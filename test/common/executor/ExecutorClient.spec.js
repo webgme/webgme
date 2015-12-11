@@ -25,6 +25,7 @@ describe('ExecutorClient', function () {
 
         param.serverPort = gmeConfig.server.port;
         param.httpsecure = false;
+        param.logger = logger.fork('ExecutorClient');
 
         rimraf('./test-tmp/executor', function (err) {
             if (err) {

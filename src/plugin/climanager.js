@@ -16,7 +16,7 @@ var PluginNodeManagerBase = require('./nodemanagerbase'),
  * @constructor
  */
 function PluginCliManager(project, mainLogger, gmeConfig) {
-    var blobClient = new BlobClientWithFSBackend(gmeConfig);
+    var blobClient = new BlobClientWithFSBackend(gmeConfig, mainLogger);
 
     PluginNodeManagerBase.call(this, blobClient, project, mainLogger, gmeConfig);
 }

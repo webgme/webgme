@@ -12,15 +12,41 @@
 define(['superagent', 'q'], function (superagent, Q) {
     'use strict';
 
+    /**
+     *
+     * @param {object} parameters
+     * @param {object} parameters.logger
+     * @constructor
+     */
     var ExecutorClient = function (parameters) {
         parameters = parameters || {};
+        if (parameters.logger) {
+            this.logger = parameters.logger;
+        } else {
+            var doLog = function () {
+                console.log.apply(console, arguments);
+            };
+            this.logger = {
+                debug: doLog,
+                log: doLog,
+                info: doLog,
+                warn: doLog,
+                error: doLog
+            };
+            console.warn('Since v1.3.0 ExecutorClient requires a logger, falling back on console.log.');
+        }
+
+        this.logger.debug('ctor', {metadata: parameters});
+
         this.isNodeJS = (typeof window === 'undefined') && (typeof process === 'object');
         this.isNodeWebkit = (typeof window === 'object') && (typeof process === 'object');
         //console.log(isNode);
         if (this.isNodeJS) {
+            this.logger.debug('Running under node');
             this.server = '127.0.0.1';
             this._clientSession = null; // parameters.sessionId;;
         }
+
         this.server = parameters.server || this.server;
         this.serverPort = parameters.serverPort || this.serverPort;
         this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
@@ -40,6 +66,9 @@ define(['superagent', 'q'], function (superagent, Q) {
         if (parameters.executorNonce) {
             this.executorNonce = parameters.executorNonce;
         }
+
+        this.logger.debug('origin', this.origin);
+        this.logger.debug('executorUrl', this.executorUrl);
     };
 
     /**
@@ -84,15 +113,20 @@ define(['superagent', 'q'], function (superagent, Q) {
      * On error the promise will be rejected with {Error} <b>error</b>.
      */
     ExecutorClient.prototype.createJob = function (jobInfo, callback) {
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            self = this;
         if (typeof jobInfo === 'string') {
             jobInfo = { hash: jobInfo }; // old API
         }
+
+        this.logger.debug('createJob', {metadata: jobInfo});
         this.sendHttpRequestWithData('POST', this.getCreateURL(jobInfo.hash), jobInfo, function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
+
+            self.logger.debug('createJob - result', response);
 
             deferred.resolve(JSON.parse(response));
         });
@@ -101,7 +135,9 @@ define(['superagent', 'q'], function (superagent, Q) {
     };
 
     ExecutorClient.prototype.updateJob = function (jobInfo, callback) {
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            self = this;
+        this.logger.debug('updateJob', {metadata: jobInfo});
         this.sendHttpRequestWithData('POST', this.executorUrl + 'update/' + jobInfo.hash, jobInfo,
             function (err, response) {
                 if (err) {
@@ -109,6 +145,7 @@ define(['superagent', 'q'], function (superagent, Q) {
                     return;
                 }
 
+                self.logger.debug('updateJob - result', response);
                 deferred.resolve(response);
             }
         );
@@ -125,13 +162,16 @@ define(['superagent', 'q'], function (superagent, Q) {
      * On error the promise will be rejected with {Error} <b>error</b>.
      */
     ExecutorClient.prototype.getInfo = function (hash, callback) {
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            self = this;
+        this.logger.debug('getInfo', hash);
         this.sendHttpRequest('GET', this.getInfoURL(hash), function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
 
+            self.logger.debug('getInfo - result', response);
             deferred.resolve(JSON.parse(response));
         });
 
@@ -139,14 +179,16 @@ define(['superagent', 'q'], function (superagent, Q) {
     };
 
     ExecutorClient.prototype.getAllInfo = function (callback) {
-        var deferred = Q.defer();
-
+        var deferred = Q.defer(),
+            self = this;
+        this.logger.debug('getAllInfo');
         this.sendHttpRequest('GET', this.getInfoURL(), function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
 
+            self.logger.debug('getAllInfo - result', response);
             deferred.resolve(JSON.parse(response));
         });
 
@@ -154,14 +196,15 @@ define(['superagent', 'q'], function (superagent, Q) {
     };
 
     ExecutorClient.prototype.getInfoByStatus = function (status, callback) {
-        var deferred = Q.defer();
-
+        var deferred = Q.defer(),
+            self = this;
+        this.logger.debug('getInfoByStatus', status);
         this.sendHttpRequest('GET', this.executorUrl + '?status=' + status, function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
-
+            self.logger.debug('getInfoByStatus - result', response);
             deferred.resolve(JSON.parse(response));
         });
 
@@ -169,14 +212,15 @@ define(['superagent', 'q'], function (superagent, Q) {
     };
 
     ExecutorClient.prototype.getWorkersInfo = function (callback) {
-        var deferred = Q.defer();
-
+        var deferred = Q.defer(),
+            self = this;
+        this.logger.debug('getWorkersInfo');
         this.sendHttpRequest('GET', this.executorUrl + 'worker', function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
-
+            self.logger.debug('getWorkersInfo - result', response);
             deferred.resolve(JSON.parse(response));
         });
 

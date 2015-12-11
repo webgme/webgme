@@ -118,7 +118,8 @@ define([
             config = self.getCurrentConfig(),
             executorClient = new ExecutorClient({
                 httpsecure: typeof window === 'undefined' ? false : window.location.protocol === 'https:',
-                serverPort: typeof window === 'undefined' ? self.gmeConfig.server.port : window.location.port
+                serverPort: typeof window === 'undefined' ? self.gmeConfig.server.port : window.location.port,
+                logger: self.logger.fork('ExecutorClient')
             }),
             executorConfig,
             finalJobInfo,

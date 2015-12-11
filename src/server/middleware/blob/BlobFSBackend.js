@@ -17,8 +17,8 @@ var fs = require('fs'),
     BlobBackendBase = require('./BlobBackendBase'),
     BlobError = require('./BlobError');
 
-var BlobFSBackend = function (gmeConfig) {
-    BlobBackendBase.call(this);
+var BlobFSBackend = function (gmeConfig, logger) {
+    BlobBackendBase.call(this, logger);
     this.blobDir = gmeConfig.blob.fsDir;
 };
 

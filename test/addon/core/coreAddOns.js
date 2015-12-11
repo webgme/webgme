@@ -64,7 +64,7 @@ describe('Core AddOns', function () {
         describe(addOnId, function () {
             var AddOnClass = testFixture.requirejs('addon/' + addOnId + '/' + addOnId + '/' + addOnId),
                 addOn = new AddOnClass(logger, gmeConfig),
-                blobClient = new BlobClient(gmeConfig);
+                blobClient = new BlobClient(gmeConfig, logger.fork('Blob'));
 
             it('should getName, description, version etc', function (done) {
                 expect(typeof addOn.getName()).to.equal('string');

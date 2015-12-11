@@ -3362,7 +3362,31 @@ define('blob/Artifact',[
     return Artifact;
 });
 
-/*globals define, escape*/
+/*jshint node: true, browser: true, bitwise: false*/
+
+/**
+ * @author kecso / https://github.com/kecso
+ */
+
+define('common/util/uint',[],function () {
+    'use strict';
+
+    //this helper function is necessary as in case of large json objects,
+    // the library standard function causes stack overflow
+    function uint8ArrayToString(uintArray) {
+        var resultString = '',
+            i;
+        for (i = 0; i < uintArray.byteLength; i++) {
+            resultString += String.fromCharCode(uintArray[i]);
+        }
+        return decodeURIComponent(escape(resultString));
+    }
+
+    return {
+        uint8ArrayToString: uint8ArrayToString
+    };
+});
+/*globals define, console*/
 /*jshint browser: true, node:true*/
 
 /**
@@ -3372,26 +3396,51 @@ define('blob/Artifact',[
  * @author ksmyth / https://github.com/ksmyth
  */
 
-define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q'], function (Artifact, BlobMetadata, superagent, Q) {
+define('blob/BlobClient',[
+    'blob/Artifact',
+    'blob/BlobMetadata',
+    'superagent',
+    'q',
+    'common/util/uint'
+], function (Artifact, BlobMetadata, superagent, Q, UINT) {
     'use strict';
 
     /**
-     * 
+     *
      * @param {object} parameters
+     * @param {object} parameters.logger
      * @constructor
      * @alias BlobClient
      */
     var BlobClient = function (parameters) {
         this.artifacts = [];
+        if (parameters && parameters.logger) {
+            this.logger = parameters.logger;
+        } else {
+            var log = console.warn.bind(console),
+                doLog = function () {
+                    log.apply(this, arguments);
+                };
+            this.logger = {
+                debug: doLog,
+                log: doLog,
+                info: doLog,
+                warn: doLog,
+                error: doLog
+            };
+            this.logger.warn('Since v1.3.0 BlobClient requires a logger, falling back on console.warn.');
+        }
+
+        this.logger.debug('ctor', {metadata: parameters});
 
         if (parameters) {
             this.server = parameters.server || this.server;
             this.serverPort = parameters.serverPort || this.serverPort;
             this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
             this.webgmeclientsession = parameters.webgmeclientsession;
-            this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || { /* use defaults */ };
+            this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || {/* use defaults */};
         } else {
-            this.keepaliveAgentOptions = { /* use defaults */ };
+            this.keepaliveAgentOptions = {/* use defaults */};
         }
         this.origin = '';
         if (this.httpsecure !== undefined && this.server && this.serverPort) {
@@ -3405,6 +3454,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
         this.isNodeOrNodeWebKit = typeof process !== 'undefined';
         if (this.isNodeOrNodeWebKit) {
             // node or node-webkit
+            this.logger.debug('Running under node or node-web-kit');
             if (this.httpsecure) {
                 this.Agent = require('agentkeepalive').HttpsAgent;
             } else {
@@ -3415,6 +3465,9 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
             }
             this.keepaliveAgent = new this.Agent(this.keepaliveAgentOptions);
         }
+
+        this.logger.debug('origin', this.origin);
+        this.logger.debug('blobUrl', this.blobUrl);
     };
 
     BlobClient.prototype.getMetadataURL = function (hash) {
@@ -3468,8 +3521,11 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
 
     BlobClient.prototype.putFile = function (name, data, callback) {
         var deferred = Q.defer(),
+            self = this,
             contentLength,
             req;
+
+        this.logger.debug('putFile', name);
 
         function toArrayBuffer(buffer) {
             var ab = new ArrayBuffer(buffer.length);
@@ -3514,6 +3570,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
                 var response = res.body;
                 // Get the first one
                 var hash = Object.keys(response)[0];
+                self.logger.debug('putFile - result', hash);
                 deferred.resolve(hash);
             });
 
@@ -3523,10 +3580,12 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
     BlobClient.prototype.putMetadata = function (metadataDescriptor, callback) {
         var metadata = new BlobMetadata(metadataDescriptor),
             deferred = Q.defer(),
+            self = this,
             blob,
             contentLength,
             req;
         // FIXME: in production mode do not indent the json file.
+        this.logger.debug('putMetadata', {metadata: metadataDescriptor});
         if (typeof Blob !== 'undefined') {
             blob = new Blob([JSON.stringify(metadata.serialize(), null, 4)], {type: 'text/plain'});
             contentLength = blob.size;
@@ -3556,6 +3615,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
                 var response = JSON.parse(res.text);
                 // Get the first one
                 var hash = Object.keys(response)[0];
+                self.logger.debug('putMetadata - result', hash);
                 deferred.resolve(hash);
             });
 
@@ -3606,7 +3666,10 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
     };
 
     BlobClient.prototype.getObject = function (hash, callback, subpath) {
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            self = this;
+
+        this.logger.debug('getObject', hash, subpath);
 
         superagent.parse['application/zip'] = function (obj, parseCallback) {
             if (parseCallback) {
@@ -3669,16 +3732,9 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
                     var contentType = req.xhr.getResponseHeader('content-type');
                     var response = req.xhr.response; // response is an arraybuffer
                     if (contentType === 'application/json') {
-                        var utf8ArrayToString = function (uintArray) {
-                            var inputString = '',
-                                i;
-                            for (i = 0; i < uintArray.byteLength; i++) {
-                                inputString += String.fromCharCode(uintArray[i]);
-                            }
-                            return decodeURIComponent(escape(inputString));
-                        };
-                        response = JSON.parse(utf8ArrayToString(new Uint8Array(response)));
+                        response = JSON.parse(UINT.uint8ArrayToString(new Uint8Array(response)));
                     }
+                    self.logger.debug('getObject - result', {metadata: response});
                     deferred.resolve(response);
                 }
             });
@@ -3687,6 +3743,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
                 if (err) {
                     deferred.reject(err);
                 } else {
+                    self.logger.debug('getObject - result', {metadata: result});
                     deferred.resolve(result);
                 }
             });
@@ -3697,7 +3754,10 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
 
     BlobClient.prototype.getMetadata = function (hash, callback) {
         var req = superagent.get(this.getMetadataURL(hash)),
-            deferred = Q.defer();
+            deferred = Q.defer(),
+            self = this;
+
+        this.logger.debug('getMetadata', hash);
 
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
@@ -3711,6 +3771,7 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
             if (err || res.status > 399) {
                 deferred.reject(err || res.status);
             } else {
+                self.logger.debug('getMetadata', res.text);
                 deferred.resolve(JSON.parse(res.text));
             }
         });
@@ -3734,12 +3795,14 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
         // TODO: get info get name.
         var self = this,
             deferred = Q.defer();
+        this.logger.debug('getArtifact', metadataHash);
         this.getMetadata(metadataHash, function (err, info) {
             if (err) {
                 callback(err);
                 return;
             }
 
+            self.logger.debug('getArtifact - return', {metadata: info});
             if (info.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
                 var artifact = new Artifact(info.name, self, info);
                 self.artifacts.push(artifact);
@@ -3799,15 +3862,42 @@ define('blob/BlobClient',['blob/Artifact', 'blob/BlobMetadata', 'superagent', 'q
 define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     'use strict';
 
+    /**
+     *
+     * @param {object} parameters
+     * @param {object} parameters.logger
+     * @constructor
+     */
     var ExecutorClient = function (parameters) {
         parameters = parameters || {};
+        if (parameters.logger) {
+            this.logger = parameters.logger;
+        } else {
+            var log = console.warn.bind(console),
+                doLog = function () {
+                    log.apply(this, arguments);
+                };
+            this.logger = {
+                debug: doLog,
+                log: doLog,
+                info: doLog,
+                warn: doLog,
+                error: doLog
+            };
+            this.logger.warn('Since v1.3.0 ExecutorClient requires a logger, falling back on console.warn.');
+        }
+
+        this.logger.debug('ctor', {metadata: parameters});
+
         this.isNodeJS = (typeof window === 'undefined') && (typeof process === 'object');
         this.isNodeWebkit = (typeof window === 'object') && (typeof process === 'object');
         //console.log(isNode);
         if (this.isNodeJS) {
+            this.logger.debug('Running under node');
             this.server = '127.0.0.1';
             this._clientSession = null; // parameters.sessionId;;
         }
+
         this.server = parameters.server || this.server;
         this.serverPort = parameters.serverPort || this.serverPort;
         this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
@@ -3827,6 +3917,9 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
         if (parameters.executorNonce) {
             this.executorNonce = parameters.executorNonce;
         }
+
+        this.logger.debug('origin', this.origin);
+        this.logger.debug('executorUrl', this.executorUrl);
     };
 
     /**
@@ -3871,15 +3964,20 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
      * On error the promise will be rejected with {Error} <b>error</b>.
      */
     ExecutorClient.prototype.createJob = function (jobInfo, callback) {
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            self = this;
         if (typeof jobInfo === 'string') {
             jobInfo = { hash: jobInfo }; // old API
         }
+
+        this.logger.debug('createJob', {metadata: jobInfo});
         this.sendHttpRequestWithData('POST', this.getCreateURL(jobInfo.hash), jobInfo, function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
+
+            self.logger.debug('createJob - result', response);
 
             deferred.resolve(JSON.parse(response));
         });
@@ -3888,7 +3986,9 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     };
 
     ExecutorClient.prototype.updateJob = function (jobInfo, callback) {
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            self = this;
+        this.logger.debug('updateJob', {metadata: jobInfo});
         this.sendHttpRequestWithData('POST', this.executorUrl + 'update/' + jobInfo.hash, jobInfo,
             function (err, response) {
                 if (err) {
@@ -3896,6 +3996,7 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
                     return;
                 }
 
+                self.logger.debug('updateJob - result', response);
                 deferred.resolve(response);
             }
         );
@@ -3912,13 +4013,16 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
      * On error the promise will be rejected with {Error} <b>error</b>.
      */
     ExecutorClient.prototype.getInfo = function (hash, callback) {
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            self = this;
+        this.logger.debug('getInfo', hash);
         this.sendHttpRequest('GET', this.getInfoURL(hash), function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
 
+            self.logger.debug('getInfo - result', response);
             deferred.resolve(JSON.parse(response));
         });
 
@@ -3926,14 +4030,16 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     };
 
     ExecutorClient.prototype.getAllInfo = function (callback) {
-        var deferred = Q.defer();
-
+        var deferred = Q.defer(),
+            self = this;
+        this.logger.debug('getAllInfo');
         this.sendHttpRequest('GET', this.getInfoURL(), function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
 
+            self.logger.debug('getAllInfo - result', response);
             deferred.resolve(JSON.parse(response));
         });
 
@@ -3941,14 +4047,15 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     };
 
     ExecutorClient.prototype.getInfoByStatus = function (status, callback) {
-        var deferred = Q.defer();
-
+        var deferred = Q.defer(),
+            self = this;
+        this.logger.debug('getInfoByStatus', status);
         this.sendHttpRequest('GET', this.executorUrl + '?status=' + status, function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
-
+            self.logger.debug('getInfoByStatus - result', response);
             deferred.resolve(JSON.parse(response));
         });
 
@@ -3956,14 +4063,15 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     };
 
     ExecutorClient.prototype.getWorkersInfo = function (callback) {
-        var deferred = Q.defer();
-
+        var deferred = Q.defer(),
+            self = this;
+        this.logger.debug('getWorkersInfo');
         this.sendHttpRequest('GET', this.executorUrl + 'worker', function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
-
+            self.logger.debug('getWorkersInfo - result', response);
             deferred.resolve(JSON.parse(response));
         });
 
@@ -4204,14 +4312,17 @@ define('executor/ExecutorWorker',[
         this.blobClient = new BlobClient({
             server: parameters.server,
             serverPort: parameters.serverPort,
-            httpsecure: parameters.httpsecure
+            httpsecure: parameters.httpsecure,
+            logger: parameters.logger
         });
 
         this.executorClient = new ExecutorClient({
             server: parameters.server,
             serverPort: parameters.serverPort,
-            httpsecure: parameters.httpsecure
+            httpsecure: parameters.httpsecure,
+            logger: parameters.logger
         });
+
         if (parameters.executorNonce) {
             this.executorClient.executorNonce = parameters.executorNonce;
         }
@@ -4733,10 +4844,18 @@ define('executor/ExecutorWorkerController',[], function () {
  */
 
 var nodeRequire = require,
-    log = function() {
+    log = function () {
+        'use strict';
         var args = Array.prototype.slice.call(arguments);
         args.splice(0, 0, new Date().toISOString());
         console.log.apply(console, args);
+    },
+    logger = {
+        debug: log,
+        log: log,
+        info: log,
+        warn: log,
+        error: log
     };
 
 if (typeof define !== 'undefined') {
@@ -4763,7 +4882,8 @@ if (typeof define !== 'undefined') {
                 sessionId: undefined,
                 availableProcessesContainer: availableProcessesContainer,
                 workingDirectory: tempPath,
-                executorNonce: parameters.executorNonce
+                executorNonce: parameters.executorNonce,
+                logger: logger
             });
 
             log('Connecting to ' + webGMEUrl);

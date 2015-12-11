@@ -8,9 +8,9 @@
 var BlobFSBackend = require('./BlobFSBackend'),
     BlobRunPluginClient = require('./BlobRunPluginClient');
 
-function BlobClientWithFSBackend(gmeConfig) {
-    var blobBackend = new BlobFSBackend(gmeConfig),
-        blobClient = new BlobRunPluginClient(blobBackend);
+function BlobClientWithFSBackend(gmeConfig, logger) {
+    var blobBackend = new BlobFSBackend(gmeConfig, logger),
+        blobClient = new BlobRunPluginClient(blobBackend, logger);
 
     return blobClient;
 }

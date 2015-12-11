@@ -45,8 +45,8 @@ define(['blob/BlobClient'], function (BlobClient) {
         }
     }
 
-    function saveJsonToBlobStorage(fileName, data, callback) {
-        var bc = new BlobClient(),
+    function saveJsonToBlobStorage(fileName, data, logger, callback) {
+        var bc = new BlobClient({logger: logger}),
             artifact = bc.createArtifact('uploaded');
 
         artifact.addFile(fileName, JSON.stringify(data, null, 4), function (err, fileHash) {

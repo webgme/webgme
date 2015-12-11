@@ -105,7 +105,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 serverPort: gmeConfig.server.port,
                 httpsecure: false,
                 server: '127.0.0.1',
-                webgmeclientsession: webGMESessionId
+                webgmeclientsession: webGMESessionId,
+                logger: logger.fork('BlobClient')
             }),
             artie;
 
@@ -416,7 +417,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         serverPort: gmeConfig.server.port,
                         httpsecure: false,
                         server: '127.0.0.1',
-                        webgmeclientsession: webGMESessionId
+                        webgmeclientsession: webGMESessionId,
+                        logger: logger.fork('BlobClient')
                     });
 
                     return _addZippedExportToBlob(filename, blobClient);
@@ -453,7 +455,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
             serverPort: gmeConfig.server.port,
             httpsecure: false,
             server: '127.0.0.1',
-            webgmeclientsession: webGMESessionId
+            webgmeclientsession: webGMESessionId,
+            logger: logger.fork('BlobClient')
         });
 
         return Q.ninvoke(blobClient, 'getMetadata', hash)

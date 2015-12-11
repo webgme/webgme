@@ -27,6 +27,7 @@ describe('BlobClient', function () {
             bcParam.serverPort = gmeConfig.server.port;
             bcParam.server = '127.0.0.1';
             bcParam.httpsecure = false;
+            bcParam.logger = testFixture.logger.fork('Blob');
             server = testFixture.WebGME.standaloneServer(gmeConfig);
             server.start(function () {
                 done();
@@ -395,6 +396,8 @@ describe('BlobClient', function () {
             bcParam.serverPort = proxyServerPort; // use https reverse proxy port
             bcParam.server = '127.0.0.1';
             bcParam.httpsecure = true;
+            bcParam.logger = testFixture.logger.fork('Blob');
+
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
             server = testFixture.WebGME.standaloneServer(gmeConfig);
             var httpProxy = require('http-proxy');

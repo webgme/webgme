@@ -64,7 +64,7 @@
                 success: function () {
                     var requirejs = window.requirejs;
                     delete window.requirejs; // don't share requirejs state across WebGMEs, they may require different versions
-                    requirejs([webGMEUrl + "/bin/getconfig.js"], function (getconfig) {
+                    requirejs([webGMEUrl + "/bin/getconfig.js"], function (gmeConfig) {
                     requirejs.config({
                         baseUrl: webGMEUrl + '/',
                         paths: {
@@ -75,8 +75,8 @@
                             "loaderProgressBar": "js/Loader/LoaderProgressBar",
                             "superagent": "lib/superagent/superagent",
                             "q": "lib/q/q",
+                            "debug": "lib/debug/debug",
                             "core": "common/core",
-
                             "codemirror": 'lib/codemirror/codemirror.amd',
                             "jquery-csszoom": 'lib/jquery/jquery.csszoom',
 
@@ -92,13 +92,16 @@
                         requirejs.s.contexts._.defined[module_name] = nodeRequire(module_name);
                     });
                     var worker;
-                    requirejs(['executor/ExecutorWorker', 'executor/JobInfo', 'executor/ExecutorWorkerController'], function (ExecutorWorker, JobInfo, ExecutorWorkerController) {
+                    requirejs(['executor/ExecutorWorker', 'executor/JobInfo', 'executor/ExecutorWorkerController', 'js/logger'], function (ExecutorWorker, JobInfo, ExecutorWorkerController, Logger) {
 
-                        var webGMEPort = url.parse(webGMEUrl).port || (url.parse(webGMEUrl).protocol === 'https:' ? 443 : 80);
+                        var webGMEPort = url.parse(webGMEUrl).port || (url.parse(webGMEUrl).protocol === 'https:' ? 443 : 80),
+                            logger = Logger.create('Index', gmeConfig.client.log);
+                        logger.debug('Logger created');
                         worker = new ExecutorWorker({ server: url.parse(webGMEUrl).hostname, serverPort: webGMEPort,
                             httpsecure: url.parse(webGMEUrl).protocol === 'https:', sessionId: undefined,
                             availableProcessesContainer: availableProcessesContainer,
-                            executorNonce: parameters.executorNonce});
+                            executorNonce: parameters.executorNonce,
+                            logger: logger.fork('ExecutorWorker')});
 
                         worker.queryWorkerAPI(function (err, response) {
                             var refreshPeriod = 60 * 1000;

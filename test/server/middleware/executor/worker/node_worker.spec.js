@@ -82,7 +82,10 @@ describe('NodeWorker', function () {
                     clientsParam.httpsecure = useHttpsProxy;
                     clientsParam.executorNonce = gmeConfig.executor.nonce;
 
+                    clientsParam.logger = testFixture.logger.fork('NodeWorker:ExecClient');
                     executorClient = new ExecutorClient(clientsParam);
+
+                    clientsParam.logger = testFixture.logger.fork('NodeWorker:BlobClient');
                     blobClient = new BlobClient(clientsParam);
                     workerConfig[server.getUrl()] = workerNonce ? {executorNonce: workerNonce} : {};
                     return Q.nfcall(fs.writeFile, 'test-tmp/worker_config.json', JSON.stringify(workerConfig));

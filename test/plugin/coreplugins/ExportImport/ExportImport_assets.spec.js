@@ -66,7 +66,7 @@ describe('Plugin ExportImport - assets', function () {
                     filePath1 = './test/plugin/coreplugins/ExportImport/assets/a.txt',
                     filePath2 = './test/plugin/coreplugins/ExportImport/assets/b.txt',
                     filePath3 = './test/plugin/coreplugins/ExportImport/assets/aa.txt';
-                blobClient = new BlobRunPluginClient(blobBackend);
+                blobClient = new BlobRunPluginClient(blobBackend, logger.fork('Blob'));
 
                 return Q.allDone([
                     Q.ninvoke(blobClient, 'putFile', 'a.txt', testFixture.fs.readFileSync(filePath1)),

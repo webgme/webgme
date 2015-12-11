@@ -23,8 +23,8 @@ var BlobClient = requireJS('blob/BlobClient'),
  * @param {{}} parameters
  * @constructor
  */
-function BlobRunPluginClient(blobBackend) {
-    BlobClient.call(this);
+function BlobRunPluginClient(blobBackend, logger) {
+    BlobClient.call(this, {logger: logger});
     this.blobBackend = blobBackend;
 }
 

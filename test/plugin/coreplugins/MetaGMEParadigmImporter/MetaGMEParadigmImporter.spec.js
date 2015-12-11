@@ -57,7 +57,7 @@ describe('Plugin MetaGMEParadigmImporter', function () {
                 var blobBackend = new BlobFSBackend(gmeConfig),
                     filePath1 = './test/plugin/coreplugins/MetaGMEParadigmImporter/SF.xmp',
                     filePath2 = './test/plugin/coreplugins/MetaGMEParadigmImporter/SF_fail.xmp',
-                    blobClient = new BlobRunPluginClient(blobBackend);
+                    blobClient = new BlobRunPluginClient(blobBackend, logger.fork('Blob'));
 
                 return Q.allDone([
                     Q.ninvoke(blobClient, 'putFile', 'SF.xmp', testFixture.fs.readFileSync(filePath1)),

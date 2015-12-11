@@ -237,7 +237,7 @@ define([
                                     }
                                 });
                             } else {
-                                config.blobClient = new BlobClient();
+                                config.blobClient = new BlobClient({logger: self.logger.fork('BlobClient')});
 
                                 pluginManager.executePlugin(name, config, function (err, result) {
                                     if (err) {

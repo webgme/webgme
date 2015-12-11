@@ -12,17 +12,15 @@ describe('Worker Requests', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
         expect = testFixture.expect,
-        BlobFSBackend = require('./../../../src/server/middleware/blob/BlobFSBackend'),
-        BlobRunPluginClient = require('./../../../src/server/middleware/blob/BlobRunPluginClient'),
+        BlobClient = require('./../../../src/server/middleware/blob/BlobClientWithFSBackend'),
         logger,
         WorkerRequests = require('./../../../src/server/worker/workerrequests'),
         wr,
         blobClient;
 
     before(function () {
-        var blobBackend = new BlobFSBackend(gmeConfig);
-        blobClient = new BlobRunPluginClient(blobBackend);
         logger = testFixture.logger.fork('Worker_Requests');
+        blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient'));
         wr = new WorkerRequests(logger, gmeConfig);
     });
 

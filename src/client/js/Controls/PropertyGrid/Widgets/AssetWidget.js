@@ -1,4 +1,4 @@
-/*globals define, _, $*/
+/*globals define, _, $, WebGMEGlobal*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -7,9 +7,11 @@
 define([
     'js/Controls/PropertyGrid/Widgets/WidgetBase',
     'blob/BlobClient',
+    'js/logger',
     'css!./styles/AssetWidget.css'
 ], function (WidgetBase,
-             BlobClient) {
+             BlobClient,
+             Logger) {
 
     'use strict';
 
@@ -22,6 +24,8 @@ define([
 
     AssetWidget = function (propertyDesc) {
         AssetWidget.superclass.call(this, propertyDesc);
+        this._logger = Logger.create('gme:js:Controls:PropertyGrid:Widgets:AssetWidget',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this.__el = ASSET_WIDGET_BASE.clone();
         this.el.append(this.__el);
@@ -103,7 +107,7 @@ define([
 
 
     AssetWidget.prototype.updateDisplay = function () {
-        var bc = new BlobClient(),
+        var bc = new BlobClient({logger: this._logger.fork('BlobClient')}),
             urlDownload = this.propertyValue ? bc.getDownloadURL(this.propertyValue) : '',
             text = this.propertyValue,
 
@@ -148,7 +152,7 @@ define([
 
     AssetWidget.prototype._fileSelectHandler = function (event) {
         var self = this,
-            blobClient = new BlobClient(),
+            blobClient = new BlobClient({logger: this._logger.fork('BlobClient')}),
             i,
             file,
 
