@@ -1,31 +1,31 @@
+/*globals*/
 /*jshint node:true, mocha:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 
-
 var testFixture = require('../../_globals');
 
-describe('MultipleMainCallbackCalls', function () {
+describe('InvalidActiveNode test', function () {
     'use strict';
 
-    var pluginName = 'MultipleMainCallbackCalls',
+    var pluginName = 'InvalidActiveNode',
         logger = testFixture.logger.fork(pluginName),
         gmeConfig = testFixture.getGmeConfig(),
         storage,
+        core,
         expect = testFixture.expect,
         Q = testFixture.Q,
         PluginCliManager = require('../../../src/plugin/climanager'),
         project,
-        projectName = 'plugin_mmcc',
-        projectId = testFixture.projectName2Id(projectName),
+        projectName = 'plugin_InvalidActiveNode',
         branchName = 'master',
         commitHash,
         gmeAuth;
 
     before(function (done) {
         var importParam = {
-            projectSeed: './test/plugin/scenarios/plugins/MultipleMainCallbackCalls/project.json',
+            projectSeed: './seeds/EmptyProject.json',
             projectName: projectName,
             branchName: branchName,
             logger: logger,
@@ -43,9 +43,19 @@ describe('MultipleMainCallbackCalls', function () {
             .then(function (importResult) {
                 project = importResult.project;
                 commitHash = importResult.commitHash;
-                done();
+                core = importResult.core;
+                return Q.allDone([
+                    testFixture.loadRootNodeFromCommit(project, core, commitHash),
+                    project.createBranch('b1', commitHash)
+                    ]);
             })
-            .catch(done);
+            .then(function (res) {
+                var persisted;
+                core.setRegistry(res[0], 'validPlugins', 'InvalidActiveNode');
+                persisted = core.persist(res[0]);
+                return project.makeCommit('b1', [commitHash], persisted.rootHash, persisted.objects, 'ff');
+            })
+            .nodeify(done);
     });
 
     after(function (done) {
@@ -56,28 +66,38 @@ describe('MultipleMainCallbackCalls', function () {
             .nodeify(done);
     });
 
-    it('should run MultipleMainCallbackCalls and return error at second cb', function (done) {
+    it('should fail when plugin is not registered', function (done) {
         var pluginContext = {
-                commitHash: commitHash,
-                branchName: branchName
+                activeNode: '',
+                branchName: 'master'
             },
-            cnt = 0,
             pluginManager = new PluginCliManager(project, logger, gmeConfig);
 
         pluginManager.executePlugin(pluginName, null, pluginContext, function (err, result) {
-            if (cnt === 0) {
+            try {
+                expect(err.message).to.contain('Plugin not registered as validPlugin');
+                expect(result.success).to.equal(false);
+                done();
+            } catch (err) {
+                done(err);
+            }
+        });
+    });
+
+    it('should succeed when plugin is registered', function (done) {
+        var pluginContext = {
+                activeNode: '',
+                branchName: 'b1'
+            },
+            pluginManager = new PluginCliManager(project, logger, gmeConfig);
+
+        pluginManager.executePlugin(pluginName, null, pluginContext, function (err, result) {
+            try {
                 expect(err).to.equal(null);
                 expect(result.success).to.equal(true);
-            } else if (cnt === 1) {
-                expect(err).to.equal('The main callback is being called more than once!');
-                expect(result.success).to.equal(false);
-            } else {
-                done(new Error('Main callback should only be called at most twice from pluginManager'));
-                return;
-            }
-            cnt += 1;
-            if (cnt === 2) {
                 done();
+            } catch (err) {
+                done(err);
             }
         });
     });

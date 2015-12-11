@@ -15,7 +15,6 @@ describe('CorePlugins', function () {
         superagent = testFixture.superagent,
 
         WebGME = testFixture.WebGME,
-        path = require('path'),
 
         logger = testFixture.logger.fork('coreplugins.spec'),
 
@@ -32,17 +31,21 @@ describe('CorePlugins', function () {
             'VisualizerGenerator',
             'LayoutGenerator',
             'MultipleMainCallbackCalls',
-            'PluginForked'
+            'PluginForked',
+            'InvalidActiveNode'
         ],
 
         pluginsShouldFail = [
             'ExecutorPlugin',
             'MergeExample',
             'MetaGMEParadigmImporter',
-            'MultipleMainCallbackCalls'
+            'MultipleMainCallbackCalls',
+            'InvalidActiveNode'
         ],
-        projects = [],// N.B.: this is getting populated by the createTests function
-
+        projectNames = pluginNames.map(function (name) {
+            return name + 'TestMain';
+        }),
+        importResults = [],
         gmeAuth,
         safeStorage,
 
@@ -50,9 +53,7 @@ describe('CorePlugins', function () {
         serverBaseUrl,
         server,
 
-        runPlugin = require('../../../src/bin/run_plugin'),
-        filename = path.normalize('../../../src/bin/run_plugin.js'),
-        oldProcessExit = process.exit;
+        PluginCliManager = require('../../../src/plugin/climanager');
 
     before(function (done) {
         var gmeConfigWithAuth = testFixture.getGmeConfig();
@@ -67,7 +68,7 @@ describe('CorePlugins', function () {
                 return;
             }
 
-            testFixture.clearDBAndGetGMEAuth(gmeConfigWithAuth, projects)
+            testFixture.clearDBAndGetGMEAuth(gmeConfigWithAuth, projectNames)
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
                     safeStorage = testFixture.getMongoStorage(logger, gmeConfigWithAuth, gmeAuth);
@@ -82,8 +83,8 @@ describe('CorePlugins', function () {
                         promise,
                         i;
 
-                    for (i = 0; i < projects.length; i += 1) {
-                        projectName = projects[i];
+                    for (i = 0; i < projectNames.length; i += 1) {
+                        projectName = projectNames[i];
                         promise = testFixture.importProject(safeStorage, {
                             projectSeed: './seeds/ActivePanels.json',
                             projectName: projectName,
@@ -93,7 +94,11 @@ describe('CorePlugins', function () {
                         });
                         promises.push(promise);
                     }
+
                     return Q.allDone(promises);
+                })
+                .then(function (results) {
+                    importResults = results;
                 })
                 .nodeify(done);
         });
@@ -112,10 +117,6 @@ describe('CorePlugins', function () {
             ])
                 .nodeify(done);
         });
-    });
-
-    afterEach(function () {
-        process.exit = oldProcessExit;
     });
 
     // get seed designs 'files' and make sure all of them are getting tested
@@ -137,44 +138,43 @@ describe('CorePlugins', function () {
     function createTests() {
         var i;
 
-        function createPluginTest(name) {
-            var projectName = name + 'TestMain';
-
-            projects.push(projectName);
-
+        function createPluginTest(name, cnt) {
             // import seed designs
             it('should run plugin ' + name, function (done) {
-                var numCallback = 0;
+                var pluginManager = new PluginCliManager(importResults[cnt].project, logger, gmeConfig),
+                    pluginContext = {
+                        activeNode: '/1',
+                        branchName: 'master'
+                    },
+                    callbackCnt = 0;
 
-                process.exit = function (code) {
-                    expect(code).to.equal(0);
-                    done();
-                };
-
-                runPlugin.main(['node', filename, name, projectName, '-s', '/1'],
-                    function (err, result) {
-                        numCallback += 1;
-                        if (err) {
-                            if (pluginsShouldFail.indexOf(name) > -1) {
-                                if (name === 'MultipleMainCallbackCalls') {
-                                    // ignore all callback functions, done() is called from process.exit once.
-                                } else {
-                                    done();
-                                }
+                pluginManager.executePlugin(name, null, pluginContext, function (err, result) {
+                    callbackCnt += 1;
+                    try {
+                        if (name === 'MultipleMainCallbackCalls') {
+                            if (callbackCnt === 1) {
+                                expect(result.success).to.equal(true);
                             } else {
-                                done(new Error(err));
+                                expect(result.success).to.equal(false);
+                                done();
                             }
-                            return;
+                        } else if (pluginsShouldFail.indexOf(name) > -1) {
+                            expect(result.success).to.equal(false);
+                            done();
+                        } else {
+                            expect(result.success).to.equal(true);
+                            expect(result.error).to.equal(null);
+                            done();
                         }
-                        expect(result.success).to.equal(true);
-                        expect(result.error).to.equal(null);
+                    } catch (err) {
+                        done(err);
                     }
-                );
+                });
             });
         }
 
         for (i = 0; i < pluginNames.length; i += 1) {
-            createPluginTest(pluginNames[i]);
+            createPluginTest(pluginNames[i], i);
         }
     }
 
