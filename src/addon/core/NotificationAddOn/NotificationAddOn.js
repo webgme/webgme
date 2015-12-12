@@ -93,7 +93,7 @@ define([
      * Called once when the addOn is started for the first time.
      * @param {object} rootNode
      * @param {object} commitObj
-     * @param {function(Error, AddOnUpdateResult} callback
+     * @param {function(Error, AddOnUpdateResult)} callback
      */
     NotificationAddOn.prototype.initialize = function (rootNode, commitObj, callback) {
         this.logger.info('NotificationAddOn got initialized at commitHash', commitObj._id);
