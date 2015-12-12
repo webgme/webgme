@@ -9,7 +9,7 @@
       "orgs":[
 
       ],
-      "site_admin":false
+      "siteAdmin":false
    },
    {
       "_id":"anonymous",

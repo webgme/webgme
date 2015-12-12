@@ -274,7 +274,7 @@ describe('REST API', function () {
                                 expect(res2.body._id).equal(res.body._id);
                                 expect(res2.body.siteAdmin).equal(res.body.siteAdmin);
 
-                                // we have changed only these fields
+                                // we have just changed these fields
                                 expect(res2.body.email).equal(updates.email);
                                 expect(res2.body.canCreate).equal(updates.canCreate);
                                 done();
@@ -349,7 +349,7 @@ describe('REST API', function () {
                                 expect(res2.body._id).equal(res.body._id);
                                 expect(res2.body.siteAdmin).equal(res.body.siteAdmin);
 
-                                // we have changed only these fields
+                                // we have changed just these fields
                                 expect(res2.body.email).equal(updates.email);
                                 expect(res2.body.canCreate).equal(updates.canCreate);
                                 done();
@@ -410,7 +410,7 @@ describe('REST API', function () {
                         });
                 });
 
-            it('should create a new user with valid data PUT /api/v1/users/new_user', function (done) {
+            it('should create a new user with valid data PUT /api/v1/users', function (done) {
                 var newUser = {
                     userId: 'new_user',
                     email: 'new_email_address',
@@ -429,6 +429,33 @@ describe('REST API', function () {
                                 expect(res2.status).equal(200, err);
 
                                 expect(res2.body._id).equal(newUser.userId);
+                                expect(res2.body.email).equal(newUser.email);
+                                expect(res2.body.canCreate).equal(newUser.canCreate);
+
+                                done();
+                            });
+                    });
+            });
+
+            it('should create a new user with valid data PUT /api/v1/users/new_user_param', function (done) {
+                var newUser = {
+                        email: 'new_email_address',
+                        password: 'pass',
+                        canCreate: true
+                    },
+                    userId = 'new_user_param';
+
+                agent.get(server.getUrl() + '/api/v1/users/new_user_param')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err); // user should not exist at this point
+
+                        agent.put(server.getUrl() + '/api/v1/users/' + userId)
+                            .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                            .send(newUser)
+                            .end(function (err, res2) {
+                                expect(res2.status).equal(200, err);
+
+                                expect(res2.body._id).equal(userId);
                                 expect(res2.body.email).equal(newUser.email);
                                 expect(res2.body.canCreate).equal(newUser.canCreate);
 
@@ -1517,13 +1544,25 @@ describe('REST API', function () {
                             importResult = results[0]; // projectName
                             return Q.allDone([
                                 importResult.project.createTag('tag', importResult.commitHash),
+                                importResult.project.createTag('tagPatched', importResult.commitHash),
                                 gmeAuth.authorizeByUserId(guestAccount, projectName2Id(unauthorizedProjectName),
                                     'create', {
                                         read: true,
                                         write: false,
                                         delete: false
                                     }
-                                )
+                                ),
+                                gmeAuth.addOrganization('org', null),
+                                gmeAuth.addUser('userSiteAdmin', 'user@example.com', 'p', true, {
+                                    overwrite: true,
+                                    siteAdmin: true
+                                })
+                            ]);
+                        })
+                        .then(function () {
+                            return Q.allDone([
+                                gmeAuth.addUserToOrganization(guestAccount, 'org'),
+                                gmeAuth.setAdminForUserInOrganization(guestAccount, 'org', true)
                             ]);
                         })
                         .nodeify(done);
@@ -1616,6 +1655,26 @@ describe('REST API', function () {
                     });
             });
 
+            it('should create a project to an organization /projects/org/:projectName', function (done) {
+                var toBeCreatedProjectName = 'ownedByOrg';
+                agent.put(server.getUrl() + '/api/projects/org/' + toBeCreatedProjectName)
+                    .send({type: 'file', seedName: 'EmptyProject'})
+                    .end(function (err, res) {
+                        expect(res.status).to.equal(204);
+
+                        agent.get(server.getUrl() + '/api/projects')
+                            .end(function (err, res) {
+                                expect(res.status).to.equal(200);
+                                expect(res.body).to.contain({
+                                    _id: testFixture.projectName2Id(toBeCreatedProjectName, 'org'),
+                                    name: toBeCreatedProjectName,
+                                    owner: 'org'
+                                });
+                                done();
+                            });
+                    });
+            });
+
             it('should get info and branches for project /projects/:ownerId/:projectId', function (done) {
                 agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName))
                     .end(function (err, res) {
@@ -1624,6 +1683,42 @@ describe('REST API', function () {
                         expect(res.body).to.have.property('info');
                         expect(res.body.info).to.include.keys('creator', 'viewer', 'modifier',
                             'createdAt', 'viewedAt', 'modifiedAt');
+                        done();
+                    });
+            });
+
+            it('should patch info for project /projects/:ownerId/:projectId', function (done) {
+                agent.patch(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName))
+                    .send({creator: 'PerAlbinHansson'})
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.have.property('info');
+                        expect(res.body.info).to.include.keys('creator', 'viewer', 'modifier',
+                            'createdAt', 'viewedAt', 'modifiedAt');
+                        expect(res.body.info.creator).to.equal('PerAlbinHansson');
+                        done();
+                    });
+            });
+
+            it('should not patch info for project if no write access /projects/:ownerId/:projectId', function (done) {
+                agent.patch(server.getUrl() + '/api/projects/' + projectName2APIPath(unauthorizedProjectName))
+                    .send({creator: 'PerAlbinHansson'})
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+                        done();
+                    });
+            });
+
+            it('should patch if siteAdmin /projects/:ownerId/:projectId', function (done) {
+                agent.patch(server.getUrl() + '/api/projects/' + projectName2APIPath(unauthorizedProjectName))
+                    .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
+                    .send({creator: 'PerAlbinHansson'})
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.have.property('info');
+                        expect(res.body.info).to.include.keys('creator', 'viewer', 'modifier',
+                            'createdAt', 'viewedAt', 'modifiedAt');
+                        expect(res.body.info.creator).to.equal('PerAlbinHansson');
                         done();
                     });
             });
@@ -1846,6 +1941,22 @@ describe('REST API', function () {
                     agent.get(url)
                         .end(function (err, res) {
                             expect(res.status).equal(404, err);
+
+                            done();
+                        });
+                }
+            );
+
+            it('should get history for branch /projects/:ownerId/branches/:branchId/commits',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/' +
+                        'master/commits';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body instanceof Array).to.equal(true);
+                            expect(res.body.length).to.equal(1);
+                            expect(res.body[0]._id).to.equal(importResult.commitHash);
 
                             done();
                         });
@@ -2176,6 +2287,36 @@ describe('REST API', function () {
                     });
             });
 
+            it('should patch an existing tag /projects/:ownerId/:projectId/tags/tagPatched', function (done) {
+                agent.patch(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags/tagPatched')
+                    .send({hash: importResult.commitHash})
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags')
+                            .end(function (err, res) {
+                                expect(res.status).equal(200, err);
+                                expect(res.body).to.have.property('tagPatched');
+
+                                done();
+                            });
+                    });
+            });
+
+            it('should patch a non-existing tag /projects/:ownerId/:projectId/tags/didNotExist', function (done) {
+                agent.patch(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags/newPatched')
+                    .send({hash: importResult.commitHash})
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags')
+                            .end(function (err, res) {
+                                expect(res.status).equal(200, err);
+                                expect(res.body).to.have.property('newPatched');
+
+                                done();
+                            });
+                    });
+            });
+
             it('should create tag for put project /projects/:ownerId/:projectId/tags/:newTag', function (done) {
                 agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags/newTag')
                     .send({hash: importResult.commitHash})
@@ -2210,6 +2351,53 @@ describe('REST API', function () {
                                     });
                             });
 
+                    });
+            });
+
+            it('should 403 for project get /projects/not/Exist/tags', function (done) {
+                agent.get(server.getUrl() + '/api/projects/not/Exist/tags')
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+
+                        done();
+                    });
+            });
+
+            it('should 403 for project get /projects/not/Exist/tags/notExist', function (done) {
+                agent.get(server.getUrl() + '/api/projects/not/Exist/tags/notExist')
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+
+                        done();
+                    });
+            });
+
+            it('should 403 for project del /projects/not/Exist/tags/notExist', function (done) {
+                agent.del(server.getUrl() + '/api/projects/not/Exist/tags/notExist')
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+
+                        done();
+                    });
+            });
+
+            it('should 403 for project put /projects/not/Exist/tags/notExist', function (done) {
+                agent.put(server.getUrl() + '/api/projects/not/Exist/tags/notExist')
+                    .send({hash: importResult.commitHash})
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+
+                        done();
+                    });
+            });
+
+            it('should 403 for project patch /projects/not/Exist/tags/notExist', function (done) {
+                agent.put(server.getUrl() + '/api/projects/not/Exist/tags/notExist')
+                    .send({hash: importResult.commitHash})
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+
+                        done();
                     });
             });
         });
@@ -2535,5 +2723,438 @@ describe('REST API', function () {
                     done();
                 });
         });
+    });
+
+    describe('Assigning authorization for projects', function () {
+        var server,
+            agent,
+            projectOwnedByUser = 'projectOwnedByUser',
+            projectOwnedByOrg = 'projectOwnedByOrg',
+            projectOwnedByOtherUser = 'projectOwnedByOtherUser',
+            safeStorage,
+            gmeAuth,
+            pr2Id = testFixture.projectName2Id,
+            guestAccount = gmeConfig.authentication.guestAccount;
+
+        before(function (done) {
+            var gmeConfig = testFixture.getGmeConfig();
+
+            server = WebGME.standaloneServer(gmeConfig);
+
+            testFixture.clearDBAndGetGMEAuth(gmeConfig)
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                    return safeStorage.openDatabase();
+                })
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.addUser('user', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userWithRights1', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userWithRights2', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userWithRights3', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userOrgAdmin', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userSiteAdmin', 'user@example.com', 'p', true, {
+                            overwrite: true,
+                            siteAdmin: true
+                        }),
+                        gmeAuth.addOrganization('org', null)
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.addUserToOrganization('userOrgAdmin', 'org'),
+                        gmeAuth.setAdminForUserInOrganization('userOrgAdmin', 'org', true)
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        testFixture.importProject(safeStorage, {
+                            projectSeed: 'seeds/EmptyProject.json',
+                            projectName: projectOwnedByUser,
+                            gmeConfig: gmeConfig,
+                            username: 'user',
+                            logger: logger
+                        }),
+                        testFixture.importProject(safeStorage, {
+                            projectSeed: 'seeds/EmptyProject.json',
+                            projectName: projectOwnedByOrg,
+                            gmeConfig: gmeConfig,
+                            username: 'userOrgAdmin',
+                            logger: logger
+                        }),
+                        testFixture.importProject(safeStorage, {
+                            projectSeed: 'seeds/EmptyProject.json',
+                            projectName: projectOwnedByOtherUser,
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        })
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.authorizeByUserOrOrgId(
+                            'user',
+                            pr2Id(projectOwnedByUser, 'user'),
+                            'create',
+                            {
+                                read: true,
+                                write: true,
+                                delete: true
+                            }
+                        ),
+                        gmeAuth.authorizeByUserOrOrgId(
+                            'userWithRights1',
+                            pr2Id(projectOwnedByUser, 'user'),
+                            'create',
+                            {
+                                read: true,
+                                write: true,
+                                delete: true
+                            }
+                        ),
+                        gmeAuth.authorizeByUserOrOrgId(
+                            'userWithRights2',
+                            pr2Id(projectOwnedByUser, 'user'),
+                            'create',
+                            {
+                                read: true,
+                                write: true,
+                                delete: true
+                            }
+                        ),
+                        gmeAuth.authorizeByUserOrOrgId(
+                            'userWithRights3',
+                            pr2Id(projectOwnedByOrg, 'org'),
+                            'create',
+                            {
+                                read: true,
+                                write: true,
+                                delete: true
+                            }
+                        ),
+                        gmeAuth.authorizeByUserOrOrgId(
+                            'userOrgAdmin',
+                            pr2Id(projectOwnedByOrg, 'userOrgAdmin'),
+                            'create',
+                            {
+                                read: true,
+                                write: true,
+                                delete: true
+                            }
+                        ),
+                        safeStorage.transferProject({
+                            projectId: pr2Id(projectOwnedByOrg, 'userOrgAdmin'),
+                            newOwnerId: 'org',
+                            username: 'userOrgAdmin'
+                        })
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.addOrganization('orgTest1', null),
+                        gmeAuth.addOrganization('orgTest2', null),
+                        gmeAuth.addOrganization('orgTest3', null)
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.addUser('userTest1', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userTest2', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userTest3', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userTest4', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userTest5', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userTest6', 'user@example.com', 'p', true, {overwrite: true}),
+                    ]);
+                })
+                .then(function () {
+                    return Q.ninvoke(server, 'start');
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            server.stop(function (err) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+
+                Q.allDone([
+                    gmeAuth.unload(),
+                    safeStorage.closeDatabase()
+                ])
+                    .nodeify(done);
+            });
+        });
+
+        beforeEach(function () {
+            agent = superagent.agent();
+        });
+
+        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/userTest1/read', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest1/read')
+                .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                .end(function (err, res) {
+                    expect(res.status).equal(204, err);
+                    gmeAuth.getProjectAuthorizationByUserId('userTest1', pr2Id(projectOwnedByUser, 'user'))
+                        .then(function (auth) {
+                            expect(auth).to.deep.equal({
+                                read: true,
+                                write: false,
+                                delete: false
+                            });
+                        })
+                        .nodeify(done);
+                });
+        });
+
+        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/userTest2/write', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest2/write')
+                .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                .end(function (err, res) {
+                    expect(res.status).equal(204, err);
+                    gmeAuth.getProjectAuthorizationByUserId('userTest2', pr2Id(projectOwnedByUser, 'user'))
+                        .then(function (auth) {
+                            expect(auth).to.deep.equal({
+                                read: true,
+                                write: true,
+                                delete: false
+                            });
+                        })
+                        .nodeify(done);
+                });
+        });
+
+        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/userTest3/delete', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest3/delete')
+                .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                .end(function (err, res) {
+                    expect(res.status).equal(204, err);
+                    gmeAuth.getProjectAuthorizationByUserId('userTest3', pr2Id(projectOwnedByUser, 'user'))
+                        .then(function (auth) {
+                            expect(auth).to.deep.equal({
+                                read: true,
+                                write: true,
+                                delete: true
+                            });
+                        })
+                        .nodeify(done);
+                });
+        });
+
+        it('500 as owner should not authorize /projects/user/projectOwnedByUser/authorize/userTest3/wrong', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest3/wrong')
+                .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                .end(function (err, res) {
+                    expect(res.status).equal(500, err);
+                    done();
+                });
+        });
+
+        it('404 as owner should not authorize /projects/user/projectOwnedByUser/authorize/notExists/read', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/notExists/read')
+                .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                .end(function (err, res) {
+                    expect(res.status).equal(404, err);
+                    done();
+                });
+        });
+
+        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/orgTest1/read', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/orgTest1/read')
+                .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                .end(function (err, res) {
+                    expect(res.status).equal(204, err);
+                    gmeAuth.getProjectAuthorizationByUserId('orgTest1', pr2Id(projectOwnedByUser, 'user'))
+                        .then(function (auth) {
+                            expect(auth).to.deep.equal({
+                                read: true,
+                                write: false,
+                                delete: false
+                            });
+                        })
+                        .nodeify(done);
+                });
+        });
+
+        it('204 as admin in owner org should authorize /projects/org/projectOwnedByOrg/authorize/userTest4/read',
+            function (done) {
+                agent.put(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/userTest4/read')
+                    .set('Authorization', 'Basic ' + new Buffer('userOrgAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(204, err);
+                        gmeAuth.getProjectAuthorizationByUserId('userTest4', pr2Id(projectOwnedByOrg, 'org'))
+                            .then(function (auth) {
+                                expect(auth).to.deep.equal({
+                                    read: true,
+                                    write: false,
+                                    delete: false
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            }
+        );
+
+        it('204 as siteAdmin should authorize /projects/org/projectOwnedByOrg/authorize/userTest5/read',
+            function (done) {
+                agent.put(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/userTest5/read')
+                    .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(204, err);
+                        gmeAuth.getProjectAuthorizationByUserId('userTest5', pr2Id(projectOwnedByOrg, 'org'))
+                            .then(function (auth) {
+                                expect(auth).to.deep.equal({
+                                    read: true,
+                                    write: false,
+                                    delete: false
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            }
+        );
+
+        it('403 should not authorize /projects/' + guestAccount + '/projectOwnedByOtherUser/authorize/userTest6/read',
+            function (done) {
+                agent.put(server.getUrl() + '/api/v1/projects/' + guestAccount + '/projectOwnedByOtherUser/authorize/userTest6/read')
+                    .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+                        done();
+                    });
+            }
+        );
+
+        it('403 should not deauthorize /projects/user/projectOwnedByUser/authorize/userWithRights1',
+            function (done) {
+                agent.del(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userWithRights1')
+                    .set('Authorization', 'Basic ' + new Buffer('userOrgAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+                        gmeAuth.getProjectAuthorizationByUserId('userWithRights1', pr2Id(projectOwnedByUser, 'user'))
+                            .then(function (auth) {
+                                expect(auth).to.deep.equal({
+                                    read: true,
+                                    write: true,
+                                    delete: true
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            }
+        );
+
+        // TODO: This might be the wrong behaviour
+        it('204 should deauthorize /projects/user/projectOwnedByUser/authorize/notExists', function (done) {
+            agent.del(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/notExists')
+                .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                .end(function (err, res) {
+                    expect(res.status).equal(204, err);
+                    done();
+                });
+        });
+
+        it('204 as owner should deauthorize /projects/user/projectOwnedByUser/authorize/userWithRights1',
+            function (done) {
+                agent.del(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userWithRights1')
+                    .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(204, err);
+                        gmeAuth.getProjectAuthorizationByUserId('userWithRights1', pr2Id(projectOwnedByUser, 'user'))
+                            .then(function (auth) {
+                                expect(auth).to.deep.equal({
+                                    read: false,
+                                    write: false,
+                                    delete: false
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            }
+        );
+
+        it('204 as siteAdmin should deauthorize /projects/user/projectOwnedByUser/authorize/userWithRights2',
+            function (done) {
+                agent.del(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userWithRights2')
+                    .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(204, err);
+                        gmeAuth.getProjectAuthorizationByUserId('userWithRights2', pr2Id(projectOwnedByUser, 'user'))
+                            .then(function (auth) {
+                                expect(auth).to.deep.equal({
+                                    read: false,
+                                    write: false,
+                                    delete: false
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            }
+        );
+
+        it('204 as org admin should deauthorize /projects/org/projectOwnedByOrg/authorize/userWithRights3',
+            function (done) {
+                agent.del(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/userWithRights3')
+                    .set('Authorization', 'Basic ' + new Buffer('userOrgAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(204, err);
+                        gmeAuth.getProjectAuthorizationByUserId('userWithRights3', pr2Id(projectOwnedByOrg, 'org'))
+                            .then(function (auth) {
+                                expect(auth).to.deep.equal({
+                                    read: false,
+                                    write: false,
+                                    delete: false
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            }
+        );
+
+        it('404 as org admin if project not exist /projects/org/unknown/authorize/userWithRights3/read',
+            function (done) {
+                agent.put(server.getUrl() + '/api/v1/projects/org/unknown/authorize/userWithRights3/read')
+                    .set('Authorization', 'Basic ' + new Buffer('userOrgAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            }
+        );
+
+        it('404 as (del) org admin if project not exist /projects/org/unknown/authorize/userWithRights3',
+            function (done) {
+                agent.del(server.getUrl() + '/api/v1/projects/org/unknown/authorize/userWithRights3')
+                    .set('Authorization', 'Basic ' + new Buffer('userOrgAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            }
+        );
+
+        it('403 as not org admin authorize /projects/org/projectOwnedByOrg/authorize/orgTest2/read',
+            function (done) {
+                agent.put(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/orgTest2/read')
+                    .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+                        done();
+                    });
+            }
+        );
+
+        it('403 (del) as not org admin authorize /projects/org/projectOwnedByOrg/authorize/orgTest3',
+            function (done) {
+                agent.del(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/orgTest3')
+                    .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+                        done();
+                    });
+            }
+        );
     });
 });

@@ -227,7 +227,7 @@ function GMEAuth(session, gmeConfig) {
         collection.findOne(query)
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject('no such user [' + userId + ']');
+                    return Q.reject(new Error('no such user [' + userId + ']'));
                 }
                 if (type === 'gmail') {
                     req.session.udmId = userData._id;
@@ -242,11 +242,11 @@ function GMEAuth(session, gmeConfig) {
                                     req.session.authenticated = true;
                                     next();
                                 } else {
-                                    return Q.reject('incorrect password');
+                                    return Q.reject(new Error('incorrect password'));
                                 }
                             });
                     }
-                    return Q.reject('no password given');
+                    return Q.reject(new Error('no password given'));
                 }
             })
             .catch(function (err) {
@@ -320,7 +320,7 @@ function GMEAuth(session, gmeConfig) {
             return collection.update({_id: userOrOrgId}, update)
                 .spread(function (numUpdated) {
                     if (numUpdated !== 1) {
-                        return Q.reject('No such user or org [' + userOrOrgId + ']');
+                        return Q.reject(new Error('No such user or org [' + userOrOrgId + ']'));
                     }
                 })
                 .nodeify(callback);
@@ -334,7 +334,7 @@ function GMEAuth(session, gmeConfig) {
                 })
                 .nodeify(callback);
         } else {
-            return Q.reject('unknown type ' + type)
+            return Q.reject(new Error('unknown type ' + type))
                 .nodeify(callback);
         }
     }
@@ -343,7 +343,7 @@ function GMEAuth(session, gmeConfig) {
         return Q.ninvoke(_session, 'getSessionUser', sessionId)
             .then(function (userId) {
                 if (!userId) {
-                    throw 'invalid session';
+                    throw new Error('invalid session');
                 }
                 return authorizeByUserId(userId, projectName, type, {read: true, write: true, delete: true});
             })
@@ -368,7 +368,7 @@ function GMEAuth(session, gmeConfig) {
     }
 
     /**
-     *
+     * This includes authorization from organizations userId is part of.
      * @param userId {string}
      * @param projectId {string}
      * @param callback
@@ -379,7 +379,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: userId}, _getProjection('orgs', 'projects.' + projectId))
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject('No such user [' + userId + ']');
+                    return Q.reject(new Error('No such user [' + userId + ']'));
                 }
                 userData.orgs = userData.orgs || [];
                 return [userData.projects[projectId] || {},
@@ -414,7 +414,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: userId}, _getProjection('orgs', 'projects'))
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject('No such user [' + userId + ']');
+                    return Q.reject(new Error('No such user [' + userId + ']'));
                 }
                 userData.orgs = userData.orgs || [];
                 res = userData.projects;
@@ -542,7 +542,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject('no such user [' + userId + ']');
+                    return Q.reject(new Error('no such user [' + userId + ']'));
                 }
                 return userData.projects;
             })
@@ -570,7 +570,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject('no such user [' + userId + ']');
+                    return Q.reject(new Error('no such user [' + userId + ']'));
                 }
                 delete userData.passwordHash;
                 return userData;
@@ -600,7 +600,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject('no such user [' + userId + ']');
+                    return Q.reject(new Error('no such user [' + userId + ']'));
                 }
 
                 userData.email = data.email || userData.email;
@@ -660,7 +660,7 @@ function GMEAuth(session, gmeConfig) {
         return Q.ninvoke(_session, 'getSessionUser', sessionId)
             .then(function (userId) {
                 if (!userId) {
-                    throw 'invalid session';
+                    throw new Error('invalid session');
                 }
                 return getAllUserAuthInfo(userId);
             })
@@ -872,7 +872,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION})
             .then(function (org) {
                 if (!org) {
-                    return Q.reject('No such organization [' + orgId + ']');
+                    return Q.reject(new Error('No such organization [' + orgId + ']'));
                 }
                 return [org, collection.find({orgs: orgId, type: {$ne: CONSTANTS.ORGANIZATION}}, {_id: 1})];
             })
@@ -916,7 +916,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.remove({_id: orgId, type: CONSTANTS.ORGANIZATION})
             .then(function (count) {
                 if (count === 0) {
-                    return Q.reject('No such organization [' + orgId + ']');
+                    return Q.reject(new Error('No such organization [' + orgId + ']'));
                 }
                 return collection.update({orgs: orgId}, {$pull: {orgs: orgId}}, {multi: true});
             })
@@ -934,14 +934,14 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION})
             .then(function (org) {
                 if (!org) {
-                    return Q.reject('No such organization [' + orgId + ']');
+                    return Q.reject(new Error('No such organization [' + orgId + ']'));
                 }
             })
             .then(function () {
                 return collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {$addToSet: {orgs: orgId}})
                     .spread(function (count) {
                         if (count === 0) {
-                            return Q.reject('No such user [' + userId + ']');
+                            return Q.reject(new Error('No such user [' + userId + ']'));
                         }
                     });
             })
@@ -959,7 +959,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION})
             .then(function (org) {
                 if (!org) {
-                    return Q.reject('No such organization [' + orgId + ']');
+                    return Q.reject(new Error('No such organization [' + orgId + ']'));
                 }
             })
             .then(function () {
@@ -986,7 +986,7 @@ function GMEAuth(session, gmeConfig) {
             .then(function (user) {
                 if (makeAdmin) {
                     if (!user) {
-                        return Q.reject('No such user [' + userId + ']');
+                        return Q.reject(new Error('No such user [' + userId + ']'));
                     }
                     return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, {$addToSet: {admins: userId}});
                 } else {
@@ -1002,7 +1002,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION}, {admins: 1})
             .then(function (org) {
                 if (!org) {
-                    return Q.reject('No such organization [' + orgId + ']');
+                    return Q.reject(new Error('No such organization [' + orgId + ']'));
                 }
                 return org.admins;
             })
@@ -1036,7 +1036,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION}, projection)
             .then(function (orgData) {
                 if (!orgData) {
-                    return Q.reject('No such organization [' + orgId + ']');
+                    return Q.reject(new Error('No such organization [' + orgId + ']'));
                 }
                 return orgData.projects[projectId] || {};
             })
@@ -1053,7 +1053,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: userOrOrgId})
             .then(function (userOrOrgData) {
                 if (!userOrOrgData) {
-                    return Q.reject('no such user or org [' + userOrOrgId + ']');
+                    return Q.reject(new Error('no such user or org [' + userOrOrgId + ']'));
                 }
                 if (!userOrOrgData.type || userOrOrgData.type === CONSTANTS.USER) {
                     delete userOrOrgData.passwordHash;
@@ -1103,6 +1103,8 @@ function GMEAuth(session, gmeConfig) {
         listOrganizations: listOrganizations,
 
         getUserOrOrg: getUserOrOrg,
+
+        authorizeByUserOrOrgId: authorizeByUserOrOrgId,
 
         removeOrganizationByOrgId: removeOrganizationByOrgId,
         addUserToOrganization: addUserToOrganization,

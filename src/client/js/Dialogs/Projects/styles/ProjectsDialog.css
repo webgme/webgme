@@ -109,6 +109,11 @@
       color: grey; }
 .projects-dialog .modal-content .modal-footer button.corner-button {
   margin-top: 0.5ex; }
+.projects-dialog .modal-content .modal-footer ul.dropdown-menu {
+  min-width: 0;
+  text-align: left; }
+  .projects-dialog .modal-content .modal-footer ul.dropdown-menu a {
+    cursor: pointer; }
 
 .txt-project-name {
   width: 50%; }

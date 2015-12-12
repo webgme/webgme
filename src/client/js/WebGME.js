@@ -155,27 +155,33 @@ define([
                         logger.error('Failed loading extension points', err);
                     }
 
-                    client.decoratorManager.downloadAll(decorators, function (err) {
+                    populateUserInfo(function (err) {
                         if (err) {
-                            logger.error(err);
-                        }
-                        for (i = 0; i < len; i += 1) {
-                            panels.push({
-                                panel: layoutPanels[i].panel,
-                                container: layoutPanels[i].container,
-                                control: layoutPanels[i].control,
-                                params: {client: client}
-                            });
+                            logger.error('Failed to set WebGMEGlobal.userInfo', err);
                         }
 
-                        //load the panels
-                        loadPanels(panels);
+                        client.decoratorManager.downloadAll(decorators, function (err) {
+                            if (err) {
+                                logger.error(err);
+                            }
+                            for (i = 0; i < len; i += 1) {
+                                panels.push({
+                                    panel: layoutPanels[i].panel,
+                                    container: layoutPanels[i].container,
+                                    control: layoutPanels[i].control,
+                                    params: {client: client}
+                                });
+                            }
 
-                        //as of now it's a global variable just to make access to it easier
-                        //TODO: might need to be changed
-                        WebGMEGlobal.KeyboardManager = KeyboardManager;
-                        WebGMEGlobal.KeyboardManager.setEnabled(true);
-                        WebGMEGlobal.PanelManager = new PanelManager(client);
+                            //load the panels
+                            loadPanels(panels);
+
+                            //as of now it's a global variable just to make access to it easier
+                            //TODO: might need to be changed
+                            WebGMEGlobal.KeyboardManager = KeyboardManager;
+                            WebGMEGlobal.KeyboardManager.setEnabled(true);
+                            WebGMEGlobal.PanelManager = new PanelManager(client);
+                        });
                     });
                 });
             });
@@ -429,6 +435,45 @@ define([
                     requestExtensionPoint('seeds'),
                     requestExtensionPoint('addOns')
                 ]).nodeify(callback);
+            }
+
+            function populateUserInfo(callback) {
+                var userInfo;
+
+                function checkIfAdminInOrg(userId, orgId) {
+                    var deferred = Q.defer();
+                    superagent.get('/api/orgs/' + orgId)
+                        .end(function (err, res) {
+                            if (res.status === 200) {
+                                if (res.body.admins.indexOf(userId) > -1) {
+                                    userInfo.adminOrgs.push(res.body);
+                                }
+                            } else {
+                                logger.error('failed getting org info', err);
+                            }
+                            deferred.resolve();
+                        });
+
+                    return deferred.promise;
+                }
+
+                superagent.get('/api/user')
+                    .end(function (err, res) {
+                        if (res.status === 200) {
+                            userInfo = res.body || {_id: 'N/A', orgs: []};
+                            userInfo.adminOrgs = [];
+
+                            Q.allSettled(userInfo.orgs.map(function (orgId) {
+                                return checkIfAdminInOrg(userInfo._id, orgId);
+                            }))
+                                .then(function () {
+                                    WebGMEGlobal.userInfo = userInfo;
+                                })
+                                .nodeify(callback);
+                        } else {
+                            callback(err);
+                        }
+                    });
             }
         }
 

@@ -92,7 +92,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.indexOf('no such user') > -1) {
+                if (err.message.indexOf('no such user') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error ' + err);
@@ -106,7 +106,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.indexOf('No such user') > -1) {
+                if (err.message.indexOf('No such user') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error ' + err);
@@ -128,7 +128,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.indexOf('no such user') > -1) {
+                if (err.message.indexOf('no such user') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error ' + err);
@@ -432,7 +432,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.indexOf('No such organization') > -1) {
+                if (err.message.indexOf('No such organization') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error: ' + err);
@@ -446,7 +446,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.indexOf('No such organization') > -1) {
+                if (err.message.indexOf('No such organization') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error: ' + err);
@@ -460,7 +460,7 @@ describe('GME authentication', function () {
 
     it('should fail to authorize organization with invalid type', function (done) {
         auth.authorizeOrganization('dummyOrgId', 'dummyProjectName', 'unknown', {}, function (err) {
-            if (err.indexOf('unknown type') > -1) {
+            if (err.message.indexOf('unknown type') > -1) {
                 done();
                 return;
             }
@@ -470,7 +470,7 @@ describe('GME authentication', function () {
 
     it('should fail to authorize by user id with invalid type', function (done) {
         auth.authorizeByUserId('user', 'dummyProjectName', 'unknown', {}, function (err) {
-            if (err.indexOf('unknown type') > -1) {
+            if (err.message.indexOf('unknown type') > -1) {
                 done();
                 return;
             }
@@ -484,7 +484,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.indexOf('No such user or org') > -1) {
+                if (err.message.indexOf('No such user or org') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error: ' + err);
@@ -497,7 +497,7 @@ describe('GME authentication', function () {
             .then(function () {
                 done(new Error('Should have failed'));
             }, function (err) {
-                if (err.indexOf('No such organization') > -1) {
+                if (err.message.indexOf('No such organization') > -1) {
                     done();
                     return;
                 }
@@ -723,10 +723,10 @@ describe('GME authentication', function () {
         var orgId = 'doesNotExist';
         return auth.getAdminsInOrganization(orgId)
             .then(function () {
-                throw 'getAdminsInOrganization should fail with non-existing organization';
+                throw new Error('getAdminsInOrganization should fail with non-existing organization');
             })
             .catch(function (error) {
-                expect(error).to.include('No such organization [' + orgId);
+                expect(error.message).to.include('No such organization [' + orgId);
                 done();
             })
             .done();
@@ -1011,10 +1011,10 @@ describe('GME authentication', function () {
 
         auth.getProjectAuthorizationListByUserId(userId).
             then(function () {
-                throw 'Should have failed';
+                throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err).to.include('No such user [' + userId);
+                expect(err.message).to.include('No such user [' + userId);
                 done();
             })
             .done();
