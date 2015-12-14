@@ -27,8 +27,8 @@ define(['js/Loader/LoaderCircles',
      */
     CreateFromSeed = function (client, newProjectId, initialTab, logger) {
         this._client = client;
-        this._logger = logger;
-        this.blobClient = new BlobClient();
+        this._logger = logger.fork('CreateProjectDialog');
+        this.blobClient = new BlobClient({logger: this._logger.fork('BlobClient')});
 
         this.newProjectId = newProjectId;
         this.seedProjectName = WebGMEGlobal.gmeConfig.seedProjects.defaultProject;

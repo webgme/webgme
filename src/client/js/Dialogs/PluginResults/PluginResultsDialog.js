@@ -210,7 +210,7 @@ define(['js/util',
 
             artifactsContainer = undefined;
 
-            blobClient = new BlobClient();
+            blobClient = new BlobClient({logger: this.logger.fork('BlobClient')});
 
             artifacts = result.getArtifacts();
             if (artifacts.length > 0) {

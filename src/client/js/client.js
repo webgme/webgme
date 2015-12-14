@@ -86,7 +86,7 @@ define([
             loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
         //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
 
-        blobClient = new BlobClient();
+        blobClient = new BlobClient({logger: logger.fork('BlobClient')});
         EventDispatcher.call(this);
 
         this.CONSTANTS = CONSTANTS;

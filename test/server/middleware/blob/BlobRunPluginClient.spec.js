@@ -13,6 +13,7 @@ describe('BlobServer', function () {
         BlobMetadata = testFixture.requirejs('common/blob/BlobMetadata'),
         gmeConfig = testFixture.getGmeConfig(),
         blobBackend,
+        logger = testFixture.logger.fork('BlobServer'),
         expect = testFixture.expect,
         rimraf = testFixture.rimraf;
 
@@ -30,7 +31,7 @@ describe('BlobServer', function () {
     });
 
     it('should have public API functions', function () {
-        var bc = new BlobClient(blobBackend);
+        var bc = new BlobClient(blobBackend, logger.fork('blob'));
         expect(typeof bc.getMetadata === 'function').to.equal(true);
         expect(typeof bc.getObject === 'function').to.equal(true);
         expect(typeof bc.putMetadata === 'function').to.equal(true);
@@ -39,7 +40,7 @@ describe('BlobServer', function () {
 
 
     it('should fail to get object with invalid hash', function (done) {
-        var bc = new BlobClient(blobBackend);
+        var bc = new BlobClient(blobBackend, logger.fork('blob'));
 
         bc.getObject('invalid', function (err /*, res*/) {
             if (err === 'Blob hash is invalid') {
@@ -54,7 +55,7 @@ describe('BlobServer', function () {
     });
 
     it('should create metadata', function (done) {
-        var bc = new BlobClient(blobBackend),
+        var bc = new BlobClient(blobBackend, logger.fork('blob')),
             metadataToAdd = (new BlobMetadata({})).serialize();
 
         metadataToAdd.name = 'new name.text';
@@ -82,7 +83,7 @@ describe('BlobServer', function () {
     });
 
     it('should create file from empty buffer', function (done) {
-        var bc = new BlobClient(blobBackend);
+        var bc = new BlobClient(blobBackend, logger.fork('blob'));
 
         bc.putFile('test.txt', new Buffer(0), function (err, hash) {
             if (err) {
@@ -110,7 +111,7 @@ describe('BlobServer', function () {
     });
 
     it('should create json', function (done) {
-        var bc = new BlobClient(blobBackend);
+        var bc = new BlobClient(blobBackend, logger.fork('blob'));
 
         bc.putFile('test.json', str2ab('{"1":2}'), function (err, hash) {
             if (err) {
@@ -138,7 +139,7 @@ describe('BlobServer', function () {
     });
 
     it('should create strange filenames', function (done) {
-        var bc = new BlobClient(blobBackend);
+        var bc = new BlobClient(blobBackend, logger.fork('blob'));
 
         bc.putFile('te%s#t.json', '{"1":2}', function (err, hash) {
             if (err) {
@@ -166,7 +167,7 @@ describe('BlobServer', function () {
     });
 
     it('should putFile unicode', function (done) {
-        var bc = new BlobClient(blobBackend),
+        var bc = new BlobClient(blobBackend, logger.fork('blob')),
             input = '1111\nmu \u03BC\n1111\n\\U+10400 DESERET CAPITAL LETTER LONG I \uD801\uDC00';
 
         bc.putFile('1111\u03BC222\uD801\uDC00.bin', input, function (err, hash) {

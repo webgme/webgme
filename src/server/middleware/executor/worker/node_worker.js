@@ -7,10 +7,18 @@
  */
 
 var nodeRequire = require,
-    log = function() {
+    log = function () {
+        'use strict';
         var args = Array.prototype.slice.call(arguments);
         args.splice(0, 0, new Date().toISOString());
         console.log.apply(console, args);
+    },
+    logger = {
+        debug: log,
+        log: log,
+        info: log,
+        warn: log,
+        error: log
     };
 
 if (typeof define !== 'undefined') {
@@ -37,7 +45,8 @@ if (typeof define !== 'undefined') {
                 sessionId: undefined,
                 availableProcessesContainer: availableProcessesContainer,
                 workingDirectory: tempPath,
-                executorNonce: parameters.executorNonce
+                executorNonce: parameters.executorNonce,
+                logger: logger
             });
 
             log('Connecting to ' + webGMEUrl);

@@ -62,7 +62,7 @@ describe('Plugin ExportImport', function () {
                     filePath1 = testFixture.SEED_DIR + 'EmptyProject.json',
                     filePath2 = testFixture.SEED_DIR + 'ActivePanels.json',
                     filePath3 = './test/plugin/coreplugins/ExportImport/assets/ActivePanelModel_lib.json';
-                blobClient = new BlobRunPluginClient(blobBackend);
+                blobClient = new BlobRunPluginClient(blobBackend, logger.fork('Blob'));
 
                 return Q.allDone([
                     Q.ninvoke(blobClient, 'putFile', 'EmptyProject.json', testFixture.fs.readFileSync(filePath1)),

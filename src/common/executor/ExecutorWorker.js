@@ -89,14 +89,17 @@ define([
         this.blobClient = new BlobClient({
             server: parameters.server,
             serverPort: parameters.serverPort,
-            httpsecure: parameters.httpsecure
+            httpsecure: parameters.httpsecure,
+            logger: parameters.logger
         });
 
         this.executorClient = new ExecutorClient({
             server: parameters.server,
             serverPort: parameters.serverPort,
-            httpsecure: parameters.httpsecure
+            httpsecure: parameters.httpsecure,
+            logger: parameters.logger
         });
+
         if (parameters.executorNonce) {
             this.executorClient.executorNonce = parameters.executorNonce;
         }

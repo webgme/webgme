@@ -90,6 +90,7 @@ describe('Executor Plugin', function () {
                 clientsParam.server = '127.0.0.1';
                 clientsParam.httpsecure = false;
                 clientsParam.executorNonce = gmeConfig.executor.nonce;
+                clientsParam.logger = logger.fork('blobOrExecutor');
 
                 executorClient = new ExecutorClient(clientsParam);
                 blobClient = new BlobClient(clientsParam);

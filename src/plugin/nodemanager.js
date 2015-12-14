@@ -13,7 +13,8 @@ function PluginNodeManager(webGMESessionId, project, mainLogger, gmeConfig) {
             serverPort: gmeConfig.server.port,
             httpsecure: false,
             server: '127.0.0.1',
-            webgmeclientsession: webGMESessionId
+            webgmeclientsession: webGMESessionId,
+            logger: mainLogger.fork('BlobClient')
         });
 
     PluginNodeManagerBase.call(this, blobClient, project, mainLogger, gmeConfig);

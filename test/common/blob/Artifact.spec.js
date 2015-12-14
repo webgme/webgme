@@ -27,6 +27,7 @@ describe('Artifact', function () {
             bcParam.serverPort = gmeConfig.server.port;
             bcParam.server = '127.0.0.1';
             bcParam.httpsecure = false;
+            bcParam.logger = testFixture.logger.fork('Blob');
             server = testFixture.WebGME.standaloneServer(gmeConfig);
             server.start(function () {
                 done();

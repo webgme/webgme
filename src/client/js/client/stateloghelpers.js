@@ -9,6 +9,7 @@
 define([
     'js/Utils/SaveToDisk'
 ], function (saveToDisk) {
+    'use strict';
 
     function _stateLogReplacer(key, value) {
         var chainItem,
@@ -144,5 +145,5 @@ define([
     return {
         downloadStateDump: downloadStateDump,
         getStateLogString: getStateLogString
-    }
+    };
 });

@@ -1,4 +1,4 @@
-/*globals define, escape*/
+/*globals define, console*/
 /*jshint browser: true, node:true*/
 
 /**
@@ -20,11 +20,29 @@ define([
     /**
      *
      * @param {object} parameters
+     * @param {object} parameters.logger
      * @constructor
      * @alias BlobClient
      */
     var BlobClient = function (parameters) {
         this.artifacts = [];
+        if (parameters && parameters.logger) {
+            this.logger = parameters.logger;
+        } else {
+            var doLog = function () {
+                console.log.apply(console, arguments);
+            };
+            this.logger = {
+                debug: doLog,
+                log: doLog,
+                info: doLog,
+                warn: doLog,
+                error: doLog
+            };
+            console.warn('Since v1.3.0 BlobClient requires a logger, falling back on console.log.');
+        }
+
+        this.logger.debug('ctor', {metadata: parameters});
 
         if (parameters) {
             this.server = parameters.server || this.server;
@@ -47,6 +65,7 @@ define([
         this.isNodeOrNodeWebKit = typeof process !== 'undefined';
         if (this.isNodeOrNodeWebKit) {
             // node or node-webkit
+            this.logger.debug('Running under node or node-web-kit');
             if (this.httpsecure) {
                 this.Agent = require('agentkeepalive').HttpsAgent;
             } else {
@@ -57,6 +76,9 @@ define([
             }
             this.keepaliveAgent = new this.Agent(this.keepaliveAgentOptions);
         }
+
+        this.logger.debug('origin', this.origin);
+        this.logger.debug('blobUrl', this.blobUrl);
     };
 
     BlobClient.prototype.getMetadataURL = function (hash) {
@@ -110,8 +132,11 @@ define([
 
     BlobClient.prototype.putFile = function (name, data, callback) {
         var deferred = Q.defer(),
+            self = this,
             contentLength,
             req;
+
+        this.logger.debug('putFile', name);
 
         function toArrayBuffer(buffer) {
             var ab = new ArrayBuffer(buffer.length);
@@ -156,6 +181,7 @@ define([
                 var response = res.body;
                 // Get the first one
                 var hash = Object.keys(response)[0];
+                self.logger.debug('putFile - result', hash);
                 deferred.resolve(hash);
             });
 
@@ -165,10 +191,12 @@ define([
     BlobClient.prototype.putMetadata = function (metadataDescriptor, callback) {
         var metadata = new BlobMetadata(metadataDescriptor),
             deferred = Q.defer(),
+            self = this,
             blob,
             contentLength,
             req;
         // FIXME: in production mode do not indent the json file.
+        this.logger.debug('putMetadata', {metadata: metadataDescriptor});
         if (typeof Blob !== 'undefined') {
             blob = new Blob([JSON.stringify(metadata.serialize(), null, 4)], {type: 'text/plain'});
             contentLength = blob.size;
@@ -198,6 +226,7 @@ define([
                 var response = JSON.parse(res.text);
                 // Get the first one
                 var hash = Object.keys(response)[0];
+                self.logger.debug('putMetadata - result', hash);
                 deferred.resolve(hash);
             });
 
@@ -248,7 +277,10 @@ define([
     };
 
     BlobClient.prototype.getObject = function (hash, callback, subpath) {
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            self = this;
+
+        this.logger.debug('getObject', hash, subpath);
 
         superagent.parse['application/zip'] = function (obj, parseCallback) {
             if (parseCallback) {
@@ -313,6 +345,7 @@ define([
                     if (contentType === 'application/json') {
                         response = JSON.parse(UINT.uint8ArrayToString(new Uint8Array(response)));
                     }
+                    self.logger.debug('getObject - result', {metadata: response});
                     deferred.resolve(response);
                 }
             });
@@ -321,6 +354,7 @@ define([
                 if (err) {
                     deferred.reject(err);
                 } else {
+                    self.logger.debug('getObject - result', {metadata: result});
                     deferred.resolve(result);
                 }
             });
@@ -331,7 +365,10 @@ define([
 
     BlobClient.prototype.getMetadata = function (hash, callback) {
         var req = superagent.get(this.getMetadataURL(hash)),
-            deferred = Q.defer();
+            deferred = Q.defer(),
+            self = this;
+
+        this.logger.debug('getMetadata', hash);
 
         if (this.webgmeclientsession) {
             req.set('webgmeclientsession', this.webgmeclientsession);
@@ -345,6 +382,7 @@ define([
             if (err || res.status > 399) {
                 deferred.reject(err || res.status);
             } else {
+                self.logger.debug('getMetadata', res.text);
                 deferred.resolve(JSON.parse(res.text));
             }
         });
@@ -368,12 +406,14 @@ define([
         // TODO: get info get name.
         var self = this,
             deferred = Q.defer();
+        this.logger.debug('getArtifact', metadataHash);
         this.getMetadata(metadataHash, function (err, info) {
             if (err) {
                 callback(err);
                 return;
             }
 
+            self.logger.debug('getArtifact - return', {metadata: info});
             if (info.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
                 var artifact = new Artifact(info.name, self, info);
                 self.artifacts.push(artifact);

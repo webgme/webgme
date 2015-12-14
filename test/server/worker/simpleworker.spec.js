@@ -759,7 +759,7 @@ describe('Simple worker', function () {
     it('should seedProject from a blob seed', function (done) {
         var worker = getSimpleWorker(),
             projectName = 'workerSeedFromBlob',
-            blobClient = new BlobClient(gmeConfig),
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
             artifact = blobClient.createArtifact('valid'),
             projectId = testFixture.projectName2Id(projectName);
 
@@ -838,7 +838,7 @@ describe('Simple worker', function () {
     it('should fail to seed from non-json blob seed', function (done) {
         var worker = getSimpleWorker(),
             projectName = 'workerSeedFromBlobFail2',
-            blobClient = new BlobClient(gmeConfig),
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
             artifact = blobClient.createArtifact('invalid');
 
         Q.all([
@@ -871,7 +871,7 @@ describe('Simple worker', function () {
     it('should fail to seed from non-project but json blob seed', function (done) {
         var worker = getSimpleWorker(),
             projectName = 'workerSeedFromBlobFail3',
-            blobClient = new BlobClient(gmeConfig),
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
             artifact = blobClient.createArtifact('invalid2');
 
         Q.all([

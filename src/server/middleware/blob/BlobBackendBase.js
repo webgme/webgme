@@ -18,11 +18,12 @@ var fs = require('fs'),
     StringStreamReader = require('../../util/StringStreamReader'),
     StringStreamWriter = require('../../util/StringStreamWriter');
 
-var BlobBackendBase = function () {
+var BlobBackendBase = function (logger) {
     this.contentBucket = 'wg-content';
     this.metadataBucket = 'wg-metadata';
     this.tempBucket = 'wg-temp';
     this.shaMethod = BlobConfig.hashMethod;
+    this.logger = logger;
 };
 
 // -----------------------------------------------------------------------------------------------------------------

@@ -26,6 +26,7 @@ describe('BlobServer', function () {
         bcParam.serverPort = gmeConfig.server.port;
         bcParam.server = '127.0.0.1';
         bcParam.httpsecure = false;
+        bcParam.logger = testFixture.logger.fork('BlobServer:Blob');
 
         rimraf('./test-tmp/blob-storage', function (err) {
             if (err) {
@@ -58,7 +59,7 @@ describe('BlobServer', function () {
             .end(function (err, res) {
                 should.equal(res.status, 500, err);
                 done();
-        });
+            });
     });
 
     it('should return 404 at /rest/blob/metadata/non-existing-hash', function (done) {
