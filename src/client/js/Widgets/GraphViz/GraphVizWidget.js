@@ -280,22 +280,26 @@ define([
 
             var sum = 0;
             var len = collideAtDepth.length;
-            if (len > 0) {
-                //start resize mode
-                this.__resizing = true;
+            //start resize mode
+            this.__resizing = true;
 
+            if (len > 0) {
                 while (len--) {
                     sum += collideAtDepth[len][1];
                 }
-
-                this._resizeD3Tree(nodesYByDepth.length * TREE_LEVEL_DISTANCE, sum * NODE_SIZE);
-
-                //redraw the tree
-                this._update();
-
-                //finish resize mode
-                this.__resizing = false;
+            } else {
+                //only the width changes
+                sum = this._el.height() / NODE_SIZE;
             }
+
+
+            this._resizeD3Tree(nodesYByDepth.length * TREE_LEVEL_DISTANCE, sum * NODE_SIZE);
+
+            //redraw the tree
+            this._update();
+
+            //finish resize mode
+            this.__resizing = false;
         }
     };
 

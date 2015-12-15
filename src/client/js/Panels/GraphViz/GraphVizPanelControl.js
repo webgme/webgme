@@ -69,9 +69,7 @@ define(['js/logger',
 
                     if (node) {
                         childrenIDs = node.childrenIDs;
-                        i = childrenIDs.length;
-
-                        while (i--) {
+                        for (i = 0; i < childrenIDs.length; i += 1) {
                             deleteRecursive(childrenIDs[i]);
                         }
                     }
@@ -201,7 +199,7 @@ define(['js/logger',
                 node.children = node.children || [];
                 if (self._nodes[node.childrenIDs[len]]) {
                     if ((self._displayModelsOnly === true &&
-                         self._nodes[node.childrenIDs[len]].isConnection !== true) ||
+                        self._nodes[node.childrenIDs[len]].isConnection !== true) ||
                         self._displayModelsOnly === false) {
                         node.children.push(_.extend({}, self._nodes[node.childrenIDs[len]]));
                         loadRecursive(node.children[node.children.length - 1]);
