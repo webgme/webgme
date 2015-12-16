@@ -78,11 +78,6 @@ define([
         this._skinParts.$EditorBtn = TEXT_META_EDIT_BTN_BASE.clone();
         this.$el.append(this._skinParts.$EditorBtn);
 
-        // Show error message if documentation attribute is not defined
-        if (nodeObj.getAttribute('documentation') === undefined) {
-            this.$doc.append('Editor is disabled because attribute "documentation" is not found in Meta-Model');
-        }
-
         // Load EpicEditor on click
         this._skinParts.$EditorBtn.on('click', function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true &&
@@ -116,8 +111,11 @@ define([
             event.preventDefault();
         });
 
-        //let the parent decorator class do its job first
+        // Let the parent decorator class do its job.
         __parent_proto__.on_addTo.apply(this, arguments);
+
+        // Finally invoke the update too.
+        self.update();
     };
 
     DocumentDecorator.prototype._renderName = function () {
@@ -135,17 +133,29 @@ define([
 
     DocumentDecorator.prototype.update = function () {
         var client = this._control._client,
+            self = this,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             newName = '',
             newDoc = '';
 
         if (nodeObj) {
             newName = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
-            newDoc = nodeObj.getAttribute('documentation') || '';
+            newDoc = nodeObj.getAttribute('documentation');
             // Update docs on node when attribute "documentation" changes
             this.$doc.empty();
-            this.$doc.append($(marked(newDoc)));
-            this.editorDialog.updateText(newDoc);
+            // Show error message if documentation attribute is not defined
+            if (newDoc === undefined) {
+                this.$doc.append('Editor is disabled because attribute "documentation" is not found in Meta-Model');
+                this._skinParts.$EditorBtn.addClass('not-activated');
+            } else {
+                if (self.hostDesignerItem.canvas.getIsReadOnlyMode() === false) {
+                    self._skinParts.$EditorBtn.removeClass('not-activated');
+                } else {
+                    self._skinParts.$EditorBtn.addClass('not-activated');
+                }
+                this.$doc.append($(marked(newDoc)));
+                this.editorDialog.updateText(newDoc);
+            }
 
             if (this.name !== newName) {
                 this.name = newName;
