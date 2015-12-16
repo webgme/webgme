@@ -16,6 +16,9 @@
     &:hover {
       font-weight: bolder;
     }
+    &.not-activated {
+      cursor: not-allowed;
+    }
   }
   .doc {
     text-align: left;

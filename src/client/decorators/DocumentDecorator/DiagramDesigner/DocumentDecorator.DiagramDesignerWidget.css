@@ -13,6 +13,8 @@
   text-align: center; }
   .Document-decorator i.text-meta:hover {
     font-weight: bolder; }
+  .Document-decorator i.text-meta.not-activated {
+    cursor: not-allowed; }
   .Document-decorator .doc {
     text-align: left; }
   .Document-decorator .name {
