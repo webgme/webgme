@@ -282,7 +282,7 @@ define(['js/logger',
 
         this._el.on('click.iconRemove', '.remove-branch-button', function (event) {
             var btn = $(this),
-                branchName = btn.data('branch'),
+                branchName = btn.data('branch')+'', //force to be string
                 branchHash,
                 i;
 
@@ -300,7 +300,7 @@ define(['js/logger',
 
         this._el.on('click.iconRemove', '.remove-tag-button', function (event) {
             var btn = $(this),
-                tagName = btn.data('tag');
+                tagName = btn.data('tag')+''; //force to be string
 
             self.onDeleteTagClick(tagName);
 

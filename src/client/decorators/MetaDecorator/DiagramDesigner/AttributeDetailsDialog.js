@@ -6,9 +6,10 @@
 
 define([
     'js/util',
+    'common/regexp',
     'text!./templates/AttributeDetailsDialog.html',
     'css!./styles/AttributeDetailsDialog.css'
-], function (util, attributeDetailsDialogTemplate) {
+], function (util, REGEXP, attributeDetailsDialogTemplate) {
 
     'use strict';
 
@@ -179,7 +180,7 @@ define([
         };
 
         isValidAttributeName = function (name) {
-            return !(name === '' || attributeNames.indexOf(name) !== -1);
+            return !(name === '' || attributeNames.indexOf(name) !== -1 || REGEXP.DOCUMENT_KEY.test(name) === false);
         };
 
         this._dialog = $(attributeDetailsDialogTemplate);
@@ -191,8 +192,6 @@ define([
 
         this._pEnumValues = this._el.find('#pEnumValues').first();
         this._pEnumValues.hide();
-
-        this._pName = this._el.find('#pName').first();
 
         this._btnSave = this._dialog.find('.btn-save').first();
         this._btnDelete = this._dialog.find('.btn-delete').first();
@@ -221,11 +220,11 @@ define([
             var val = self._inputName.val();
 
             if (!isValidAttributeName(val)) {
-                self._pName.addClass('error');
+                self._inputName.addClass('text-danger');
                 self._btnSave.disable(true);
                 self._btnDelete.disable(true);
             } else {
-                self._pName.removeClass('error');
+                self._inputName.removeClass('text-danger');
                 self._btnSave.disable(false);
                 self._btnDelete.disable(false);
             }
@@ -296,7 +295,6 @@ define([
             this._btnDelete.remove();
         }
 
-
         //fill controls based on the currently edited attribute
         this._inputName.val(attributeDesc.name);
         this._inputType.val(attributeDesc.type);
@@ -341,7 +339,6 @@ define([
             }
         }
     };
-
 
     return AttributeDetailsDialog;
 });

@@ -18,6 +18,7 @@ define([
     './MetaDecorator.DiagramDesignerWidget.Constraints',
     './MetaDecorator.DiagramDesignerWidget.Aspects',
     './MetaTextEditorDialog',
+    'common/regexp',
     'css!./styles/MetaDecorator.DiagramDesignerWidget.css'
 ], function (CONSTANTS,
              nodePropertyNames,
@@ -29,7 +30,8 @@ define([
              MetaRelations,
              MetaDecoratorDiagramDesignerWidgetConstraints,
              MetaDecoratorDiagramDesignerWidgetAspects,
-             MetaTextEditorDialog) {
+             MetaTextEditorDialog,
+             REGEXP) {
 
     'use strict';
 
@@ -300,7 +302,6 @@ define([
                 attrLIBase.clone().append(this._attributes[this._attributeNames[i]].$el));
         }
 
-
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype._addAttribute = function (attrName) {
@@ -316,7 +317,6 @@ define([
         }
     };
 
-
     MetaDecoratorDiagramDesignerWidget.prototype._removeAttribute = function (attrName) {
         var idx = this._attributeNames.indexOf(attrName);
 
@@ -326,7 +326,6 @@ define([
             this._attributeNames.splice(idx, 1);
         }
     };
-
 
     MetaDecoratorDiagramDesignerWidget.prototype.destroy = function () {
         var len = this._attributeNames.length;
@@ -433,18 +432,19 @@ define([
                 }
             }
         ).keyup(function (/*event*/) {
-                if (self._isValidName(inputCtrl.val(), existingNames)) {
-                    ctrlGroup.removeClass('error');
-                } else {
-                    ctrlGroup.addClass('error');
-                }
-            }).blur(function (/*event*/) {
-                cancel();
-            });
+            if (self._isValidName(inputCtrl.val(), existingNames)) {
+                //ctrlGroup.removeClass('error');
+                inputCtrl.removeClass('text-danger');
+            } else {
+                //ctrlGroup.addClass('error');
+                inputCtrl.addClass('text-danger');
+            }
+        }).blur(function (/*event*/) {
+            cancel();
+        });
 
         this.hostDesignerItem.canvas.selectNone();
     };
-
 
     MetaDecoratorDiagramDesignerWidget.prototype._onNewAttributeCreate = function (attrName) {
         var desc,
@@ -473,7 +473,8 @@ define([
 
         if (attrName === '' ||
             typeof attrName !== 'string' ||
-            collection.indexOf(attrName) !== -1) {
+            collection.indexOf(attrName) !== -1 ||
+            REGEXP.DOCUMENT_KEY.test(attrName) === false) {
             result = false;
         }
 
@@ -507,7 +508,6 @@ define([
         client.startTransaction();
 
         this.logger.warn('saveAttributeDescriptor: ' + name + ', attrDesc: ' + JSON.stringify(attrDesc));
-
 
         if (attrName !== attrDesc.name) {
             //rename an attribute
