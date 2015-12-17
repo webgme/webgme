@@ -43,6 +43,10 @@ define(['js/logger',
         var self = this;
 
         /*OVERRIDE DESIGNER CANVAS METHODS*/
+        this.diagramDesigner.onDesignerItemsMove = function (repositionDesc) {
+            self._onDesignerItemsMove(repositionDesc);
+        };
+
         this.diagramDesigner.onCreateNewConnection = function (params) {
             var sourceId = self._ComponentID2GMEID[params.src],
                 targetId = self._ComponentID2GMEID[params.dst],
@@ -194,6 +198,25 @@ define(['js/logger',
         };
 
         this.logger.debug('attachDesignerCanvasEventHandlers finished');
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
+        var id;
+
+        this._client.startTransaction();
+        for (id in repositionDesc) {
+            if (repositionDesc.hasOwnProperty(id)) {
+                this._client.setMemberRegistry(this.metaAspectContainerNodeID,
+                    this._ComponentID2GMEID[id],
+                    this._selectedMetaAspectSet,
+                    REGISTRY_KEYS.POSITION,
+                    {
+                        x: repositionDesc[id].x,
+                        y: repositionDesc[id].y
+                    });
+            }
+        }
+        this._client.completeTransaction();
     };
 
     /**********************************************************/
