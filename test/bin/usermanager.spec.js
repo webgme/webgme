@@ -403,7 +403,7 @@ describe('User manager command line interface (CLI)', function () {
                 .then(function () {
                     auth.getUser('user_to_delete', function (err, data) {
                         restoreLogAndExit();
-                        if (err && err.indexOf('no such user') > -1 && !data) {
+                        if (err && err.message.indexOf('no such user') > -1 && !data) {
                             done();
                             return;
                         }

@@ -1,0 +1,13 @@
+{
+  "root": "#20d99ca1c0a2ec8a256d0beda8302d2bc0ddd300",
+  "parents": [
+    "#8b2ce483f807d52d44a9377d08ac5a7573ddb07c"
+  ],
+  "updater": [
+    "pmeijer"
+  ],
+  "time": 1448397167677,
+  "message": "[setRegistry(/1036661779/588886926,,position,[object Object])]",
+  "type": "commit",
+  "_id": "#cdfc41958e056e5faf59ff3059394368204a7bbc"
+}

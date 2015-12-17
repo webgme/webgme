@@ -277,6 +277,7 @@ function importProject(storage, parameters, callback) {
                     return;
                 }
                 persisted = core.persist(rootNode);
+                project.setUser(data.username);
 
                 project.makeCommit(branchName, [''], persisted.rootHash, persisted.objects, 'project imported')
                     .then(function (result) {

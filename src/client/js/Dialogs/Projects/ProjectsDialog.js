@@ -8,6 +8,7 @@
 
 define([
     'angular',
+    'superagent',
     'js/logger',
     'js/Constants',
     'js/Loader/LoaderCircles',
@@ -22,7 +23,7 @@ define([
 
     'css!./styles/ProjectsDialog.css'
 
-], function (ng, Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, StorageUtil,
+], function (ng, superagent, Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, StorageUtil,
              clientUtil, projectsDialogTemplate, ConfirmDialog, DeleteDialogTemplate) {
 
     'use strict';
@@ -51,7 +52,8 @@ define([
         this._projectIds = [];
         this._projectList = {};
         this._filter = undefined;
-        this._ownerId = null; // TODO get this from dropdown list
+        this._userId = null;
+        this._ownerId = null;
         this._creatingNew = createNew;
         this._createType = createType || 'seed';
         this._logger.debug('Created');
@@ -179,26 +181,38 @@ define([
 
         this._dialog = $(projectsDialogTemplate);
 
+        this._userId = this._client.getUserId();
         //get controls
         this._modalContent = this._dialog.find('.modal-content').first();
         this._el = this._dialog.find('.modal-body').first();
         this._table = this._el.find('table').first();
         this._tableHead = this._table.find('thead').first();
         this._tableBody = this._table.find('tbody').first();
+        this._modalFooter = this._dialog.find('.modal-footer');
 
-        this._panelButtons = this._dialog.find('.panel-buttons');
-        this._panelCreateNew = this._dialog.find('.panel-create-new').hide();
+        this._panelButtons = this._modalFooter.find('.panel-buttons');
+        this._panelCreateNew = this._modalFooter.find('.panel-create-new').hide();
 
-        this._btnCreateNew = this._dialog.find('.btn-create-new');
+        this._btnCreateNew = this._panelButtons.find('.btn-create-new');
+        this._btnRefresh = this._panelButtons.find('.btn-refresh');
 
-        this._btnRefresh = this._dialog.find('.btn-refresh');
+        this._btnNewProjectCancel = this._panelCreateNew.find('.btn-cancel');
+        this._btnNewProjectCreate = this._panelCreateNew.find('.btn-save');
 
-        this._btnNewProjectCancel = this._dialog.find('.btn-cancel');
-        this._btnNewProjectCreate = this._dialog.find('.btn-save');
+        this._txtNewProjectName = this._panelCreateNew.find('.txt-project-name');
+        this._ownerIdList = this._panelCreateNew.find('ul.ownerId-list');
+        this._selectedOwner = this._panelCreateNew.find('.selected-owner-id');
+        this._ownerId = this._userId;
+        this._selectedOwner.text(this._ownerId);
 
-        this._txtNewProjectName = this._dialog.find('.txt-project-name');
-        this._dialog.find('.username').text(this._client.getUserId());
-        this._ownerId = this._client.getUserId(); //TODO: Get this from drop-down
+        this._ownerIdList.append($('<li><a class="ownerId-selection">' + self._userId + '</a></li>'));
+
+        if (WebGMEGlobal.userInfo.adminOrgs.length > 0) {
+            this._ownerIdList.append($('<li role="separator" class="divider"></li>'));
+            WebGMEGlobal.userInfo.adminOrgs.forEach(function (orgInfo) {
+                self._ownerIdList.append($('<li><a class="ownerId-selection">' + orgInfo._id + '</a></li>'));
+            });
+        }
 
         this._loader = new LoaderCircles({containerElement: this._btnRefresh});
         this._loader.setSize(14);
@@ -338,6 +352,13 @@ define([
             event.preventDefault();
         });
 
+        this._ownerIdList.on('click', 'a.ownerId-selection', function (/*event*/) {
+            var newOwnerId = $(this).text();
+            self._ownerId = newOwnerId;
+            self._selectedOwner.text(newOwnerId);
+            //event.stopPropagation();
+            //event.preventDefault();
+        });
 
         function isValidProjectName(aProjectName, projectId) {
             var re = /^[0-9a-z_]+$/gi;
@@ -391,7 +412,6 @@ define([
 
         this._btnRefresh.on('click', function (event) {
             self._refreshProjectList.call(self);
-
             event.stopPropagation();
             event.preventDefault();
         });

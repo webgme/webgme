@@ -102,6 +102,52 @@ function createAPI(app, mountPath, middlewareOpts) {
         });
     });
 
+    function putUser(receivedData, req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.getUser(userId, function (err, data) {
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+
+            if (!data.siteAdmin) {
+                res.status(403);
+                return next(new Error('site admin role is required for  this operation'));
+            }
+
+            // we may need to check if this user can create other ones.
+            gmeAuth.addUser(receivedData.userId,
+                receivedData.email,
+                receivedData.password,
+                receivedData.canCreate === 'true' || receivedData.canCreate === true,
+                {overwrite: false},
+                function (err/*, updateData*/) {
+                    if (err) {
+                        res.status(400);
+                        return next(new Error(err));
+                    }
+
+                    gmeAuth.getUser(receivedData.userId, function (err, data) {
+                        if (err) {
+                            res.status(404);
+                            res.json({
+                                message: 'Requested resource was not found',
+                                error: err
+                            });
+                            return;
+                        }
+
+                        res.json(data);
+                    });
+                });
+        });
+    }
+
     // AUTHENTICATED
     router.get('/user', ensureAuthenticated, function (req, res) {
         var userId = getUserId(req);
@@ -193,63 +239,12 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.put('/users', function (req, res, next) {
+        //"userId"
+        //"email": "user@example.com",
+        //"password": "pass",
+        //"canCreate": null,
 
-        var userId = getUserId(req);
-
-        gmeAuth.getUser(userId, function (err, data) {
-            var receivedData;
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
-
-            if (!data.siteAdmin) {
-                res.status(403);
-                return next(new Error('site admin role is required for  this operation'));
-            }
-
-            //try {
-            receivedData = req.body;
-            // TODO: verify request
-            // "userId"
-            //"email": "user@example.com",
-            //"password": "pass",
-            //"canCreate": null,
-            //"siteAdmin": false,
-
-            // we may need to check if this user can create other ones.
-
-            gmeAuth.addUser(receivedData.userId,
-                receivedData.email,
-                receivedData.password,
-                receivedData.canCreate === 'true' || receivedData.canCreate === true,
-                {overwrite: false},
-                function (err/*, updateData*/) {
-                    if (err) {
-                        res.status(400);
-                        return next(new Error(err));
-                    }
-
-                    gmeAuth.getUser(receivedData.userId, function (err, data) {
-                        if (err) {
-                            res.status(404);
-                            res.json({
-                                message: 'Requested resource was not found',
-                                error: err
-                            });
-                            return;
-                        }
-
-                        res.json(data);
-                    });
-                });
-
-        });
-
+        putUser(req.body, req, res, next);
     });
 
     router.get('/users/:username', function (req, res) {
@@ -266,6 +261,17 @@ function createAPI(app, mountPath, middlewareOpts) {
 
             res.json(data);
         });
+    });
+
+    router.put('/users/:username', function (req, res, next) {
+        var receivedData = {
+            userId: req.params.username,
+            email: req.body.email,
+            password: req.body.password,
+            canCreate: req.body.canCreate || false
+        };
+
+        putUser(receivedData, req, res, next);
     });
 
     router.patch('/users/:username', function (req, res, next) {
@@ -430,7 +436,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(data);
             })
             .catch(function (err) {
-                err = new Error(err);
                 if (err.message.indexOf('No such organization [') > -1) {
                     res.status(404);
                 }
@@ -447,7 +452,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                err = new Error(err);
                 if (err.message.indexOf('No such organization [') > -1) {
                     res.status(404);
                 }
@@ -464,7 +468,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                err = new Error(err);
                 if (err.message.indexOf('No such organization [') > -1 ||
                     err.message.indexOf('No such user [') > -1) {
                     res.status(404);
@@ -482,7 +485,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                err = new Error(err);
                 if (err.message.indexOf('No such organization [') > -1) {
                     res.status(404);
                 }
@@ -499,7 +501,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                err = new Error(err);
                 if (err.message.indexOf('No such organization [') > -1 ||
                     err.message.indexOf('No such user [') > -1) {
                     res.status(404);
@@ -517,7 +518,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                err = new Error(err);
                 if (err.message.indexOf('No such organization [') > -1 ||
                     err.message.indexOf('No such user [') > -1) {
                     res.status(404);
@@ -566,6 +566,31 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     }
 
+    function canUserAuthorizeProject(req) {
+        var userId = getUserId(req);
+
+        return gmeAuth.getUser(userId)
+            .then(function (userData) {
+                // Make sure user is authorized (owner, admin in owner Org or siteAdmin).
+                if (userId === req.params.ownerId || userData.siteAdmin === true) {
+                    return true;
+                } else {
+                    return gmeAuth.getOrganization(req.params.ownerId)
+                        .then(function (orgData) {
+                            if (orgData.admins.indexOf(userId) > -1) {
+                                return true;
+                            }
+
+                            return false;
+                        })
+                        .catch(function (err) {
+                            logger.debug(err);
+                            return false;
+                        });
+                }
+            });
+    }
+
     router.get('/projects', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
         safeStorage.getProjects({username: userId})
@@ -600,6 +625,32 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    router.patch('/projects/:ownerId/:projectName', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req),
+            projectId =  StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
+
+        gmeAuth.getProjectAuthorizationByUserId(userId, projectId)
+            .then(function (rights) {
+                if (rights.write !== true) {
+                    return gmeAuth.getUser(userId)
+                        .then(function (userData) {
+                            if (userData.siteAdmin !== true) {
+                                res.status(403);
+                                throw new Error('Not authorized to modify project');
+                            }
+                        });
+                }
+            })
+            .then(function () {
+                return gmeAuth.updateProjectInfo(projectId, req.body);
+            })
+            .then(function (projectData) {
+                res.json(projectData);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
     /**
      * Creating project by seed
      *
@@ -651,6 +702,64 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    router.put('/projects/:ownerId/:projectName/authorize/:userOrOrgId/:rights', function (req, res, next) {
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
+
+        canUserAuthorizeProject(req)
+            .then(function (isAuthorized) {
+                if (isAuthorized === false) {
+                    res.status(403);
+                    throw new Error('Not allowed to authorize users/organizations for project');
+                }
+                // ensure project exists
+                return gmeAuth.getProject(projectId);
+            })
+            .then(function (/*projectData*/) {
+                var rights = {
+                    read: req.params.rights.indexOf('r') !== -1,
+                    write: req.params.rights.indexOf('w') !== -1,
+                    delete: req.params.rights.indexOf('d') !== -1
+                };
+
+                return gmeAuth.authorizeByUserOrOrgId(req.params.userOrOrgId, projectId, 'set', rights);
+            })
+            .then(function () {
+                res.sendStatus(204);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('No such user or org') > -1 || err.message.indexOf('no such project') > -1) {
+                    res.status(404);
+                }
+                next(err);
+            });
+    });
+
+    router.delete('/projects/:ownerId/:projectName/authorize/:userOrOrgId', function (req, res, next) {
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
+
+        canUserAuthorizeProject(req)
+            .then(function (isAuthorized) {
+                if (isAuthorized === false) {
+                    res.status(403);
+                    throw new Error('Not allowed to authorize users/organizations for project');
+                }
+                // ensure project exists
+                return gmeAuth.getProject(projectId);
+            })
+            .then(function (/*projectData*/) {
+                return gmeAuth.authorizeByUserOrOrgId(req.params.userOrOrgId, projectId, 'delete');
+            })
+            .then(function () {
+                res.sendStatus(204);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('No such user or org') > -1 || err.message.indexOf('no such project') > -1) {
+                    res.status(404);
+                }
+                next(err);
+            });
+    });
+
     router.get('/projects/:ownerId/:projectName/commits', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             data = {
@@ -658,7 +767,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                     req.params.projectName),
                 before: (new Date()).getTime(), // current time
-                number: 100 // asks for the last 100 commits from the time specified above
+                number: parseInt(req.query.n, 10) || 100 // asks for the last 100 commits from the time specified above
             };
 
         safeStorage.getCommits(data)
@@ -783,60 +892,6 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/projects/:ownerId/:projectName/branches/:branchId/commits', ensureAuthenticated,
-        function (req, res, next) {
-            var userId = getUserId(req),
-                data = {
-                    username: userId,
-                    projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
-                        req.params.projectName),
-                    start: req.params.branchId,
-                    number: 100
-                };
-
-            safeStorage.getHistory(data)
-                .then(function (result) {
-                    res.json(result);
-                })
-                .catch(function (err) {
-                    if (err.message.indexOf('not exist') > -1) {
-                        err.status = 404;
-                    }
-                    next(err);
-                });
-        }
-    );
-
-    router.get('/projects/:ownerId/:projectName/branches/:branchId/tree/*', ensureAuthenticated,
-        function (req, res, next) {
-            var userId = getUserId(req),
-                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
-                    req.params.projectName),
-                data = {
-                    username: userId,
-                    projectId: projectId,
-                    branchName: req.params.branchId
-                };
-
-            safeStorage.getBranchHash(data)
-                .then(function (branchHash) {
-                    if (!branchHash) {
-                        throw new Error('Branch does not exist ' + req.params.branchId);
-                    }
-                    return loadNodePathByCommitHash(userId, projectId, branchHash, '/' + req.params[0]);
-                })
-                .then(function (dataObj) {
-                    res.json(dataObj);
-                })
-                .catch(function (err) {
-                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
-                        err.status = 404;
-                    }
-                    next(err);
-                });
-        }
-    );
-
     router.patch('/projects/:ownerId/:projectName/branches/:branchId', function (req, res, next) {
         var userId = getUserId(req),
             data = {
@@ -894,6 +949,60 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    router.get('/projects/:ownerId/:projectName/branches/:branchId/commits', ensureAuthenticated,
+        function (req, res, next) {
+            var userId = getUserId(req),
+                data = {
+                    username: userId,
+                    projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                        req.params.projectName),
+                    start: req.params.branchId,
+                    number: parseInt(req.query.n, 10) || 100
+                };
+
+            safeStorage.getHistory(data)
+                .then(function (result) {
+                    res.json(result);
+                })
+                .catch(function (err) {
+                    if (err.message.indexOf('not exist') > -1) {
+                        err.status = 404;
+                    }
+                    next(err);
+                });
+        }
+    );
+
+    router.get('/projects/:ownerId/:projectName/branches/:branchId/tree/*', ensureAuthenticated,
+        function (req, res, next) {
+            var userId = getUserId(req),
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                data = {
+                    username: userId,
+                    projectId: projectId,
+                    branchName: req.params.branchId
+                };
+
+            safeStorage.getBranchHash(data)
+                .then(function (branchHash) {
+                    if (!branchHash) {
+                        throw new Error('Branch does not exist ' + req.params.branchId);
+                    }
+                    return loadNodePathByCommitHash(userId, projectId, branchHash, '/' + req.params[0]);
+                })
+                .then(function (dataObj) {
+                    res.json(dataObj);
+                })
+                .catch(function (err) {
+                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
+                        err.status = 404;
+                    }
+                    next(err);
+                });
+        }
+    );
+
     router.get('/projects/:ownerId/:projectName/tags', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             data = {
@@ -944,6 +1053,28 @@ function createAPI(app, mountPath, middlewareOpts) {
         safeStorage.createTag(data)
             .then(function () {
                 res.sendStatus(201);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.patch('/projects/:ownerId/:projectName/tags/:tagId', function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                tagName: req.params.tagId,
+                commitHash: req.body.hash
+            };
+
+        safeStorage.deleteTag(data)
+            .then(function () {
+                return safeStorage.createTag(data);
+            })
+            .then(function () {
+                res.sendStatus(200);
             })
             .catch(function (err) {
                 next(err);

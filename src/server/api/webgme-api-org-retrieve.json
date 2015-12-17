@@ -3,12 +3,11 @@
   "projects": {},
   "type": "Organization",
   "admins": [
-    "pmeijer"
+    "pelleBlom"
   ],
-    "info": {},
-    "users": [
-      "pmeijer",
-      "guest",
-      "pelleBlom"
-    ]
+  "info": {},
+  "users": [
+    "guest",
+    "pelleBlom"
+  ]
 }

@@ -18,50 +18,25 @@ securitySchemes:
             description: Authentication required
           403:
             description: Forbidden
-  - orgOrSiteAdmin:
-      description: Admin for the entire site or the organization.
-      type: Basic Authentication
-      describedBy:
-        responses:
-          403:
-            description: Not authorized.
 
 
 resourceTypes:
   - collection:
       description: Collection of available <<resourcePathName>> in WebGME.
       get:
-        description: Get a list of <<resourcePathName>>.
+        description: Get a list of <<resourcePathName>>. <<desc>>
         responses:
           200:
             body:
               application/json:
                 example: |
                   <<exampleCollection>>
-      put:
-        description: |
-          Add a new <<resourcePathName|!singularize>> to WebGME.
-        securedBy: [ basic ]
-        body:
-          application/json:
-            schema: <<resourcePathName|!singularize>>
-            example: |
-              <<exampleItem>>
-        responses:
-          200:
-            body:
-              application/json:
-                example: |
-                  { "message": "The <<resourcePathName|!singularize>> has been properly entered" }
-          400:
           
   - collection-item:
       description: Entity representing a <<resourcePathName|!singularize>>
       get:
         description: |
-          Get the <<resourcePathName|!singularize>>
-          with <<resourcePathName|!singularize>>Id =
-          {<<resourcePathName|!singularize>>Id}
+          Get the <<resourcePathName|!singularize>>. <<getDesc>>
         responses:
           200:
             body:
@@ -74,14 +49,51 @@ resourceTypes:
                 example: |
                   {"message": "<<resourcePathName|!singularize>> not found" }
       put:
-          securedBy: [ basic ]
+        description: |
+          Add a new <<resourcePathName|!singularize>> to WebGME. <<putDesc>>
+        securedBy: [ basic ]
+        body:
+          application/json:
+            schema: See example
+            example: |
+              <<putBody>>
+        responses:
+          204:
+            body:
+              application/json:
+                example: |
+                  { "message": "The <<resourcePathName|!singularize>> has been properly entered" }
+          403:
+          404:
       patch:
-          securedBy: [ basic ]
+        description: Update <<resourcePathName|!singularize>> within WebGME. <<patchDesc>>
+        securedBy: [ basic ]
+        body:
+          application/json:
+            schema: See example
+            example: |
+              <<patchBody>>
+        responses:
+            204:
+            403:
+            404:
       delete:
-          securedBy: [ basic ]
-          responses:
-            204:          
-        
+        description: Delete <<resourcePathName|!singularize>> from WebGME. <<deleteDesc>>
+        securedBy: [ basic ]
+        responses:
+          204:
+          403:
+          404:
+  - project-tree:
+      get:
+        description: Retrieves the raw data object at given path within the project tree. Requires <b>read</b> access for project.
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-tree-retrieve.json
+          403:
+          404:
 
 /:
   get:
@@ -109,6 +121,8 @@ resourceTypes:
           application/json:
             example: !include webgme-api-user-retrieve.json
   delete:
+    description: Remove the current user
+    securedBy: [ basic ]
     responses:
       204:
 
@@ -116,11 +130,17 @@ resourceTypes:
   type:
     collection:
       exampleCollection: !include webgme-api-users.json
-      exampleItem: !include webgme-api-user-new.json  
+      desc: 
   /{username}:
     type:
       collection-item:
-        exampleItem: !include webgme-api-user-retrieve.json   
+        exampleItem: !include webgme-api-user-retrieve.json
+        putBody: !include webgme-api-user-new.json
+        patchBody: !include webgme-api-user-patch.json
+        getDesc:
+        putDesc: Requires <b>user.siteAdmin</b>.
+        patchDesc: Requires <b>user.siteAdmin</b> if setting siteAdmin.
+        deleteDesc: Requires is current user or <b>user.siteAdmin</b>.
 
 /orgs:
   get:
@@ -133,7 +153,7 @@ resourceTypes:
             example: !include webgme-api-orgs.json
   /{orgId}:
     get:
-      description: Entity representing an organization
+      description: Retrives organization data including members.
       securedBy: [ basic ]
       responses:
         200:
@@ -142,58 +162,63 @@ resourceTypes:
               example: !include webgme-api-org-retrieve.json
         404:
     put:
-      description: Create a new organization (requires canCreate).
+      description: Create a new organization. Requires <b>user.canCreate</b> or <b>user.siteAdmin</b>.
       securedBy: [ basic ]
       responses:
         200:
           body:
             application/json:
-              example: !include webgme-api-org-retrieve.json
+              example: !include webgme-api-org-new.json
         403:
         404:
     delete:
-      description: Delete an organization.
-      securedBy: [ basic, orgOrSiteAdmin ]
+      description: Delete an organization. Requires admin in organization or <b>user.siteAdmin</b>.
+      securedBy: [ basic ]
       responses:
-        200:
+        204:
         403:
         404:
     
     /users/{username}:
       put:
-        description: Adds user to the organization.
-        securedBy: [ basic, orgOrSiteAdmin ]
+        description: Adds user to the organization. Requires admin in organization or <b>user.siteAdmin</b>.
+        securedBy: [ basic ]
         responses:
           200:
           403:
           404:
         
       delete:
-        description: Delete user from the organization.
-        securedBy: [ basic, orgOrSiteAdmin ]
+        description: Delete user from the organization. Requires admin in organization or <b>user.siteAdmin</b>.
+        securedBy: [ basic ]
         responses:
           204:
+          403:
           404:
           
     /admins/{username}:
       put:
-        description: Make user admin for the organization.
-        securedBy: [ basic, orgOrSiteAdmin ]
+        description: Make user admin for the organization. Requires admin in organization or <b>user.siteAdmin</b>.
+        securedBy: [ basic ]
         responses:
           200:
+          403:
+          404:
         
       delete:
-        description: Remove user from admins of the organization.
-        securedBy: [ basic, orgOrSiteAdmin ]
+        description: Remove user from admins of the organization. Requires admin in organization or <b>user.siteAdmin</b>.
+        securedBy: [ basic ]
         responses:
           204:
+          403:
+          404:
 
 
 /projects:
   type:
     collection:
       exampleCollection: !include webgme-api-projects.json
-      exampleItem: !include webgme-api-project-new.json
+      desc: Only lists the projects where the user has at least <b>read</b> access.
   /{ownerId}/{projectName}:
     uriParameters:
       ownerId:
@@ -203,19 +228,78 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include webgme-api-project-retrieve.json
-    
+        putBody: !include webgme-api-project-new.json
+        patchBody: !include webgme-api-project-patch.json
+        getDesc: Requires <b>read</b> access for project.
+        putDesc: Requires <b>user.canCreate</b>.
+        patchDesc: Requires <b>write</b> access for project.
+        deleteDesc: Requires <b>delete</b> access for project.
+    /authorize/{userOrOrgId}:
+      uriParameters:
+        userOrOrgId:
+          example: demoUser
+      delete:
+        description: Remove user's or organization's access rights to the project. Requires at least one of the following from user;
+           is <b>owner</b> of the project, is <b>admin in the organization</b> that owns the project, or is <b>siteAdmin</b>.
+        responses:
+          204:
+          403:
+          404:
+      /{rights}:
+        uriParameters:
+          rights:
+            description: Combination of r-read, w-write, d-delete
+            example: rwd
+        put:
+          description: Grants user or organization access to the project. Requires at least one of the following from user;
+           is <b>owner</b> of the project, is <b>admin in the organization</b> that owns the project, or is <b>siteAdmin</b>.
+          responses:
+            204:
+            403:
+            404:
     /commits:
       get:
-    
+        description: Retrives an array of latested commits made to the project. Requires <b>read</b> access for project.
+        queryParameters:
+          n:
+            displayName: n
+            type: number
+            description: Maximum number of commits to retrieve (default 100).
+            example: 2
+            required: false
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-commits-retrieve.json
+          403:
+      /{commitId}:
+        uriParameters:
+          commitId:
+            description: Commit hash, with or without URL-encoded '#'.
+            example: b83ee8d50034fc96f006176bba516e68ce50838a
+        get:
+          description: Retrieves the commit object associated with the commitId. Requires <b>read</b> access for project.
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include webgme-api-commit-retrieve.json
+            403:
+        /tree/{nodePath}:
+          uriParameters:
+            nodePath:
+              example: 1563412505/5585498754
+          type:
+            project-tree:
+
     /compare/{branchOrCommitA}...{branchOrCommitB}:
       get:
-      
-      
     /branches:
       type:
         collection:
           exampleCollection: !include webgme-api-branches.json
-          exampleItem: !include webgme-api-branch-new.json
+          desc: Requires <b>read</b> access for project.
         
       /{branchId}:
         uriParameters:
@@ -224,7 +308,62 @@ resourceTypes:
         type:
           collection-item:
             exampleItem: !include webgme-api-branch-retrieve.json
-        
+            putBody: "{
+              \"hash\": \"#f2a624d9cfbf883c927b04dd45800ba55537dff5\"
+            }"
+            patchBody: "{
+              \"oldHash\": \"#f2a624d9cfbf883c927b04dd45800ba55537dff5\",
+              \"newHash\": \"#4ac76d63da6f50cc5baaa5bfb42c86138edc9396\"
+            }"
+            getDesc: Requires <b>read</b> access for project.
+            putDesc: Requires <b>write</b> access for project.
+            patchDesc: Requires <b>write</b> access for project.
+            deleteDesc: Requires <b>write</b> access for project.
+        /commits:
+          get:
+            description: Retrives an array of the commit history for the branch. Requires <b>read</b> access for project.
+            queryParameters:
+              n:
+                displayName: n
+                type: number
+                description: Maximum number of commits to retrieve (default 100).
+                example: 2
+                required: false
+            responses:
+              200:
+                body:
+                  application/json:
+                    example: !include webgme-api-commits-retrieve.json
+              403:
+          
+        /tree/{nodePath}:
+          uriParameters:
+            nodePath:
+              example: 1563412505/5585498754
+          type:
+            project-tree:
+    /tags:
+      type:
+        collection:
+          exampleCollection: !include webgme-api-branches.json
+          desc: Requires <b>read</b> access for project.
+      /{tagId}:
+        uriParameters:
+          tagId:
+            example: myTag
+        type:
+          collection-item:
+            exampleItem: !include webgme-api-commit-retrieve.json
+            putBody: "{
+              \"hash\": \"#f2a624d9cfbf883c927b04dd45800ba55537dff5\"
+            }"
+            patchBody: "{
+              \"hash\": \"#f2a624d9cfbf883c927b04dd45800ba55537dff5\"
+            }"
+            getDesc: Requires <b>read</b> access for project.
+            putDesc: Requires <b>write</b> access for project.
+            patchDesc: Requires <b>delete</b> access for project.
+            deleteDesc: Requires <b>delete</b> access for project.
 
 /decorators:
   get:

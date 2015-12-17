@@ -277,7 +277,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
             })
             .then(function (projectId) {
                 data.projectId = projectId;
-                return self.gmeAuth.authorizeByUserId(data.username, projectId, 'create', {
+                return self.gmeAuth.authorizeByUserId(data.ownerId, projectId, 'create', {
                     read: true,
                     write: true,
                     delete: true
@@ -1034,7 +1034,11 @@ SafeStorage.prototype.createTag = function (data, callback) {
         check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
 
         check(typeof data.tagName === 'string', deferred, 'data.tagName is not a string.') ||
-        check(REGEXP.TAG.test(data.tagName), deferred, 'data.tagName failed regexp: ' + data.tagName);
+        check(REGEXP.TAG.test(data.tagName), deferred, 'data.tagName failed regexp: ' + data.tagName) ||
+
+        check(typeof data.commitHash === 'string', deferred, 'data.hash is not a string.') ||
+        check(data.commitHash === '' || REGEXP.HASH.test(data.commitHash), deferred,
+            'data.hash is not a valid hash: ' + data.commitHash);
 
 
     if (data.hasOwnProperty('username')) {

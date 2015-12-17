@@ -201,6 +201,13 @@
       button.corner-button {
         margin-top: 0.5ex;
       }
+      ul.dropdown-menu {
+        min-width: 0;
+        text-align: left;
+        a {
+          cursor: pointer;
+        }
+      }
     }
   }
 }
