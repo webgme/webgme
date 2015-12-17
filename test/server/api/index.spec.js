@@ -2949,7 +2949,7 @@ describe('REST API', function () {
                     gmeAuth.getProjectAuthorizationByUserId('userTest2', pr2Id(projectOwnedByUser, 'user'))
                         .then(function (auth) {
                             expect(auth).to.deep.equal({
-                                read: true,
+                                read: false,
                                 write: true,
                                 delete: false
                             });
