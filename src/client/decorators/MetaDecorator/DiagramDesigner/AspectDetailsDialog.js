@@ -8,9 +8,10 @@
 define([
     'js/util',
     'js/Constants',
+    'common/regexp',
     'text!./templates/AspectDetailsDialog.html',
     'css!./styles/AspectDetailsDialog.css'
-], function (util, CONSTANTS, aspectDetailsDialogTemplate) {
+], function (util, CONSTANTS, REGEXP, aspectDetailsDialogTemplate) {
 
     'use strict';
 
@@ -86,7 +87,8 @@ define([
 
         isValidAspectName = function (name) {
             return !(name === '' || aspectNames.indexOf(name) !== -1 ||
-            name.toLowerCase() === CONSTANTS.ASPECT_ALL.toLowerCase());
+            name.toLowerCase() === CONSTANTS.ASPECT_ALL.toLowerCase() ||
+            REGEXP.DOCUMENT_KEY.test(name) === false);
         };
 
         checkSelected = function () {
@@ -94,7 +96,7 @@ define([
 
             if (checked.length === 0) {
                 self._btnSave.disable(true);
-            } else {
+            } else if (isValidAspectName(self._inputName.val())) {
                 self._btnSave.disable(false);
             }
         };
@@ -107,7 +109,6 @@ define([
         this._btnSave = this._dialog.find('.btn-save').first();
         this._btnDelete = this._dialog.find('.btn-delete').first();
 
-        this._pName = this._el.find('#pName').first();
         this._pTypes = this._el.find('#pTypes').first();
 
         var typesContainer = this._pTypes.find('.controls');
@@ -120,11 +121,15 @@ define([
             var val = self._inputName.val();
 
             if (!isValidAspectName(val)) {
-                self._pName.addClass('error');
+                self._inputName.addClass('text-danger');
                 self._btnSave.disable(true);
             } else {
-                self._pName.removeClass('error');
-                self._btnSave.disable(false);
+                self._inputName.removeClass('text-danger');
+                var checked = typesContainer.find('input[type=checkbox]:checked');
+
+                if (checked.length > 0) {
+                    self._btnSave.disable(false);
+                }
             }
         });
 
@@ -198,7 +203,6 @@ define([
 
         checkSelected();
     };
-
 
     return AspectDetailsDialog;
 });

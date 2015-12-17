@@ -7,9 +7,10 @@
  */
 
 define(['js/util',
+    'common/regexp',
     'text!./templates/ConstraintCheckResultsDialog.html',
     'css!./styles/ConstraintCheckResultsDialog.css'
-], function (clientUtil, pluginResultsDialogTemplate) {
+], function (clientUtil, REGEXP, pluginResultsDialogTemplate) {
 
     'use strict';
 
@@ -32,9 +33,7 @@ define(['js/util',
     //jscs:disable maximumLineLength
         NODE_BTN_BASE = $('<span class="btn btn-micro btn-node pull-left"><i class="glyphicon glyphicon-link"/></span>'),
     //jscs:enable maximumLineLength
-        MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>'),
-    // FIXME: MAGIC do not we have a GUID regexp somewhere???
-        GUID_REGEXP = new RegExp('[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}', 'i');
+        MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>');
 
     ContraintCheckResultsDialog.prototype.show = function (client, pluginResults) {
         var self = this;
@@ -54,7 +53,6 @@ define(['js/util',
 
         this._dialog.modal('show');
     };
-
 
     ContraintCheckResultsDialog.prototype._initDialog = function (pluginResults) {
         var dialog = this._dialog,
@@ -79,7 +77,6 @@ define(['js/util',
 
         for (i = 0; i < pluginResults.length; i += 1) {
             result = pluginResults[i];
-
 
             resultEntry = PLUGIN_RESULT_ENTRY_BASE.clone();
 
@@ -114,7 +111,7 @@ define(['js/util',
             nodeGuids = Object.keys(result);
             j = nodeGuids.length;
             while (--j >= 0) {
-                if (!(GUID_REGEXP.test(nodeGuids[j]) && result[nodeGuids[j]].hasViolation === true )) {
+                if (!(REGEXP.GUID.test(nodeGuids[j]) && result[nodeGuids[j]].hasViolation === true )) {
                     nodeGuids.splice(j, 1);
                 }
             }
@@ -153,7 +150,6 @@ define(['js/util',
                     constraintContainer.append(constraintEntry);
                 }
                 nodeEntry.append(constraintContainer);
-
 
                 nodeContainer.append(nodeEntry);
 
@@ -198,11 +194,9 @@ define(['js/util',
                 dialog.modal('hide');
             }
 
-
         });
 
     };
-
 
     return ContraintCheckResultsDialog;
 });
