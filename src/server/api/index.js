@@ -702,7 +702,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.put('/projects/:ownerId/:projectName/authorize/:userOrOrgId/:accessLevel', function (req, res, next) {
+    router.put('/projects/:ownerId/:projectName/authorize/:userOrOrgId/:rights', function (req, res, next) {
         var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
 
         canUserAuthorizeProject(req)
@@ -716,23 +716,10 @@ function createAPI(app, mountPath, middlewareOpts) {
             })
             .then(function (/*projectData*/) {
                 var rights = {
-                    read: false,
-                    write: false,
-                    delete: false
+                    read: req.params.rights.indexOf('r') !== -1,
+                    write: req.params.rights.indexOf('w') !== -1,
+                    delete: req.params.rights.indexOf('d') !== -1
                 };
-
-                if (req.params.accessLevel === 'read') {
-                    rights.read = true;
-                } else if (req.params.accessLevel === 'write') {
-                    rights.read = true;
-                    rights.write = true;
-                } else if (req.params.accessLevel === 'delete') {
-                    rights.read = true;
-                    rights.write = true;
-                    rights.delete = true;
-                } else {
-                    throw new Error('Unexpected accessLevel [' + req.params.accessLevel + ']');
-                }
 
                 return gmeAuth.authorizeByUserOrOrgId(req.params.userOrOrgId, projectId, 'set', rights);
             })
@@ -740,7 +727,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                console.log(err);
                 if (err.message.indexOf('No such user or org') > -1 || err.message.indexOf('no such project') > -1) {
                     res.status(404);
                 }
@@ -781,7 +767,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                     req.params.projectName),
                 before: (new Date()).getTime(), // current time
-                number: req.body.number || 100 // asks for the last 100 commits from the time specified above
+                number: parseInt(req.query.n, 10) || 100 // asks for the last 100 commits from the time specified above
             };
 
         safeStorage.getCommits(data)
@@ -971,7 +957,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                         req.params.projectName),
                     start: req.params.branchId,
-                    number: req.body.number || 100
+                    number: parseInt(req.query.n, 10) || 100
                 };
 
             safeStorage.getHistory(data)

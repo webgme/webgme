@@ -239,32 +239,34 @@ resourceTypes:
         userOrOrgId:
           example: demoUser
       delete:
-        description: Remove user's or organization's access rights to the project. Requires at least one of the following from initiator;
-         is owner of the project, is admin in the organization that owns the project, or is siteAdmin.
+        description: Remove user's or organization's access rights to the project. Requires at least one of the following from user;
+           is <b>owner</b> of the project, is <b>admin in the organization</b> that owns the project, or is <b>siteAdmin</b>.
         responses:
           204:
           403:
           404:
-      /{accessLevel}:
+      /{rights}:
         uriParameters:
-          accessLevel:
-            description: read, write or delete
-            example: read
+          rights:
+            description: Combination of r-read, w-write, d-delete
+            example: rwd
         put:
-          description: Grants user or organization access to the project. Requires at least one of the following from initiator;
-           is owner of the project, is admin in the organization that owns the project, or is siteAdmin.
+          description: Grants user or organization access to the project. Requires at least one of the following from user;
+           is <b>owner</b> of the project, is <b>admin in the organization</b> that owns the project, or is <b>siteAdmin</b>.
           responses:
             204:
             403:
             404:
     /commits:
       get:
-        description: Retrives an array of latested commits made to the project. The body parameter "number" set the maximum number of commits retrieved (default is 100). Requires <b>read</b> access for project.
-        body:
-          application/json:
-            example: "{
-              \"number\": 2
-            }"
+        description: Retrives an array of latested commits made to the project. Requires <b>read</b> access for project.
+        queryParameters:
+          n:
+            displayName: n
+            type: number
+            description: Maximum number of commits to retrieve (default 100).
+            example: 2
+            required: false
         responses:
           200:
             body:
@@ -319,12 +321,14 @@ resourceTypes:
             deleteDesc: Requires <b>write</b> access for project.
         /commits:
           get:
-            description: Retrives an array of the commit history for the branch. The body parameter "number" set the maximum number of commits retrieved default is 100. Requires <b>read</b> access for project.
-            body:
-              application/json:
-                example: "{
-                  \"number\": 2
-                }"
+            description: Retrives an array of the commit history for the branch. Requires <b>read</b> access for project.
+            queryParameters:
+              n:
+                displayName: n
+                type: number
+                description: Maximum number of commits to retrieve (default 100).
+                example: 2
+                required: false
             responses:
               200:
                 body:

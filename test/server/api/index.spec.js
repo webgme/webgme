@@ -1792,6 +1792,22 @@ describe('REST API', function () {
                     });
             });
 
+            it('should list commits for project /projects/:ownerId/:projectId/commits?n=1', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits?n=1')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body.length).to.equal(1);
+                        expect(res.body[0]).to.have.property('message');
+                        expect(res.body[0]).to.have.property('parents');
+                        expect(res.body[0]).to.have.property('root');
+                        expect(res.body[0]).to.have.property('time');
+                        expect(res.body[0]).to.have.property('type');
+                        expect(res.body[0]).to.have.property('updater');
+                        expect(res.body[0]).to.have.property('_id');
+                        done();
+                    });
+            });
+
             it('should return commit for project /projects/:ownerId/:projectId/commits/:commitHash', function (done) {
                 var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
                     importResult.commitHash.substring(1);
@@ -1951,6 +1967,22 @@ describe('REST API', function () {
                 function (done) {
                     var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/' +
                         'master/commits';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body instanceof Array).to.equal(true);
+                            expect(res.body.length).to.equal(1);
+                            expect(res.body[0]._id).to.equal(importResult.commitHash);
+
+                            done();
+                        });
+                }
+            );
+
+            it('should get history for branch /projects/:ownerId/branches/:branchId/commits?n=1',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/' +
+                        'master/commits?n=1';
                     agent.get(url)
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
@@ -2892,8 +2924,8 @@ describe('REST API', function () {
             agent = superagent.agent();
         });
 
-        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/userTest1/read', function (done) {
-            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest1/read')
+        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/userTest1/r', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest1/rr')
                 .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                 .end(function (err, res) {
                     expect(res.status).equal(204, err);
@@ -2909,8 +2941,8 @@ describe('REST API', function () {
                 });
         });
 
-        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/userTest2/write', function (done) {
-            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest2/write')
+        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/userTest2/w', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest2/w')
                 .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                 .end(function (err, res) {
                     expect(res.status).equal(204, err);
@@ -2926,8 +2958,8 @@ describe('REST API', function () {
                 });
         });
 
-        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/userTest3/delete', function (done) {
-            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest3/delete')
+        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/userTest3/rwd', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest3/rwd')
                 .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                 .end(function (err, res) {
                     expect(res.status).equal(204, err);
@@ -2943,17 +2975,8 @@ describe('REST API', function () {
                 });
         });
 
-        it('500 as owner should not authorize /projects/user/projectOwnedByUser/authorize/userTest3/wrong', function (done) {
-            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/userTest3/wrong')
-                .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
-                .end(function (err, res) {
-                    expect(res.status).equal(500, err);
-                    done();
-                });
-        });
-
-        it('404 as owner should not authorize /projects/user/projectOwnedByUser/authorize/notExists/read', function (done) {
-            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/notExists/read')
+        it('404 as owner should not authorize /projects/user/projectOwnedByUser/authorize/notExists/r', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/notExists/r')
                 .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                 .end(function (err, res) {
                     expect(res.status).equal(404, err);
@@ -2961,8 +2984,8 @@ describe('REST API', function () {
                 });
         });
 
-        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/orgTest1/read', function (done) {
-            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/orgTest1/read')
+        it('204 as owner should authorize /projects/user/projectOwnedByUser/authorize/orgTest1/r', function (done) {
+            agent.put(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/orgTest1/r')
                 .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                 .end(function (err, res) {
                     expect(res.status).equal(204, err);
@@ -2978,9 +3001,9 @@ describe('REST API', function () {
                 });
         });
 
-        it('204 as admin in owner org should authorize /projects/org/projectOwnedByOrg/authorize/userTest4/read',
+        it('204 as admin in owner org should authorize /projects/org/projectOwnedByOrg/authorize/userTest4/r',
             function (done) {
-                agent.put(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/userTest4/read')
+                agent.put(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/userTest4/r')
                     .set('Authorization', 'Basic ' + new Buffer('userOrgAdmin:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(204, err);
@@ -2997,9 +3020,9 @@ describe('REST API', function () {
             }
         );
 
-        it('204 as siteAdmin should authorize /projects/org/projectOwnedByOrg/authorize/userTest5/read',
+        it('204 as siteAdmin should authorize /projects/org/projectOwnedByOrg/authorize/userTest5/r',
             function (done) {
-                agent.put(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/userTest5/read')
+                agent.put(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/userTest5/r')
                     .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(204, err);
@@ -3016,9 +3039,9 @@ describe('REST API', function () {
             }
         );
 
-        it('403 should not authorize /projects/' + guestAccount + '/projectOwnedByOtherUser/authorize/userTest6/read',
+        it('403 should not authorize /projects/' + guestAccount + '/projectOwnedByOtherUser/authorize/userTest6/r',
             function (done) {
-                agent.put(server.getUrl() + '/api/v1/projects/' + guestAccount + '/projectOwnedByOtherUser/authorize/userTest6/read')
+                agent.put(server.getUrl() + '/api/v1/projects/' + guestAccount + '/projectOwnedByOtherUser/authorize/userTest6/r')
                     .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(403, err);
@@ -3113,9 +3136,9 @@ describe('REST API', function () {
             }
         );
 
-        it('404 as org admin if project not exist /projects/org/unknown/authorize/userWithRights3/read',
+        it('404 as org admin if project not exist /projects/org/unknown/authorize/userWithRights3/r',
             function (done) {
-                agent.put(server.getUrl() + '/api/v1/projects/org/unknown/authorize/userWithRights3/read')
+                agent.put(server.getUrl() + '/api/v1/projects/org/unknown/authorize/userWithRights3/r')
                     .set('Authorization', 'Basic ' + new Buffer('userOrgAdmin:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(404, err);
@@ -3135,9 +3158,9 @@ describe('REST API', function () {
             }
         );
 
-        it('403 as not org admin authorize /projects/org/projectOwnedByOrg/authorize/orgTest2/read',
+        it('403 as not org admin authorize /projects/org/projectOwnedByOrg/authorize/orgTest2/r',
             function (done) {
-                agent.put(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/orgTest2/read')
+                agent.put(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/orgTest2/r')
                     .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(403, err);
