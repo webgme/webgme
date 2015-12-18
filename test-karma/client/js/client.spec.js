@@ -1583,6 +1583,11 @@ describe('GME client', function () {
         it('should check if the node is abstract',function(){
             expect(clientNode.isAbstract()).to.equal(false);
         });
+
+        it('should return the list of defined aspect names of the node',function(){
+            expect(clientNode.getValidAspectNames()).to.eql([]);
+        });
+        
         //it('should log the textual representation of the node', function () {
         //
         //})
