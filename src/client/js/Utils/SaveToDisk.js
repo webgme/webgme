@@ -7,8 +7,8 @@
 define(['blob/BlobClient'], function (BlobClient) {
     'use strict';
 
-    function saveJsonToDisk(fileName, data, callback) {
-        saveJsonToBlobStorage(fileName, data, function (err, downloadUrl) {
+    function saveJsonToDisk(fileName, data, logger, callback) {
+        saveJsonToBlobStorage(fileName, data, logger, function (err, downloadUrl) {
             if (err) {
                 return callback(err);
             }
