@@ -344,7 +344,7 @@ describe('AutoRouter', function () {
 
                     hasBracketOpeningOrClosing,
                     testFn = function (edge) {
-                        return edge.bracketOpening || edge.bracketOpening;
+                        return edge.bracketOpening || edge.bracketClosing;
                     };
 
                 router.addPath({src: box1.ports[srcId], dst: box1.ports[dstId]});
@@ -352,7 +352,7 @@ describe('AutoRouter', function () {
 
                 // Check that the graph contains an edge that is bracket closing or opening
                 hasBracketOpeningOrClosing = utils.evaluateEdges(router.graph.horizontal, testFn) ||
-                utils.evaluateEdges(router.graph.vertical, testFn);
+                    utils.evaluateEdges(router.graph.vertical, testFn);
 
                 if (!hasBracketOpeningOrClosing) {
                     router.graph.dumpEdgeLists();

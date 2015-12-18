@@ -165,140 +165,138 @@ define([
         return uniqueId;
     };
 
-    AutoRouter.prototype._createPort = function (connData, box) {
+    AutoRouter.prototype._createPort = function (connData, box, port) {
         var angles = connData.angles || [], // Incoming angles. If defined, it will set attr at the end
-            attr = 0, // Set by angles. Defaults to guessing by location if angles undefined
-            type = 'any', // Specify start, end, or any
-            port = box.createPort(),
             rect = box.rect,
-            connArea = connData.area;
+            connArea = connData.area,
+            r = this._createPortRect(rect, connArea),
+            attr = this._getPortAttr.apply(this, angles) || this._guessPortAttr(rect, r, connArea);
 
-        var isStart = 17,
-            arx1,
-            arx2,
-            ary1,
-            ary2;
-
-        var _x1,
-            _x2,
-            _y1,
-            _y2,
-            horizontal;
-
-        var r;
-
-        var a1, // min angle
-            a2, // max angle
-            rightAngle = 0,
-            bottomAngle = 90,
-            leftAngle = 180,
-            topAngle = 270;
-
-        if (connArea instanceof Array) {
-            isStart = 17;
-
-            // This gives us a coefficient to multiply our attributes by to govern incoming
-            // or outgoing connection. Now, the port needs only to determine the direction
-            if (type !== 'any') {
-                isStart -= (type === 'start' ? 1 : 16);
-            }
-
-            // using points to designate the connection area: [ [x1, y1], [x2, y2] ]
-            _x1 = Math.min(connArea[0][0], connArea[1][0]);
-            _x2 = Math.max(connArea[0][0], connArea[1][0]);
-            _y1 = Math.min(connArea[0][1], connArea[1][1]);
-            _y2 = Math.max(connArea[0][1], connArea[1][1]);
-            horizontal = _y1 === _y2;
-
-            // If it is a single point of connection, we will expand it to a rect
-            // We will determine that it is horizontal by if it is closer to a horizontal edges
-            // or the vertical edges
-            if (_y1 === _y2 && _x1 === _x2) {
-                horizontal = Math.min(Math.abs(rect.ceil - _y1), Math.abs(rect.floor - _y2)) <
-                Math.min(Math.abs(rect.left - _x1), Math.abs(rect.right - _x2));
-                if (horizontal) {
-                    _x1 -= 1;
-                    _x2 += 1;
-                } else {
-                    _y1 -= 1;
-                    _y2 += 1;
-                }
-            }
-
-            assert(horizontal || _x1 === _x2,
-                'AutoRouter:addBox Connection Area for box must be either horizontal or vertical');
-
-            arx1 = _x1;
-            arx2 = _x2;
-            ary1 = _y1;
-            ary2 = _y2;
-
-            if (horizontal) {
-                if (Math.abs(_y1 - rect.ceil) < Math.abs(_y1 - rect.floor)) { // Closer to the top (horizontal)
-                    ary1 = _y1 + 1;
-                    ary2 = _y1 + 5;
-                    attr = CONSTANTS.PortStartOnTop + CONSTANTS.PortEndOnTop;
-                } else { // Closer to the top (horizontal)
-                    ary1 = _y1 - 5;
-                    ary2 = _y1 - 1;
-                    attr = CONSTANTS.PortStartOnBottom + CONSTANTS.PortEndOnBottom;
-                }
-
-            } else {
-                if (Math.abs(_x1 - rect.left) < Math.abs(_x1 - rect.right)) {// Closer to the left (vertical)
-                    arx1 += 1;
-                    arx2 += 5;
-                    attr = CONSTANTS.PortStartOnLeft + CONSTANTS.PortEndOnLeft;
-                } else {// Closer to the right (vertical)
-                    arx1 -= 5;
-                    arx2 -= 1;
-                    attr = CONSTANTS.PortStartOnRight + CONSTANTS.PortEndOnRight;
-                }
-            }
-
-        }
-        // Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
-        if (arx2 - arx1 < 3) {
-            arx1 -= 2;
-            arx2 += 2;
-        }
-        // Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
-        if (ary2 - ary1 < 3) {
-            ary1 -= 2;
-            ary2 += 2;
-        }
-
-        r = new ArRect(arx1, ary1, arx2, ary2);
-
-        // If 'angles' is defined, I will use it to set attr
-        if (angles[0] !== undefined && angles[1] !== undefined) {
-            a1 = angles[0]; // min angle
-            a2 = angles[1]; // max angle
-
-            attr = 0; // Throw away our guess of attr
-
-            if (rightAngle >= a1 && rightAngle <= a2) {
-                attr += CONSTANTS.PortStartOnRight + CONSTANTS.PortEndOnRight;
-            }
-
-            if (topAngle >= a1 && topAngle <= a2) {
-                attr += CONSTANTS.PortStartOnTop + CONSTANTS.PortEndOnTop;
-            }
-
-            if (leftAngle >= a1 && leftAngle <= a2) {
-                attr += CONSTANTS.PortStartOnLeft + CONSTANTS.PortEndOnLeft;
-            }
-
-            if (bottomAngle >= a1 && bottomAngle <= a2) {
-                attr += CONSTANTS.PortStartOnBottom + CONSTANTS.PortEndOnBottom;
-            }
-        }
-
+        port = port || box.createPort();
         port.setLimitedDirs(false);
         port.attributes = attr;
         port.setRect(r);
 
         return port;
+    };
+
+    AutoRouter.prototype._guessPortAttr = function (parentRect, portRect, connArea) {
+        var center = portRect.getCenter(),
+            horizontal,
+            attr;
+
+        horizontal = connArea[0][1] === connArea[1][1];
+
+        if (horizontal) {
+            if (Math.abs(center.y - parentRect.ceil) < Math.abs(center.y - parentRect.floor)) { // Closer to the top (horizontal)
+                attr = CONSTANTS.PortStartOnTop + CONSTANTS.PortEndOnTop;
+            } else { // Closer to the top (horizontal)
+                attr = CONSTANTS.PortStartOnBottom + CONSTANTS.PortEndOnBottom;
+            }
+
+        } else {
+            if (Math.abs(center.x - parentRect.left) < Math.abs(center.x - parentRect.right)) {// Closer to the left (vertical)
+                attr = CONSTANTS.PortStartOnLeft + CONSTANTS.PortEndOnLeft;
+            } else {// Closer to the right (vertical)
+                attr = CONSTANTS.PortStartOnRight + CONSTANTS.PortEndOnRight;
+            }
+        }
+
+        return attr;
+    };
+
+    AutoRouter.prototype._getPortAttr = function (minAngle, maxAngle) {
+        var rightAngle = 0,
+            bottomAngle = 90,
+            leftAngle = 180,
+            topAngle = 270,
+            attr;
+
+        // If 'angles' is defined, I will use it to set attr
+        if (minAngle !== undefined && maxAngle !== undefined) {
+            attr = 0;
+
+            if (rightAngle >= minAngle && rightAngle <= maxAngle) {
+                attr += CONSTANTS.PortStartOnRight + CONSTANTS.PortEndOnRight;
+            }
+
+            if (topAngle >= minAngle && topAngle <= maxAngle) {
+                attr += CONSTANTS.PortStartOnTop + CONSTANTS.PortEndOnTop;
+            }
+
+            if (leftAngle >= minAngle && leftAngle <= maxAngle) {
+                attr += CONSTANTS.PortStartOnLeft + CONSTANTS.PortEndOnLeft;
+            }
+
+            if (bottomAngle >= minAngle && bottomAngle <= maxAngle) {
+                attr += CONSTANTS.PortStartOnBottom + CONSTANTS.PortEndOnBottom;
+            }
+        }
+
+        return attr;
+    };
+
+    AutoRouter.prototype._createPortRect = function (parentRect, connArea) {
+        var horizontal,
+            x1, x2, y1, y2;
+
+        // using points to designate the connection area: [ [x1, y1], [x2, y2] ]
+        x1 = Math.min(connArea[0][0], connArea[1][0]);
+        x2 = Math.max(connArea[0][0], connArea[1][0]);
+        y1 = Math.min(connArea[0][1], connArea[1][1]);
+        y2 = Math.max(connArea[0][1], connArea[1][1]);
+        horizontal = y1 === y2;
+
+        // If it is a single point of connection, we will expand it to a rect
+        // We will determine that it is horizontal by if it is closer to a horizontal edges
+        // or the vertical edges
+        if (y1 === y2 && x1 === x2) {
+            horizontal = Math.min(Math.abs(parentRect.ceil - y1), Math.abs(parentRect.floor - y2)) <
+            Math.min(Math.abs(parentRect.left - x1), Math.abs(parentRect.right - x2));
+            if (horizontal) {
+                x1 -= 1;
+                x2 += 1;
+            } else {
+                y1 -= 1;
+                y2 += 1;
+            }
+        }
+
+        assert(horizontal || x1 === x2,
+            'AutoRouter:addBox Connection Area for box must be either horizontal or vertical');
+
+        if (horizontal) {
+            if (Math.abs(y1 - parentRect.ceil) < Math.abs(y1 - parentRect.floor)) {  // Closer to the top (horizontal)
+                y1 += 1;
+                y2 += 5;
+            } else {  // Closer to the top (horizontal)
+                y1 -= 5;
+                y2 -= 1;
+            }
+
+        } else {
+            if (Math.abs(x1 - parentRect.left) < Math.abs(x1 - parentRect.right)) {  // Closer to the left (vertical)
+                x1 += 1;
+                x2 += 5;
+            } else {  // Closer to the right (vertical)
+                x1 -= 5;
+                x2 -= 1;
+            }
+        }
+
+
+        // Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
+        if (x2 - x1 < 3) {
+            x1 -= 2;
+            x2 += 2;
+        }
+        // Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
+        if (y2 - y1 < 3) {
+            y1 -= 2;
+            y2 += 2;
+        }
+
+        return new ArRect(x1, y1, x2, y2);
     };
 
     /**
@@ -516,37 +514,9 @@ define([
         // Remove owner box from graph
         var portId = this.getPortId(portInfo.id, boxObject),
             oldPort = this.ports[portId],
-            tmpId = '##TEMP_ID##',
-            incomingPaths = this.portId2Path[portId].in,
-            outgoingPaths = this.portId2Path[portId].out,
             newPort;
 
-        this._changePortId(portId, tmpId);
-        newPort = this.addPort(boxObject, portInfo);
-
-        // For all paths using this port, add the new port
-        var path,
-            i;
-
-        for (i = outgoingPaths.length; i--;) {
-            path = outgoingPaths[i];
-            path.startports.push(newPort);
-            this.graph.disconnect(path);
-            this.portId2Path[portId].out.push(path);
-        }
-
-        for (i = incomingPaths.length; i--;) {
-            path = incomingPaths[i];
-            path.endports.push(newPort);
-            this.graph.disconnect(path);
-            this.portId2Path[portId].in.push(path);
-        }
-
-        this.removePort(oldPort);
-
-        // update the boxObject
-        boxObject.ports[portId] = newPort;
-
+        newPort = this._createPort(portInfo, boxObject.box, oldPort);
         return newPort;
     };
 
