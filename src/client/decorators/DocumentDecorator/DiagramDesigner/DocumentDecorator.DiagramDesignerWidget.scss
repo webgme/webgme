@@ -10,8 +10,10 @@
   width: auto;
   border: 1px solid black;
   background-color: #dedede;
-  padding: 3px;
+  padding: 2ex;
   text-align: center;
+  font-weight: normal;
+
   i.text-meta {
     &:hover {
       font-weight: bolder;
@@ -24,7 +26,6 @@
     text-align: left;
   }
   .name {
-    margin-top: 10px;
     white-space: nowrap;
     font-size: 11px;
     font-weight: bold;

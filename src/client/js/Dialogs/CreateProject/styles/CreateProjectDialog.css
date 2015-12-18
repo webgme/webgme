@@ -1,10 +1,6 @@
 /*
  * @author pmeijer / https://github.com/pmeijer
  */
-div.create-new-project-dialog * {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none; }
 div.create-new-project-dialog div.modal-content div.modal-header .gme-icon {
   background-image: url("../../../../img/gme-icon-24.png");
   height: 24px;

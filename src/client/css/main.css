@@ -37,6 +37,14 @@ ol.unstyled {
     list-style: none;
 }
 
+* {
+    -moz-user-select:-moz-none;
+    -webkit-user-select:none;
+    -o-user-select:none;
+    user-select:none;
+    -ms-user-select:none;
+}
+
 .user-select-off {
     -moz-user-select:-moz-none;
     -webkit-user-select:none;

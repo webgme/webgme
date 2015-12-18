@@ -282,7 +282,7 @@ define(['js/logger',
 
         this._el.on('click.iconRemove', '.remove-branch-button', function (event) {
             var btn = $(this),
-                branchName = btn.data('branch')+'', //force to be string
+                branchName = btn.data('branch') + '', //force to be string
                 branchHash,
                 i;
 
@@ -300,7 +300,7 @@ define(['js/logger',
 
         this._el.on('click.iconRemove', '.remove-tag-button', function (event) {
             var btn = $(this),
-                tagName = btn.data('tag')+''; //force to be string
+                tagName = btn.data('tag') + ''; //force to be string
 
             self.onDeleteTagClick(tagName);
 
@@ -704,11 +704,19 @@ define(['js/logger',
         //generate 'Create branch from here' button
         btn = this._createBranchBtnDOMBase.clone();
         btn.data(COMMIT_IT, params.id);
+        if (this._projectAccess.write === false) {
+            btn.disable(true);
+        }
+
         tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
 
         //generate 'Create tag here' button
         btn = this._createTagBtnDOMBase.clone();
         btn.data(COMMIT_IT, params.id);
+        if (this._projectAccess.write === false) {
+            btn.disable(true);
+        }
+
         tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
 
         //generate 'switch to this commit' button

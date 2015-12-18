@@ -219,7 +219,7 @@ require(
                     //'routeStyles',
                     'ui.bootstrap',
                     'isis.ui.components',
-                    'gme.ui.projectsDialog',
+                    //'gme.ui.projectsDialog',
                     'gme.ui.headerPanel'
                 ]).config(function ($locationProvider) {
                     $locationProvider.html5Mode({
