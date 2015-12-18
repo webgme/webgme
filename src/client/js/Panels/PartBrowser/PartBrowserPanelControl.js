@@ -61,6 +61,12 @@ define(['js/logger',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObject) {
             self._containerNodeId = activeObject;
+            //we have to reset the aspect, if that is not available in the new container
+            var container = self._client.getNode(activeObject);
+            if (!container ||
+                container.getValidAspectNames().indexOf(self._aspect) === -1) {
+                self._aspect = null;
+            }
             self._updateDescriptor(self._getPartDescriptorCollection());
         });
 
@@ -136,9 +142,13 @@ define(['js/logger',
 
         // TODO: later we should apply project specific sorting if it is defined.
         keys = Object.keys(newDescriptor || {})         // get the descriptor keys or empty object
-            .map(function (key) { return descriptor[key]; })  // turn the object into an array
+            .map(function (key) {
+                return descriptor[key];
+            })  // turn the object into an array
             .sort(self._defaultCompare)                 // sort the objects, using the default compare
-            .map(function (value, index) { return value.id; }); // get only the ids
+            .map(function (value, index) {
+                return value.id;
+            }); // get only the ids
 
         //add and update
         for (i = 0; i < keys.length; i += 1) {
@@ -270,7 +280,6 @@ define(['js/logger',
             }
         }
 
-
         return patterns;
     };
 
@@ -302,7 +311,6 @@ define(['js/logger',
         return result;
     };
 
-
     PartBrowserControl.prototype._getPartDescriptor = function (id) {
         var desc = this._getObjectDescriptor(id);
 
@@ -314,7 +322,6 @@ define(['js/logger',
             desc.preferencesHelper = PreferencesHelper.getPreferences();
             desc.aspect = this._aspect;
         }
-
 
         return desc;
     };
@@ -340,7 +347,6 @@ define(['js/logger',
             }
         }
     };
-
 
     PartBrowserControl.prototype._initDragDropFeatures = function () {
         var dragEffects = this._partBrowserView.DRAG_EFFECTS;

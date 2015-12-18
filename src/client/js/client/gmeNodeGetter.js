@@ -303,6 +303,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
             }
         }
 
+        function getValidAspectNames() {
+            return state.core.getValidAspectNames(state.nodes[_id].node);
+        }
+
         if (state.nodes[_id]) {
             return {
                 getParentId: getParentId,
@@ -345,6 +349,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
                 getValidSetNames: getValidSetNames,
                 getValidChildrenTypesDetailed: getValidChildrenTypesDetailed,
                 getValidSetMemberTypesDetailed: getValidSetMemberTypesDetailed,
+                getValidAspectNames: getValidAspectNames,
                 isConnection: isConnection,
                 isAbstract: isAbstract,
                 getCrosscutsInfo: getCrosscutsInfo,
