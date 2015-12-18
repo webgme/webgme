@@ -70,6 +70,8 @@ define([
         this.rect.assign(r);
         this.calculateSelfPoints();
         this.resetAvailableArea();
+        // Clear the points
+        this.clearPoints();
     };
 
     AutoRouterPort.prototype.shiftBy = function (offset) {
@@ -435,6 +437,24 @@ define([
 
         this.points = [[], [], [], []];
 
+    };
+
+    AutoRouterPort.prototype.clearPoints = function () {
+        var clearedPaths = {},
+            point,
+            path;
+
+        for (var i = this.points.length; i--;) {
+            for (var j = this.points[i].length; j--;) {
+                point = this.points[i][j];
+                path = point.owner;
+                if (path && !clearedPaths[path.id]) {
+                    path.clearPorts(true);
+                    clearedPaths[path.id] = true;
+                }
+            }
+        }
+        this.points = [[], [], [], []];
     };
 
     return AutoRouterPort;

@@ -60,7 +60,7 @@ define([
         }
     };
 
-    AutoRouterPath.prototype.clearPorts = function () {
+    AutoRouterPath.prototype.clearPorts = function (disconnect) {
         // remove the start/endpoints from the given ports
         if (this.startpoint) {
             this.startport.removePoint(this.startpoint);
@@ -72,6 +72,9 @@ define([
         }
         this.startport = null;
         this.endport = null;
+        if (disconnect) {
+            this.owner.disconnect(this);
+        }
     };
 
     AutoRouterPath.prototype.getStartPort = function () {

@@ -7,12 +7,14 @@
 
 define([
     'js/logger',
+    'common/util/assert',
     'module',
     './AutoRouter.ActionApplier',
     './AutoRouter.Utils',
     './ConnectionRouteManager2',
     'js/Utils/SaveToDisk'
 ], function (Logger,
+             assert,
              module,
              ActionApplier,
              Utils,
@@ -101,7 +103,8 @@ define([
                 break;
 
             case 'remove':
-                id = array[1][1];
+                id = array[1][0];
+                assert(id !== undefined);
                 delete this._onItemCreateQueue[id];
                 break;
         }
@@ -490,8 +493,6 @@ define([
             boxIds = [objId],
             index;
 
-        this._modifyItem(objId, removeFn);
-
         // Update moved item records
         if (this.diagramDesigner.connectionIds.indexOf(objId) !== -1) {
             boxIds = this._getBoxIdsFor(objId);
@@ -502,12 +503,18 @@ define([
                 }
             }
         } else {
+            // Remove all the paths
+            if (this._pathsForItem[objId]) {
+                this._pathsForItem[objId].forEach(this.deleteItem.bind(this));
+            }
             delete this._pathsForItem[objId];
             index = this._movedItems.indexOf(objId);
             if (index > -1) {
                 this._movedItems.splice(index, 1);
             }
         }
+
+        this._modifyItem(objId, removeFn);
     };
 
     ConnectionRouteManager3.prototype._resizeItem = function (objId) {
@@ -702,7 +709,7 @@ define([
             return;
         }
 
-        Saver.saveJsonToDisk(filename, JSON.parse(data), function (err) {
+        Saver.saveJsonToDisk(filename, this.logger, JSON.parse(data), function (err) {
             if (err) {
                 self.logger.error('downloading resource for error handling failed', {metadata: {error: err}});
             }
