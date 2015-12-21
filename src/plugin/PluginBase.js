@@ -385,13 +385,13 @@ define([
             persisted.objects,
             commitMessage)
             .then(function (commitResult) {
-                self.currentHash = commitResult.hash;
-
                 if (commitResult.status === STORAGE_CONSTANTS.SYNCED) {
+                    self.currentHash = commitResult.hash;
                     self.logger.info('"' + self.branchName + '" was updated to the new commit.');
                     self.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
                     return commitResult;
                 } else if (commitResult.status === STORAGE_CONSTANTS.FORKED) {
+                    self.currentHash = commitResult.hash;
                     return self._createFork();
                 } else if (commitResult.status === STORAGE_CONSTANTS.CANCELED) {
                     // Plugin running in the browser and the client has made changes since plugin was invoked.
@@ -406,6 +406,7 @@ define([
                             return self._createFork();
                         });
                 } else if (!self.branchName) {
+                    self.currentHash = commitResult.hash;
                     self.addCommitToResult(null);
                 } else {
                     throw new Error('setBranchHash returned unexpected status' + commitResult.status);
