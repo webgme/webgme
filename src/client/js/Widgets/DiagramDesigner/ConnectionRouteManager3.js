@@ -496,10 +496,8 @@ define([
         if (this.diagramDesigner.connectionIds.indexOf(objId) !== -1) {
             boxIds = this._getBoxIdsFor(objId);
             for (var i = boxIds.length; i--;) {
-                if (this._pathsForItem[boxIds[i]]) {  // box hasn't been removed
-                    index = this._pathsForItem[boxIds[i]].indexOf(objId);
-                    this._pathsForItem[boxIds[i]].splice(index, 1);
-                }
+                index = this._pathsForItem[boxIds[i]].indexOf(objId);
+                this._pathsForItem[boxIds[i]].splice(index, 1);
             }
         } else {
             delete this._pathsForItem[objId];
@@ -698,15 +696,19 @@ define([
 
     ConnectionRouteManager3.prototype.download = function (filename, data) {
         var self = this;
-        if (!self.readyToDownload) {
+        if (!this.readyToDownload) {
             return;
         }
 
-        Saver.saveJsonToDisk(filename, JSON.parse(data), function (err) {
+        if (!filename) {
+            filename = 'console.json';
+        }
+
+        Saver.saveJsonToDisk(filename, data, function (err) {
             if (err) {
                 self.logger.error('downloading resource for error handling failed', {metadata: {error: err}});
             }
-            self.readyToDownload = false;
+            this.readyToDownload = false;
         });
     };
 
