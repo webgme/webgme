@@ -74,8 +74,9 @@ function ServerWorkerManager(_parameters) {
             childProcess.on('message', messageHandling);
             childProcess.on('exit', function (code, signal) {
                 logger.debug('worker has exited: ' + childProcess.pid);
-                if (code !== null && !signal) {
-                    logger.warn('worker ' + childProcess.pid + ' has exited abnormally with code ' + code);
+                if (code !== 0) {
+                    logger.warn('worker ' + childProcess.pid + ' has exited abnormally with code ' + code +
+                        ', signal', signal);
                 }
 
                 if (workerType === CONSTANTS.workerTypes.connected) {
