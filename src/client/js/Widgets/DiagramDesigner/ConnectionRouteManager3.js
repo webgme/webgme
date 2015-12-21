@@ -75,10 +75,6 @@ define([
     // they are overridden by ActionApplier
     ConnectionRouteManager3.prototype.init = ActionApplier.prototype._clearRecords;
 
-    ConnectionRouteManager3.prototype.downloadReplayData = function () {
-        this.worker.postMessage(['DownloadReplay']);
-    };
-
     ConnectionRouteManager3.prototype._invokeAutoRouterMethod = function () {
         var array = Utils.toArray(arguments),  // Remove the extra 'arguments' stuff
             id;
