@@ -85,6 +85,17 @@ define(['js/logger'], function (Logger) {
                 });
         };
 
+        self._view.onSelectBranch = function (branchName) {
+            self._client.selectBranch(branchName, null,
+                function (err) {
+                    if (err) {
+                        self._logger.error(err);
+                    } else {
+                        self._logger.debug('Branch selected in client', branchName);
+                    }
+                });
+        };
+
         self._view.onLoadMoreCommits = function (num, start) {
             self._loadMoreCommits(num, start);
         };

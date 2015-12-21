@@ -203,6 +203,11 @@ define(['js/logger',
             JSON.stringify(params) + '\'');
     };
 
+    ProjectRepositoryWidget.prototype.onSelectBranch = function (params) {
+        this._logger.warn('onSelectBranch is not overridden in Controller...params: \'' +
+            JSON.stringify(params) + '\'');
+    };
+
     /******************* PRIVATE API *****************************/
 
     ProjectRepositoryWidget.cMessageStyleStr = 'div.' + MESSAGE_DIV_CLASS + ' { max-width: __MW__px; }';
@@ -303,6 +308,15 @@ define(['js/logger',
                 tagName = btn.data('tag') + ''; //force to be string
 
             self.onDeleteTagClick(tagName);
+
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        this._el.on('click.select-branch-in-text', '.select-branch-in-text', function (event) {
+            var branchName = $(this).text();
+
+            self.onSelectBranch(branchName);
 
             event.stopPropagation();
             event.preventDefault();
@@ -509,12 +523,12 @@ define(['js/logger',
     };
 
     ProjectRepositoryWidget.prototype._branchLabelDOMBase = $(
-        '<span class="label"><i data-branch="" ' +
+        '<span class="label"><span class="label-name select-branch-in-text" title="Select branch"></span><i data-branch="" ' +
         'class="glyphicon glyphicon-remove icon-white remove-branch-button" title="Delete branch"></i></span>'
     );
 
     ProjectRepositoryWidget.prototype._tagLabelDOMBase = $(
-        '<span class="label"><i data-tag="" ' +
+        '<span class="label"><span class="label-name"><i data-tag="" ' +
         'class="glyphicon glyphicon-tag tag-label-icon"></i></span>'
     );
 
@@ -523,7 +537,7 @@ define(['js/logger',
             td,
             div;
 
-        label.prepend(branchName);
+        label.find('span.label-name').text(branchName);
         label.find('i').attr('data-branch', branchName);
         label.addClass(BRANCH_LABEL_CLASS);
         label.addClass(COMMON_LABEL_CLASS);
@@ -545,7 +559,7 @@ define(['js/logger',
             td,
             div;
 
-        label.append(tagName);
+        label.find('span.label-name').text(tagName);
         label.append($('<i data-tag="' + tagName + '" class="glyphicon glyphicon-remove icon-white remove-tag-button"' +
             ' title="Delete tag"/>'));
 
