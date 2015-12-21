@@ -7,43 +7,25 @@
 
 
 define([
-    'angular',
     'superagent',
     'js/logger',
     'js/Constants',
     'js/Loader/LoaderCircles',
     'js/Utils/GMEConcepts',
     'js/Dialogs/CreateProject/CreateProjectDialog',
+    'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
     'common/storage/util',
     'js/util',
     'text!./templates/ProjectsDialog.html',
-
-    'isis-ui-components/simpleDialog/simpleDialog',
-    'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html',
-
     'css!./styles/ProjectsDialog.css'
-
-], function (ng, superagent, Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, StorageUtil,
-             clientUtil, projectsDialogTemplate, ConfirmDialog, DeleteDialogTemplate) {
+], function (superagent, Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, ConfirmDeleteDialog,
+             StorageUtil, clientUtil, projectsDialogTemplate) {
 
     'use strict';
 
     var ProjectsDialog,
         DATA_PROJECT = 'DATA_PROJECT',
-        TABLE_ROW_BASE = $('<tr class="project-row"></tr>'),
-        ngConfirmDialog,
-        rootScope;
-
-
-    angular.module('gme.ui.projectsDialog', ['isis.ui.simpleDialog']).run(function ($simpleDialog, $templateCache,
-                                                                                    $rootScope) {
-        ngConfirmDialog = $simpleDialog;
-
-        $templateCache.put('DeleteDialogTemplate.html', DeleteDialogTemplate);
-
-        rootScope = $rootScope;
-
-    });
+        TABLE_ROW_BASE = $('<tr class="project-row"></tr>');
 
     ProjectsDialog = function (client, createNew, createType) {
         this._logger = Logger.create('gme:Dialogs:Projects:ProjectsDialog', WebGMEGlobal.gmeConfig.client.log);
@@ -57,6 +39,7 @@ define([
         this._creatingNew = createNew;
         this._createType = createType || 'seed';
         this._logger.debug('Created');
+        this._dontAskOnDelete = false;
     };
 
     ProjectsDialog.prototype.show = function () {
@@ -139,43 +122,45 @@ define([
                 refreshPage = function () {
                     document.location.href = window.location.href.split('?')[0];
                 },
+                doDelete = function () {
+                    self._client.deleteProject(projectId, function (err) {
+                        if (err) {
+                            self._logger.error(err);
+                            return;
+                        }
 
-                deleteProjectModal,
-                myScope = rootScope.$new(true);
+                        if (self._activeProject === projectId) {
+                            refreshPage();
+                        } else {
+                            refreshList();
+                        }
+                    });
+                },
+                deleteProjectModal;
 
 
             if (self._projectList[projectId].rights.delete === true) {
-                myScope.thingName = 'project "' + projectId + '"';
+                if (self._dontAskOnDelete === true) {
+                    doDelete();
+                    return;
+                }
+                deleteProjectModal = new ConfirmDeleteDialog();
 
-                deleteProjectModal = ngConfirmDialog.open({
-                    dialogTitle: 'Confirm delete',
-                    dialogContentTemplate: 'DeleteDialogTemplate.html',
-                    onOk: function () {
-                        self._client.deleteProject(projectId, function (err) {
-                            if (err) {
-                                self._logger.error(err);
-                                return;
-                            }
+                deleteProjectModal.onHide = function () {
+                    self._modalContent.removeClass('in-background');
+                };
 
-                            if (self._activeProject === projectId) {
-                                refreshPage();
-                            } else {
-                                refreshList();
-                            }
-                        });
+                deleteProjectModal.show({
+                        deleteItem: StorageUtil.getProjectDisplayedNameFromProjectId(projectId),
+                        enableDontAskAgain: true
                     },
-                    scope: myScope
-                });
-
+                    function (dontAskAgain) {
+                        if (dontAskAgain) {
+                            self._dontAskOnDelete = true;
+                        }
+                        doDelete();
+                    });
                 self._modalContent.addClass('in-background');
-
-                deleteProjectModal.result.then(function () {
-                    self._modalContent.removeClass('in-background');
-                }, function () {
-                    self._modalContent.removeClass('in-background');
-                });
-
-
             }
         }
 

@@ -91,7 +91,12 @@
           font-size: 10px; }
           .project-repository-widget table tr th .common-label i.icon-white:hover,
           .project-repository-widget table tr td .common-label i.icon-white:hover {
-            cursor: pointer; }
+            cursor: pointer;
+            color: darkred; }
+        .project-repository-widget table tr th .common-label .select-branch-in-text:hover,
+        .project-repository-widget table tr td .common-label .select-branch-in-text:hover {
+          cursor: pointer;
+          font-weight: bold; }
         .project-repository-widget table tr th .common-label i.tag-label-icon,
         .project-repository-widget table tr td .common-label i.tag-label-icon {
           padding-right: 5px;

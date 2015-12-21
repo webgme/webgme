@@ -70,7 +70,7 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
 
         executePlugin = function (name) {
             WebGMEGlobal.InterpreterManager.run(name, null, function (result) {
-                self._results.__unread = true;
+                result.__unread = true;
                 self._results.splice(0, 0, result);
                 self.$btnExecutePlugin.el.find('.btn').disable(false);
                 unreadResults += 1;

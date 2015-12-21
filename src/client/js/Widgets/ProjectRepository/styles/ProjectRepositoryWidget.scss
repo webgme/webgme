@@ -144,6 +144,15 @@ $table-row-height: 25px;
             font-size: 10px;
             &:hover {
               cursor: pointer;
+              color: darkred;
+            }
+          }
+
+          .select-branch-in-text {
+            &:hover {
+              cursor: pointer;
+              //color: #3160ab;
+              font-weight: bold;
             }
           }
 

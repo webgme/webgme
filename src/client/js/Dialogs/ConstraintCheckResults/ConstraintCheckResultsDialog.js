@@ -22,11 +22,11 @@ define(['js/util',
         RESULT_SUCCESS_CLASS = 'alert-success',
         RESULT_ERROR_CLASS = 'alert-danger',
         ICON_SUCCESS = $('<i class="glyphicon glyphicon-ok"/>'),
-        ICON_ERROR = $('<i class="glyphicon glyphicon-warning-sign glyphicon glyphicon-warning-sign"/>'),
+        ICON_ERROR = $('<i class="glyphicon glyphicon-warning-sign"/>'),
         RESULT_NAME_BASE = $('<span/>', {class: 'title'}),
         RESULT_TIME_BASE = $('<span/>', {class: 'time'}),
     //jscs:disable maximumLineLength
-        RESULT_DETAILS_BTN_BASE = $('<span class="btn btn-micro btn-details pull-right"><i class="glyphicon glyphicon-plus"/></span>'),
+        RESULT_DETAILS_BTN_BASE = $('<span class="btn btn-micro btn-details pull-right result-details"><i class="glyphicon glyphicon-plus"/></span>'),
     //jscs:enable maximumLineLength
         RESULT_DETAILS_BASE = $('<div/>', {class: 'messages collapse'}),
         NODE_ENTRY_BASE = $('<div/>', {class: 'constraint-check-result'}),
@@ -105,6 +105,7 @@ define(['js/util',
             resultHeader.append(spanResultTime);
 
             resultDetailsBtn = RESULT_DETAILS_BTN_BASE.clone();
+            resultDetailsBtn.addClass('main-details');
             resultHeader.append(resultDetailsBtn);
 
             //collecting the nodes which has violation
@@ -156,6 +157,10 @@ define(['js/util',
             }
             resultHeader.append(nodeContainer);
 
+            if (j === 0) {
+                resultDetailsBtn.addClass('no-details-available');
+            }
+
             resultEntry.append(resultHeader);
 
             body.append(resultEntry);
@@ -170,9 +175,9 @@ define(['js/util',
             $(this).siblings('.messages').toggleClass('in');
 
             if ($(this).children('.glyphicon-plus').length > 0) {
-                $(this).html('<i class="glyphicon glyphicon-minus glyphicon glyphicon-minus"/>');
+                $(this).html('<i class="glyphicon glyphicon-minus"/>');
             } else {
-                $(this).html('<i class="glyphicon glyphicon-plus glyphicon glyphicon-plus"/>');
+                $(this).html('<i class="glyphicon glyphicon-plus"/>');
             }
             event.stopPropagation();
             event.preventDefault();

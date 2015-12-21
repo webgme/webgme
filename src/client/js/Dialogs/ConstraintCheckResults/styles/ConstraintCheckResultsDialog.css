@@ -8,6 +8,8 @@
   margin-bottom: 10px;
   background-color: #f5f5f5;
   border: 1px solid #ddd; }
+  .constraint-check-results-dialog .modal-body div.constraint-check-result .result-details.main-details.no-details-available {
+    display: none; }
   .constraint-check-results-dialog .modal-body div.constraint-check-result.unread {
     color: #3a87ad;
     background-color: #d9edf7;

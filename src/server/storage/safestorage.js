@@ -444,7 +444,7 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
             })
             .then(function (projectId) {
                 data.newProjectId = projectId;
-                return self.gmeAuth.authorizeByUserId(data.username, projectId, 'create', {
+                return self.gmeAuth.authorizeByUserId(data.ownerId, projectId, 'create', {
                     read: true,
                     write: true,
                     delete: true

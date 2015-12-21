@@ -1,0 +1,33 @@
+/*
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+div.confirm-delete-dialog {
+  div.modal-header {
+    .header-icon {
+      font-size: 20px;
+      margin-right: 1ex;
+      display: inline-block;
+      color: #b30404;
+    }
+    span {
+      font-size: 24px;
+    }
+  }
+  form {
+    .do-not-show {
+      display: none;
+    }
+    label {
+      font-weight: lighter;
+    }
+  }
+  .modal-content {
+    .delete-item {
+      text-align: center;
+      font-size: 20px;
+      margin-top: 14px;
+      font-weight: bold;
+    }
+  }
+}

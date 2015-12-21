@@ -9,8 +9,9 @@
   width: auto;
   border: 1px solid black;
   background-color: #dedede;
-  padding: 3px;
-  text-align: center; }
+  padding: 2ex;
+  text-align: center;
+  font-weight: normal; }
   .Document-decorator i.text-meta:hover {
     font-weight: bolder; }
   .Document-decorator i.text-meta.not-activated {
@@ -18,7 +19,6 @@
   .Document-decorator .doc {
     text-align: left; }
   .Document-decorator .name {
-    margin-top: 10px;
     white-space: nowrap;
     font-size: 11px;
     font-weight: bold;

@@ -14,10 +14,9 @@ define([
     'js/Dialogs/Merge/MergeDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
     'js/Dialogs/Branches/BranchesDialog',
+    'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
+    'js/Dialogs/ProjectRights/ProjectRightsDialog',
     'common/storage/util',
-    'isis-ui-components/simpleDialog/simpleDialog',
-    'text!js/Dialogs/Projects/templates/DeleteDialogTemplate.html',
-    'text!js/Dialogs/Projects/templates/TransferDialogTemplate.html',
     'js/Utils/SaveToDisk',
     'q'
 ], function (Logger,
@@ -28,30 +27,27 @@ define([
              MergeDialog,
              ProjectRepositoryDialog,
              BranchesDialog,
+             ConfirmDeleteDialog,
+             ProjectRightsDialog,
              StorageUtil,
-             ConfirmDialog,
-             DeleteDialogTemplate,
-             TransferDialogTemplate,
              saveToDisk,
              Q) {
     'use strict';
 
 
-    angular.module('gme.ui.ProjectNavigator', []).run(function ($templateCache) {
-        $templateCache.put('DeleteDialogTemplate.html', DeleteDialogTemplate);
-        $templateCache.put('TransferDialogTemplate.html', TransferDialogTemplate);
+    angular.module('gme.ui.ProjectNavigator', []).run(function () {
     });
 
 
     var ProjectNavigatorController;
 
-    ProjectNavigatorController = function ($scope, gmeClient, $simpleDialog, $timeout, $window, $http) {
+    ProjectNavigatorController = function ($scope, gmeClient, $timeout, $window, $http) {
         var self = this;
         self.logger = Logger.create('gme:Panels:Header:ProjectNavigatorController', WebGMEGlobal.gmeConfig.client.log);
         self.$scope = $scope;
         self.$window = $window;
         self.gmeClient = gmeClient;
-        self.$simpleDialog = $simpleDialog;
+        //self.$simpleDialog = $simpleDialog;
         self.$timeout = $timeout;
         self.$http = $http;
 
@@ -155,10 +151,8 @@ define([
 
         if (self.gmeClient) {
             self.initWithClient();
-            self.$scope.ownerList = [self.userId];
         } else {
             self.initTestData();
-            self.$scope.ownerList = [self.userId];
         }
 
         // only root is selected by default
@@ -179,17 +173,7 @@ define([
     ProjectNavigatorController.prototype.initWithClient = function () {
         var self = this;
 
-        self.$http.get('/api/users/' + self.userId)
-            .then(function (userData) {
-                self.$scope.ownerList = userData.data.orgs;
-                self.$scope.ownerList.push(self.userId);
-            }, function (err) {
-                self.logger.error(err);
-                self.$scope.ownerList = [self.userId];
-            });
-
         // register all event listeners on gmeClient
-
         self.gmeClient.addEventListener(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, function (client, networkStatus) {
             var projectId;
             self.logger.debug('NETWORK_STATUS_CHANGED', networkStatus);
@@ -445,7 +429,6 @@ define([
             deleteProject,
             transferProject,
             selectProject,
-            refreshPage,
             updateProjectList,
             projectDisplayedName;
 
@@ -457,10 +440,6 @@ define([
 
         if (self.gmeClient) {
 
-            refreshPage = function () {
-                document.location.href = window.location.href.split('?')[0];
-            };
-
             updateProjectList = function () {
                 self.updateProjectList.call(self);
             };
@@ -470,75 +449,25 @@ define([
             };
 
             deleteProject = function (data) {
-                var deleteProjectModal;
-
-                self.$scope.thingName = 'project "' + data.projectId + '"';
-
-                deleteProjectModal = self.$simpleDialog.open({
-                    dialogTitle: 'Confirm delete',
-                    dialogContentTemplate: 'DeleteDialogTemplate.html',
-                    onOk: function () {
-                        var activeProjectId = self.gmeClient.getActiveProjectId();
-
-                        self.gmeClient.deleteProject(data.projectId, function (err) {
-                            if (err) {
-                                self.logger.error('Failed deleting project', err);
+                var deleteProjectModal = new ConfirmDeleteDialog();
+                deleteProjectModal.show({deleteItem: data.projectId}, function () {
+                    self.gmeClient.deleteProject(data.projectId, function (err) {
+                        if (err) {
+                            self.logger.error('Failed deleting project', err);
+                        } else {
+                            if (data.projectId === self.gmeClient.getActiveProjectId()) {
+                                self.refreshPage();
                             } else {
-                                if (data.projectId === activeProjectId) {
-                                    refreshPage();
-                                } else {
-                                    self.removeProject(data.projectId);
-                                }
-
+                                self.removeProject(data.projectId);
                             }
-                        });
-                    },
-                    scope: self.$scope
+                        }
+                    });
                 });
-
             };
 
             transferProject = function (data) {
-                var transferProjectModal;
-
-                self.$scope.thingName = data.projectId;
-                self.$scope.newOwnerId = self.userId;
-
-                transferProjectModal = self.$simpleDialog.open({
-                    dialogTitle: 'Transfer',
-                    dialogContentTemplate: 'TransferDialogTemplate.html',
-                    controller: function ($scope, $modalInstance, dialogTitle, dialogContentTemplate) {
-
-                        $scope.dialogTitle = dialogTitle;
-                        $scope.dialogContentTemplate = dialogContentTemplate;
-
-                        $scope.ok = function () {
-                            var activeProjectId = self.gmeClient.getActiveProjectId();
-                            $modalInstance.close();
-                            self.gmeClient.transferProject(data.projectId, $scope.newOwnerId, function (err) {
-                                if (err) {
-                                    self.logger.error('Failed transferProject', err);
-                                } else {
-                                    if (data.projectId === activeProjectId) {
-                                        refreshPage();
-                                    } else {
-                                        self.removeProject(data.projectId);
-                                    }
-                                }
-                            });
-                        };
-
-                        $scope.cancel = function () {
-                            $modalInstance.dismiss('cancel');
-                        };
-
-                        $scope.setNewOwnerId = function (ownerId) {
-                            self.$scope.newOwnerId = ownerId;
-                        };
-                    },
-                    scope: self.$scope
-                });
-
+                var dialog = new ProjectRightsDialog(self.gmeClient, self.logger);
+                dialog.show({projectId: data.projectId});
             };
 
             showAllBranches = function (data) {
@@ -723,17 +652,6 @@ define([
 
         if (self.gmeClient) {
             exportBranch = function (data) {
-                //var url = self.gmeClient.getDumpURL({
-                //    project: data.projectId,
-                //    branch: data.branchId,
-                //    output: data.projectId + '_' + data.branchId
-                //});
-                //
-                //if (url) {
-                //    window.location = url;
-                //} else {
-                //    self.logger.error('Failed to get project dump url for ', data);
-                //}
                 self.gmeClient.getExportProjectBranchUrl(data.projectId,
                     data.branchId, data.projectId + '_' + data.branchId, function (err, url) {
                         if (!err && url) {
@@ -750,27 +668,22 @@ define([
             };
 
             deleteBranch = function (data) {
-                var deleteBranchModal;
-
-                self.$scope.thingName = 'branch "' + data.branchId + '"';
-
-                deleteBranchModal = self.$simpleDialog.open({
-                    dialogTitle: 'Confirm delete',
-                    dialogContentTemplate: 'DeleteDialogTemplate.html',
-                    onOk: function () {
-                        self.gmeClient.deleteBranch(data.projectId,
-                            data.branchId,
-                            data.branchInfo.branchHash,
-                            function (err) {
-                                if (err) {
-                                    self.logger.error('Failed deleting branch of project.',
-                                        data.projectId, data.branchId, err);
-                                } else {
-                                    self.removeBranch(data.projectId, data.branchId);
-                                }
-                            });
-                    },
-                    scope: self.$scope
+                var deleteBranchModal = new ConfirmDeleteDialog(),
+                    deleteItem = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId) +
+                        '  ::  ' + data.branchId;
+                deleteBranchModal.show({deleteItem: deleteItem}, function () {
+                    self.gmeClient.deleteBranch(data.projectId,
+                        data.branchId,
+                        data.branchInfo.branchHash,
+                        function (err) {
+                            if (err) {
+                                self.logger.error('Failed deleting branch of project.',
+                                    data.projectId, data.branchId, err);
+                            } else {
+                                self.removeBranch(data.projectId, data.branchId);
+                            }
+                        }
+                    );
                 });
 
             };
@@ -823,23 +736,11 @@ define([
             };
 
             deleteBranch = function (data) {
-                var deleteBranchModal;
+                var deleteBranchModal = new ConfirmDeleteDialog(),
+                    deleteItem = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId) +
+                        '  -  ' + data.branchId;
 
-                self.logger.debug('delete branch');
-
-                self.$scope.thingName = data.branchId;
-
-                deleteBranchModal = self.$simpleDialog.open({
-                    dialogTitle: 'Confirm delete',
-                    dialogContentTemplate: 'DeleteDialogTemplate.html',
-                    onOk: function () {
-                        self.removeBranch(data.projectId, data.branchId);
-                        //self.selectProject( data );
-                        // you cannot delete the actual branch so there is no need for re-selection
-                    },
-                    scope: self.$scope
-                });
-
+                deleteBranchModal.show({deleteItem: deleteItem}, function () {});
             };
 
             createCommitMessage = function (data) {
@@ -1016,7 +917,7 @@ define([
             }
 
             if (projectId === self.gmeClient.getActiveProjectId()) {
-                self.selectProject({}); // redundant, we reload the entire page in postDelete
+                self.refreshPage();
             }
 
             self.update();
@@ -1330,6 +1231,10 @@ define([
                 prd.show(options);
             });
         }
+    };
+
+    ProjectNavigatorController.prototype.refreshPage = function () {
+        document.location.href = window.location.href.split('?')[0];
     };
 
     return ProjectNavigatorController;
