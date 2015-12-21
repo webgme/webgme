@@ -230,7 +230,8 @@ SafeStorage.prototype.createProject = function (data, callback) {
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-        check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
+        check(REGEXP.PROJECT_NAME.test(data.projectName), deferred,
+            'data.projectName failed regexp: ' + data.projectName);
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -385,7 +386,8 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
         check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
         check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
-        check(REGEXP.PROJECT.test(data.projectName), deferred, 'data.projectName failed regexp: ' + data.projectName);
+        check(REGEXP.PROJECT_NAME.test(data.projectName), deferred,
+            'data.projectName failed regexp: ' + data.projectName);
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
