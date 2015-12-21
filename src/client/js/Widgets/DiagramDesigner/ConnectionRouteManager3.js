@@ -283,19 +283,15 @@ define([
     ConnectionRouteManager3.prototype.redrawConnections = function () {
 
         var disconnectedIds = [],
-            id,
-            conns;
-
+            id;
         for (var i = this._movedItems.length; i--;) {
             id = this._movedItems[i];
-            conns = this._pathsForItem[id] || [];
-            for (var j = conns.length; j--;) {
-                disconnectedIds.push(conns[j]);
-                this._movedPaths[conns[j]] = true;
+            if (this._pathsForItem[id]) {
+                disconnectedIds = disconnectedIds.concat(this._pathsForItem[id]);
             }
         }
-        this.simpleRouter.redrawSomeConnections(disconnectedIds);
         this._movedItems = [];
+        this.simpleRouter.redrawSomeConnections(disconnectedIds);
 
         if (!this._initialized) {
             this._initializeGraph();
@@ -331,10 +327,7 @@ define([
      */
     ConnectionRouteManager3.prototype._renderConnection = function (id, points) {
         if (this.diagramDesigner.items[id]) {  // Only render if the box still exists
-            // Check if it was a moved connection
-            var animate = !this._movedPaths[id];
-            this.diagramDesigner.items[id].setConnectionRenderData(points, animate);
-            delete this._movedPaths[id];
+            this.diagramDesigner.items[id].setConnectionRenderData(points);
         }
     };
 
@@ -348,7 +341,6 @@ define([
 
         this._pathsForItem = {};
         this._movedItems = [];
-        this._movedPaths = {};
     };
 
     ConnectionRouteManager3.prototype._initializeGraph = function () {
@@ -384,8 +376,12 @@ define([
     ConnectionRouteManager3.prototype._getBoxIdsFor = function(connId) {
         var canvas = this.diagramDesigner,
             srcObjId = canvas.connectionEndIDs[connId].srcObjId,
-            dstObjId = canvas.connectionEndIDs[connId].dstObjId;
-        return [srcObjId, dstObjId];
+            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId,
+            dstObjId = canvas.connectionEndIDs[connId].dstObjId,
+            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId,
+            sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
+            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId;
+        return [sId, tId];
     };
 
     ConnectionRouteManager3.prototype.insertConnection = function (connId) {
@@ -422,7 +418,7 @@ define([
             this._invokeAutoRouterMethod('addPath',
                 [{src: srcPorts, dst: dstPorts}, connId]);
             // Record the path
-            this.recordPathFor(connId, srcObjId, dstObjId);
+            this.recordPathFor(connId, sId, tId);
         }
 
         //Set custom points, if applicable
