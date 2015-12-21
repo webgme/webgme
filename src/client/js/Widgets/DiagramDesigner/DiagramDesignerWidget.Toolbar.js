@@ -307,23 +307,6 @@ define([
                     });
             }
         }
-        // Create debug buttons
-        if (DEBUG) {
-            this._ARReplayDownloadBtn = toolbar.addButton({
-                        title: 'Download AutoRouter Replay Data',
-                        icon: 'glyphicon glyphicon-download',
-                        clickFn: function () {
-                            self.connectionRouteManager.downloadReplayData();
-                        }
-                    });
-
-            if (this.connectionRouteManager.downloadReplayData) {
-                this._ARReplayDownloadBtn.show();
-            } else {
-                this._ARReplayDownloadBtn.hide();
-            }
-        }
-
 
         this._toolbarInitialized = true;
     };
@@ -355,6 +338,7 @@ define([
             }
         }
     };
+
 
     return DiagramDesignerWidgetToolbar;
 });
