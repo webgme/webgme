@@ -16,10 +16,11 @@ define([
     'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
     'common/storage/util',
     'js/util',
+    'common/regexp',
     'text!./templates/ProjectsDialog.html',
     'css!./styles/ProjectsDialog.css'
 ], function (superagent, Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, ConfirmDeleteDialog,
-             StorageUtil, clientUtil, projectsDialogTemplate) {
+             StorageUtil, clientUtil, REGEXP, projectsDialogTemplate) {
 
     'use strict';
 
@@ -338,26 +339,30 @@ define([
         });
 
         this._ownerIdList.on('click', 'a.ownerId-selection', function (/*event*/) {
-            var newOwnerId = $(this).text();
+            var newOwnerId = $(this).text(),
+                projectName = self._txtNewProjectName.val(),
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
+                    newOwnerId, projectName);
             self._ownerId = newOwnerId;
             self._selectedOwner.text(newOwnerId);
-            //event.stopPropagation();
-            //event.preventDefault();
+
+            if (isValidProjectName(projectName, projectId) === false) {
+                self._panelCreateNew.addClass('has-error');
+                self._btnNewProjectCreate.disable(true);
+            } else {
+                self._panelCreateNew.removeClass('has-error');
+                self._btnNewProjectCreate.disable(false);
+            }
         });
 
         function isValidProjectName(aProjectName, projectId) {
-            var re = /^[0-9a-z_]+$/gi;
-
-            return (
-                re.test(aProjectName) &&
-                self._projectIds.indexOf(projectId) === -1
-            );
+            return REGEXP.PROJECT_NAME.test(aProjectName) && self._projectIds.indexOf(projectId) === -1;
         }
 
         this._txtNewProjectName.on('keyup', function () {
             var val = self._txtNewProjectName.val(),
                 projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
-                    self._dialog.find('.username').text(), val);
+                    self._ownerId, val);
 
             if (val.length === 1) {
                 self._updateFilter([val.toUpperCase()[0], val.toUpperCase()[0]]);

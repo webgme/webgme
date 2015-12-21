@@ -1179,6 +1179,46 @@ describe('SafeStorage', function () {
             safeStorage.closeDatabase(done);
         });
 
+        it('should fail to create if projectName contains +', function (done) {
+            var projectName = 'contains+plus',
+                username = notInOrgCanCreate,
+                ownerId = notInOrgCanCreate,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                };
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Invalid argument, data.projectName failed regexp: contains+plus');
+                    done();
+                })
+                .done();
+        });
+
+        it('should fail to create if projectName empty string', function (done) {
+            var projectName = '',
+                username = notInOrgCanCreate,
+                ownerId = notInOrgCanCreate,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId
+                };
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Invalid argument, data.projectName failed regexp: ');
+                    done();
+                })
+                .done();
+        });
+
         it('should fail notInOrgCanNotCreate1', function (done) {
             var projectName = 'notInOrgCanNotCreate1',
                 username = notInOrgCanNotCreate,
