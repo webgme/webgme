@@ -22,15 +22,14 @@ describe('ExecutorServer', function () {
         ])
             .then(function () {
                 gmeConfig = testFixture.getGmeConfig();
+                return testFixture.clearDatabase(gmeConfig);
             })
             .nodeify(done);
     });
 
     afterEach(function (done) {
         server.stop(function (err) {
-            setTimeout(function () {
-                done(err);
-            }, 300); // FIXME: This is really ugly and bad
+            done(err);
         });
     });
 

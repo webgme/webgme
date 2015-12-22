@@ -6,6 +6,13 @@
 
 var configFileName;
 
+function warnDeprecated(name, value) {
+    'use strict';
+    if (typeof value !== 'undefined') {
+        console.warn('Deprecated configuration key', name);
+    }
+}
+
 function throwTypeMiss(name, value, typeStr) {
     'use strict';
     var msg;
@@ -141,9 +148,10 @@ function validateConfig(configOrFileName) {
     assertObject('config.executor', config.executor);
     assertBoolean('config.executor.enable', config.executor.enable);
     assertString('config.executor.nonce', config.executor.nonce, true);
-    assertString('config.executor.outputDir', config.executor.outputDir);
+    warnDeprecated('config.executor.outputDir', config.executor.outputDir);
     assertString('config.executor.labelJobs', config.executor.labelJobs);
     assertNumber('config.executor.workerRefreshInterval', config.executor.workerRefreshInterval);
+    assertNumber('config.executor.clearOutputTimeout', config.executor.clearOutputTimeout);
 
     // mongo configuration
     expectedKeys.push('mongo');

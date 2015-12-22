@@ -139,7 +139,8 @@ function StandAloneServer(gmeConfig) {
         var serverDeferred = Q.defer(),
             storageDeferred = Q.defer(),
             svgDeferred = Q.defer(),
-            gmeAuthDeferred = Q.defer();
+            gmeAuthDeferred = Q.defer(),
+            executorDeferred = Q.defer();
 
         if (typeof callback !== 'function') {
             callback = function () {
@@ -213,19 +214,37 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
-        __gmeAuth.connect(function (err) {
+        __gmeAuth.connect(function (err, db) {
             if (err) {
                 logger.error(err);
                 gmeAuthDeferred.reject(err);
             } else {
                 logger.debug('gmeAuth is ready');
                 gmeAuthDeferred.resolve();
+                if (__executorServer) {
+                    __executorServer.start({mongoClient: db}, function (err) {
+                        if (err) {
+                            executorDeferred.reject(err);
+                        } else {
+                            executorDeferred.resolve();
+                        }
+                    });
+                } else {
+                    executorDeferred.resolve();
+                }
             }
         });
 
         __workerManager.start();
 
-        Q.all([svgDeferred.promise, serverDeferred.promise, storageDeferred.promise, gmeAuthDeferred.promise, apiReady])
+        Q.all([
+            svgDeferred.promise,
+            serverDeferred.promise,
+            storageDeferred.promise,
+            gmeAuthDeferred.promise,
+            apiReady,
+            executorDeferred.promise
+        ])
             .nodeify(function (err) {
                 self.isRunning = true;
                 callback(err);
@@ -245,8 +264,8 @@ function StandAloneServer(gmeConfig) {
 
         try {
 
-            if (gmeConfig.executor.enable) {
-                ExecutorServer.stop();
+            if (__executorServer) {
+                __executorServer.stop();
             }
             // FIXME: is this call synchronous?
             __webSocket.stop();
@@ -393,7 +412,7 @@ function StandAloneServer(gmeConfig) {
 
     function getGoodExtraAssetRouteFor(component, basePaths) {
         // Check for good extra asset
-        return function(req, res) {
+        return function (req, res) {
             res.sendFile(Path.join(__baseDir, req.path), function (err) {
                 if (err && err.code !== 'ECONNRESET') {
                     //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format
@@ -410,7 +429,7 @@ function StandAloneServer(gmeConfig) {
                     baseAndPathExist = typeof basePath === 'string' && typeof relPath === 'string';
                     if (baseAndPathExist &&
                         webgmeUtils.isGoodExtraAsset(pluginName, Path.join(basePath, pluginName))) {
-                            expressFileSending(res, Path.resolve(Path.join(basePath, relPath)));
+                        expressFileSending(res, Path.resolve(Path.join(basePath, relPath)));
                     } else {
                         res.sendStatus(404);
                     }
@@ -438,7 +457,7 @@ function StandAloneServer(gmeConfig) {
      */
     function getRouteFor(component, basePaths) {
         //first we try to give back the common plugin/modules
-        return function(req, res) {
+        return function (req, res) {
             res.sendFile(Path.join(__baseDir, req.path), function (err) {
                 if (err && err.code !== 'ECONNRESET') {
                     //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format
@@ -477,7 +496,6 @@ function StandAloneServer(gmeConfig) {
             }
         }
     }
-
 
 
     function setupExternalRestModules() {
@@ -540,6 +558,7 @@ function StandAloneServer(gmeConfig) {
         __requestCounter = 0,
         __reportedRequestCounter = 0,
         __requestCheckInterval = 2500,
+        __executorServer,
         middlewareOpts;
 
     //creating the logger
@@ -666,8 +685,8 @@ function StandAloneServer(gmeConfig) {
     //});
 
     if (gmeConfig.executor.enable) {
-        ExecutorServer.initialize(middlewareOpts);
-        __app.use('/rest/executor', ExecutorServer.router);
+        __executorServer = new ExecutorServer(middlewareOpts);
+        __app.use('/rest/executor', __executorServer.router);
     } else {
         logger.debug('Executor not enabled. Add \'executor.enable: true\' to configuration to activate.');
     }

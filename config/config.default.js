@@ -66,8 +66,9 @@ var path = require('path'),
         executor: {
             enable: false,
             nonce: null,
-            outputDir: './',
             workerRefreshInterval: 5000,
+            clearOutputTimeout: 60000,
+            dropCollectionsAtStartUp: false,
             labelJobs: './labelJobs.json'
         },
 

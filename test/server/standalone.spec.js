@@ -354,7 +354,7 @@ describe('standalone server', function () {
                     })
                     .then(function (gmeauth_) {
                         var account = gmeConfig.authentication.guestAccount;
-                        gmeauth = gmeauth_;
+                        gmeauth = auth;
                         return gmeauth.addUser(account, account + '@example.com', account, true, {overwrite: true});
                     })
                     .then(function () {

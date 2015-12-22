@@ -30,9 +30,6 @@ describe('NodeWorker', function () {
 
             Q.nfcall(rimraf, './test-tmp/blob-local-storage')
                 .then(function () {
-                    return Q.nfcall(rimraf, './test-tmp/executor');
-                })
-                .then(function () {
                     return Q.nfcall(rimraf, './test-tmp/executor-tmp');
                 })
                 .then(function () {
@@ -165,16 +162,21 @@ describe('NodeWorker', function () {
             });
 
             after(function (done) {
-                nodeWorkerProcess.kill('SIGINT');
-                server.stop(function (err) {
-                    if (proxyServer) {
-                        proxyServer.close(function (err1) {
-                            done(err || err1);
-                        })
-                    } else {
-                        done(err);
-                    }
+                nodeWorkerProcess.on('close', function (/*code*/) {
+                    setTimeout(function () {
+                        server.stop(function (err) {
+                            if (proxyServer) {
+                                proxyServer.close(function (err1) {
+                                    done(err || err1);
+                                });
+                            } else {
+                                done(err);
+                            }
+                        });
+                    }, 200); // Allow some time for initiated POST /worker
                 });
+
+                nodeWorkerProcess.kill('SIGINT');
             });
 
             it('getWorkersInfo should return one worker', function (done) {
@@ -261,16 +263,21 @@ describe('NodeWorker', function () {
             });
 
             after(function (done) {
-                nodeWorkerProcess.kill('SIGINT');
-                server.stop(function (err) {
-                    if (proxyServer) {
-                        proxyServer.close(function (err1) {
-                            done(err || err1);
-                        })
-                    } else {
-                        done(err);
-                    }
+                nodeWorkerProcess.on('close', function (/*code*/) {
+                    setTimeout(function () {
+                        server.stop(function (err) {
+                            if (proxyServer) {
+                                proxyServer.close(function (err1) {
+                                    done(err || err1);
+                                });
+                            } else {
+                                done(err);
+                            }
+                        });
+                    }, 200); // Allow some time for initiated POST /worker
                 });
+
+                nodeWorkerProcess.kill('SIGINT');
             });
 
             it('getWorkersInfo should return at least one worker', function (done) {
@@ -565,16 +572,21 @@ describe('NodeWorker', function () {
             });
 
             after(function (done) {
-                nodeWorkerProcess.kill('SIGINT');
-                server.stop(function (err) {
-                    if (proxyServer) {
-                        proxyServer.close(function (err1) {
-                            done(err || err1);
-                        })
-                    } else {
-                        done(err);
-                    }
+                nodeWorkerProcess.on('close', function (/*code*/) {
+                    setTimeout(function () {
+                        server.stop(function (err) {
+                            if (proxyServer) {
+                                proxyServer.close(function (err1) {
+                                    done(err || err1);
+                                });
+                            } else {
+                                done(err);
+                            }
+                        });
+                    }, 200); // Allow some time for initiated POST /worker
                 });
+
+                nodeWorkerProcess.kill('SIGINT');
             });
         });
 
@@ -605,17 +617,22 @@ describe('NodeWorker', function () {
             });
 
             after(function (done) {
-                nodeWorkerProcess.kill('SIGINT');
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = nodeTLSRejectUnauthorized;
-                server.stop(function (err) {
-                    if (proxyServer) {
-                        proxyServer.close(function (err1) {
-                            done(err || err1);
-                        })
-                    } else {
-                        done(err);
-                    }
+                nodeWorkerProcess.on('close', function (/*code*/) {
+                    setTimeout(function () {
+                        server.stop(function (err) {
+                            if (proxyServer) {
+                                proxyServer.close(function (err1) {
+                                    done(err || err1);
+                                });
+                            } else {
+                                done(err);
+                            }
+                        });
+                    }, 200); // Allow some time for initiated POST /worker
                 });
+
+                nodeWorkerProcess.kill('SIGINT');
             });
 
             it('getWorkersInfo should return at least one worker', function (done) {
