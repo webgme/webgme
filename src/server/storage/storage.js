@@ -12,7 +12,8 @@ var Q = require('q'),
     REGEXP = requireJS('common/regexp'),
     storageHelpers = require('./storagehelpers'),
     EventDispatcher = requireJS('common/EventDispatcher'),
-    CONSTANTS = requireJS('common/storage/constants');
+    CONSTANTS = requireJS('common/storage/constants'),
+    jsonPatcher = requireJS('common/util/jsonPatcher');
 
 function Storage(database, logger, gmeConfig) {
     EventDispatcher.call(this);
@@ -165,10 +166,37 @@ Storage.prototype.makeCommit = function (data, callback) {
     this.database.openProject(data.projectId)
         .then(function (project) {
             var objectHashes = Object.keys(data.coreObjects),
-                rootProvided;
+                rootProvided,
+                patchRoot = null;
 
             function insertObj(hash) {
                 return project.insertObject(data.coreObjects[hash]);
+            }
+
+            function handlePatchRoot() {
+                var pathcRootDeferred = Q.defer();
+                if (data.coreObjects[data.commitObject.root] &&
+                    data.coreObjects[data.commitObject.root].type === 'patch') {
+                    project.loadObject(data.coreObjects[data.commitObject.root].base)
+                        .then(function (base) {
+                            var rootResult = jsonPatcher.apply(base, data.coreObjects[data.commitObject.root].patch);
+
+                            if (rootResult.status === 'success') {
+                                patchRoot = data.coreObjects[data.commitObject.root];
+                                rootResult.result[CONSTANTS.MONGO_ID] = patchRoot[CONSTANTS.MONGO_ID];
+                                data.coreObjects[data.commitObject.root] = rootResult.result;
+                                pathcRootDeferred.resolve();
+                            } else {
+                                self.logger.error('failed root patching', rootResult);
+                                pathcRootDeferred.reject(new Error('error during patch application'));
+                            }
+                        })
+                        .catch(pathcRootDeferred.reject);
+                } else {
+                    pathcRootDeferred.resolve();
+                }
+
+                return pathcRootDeferred.promise;
             }
 
             function loadRootObject() {
@@ -188,7 +216,10 @@ Storage.prototype.makeCommit = function (data, callback) {
                 return rootDeferred.promise;
             }
 
-            Q.allSettled(objectHashes.map(insertObj))
+            handlePatchRoot()
+                .then(function () {
+                    return Q.allSettled(objectHashes.map(insertObj));
+                })
                 .then(function (insertResults) {
                     var failedInserts = [];
                     insertResults.map(function (res) {
@@ -236,12 +267,21 @@ Storage.prototype.makeCommit = function (data, callback) {
 
                                                     if (self.gmeConfig.storage.emitCommittedCoreObjects &&
                                                         rootProvided) {
+                                                        if (self.gmeConfig.storage.patchRootCommunicationEnabled &&
+                                                            patchRoot !== null) {
+                                                            data.coreObjects[patchRoot[CONSTANTS.MONGO_ID]] = patchRoot;
+                                                        }
                                                         //https://github.com/webgme/webgme/issues/474
                                                         Object.keys(data.coreObjects).map(function (obj) {
                                                             fullEventData.coreObjects.push(data.coreObjects[obj]);
                                                         });
+
                                                         self.logger.debug('Will emit committed core objects');
                                                     } else {
+                                                        if (self.gmeConfig.storage.patchRootCommunicationEnabled &&
+                                                            patchRoot !== null) {
+                                                            rootObject = patchRoot;
+                                                        }
                                                         fullEventData.coreObjects.push(rootObject);
                                                     }
 
@@ -280,7 +320,8 @@ Storage.prototype.makeCommit = function (data, callback) {
                             });
 
                     }
-                });
+                })
+                .catch(deferred.reject);
         })
         .catch(function (err) {
             deferred.reject(err);
@@ -585,9 +626,9 @@ Storage.prototype.getCommonAncestorCommit = function (data, callback) {
             deferred.resolve(candidate);
         } else {
             Q.all([
-                loadAncestorsAndGetParents(project, newAncestorsA, ancestorsA),
-                loadAncestorsAndGetParents(project, newAncestorsB, ancestorsB)
-            ])
+                    loadAncestorsAndGetParents(project, newAncestorsA, ancestorsA),
+                    loadAncestorsAndGetParents(project, newAncestorsB, ancestorsB)
+                ])
                 .then(function (results) {
                     newAncestorsA = results[0] || [];
                     newAncestorsB = results[1] || [];
@@ -605,8 +646,8 @@ Storage.prototype.getCommonAncestorCommit = function (data, callback) {
 
     function loadAncestorsAndGetParents(project, commits, ancestorsSoFar) {
         return Q.all(commits.map(function (commitHash) {
-            return project.loadObject(commitHash);
-        }))
+                return project.loadObject(commitHash);
+            }))
             .then(function (loadedCommits) {
                 var newCommits = [],
                     i,

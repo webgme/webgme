@@ -174,6 +174,19 @@ define([
         };
 
         this.makeCommit = function (data, callback) {
+            var localCoreObjects = data.coreObjects,
+                i,
+                keys = Object.keys(data.coreObjects || {});
+
+            if (gmeConfig.storage.patchRootCommunicationEnabled && data.patchRoot) {
+                data.coreObjects = {};
+                for (i = 0; i < keys.length; i += 1) {
+                    data.coreObjects[keys[i]] = localCoreObjects[keys[i]];
+                }
+                data.coreObjects[data.commitObject.root] = data.patchRoot;
+            }
+            delete data.patchRoot; //we remove the field in either way
+
             self.socket.emit('makeCommit', data, wrapError(callback));
         };
 

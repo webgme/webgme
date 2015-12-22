@@ -182,7 +182,8 @@ var path = require('path'),
                 options: { // if mongo - settings will be used from config.mongo
                     //port: 6666
                 }
-            }
+            },
+            patchRootCommunicationEnabled: true
         },
 
         visualization: {

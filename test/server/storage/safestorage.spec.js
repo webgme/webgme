@@ -12,6 +12,9 @@ describe('SafeStorage', function () {
         expect = testFixture.expect,
         logger,
         Q = testFixture.Q,
+        jsonPatcher = testFixture.requirejs('common/util/jsonPatcher'),
+        CONSTANTS = testFixture.requirejs('common/storage/constants'),
+        GENKEY = testFixture.requirejs('common/util/key'),
         gmeAuth,
         projectName = 'newProject',
         projectId = gmeConfig.authentication.guestAccount + testFixture.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
@@ -1142,6 +1145,335 @@ describe('SafeStorage', function () {
                 {},
                 'emitAllNoNodes'
             )
+                .catch(done);
+        });
+    });
+
+    describe('gmeConfig.storage.patchRootCommunicationEnabled', function () {
+
+        var storages = [],
+            initTest = function (parameters) {
+                var deferred = Q.defer();
+                parameters.storage = testFixture.getMemoryStorage(logger, parameters.gmeConfig, gmeAuth);
+                parameters.storage.openDatabase()
+                    .then(function () {
+                        return testFixture.importProject(parameters.storage, {
+                            projectSeed: 'seeds/EmptyProject.json',
+                            projectName: parameters.projectName,
+                            gmeConfig: parameters.gmeConfig,
+                            logger: logger
+                        });
+                    })
+                    .then(function (result) {
+                        parameters.result = result;
+                        parameters.project = result.project;
+                        parameters.projectId = parameters.project.projectId;
+                        return Q.nfcall(parameters.project.createBranch,
+                            parameters.branchName,
+                            result.commitHash);
+                    })
+                    .then(function(){
+                        storages.push(parameters.storage);
+                        deferred.resolve();
+                    })
+                    .catch(deferred.reject);
+                return deferred.promise;
+            };
+
+        after(function (done) {
+            var promises = [],
+                i;
+
+            for (i = 0; i < storages.length; i += 1) {
+                promises.push(storages[i].closeDatabase);
+            }
+
+            Q.allDone(promises)
+                .nodeify(done);
+        });
+
+        it('should broadcast complete object even when the commit contains a patch root', function (done) {
+            var parameters = {
+                    projectName: 'patchOff',
+                    branchName:'patchOffBranch',
+                    gmeConfig: testFixture.getGmeConfig()
+                },
+                eventHandler = function (_storage, eventData) {
+                    expect(eventData.branchName).to.equal(parameters.branchName);
+                    expect(eventData.commitObject[CONSTANTS.MONGO_ID]).to.not.equal(parameters.result.commitHash);
+                    expect(eventData.commitObject.root).to.equal(newRoot[CONSTANTS.MONGO_ID]);
+                    expect(eventData.coreObjects instanceof Array).to.equal(true);
+                    expect(eventData.coreObjects.length).to.equal(1);
+                    expect(eventData.coreObjects[0][CONSTANTS.MONGO_ID]).to.equal(newRoot[CONSTANTS.MONGO_ID]);
+                    expect(eventData.coreObjects[0]).to.eql(newRoot);
+                    parameters.storage.clearAllEvents();
+                    done();
+                },
+                patchRoot,
+                patching,
+                newRoot,
+                coreObjects = {};
+
+            parameters.gmeConfig.storage.patchRootCommunicationEnabled = false;
+            initTest(parameters)
+                .then(function(){
+                    patchRoot = {
+                        type: 'patch',
+                        base: parameters.result.rootHash,
+                        patch: [{op: 'add', path: '/atr/new', value: 'value'}]
+                    };
+                    patching = jsonPatcher.apply(parameters.result.rootNode.data, patchRoot.patch);
+                    expect(patching.status).to.equal('success');
+                    patching.result[CONSTANTS.MONGO_ID] = '';
+                    newRoot = patching.result;
+                    newRoot[CONSTANTS.MONGO_ID] = '#' + GENKEY(newRoot, parameters.gmeConfig);
+                    patchRoot[CONSTANTS.MONGO_ID] = newRoot[CONSTANTS.MONGO_ID];
+
+                    expect(newRoot[CONSTANTS.MONGO_ID].indexOf('#')).to.equal(0);
+                    expect(newRoot[CONSTANTS.MONGO_ID].length).to.above(1);
+                    expect(newRoot.atr.new).to.equal('value');
+
+                    coreObjects[newRoot[CONSTANTS.MONGO_ID]] = patchRoot;
+
+                    parameters.storage.addEventListener(parameters.project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+
+                    parameters.project.makeCommit(
+                        parameters.branchName,
+                        [parameters.result.commitHash],
+                        newRoot[CONSTANTS.MONGO_ID],
+                        coreObjects,
+                        'patchRootSent'
+                        )
+                        .catch(done);
+                })
+                .catch(done);
+        });
+
+        it('should broadcast patch root when function is enabled', function (done) {
+            var parameters = {
+                    projectName: 'patchOn',
+                    branchName:'patchOnBranch',
+                    gmeConfig: testFixture.getGmeConfig()
+                },
+                eventHandler = function (_storage, eventData) {
+                    expect(eventData.branchName).to.equal(parameters.branchName);
+                    expect(eventData.commitObject[CONSTANTS.MONGO_ID]).to.not.equal(parameters.result.commitHash);
+                    expect(eventData.commitObject.root).to.equal(newRoot[CONSTANTS.MONGO_ID]);
+                    expect(eventData.coreObjects instanceof Array).to.equal(true);
+                    expect(eventData.coreObjects.length).to.equal(1);
+                    expect(eventData.coreObjects[0][CONSTANTS.MONGO_ID]).to.equal(patchRoot[CONSTANTS.MONGO_ID]);
+                    expect(eventData.coreObjects[0]).to.eql(patchRoot);
+                    parameters.storage.clearAllEvents();
+                    done();
+                },
+                patchRoot,
+                patching,
+                newRoot,
+                coreObjects = {};
+
+            parameters.gmeConfig.storage.patchRootCommunicationEnabled = true;
+            initTest(parameters)
+                .then(function(){
+                    patchRoot = {
+                        type: 'patch',
+                        base: parameters.result.rootHash,
+                        patch: [{op: 'add', path: '/atr/new', value: 'value'}]
+                    };
+                    patching = jsonPatcher.apply(parameters.result.rootNode.data, patchRoot.patch);
+                    expect(patching.status).to.equal('success');
+                    patching.result[CONSTANTS.MONGO_ID] = '';
+                    newRoot = patching.result;
+                    newRoot[CONSTANTS.MONGO_ID] = '#' + GENKEY(newRoot, parameters.gmeConfig);
+                    patchRoot[CONSTANTS.MONGO_ID] = newRoot[CONSTANTS.MONGO_ID];
+
+                    expect(newRoot[CONSTANTS.MONGO_ID].indexOf('#')).to.equal(0);
+                    expect(newRoot[CONSTANTS.MONGO_ID].length).to.above(1);
+                    expect(newRoot.atr.new).to.equal('value');
+
+                    coreObjects[newRoot[CONSTANTS.MONGO_ID]] = patchRoot;
+
+                    parameters.storage.addEventListener(parameters.project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+
+                    parameters.project.makeCommit(
+                        parameters.branchName,
+                        [parameters.result.commitHash],
+                        newRoot[CONSTANTS.MONGO_ID],
+                        coreObjects,
+                        'patchRootSent'
+                        )
+                        .catch(done);
+                })
+                .catch(done);
+        });
+
+        it('should broadcast patch root when function is enabled and only root is sent', function (done) {
+            var parameters = {
+                    projectName: 'patchOnOnlyRoot',
+                    branchName:'patchOnBranch',
+                    gmeConfig: testFixture.getGmeConfig()
+                },
+                eventHandler = function (_storage, eventData) {
+                    expect(eventData.branchName).to.equal(parameters.branchName);
+                    expect(eventData.commitObject[CONSTANTS.MONGO_ID]).to.not.equal(parameters.result.commitHash);
+                    expect(eventData.commitObject.root).to.equal(newRoot[CONSTANTS.MONGO_ID]);
+                    expect(eventData.coreObjects instanceof Array).to.equal(true);
+                    expect(eventData.coreObjects.length).to.equal(1);
+                    expect(eventData.coreObjects[0][CONSTANTS.MONGO_ID]).to.equal(patchRoot[CONSTANTS.MONGO_ID]);
+                    expect(eventData.coreObjects[0]).to.eql(patchRoot);
+                    parameters.storage.clearAllEvents();
+                    done();
+                },
+                patchRoot,
+                patching,
+                newRoot,
+                coreObjects = {};
+
+            parameters.gmeConfig.storage.patchRootCommunicationEnabled = true;
+            parameters.gmeConfig.storage.emitCommittedCoreObjects = false;
+            initTest(parameters)
+                .then(function(){
+                    patchRoot = {
+                        type: 'patch',
+                        base: parameters.result.rootHash,
+                        patch: [{op: 'add', path: '/atr/new', value: 'value'}]
+                    };
+                    patching = jsonPatcher.apply(parameters.result.rootNode.data, patchRoot.patch);
+                    expect(patching.status).to.equal('success');
+                    patching.result[CONSTANTS.MONGO_ID] = '';
+                    newRoot = patching.result;
+                    newRoot[CONSTANTS.MONGO_ID] = '#' + GENKEY(newRoot, parameters.gmeConfig);
+                    patchRoot[CONSTANTS.MONGO_ID] = newRoot[CONSTANTS.MONGO_ID];
+
+                    expect(newRoot[CONSTANTS.MONGO_ID].indexOf('#')).to.equal(0);
+                    expect(newRoot[CONSTANTS.MONGO_ID].length).to.above(1);
+                    expect(newRoot.atr.new).to.equal('value');
+
+                    coreObjects[newRoot[CONSTANTS.MONGO_ID]] = patchRoot;
+
+                    parameters.storage.addEventListener(parameters.project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+
+                    parameters.project.makeCommit(
+                        parameters.branchName,
+                        [parameters.result.commitHash],
+                        newRoot[CONSTANTS.MONGO_ID],
+                        coreObjects,
+                        'patchRootSent'
+                        )
+                        .catch(done);
+                })
+                .catch(done);
+        });
+
+
+        it('should fail to handle faulty patch root object', function (done) {
+            var parameters = {
+                    projectName: 'patchOnFaultyPatch',
+                    branchName:'patchOnBranch',
+                    gmeConfig: testFixture.getGmeConfig()
+                },
+                eventHandler = function (_storage, eventData) {
+                    parameters.storage.clearAllEvents();
+                    done(new Error('missing fault handling'));
+                },
+                patchRoot,
+                patching,
+                newRoot,
+                coreObjects = {};
+
+            parameters.gmeConfig.storage.patchRootCommunicationEnabled = true;
+            parameters.gmeConfig.storage.emitCommittedCoreObjects = false;
+            initTest(parameters)
+                .then(function(){
+                    patchRoot = {
+                        type: 'patch',
+                        base: parameters.result.rootHash,
+                        patch: [{op: 'add', path: '/atr/new', value: 'value'}]
+                    };
+                    patching = jsonPatcher.apply(parameters.result.rootNode.data, patchRoot.patch);
+                    expect(patching.status).to.equal('success');
+                    patching.result[CONSTANTS.MONGO_ID] = '';
+                    newRoot = patching.result;
+                    newRoot[CONSTANTS.MONGO_ID] = '#' + GENKEY(newRoot, parameters.gmeConfig);
+                    patchRoot[CONSTANTS.MONGO_ID] = newRoot[CONSTANTS.MONGO_ID];
+
+                    patchRoot.patch[0].op = 'badOperation';
+                    expect(newRoot[CONSTANTS.MONGO_ID].indexOf('#')).to.equal(0);
+                    expect(newRoot[CONSTANTS.MONGO_ID].length).to.above(1);
+                    expect(newRoot.atr.new).to.equal('value');
+
+                    coreObjects[newRoot[CONSTANTS.MONGO_ID]] = patchRoot;
+
+                    parameters.storage.addEventListener(parameters.project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+
+                    parameters.project.makeCommit(
+                        parameters.branchName,
+                        [parameters.result.commitHash],
+                        newRoot[CONSTANTS.MONGO_ID],
+                        coreObjects,
+                        'patchRootSent'
+                        )
+                        .catch(function(err){
+                            expect(err.message).to.contain('error during patch application');
+                            done();
+                        });
+                })
+                .catch(done);
+        });
+
+
+        it('should fail to handle patch root object with faulty base', function (done) {
+            var parameters = {
+                    projectName: 'patchOnFaultyBase',
+                    branchName:'patchOnBranch',
+                    gmeConfig: testFixture.getGmeConfig()
+                },
+                eventHandler = function (_storage, eventData) {
+                    parameters.storage.clearAllEvents();
+                    done(new Error('missing fault handling'));
+                },
+                patchRoot,
+                patching,
+                newRoot,
+                coreObjects = {};
+
+            parameters.gmeConfig.storage.patchRootCommunicationEnabled = true;
+            parameters.gmeConfig.storage.emitCommittedCoreObjects = false;
+            initTest(parameters)
+                .then(function(){
+                    patchRoot = {
+                        type: 'patch',
+                        base: parameters.result.rootHash,
+                        patch: [{op: 'add', path: '/atr/new', value: 'value'}]
+                    };
+                    patching = jsonPatcher.apply(parameters.result.rootNode.data, patchRoot.patch);
+                    expect(patching.status).to.equal('success');
+                    patching.result[CONSTANTS.MONGO_ID] = '';
+                    newRoot = patching.result;
+                    newRoot[CONSTANTS.MONGO_ID] = '#' + GENKEY(newRoot, parameters.gmeConfig);
+                    patchRoot[CONSTANTS.MONGO_ID] = newRoot[CONSTANTS.MONGO_ID];
+
+                    patchRoot.base = patchRoot[CONSTANTS.MONGO_ID];
+                    expect(newRoot[CONSTANTS.MONGO_ID].indexOf('#')).to.equal(0);
+                    expect(newRoot[CONSTANTS.MONGO_ID].length).to.above(1);
+                    expect(newRoot.atr.new).to.equal('value');
+
+                    coreObjects[newRoot[CONSTANTS.MONGO_ID]] = patchRoot;
+
+                    parameters.storage.addEventListener(parameters.project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+
+                    parameters.project.makeCommit(
+                        parameters.branchName,
+                        [parameters.result.commitHash],
+                        newRoot[CONSTANTS.MONGO_ID],
+                        coreObjects,
+                        'patchRootSent'
+                        )
+                        .catch(function(err){
+                            expect(err.message).to.contain('object does not exist '+newRoot[CONSTANTS.MONGO_ID]);
+                            done();
+                        }).
+                    done();
+                })
                 .catch(done);
         });
     });
