@@ -38,8 +38,6 @@ define([
 
         this.name = '';
 
-        this.editorDialog = new DocumentEditorDialog();
-
         this._skinParts = {};
 
         this.$doc = this.$el.find('.doc').first();
@@ -70,8 +68,6 @@ define([
         var self = this;
         var client = this._control._client;
         var nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
-        // Initialize dialog with EpicEditor.
-        this._initDialog();
         this._renderName();
 
         //render text-editor based META editing UI piece
@@ -82,8 +78,9 @@ define([
         this._skinParts.$EditorBtn.on('click', function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true &&
                 nodeObj.getAttribute('documentation') !== undefined) {
-                self.editorDialog.show();
+                self._showEditorDialog();
             }
+
             event.stopPropagation();
             event.preventDefault();
         });
@@ -154,7 +151,6 @@ define([
                     self._skinParts.$EditorBtn.addClass('not-activated');
                 }
                 this.$doc.append($(marked(newDoc)));
-                this.editorDialog.updateText(newDoc);
             }
 
             if (this.name !== newName) {
@@ -286,17 +282,15 @@ define([
      * Initialize Dialog and Editor creation
      * @return {void}
      */
-    DocumentDecorator.prototype._initDialog = function () {
+    DocumentDecorator.prototype._showEditorDialog = function () {
         var self = this;
         var client = this._control._client;
         var nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
         var documentation = nodeObj.getAttribute('documentation') || 'Click to enter documentation.';
-        if (nodeObj.getAttribute('documentation') !== undefined) {
-            this.$doc.append($(marked(documentation)));
-        }
+        var editorDialog = new DocumentEditorDialog();
 
         // Initialize with documentation attribute and save callback function
-        this.editorDialog.initialize(documentation,
+        editorDialog.initialize(documentation,
             function (text) {
                 try {
                     client.setAttributes(self._metaInfo[CONSTANTS.GME_ID], 'documentation', text);
@@ -307,6 +301,8 @@ define([
                 }
             }
         );
+
+        editorDialog.show();
     };
 
     return DocumentDecorator;

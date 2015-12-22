@@ -67,12 +67,13 @@ define(['js/util',
 
         // Event listener on click for SAVE button
         this._btnSave.on('click', function (event) {
-            // Close dialog and invoke callback
-            self._dialog.modal('hide');
             // Invoke callback to deal with modified text, like save it in client.
             if (saveCallback) {
-                saveCallback.call(self, self.editor.exportFile());
+                saveCallback.call(null, self.editor.exportFile());
             }
+
+            // Close dialog
+            self._dialog.modal('hide');
             event.stopPropagation();
             event.preventDefault();
         });
@@ -89,7 +90,9 @@ define(['js/util',
 
         // Listener on event when dialog is hidden
         this._dialog.on('hidden.bs.modal', function () {
-            self.text = self.editor.exportFile();
+            self._dialog.empty();
+            self._dialog.remove();
+            self.editor.remove(); // clear the localstorage of the editor
         });
     };
 
