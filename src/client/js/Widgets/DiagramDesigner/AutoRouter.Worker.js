@@ -29,7 +29,8 @@ var startWorker = function() {
             assert: '../../../../common/util/assert',
             js: '../..',
             underscore: '../../../lib/underscore/underscore-min',
-            debug: '../../../lib/debug/debug'
+            debug: '../../../lib/debug/debug',
+            AutoRouterActionApplier: '../../../lib/autorouter/action-applier'
         }, 
         shim: {
             debug: {
@@ -38,14 +39,12 @@ var startWorker = function() {
         }
     }, 
     [
-        'AutoRouter.ActionApplier', 
-        'AutoRouter.Utils', 
+        'AutoRouterActionApplier', 
         'js/logger',
         'underscore'
     ],
     function(
         ActionApplier, 
-        Utils,
         Logger,
         _
     ) {
