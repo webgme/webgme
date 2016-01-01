@@ -44,6 +44,7 @@ require.config({
         bootstrap: 'lib/bootstrap/' + _bootstrapVersion + '/js/bootstrap' + ( DEBUG ? '.min' : '' ),
 
         //Other modules
+        AutoRouterActionApplier: 'lib/autorouter/action-applier',
         underscore: 'lib/underscore/underscore-min',
         backbone: 'lib/backbone/backbone.min',
         d3: 'lib/d3/d3.v3.min',

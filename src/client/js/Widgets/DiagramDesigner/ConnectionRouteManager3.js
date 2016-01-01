@@ -8,14 +8,12 @@
 define([
     'js/logger',
     'module',
-    './AutoRouter.ActionApplier',
-    './AutoRouter.Utils',
+    'AutoRouterActionApplier',
     './ConnectionRouteManager2',
     'js/Utils/SaveToDisk'
 ], function (Logger,
              module,
              ActionApplier,
-             Utils,
              ConnectionRouteManager2,
              Saver) {
 
@@ -76,7 +74,7 @@ define([
     ConnectionRouteManager3.prototype.init = ActionApplier.prototype._clearRecords;
 
     ConnectionRouteManager3.prototype._invokeAutoRouterMethod = function () {
-        var array = Utils.toArray(arguments),  // Remove the extra 'arguments' stuff
+        var array = Array.prototype.slice.call(arguments),  // Remove the extra 'arguments' stuff
             id;
         if (this.workerReady) {
             this.worker.postMessage(array);
