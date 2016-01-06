@@ -9,6 +9,7 @@ var env = process.env.NODE_ENV || 'default',
     config = require(configFilename),
     validateConfig = require(__dirname + '/validator');
 
+console.info('Using configuration from ' + configFilename);
 validateConfig(configFilename);
 
 module.exports = config;
