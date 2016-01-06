@@ -3,13 +3,16 @@
 
 /**
  * @author kecso / https://github.com/kecso
+ * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';
 
 global.TESTING = true;
 global.WebGMEGlobal = {};
 
-process.env.NODE_ENV = process.env.NODE_ENV || 'test';
+process.env.NODE_ENV = (process.env.NODE_ENV && process.env.NODE_ENV.indexOf('test') === 0) ?
+    process.env.NODE_ENV : 'test';
 
 //adding a local storage class to the global Namespace
 var WebGME = require('../webgme'),
