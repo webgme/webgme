@@ -33,7 +33,7 @@ if (typeof define !== 'undefined') {
     ], function (eventDispatcher, BlobClient, ExecutorWorker, JobInfo, ExecutorWorkerController, url) {
         'use strict';
 
-        return function (webGMEUrl, tempPath, parameters) {
+        return function (webGMEUrl, tempPath, parameters, availableProcessesContainer) {
             var worker,
                 webGMEPort = url.parse(webGMEUrl).port || (url.parse(webGMEUrl).protocol === 'https:' ? 443 : 80);
 
@@ -178,11 +178,11 @@ if (nodeRequire.main === module) {
                     } else {
                         webGMEUrls[webGMEUrl] = addWebGMEConnection(webGMEUrl,
                             path.join(workingDirectory, '' + workingDirectoryCount++),
-                            config[webGMEUrl]);
+                            config[webGMEUrl], availableProcessesContainer);
                     }
                 } else if (key === 'maxConcurrentJobs') {
-                    availableProcessesContainer.availableProcesses += config[maxConcurrentJobs] - maxConcurrentJobs;
-                    maxConcurrentJobs = config[maxConcurrentJobs];
+                    availableProcessesContainer.availableProcesses += config.maxConcurrentJobs - maxConcurrentJobs;
+                    maxConcurrentJobs = config.maxConcurrentJobs;
                 } else {
                     log('Unknown configuration key ' + key);
                 }
