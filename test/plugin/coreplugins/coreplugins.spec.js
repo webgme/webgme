@@ -32,7 +32,8 @@ describe('CorePlugins', function () {
             'LayoutGenerator',
             'MultipleMainCallbackCalls',
             'PluginForked',
-            'InvalidActiveNode'
+            'InvalidActiveNode',
+            'ConstraintEvaluator'
         ],
 
         pluginsShouldFail = [
@@ -40,7 +41,8 @@ describe('CorePlugins', function () {
             'MergeExample',
             'MetaGMEParadigmImporter',
             'MultipleMainCallbackCalls',
-            'InvalidActiveNode'
+            'InvalidActiveNode',
+            'ConstraintEvaluator'
         ],
         projectNames = pluginNames.map(function (name) {
             return name + 'TestMain';

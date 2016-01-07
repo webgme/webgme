@@ -39,7 +39,7 @@
 
 /**
  * @typedef {object} Constraint - An object that represents some additional rule regarding some node of the project.
- * @prop {string} script - The script which checks if the contraint is met.
+ * @prop {string} script - The script which checks if the constraint is met.
  * @prop {string} info - Short description of the constraint.
  * @prop {string} priority - Gives instructions on how to deal with violations of the constraint.
  */
@@ -974,7 +974,7 @@ define([
          * Sets a constraint object of the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the constraint.
-         * @param {module:Core~Constraint} constraint  - the contraint to be set.
+         * @param {module:Core~Constraint} constraint  - the constraint to be set.
          * @func
          */
         this.setConstraint = core.setConstraint;
