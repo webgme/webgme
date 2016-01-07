@@ -182,7 +182,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                             relPath = '/' + pathArray.pop() + relPath;
                             path = pathArray.join('/');
                         }
-                    } while (!guid);
+                    } while (!guid && pathArray.length > 0);
 
                     return relPath === '' ? guid : guid + '@' + relPath;
                 };
