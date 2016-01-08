@@ -16,12 +16,9 @@ define(['./chance.min'], function (ChanceJs) {
 
         //adding excludes
         if (excludeList.length > 0) {
-            regexp += '(?!';
             for (i = 0; i < excludeList.length; i += 1) {
-                regexp += '(^' + excludeList[i] + '$)|';
+                regexp += '(?!(^' + excludeList[i] + '$))';
             }
-            regexp = regexp.slice(0, -1);
-            regexp += ')';
         }
         //adding the pool
         regexp += '^(-)?[' + relidPool + ']+$';

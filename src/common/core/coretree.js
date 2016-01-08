@@ -581,19 +581,14 @@ define([
                 return null;
             }
 
-            var keys = Object.keys(node.data);
-
-            var i = keys.length;
-            while (--i >= 0 && !predicate(keys[i])) {
-                keys.pop();
-            }
+            var keys = Object.keys(node.data),
+                i = keys.length;
 
             while (--i >= 0) {
                 if (!predicate(keys[i])) {
-                    keys[i] = keys.pop();
+                    keys.splice(i, 1);
                 }
             }
-
             return keys;
         };
 
