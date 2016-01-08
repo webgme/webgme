@@ -3,3 +3,11 @@
  */
 .constraint-details-dialog .modal-body {
   max-height: 500px; }
+  .constraint-details-dialog .modal-body label.control-label {
+    width: 15%; }
+  .constraint-details-dialog .modal-body div.controls {
+    width: 80%; }
+    .constraint-details-dialog .modal-body div.controls input.name-input {
+      width: 30%; }
+    .constraint-details-dialog .modal-body div.controls input.info-input {
+      width: 60%; }

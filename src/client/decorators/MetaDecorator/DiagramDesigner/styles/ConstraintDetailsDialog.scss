@@ -6,5 +6,18 @@
 
   .modal-body {
     max-height: 500px;
+
+    label.control-label {
+      width: 15%;
+    }
+    div.controls {
+      width: 80%;
+      input.name-input {
+        width: 30%;
+      }
+      input.info-input {
+        width: 60%;
+      }
+    }
   }
 }
