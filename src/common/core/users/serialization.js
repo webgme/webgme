@@ -188,7 +188,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 };
 
             for (i = 0; i < keys.length; i += 1) {
-                if (typeof  object[keys[i]] === 'string' && object[keys[i]].indexOf('/') === 0) {
+                if (typeof object[keys[i]] === 'string' && object[keys[i]].indexOf('/') === 0) {
                     object[keys[i]] = pathToCompositeId(object[keys[i]]);
                 } else if (typeof object[keys[i]] === 'object' && object[keys[i]] !== null) {
                     pathToGuidInObject(object[keys[i]]);
@@ -1064,7 +1064,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 } else if (isCombinedId(target)) {
                     core.setPointer(node, keys[i], getCombinedTarget(target));
                 } else {
-                    console.log('error handling needed???!!!???');
+                    throw new Error('invalid pointer target found [' + target +
+                        '] for pointer [' + keys[i] + '] of node [' + guid + ']');
                 }
             }
 
