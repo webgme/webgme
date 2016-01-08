@@ -38,7 +38,6 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             counter = 0,
             nodeCount = 0;
 
-
         function getAttributes(node) {
             var names = core.getOwnAttributeNames(node).sort(),
                 i,
@@ -171,13 +170,26 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
 
         function pathToGuidInObject(object) {
             var keys = Object.keys(object),
-                i;
+                i,
+                pathToCompositeId = function (path) {
+                    var relPath = '',
+                        guid = undefined,
+                        pathArray = path.split('/');
+
+                    do {
+                        guid = ancestorPathToGuid[path] || pathToGuid[path];
+                        if (!guid) {
+                            relPath = '/' + pathArray.pop() + relPath;
+                            path = pathArray.join('/');
+                        }
+                    } while (!guid && pathArray.length > 0);
+
+                    return relPath === '' ? guid : guid + '@' + relPath;
+                };
 
             for (i = 0; i < keys.length; i += 1) {
-                if (typeof object[keys[i]] === 'string' &&
-                    object[keys[i]].indexOf('/') === 0 &&
-                    (ancestorPathToGuid[object[keys[i]]] || pathToGuid[object[keys[i]]])) {
-                    object[keys[i]] = ancestorPathToGuid[object[keys[i]]] || pathToGuid[object[keys[i]]];
+                if (typeof object[keys[i]] === 'string' && object[keys[i]].indexOf('/') === 0) {
+                    object[keys[i]] = pathToCompositeId(object[keys[i]]);
                 } else if (typeof object[keys[i]] === 'object' && object[keys[i]] !== null) {
                     pathToGuidInObject(object[keys[i]]);
                 }
@@ -1016,8 +1028,26 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             // we should go through inheritance just to be sure.
             var node = nodes[guid],
                 jsonNode = updatedLibraryJson.nodes[guid],
-                keys, i, j, k, target, memberGuid,
-                baseMemberPaths, base;
+                keys, i, j, k, target, memberGuid, member,
+                baseMemberPaths, base,
+                isCombinedId = function (id) {
+                    var idArray = id.split('@');
+                    return idArray.length === 2 && nodes[idArray[0]] && idArray[1][0] === '/';
+                },
+                getCombinedTarget = function (combinedId) {
+                    var idArray = combinedId.split('@'),
+                        node = nodes[idArray[0]],
+                        pathArray = (idArray[1] || '').split('/'),
+                        i;
+
+                    pathArray.shift();
+
+                    for (i = 0; i < pathArray.length; i += 1) {
+                        node = core.createNode({parent: node, relid: pathArray[i]});
+                    }
+
+                    return node;
+                };
 
             //pointers
             keys = core.getOwnPointerNames(node);
@@ -1031,8 +1061,11 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                     core.setPointer(node, keys[i], null);
                 } else if (nodes[target] && toRemoveGuids.indexOf(target) === -1) {
                     core.setPointer(node, keys[i], nodes[target]);
+                } else if (isCombinedId(target)) {
+                    core.setPointer(node, keys[i], getCombinedTarget(target));
                 } else {
-                    console.log('error handling needed???!!!???');
+                    throw new Error('invalid pointer target found [' + target +
+                        '] for pointer [' + keys[i] + '] of node [' + guid + ']');
                 }
             }
 
@@ -1049,17 +1082,18 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 core.createSet(node, keys[i]);
                 for (j = 0; j < jsonNode.sets[keys[i]].length; j++) {
                     memberGuid = jsonNode.sets[keys[i]][j].guid;
-                    if (nodes[memberGuid]) {
-                        if (baseMemberPaths.indexOf(core.getPath(nodes[memberGuid])) === -1 ||
+                    if (nodes[memberGuid] || isCombinedId(memberGuid)) {
+                        member = getCombinedTarget(memberGuid);
+                        if (baseMemberPaths.indexOf(core.getPath(member)) === -1 ||
                             jsonNode.sets[keys[i]][j].overridden === true) {
-                            core.addMember(node, keys[i], nodes[memberGuid]);
+                            core.addMember(node, keys[i], member);
                         }
                         for (k in jsonNode.sets[keys[i]][j].attributes) {
-                            core.setMemberAttribute(node, keys[i], core.getPath(nodes[memberGuid]), k,
+                            core.setMemberAttribute(node, keys[i], core.getPath(member), k,
                                 jsonNode.sets[keys[i]][j].attributes[k]);
                         }
                         for (k in jsonNode.sets[keys[i]][j].registry) {
-                            core.setMemberRegistry(node, keys[i], core.getPath(nodes[memberGuid]), k,
+                            core.setMemberRegistry(node, keys[i], core.getPath(member), k,
                                 jsonNode.sets[keys[i]][j].registry[k]);
                         }
                     }
