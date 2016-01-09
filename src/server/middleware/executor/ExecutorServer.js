@@ -490,7 +490,7 @@ function ExecutorServer(options) {
                 self.jobList = res[0];
                 self.workerList = res[1];
                 self.outputList = res[2];
-                if (self.gmeConfig.executor.dropCollectionsAtStartUp === true) {
+                if (self.gmeConfig.executor.clearOldDataAtStartUp === true) {
                     return Q.allSettled([
                         Q.ninvoke(mongo, 'dropCollection', JOB_LIST),
                         Q.ninvoke(mongo, 'dropCollection', WORKER_LIST),

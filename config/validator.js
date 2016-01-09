@@ -152,6 +152,7 @@ function validateConfig(configOrFileName) {
     assertString('config.executor.labelJobs', config.executor.labelJobs);
     assertNumber('config.executor.workerRefreshInterval', config.executor.workerRefreshInterval);
     assertNumber('config.executor.clearOutputTimeout', config.executor.clearOutputTimeout);
+    assertBoolean('config.executor.clearOldDataAtStartUp', config.executor.clearOldDataAtStartUp);
 
     // mongo configuration
     expectedKeys.push('mongo');

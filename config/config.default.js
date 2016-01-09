@@ -68,7 +68,7 @@ var path = require('path'),
             nonce: null,
             workerRefreshInterval: 5000,
             clearOutputTimeout: 60000,
-            dropCollectionsAtStartUp: false,
+            clearOldDataAtStartUp: false,
             labelJobs: './labelJobs.json'
         },
 
