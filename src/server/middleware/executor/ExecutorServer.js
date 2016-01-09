@@ -322,16 +322,32 @@ function ExecutorServer(options) {
         }
 
         self.logger.debug('ouput requested', query);
-        self.outputList.find(query).toArray(function (err, docs) {
-            if (err) {
-                self.logger.error('get output', err);
-                res.sendStatus(500);
-                return;
-            }
+        self.outputList.find(query)
+            .sort({outputNumber: 1})
+            .toArray(function (err, docs) {
+                if (err) {
+                    self.logger.error('get output', err);
+                    res.sendStatus(500);
+                    return;
+                }
 
-            self.logger.debug('got outputs, nbr', docs.length);
-            res.send(docs);
-        });
+                self.logger.debug('got outputs, nbr', docs.length);
+                if (docs.length > 0) {
+                    res.send(docs);
+                } else {
+                    // No output found, could it be that job does not even exist?
+                    self.jobList.findOne({hash: req.params.hash}, function (err, jobInfo) {
+                        if (err) {
+                            self.logger.error(err);
+                            res.sendStatus(500);
+                        } else if (jobInfo) {
+                            res.send(docs);
+                        } else {
+                            res.sendStatus(404);
+                        }
+                    });
+                }
+            });
     });
 
     router.post('/output/:hash', function (req, res/*, next*/) {
@@ -350,14 +366,16 @@ function ExecutorServer(options) {
                 $set: {
                     outputNumber: outputInfo.outputNumber
                 }
-            }, function (err) {
+            }, function (err, num) {
                 if (err) {
                     self.logger.error('post output', err);
                     res.sendStatus(500);
-                    return;
+                } else if (num === 0) {
+                    self.logger.warn('posted output to job that did not exist');
+                    res.sendStatus(404);
+                } else {
+                    res.sendStatus(200);
                 }
-
-                res.sendStatus(200);
             });
         });
     });
