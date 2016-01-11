@@ -13,12 +13,18 @@ var nodeRequire = require,
         args.splice(0, 0, new Date().toISOString());
         console.log.apply(console, args);
     },
+    err = function () {
+        'use strict';
+        var args = Array.prototype.slice.call(arguments);
+        args.splice(0, 0, new Date().toISOString());
+        console.error.apply(console, args);
+    },
     logger = {
         debug: log,
         log: log,
         info: log,
         warn: log,
-        error: log
+        error: err
     };
 
 if (typeof define !== 'undefined') {

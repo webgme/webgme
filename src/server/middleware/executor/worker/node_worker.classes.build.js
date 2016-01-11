@@ -3417,10 +3417,9 @@ define('blob/BlobClient',[
         if (parameters && parameters.logger) {
             this.logger = parameters.logger;
         } else {
-            var log = console.warn.bind(console),
-                doLog = function () {
-                    log.apply(this, arguments);
-                };
+            var doLog = function () {
+                console.log.apply(console, arguments);
+            };
             this.logger = {
                 debug: doLog,
                 log: doLog,
@@ -3428,7 +3427,7 @@ define('blob/BlobClient',[
                 warn: doLog,
                 error: doLog
             };
-            this.logger.warn('Since v1.3.0 BlobClient requires a logger, falling back on console.warn.');
+            console.warn('Since v1.3.0 BlobClient requires a logger, falling back on console.log.');
         }
 
         this.logger.debug('ctor', {metadata: parameters});
@@ -3873,10 +3872,9 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
         if (parameters.logger) {
             this.logger = parameters.logger;
         } else {
-            var log = console.warn.bind(console),
-                doLog = function () {
-                    log.apply(this, arguments);
-                };
+            var doLog = function () {
+                console.log.apply(console, arguments);
+            };
             this.logger = {
                 debug: doLog,
                 log: doLog,
@@ -3884,7 +3882,7 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
                 warn: doLog,
                 error: doLog
             };
-            this.logger.warn('Since v1.3.0 ExecutorClient requires a logger, falling back on console.warn.');
+            console.warn('Since v1.3.0 ExecutorClient requires a logger, falling back on console.log.');
         }
 
         this.logger.debug('ctor', {metadata: parameters});
@@ -3925,14 +3923,28 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     /**
      * Creates a new configuration file for the job execution.
      *
+     * To make the worker post output either the outputInterval and/or outputSegmentSize must be specified.
+     * - If both are negative (or falsy) no output will be given.
+     * - When both are specified a timeout will be set at start (and after each posted output). If the number of lines
+     *  exceeds outputSegmentSize during that timeout, the output will be posted and a new timeout will be triggered.
+     *
+     * N.B. even though a short outputInterval is set, the worker won't post new output until the responses from
+     * previous posts have returned. Before the job returns with a "completed" status code, all queued outputs will be
+     * posted (and the responses will be ensured to have returned).
+     *
      * @param {string} cmd - command to execute.
      * @param {string[]} [args] - command arguments.
+     * @param {number} [outputInterval=-1] - max time [ms] between (non-empty) output posts from worker.
+     * @param {number} [outputSegmentSize=-1] - number of lines before new output is posted from worker. (N.B. posted
+     * segments can still contain more number of lines).
      * @returns {{cmd: *, resultArtifacts: Array}}
      */
-    ExecutorClient.prototype.getNewExecutorConfig = function (cmd, args) {
+    ExecutorClient.prototype.getNewExecutorConfig = function (cmd, args, outputInterval, outputSegmentSize) {
         var config = {
             cmd: cmd,
-            resultArtifacts: []
+            resultArtifacts: [],
+            outputSegmentSize: typeof outputSegmentSize === 'number' ? outputSegmentSize : -1,
+            outputInterval: typeof outputInterval === 'number' ? outputInterval : -1
         };
 
         if (args) {
@@ -4078,6 +4090,63 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Retrieves the output associated with jobHash, to limit the output pass start and/or end.
+     * The outputs are identified by 0, 1, 2, ...
+     * @param {string} hash - hash of job related to output.
+     * @param {number} [start] - number/id of the output segment to start from (inclusive).
+     * @param {number} [end] - number/id of segment to end at (exclusive).
+     * @param {function(Error, OutputInfo[])} [callback]
+     */
+    ExecutorClient.prototype.getOutput = function (hash, start, end, callback) {
+        var deferred = Q.defer(),
+            url = this.executorUrl + 'output/' + hash,
+            query = '';
+
+        if (typeof start === 'number') {
+            query += '?start=' + start;
+        }
+
+        if (typeof end === 'number') {
+            if (query) {
+                query += '&end=' + end;
+            } else {
+                query += '?end=' + end;
+            }
+        }
+
+        url += query;
+
+        this.logger.debug('getOutput, url=', url);
+
+        this.sendHttpRequest('GET', url, function (err, response) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve(JSON.parse(response));
+            }
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExecutorClient.prototype.sendOutput = function (outputInfo, callback) {
+        var deferred = Q.defer(),
+            url = this.executorUrl + 'output/' + outputInfo.hash;
+
+        this.logger.debug('sendOuput', outputInfo._id);
+
+        this.sendHttpRequestWithData('POST', url, outputInfo, function (err) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve();
+            }
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
     // Helper methods
     ExecutorClient.prototype.getInfoURL = function (hash) {
         return this.origin + this.getRelativeInfoURL(hash);
@@ -4196,6 +4265,7 @@ define('executor/JobInfo',[], function () {
         this.finishTime = parameters.finishTime || null;
         this.worker = parameters.worker || null;
         this.labels = parameters.labels || [];
+        this.outputNumber = parameters.outputNumber || null;
     };
 
     JobInfo.finishedStatuses = [
@@ -4220,6 +4290,153 @@ define('executor/JobInfo',[], function () {
     };
 
     return JobInfo;
+});
+/*globals define*/
+
+/**
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+define('executor/OutputInfo',[], function () {
+    'use strict';
+
+    /**
+     *
+     * @param {string} jobHash
+     * @param {object} params
+     * @param {string} params.output - The output string.
+     * @param {number} params.outputNumber - Ordered id of output (0, 1, 2..)
+     * @constructor
+     */
+    function OutputInfo(jobHash, params) {
+        this.hash = jobHash;
+        this.outputNumber = params.outputNumber;
+        this.output = params.output;
+
+        this._id = this.hash + '+' + this.outputNumber;
+    }
+
+    return OutputInfo;
+});
+/*globals define*/
+/*jshint node:true*/
+/**
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+define('executor/ExecutorOutputQueue',[], function () {
+    'use strict';
+
+    function ExecutorOutputQueue(worker, jobInfo, interval, segmentSize) {
+        var self = this;
+        this.logger = worker.logger; //TODO: Consider using gmeLogger for ExecutorWorker
+        this.jobInfo = jobInfo;
+
+        this.currOutput = {
+            lines: [],
+            callback: null,
+            finishFn: null
+        };
+        this.outputQueue = [];
+
+        this.timeoutId = null;
+
+        /**
+         * Adds a string to the current output (which will be queued based on interval and/or segmentSize).
+         * @param {string} outputStr
+         */
+        this.addOutput = function (outputStr) {
+            var lines = outputStr.split(/\r\n|\r|\n/);
+
+            self.currOutput.lines = self.currOutput.lines.concat(lines);
+            self.logger.debug('length', self.currOutput.lines.length);
+            if (segmentSize > -1 && self.currOutput.lines.length >= segmentSize) {
+                self._setNewTimeout();
+                self._queueCurrOutput();
+            }
+        };
+
+        /**
+         * Stops any timeouts, queues the current output (if any) and empties the outputQueue.
+         * This can be invoked to ensure that all output has been sent before sending the final jobInfo update.
+         * @param {function} callback
+         */
+        this.sendAllOutputs = function (callback) {
+            var nbrOfQueued;
+            clearTimeout(self.timeoutId);
+
+            // Add the remaining stored output.
+            self._queueCurrOutput();
+            nbrOfQueued = self.outputQueue.length;
+
+            self.logger.debug('sending out all outputs');
+            if (nbrOfQueued > 0) {
+                // Attach a finishFn to the last output in the queue.
+                self.outputQueue[self.outputQueue.length - 1].finishFn = function (err) {
+                    callback(err);
+                };
+            } else {
+                callback(null);
+            }
+        };
+
+        this._queueCurrOutput = function () {
+            if (self.currOutput.lines.length === 0) {
+                return;
+            }
+
+            // Add a callback to the output batch that will be invoked when it has been sent to the server.
+            self.currOutput.callback = function (err) {
+                var sentOutput;
+                if (err) {
+                    self.logger.error('output failed to be sent', err.toString());
+                } else {
+                    self.logger.debug('output sent');
+                }
+
+                // When it has been sent, it is removed from the queue and if an additional finishFn has been attached
+                // it is invoked.
+                sentOutput = self.outputQueue.shift();
+                if (typeof sentOutput.finishFn === 'function') {
+                    sentOutput.finishFn(err || null);
+                }
+
+                // If there are more queued outputs after the one just sent, send the first one in the queue.
+                if (self.outputQueue.length > 0) {
+                    worker.sendOutput(self.jobInfo, self.outputQueue[0].lines.join('\n'), self.outputQueue[0].callback);
+                }
+            };
+
+            // Queue the new output and reset the current output.
+            self.outputQueue.push(self.currOutput);
+
+            self.currOutput = {
+                lines: [],
+                callback: null,
+                finishFn: null
+            };
+
+            if (self.outputQueue.length === 1) {
+                worker.sendOutput(self.jobInfo, self.outputQueue[0].lines.join('\n'), self.outputQueue[0].callback);
+            }
+        };
+
+        this._setNewTimeout = function () {
+            if (interval < 0) {
+                return;
+            }
+            clearTimeout(self.timeoutId);
+            self.timeoutId = setTimeout(function () {
+                self._queueCurrOutput();
+                self._setNewTimeout();
+            }, interval);
+        };
+
+        // Start a new timeout at construction.
+        self._setNewTimeout();
+    }
+
+    return ExecutorOutputQueue;
 });
 /*globals define, File, alert*/
 /*jshint node:true*/
@@ -4247,6 +4464,8 @@ define('executor/ExecutorWorker',[
     'executor/ExecutorClient',
     'executor/WorkerInfo',
     'executor/JobInfo',
+    'executor/OutputInfo',
+    'executor/ExecutorOutputQueue',
     'superagent',
     'rimraf'
 ], function (BlobClient,
@@ -4260,6 +4479,8 @@ define('executor/ExecutorWorker',[
              ExecutorClient,
              WorkerInfo,
              JobInfo,
+             OutputInfo,
+             ExecutorOutputQueue,
              superagent,
              rimraf) {
     'use strict';
@@ -4306,9 +4527,9 @@ define('executor/ExecutorWorker',[
         });
     };
 
-    //here you can define global variables for your middleware
-
     var ExecutorWorker = function (parameters) {
+        this.logger = parameters.logger;
+
         this.blobClient = new BlobClient({
             server: parameters.server,
             serverPort: parameters.serverPort,
@@ -4391,7 +4612,7 @@ define('executor/ExecutorWorker',[
                             if (err) {
                                 jobInfo.status = 'FAILED_UNZIP';
                                 jobInfo.finishTime = new Date().toISOString();
-                                console.error(stderr);
+                                self.logger.error(stderr);
                                 errorCallback(err);
                                 return;
                             }
@@ -4414,46 +4635,68 @@ define('executor/ExecutorWorker',[
                                     executorConfig = JSON.parse(data);
                                 } catch (e) {
                                 }
+
+                                self.logger.debug('executorConfig', executorConfig);
                                 if (typeof executorConfig !== 'object' ||
                                     typeof executorConfig.cmd !== 'string' ||
                                     typeof executorConfig.resultArtifacts !== 'object') {
 
                                     jobInfo.status = 'FAILED_EXECUTOR_CONFIG';
                                     jobInfo.finishTime = new Date().toISOString();
-                                    errorCallback(self.executorConfigFilename + ' is missing or wrong type for cmd and/or resultArtifacts.');
+                                    errorCallback(self.executorConfigFilename +
+                                        ' is missing or wrong type for cmd and/or resultArtifacts.');
                                     return;
                                 }
                                 var cmd = executorConfig.cmd;
                                 var args = executorConfig.args || [];
-                                console.log('working directory: ' + jobDir + ' executing: ' + cmd + ' with args: ' +
-                                    args.toString());
-
+                                self.logger.debug('working directory: ' + jobDir + ' executing: ' + cmd +
+                                    ' with args: ' + args.toString());
+                                var outputSegmentSize = executorConfig.outputSegmentSize || -1;
+                                var outputInterval = executorConfig.outputInterval || -1;
+                                var outputQueue;
                                 var child = childProcess.spawn(cmd, args, {
                                     cwd: jobDir,
                                     stdio: ['ignore', 'pipe', 'pipe']
                                 }), childExit = function (err) {
 
-                                    childExit = function () {}; // "Note that the exit-event may or may not fire after an error has occurred"
+                                    childExit = function () {
+                                    }; // "Note that the exit-event may or may not fire after an error has occurred"
                                     jobInfo.finishTime = new Date().toISOString();
 
                                     if (err) {
-                                        console.error(jobInfo.hash + ' exec error: ' + util.inspect(err));
+                                        self.logger.error(jobInfo.hash + ' exec error: ' + util.inspect(err));
                                         jobInfo.status = 'FAILED_TO_EXECUTE';
                                     }
 
                                     // TODO: save stderr and stdout to files.
-
-                                    successCallback(jobInfo, jobDir, executorConfig);
+                                    if (outputQueue) {
+                                        outputQueue.sendAllOutputs(function (/*err*/) {
+                                            successCallback(jobInfo, jobDir, executorConfig);
+                                        });
+                                    } else {
+                                        successCallback(jobInfo, jobDir, executorConfig);
+                                    }
                                     // normally self.saveJobResults(jobInfo, jobDir, executorConfig);
                                 };
                                 var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
+
                                 child.stdout.pipe(outlog);
                                 child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory,
                                     jobInfo.hash.substr(0, 6) + '_stdout.txt')));
                                 // TODO: maybe put in the same file as stdout
                                 child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt')));
-                                child.on('error', childExit); // FIXME can it happen that the close event arrives before error?
+
+                                // FIXME can it happen that the close event arrives before error?
+                                child.on('error', childExit);
                                 child.on('close', childExit);
+
+                                if (outputInterval > - 1 || outputSegmentSize > -1) {
+                                    outputQueue = new ExecutorOutputQueue(self, jobInfo,
+                                        outputInterval, outputSegmentSize);
+                                    child.stdout.on('data', function (data) {
+                                        outputQueue.addOutput(data.toString());
+                                    });
+                                }
                             });
                         });
 
@@ -4505,7 +4748,7 @@ define('executor/ExecutorWorker',[
                 };
             counter = filesToArchive.length;
             if (filesToArchive.length === 0) {
-                console.info(jobInfo.hash + ' There were no files to archive..');
+                self.logger.info(jobInfo.hash + ' There were no files to archive..');
                 counterCallback(null);
             }
             for (i = 0; i < filesToArchive.length; i += 1) {
@@ -4518,9 +4761,9 @@ define('executor/ExecutorWorker',[
                 jointArtifact.addFileAsSoftLink(filename, data, function (err, hash) {
                     var j;
                     if (err) {
-                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' +
-                        filePath + '", err: ' + err);
-                        console.error(err);
+                        self.logger.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' +
+                            filePath + '", err: ' + err);
+                        self.logger.error(err);
                         callback('FAILED_TO_ARCHIVE_FILE');
                     } else {
                         // Add the file-hash to the results artifacts containing the filename.
@@ -4539,8 +4782,8 @@ define('executor/ExecutorWorker',[
             if (typeof File === 'undefined') { // nodejs doesn't have File
                 fs.readFile(filePath, function (err, data) {
                     if (err) {
-                        console.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath +
-                        '", err: ' + err);
+                        self.logger.error(jobInfo.hash + ' Failed to archive as "' + filename + '" from "' + filePath +
+                            '", err: ' + err);
                         return callback('FAILED_TO_ARCHIVE_FILE');
                     }
                     archiveData(null, data);
@@ -4557,7 +4800,7 @@ define('executor/ExecutorWorker',[
                     i,
                     counterCallback;
                 if (err) {
-                    console.error(jobInfo.hash + ' ' + err);
+                    self.logger.error(jobInfo.hash + ' ' + err);
                     jobInfo.status = 'FAILED_TO_SAVE_JOINT_ARTIFACT';
                     self.sendJobUpdate(jobInfo);
                 } else {
@@ -4583,7 +4826,7 @@ define('executor/ExecutorWorker',[
                     }
                     rimraf(directory, function (err) {
                         if (err) {
-                            console.error('Could not delete executor-temp file, err: ' + err);
+                            self.logger.error('Could not delete executor-temp file, err: ' + err);
                         }
                         jobInfo.resultSuperSetHash = resultHash;
                         for (i = 0; i < resultsArtifacts.length; i += 1) {
@@ -4597,12 +4840,12 @@ define('executor/ExecutorWorker',[
         addObjectHashesAndSaveArtifact = function (resultArtifact, callback) {
             resultArtifact.artifact.addMetadataHashes(resultArtifact.files, function (err/*, hashes*/) {
                 if (err) {
-                    console.error(jobInfo.hash + ' ' + err);
+                    self.logger.error(jobInfo.hash + ' ' + err);
                     return callback('FAILED_TO_ADD_OBJECT_HASHES');
                 }
                 resultArtifact.artifact.save(function (err, resultHash) {
                     if (err) {
-                        console.error(jobInfo.hash + ' ' + err);
+                        self.logger.error(jobInfo.hash + ' ' + err);
                         return callback('FAILED_TO_SAVE_ARTIFACT');
                     }
                     jobInfo.resultHashes[resultArtifact.name] = resultHash;
@@ -4649,12 +4892,13 @@ define('executor/ExecutorWorker',[
     };
 
     ExecutorWorker.prototype.sendJobUpdate = function (jobInfo) {
+        var self = this;
         if (JobInfo.isFinishedStatus(jobInfo.status)) {
             this.availableProcessesContainer.availableProcesses += 1;
         }
         this.executorClient.updateJob(jobInfo, function (err) {
             if (err) {
-                console.log(err); // TODO
+                self.logger.error(err); // TODO
             }
         });
         this.emit('jobUpdate', jobInfo);
@@ -4713,7 +4957,7 @@ define('executor/ExecutorWorker',[
                                 self.availableProcessesContainer.availableProcesses -= 1;
                                 self.emit('jobUpdate', info);
                                 self.startJob(info, function (err) {
-                                    console.error(info.hash + ' failed to run: ' + err + '. Status: ' + info.status);
+                                    self.logger.error(info.hash + ' failed to run: ' + err + '. Status: ' + info.status);
                                     self.sendJobUpdate(info);
                                 }, function (jobInfo, jobDir, executorConfig) {
                                     self.saveJobResults(jobInfo, jobDir, executorConfig);
@@ -4729,17 +4973,17 @@ define('executor/ExecutorWorker',[
                                         var info = {hash: response.labelJobs[label]};
                                         self.startJob(info, function (err) {
                                             this.availableProcessesContainer.availableProcesses += 1;
-                                            console.error('Label job ' + label + '(' + info.hash + ') failed to run: ' +
-                                            err + '. Status: ' + info.status);
+                                            self.logger.error('Label job ' + label + '(' + info.hash + ') failed to run: ' +
+                                                err + '. Status: ' + info.status);
                                         }, function (jobInfo/*, jobDir, executorConfig*/) {
                                             this.availableProcessesContainer.availableProcesses += 1;
                                             if (jobInfo.status !== 'FAILED_TO_EXECUTE') {
                                                 self.clientRequest.labels.push(label);
-                                                console.info('Label job ' + label + ' succeeded. Labels are ' +
-                                                JSON.stringify(self.clientRequest.labels));
+                                                self.logger.info('Label job ' + label + ' succeeded. Labels are ' +
+                                                    JSON.stringify(self.clientRequest.labels));
                                             } else {
-                                                console.error('Label job ' + label + '(' + info.hash +
-                                                ') run failed: ' + err + '. Status: ' + info.status);
+                                                self.logger.error('Label job ' + label + '(' + info.hash +
+                                                    ') run failed: ' + err + '. Status: ' + info.status);
                                             }
                                         });
                                     })(label);
@@ -4760,6 +5004,21 @@ define('executor/ExecutorWorker',[
                 _queryWorkerAPI.call(self);
             });
         }
+    };
+
+    ExecutorWorker.prototype.sendOutput = function (jobInfo, output, callback) {
+        var outputInfo;
+
+        jobInfo.outputNumber = typeof jobInfo.outputNumber === 'number' ?
+        jobInfo.outputNumber + 1 : 0;
+
+        outputInfo = new OutputInfo(jobInfo.hash, {
+            output: output,
+            outputNumber: jobInfo.outputNumber
+        });
+
+        this.logger.debug('sending output', outputInfo);
+        this.executorClient.sendOutput(outputInfo, callback);
     };
 
     return ExecutorWorker;
@@ -4850,12 +5109,18 @@ var nodeRequire = require,
         args.splice(0, 0, new Date().toISOString());
         console.log.apply(console, args);
     },
+    err = function () {
+        'use strict';
+        var args = Array.prototype.slice.call(arguments);
+        args.splice(0, 0, new Date().toISOString());
+        console.error.apply(console, args);
+    },
     logger = {
         debug: log,
         log: log,
         info: log,
         warn: log,
-        error: log
+        error: err
     };
 
 if (typeof define !== 'undefined') {
@@ -4870,7 +5135,7 @@ if (typeof define !== 'undefined') {
     ], function (eventDispatcher, BlobClient, ExecutorWorker, JobInfo, ExecutorWorkerController, url) {
         'use strict';
 
-        return function (webGMEUrl, tempPath, parameters) {
+        return function (webGMEUrl, tempPath, parameters, availableProcessesContainer) {
             var worker,
                 webGMEPort = url.parse(webGMEUrl).port || (url.parse(webGMEUrl).protocol === 'https:' ? 443 : 80);
 
@@ -5015,11 +5280,11 @@ if (nodeRequire.main === module) {
                     } else {
                         webGMEUrls[webGMEUrl] = addWebGMEConnection(webGMEUrl,
                             path.join(workingDirectory, '' + workingDirectoryCount++),
-                            config[webGMEUrl]);
+                            config[webGMEUrl], availableProcessesContainer);
                     }
                 } else if (key === 'maxConcurrentJobs') {
-                    availableProcessesContainer.availableProcesses += config[maxConcurrentJobs] - maxConcurrentJobs;
-                    maxConcurrentJobs = config[maxConcurrentJobs];
+                    availableProcessesContainer.availableProcesses += config.maxConcurrentJobs - maxConcurrentJobs;
+                    maxConcurrentJobs = config.maxConcurrentJobs;
                 } else {
                     log('Unknown configuration key ' + key);
                 }

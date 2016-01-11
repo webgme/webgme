@@ -182,7 +182,7 @@ function GMEAuth(session, gmeConfig) {
                 return _prepareGuestAccount();
             })
             .then(function () {
-                return self;
+                return db;
             })
             .catch(function (err) {
                 logger.error(err);

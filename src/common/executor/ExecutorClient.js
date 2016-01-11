@@ -74,14 +74,28 @@ define(['superagent', 'q'], function (superagent, Q) {
     /**
      * Creates a new configuration file for the job execution.
      *
+     * To make the worker post output either the outputInterval and/or outputSegmentSize must be specified.
+     * - If both are negative (or falsy) no output will be given.
+     * - When both are specified a timeout will be set at start (and after each posted output). If the number of lines
+     *  exceeds outputSegmentSize during that timeout, the output will be posted and a new timeout will be triggered.
+     *
+     * N.B. even though a short outputInterval is set, the worker won't post new output until the responses from
+     * previous posts have returned. Before the job returns with a "completed" status code, all queued outputs will be
+     * posted (and the responses will be ensured to have returned).
+     *
      * @param {string} cmd - command to execute.
      * @param {string[]} [args] - command arguments.
+     * @param {number} [outputInterval=-1] - max time [ms] between (non-empty) output posts from worker.
+     * @param {number} [outputSegmentSize=-1] - number of lines before new output is posted from worker. (N.B. posted
+     * segments can still contain more number of lines).
      * @returns {{cmd: *, resultArtifacts: Array}}
      */
-    ExecutorClient.prototype.getNewExecutorConfig = function (cmd, args) {
+    ExecutorClient.prototype.getNewExecutorConfig = function (cmd, args, outputInterval, outputSegmentSize) {
         var config = {
             cmd: cmd,
-            resultArtifacts: []
+            resultArtifacts: [],
+            outputSegmentSize: typeof outputSegmentSize === 'number' ? outputSegmentSize : -1,
+            outputInterval: typeof outputInterval === 'number' ? outputInterval : -1
         };
 
         if (args) {
@@ -222,6 +236,63 @@ define(['superagent', 'q'], function (superagent, Q) {
             }
             self.logger.debug('getWorkersInfo - result', response);
             deferred.resolve(JSON.parse(response));
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    /**
+     * Retrieves the output associated with jobHash, to limit the output pass start and/or end.
+     * The outputs are identified by 0, 1, 2, ...
+     * @param {string} hash - hash of job related to output.
+     * @param {number} [start] - number/id of the output segment to start from (inclusive).
+     * @param {number} [end] - number/id of segment to end at (exclusive).
+     * @param {function(Error, OutputInfo[])} [callback]
+     */
+    ExecutorClient.prototype.getOutput = function (hash, start, end, callback) {
+        var deferred = Q.defer(),
+            url = this.executorUrl + 'output/' + hash,
+            query = '';
+
+        if (typeof start === 'number') {
+            query += '?start=' + start;
+        }
+
+        if (typeof end === 'number') {
+            if (query) {
+                query += '&end=' + end;
+            } else {
+                query += '?end=' + end;
+            }
+        }
+
+        url += query;
+
+        this.logger.debug('getOutput, url=', url);
+
+        this.sendHttpRequest('GET', url, function (err, response) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve(JSON.parse(response));
+            }
+        });
+
+        return deferred.promise.nodeify(callback);
+    };
+
+    ExecutorClient.prototype.sendOutput = function (outputInfo, callback) {
+        var deferred = Q.defer(),
+            url = this.executorUrl + 'output/' + outputInfo.hash;
+
+        this.logger.debug('sendOuput', outputInfo._id);
+
+        this.sendHttpRequestWithData('POST', url, outputInfo, function (err) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve();
+            }
         });
 
         return deferred.promise.nodeify(callback);

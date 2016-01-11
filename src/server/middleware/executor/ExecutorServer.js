@@ -4,6 +4,7 @@
 /**
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
+ * @author pmeijer / https://github.com/pmeijer
  *
  curl http://localhost:8855/rest/executor/info/77704f10a36aa4214f5b0095ba8099e729a10f46
  curl -X POST -H "Content-Type: application/json"
@@ -15,32 +16,55 @@
 'use strict';
 
 var express = require('express'),
-    router = express.Router(),
+    Q = require('q'),
+// Mongo collections
+    JOB_LIST = '_executorJobList',
+    WORKER_LIST = '_executorWorkerList',
+    OUTPUT_LIST = '_executorOutput';
 
-    intervalId,
-    updateLabelsTimeoutId,
-    watchLabelsTimeout;
-
-//function getUserId(req) {
-//    return req.session.udmId;
-//}
-
-function initialize(middlewareOpts) {
-    var self = this, // Will be the module.exports, i.e. have keys initialize and router - consider instances.
+/**
+ *
+ * @param {object} options - middlewareOptions
+ * @param {GmeLogger} options.logger - logger to fork off from
+ * @param {GmeConfig} options.gmeConfig - gmeConfig
+ * @param {function} options.ensureAuthenticated
+ * @constructor
+ */
+function ExecutorServer(options) {
+    var self = this,
         fs = require('fs'),
-        path = require('path'),
         bufferEqual = require('buffer-equal-constant-time'),
-        DataStore = require('nedb'),
-        mkdirp = require('mkdirp'),
-
+        router = express.Router(),
         JobInfo = requireJS('common/executor/JobInfo'),
         WorkerInfo = requireJS('common/executor/WorkerInfo'),
-
+        OutputInfo = requireJS('common/executor/OutputInfo'),
+        workerTimeoutIntervalId,
+        updateLabelsTimeoutId,
+        watchLabelsTimeout,
         workerRefreshInterval;
 
-    self.logger = middlewareOpts.logger.fork('middleware:ExecutorServer');
-    self.gmeConfig = middlewareOpts.gmeConfig;
-    self.ensureAuthenticated = middlewareOpts.ensureAuthenticated;
+    self.logger = options.logger.fork('middleware:ExecutorServer');
+    self.logger.debug('ctor');
+    self.gmeConfig = options.gmeConfig;
+    self.ensureAuthenticated = options.ensureAuthenticated;
+    self.jobList = null;
+    self.workerList = null;
+    self.outputList = null;
+    self.timerId = 0;
+    self.clearOutputsTimers = {
+        // <timerId>: {
+        //   timeoutObj: <timeoutObject>
+        //   jobInfo: <JobInfo>
+        // }
+    };
+
+    self.router = router;
+
+    workerRefreshInterval = self.gmeConfig.executor.workerRefreshInterval;
+
+    self.logger.debug('label-jobs config file', self.gmeConfig.labelJobs);
+    self.labelJobs = {}; // map from label to blob hash
+    self.labelJobsFilename = self.gmeConfig.executor.labelJobs;
 
     function executorAuthenticate(req, res, next) {
         var isAuth = true,
@@ -72,66 +96,59 @@ function initialize(middlewareOpts) {
                 $lt: (new Date()).getTime() / 1000 - workerRefreshInterval / 1000 * 5
             }
         };
-        self.workerList.find(query, function (err, docs) {
+
+        function callback(err) {
+            if (err) {
+                self.logger.error(err);
+            }
+        }
+
+        self.workerList.find(query).toArray(function (err, docs) {
+            if (self.workerList === null || self.jobList === null) {
+                self.logger.debug('ExecutorServer had been stopped.');
+                return;
+            }
             for (var i = 0; i < docs.length; i += 1) {
                 // reset unfinished jobs assigned to worker to CREATED, so they'll be executed by someone else
                 self.logger.debug('worker "' + docs[i].clientId + '" is gone');
-                self.workerList.remove({_id: docs[i]._id});
+
+                self.workerList.remove({_id: docs[i]._id}, callback);
                 self.jobList.update({worker: docs[i].clientId, status: {$nin: JobInfo.finishedStatuses}}, {
                     $set: {
                         worker: null,
                         status: 'CREATED',
                         startTime: null
                     }
-                }, function () {
-                });
+                }, callback);
             }
         });
     }
 
-    function updateLabelJobs() {
+    function updateLabelJobs(callback) {
         fs.readFile(self.labelJobsFilename, {encoding: 'utf-8'}, function (err, data) {
             self.logger.debug('Reading ' + self.labelJobsFilename);
             self.labelJobs = JSON.parse(data);
+            if (callback) {
+                callback(err);
+            }
         });
     }
 
-    function watchLabelJobs() {
+    function watchLabelJobs(callback) {
         fs.exists(self.labelJobsFilename, function (exists) {
             if (exists) {
-                updateLabelJobs();
+                updateLabelJobs(callback);
                 fs.watch(self.labelJobsFilename, {persistent: false}, function () {
                     updateLabelsTimeoutId = setTimeout(updateLabelJobs, 200);
                 });
             } else {
                 watchLabelsTimeout = setTimeout(watchLabelJobs, 10 * 1000);
+                if (callback) {
+                    callback();
+                }
             }
         });
     }
-
-    self.logger.debug('initializing ...');
-
-    self.logger.debug('output directory', self.gmeConfig.executor.outputDir);
-    mkdirp.sync(self.gmeConfig.executor.outputDir);
-
-    self.jobListDBFile = path.join(self.gmeConfig.executor.outputDir, 'jobList.nedb');
-    self.workerListDBFile = path.join(self.gmeConfig.executor.outputDir, 'workerList.nedb');
-    self.jobList = new DataStore({filename: self.jobListDBFile, autoload: true});
-    self.workerList = new DataStore({filename: self.workerListDBFile, autoload: true});
-    workerRefreshInterval = self.gmeConfig.executor.workerRefreshInterval;
-
-    self.logger.debug('label-jobs config file', self.gmeConfig.labelJobs);
-    self.labelJobs = {}; // map from label to blob hash
-    self.labelJobsFilename = self.gmeConfig.executor.labelJobs;
-    watchLabelJobs();
-    intervalId = setInterval(workerTimeout, 10 * 1000);
-    self.jobList.ensureIndex({fieldName: 'hash', unique: true}, function (err) {
-        if (err) {
-            self.logger.error('Failure in ExecutorRest');
-            throw new Error(err);
-        }
-    });
-
 
     // ensure authenticated can be used only after this rule
     router.use('*', function (req, res, next) {
@@ -149,7 +166,8 @@ function initialize(middlewareOpts) {
         if (req.query.status) { // req.query.hasOwnProperty raises TypeError on node 0.11.16 [!]
             query.status = req.query.status;
         }
-        self.jobList.find(query, function (err, docs) {
+        self.logger.debug('get by status:', query.status);
+        self.jobList.find(query).toArray(function (err, docs) {
             if (err) {
                 self.logger.error(err);
                 res.sendStatus(500);
@@ -160,6 +178,7 @@ function initialize(middlewareOpts) {
                 jobList[docs[i].hash] = docs[i];
                 delete docs[i]._id;
             }
+            self.logger.debug('Found number of jobs matching status', docs.length, query.status);
             res.send(jobList);
         });
 
@@ -174,12 +193,13 @@ function initialize(middlewareOpts) {
     });
 
     router.get('/info/:hash', function (req, res/*, next*/) {
-        self.jobList.find({hash: req.params.hash}, function (err, docs) {
+        self.jobList.findOne({hash: req.params.hash}, function (err, jobInfo) {
             if (err) {
                 self.logger.error(err);
                 res.sendStatus(500);
-            } else if (docs.length) {
-                res.send(docs[0]);
+            } else if (jobInfo) {
+                delete jobInfo._id;
+                res.send(jobInfo);
             } else {
                 res.sendStatus(404);
             }
@@ -196,12 +216,14 @@ function initialize(middlewareOpts) {
 
         jobInfo = new JobInfo(info);
         // TODO: check if hash ok
-        self.jobList.find({hash: req.params.hash}, function (err, docs) {
+        self.logger.debug('job creation info:', {metadata: info});
+        self.jobList.findOne({hash: req.params.hash}, function (err, doc) {
             if (err) {
-                self.logger.error('err');
+                self.logger.error(err);
                 res.sendStatus(500);
-            } else if (docs.length === 0) {
+            } else if (!doc) {
                 self.jobList.update({hash: req.params.hash}, jobInfo, {upsert: true}, function (err) {
+                    self.logger.info(err);
                     if (err) {
                         self.logger.error(err);
                         res.sendStatus(500);
@@ -211,8 +233,8 @@ function initialize(middlewareOpts) {
                     }
                 });
             } else {
-                delete docs[0]._id;
-                res.send(docs[0]);
+                delete doc._id;
+                res.send(doc);
             }
         });
 
@@ -220,15 +242,14 @@ function initialize(middlewareOpts) {
 
     });
 
-
     router.post('/update/:hash', function (req, res/*, next*/) {
 
-        self.jobList.find({hash: req.params.hash}, function (err, docs) {
+        self.jobList.findOne({hash: req.params.hash}, function (err, doc) {
             if (err) {
                 self.logger.error(err);
                 res.sendStatus(500);
-            } else if (docs.length) {
-                var jobInfo = new JobInfo(docs[0]);
+            } else if (doc) {
+                var jobInfo = new JobInfo(doc);
                 var jobInfoUpdate = new JobInfo(req.body);
                 jobInfoUpdate.hash = req.params.hash;
                 for (var i in jobInfoUpdate) {
@@ -239,6 +260,8 @@ function initialize(middlewareOpts) {
                     }
                 }
                 self.jobList.update({hash: req.params.hash}, jobInfo, function (err, numReplaced) {
+                    var timeoutObj,
+                        timerId;
                     if (err) {
                         self.logger.error(err);
                         res.sendStatus(500);
@@ -246,11 +269,125 @@ function initialize(middlewareOpts) {
                         res.sendStatus(404);
                     } else {
                         res.sendStatus(200);
+                        if (JobInfo.isFinishedStatus(jobInfo.status) && jobInfo.outputNumber !== null &&
+                            self.gmeConfig.executor.clearOutputTimeout > -1) {
+                            // The job has finished and there is stored output - set timeout to clear it.
+                            timerId = self.timerId;
+                            self.timerId += 1;
+                            timeoutObj = setTimeout(function () {
+                                var query = {
+                                    _id: {
+                                        $regex: '^' + jobInfo.hash
+                                    }
+                                };
+
+                                delete self.clearOutputsTimers[timerId];
+
+                                self.outputList.remove(query, function (err, num) {
+                                    if (err) {
+                                        self.logger.error('Failed to remove output for job', {metadata: jobInfo});
+                                    }
+                                    if (num !== jobInfo.outputNumber + 1) {
+                                        self.logger.warn('Did not remove all output for job', num, {metadata: jobInfo});
+                                    }
+
+                                    self.logger.debug('Cleared output for job', num, jobInfo.hash);
+                                });
+                            }, self.gmeConfig.executor.clearOutputTimeout);
+
+                            self.clearOutputsTimers[timerId] = {
+                                jobInfo: jobInfo,
+                                timeoutObj: timeoutObj
+                            };
+
+                            self.logger.debug('Timeout ' + self.gmeConfig.executor.clearOutputTimeout +
+                                ' [ms] to clear output for job set (id)', jobInfo.hash, timerId);
+                        }
                     }
                 });
             } else {
                 res.sendStatus(404);
             }
+        });
+    });
+
+    router.get('/output/:hash', function (req, res/*, next*/) {
+        var query = {
+            hash: req.params.hash
+        };
+
+        if (parseInt(req.query.start, 10)) {
+            query.outputNumber = {
+                $gte: parseInt(req.query.start, 10)
+            };
+        }
+
+        if (parseInt(req.query.end, 10)) {
+            if (query.hasOwnProperty('outputNumber')) {
+                query.outputNumber.$lt = parseInt(req.query.end, 10);
+            } else {
+                query.outputNumber = {
+                    $lt: parseInt(req.query.end, 10)
+                };
+            }
+        }
+
+        self.logger.debug('ouput requested', query);
+        self.outputList.find(query)
+            .sort({outputNumber: 1})
+            .toArray(function (err, docs) {
+                if (err) {
+                    self.logger.error('get output', err);
+                    res.sendStatus(500);
+                    return;
+                }
+
+                self.logger.debug('got outputs, nbr', docs.length);
+                if (docs.length > 0) {
+                    res.send(docs);
+                } else {
+                    // No output found, could it be that job does not even exist?
+                    self.jobList.findOne({hash: req.params.hash}, function (err, jobInfo) {
+                        if (err) {
+                            self.logger.error(err);
+                            res.sendStatus(500);
+                        } else if (jobInfo) {
+                            res.send(docs);
+                        } else {
+                            res.sendStatus(404);
+                        }
+                    });
+                }
+            });
+    });
+
+    router.post('/output/:hash', function (req, res/*, next*/) {
+        var outputInfo = new OutputInfo(req.params.hash, req.body);
+
+        self.logger.debug('output posted', outputInfo._id);
+
+        self.outputList.update({_id: outputInfo._id}, outputInfo, {upsert: true}, function (err) {
+            if (err) {
+                self.logger.error('post output', err);
+                res.sendStatus(500);
+                return;
+            }
+
+            self.jobList.update({hash: req.params.hash}, {
+                $set: {
+                    outputNumber: outputInfo.outputNumber
+                }
+            }, function (err, num) {
+                if (err) {
+                    self.logger.error('post output', err);
+                    res.sendStatus(500);
+                } else if (num === 0) {
+                    self.logger.warn('posted output to job that did not exist');
+                    res.sendStatus(404);
+                } else {
+                    res.sendStatus(200);
+                }
+            });
         });
     });
 
@@ -261,7 +398,7 @@ function initialize(middlewareOpts) {
     // worker API
     router.get('/worker', function (req, res/*, next*/) {
         var response = {};
-        self.workerList.find({}, function (err, workers) {
+        self.workerList.find({}).toArray(function (err, workers) {
             var jobQuery = function (i) {
                 if (i === workers.length) {
                     res.send(JSON.stringify(response));
@@ -271,7 +408,7 @@ function initialize(middlewareOpts) {
                 self.jobList.find({
                     status: 'RUNNING',
                     worker: worker.clientId
-                }).sort({createTime: 1}).exec(function (err, jobs) {
+                }).sort({createTime: 1}).toArray(function (err, jobs) {
                     // FIXME: index self.jobList on status?
                     for (var j = 0; j < jobs.length; j += 1) {
                         delete jobs[j]._id;
@@ -302,8 +439,14 @@ function initialize(middlewareOpts) {
             if (clientRequest.availableProcesses) {
                 self.jobList.find({
                     status: 'CREATED',
-                    $not: {labels: {$nin: clientRequest.labels}}
-                }).limit(clientRequest.availableProcesses).exec(function (err, docs) {
+                    labels: {
+                        $not: {
+                            $elemMatch: {
+                                $nin: clientRequest.labels
+                            }
+                        }
+                    }
+                }).limit(clientRequest.availableProcesses).toArray(function (err, docs) {
                     if (err) {
                         self.logger.error(err);
                         res.sendStatus(500);
@@ -339,18 +482,61 @@ function initialize(middlewareOpts) {
         });
     });
 
-    self.logger.debug('ready');
+    /**
+     *
+     * @param {object} params
+     * @param {object} mongoClient - open connection to mongodb
+     * @param callback
+     * @returns {*}
+     */
+    this.start = function (params, callback) {
+        var mongo = params.mongoClient;
+        self.logger.debug('Starting executor');
+        return Q.all([
+            Q.ninvoke(mongo, 'collection', JOB_LIST),
+            Q.ninvoke(mongo, 'collection', WORKER_LIST),
+            Q.ninvoke(mongo, 'collection', OUTPUT_LIST)
+        ])
+            .then(function (res) {
+                self.jobList = res[0];
+                self.workerList = res[1];
+                self.outputList = res[2];
+                if (self.gmeConfig.executor.clearOldDataAtStartUp === true) {
+                    return Q.allSettled([
+                        Q.ninvoke(mongo, 'dropCollection', JOB_LIST),
+                        Q.ninvoke(mongo, 'dropCollection', WORKER_LIST),
+                        Q.ninvoke(mongo, 'dropCollection', OUTPUT_LIST)
+                    ]);
+                }
+            })
+            .then(function () {
+                watchLabelJobs();
+                workerTimeoutIntervalId = setInterval(workerTimeout, 10 * 1000);
+                return Q.ninvoke(self.jobList, 'ensureIndex', {hash: 1}, {unique: true});
+            })
+            .nodeify(callback);
+    };
+
+    /**
+     * Clears the opened intervals and timeouts.
+     * This does not close the connection to mongo.
+     */
+    this.stop = function () {
+        var timerIds = Object.keys(self.clearOutputsTimers);
+        timerIds.forEach(function (timerId) {
+            clearTimeout(self.clearOutputsTimers[timerId].timeoutObj);
+            self.logger.warn('Outputs will not be cleared for job', self.clearOutputsTimers[timerId].jobInfo.hash,
+                self.clearOutputsTimers[timerId].jobInfo.outputNumber);
+        });
+
+        clearInterval(workerTimeoutIntervalId);
+        clearTimeout(updateLabelsTimeoutId);
+        clearTimeout(watchLabelsTimeout);
+        self.jobList = null;
+        self.workerList = null;
+        self.outputList = null;
+        self.logger.debug('Executor was stopped');
+    };
 }
 
-function stop() {
-    clearInterval(intervalId);
-    clearTimeout(updateLabelsTimeoutId);
-    clearTimeout(watchLabelsTimeout);
-}
-
-
-module.exports = {
-    initialize: initialize,
-    stop: stop,
-    router: router
-};
+module.exports = ExecutorServer;

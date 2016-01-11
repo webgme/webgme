@@ -12,15 +12,17 @@ describe('ExecutorClient', function () {
         should = testFixture.should,
         expect = testFixture.expect,
         ExecutorClient = testFixture.ExecutorClient,
+        OutputInfo,
         executorClient,
         logger = testFixture.logger,
+        Q = testFixture.Q,
+        gmeConfig,
         server;
 
     before(function (done) {
-        // we have to set the config here
-        var gmeConfig = testFixture.getGmeConfig(),
-            param = {};
-
+        var param = {};
+        gmeConfig = testFixture.getGmeConfig();
+        OutputInfo = testFixture.requirejs('common/executor/OutputInfo');
         gmeConfig.executor.enable = true;
 
         param.serverPort = gmeConfig.server.port;
@@ -50,6 +52,15 @@ describe('ExecutorClient', function () {
         expect(typeof executorClient.getCreateURL === 'function').to.equal(true);
         expect(executorClient.getCreateURL()).to.contain('create');
         expect(executorClient.getCreateURL('1234567890abcdef')).to.contain('1234567890abcdef');
+    });
+
+    it('should create executorClient without a logger passed', function () {
+        var noLoggerPassed = new ExecutorClient({
+            serverPort: gmeConfig.server.port,
+            httpsecure: false
+        });
+
+        expect(noLoggerPassed.logger).to.have.keys('debug', 'log', 'info', 'warn', 'error');
     });
 
     it('getInfoURL should be concatenation of origin and getRelativeInfoURL', function () {
@@ -175,5 +186,116 @@ describe('ExecutorClient', function () {
                 });
             });
         });
+    });
+
+    it('should return Not Found for getOutput when job does not exist', function (done) {
+        executorClient.getOutput('someHash')
+            .then(function () {
+                throw new Error('Should have failed');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Not Found');
+            })
+            .nodeify(done);
+    });
+
+    it('should return Not Found when posting output to a job that does not exist', function (done) {
+        var outputInfo = new OutputInfo('hashDoesNotExist', {
+            output: 'hello world',
+            outputNumber: 0
+        });
+        executorClient.sendOutput(outputInfo)
+            .then(function () {
+                throw new Error('Should have failed');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Not Found');
+            })
+            .nodeify(done);
+    });
+
+    it('should create a job and post and return output', function (done) {
+        var jobHash = 'jobHashWithOutput1',
+            outputInfo = new OutputInfo(jobHash, {
+                output: 'hello world',
+                outputNumber: 0
+            });
+        executorClient.createJob({hash: jobHash})
+            .then(function (/*jobInfo*/) {
+                return executorClient.sendOutput(outputInfo);
+            })
+            .then(function () {
+                return executorClient.getOutput(jobHash);
+            })
+            .then(function (output) {
+                expect(output.length).to.equal(1);
+                expect(output[0]).to.deep.equal(outputInfo);
+            })
+            .nodeify(done);
+    });
+
+    it('should create a job and post and return outputs based on queries', function (done) {
+        var jobHash = 'jobHashWithOutput2',
+            outputInfo = new OutputInfo(jobHash, {
+                output: 'hello world',
+                outputNumber: 0
+            }),
+            outputInfo1 = new OutputInfo(jobHash, {
+                output: 'hello world 1',
+                outputNumber: 1
+            }),
+            outputInfo2 = new OutputInfo(jobHash, {
+                output: 'hello world 2',
+                outputNumber: 2
+            });
+
+        executorClient.createJob({hash: jobHash})
+            .then(function (jobInfo) {
+                expect(jobInfo.outputNumber).to.equal(null);
+                return executorClient.sendOutput(outputInfo);
+            })
+            .then(function () {
+                return executorClient.sendOutput(outputInfo1);
+            })
+            .then(function () {
+                return executorClient.getInfo(jobHash);
+            })
+            .then(function (jobInfo) {
+                expect(jobInfo.outputNumber).to.equal(1);
+                return executorClient.getOutput(jobHash);
+            })
+            .then(function (output) {
+                expect(output.length).to.equal(2);
+                expect(output[0]).to.deep.equal(outputInfo);
+                expect(output[1]).to.deep.equal(outputInfo1);
+
+                return executorClient.sendOutput(outputInfo2);
+            })
+            .then(function () {
+                return Q.allDone([
+                    executorClient.getOutput(jobHash, 1, 3),
+                    executorClient.getOutput(jobHash, 1, 1),
+                    executorClient.getOutput(jobHash, null, 2),
+                    executorClient.getOutput(jobHash, 0, 5),
+                    executorClient.getOutput(jobHash, 2, 3),
+                    ]);
+            })
+            .then(function (res) {
+                expect(res[0].length).to.equal(2);
+                expect(res[0][0]).to.deep.equal(outputInfo1);
+                expect(res[0][1]).to.deep.equal(outputInfo2);
+
+                expect(res[1].length).to.equal(0);
+
+                expect(res[2].length).to.equal(2);
+                expect(res[2][0]).to.deep.equal(outputInfo);
+                expect(res[2][1]).to.deep.equal(outputInfo1);
+
+                expect(res[3].length).to.equal(3);
+
+                expect(res[4].length).to.equal(1);
+                expect(res[4][0]).to.deep.equal(outputInfo2);
+            })
+            .nodeify(done);
     });
 });

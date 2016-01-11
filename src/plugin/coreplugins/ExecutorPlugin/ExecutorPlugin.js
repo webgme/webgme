@@ -124,6 +124,7 @@ define([
             executorConfig,
             finalJobInfo,
             filesToAdd,
+            latestOutputNumber = -1,
             artifact;
 
         self.logger.info('inside main');
@@ -133,7 +134,7 @@ define([
             return;
         }
 
-        executorConfig = executorClient.getNewExecutorConfig(config.pythonCmd, ['generate_name.py']);
+        executorConfig = executorClient.getNewExecutorConfig(config.pythonCmd, ['generate_name.py'], 600, 5);
         executorConfig.defineResultArtifact('all', []);
         executorConfig.defineResultArtifact('logs', ['log/**/*']);
         executorConfig.defineResultArtifact('resultFile', ['new_name.json']);
@@ -147,7 +148,7 @@ define([
 
         // The hash of the artifact with these files will define the job. N.B. executor_config.json must exist.
         filesToAdd = {
-            'executor_config.json': JSON.stringify(executorConfig, null, 4),
+            'executor_config.json': JSON.stringify(executorConfig, null, 2),
             'generate_name.py': ejs.render(TEMPLATES['generate_name.py.ejs'], {
                 exitCode: config.success ? 0 : 1,
                 sleepTime: config.time
@@ -178,17 +179,42 @@ define([
                     // Get the job-info at intervals and check for a non-CREATED/RUNNING status.
                     executorClient.getInfo(jobInfo.hash)
                         .then(function (jInfo) {
-                            var key;
-                            self.logger.info(JSON.stringify(jInfo, null, 4));
+                            var key,
+                                startOutput;
+                            self.logger.debug(JSON.stringify(jInfo, null, 4));
 
                             if (jInfo.status === 'CREATED' || jInfo.status === 'RUNNING') {
                                 // The job is still running..
+                                if (jInfo.outputNumber !== null && jInfo.outputNumber >= latestOutputNumber) {
+                                    startOutput = latestOutputNumber;
+                                    latestOutputNumber = jInfo.outputNumber + 1;
+                                    executorClient.getOutput(jInfo.hash, startOutput, latestOutputNumber)
+                                        .then(function (output) {
+                                            output.forEach(function (o) {
+                                                self.logger.debug('partial output\n', o.output);
+                                            });
+                                        });
+                                }
                                 return;
                             }
 
                             clearInterval(intervalID);
                             if (jInfo.status === 'SUCCESS') {
-                                deferred.resolve(jInfo);
+                                if (jInfo.outputNumber) {
+                                    executorClient.getOutput(jInfo.hash)
+                                        .then(function (output) {
+                                            var completeOutput = '';
+                                            output.forEach(function (o) {
+                                                completeOutput += o.output;
+                                            });
+                                            self.logger.debug('complete output\n', completeOutput);
+                                            deferred.resolve(jInfo);
+                                        })
+                                        .catch(deferred.reject);
+                                } else {
+                                    self.logger.debug('no output after success');
+                                    deferred.resolve(jInfo);
+                                }
                             } else {
                                 //Add the resultHashes even though job failed (for user to debug).
                                 for (key in jInfo.resultHashes) {

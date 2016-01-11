@@ -19,6 +19,7 @@ define([], function () {
         this.finishTime = parameters.finishTime || null;
         this.worker = parameters.worker || null;
         this.labels = parameters.labels || [];
+        this.outputNumber = parameters.outputNumber || null;
     };
 
     JobInfo.finishedStatuses = [

@@ -98,10 +98,12 @@ ubuntu
  - If true will enable the executor.
 - `config.executor.nonce = null`
  - If defined this is the secret shared between the server and attached workers.
-- `config.executor.outputDir = './'`
- - Directory where the state of the executor manager is stored (running jobs and workers attached) **will be deprecated when stored in the mongo database**.
 - `config.executor.workerRefreshInterval = 5000`
  - Time interval in milliseconds that attached workers will request jobs from the server.
+- `config.executor.clearOutputTimeout = 60000`
+ - Time in milliseconds that output is stored after a job has finished.
+- `config.executor.clearOldDataAtStartUp = false`
+ - If true, all data stored for jobs (jobInfos, outputs, workerInfos, etc.) is cleared when the server starts.
 - `config.executor.labelJobs = './labelJobs.json'`
  - Path to configuration file for label jobs for the workers.
 

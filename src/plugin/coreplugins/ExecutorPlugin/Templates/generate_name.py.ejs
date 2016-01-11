@@ -39,8 +39,46 @@ if __name__ == '__main__':
     with open('new_name.json', 'wb') as f_out:
         json.dump({active_node_path: 'ThisIsANewName'}, f_out)
     logger.info('created new_name.json')
-    logger.info('Going to sleep for {0} seconds.. zzZzZZ'.format(<%=sleepTime%>))
+    cnt = 0
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+
+    logger.info('1 Going to sleep for {0} seconds.. zzZzZZ'.format(<%=sleepTime%>))
     time.sleep(<%=sleepTime%>)
-    logger.info('Good Morning!')
+    logger.info('1 Good Morning!')
+
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+
+    logger.info('2 Going to sleep again for {0} seconds.. zzZzZZ'.format(<%=sleepTime%>))
+    time.sleep(<%=sleepTime%>)
+    logger.info('2 Good Morning!')
+
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+    cnt += 1
+    logger.info('output_{0}'.format(cnt))
+
     logger.info('Will exit with code {0}'.format(<%=exitCode%>))
     sys.exit(<%=exitCode%>)
