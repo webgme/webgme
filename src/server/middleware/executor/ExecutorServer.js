@@ -50,8 +50,12 @@ function ExecutorServer(options) {
     self.jobList = null;
     self.workerList = null;
     self.outputList = null;
+    self.timerId = 0;
     self.clearOutputsTimers = {
-        // <timeoutId>: <JobInfo>
+        // <timerId>: {
+        //   timeoutObj: <timeoutObject>
+        //   jobInfo: <JobInfo>
+        // }
     };
 
     self.router = router;
@@ -256,7 +260,8 @@ function ExecutorServer(options) {
                     }
                 }
                 self.jobList.update({hash: req.params.hash}, jobInfo, function (err, numReplaced) {
-                    var timeoutId;
+                    var timeoutObj,
+                        timerId;
                     if (err) {
                         self.logger.error(err);
                         res.sendStatus(500);
@@ -267,14 +272,16 @@ function ExecutorServer(options) {
                         if (JobInfo.isFinishedStatus(jobInfo.status) && jobInfo.outputNumber !== null &&
                             self.gmeConfig.executor.clearOutputTimeout > -1) {
                             // The job has finished and there is stored output - set timeout to clear it.
-                            timeoutId = setTimeout(function () {
+                            timerId = self.timerId;
+                            self.timerId += 1;
+                            timeoutObj = setTimeout(function () {
                                 var query = {
                                     _id: {
                                         $regex: '^' + jobInfo.hash
                                     }
                                 };
 
-                                delete self.clearOutputsTimers[timeoutId];
+                                delete self.clearOutputsTimers[timerId];
 
                                 self.outputList.remove(query, function (err, num) {
                                     if (err) {
@@ -288,9 +295,13 @@ function ExecutorServer(options) {
                                 });
                             }, self.gmeConfig.executor.clearOutputTimeout);
 
-                            self.clearOutputsTimers[timeoutId] = jobInfo;
+                            self.clearOutputsTimers[timerId] = {
+                                jobInfo: jobInfo,
+                                timeoutObj: timeoutObj
+                            };
+
                             self.logger.debug('Timeout ' + self.gmeConfig.executor.clearOutputTimeout +
-                                ' [ms] to clear output for job set', jobInfo.hash);
+                                ' [ms] to clear output for job set (id)', jobInfo.hash, timerId);
                         }
                     }
                 });
@@ -511,12 +522,13 @@ function ExecutorServer(options) {
      * This does not close the connection to mongo.
      */
     this.stop = function () {
-        var clearOutputTimeouts = Object.keys(self.clearOutputsTimers);
-        clearOutputTimeouts.forEach(function (timeoutId) {
-            clearTimeout(timeoutId);
-            self.logger.warn('Outputs will not be cleared for job',
-                self.clearOutputsTimers[timeoutId].outputNumber, self.clearOutputsTimers[timeoutId].hash);
+        var timerIds = Object.keys(self.clearOutputsTimers);
+        timerIds.forEach(function (timerId) {
+            clearTimeout(self.clearOutputsTimers[timerId].timeoutObj);
+            self.logger.warn('Outputs will not be cleared for job', self.clearOutputsTimers[timerId].jobInfo.hash,
+                self.clearOutputsTimers[timerId].jobInfo.outputNumber);
         });
+
         clearInterval(workerTimeoutIntervalId);
         clearTimeout(updateLabelsTimeoutId);
         clearTimeout(watchLabelsTimeout);
