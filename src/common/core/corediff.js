@@ -15,7 +15,6 @@ define(['common/util/canon',
 ], function (CANON, TASYNC, ASSERT, REGEXP, RANDOM) {
     'use strict';
 
-
     function diffCore(_innerCore, options) {
         ASSERT(typeof options === 'object');
         ASSERT(typeof options.globConf === 'object');
@@ -215,7 +214,7 @@ define(['common/util/canon',
         function ovrDiff(source, target) {
             var getOvrData = function (node) {
                     var paths, names, i, j,
-                        ovr = _core.getProperty(node, 'ovr') || {},
+                        ovr = _core.getProperty(node, _core.constants.OVERLAYS_PROPERTY) || {},
                         data = {},
                         base = _core.getPath(node);
 
@@ -837,8 +836,7 @@ define(['common/util/canon',
                 dst2src,
                 src2dst,
                 relidObj = {},
-                parent,
-                needToRelocate = false;
+                parent;
 
             if (diffBase.guid !== diffExtension.guid) {
                 if (diffBase.movedFrom && diffExtension.movedFrom) {
@@ -847,51 +845,44 @@ define(['common/util/canon',
                     nodeDiff = diffExtension;
                     dst2src = _concatMoves.getExtensionSourceFromDestination;
                     src2dst = _concatMoves.getExtensionDestinationFromSource;
-                    needToRelocate = true;
                 } else if (diffBase.movedFrom && diffExtension.removed === false) {
                     globalDiff = _concatBase;
                     nodeDiff = diffBase;
                     dst2src = _concatMoves.getBaseSourceFromDestination;
                     src2dst = _concatMoves.getBaseDestinationFromSource;
-                    needToRelocate = true;
                 } else if (diffExtension.movedFrom && diffBase.removed === false) {
                     globalDiff = _concatExtension;
                     nodeDiff = diffExtension;
                     dst2src = _concatMoves.getExtensionSourceFromDestination;
                     src2dst = _concatMoves.getExtensionDestinationFromSource;
-                    needToRelocate = true;
-                }
-
-                if (needToRelocate) {
-                    relids = getDiffChildrenRelids(getPathOfDiff(_concatBase, getParentPath(path)))
-                        .concat(getDiffChildrenRelids(getPathOfDiff(_concatExtension, getParentPath(path))));
-
-                    relidObj = {};
-                    for (i = 0; i < relids.length; i += 1) {
-                        relidObj[relids[i]] = {};
-                    }
-                    newRelid = RANDOM.generateRelid(relidObj);
-                    newPath = getParentPath(path) + '/' + newRelid;
-
-                    //now the actual place switching
-                    parent = getPathOfDiff(globalDiff, getParentPath(path));
-                    parent[newRelid] = nodeDiff;
-                    delete parent[relid];
-                    dst2src[newPath] = dst2src[path];
-                    delete dst2src[path];
-                    src2dst[dst2src[newPath]] = newPath;
                 } else {
-                    logger.warning('there is a guid mismatch among the two diffs: ' +
+                    throw new Error('there is a guid mismatch among the two diffs: ' +
                         diffBase.guid + ' vs ' + diffExtension.guid);
                 }
+
+                relids = getDiffChildrenRelids(getPathOfDiff(_concatBase, getParentPath(path)))
+                    .concat(getDiffChildrenRelids(getPathOfDiff(_concatExtension, getParentPath(path))));
+
+                relidObj = {};
+                for (i = 0; i < relids.length; i += 1) {
+                    relidObj[relids[i]] = {};
+                }
+                newRelid = RANDOM.generateRelid(relidObj);
+                newPath = getParentPath(path) + '/' + newRelid;
+
+                //now the actual place switching
+                parent = getPathOfDiff(globalDiff, getParentPath(path));
+                parent[newRelid] = nodeDiff;
+                delete parent[relid];
+                dst2src[newPath] = dst2src[path];
+                delete dst2src[path];
+                src2dst[dst2src[newPath]] = newPath;
             }
 
             //recursive calls - only if there were no replacement due to collision
-            if (!needToRelocate) {
-                for (i = 0; i < keys.length; i += 1) {
-                    if (diffExtension[keys[i]]) {
-                        fixCollision(path + '/' + keys[i], keys[i], diffBase[keys[i]], diffExtension[keys[i]]);
-                    }
+            for (i = 0; i < keys.length; i += 1) {
+                if (diffExtension[keys[i]]) {
+                    fixCollision(path + '/' + keys[i], keys[i], diffBase[keys[i]], diffExtension[keys[i]]);
                 }
             }
         }
@@ -924,33 +915,35 @@ define(['common/util/canon',
                 sourcePath = _core.getPath(node).substr(_core.getPath(ancestor).length),
                 targetPath = basePath.substr(_core.getPath(ancestor).length);
             sourcePath = sourcePath + '/' + relid;
-            _innerCore.overlayInsert(_core.getChild(ancestor, 'ovr'), sourcePath, 'base', targetPath);
+            _innerCore.overlayInsert(_core.getChild(ancestor, _core.constants.OVERLAYS_PROPERTY),
+                sourcePath, 'base', targetPath);
+        }
+
+        function getOrderedRelids(diffObject) {
+            //those nodes that were changing relid as a result of move should be handled last
+            var keys = getDiffChildrenRelids(diffObject),
+                i,
+                ordered = [],
+                sourceRelid;
+            for (i = 0; i < keys.length; i += 1) {
+                if (diffObject[keys[i]].movedFrom) {
+                    sourceRelid = diffObject[keys[i]].movedFrom;
+                    sourceRelid = sourceRelid.split('/');
+                    sourceRelid = sourceRelid[sourceRelid.length - 1];
+                    if (sourceRelid !== keys[i]) {
+                        ordered.push(keys[i]);
+                    } else {
+                        ordered.unshift(keys[i]);
+                    }
+                } else {
+                    ordered.unshift(keys[i]);
+                }
+            }
+            return ordered;
         }
 
         function makeInitialContainmentChanges(node, diff) {
-            var getOrderedRelids = function () {
-                    //those nodes that were changing relid as a result of move should be handled last
-                    var keys = getDiffChildrenRelids(diff),
-                        i,
-                        ordered = [],
-                        sourceRelid;
-                    for (i = 0; i < keys.length; i += 1) {
-                        if (diff[keys[i]].movedFrom) {
-                            sourceRelid = diff[keys[i]].movedFrom;
-                            sourceRelid = sourceRelid.split('/');
-                            sourceRelid = sourceRelid[sourceRelid.length - 1];
-                            if (sourceRelid !== keys[i]) {
-                                ordered.push(keys[i]);
-                            } else {
-                                ordered.unshift(keys[i]);
-                            }
-                        } else {
-                            ordered.unshift(keys[i]);
-                        }
-                    }
-                    return ordered;
-                },
-                relids = getOrderedRelids(),
+            var relids = getOrderedRelids(diff),
                 i, done, child, moved,
                 moving = function (n, di, r, p, m/*, d*/) {
                     var nRelid;
@@ -1912,10 +1905,8 @@ define(['common/util/canon',
                                         value: diffMeta.pointers[keys[i]][relids[j]],
                                         conflictingPaths: {}
                                     };
-                                conflict[path + '/pointers/' + keys[i] + '/' + tPath + '//'].
-                                    conflictingPaths[opposingPath] = true;
-                                opposingConflict.
-                                    conflictingPaths[path + '/pointers/' + keys[i] + '/' + tPath + '//'] = true;
+                                conflict[path + '/pointers/' + keys[i] + '/' + tPath + '//'].conflictingPaths[opposingPath] = true;
+                                opposingConflict.conflictingPaths[path + '/pointers/' + keys[i] + '/' + tPath + '//'] = true;
                             }
                         }
                     }
@@ -2250,7 +2241,6 @@ define(['common/util/canon',
                     ASSERT(basePath === path || baseNode.movedFrom === path);
                     path = basePath; //the base was moved
 
-
                     //and now the sub-node conflicts
                     if (extNode.attr) {
                         if (baseNode.attr) {
@@ -2449,7 +2439,6 @@ define(['common/util/canon',
 
             return conflictObject.merge;
         };
-
 
         //we remove some low level functions as they should not be used on high level
         delete _core.overlayInsert;

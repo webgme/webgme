@@ -14,26 +14,6 @@ define([
 
     'use strict';
 
-    // ----------------- RELID -----------------
-
-    var ATTRIBUTES = 'atr',
-        REGISTRY = 'reg',
-        OVERLAYS = 'ovr',
-        COLLSUFFIX = '-inv';
-
-    function isPointerName(name) {
-        ASSERT(typeof name === 'string');
-        //TODO this is needed as now we work with modified data as well
-        if (name === '_mutable') {
-            return false;
-        }
-        return name.slice(-COLLSUFFIX.length) !== COLLSUFFIX;
-    }
-
-    //function isValidRelid(relid) {
-    //    return typeof relid === 'string' && parseInt(relid, 10).toString() === relid;
-    //}
-
     function __test(text, cond) {
         if (!cond) {
             throw new Error(text);
@@ -51,6 +31,16 @@ define([
         var logger = options.logger.fork('corerel');
 
         logger.debug('initialized');
+
+        function isPointerName(name) {
+            ASSERT(typeof name === 'string');
+            //TODO this is needed as now we work with modified data as well
+            if (name === '_mutable') {
+                return false;
+            }
+            return name.slice(-coretree.constants.COLLECTION_NAME_SUFFIX.length) !==
+                coretree.constants.COLLECTION_NAME_SUFFIX;
+        }
 
         function isValidNode(node) {
             try {
@@ -71,7 +61,7 @@ define([
                 keys,
                 i;
 
-            data = (coretree.getProperty(node, ATTRIBUTES) || {});
+            data = (coretree.getProperty(node, coretree.constants.ATTRIBUTES_PROPERTY) || {});
             keys = Object.keys(data);
             i = keys.length;
             while (--i >= 0) {
@@ -93,7 +83,7 @@ define([
                 keys,
                 i;
 
-            data = (coretree.getProperty(node, REGISTRY) || {});
+            data = (coretree.getProperty(node, coretree.constants.REGISTRY_PROPERTY) || {});
             keys = Object.keys(data);
             i = keys.length;
             while (--i >= 0) {
@@ -109,39 +99,39 @@ define([
         }
 
         function getAttribute(node, name) {
-            /*node = coretree.getChild(node, ATTRIBUTES);
+            /*node = coretree.getChild(node, coretree.constants.ATTRIBUTES_PROPERTY);
              return coretree.getProperty(node, name);*/
-            return (coretree.getProperty(node, ATTRIBUTES) || {})[name];
+            return (coretree.getProperty(node, coretree.constants.ATTRIBUTES_PROPERTY) || {})[name];
         }
 
         function delAttribute(node, name) {
-            node = coretree.getChild(node, ATTRIBUTES);
+            node = coretree.getChild(node, coretree.constants.ATTRIBUTES_PROPERTY);
             coretree.deleteProperty(node, name);
         }
 
         function setAttribute(node, name, value) {
-            node = coretree.getChild(node, ATTRIBUTES);
+            node = coretree.getChild(node, coretree.constants.ATTRIBUTES_PROPERTY);
             coretree.setProperty(node, name, value);
         }
 
         function getRegistry(node, name) {
-            /*node = coretree.getChild(node, REGISTRY);
+            /*node = coretree.getChild(node, coretree.constants.REGISTRY_PROPERTY);
              return coretree.getProperty(node, name);*/
-            return (coretree.getProperty(node, REGISTRY) || {})[name];
+            return (coretree.getProperty(node, coretree.constants.REGISTRY_PROPERTY) || {})[name];
         }
 
         function delRegistry(node, name) {
-            node = coretree.getChild(node, REGISTRY);
+            node = coretree.getChild(node, coretree.constants.REGISTRY_PROPERTY);
             coretree.deleteProperty(node, name);
         }
 
         function setRegistry(node, name, value) {
-            node = coretree.getChild(node, REGISTRY);
+            node = coretree.getChild(node, coretree.constants.REGISTRY_PROPERTY);
             coretree.setProperty(node, name, value);
         }
 
         function overlayInsert(overlays, source, name, target) {
-            ASSERT(isValidNode(overlays) && coretree.getRelid(overlays) === OVERLAYS);
+            ASSERT(isValidNode(overlays) && coretree.getRelid(overlays) === coretree.constants.OVERLAYS_PROPERTY);
             ASSERT(coretree.isValidPath(source) && coretree.isValidPath(target) && isPointerName(name));
             ASSERT(coretree.getCommonPathPrefixData(source, target).common === '');
 
@@ -153,7 +143,7 @@ define([
             coretree.setProperty(node, name, target);
 
             node = coretree.getChild(overlays, target);
-            name = name + COLLSUFFIX;
+            name = name + coretree.constants.COLLECTION_NAME_SUFFIX;
 
             var array = coretree.getProperty(node, name);
             if (array) {
@@ -169,7 +159,7 @@ define([
         }
 
         function overlayRemove(overlays, source, name, target) {
-            ASSERT(isValidNode(overlays) && coretree.getRelid(overlays) === OVERLAYS);
+            ASSERT(isValidNode(overlays) && coretree.getRelid(overlays) === coretree.constants.OVERLAYS_PROPERTY);
             ASSERT(coretree.isValidPath(source) && coretree.isValidPath(target) && isPointerName(name));
             ASSERT(coretree.getCommonPathPrefixData(source, target).common === '');
 
@@ -186,7 +176,7 @@ define([
             node = coretree.getChild(overlays, target);
             ASSERT(node);
 
-            name = name + COLLSUFFIX;
+            name = name + coretree.constants.COLLECTION_NAME_SUFFIX;
 
             var array = coretree.getProperty(node, name);
             ASSERT(Array.isArray(array) && array.length >= 1);
@@ -235,7 +225,7 @@ define([
                         } else {
                             var array = coretree.getProperty(node, name);
                             ASSERT(Array.isArray(array));
-                            name = name.slice(0, -COLLSUFFIX.length);
+                            name = name.slice(0, -coretree.constants.COLLECTION_NAME_SUFFIX.length);
                             for (var k = 0; k < array.length; ++k) {
                                 list.push({
                                     s: array[k],
@@ -287,7 +277,7 @@ define([
             coretree.deleteProperty(parent, coretree.getRelid(node));
 
             while (parent) {
-                var overlays = coretree.getChild(parent, OVERLAYS);
+                var overlays = coretree.getChild(parent, coretree.constants.OVERLAYS_PROPERTY);
 
                 var list = overlayQuery(overlays, prefix);
                 for (var i = 0; i < list.length; ++i) {
@@ -319,7 +309,7 @@ define([
                 coretree.setHashed(newNode, true);
                 coretree.setData(newNode, coretree.copyData(node));
 
-                var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
+                var ancestorOverlays = coretree.getChild(ancestor, coretree.constants.OVERLAYS_PROPERTY);
                 var ancestorNewPath = coretree.getPath(newNode, ancestor);
 
                 var base = coretree.getParent(node);
@@ -327,7 +317,7 @@ define([
                 var aboveAncestor = 1;
 
                 while (base) {
-                    var baseOverlays = coretree.getChild(base, OVERLAYS);
+                    var baseOverlays = coretree.getChild(base, coretree.constants.OVERLAYS_PROPERTY);
                     var list = overlayQuery(baseOverlays, baseOldPath);
                     var tempAncestor = coretree.getAncestor(base, ancestor);
 
@@ -358,7 +348,7 @@ define([
                                 while (data.firstLength-- > 0) {
                                     overlays = coretree.getParent(overlays);
                                 }
-                                overlays = coretree.getChild(overlays, OVERLAYS);
+                                overlays = coretree.getChild(overlays, coretree.constants.OVERLAYS_PROPERTY);
 
                                 source = coretree.joinPaths(data.first, entry.s.substr(baseOldPath.length));
                                 target = data.second;
@@ -452,11 +442,11 @@ define([
             coretree.setHashed(node, true);
             coretree.setData(node, coretree.copyData(oldNode));
 
-            var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
+            var ancestorOverlays = coretree.getChild(ancestor, coretree.constants.OVERLAYS_PROPERTY);
             var ancestorNewPath = coretree.getPath(node, ancestor);
 
             while (base) {
-                var baseOverlays = coretree.getChild(base, OVERLAYS);
+                var baseOverlays = coretree.getChild(base, coretree.constants.OVERLAYS_PROPERTY);
                 var list = overlayQuery(baseOverlays, baseOldPath);
                 var tempAncestor = coretree.getAncestor(base, ancestor);
 
@@ -495,7 +485,7 @@ define([
                         while (data.firstLength-- > 0) {
                             overlays = coretree.getParent(overlays);
                         }
-                        overlays = coretree.getChild(overlays, OVERLAYS);
+                        overlays = coretree.getChild(overlays, coretree.constants.OVERLAYS_PROPERTY);
 
                         source = coretree.joinPaths(data.first, entry.s.substr(baseOldPath.length));
                         target = data.second;
@@ -566,7 +556,7 @@ define([
             //var names = [];
             //
             //do {
-            //    var child = (coretree.getProperty(node, OVERLAYS) || {})[source];
+            //    var child = (coretree.getProperty(node, coretree.constants.OVERLAYS_PROPERTY) || {})[source];
             //    if (child) {
             //        for (var name in child) {
             //            ASSERT(names.indexOf(name) === -1);
@@ -589,7 +579,7 @@ define([
             var names = [];
 
             do {
-                var child = (coretree.getProperty(node, OVERLAYS) || {})[source];
+                var child = (coretree.getProperty(node, coretree.constants.OVERLAYS_PROPERTY) || {})[source];
                 if (child) {
                     for (var name in child) {
                         ASSERT(names.indexOf(name) === -1);
@@ -613,7 +603,7 @@ define([
             //var target;
             //
             //do {
-            //    var child = (coretree.getProperty(node, OVERLAYS) || {})[source];
+            //    var child = (coretree.getProperty(node, coretree.constants.OVERLAYS_PROPERTY) || {})[source];
             //    if (child) {
             //        target = child[name];
             //        if (target !== undefined) {
@@ -640,7 +630,7 @@ define([
                 ovrInfo;
 
             do {
-                ovrInfo = (coretree.getProperty(node, OVERLAYS) || {})[source];
+                ovrInfo = (coretree.getProperty(node, coretree.constants.OVERLAYS_PROPERTY) || {})[source];
                 if (ovrInfo) {
                     target = ovrInfo[name];
                     if (target !== undefined) {
@@ -668,7 +658,7 @@ define([
             var target;
 
             do {
-                var child = (coretree.getProperty(node, OVERLAYS) || {})[source];
+                var child = (coretree.getProperty(node, coretree.constants.OVERLAYS_PROPERTY) || {})[source];
                 if (child) {
                     target = child[name];
                     if (target !== undefined) {
@@ -695,11 +685,11 @@ define([
             var names = [];
 
             do {
-                var child = coretree.getProperty(coretree.getChild(node, OVERLAYS), target);
+                var child = coretree.getProperty(coretree.getChild(node, coretree.constants.OVERLAYS_PROPERTY), target);
                 if (child) {
                     for (var name in child) {
                         if (!isPointerName(name) && name !== '_mutable') {
-                            name = name.slice(0, -COLLSUFFIX.length);
+                            name = name.slice(0, -coretree.constants.COLLECTION_NAME_SUFFIX.length);
                             if (isPointerName(name) && names.indexOf(name) < 0) {
                                 names.push(name);
                             }
@@ -717,13 +707,13 @@ define([
         function loadCollection(node, name) {
             ASSERT(isValidNode(node) && name);
 
-            name += COLLSUFFIX;
+            name += coretree.constants.COLLECTION_NAME_SUFFIX;
 
             var collection = [];
             var target = '';
 
             do {
-                var child = coretree.getChild(node, OVERLAYS);
+                var child = coretree.getChild(node, coretree.constants.OVERLAYS_PROPERTY);
 
                 child = coretree.getChild(child, target);
                 if (child) {
@@ -747,13 +737,13 @@ define([
         function getCollectionPaths(node, name) {
             ASSERT(isValidNode(node) && name);
 
-            name += COLLSUFFIX;
+            name += coretree.constants.COLLECTION_NAME_SUFFIX;
 
             var result = [];
             var target = '';
 
             do {
-                var child = coretree.getChild(node, OVERLAYS);
+                var child = coretree.getChild(node, coretree.constants.OVERLAYS_PROPERTY);
 
                 child = coretree.getChild(child, target);
                 if (child) {
@@ -782,7 +772,7 @@ define([
             var source = '';
 
             do {
-                var overlays = coretree.getChild(node, OVERLAYS);
+                var overlays = coretree.getChild(node, coretree.constants.OVERLAYS_PROPERTY);
                 ASSERT(overlays);
 
                 var target = coretree.getProperty(coretree.getChild(overlays, source), name);
@@ -806,7 +796,7 @@ define([
             if (target) {
                 var ancestor = coretree.getAncestor(node, target);
 
-                var overlays = coretree.getChild(ancestor, OVERLAYS);
+                var overlays = coretree.getChild(ancestor, coretree.constants.OVERLAYS_PROPERTY);
                 var sourcePath = coretree.getPath(node, ancestor);
                 var targetPath = coretree.getPath(target, ancestor);
 
@@ -854,6 +844,7 @@ define([
         corerel.setRegistry = setRegistry;
         corerel.delRegistry = delRegistry;
 
+        corerel.isPointerName = isPointerName;
         corerel.getPointerNames = getPointerNames;
         corerel.getPointerNamesFrom = getPointerNamesFrom;
         corerel.getPointerPath = getPointerPath;
@@ -882,6 +873,8 @@ define([
 
             return true;
         };
+
+        corerel.constants = coretree.constants;
 
         return corerel;
     }

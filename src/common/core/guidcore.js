@@ -169,19 +169,7 @@ define([
 
             node = _innerCore.moveNode(node, parent);
 
-            _core.setAttribute(node, OWN_GUID,
-                xorGuids(
-                    toInternalGuid(oldGuid),
-                    xorGuids(
-                        getRelidGuid(node),
-                        toInternalGuid(
-                            _core.getGuid(
-                                _core.getParent(node)
-                            )
-                        )
-                    )
-                )
-            );
+            setDataGuid(node, oldGuid);
 
             return node;
         };

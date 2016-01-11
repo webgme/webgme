@@ -10,13 +10,13 @@ define([
     'common/util/key',
     'common/core/tasync',
     'common/util/random',
-    'common/regexp'
-], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP) {
+    'common/regexp',
+    'common/core/constants'
+], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS) {
 
     'use strict';
 
-    var HASH_REGEXP = new RegExp('#[0-9a-f]{40}'),
-        rootCounter = 0;
+    var rootCounter = 0;
 
     return function (storage, options) {
         ASSERT(typeof options === 'object');
@@ -928,7 +928,9 @@ define([
 
             getChildHash: getChildHash,
 
-            loadPaths: TASYNC.wrap(storage.loadPaths)
+            loadPaths: TASYNC.wrap(storage.loadPaths),
+
+            constants: CONSTANTS
         };
     };
 });
