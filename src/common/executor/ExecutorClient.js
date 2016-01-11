@@ -247,7 +247,7 @@ define(['superagent', 'q'], function (superagent, Q) {
      * @param {string} hash - hash of job related to output.
      * @param {number} [start] - number/id of the output segment to start from (inclusive).
      * @param {number} [end] - number/id of segment to end at (exclusive).
-     * @param {function(Error, object[])} [callback]
+     * @param {function(Error, OutputInfo[])} [callback]
      */
     ExecutorClient.prototype.getOutput = function (hash, start, end, callback) {
         var deferred = Q.defer(),

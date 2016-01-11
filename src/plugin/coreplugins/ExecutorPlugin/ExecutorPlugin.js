@@ -212,7 +212,7 @@ define([
                                         })
                                         .catch(deferred.reject);
                                 } else {
-                                    console.log('no output after success');
+                                    self.logger.debug('no output after success');
                                     deferred.resolve(jInfo);
                                 }
                             } else {

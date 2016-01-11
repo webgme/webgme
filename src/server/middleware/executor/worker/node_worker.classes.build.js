@@ -4096,7 +4096,7 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
      * @param {string} hash - hash of job related to output.
      * @param {number} [start] - number/id of the output segment to start from (inclusive).
      * @param {number} [end] - number/id of segment to end at (exclusive).
-     * @param {function(Error, object[])} [callback]
+     * @param {function(Error, OutputInfo[])} [callback]
      */
     ExecutorClient.prototype.getOutput = function (hash, start, end, callback) {
         var deferred = Q.defer(),
@@ -4300,11 +4300,20 @@ define('executor/JobInfo',[], function () {
 define('executor/OutputInfo',[], function () {
     'use strict';
 
+    /**
+     *
+     * @param {string} jobHash
+     * @param {object} params
+     * @param {string} params.output - The output string.
+     * @param {number} params.outputNumber - Ordered id of output (0, 1, 2..)
+     * @constructor
+     */
     function OutputInfo(jobHash, params) {
-        this.hash = jobHash || params.hash;
+        this.hash = jobHash;
         this.outputNumber = params.outputNumber;
         this.output = params.output;
-        this._id = params._id || this.hash + '+' + this.outputNumber;
+
+        this._id = this.hash + '+' + this.outputNumber;
     }
 
     return OutputInfo;
@@ -4360,6 +4369,7 @@ define('executor/ExecutorOutputQueue',[], function () {
             self._queueCurrOutput();
             nbrOfQueued = self.outputQueue.length;
 
+            self.logger.debug('sending out all outputs');
             if (nbrOfQueued > 0) {
                 // Attach a finishFn to the last output in the queue.
                 self.outputQueue[self.outputQueue.length - 1].finishFn = function (err) {
@@ -4882,12 +4892,13 @@ define('executor/ExecutorWorker',[
     };
 
     ExecutorWorker.prototype.sendJobUpdate = function (jobInfo) {
+        var self = this;
         if (JobInfo.isFinishedStatus(jobInfo.status)) {
             this.availableProcessesContainer.availableProcesses += 1;
         }
         this.executorClient.updateJob(jobInfo, function (err) {
             if (err) {
-                self.logger.debug(err); // TODO
+                self.logger.error(err); // TODO
             }
         });
         this.emit('jobUpdate', jobInfo);

@@ -452,12 +452,13 @@ define([
     };
 
     ExecutorWorker.prototype.sendJobUpdate = function (jobInfo) {
+        var self = this;
         if (JobInfo.isFinishedStatus(jobInfo.status)) {
             this.availableProcessesContainer.availableProcesses += 1;
         }
         this.executorClient.updateJob(jobInfo, function (err) {
             if (err) {
-                self.logger.debug(err); // TODO
+                self.logger.error(err); // TODO
             }
         });
         this.emit('jobUpdate', jobInfo);

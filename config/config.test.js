@@ -15,7 +15,7 @@ config.mongo.options.server.poolSize = 2; // 5 is the default
 config.blob.fsDir = './test-tmp/blob-storage';
 
 config.executor.workerRefreshInterval = 100;
-config.executor.dropCollectionsAtStartUp = true;
+config.executor.clearOldDataAtStartUp = true;
 
 config.authentication.salts = 1;
 
