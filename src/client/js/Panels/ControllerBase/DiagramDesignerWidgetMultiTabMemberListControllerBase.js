@@ -12,7 +12,8 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
     'js/DragDrop/DragHelper',
-    'js/Utils/PreferencesHelper'
+    'js/Utils/PreferencesHelper',
+    'js/Controls/AlignMenu'
 ], function (Logger,
              generateGuid,
              CONSTANTS,
@@ -21,7 +22,8 @@ define(['js/logger',
              GMEConcepts,
              GMEVisualConcepts,
              DragHelper,
-             PreferencesHelper) {
+             PreferencesHelper,
+             AlignMenu) {
 
     'use strict';
 
@@ -42,6 +44,8 @@ define(['js/logger',
 
         //initialize core collections and variables
         this._widget = options.widget;
+
+        this._alignMenu = new AlignMenu(this._widget.CONSTANTS, {});
 
         if (this._client === undefined) {
             this.logger.error('DiagramDesignerWidgetMultiTabMemberListControllerBase\'s client is not specified...');
@@ -129,6 +133,14 @@ define(['js/logger',
 
             this._widget.onUnregisterSubcomponent = function (objID, sCompID) {
                 self._onUnregisterSubcomponent(objID, sCompID);
+            };
+
+            this._widget.onSelectionAlignMenu = function (selectedIds, mousePos) {
+                self._onSelectionAlignMenu(selectedIds, mousePos);
+            };
+
+            this._widget.onAlignSelection = function (selectedIds, type) {
+                self._onAlignSelection(selectedIds, type);
             };
         };
 
@@ -1875,6 +1887,30 @@ define(['js/logger',
         this._ComponentID2GMEID[uiComponent.id] = gmeID;
 
         this._delayedConnectionsAsItems[gmeID] = uiComponent.id;
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionAlignMenu = function (selectedIds,
+                                                                                                    mousePos) {
+        var menuPos = this._widget.posToPageXY(mousePos.mX, mousePos.mY),
+            self = this;
+
+        this._alignMenu.show(selectedIds, menuPos, function (key) {
+            self._onAlignSelection(selectedIds, key);
+        });
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onAlignSelection = function (selectedIds, type) {
+        var params = {
+            client: this._client,
+            modelId: this._memberListContainerID,
+            idMap: this._ComponentID2GMEID,
+            setName: this._selectedMemberListID,
+            coordinates: this._memberListMemberCoordinates[this._selectedMemberListID]
+        };
+
+        if (params.coordinates) {
+            this._alignMenu.alignSetSelection(params, selectedIds, type);
+        }
     };
 
     return DiagramDesignerWidgetMultiTabMemberListControllerBase;

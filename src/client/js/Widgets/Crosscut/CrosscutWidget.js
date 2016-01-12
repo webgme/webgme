@@ -47,6 +47,11 @@ define([
         this._initializeFilterPanel();
     };
 
+    CrosscutWidget.prototype._afterManagersInitialized = function () {
+        //turn off item rotation
+        this.enableRotate(false);
+    };
+
     CrosscutWidget.prototype.getDragEffects = function (/*selectedElements, event*/) {
         //the only drag is a MOVE
         return [DragHelper.DRAG_EFFECTS.DRAG_MOVE];

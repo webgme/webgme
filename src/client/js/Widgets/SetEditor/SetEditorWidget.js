@@ -42,6 +42,11 @@ define(['js/DragDrop/DragHelper',
         this._connectToConnection = false;
     };
 
+    SetEditorWidget.prototype._afterManagersInitialized = function () {
+        //turn off item rotation
+        this.enableRotate(false);
+    };
+
     SetEditorWidget.prototype.getDragEffects = function (/*selectedElements, event*/) {
         //the only drag is a MOVE
         return [DragHelper.DRAG_EFFECTS.DRAG_MOVE];

@@ -147,6 +147,10 @@ define(['js/logger',
             self._onSelectionContextMenu(selectedIds, mousePos);
         };
 
+        this.designerCanvas.onSelectionAlignMenu = function (selectedIds, mousePos) {
+            self._onSelectionAlignMenu(selectedIds, mousePos);
+        };
+
         this.designerCanvas.onSelectionFillColorChanged = function (selectedElements, color) {
             self._onSelectionFillColorChanged(selectedElements, color);
         };
@@ -163,12 +167,17 @@ define(['js/logger',
             self._onSelectedTabChanged(tabID);
         };
 
+        this.designerCanvas.onAlignSelection = function (selectedIds, type) {
+            self._onAlignSelection(selectedIds, type);
+        };
+
         this.logger.debug('attachDiagramDesignerWidgetEventHandlers finished');
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
         var id;
-
+        // FIXME: This does not work for aspects!
+        // Consider using _saveReposition
         this._client.startTransaction();
         for (id in repositionDesc) {
             if (repositionDesc.hasOwnProperty(id)) {
@@ -1267,6 +1276,16 @@ define(['js/logger',
         );
     };
 
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionAlignMenu = function (selectedIds,
+                                                                                                     mousePos) {
+        var menuPos = this.designerCanvas.posToPageXY(mousePos.mX, mousePos.mY),
+            self = this;
+
+        this._alignMenu.show(selectedIds, menuPos, function (key) {
+            self._onAlignSelection(selectedIds, key);
+        });
+    };
+
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._exIntConf = function (selectedIds) {
         var i = selectedIds.length,
             gmeIDs = [];
@@ -1375,6 +1394,68 @@ define(['js/logger',
 
             this._initializeSelectedAspect(tabID);
         }
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onAlignSelection = function (selectedIds, type) {
+        var selectedModels = [],
+            allModels = [],
+            target,
+            changeXAxis,
+            modelId = this.currentNodeInfo.id,
+            self = this;
+
+        // Get the gmeIds and filter out connections.
+        selectedIds.forEach(function (id) {
+            var gmeId = self._ComponentID2GmeID[id];
+            if (self._GMEModels.indexOf(gmeId) > -1) {
+                selectedModels.push(self._getObjectDescriptor(gmeId));
+            }
+        });
+
+        if (selectedModels.length === 0) {
+            // No models were selected...
+            return;
+        }
+
+        if (type.indexOf('MOVE_TO_') === 0) {
+            self._GMEModels.forEach(function (gmeId) {
+                allModels.push(self._getObjectDescriptor(gmeId));
+            });
+
+            target = self._alignMenu.getExtremePosition(allModels, type);
+        } else {
+            target = selectedModels[0];
+        }
+
+        if (!target) {
+            return;
+        }
+
+        changeXAxis = self._alignMenu.isXAxisType(type);
+
+        this._client.startTransaction();
+        selectedModels.forEach(function (modelDesc) {
+            var newPos = modelDesc.position;
+            if (target.id === modelDesc.id) {
+                return;
+            }
+
+            if (changeXAxis === true) {
+                newPos.x = target.position.x;
+            } else {
+                newPos.y = target.position.y;
+            }
+
+            if (self._selectedAspect === CONSTANTS.ASPECT_ALL) {
+                self._client.setRegistry(modelDesc.id, REGISTRY_KEYS.POSITION, newPos);
+            } else {
+                self._client.addMember(modelId, modelDesc.id, self._selectedAspect);
+                self._client.setMemberRegistry(modelId, modelDesc.id, self._selectedAspect, REGISTRY_KEYS.POSITION,
+                    newPos);
+            }
+        });
+
+        this._client.completeTransaction();
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;

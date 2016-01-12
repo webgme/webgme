@@ -67,6 +67,16 @@ define(['js/Constants'], function (CONSTANTS) {
         ROTATION_RESET: 'reset',
         ROTATION_TOLEFT: 'toleft',
         ROTATION_TORIGHT: 'toright',
-        ROTATION_CLEAR: 'clear'
+        ROTATION_CLEAR: 'clear',
+
+        /*
+         * ALIGN CONSTANTS
+         */
+        ALIGN_HORIZON: 'ALIGN_HORIZON',
+        ALIGN_VERTICAL: 'ALIGN_VERTICAL',
+        MOVE_TO_TOP: 'MOVE_TO_TOP',
+        MOVE_TO_BOTTOM: 'MOVE_TO_BOTTOM',
+        MOVE_TO_RIGHT: 'MOVE_TO_RIGHT',
+        MOVE_TO_LEFT: 'MOVE_TO_LEFT'
     };
 });

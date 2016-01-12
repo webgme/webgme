@@ -197,6 +197,14 @@ define(['js/logger',
             self._onSelectionTextColorChanged(selectedElements, color);
         };
 
+        this.diagramDesigner.onSelectionAlignMenu = function (selectedIds, mousePos) {
+            self._onSelectionAlignMenu(selectedIds, mousePos);
+        };
+
+        this.diagramDesigner.onAlignSelection = function (selectedIds, type) {
+            self._onAlignSelection(selectedIds, type);
+        };
+
         this.logger.debug('attachDesignerCanvasEventHandlers finished');
     };
 
@@ -920,6 +928,30 @@ define(['js/logger',
         this._client.completeTransaction();
     };
 
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionAlignMenu = function (selectedIds,
+                                                                                                     mousePos) {
+        var menuPos = this.diagramDesigner.posToPageXY(mousePos.mX, mousePos.mY),
+            self = this;
+
+        this._alignMenu.show(selectedIds, menuPos, function (key) {
+            self._onAlignSelection(selectedIds, key);
+        });
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onAlignSelection = function (selectedIds, type) {
+        var params = {
+            client: this._client,
+            modelId: this.metaAspectContainerNodeID,
+            idMap: this._ComponentID2GMEID,
+            setName: this._selectedMetaAspectSet,
+            coordinates: this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet]
+        };
+
+        //TODO: Currently connections are always accounted for, regardless if they are displayed as boxes or not.
+        if (params.coordinates) {
+            this._alignMenu.alignSetSelection(params, selectedIds, type);
+        }
+    };
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;
 });
