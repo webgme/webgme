@@ -152,6 +152,50 @@ describe('serialization', function () {
             .nodeify(done);
     });
 
+    it('should update library where some item removed only from the META sheets', function (done) {
+        var testProjectName = 'sheetItemRemovalTest',
+            testProjectId = testFixture.projectName2Id(testProjectName),
+            jsonLibrary,
+            testContext;
+
+        storage.getProjects({})
+            .then(function (ids) {
+                if (ids[testProjectId]) {
+                    return storage.deleteProject({projectId: testProjectId});
+                } else {
+                    return Q();
+                }
+            })
+            .then(function () {
+                return testFixture.importProject(storage, {
+                    projectName: testProjectName,
+                    logger: logger.fork('import'),
+                    gmeConfig: gmeConfig,
+                    branchName: 'master',
+                    userName: gmeConfig.authentication.guestAccount,
+                    projectSeed: './seeds/SignalFlowSystem.json'
+                });
+            })
+            .then(function (testContext_) {
+                testContext = testContext_;
+                jsonLibrary = JSON.parse(
+                    testFixture.fs.readFileSync('./test/common/core/users/serialization/removeFromSheet.json', 'utf8'));
+
+                return testContext.core.loadByPath(testContext.rootNode, '/-2');
+            })
+            .then(function (libraryContainerNode) {
+                return Q.nfcall(Serialization.import, testContext.core, libraryContainerNode, jsonLibrary);
+            })
+            .then(function () {
+                expect(testContext.core.getMemberPaths(
+                    testContext.rootNode, 'MetaAspectSet_2ffaa6f0-de50-9adb-a7f7-50c4251913fe')).to.have.length(0);
+            })
+            .then(function () {
+                return storage.deleteProject({projectId: testProjectId});
+            })
+            .nodeify(done);
+    });
+
     it('should update library with external nodes', function (done) {
         var testProjectName = 'externalBasesTest',
             testProjectId = testFixture.projectName2Id(testProjectName),

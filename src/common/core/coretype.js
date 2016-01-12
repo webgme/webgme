@@ -11,9 +11,6 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
     // ----------------- CoreType -----------------
 
     //FIXME TODO these stuff have been simply copied from lower layer, probably it should be put to some constant place
-    var OVERLAYS = 'ovr';
-    var COLLSUFFIX = '-inv';
-
     var CoreType = function (oldcore, options) {
         // copy all operations
         ASSERT(typeof options === 'object');
@@ -24,7 +21,12 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         for (var key in oldcore) {
             core[key] = oldcore[key];
         }
+
+        //isPointerName should be removed from API at this level
+        delete core.isPointerName;
+
         logger.debug('initialized');
+
         // ----- validity
 
         function __test(text, cond) {
@@ -314,13 +316,6 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
             return node;
         }
 
-        //TODO copied function from corerel
-        function isPointerName(name) {
-            ASSERT(typeof name === 'string');
-
-            return name.slice(-COLLSUFFIX.length) !== COLLSUFFIX;
-        }
-
         function _getInheritedCollectionNames(node) {
             var target = '',
                 names = [],
@@ -342,11 +337,11 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     if (core.getPath(node) === core.getPath(endNode)) {
                         exit = true;
                     }
-                    var child = oldcore.getProperty(oldcore.getChild(node, OVERLAYS), target);
+                    var child = oldcore.getProperty(oldcore.getChild(node, oldcore.constants.OVERLAYS_PROPERTY), target);
                     if (child) {
                         for (var name in child) {
-                            if (!isPointerName(name)) {
-                                name = name.slice(0, -COLLSUFFIX.length);
+                            if (!oldcore.isPointerName(name)) {
+                                name = name.slice(0, -oldcore.constants.COLLECTION_NAME_SUFFIX.length);
                                 if (names.indexOf(name) < 0) {
                                     names.push(name);
                                 }
@@ -370,14 +365,14 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                 prefixStart = startNode,
                 prefixNode = prefixStart,
                 exit,
-                collName = name + COLLSUFFIX,
+                collName = name + oldcore.constants.COLLECTION_NAME_SUFFIX,
                 notOverwritten = function (sNode, eNode, source) {
                     var result = true,
                         tNode = sNode,
                         child, target;
 
                     while (core.getPath(tNode) !== core.getPath(eNode)) {
-                        child = oldcore.getChild(tNode, OVERLAYS);
+                        child = oldcore.getChild(tNode, oldcore.constants.OVERLAYS_PROPERTY);
                         child = oldcore.getChild(child, source);
                         if (child) {
                             target = oldcore.getProperty(child, name);
@@ -406,7 +401,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     if (core.getPath(node) === core.getPath(endNode)) {
                         exit = true;
                     }
-                    var child = oldcore.getChild(node, OVERLAYS);
+                    var child = oldcore.getChild(node, oldcore.constants.OVERLAYS_PROPERTY);
                     child = oldcore.getChild(child, target);
                     if (child) {
                         var sources = oldcore.getProperty(child, collName);
@@ -488,7 +483,6 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
             parameters = parameters || {};
             var base = parameters.base || null,
                 parent = parameters.parent;
-
 
             ASSERT(!parent || isValidNode(parent));
             ASSERT(!base || isValidNode(base));
@@ -572,7 +566,6 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         core.getOwnRegistry = function (node, name) {
             return oldcore.getRegistry(node, name);
         };
-
 
         // ----- pointers
 
@@ -676,7 +669,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     }
                 },
                 getTargetRelPath = function (node, relSource, name) {
-                    var ovr = core.getChild(node, 'ovr');
+                    var ovr = core.getChild(node, core.constants.OVERLAYS_PROPERTY);
                     var source = core.getChild(ovr, relSource);
                     return getProperty(source, name);
                 };
@@ -701,7 +694,6 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     node = null;
                 }
             }
-
 
             if (target !== undefined) {
                 ASSERT(node);
@@ -842,7 +834,6 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
             ASSERT((base === null || oldBase === null) ||
                 (core.getChildrenRelids(base).length === 0 && core.getChildrenRelids(oldBase).length === 0));
 
-
             if (!!base) {
                 //TODO maybe this is not the best way, needs to be double checked
                 node.base = base;
@@ -956,7 +947,6 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                 copiedNodes[i].base = base;
                 oldcore.setPointer(copiedNodes[i], 'base', base);
             }
-
 
             return copiedNodes;
         };

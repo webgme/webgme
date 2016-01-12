@@ -7,6 +7,7 @@
 define([], function () {
     'use strict';
     var HASH = new RegExp('^#[0-9a-zA-Z_]*$'),
+        DB_HASH = new RegExp('^#[0-9a-zA-Z_]{40}$'),
         BRANCH = new RegExp('^[0-9a-zA-Z_]*$'),
         TAG = new RegExp('^[0-9a-zA-Z_]*$'),
         RAW_BRANCH = new RegExp('^\\*[0-9a-zA-Z_]*$'),// This is how it's stored in mongodb, i.e. with a prefixed *.
@@ -18,6 +19,7 @@ define([], function () {
 
     return {
         HASH: HASH,
+        DB_HASH: DB_HASH,
         BRANCH: BRANCH,
         TAG: TAG,
         RAW_BRANCH: RAW_BRANCH,
