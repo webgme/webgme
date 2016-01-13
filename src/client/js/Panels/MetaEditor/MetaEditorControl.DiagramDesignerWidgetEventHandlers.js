@@ -947,7 +947,6 @@ define(['js/logger',
             coordinates: this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet]
         };
 
-        //TODO: Currently connections are always accounted for, regardless if they are displayed as boxes or not.
         if (params.coordinates) {
             this._alignMenu.alignSetSelection(params, selectedIds, type);
         }

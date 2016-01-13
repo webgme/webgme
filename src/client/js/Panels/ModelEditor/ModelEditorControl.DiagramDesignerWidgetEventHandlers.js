@@ -175,18 +175,25 @@ define(['js/logger',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
-        var id;
-        // FIXME: This does not work for aspects!
-        // Consider using _saveReposition
+        var id,
+            modelId = this.currentNodeInfo.id,
+            newPos;
+
         this._client.startTransaction();
         for (id in repositionDesc) {
             if (repositionDesc.hasOwnProperty(id)) {
-                this._client.setRegistry(this._ComponentID2GmeID[id],
-                    REGISTRY_KEYS.POSITION,
-                    {
-                        x: repositionDesc[id].x,
-                        y: repositionDesc[id].y
-                    });
+                newPos = {
+                    x: repositionDesc[id].x,
+                    y: repositionDesc[id].y
+                };
+
+                if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
+                    this._client.setRegistry(this._ComponentID2GmeID[id], REGISTRY_KEYS.POSITION, newPos);
+                } else {
+                    this._client.addMember(modelId, this._ComponentID2GmeID[id], this._selectedAspect);
+                    this._client.setMemberRegistry(modelId, this._ComponentID2GmeID[id], this._selectedAspect,
+                        REGISTRY_KEYS.POSITION, newPos);
+                }
             }
         }
         this._client.completeTransaction();

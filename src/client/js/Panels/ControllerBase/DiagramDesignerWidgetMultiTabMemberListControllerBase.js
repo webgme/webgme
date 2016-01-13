@@ -142,6 +142,10 @@ define(['js/logger',
             this._widget.onAlignSelection = function (selectedIds, type) {
                 self._onAlignSelection(selectedIds, type);
             };
+
+            this._widget.onDesignerItemsMove = function (repositionDesc) {
+                self._onDesignerItemsMove(repositionDesc);
+            };
         };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.selectedObjectChanged = function (nodeId) {
@@ -1908,9 +1912,29 @@ define(['js/logger',
             coordinates: this._memberListMemberCoordinates[this._selectedMemberListID]
         };
 
+        //TODO: Currently connections are always accounted for, regardless if they are displayed as boxes or not.
         if (params.coordinates) {
             this._alignMenu.alignSetSelection(params, selectedIds, type);
         }
+    };
+
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onDesignerItemsMove = function (repositionDesc) {
+        var id;
+
+        this._client.startTransaction();
+        for (id in repositionDesc) {
+            if (repositionDesc.hasOwnProperty(id)) {
+                this._client.setMemberRegistry(this._memberListContainerID,
+                    this._ComponentID2GMEID[id],
+                    this._selectedMemberListID,
+                    REGISTRY_KEYS.POSITION,
+                    {
+                        x: repositionDesc[id].x,
+                        y: repositionDesc[id].y
+                    });
+            }
+        }
+        this._client.completeTransaction();
     };
 
     return DiagramDesignerWidgetMultiTabMemberListControllerBase;
