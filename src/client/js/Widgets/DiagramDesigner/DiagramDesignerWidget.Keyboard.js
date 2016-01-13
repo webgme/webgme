@@ -60,6 +60,22 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
                 this._moveSelection(this.gridSize, 0);
                 ret = false;
                 break;
+            case this.CONSTANTS.KEY_SHORT_CUT_MOVE_TO_TOP:
+                this.onAlignSelection(this.selectionManager.getSelectedElements(), this.CONSTANTS.MOVE_TO_TOP);
+                ret = false;
+                break;
+            case this.CONSTANTS.KEY_SHORT_CUT_MOVE_TO_BOTTOM:
+                this.onAlignSelection(this.selectionManager.getSelectedElements(), this.CONSTANTS.MOVE_TO_BOTTOM);
+                ret = false;
+                break;
+            case this.CONSTANTS.KEY_SHORT_CUT_MOVE_TO_LEFT:
+                this.onAlignSelection(this.selectionManager.getSelectedElements(), this.CONSTANTS.MOVE_TO_LEFT);
+                ret = false;
+                break;
+            case this.CONSTANTS.KEY_SHORT_CUT_MOVE_TO_RIGHT:
+                this.onAlignSelection(this.selectionManager.getSelectedElements(), this.CONSTANTS.MOVE_TO_RIGHT);
+                ret = false;
+                break;
             default:
                 break;
             /*case 'ctrl+c':

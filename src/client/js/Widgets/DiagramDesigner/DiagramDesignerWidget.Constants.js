@@ -74,9 +74,16 @@ define(['js/Constants'], function (CONSTANTS) {
          */
         ALIGN_HORIZON: 'ALIGN_HORIZON',
         ALIGN_VERTICAL: 'ALIGN_VERTICAL',
+
         MOVE_TO_TOP: 'MOVE_TO_TOP',
         MOVE_TO_BOTTOM: 'MOVE_TO_BOTTOM',
+        MOVE_TO_LEFT: 'MOVE_TO_LEFT',
         MOVE_TO_RIGHT: 'MOVE_TO_RIGHT',
-        MOVE_TO_LEFT: 'MOVE_TO_LEFT'
+
+        //TODO: Agree on the short cuts keys for these actions..
+        KEY_SHORT_CUT_MOVE_TO_TOP: 'shift+up',
+        KEY_SHORT_CUT_MOVE_TO_BOTTOM: 'shift+down',
+        KEY_SHORT_CUT_MOVE_TO_LEFT: 'shift+left',
+        KEY_SHORT_CUT_MOVE_TO_RIGHT: 'shift+right',
     };
 });

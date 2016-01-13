@@ -58,20 +58,21 @@ define(['./ContextMenu'], function (ContextMenu) {
         this.show = function (selectionIds, position, callback) {
             var menuItems = {};
 
+            //TODO: Display the short cuts in a prettier way
             menuItems[CONSTANTS.MOVE_TO_TOP] = {
-                name: 'Move to top',
+                name: 'Move to top [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_TOP + ']',
                 icon: 'glyphicon glyphicon-arrow-up'
             };
             menuItems[CONSTANTS.MOVE_TO_BOTTOM] = {
-                name: 'Move to bottom',
+                name: 'Move to bottom [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_BOTTOM + ']',
                 icon: 'glyphicon glyphicon-arrow-down'
             };
             menuItems[CONSTANTS.MOVE_TO_LEFT] = {
-                name: 'Move to left',
+                name: 'Move to left [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_LEFT + ']',
                 icon: 'glyphicon glyphicon-arrow-left'
             };
             menuItems[CONSTANTS.MOVE_TO_RIGHT] = {
-                name: 'Move to right',
+                name: 'Move to right [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_RIGHT + ']',
                 icon: 'glyphicon glyphicon-arrow-right'
             };
 
