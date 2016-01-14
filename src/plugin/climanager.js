@@ -14,6 +14,7 @@ var PluginNodeManagerBase = require('./nodemanagerbase'),
  * @param {object} - mainLogger - logger for manager, plugin-logger will fork from this logger.
  * @param {object} gmeConfig - global configuration
  * @constructor
+ * @ignore
  */
 function PluginCliManager(project, mainLogger, gmeConfig) {
     var blobClient = new BlobClientWithFSBackend(gmeConfig, mainLogger);

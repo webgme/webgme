@@ -104,8 +104,9 @@ describe('Executor Plugin', function () {
                     args = ['node_worker.js', '../../../../../test-tmp/worker_config.json',
                         '../../../../../test-tmp/executor-tmp'],
                     timeoutId = setTimeout(function () {
-                        deferred.reject('Worker did not respond in time, stderr: ' + stderr + ' stdout: ' + stdout);
-                    }, 3000);
+                        deferred.reject(new Error('Worker did not respond in time, stderr: ' +
+                            stderr + ' stdout: ' + stdout));
+                    }, 5000);
 
                 nodeWorkerProcess = childProcess.spawn('node', args,
                     {cwd: 'src/server/middleware/executor/worker'});

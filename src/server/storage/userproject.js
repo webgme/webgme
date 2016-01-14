@@ -194,6 +194,18 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             .nodeify(callback);
     };
 
+    this.getHistory = function (start, number, callback) {
+        var data = {
+            username: self.userName,
+            projectId: self.projectId,
+            start: start,
+            number: number
+        };
+
+        return storage.getHistory(data)
+            .nodeify(callback);
+    };
+
     this.getCommonAncestorCommit = function (commitA, commitB, callback) {
         var data = {
             username: self.userName,

@@ -21,6 +21,7 @@ define(['blob/BlobConfig'], function (BlobConfig) {
      * @param {boolean} [metadata.isPublic=false]
      * @param {string[]} [metadata.tags=[]]
      * @constructor
+     * @alias BlobMetadata
      */
     var BlobMetadata = function (metadata) {
         var key;

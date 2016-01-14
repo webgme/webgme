@@ -108,7 +108,6 @@ function addToRequireJsPaths(gmeConfig) {
     addFromRequireJsPath(gmeConfig.requirejsPaths);
 }
 
-var sa = require('./src/server/standalone.js');
 module.exports = {
     standaloneServer: function (gmeConfig) {
         var Standalone = require('./src/server/standalone.js');

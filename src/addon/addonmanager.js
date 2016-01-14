@@ -20,6 +20,7 @@ var Q = require('q'),
  * @param {number} gmeConfig.addOn.monitorTimeout - Time to wait before stopping a monitor after only the monitor itself
  * is connected to the branch.
  * @constructor
+ * @ignore
  */
 function AddOnManager(projectId, mainLogger, gmeConfig) {
     var self = this,

@@ -2,8 +2,9 @@
 /*jshint node:true*/
 
 /**
- * Add-on that appends to the name of newly created nodes.
+ * Add-on that alters the name of newly created nodes and persists back to model.
  * @author pmeijer / https://github.com/pmeijer
+ * @module CoreAddOns:TestAddOn
  */
 
 define(['addon/AddOnBase'], function (AddOnBase) {

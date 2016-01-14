@@ -199,6 +199,46 @@ describe('storage project', function () {
             .nodeify(done);
     });
 
+    it('should getHistory from branch', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                return project.getHistory('master', 100);
+            })
+            .then(function (commits) {
+                expect(commits.length).to.equal(1);
+                expect(commits[0]).to.have.property('message');
+            })
+            .nodeify(done);
+    });
+
+    it('should getHistory from array of branches', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                return project.getHistory(Object.keys(branches), 100);
+            })
+            .then(function (commits) {
+                expect(commits.length).to.equal(1);
+                expect(commits[0]).to.have.property('message');
+            })
+            .nodeify(done);
+    });
+
     it('should makeCommit to branch without branch open', function (done) {
         var project,
             branches,

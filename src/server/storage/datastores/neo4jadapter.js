@@ -20,6 +20,8 @@ var neo4j = require('node-neo4j'),
  * @param mainLogger
  * @param gmeConfig
  * @constructor
+ * @todo Finalize implementation
+ * @ignore
  */
 function Neo4jAdapter(mainLogger, gmeConfig) {
     var self = this,

@@ -4,6 +4,7 @@
  * Plugin for generating AddOns.
  *
  * @author pmeijer / https://github.com/pmeijer
+ * @module CorePlugins:AddOnGenerator
  */
 
 define([

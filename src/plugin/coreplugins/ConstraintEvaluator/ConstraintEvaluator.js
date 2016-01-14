@@ -4,22 +4,26 @@
 /**
  * Plugin for facilitating construction of constraints. This plugin is mainly intended for developers.
  * There are three different modes to execute the plugin:
- *
+ * <br><br>
  * - EvaluateConstraints
+ * <br>
  * Loads the constraints defined in "Constraints.js" and applies them to all nodes starting
  * from the activeNode. If the constraint returns an error or an exception is thrown it is reported
  * as an error and a message with the full stack is added to the result. If the constraint succeeds or
  * fails, it is simply reported in the summary.
- *
+ * <br><br>
  * - GenerateConstraints
+ * <br>
  * Goes through all the meta-nodes in the model and extracts the constraints and generates a "Constraints.js".
  * This is intended to be used to overwrite the file and run/tweak and write the fixed constraints back to the model.
- *
+ * <br><br>
  * - PopulateFromConstraints
+ * <br>
  * Reads in the constraints from "Constraints.js" and adds them to the matched meta-nodes in the model.
  * N.B. if the constraint already exists it will be overwritten by the new one.
  *
  * @author pmeijer / https://github.com/pmeijer
+ * @module CorePlugins:ConstraintEvaluator
  */
 
 define([

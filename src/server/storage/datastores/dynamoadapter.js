@@ -22,6 +22,7 @@ var AWS = require('aws-sdk'),
  * @param mainLogger
  * @param {GmeConfig} gmeConfig
  * @constructor
+ * @ignore
  */
 function DynamoAdapter(mainLogger, gmeConfig) {
     var self = this,

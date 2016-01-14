@@ -2,7 +2,9 @@
 /*jshint node:true, browser:true*/
 
 /**
+ * Plugin for generating layouts.
  * @author brollb / https://github.com/brollb
+ * @module CorePlugins:LayoutGenerator
  */
 
 define([

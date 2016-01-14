@@ -1,7 +1,10 @@
 /*globals define*/
 /*jshint browser: true, node:true*/
 /**
- * @author pmeijer / https://github.com/pmeijer
+ * Plugin for generating a decorator. Generating a META aware plugin is experimental and the generated code
+ * may need some tweaks.
+ * @author zhangpn / https://github.com/zhangpn
+ * @module CorePlugins:DecoratorGenerator
  */
 
 define([

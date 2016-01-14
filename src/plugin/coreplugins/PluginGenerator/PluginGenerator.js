@@ -5,6 +5,7 @@
  *
  * @author pmeijer / https://github.com/pmeijer
  * @author lattmann / https://github.com/lattmann
+ * @module CorePlugins:PluginGenerator
  */
 
 define([
@@ -15,7 +16,7 @@ define([
 ], function (PluginConfig, PluginBase, ejs, TEMPLATES) {
     'use strict';
 
-    var PluginGeneratorPlugin = function () {
+    var PluginGenerator = function () {
         // Call base class's constructor
         PluginBase.call(this);
         this.currentConfig = null;
@@ -24,19 +25,19 @@ define([
         this.filesToAdd = {};
     };
 
-    PluginGeneratorPlugin.prototype = Object.create(PluginBase.prototype);
+    PluginGenerator.prototype = Object.create(PluginBase.prototype);
 
-    PluginGeneratorPlugin.prototype.constructor = PluginGeneratorPlugin;
+    PluginGenerator.prototype.constructor = PluginGenerator;
 
-    PluginGeneratorPlugin.prototype.getName = function () {
+    PluginGenerator.prototype.getName = function () {
         return 'Plugin Generator';
     };
 
-    PluginGeneratorPlugin.prototype.getVersion = function () {
+    PluginGenerator.prototype.getVersion = function () {
         return '0.14.0';
     };
 
-    PluginGeneratorPlugin.prototype.getConfigStructure = function () {
+    PluginGenerator.prototype.getConfigStructure = function () {
         return [
             {
                 name: 'pluginID',
@@ -110,7 +111,7 @@ define([
         ];
     };
 
-    PluginGeneratorPlugin.prototype.main = function (callback) {
+    PluginGenerator.prototype.main = function (callback) {
         var self = this,
             pluginFileContent,
             pluginFileName,
@@ -194,7 +195,7 @@ define([
         }
     };
 
-    PluginGeneratorPlugin.prototype.addMetaFile = function () {
+    PluginGenerator.prototype.addMetaFile = function () {
         var self = this,
             i,
             metaNodes = [],
@@ -223,7 +224,7 @@ define([
         });
     };
 
-    PluginGeneratorPlugin.prototype.addTemplateFile = function () {
+    PluginGenerator.prototype.addTemplateFile = function () {
         var self = this,
             fileName,
             fileContent;
@@ -252,5 +253,5 @@ define([
         }
     };
 
-    return PluginGeneratorPlugin;
+    return PluginGenerator;
 });

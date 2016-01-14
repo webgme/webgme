@@ -2,10 +2,12 @@
 /*jshint node:true*/
 
 /**
- * Continuously validates the meta rules for the entire project.
+ * Continuously validates the meta rules for the entire project. Will send notifications when violations
+ * are found (and when they have been fixed).
  *
  * @author kecso / https://github.com/kecso
  * @author pmeijer / https://github.com/pmeijer
+ * @module CoreAddOns:ConstraintAddOn
  */
 
 define(['addon/AddOnBase', 'common/core/users/constraintchecker'], function (AddOnBase, constraint) {

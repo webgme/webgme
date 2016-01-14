@@ -13,6 +13,14 @@
  */
 
 /**
+ * JavaScript Error class.
+ * @typedef {object} Error
+ * @prop {string} message - Message typically set in the constructor.
+ * @prop {stack} stack - Detailed stack trace.
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error}
+ */
+
+/**
  * @typedef {object} GmeConfig
  * @prop {object} addOn - Add-on related settings.
  * @prop {object} authentication - Authentication related settings.

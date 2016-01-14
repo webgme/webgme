@@ -2,6 +2,8 @@
 /*jshint node:true*/
 
 /**
+ * This is the base class that add-ons should inherit from.
+ * (Using the AddOnGenerator - the generated add-on will do that.)
  * @author pmeijer / https://github.com/pmeijer
  */
 
@@ -41,7 +43,14 @@ define([
          */
         this.project = null;
 
+        /**
+         * @type {string}
+         */
         this.branchName = null;
+
+        /**
+         * @type {BlobClient}
+         */
         this.blobClient = null;
 
         this.initialized = false;

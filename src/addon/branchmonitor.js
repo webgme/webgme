@@ -19,6 +19,7 @@ var Q = require('q'),
  * @param {object} gmeConfig
  * @param {object} mainLogger
  * @constructor
+ * @ignore
  */
 function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger, gmeConfig) {
     var self = this,
