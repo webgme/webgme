@@ -12,7 +12,8 @@ define(['js/logger',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
-    'js/Utils/PreferencesHelper'
+    'js/Utils/PreferencesHelper',
+    'js/Controls/AlignMenu'
 ], function (Logger,
              CONSTANTS,
              nodePropertyNames,
@@ -21,7 +22,8 @@ define(['js/logger',
              ModelEditorControlDiagramDesignerWidgetEventHandlers,
              GMEConcepts,
              GMEVisualConcepts,
-             PreferencesHelper) {
+             PreferencesHelper,
+             AlignMenu) {
 
     'use strict';
 
@@ -44,6 +46,7 @@ define(['js/logger',
 
         //initialize core collections and variables
         this.designerCanvas = options.widget;
+        this._alignMenu = new AlignMenu(this.designerCanvas.CONSTANTS, {});
 
         if (this._client === undefined) {
             this.logger.error('ModelEditorControl\'s client is not specified...');
@@ -69,7 +72,7 @@ define(['js/logger',
 
         /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
-            //attach all the event handlers for event's coming from DesignerCanvas
+        //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDiagramDesignerWidgetEventHandlers();
 
         this.logger.debug('ModelEditorControl ctor finished');
@@ -1170,7 +1173,7 @@ define(['js/logger',
 
     ModelEditorControl.prototype._initializeSelectedAspect = function (tabID) {
         WebGMEGlobal.State.registerActiveAspect(this._selectedAspect);
-        WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB,tabID);
+        WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, tabID);
 
         this.selectedObjectChanged(this.currentNodeInfo.id);
     };

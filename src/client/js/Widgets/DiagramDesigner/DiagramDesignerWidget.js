@@ -89,6 +89,8 @@ define([
         var self = this,
             params = {};
 
+        this.CONSTANTS = DiagramDesignerWidgetConstants;
+
         //merge dfault values with the given parameters
         _.extend(params, defaultParams, par);
         this.gmeConfig = WebGMEGlobal.gmeConfig;
@@ -913,6 +915,9 @@ define([
             case 'contextmenu':
                 this.onSelectionContextMenu(selectedIds, this.getAdjustedMousePos(event));
                 break;
+            case 'align':
+                this.onSelectionAlignMenu(selectedIds, this.getAdjustedMousePos(event));
+                break;
         }
     };
 
@@ -926,7 +931,20 @@ define([
             selectedIds + '", mousePos: ' + JSON.stringify(mousePos));
     };
 
-    /************************** SELECTION DELETE CLICK HANDLER ****************************/
+    DiagramDesignerWidget.prototype.onSelectionAlignMenu = function (selectedIds, mousePos) {
+        this.logger.warn('DiagramDesignerWidget.onSelectionAlignMenu IS NOT OVERRIDDEN IN A CONTROLLER. ID: "' +
+            selectedIds + '", mousePos: ' + JSON.stringify(mousePos));
+    };
+
+    /************************** END - SELECTION DELETE CLICK HANDLER ****************************/
+
+    /************************** ALIGN SHORT CUTS HANDLERS ****************************/
+    DiagramDesignerWidget.prototype.onAlignSelection = function (selectedIds, type) {
+        this.logger.warn('DiagramDesignerWidget.onAlignSelection IS NOT OVERRIDDEN IN A CONTROLLER. ID: "' +
+            selectedIds + '", type: "' + type + '".');
+    };
+
+    /************************** END - ALIGN SHORT CUTS HANDLERS ****************************/
 
     /************************** SELECTION CHANGED HANDLER ****************************/
 
@@ -1215,6 +1233,10 @@ define([
 
     DiagramDesignerWidget.prototype.enableRotate = function (enabled) {
         this.selectionManager.enableRotation(enabled);
+    };
+
+    DiagramDesignerWidget.prototype.enableAlign = function (enabled) {
+        this.selectionManager.enableAlign(enabled);
     };
 
     /*************** SELECTION API ******************************************/

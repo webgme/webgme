@@ -14,7 +14,8 @@ define(['js/logger',
     './MetaEditorControl.DiagramDesignerWidgetEventHandlers',
     './MetaRelations',
     './MetaEditorConstants',
-    'js/Utils/PreferencesHelper'
+    'js/Utils/PreferencesHelper',
+    'js/Controls/AlignMenu'
 ], function (Logger,
              util,
              CONSTANTS,
@@ -25,7 +26,8 @@ define(['js/logger',
              MetaEditorControlDiagramDesignerWidgetEventHandlers,
              MetaRelations,
              MetaEditorConstants,
-             PreferencesHelper) {
+             PreferencesHelper,
+             AlignMenu) {
 
     'use strict';
 
@@ -44,6 +46,7 @@ define(['js/logger',
 
         //initialize core collections and variables
         this.diagramDesigner = options.widget;
+        this._alignMenu = new AlignMenu(this.diagramDesigner.CONSTANTS, {});
 
         if (this._client === undefined) {
             this.logger.error('MetaEditorControl\'s client is not specified...');

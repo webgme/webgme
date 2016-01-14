@@ -22,5 +22,11 @@
     display: block; }
     #context-menu .dropdown-menu a {
       font-size: 14px; }
+      #context-menu .dropdown-menu a i.fa.fa-ellipsis-h {
+        padding-left: 1px;
+        padding-right: 3px; }
+      #context-menu .dropdown-menu a i.fa.fa-ellipsis-v {
+        padding-left: 5px;
+        padding-right: 7px; }
   #context-menu.show {
     display: block; }

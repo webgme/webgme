@@ -33,6 +33,7 @@ define([
 
         this._selectedElements = [];
         this._rotationEnabled = true;
+        this._alignEnabled = true;
 
         this.logger.debug('SelectionManager ctor finished');
     };
@@ -605,15 +606,17 @@ define([
     });
     MOVE_BUTTON_BASE.html('<i class="glyphicon glyphicon-move"></i>');
 
+    var ALIGN_BUTTON_BASE = $('<div/>', {
+        class: 's-btn align',
+        command: 'align'
+    });
+    ALIGN_BUTTON_BASE.html('<i class="glyphicon glyphicon-th"></i>');
+
     SelectionManager.prototype._renderSelectionActions = function () {
         var self = this,
             deleteBtn,
             contextMenuBtn,
-            moveBtn;
-
-        if (this._diagramDesigner.getIsReadOnlyMode() === true) {
-            return;
-        }
+            alignBtn;
 
         if (this._diagramDesigner.getIsReadOnlyMode() !== true) {
             deleteBtn = DELETE_BUTTON_BASE.clone();
@@ -623,6 +626,10 @@ define([
             // moveBtn = MOVE_BUTTON_BASE.clone();
             // this._diagramDesigner.skinParts.$selectionOutline.append(moveBtn);
             // this._diagramDesigner._makeDraggable({$el: moveBtn});
+            if (this._alignEnabled === true) {
+                alignBtn = ALIGN_BUTTON_BASE.clone();
+                this._diagramDesigner.skinParts.$selectionOutline.append(alignBtn);
+            }
         }
 
         //context menu
@@ -830,6 +837,12 @@ define([
     SelectionManager.prototype.enableRotation = function (enabled) {
         if (this._rotationEnabled !== enabled) {
             this._rotationEnabled = enabled;
+        }
+    };
+
+    SelectionManager.prototype.enableAlign = function (enabled) {
+        if (this._alignEnabled !== enabled) {
+            this._alignEnabled = enabled;
         }
     };
 
