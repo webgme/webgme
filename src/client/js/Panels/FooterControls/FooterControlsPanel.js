@@ -62,7 +62,7 @@ define(['js/PanelBase/PanelBase',
 
         //add ISIS link
         pullLeft = $('<div class="pull-left inline"></div>');
-        pullLeft.append($('<div class="navbar-text"><div class="webgme-copyright">&copy; 2015 <a href="http://www.isis.vanderbilt.edu/" title="Vanderbilt University" target="_blank">Vanderbilt University</a></div></div>'));
+        pullLeft.append($('<div class="navbar-text"><div class="webgme-copyright">&copy; 2016 <a href="http://www.isis.vanderbilt.edu/" title="Vanderbilt University" target="_blank">Vanderbilt University</a></div></div>'));
         navBarInner.append(pullLeft);
 
         //add version UI piece
