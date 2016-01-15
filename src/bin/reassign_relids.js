@@ -1,5 +1,9 @@
 /* jshint node:true */
 /**
+ * This tool can re-assign relids of an exported project. It keeps every other information intact.
+ * This tool is advised to be used if someone has an old large project, as the reassigned relids
+ * will be as short as possible, making the objects in the project smaller (especially the root object).
+ *
  * @module Bin:ReassignRelids
  * @author kecso / https://github.com/kecso
  */
@@ -16,6 +20,12 @@ var webgme = require('../../webgme'),
     logger = webgme.Logger.create('gme:bin:reassign', gmeConfig.bin.log),
     main;
 
+/**
+ * Entrypoint for CLI usage
+ *
+ * @param {Array<String>} argv
+ * @return {undefined}
+ */
 main = function (argv) {
     var mainDeferred = Q.defer(),
         Command = require('commander').Command,
@@ -55,7 +65,7 @@ main = function (argv) {
     outputPath = program.output || program.args[0];
 
     Q.nfcall(function () {
-            console.log('loading input');
+            logger.info('loading input');
             var jsonProject = JSON.parse(FS.readFileSync(program.args[0], 'utf-8')),
                 deferred = Q.defer(),
                 oldToNewRelid = {'1': '1'},
@@ -119,7 +129,7 @@ main = function (argv) {
                     }
                 };
 
-            console.log('converting input');
+            logger.info('converting input');
             containmentBasedRelidGeneration(jsonProject.containment);
 
             //now we filled up the conversion lookup table, we just have to make the conversion
@@ -135,9 +145,12 @@ main = function (argv) {
                 nodeCompositeIdUpdate(jsonProject.nodes[keys[i]]);
             }
 
-            console.log('saving output');
+            logger.info('saving output');
             //save the result
             FS.writeFileSync(outputPath, JSON.stringify(jsonProject, null, 2));
+
+            logger.debug('relid conversion table', oldToNewRelid);
+
             finishUp(null);
         })
         .catch(finishUp);
