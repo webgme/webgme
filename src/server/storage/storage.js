@@ -174,7 +174,7 @@ Storage.prototype.makeCommit = function (data, callback) {
             }
 
             function handlePatchRoot() {
-                var pathcRootDeferred = Q.defer();
+                var patchRootDeferred = Q.defer();
                 if (data.coreObjects[data.commitObject.root] &&
                     data.coreObjects[data.commitObject.root].type === 'patch') {
                     project.loadObject(data.coreObjects[data.commitObject.root].base)
@@ -185,18 +185,18 @@ Storage.prototype.makeCommit = function (data, callback) {
                                 patchRoot = data.coreObjects[data.commitObject.root];
                                 rootResult.result[CONSTANTS.MONGO_ID] = patchRoot[CONSTANTS.MONGO_ID];
                                 data.coreObjects[data.commitObject.root] = rootResult.result;
-                                pathcRootDeferred.resolve();
+                                patchRootDeferred.resolve();
                             } else {
                                 self.logger.error('failed root patching', rootResult);
-                                pathcRootDeferred.reject(new Error('error during patch application'));
+                                patchRootDeferred.reject(new Error('error during patch application'));
                             }
                         })
-                        .catch(pathcRootDeferred.reject);
+                        .catch(patchRootDeferred.reject);
                 } else {
-                    pathcRootDeferred.resolve();
+                    patchRootDeferred.resolve();
                 }
 
-                return pathcRootDeferred.promise;
+                return patchRootDeferred.promise;
             }
 
             function loadRootObject() {

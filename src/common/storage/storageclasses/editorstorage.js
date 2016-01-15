@@ -16,15 +16,13 @@
  */
 
 define([
-    'common/storage/storageclasses/objectloaders',
+    'common/storage/storageclasses/patchstorage',
     'common/storage/constants',
     'common/storage/project/project',
     'common/storage/project/branch',
     'common/util/assert',
-    'common/util/key',
-    'common/util/jsonPatcher',
-    'q'
-], function (StorageObjectLoaders, CONSTANTS, Project, Branch, ASSERT, GENKEY, jsonPatcher, Q) {
+    'common/util/key'
+], function (PatchStorage, CONSTANTS, Project, Branch, ASSERT, GENKEY) {
     'use strict';
 
     /**
@@ -42,7 +40,7 @@ define([
         self.logger = logger;
         self.userId = null;
 
-        StorageObjectLoaders.call(this, webSocket, mainLogger, gmeConfig);
+        PatchStorage.call(this, webSocket, mainLogger, gmeConfig);
 
         this.open = function (networkHandler) {
             webSocket.connect(function (err, connectionState) {
@@ -224,57 +222,11 @@ define([
                 branch.addBranchStatusHandler(branchStatusHandler);
 
                 branch._remoteUpdateHandler = function (_ws, updateData, initCallback) {
-                    var j,
-                        inserts = [],
-                        insertFailed = false,
-                        originHash = updateData.commitObject[CONSTANTS.MONGO_ID],
-                        insertObject = function (coreObject) {
-                            var deferred = Q.defer(),
-                                patchObject;
-                            if (coreObject) {
-                                if (coreObject.type === 'patch') {
-                                    patchObject = coreObject;
-                                    project.loadObject(patchObject.base, function (err, baseObject) {
-                                        if (err || !baseObject) {
-                                            return deferred.reject(new Error('Patch object\'s base cannot be loaded!'));
-                                        }
-
-                                        coreObject = jsonPatcher.apply(baseObject, patchObject.patch);
-                                        if (coreObject.status === 'success') {
-                                            coreObject = coreObject.result;
-                                            coreObject[CONSTANTS.MONGO_ID] = patchObject[CONSTANTS.MONGO_ID];
-                                            project.insertObject(coreObject);
-                                            deferred.resolve();
-                                        } else {
-                                            deferred.reject(new Error('failed to patch root object!'));
-                                        }
-                                    });
-                                } else {
-                                    project.insertObject(coreObject);
-                                    deferred.resolve();
-                                }
-                            }
-
-                            return deferred.promise;
-                        };
+                    var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     logger.debug('_remoteUpdateHandler invoked for project, branch', projectId, branchName);
-                    for (j = 0; j < updateData.coreObjects.length; j += 1) {
-                        inserts.push(insertObject(updateData.coreObjects[j]));
-                    }
 
-                    Q.allSettled(inserts)
-                        .then(function (insertResults) {
-                            insertResults.map(function (res) {
-                                if (res.state === 'rejected') {
-                                    logger.error(res.reason);
-                                    insertFailed = true;
-                                }
-                            });
-
-                            if (insertFailed) {
-                                throw new Error('faulty commit received!!');
-                            }
-
+                    self.insertObjects(project, updateData.coreObjects)
+                        .then(function () {
                             branch.queueUpdate(updateData);
                             branch.updateHashes(null, originHash);
 
@@ -285,6 +237,10 @@ define([
                             } else {
                                 logger.debug('commitQueue is not empty, only updating originHash.');
                             }
+                        })
+                        .catch(function (err) {
+                            logger.error('invalid commit arrived');
+                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
                         });
                 };
 
@@ -400,63 +356,44 @@ define([
                     coreObjects: null
                 },
                 rootHash = Array.isArray(rootHash_es) ? rootHash_es[0] : rootHash_es,
-                baseRootHash = Array.isArray(rootHash_es) ? rootHash_es[1] : null,
-                fillPatchRoot = function (next) {
-                    if (gmeConfig.storage.patchRootCommunicationEnabled &&
-                        baseRootHash !== null &&
-                        coreObjects[rootHash] &&
-                        project) {
-                        project.loadObject(baseRootHash, function (err, baseRoot) {
-                            if (!err && baseRoot) {
-                                commitData.patchRoot = {
-                                    type: 'patch',
-                                    base: baseRootHash,
-                                    patch: jsonPatcher.create(baseRoot, coreObjects[rootHash])
-                                };
-                                commitData.patchRoot[CONSTANTS.MONGO_ID] = rootHash;
-                            }
-                            next();
-                        });
-                    } else {
-                        next();
-                    }
-                };
+                baseRootHash = Array.isArray(rootHash_es) ? rootHash_es[1] : null;
 
             commitData.commitObject = self._getCommitObject(projectId, parents, rootHash, msg);
             commitData.coreObjects = coreObjects;
 
-            fillPatchRoot(function () {
-                if (project) {
-                    project.insertObject(commitData.commitObject);
-                    commitId = commitData.commitObject[CONSTANTS.MONGO_ID];
+            self._fillPatchRoot(project, commitData, rootHash, baseRootHash)
+                .then(function () {
+                    if (project) {
+                        project.insertObject(commitData.commitObject);
+                        commitId = commitData.commitObject[CONSTANTS.MONGO_ID];
 
-                    commitCallback = function commitCallback() {
-                        delete project.projectCache.queuedPersists[commitId];
-                        self.logger.debug('Removed now persisted core-objects from cache: ',
+                        commitCallback = function commitCallback() {
+                            delete project.projectCache.queuedPersists[commitId];
+                            self.logger.debug('Removed now persisted core-objects from cache: ',
+                                Object.keys(project.projectCache.queuedPersists).length);
+                            callback.apply(null, arguments);
+                        };
+
+                        project.projectCache.queuedPersists[commitId] = coreObjects;
+                        logger.debug('Queued non-persisted core-objects in cache: ',
                             Object.keys(project.projectCache.queuedPersists).length);
-                        callback.apply(null, arguments);
-                    };
+                    } else {
+                        commitCallback = callback;
+                    }
 
-                    project.projectCache.queuedPersists[commitId] = coreObjects;
-                    logger.debug('Queued non-persisted core-objects in cache: ',
-                        Object.keys(project.projectCache.queuedPersists).length);
-                } else {
-                    commitCallback = callback;
-                }
+                    if (typeof branchName === 'string') {
+                        commitData.branchName = branchName;
+                        branch = project ? project.branches[branchName] : null;
+                    }
 
-                if (typeof branchName === 'string') {
-                    commitData.branchName = branchName;
-                    branch = project ? project.branches[branchName] : null;
-                }
-
-                logger.debug('makeCommit', commitData);
-                if (branch) {
-                    logger.debug('makeCommit, branch is open will commit using commitQueue. branchName:', branchName);
-                    self._commitToBranch(projectId, branchName, commitData, parents[0], commitCallback);
-                } else {
-                    webSocket.makeCommit(commitData, commitCallback);
-                }
-            });
+                    logger.debug('makeCommit', commitData);
+                    if (branch) {
+                        logger.debug('makeCommit, branch is open will commit using commitQueue. branchName:', branchName);
+                        self._commitToBranch(projectId, branchName, commitData, parents[0], commitCallback);
+                    } else {
+                        webSocket.makeCommit(commitData, commitCallback);
+                    }
+                });
         };
 
         this.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {
@@ -486,7 +423,7 @@ define([
                     self._commitToBranch(projectId, branchName, commitData, oldHash, callback);
                 });
             } else {
-                StorageObjectLoaders.prototype.setBranchHash.call(self,
+                PatchStorage.prototype.setBranchHash.call(self,
                     projectId, branchName, newHash, oldHash, callback);
             }
         };
@@ -787,7 +724,7 @@ define([
         };
     }
 
-    EditorStorage.prototype = Object.create(StorageObjectLoaders.prototype);
+    EditorStorage.prototype = Object.create(PatchStorage.prototype);
     EditorStorage.prototype.constructor = EditorStorage;
 
     return EditorStorage;
