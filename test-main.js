@@ -1,4 +1,4 @@
-/*globals require, console*/
+/*globals require*/
 /*jshint browser: true*/
 
 function done() {

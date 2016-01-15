@@ -7,6 +7,26 @@ define([], function () {
     'use strict';
     function gmeNodeSetter(logger, state, saveRoot, storeNode) {
 
+        function _setAttrAndRegistry(node, desc) {
+            var name;
+
+            if (desc.attributes) {
+                for (name in desc.attributes) {
+                    if (desc.attributes.hasOwnProperty(name)) {
+                        state.core.setAttribute(node, name, desc.attributes[name]);
+                    }
+                }
+            }
+
+            if (desc.registry) {
+                for (name in desc.registry) {
+                    if (desc.registry.hasOwnProperty(name)) {
+                        state.core.setRegistry(node, name, desc.registry[name]);
+                    }
+                }
+            }
+        }
+
         function setAttributes(path, name, value, msg) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 state.core.setAttribute(state.nodes[path].node, name, value);
@@ -41,16 +61,16 @@ define([], function () {
 
         function copyMoreNodes(parameters, msg) {
             var pathestocopy = [],
-                i,
-                j,
+                nodePath,
                 newNodes,
                 newNode;
 
             if (typeof parameters.parentId === 'string' && state.nodes[parameters.parentId] &&
                 typeof state.nodes[parameters.parentId].node === 'object') {
-                for (i in parameters) {
-                    if (i !== 'parentId') {
-                        pathestocopy.push(i);
+
+                for (nodePath in parameters) {
+                    if (parameters.hasOwnProperty(nodePath) && nodePath !== 'parentId') {
+                        pathestocopy.push(nodePath);
                     }
                 }
 
@@ -61,33 +81,13 @@ define([], function () {
                     newNode = state.core.copyNode(state.nodes[pathestocopy[0]].node,
                         state.nodes[parameters.parentId].node);
                     storeNode(newNode);
-                    if (parameters[pathestocopy[0]]) {
-                        for (j in parameters[pathestocopy[0]].attributes) {
-                            if (parameters[pathestocopy[0]].attributes.hasOwnProperty(j)) {
-                                state.core.setAttribute(newNode, j, parameters[pathestocopy[0]].attributes[j]);
-                            }
-                        }
-                        for (j in parameters[pathestocopy[0]].registry) {
-                            if (parameters[pathestocopy[0]].registry.hasOwnProperty(j)) {
-                                state.core.setRegistry(newNode, j, parameters[pathestocopy[0]].registry[j]);
-                            }
-                        }
-                    }
+                    _setAttrAndRegistry(newNode, parameters[pathestocopy[0]]);
                     saveRoot(msg);
                 } else {
-                    newNodes = copyMultipleNodes(pathestocopy, parameters.parentId);
-                    for (i in newNodes) {
-                        if (newNodes.hasOwnProperty(i) && parameters[i]) {
-                            for (j in parameters[i].attributes) {
-                                if (parameters[i].attributes.hasOwnProperty(j)) {
-                                    state.core.setAttribute(newNodes[i], j, parameters[i].attributes[j]);
-                                }
-                            }
-                            for (j in parameters[i].registry) {
-                                if (parameters[i].registry.hasOwnProperty(j)) {
-                                    state.core.setRegistry(newNodes[i], j, parameters[i].registry[j]);
-                                }
-                            }
+                    newNodes = _copyMultipleNodes(pathestocopy, parameters.parentId);
+                    for (nodePath in newNodes) {
+                        if (newNodes.hasOwnProperty(nodePath) && parameters[nodePath]) {
+                            _setAttrAndRegistry(newNodes[nodePath], parameters[nodePath]);
                         }
                     }
 
@@ -98,7 +98,7 @@ define([], function () {
             }
         }
 
-        function copyMultipleNodes(nodePaths, parentPath) {
+        function _copyMultipleNodes(nodePaths, parentPath) {
             var i,
                 tempFrom,
                 tempTo,
@@ -167,7 +167,7 @@ define([], function () {
                         storeNode(newNode);
                         result[subPathArray[state.core.getRelid(childNode)]] = newNode;
                     } else {
-                        state.logger.error('635 - should never happen!!!');
+                        state.logger.error(new Error('Unexpected error when copying nodes!'));
                     }
                 }
 
@@ -183,7 +183,6 @@ define([], function () {
             var pathsToMove = [],
                 returnParams = {},
                 i,
-                j,
                 newNode;
 
             for (i in parameters) {
@@ -201,26 +200,11 @@ define([], function () {
                 for (i = 0; i < pathsToMove.length; i += 1) {
                     if (state.nodes[pathsToMove[i]] &&
                         typeof state.nodes[pathsToMove[i]].node === 'object') {
+
                         newNode = state.core.moveNode(state.nodes[pathsToMove[i]].node,
                             state.nodes[parameters.parentId].node);
                         returnParams[pathsToMove[i]] = state.core.getPath(newNode);
-                        if (parameters[pathsToMove[i]].attributes) {
-                            for (j in parameters[pathsToMove[i]].attributes) {
-                                if (parameters[pathsToMove[i]].attributes.hasOwnProperty(j)) {
-                                    state.core.setAttribute(newNode,
-                                        j, parameters[pathsToMove[i]].attributes[j]);
-                                }
-                            }
-                        }
-                        if (parameters[pathsToMove[i]].registry) {
-                            for (j in parameters[pathsToMove[i]].registry) {
-                                if (parameters[pathsToMove[i]].registry.hasOwnProperty(j)) {
-                                    state.core.setRegistry(newNode,
-                                        j, parameters[pathsToMove[i]].registry[j]);
-                                }
-                            }
-                        }
-
+                        _setAttrAndRegistry(newNode, parameters[pathsToMove[i]]);
                         delete state.nodes[pathsToMove[i]];
                         storeNode(newNode, true);
                     }
@@ -273,18 +257,7 @@ define([], function () {
 
             //now for the storage and relation setting
             for (i = 0; i < paths.length; i++) {
-                //attributes
-                names = Object.keys(parameters[paths[i]].attributes || {});
-                for (j = 0; j < names.length; j++) {
-                    state.core.setAttribute(newChildren[i],
-                        names[j], parameters[paths[i]].attributes[names[j]]);
-                }
-                //registry
-                names = Object.keys(parameters[paths[i]].registry || {});
-                for (j = 0; j < names.length; j++) {
-                    state.core.setRegistry(newChildren[i],
-                        names[j], parameters[paths[i]].registry[names[j]]);
-                }
+                _setAttrAndRegistry(newChildren[i], parameters[paths[i]]);
 
                 //relations
                 names = Object.keys(relations[i]);
