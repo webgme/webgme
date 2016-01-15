@@ -7,6 +7,26 @@ define([], function () {
     'use strict';
     function gmeNodeSetter(logger, state, saveRoot, storeNode) {
 
+        function _setAttrAndRegistry(node, desc) {
+            var name;
+
+            if (desc.attributes) {
+                for (name in desc.attributes) {
+                    if (desc.attributes.hasOwnProperty(name)) {
+                        state.core.setAttribute(node, name, desc.attributes[name]);
+                    }
+                }
+            }
+
+            if (desc.registry) {
+                for (name in desc.registry) {
+                    if (desc.registry.hasOwnProperty(name)) {
+                        state.core.setRegistry(node, name, desc.registry[name]);
+                    }
+                }
+            }
+        }
+
         function setAttributes(path, name, value, msg) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 state.core.setAttribute(state.nodes[path].node, name, value);
@@ -41,15 +61,16 @@ define([], function () {
 
         function copyMoreNodes(parameters, msg) {
             var pathestocopy = [],
-                i,
-                j,
+                nodePath,
+                newNodes,
                 newNode;
 
             if (typeof parameters.parentId === 'string' && state.nodes[parameters.parentId] &&
                 typeof state.nodes[parameters.parentId].node === 'object') {
-                for (i in parameters) {
-                    if (i !== 'parentId') {
-                        pathestocopy.push(i);
+
+                for (nodePath in parameters) {
+                    if (parameters.hasOwnProperty(nodePath) && nodePath !== 'parentId') {
+                        pathestocopy.push(nodePath);
                     }
                 }
 
@@ -60,58 +81,34 @@ define([], function () {
                     newNode = state.core.copyNode(state.nodes[pathestocopy[0]].node,
                         state.nodes[parameters.parentId].node);
                     storeNode(newNode);
-                    if (parameters[pathestocopy[0]]) {
-                        for (j in parameters[pathestocopy[0]].attributes) {
-                            if (parameters[pathestocopy[0]].attributes.hasOwnProperty(j)) {
-                                state.core.setAttribute(newNode, j, parameters[pathestocopy[0]].attributes[j]);
-                            }
-                        }
-                        for (j in parameters[pathestocopy[0]].registry) {
-                            if (parameters[pathestocopy[0]].registry.hasOwnProperty(j)) {
-                                state.core.setRegistry(newNode, j, parameters[pathestocopy[0]].registry[j]);
-                            }
-                        }
-                    }
+                    _setAttrAndRegistry(newNode, parameters[pathestocopy[0]]);
                     saveRoot(msg);
                 } else {
-                    copyMoreNodesAsync(pathestocopy, parameters.parentId, function (err, copyarr) {
-                        var i,
-                            j;
-                        if (err) {
-                            //rollBackModification();
-                            state.logger.error(err);
-                        } else {
-                            for (i in copyarr) {
-                                if (copyarr.hasOwnProperty(i) && parameters[i]) {
-                                    for (j in parameters[i].attributes) {
-                                        if (parameters[i].attributes.hasOwnProperty(j)) {
-                                            state.core.setAttribute(copyarr[i], j, parameters[i].attributes[j]);
-                                        }
-                                    }
-                                    for (j in parameters[i].registry) {
-                                        if (parameters[i].registry.hasOwnProperty(j)) {
-                                            state.core.setRegistry(copyarr[i], j, parameters[i].registry[j]);
-                                        }
-                                    }
-                                }
-                            }
-                            saveRoot(msg);
+                    newNodes = _copyMultipleNodes(pathestocopy, parameters.parentId);
+                    for (nodePath in newNodes) {
+                        if (newNodes.hasOwnProperty(nodePath) && parameters[nodePath]) {
+                            _setAttrAndRegistry(newNodes[nodePath], parameters[nodePath]);
                         }
-                    });
+                    }
+
+                    saveRoot(msg);
                 }
             } else {
                 state.logger.error('wrong parameters for copy operation - denied -');
             }
         }
 
-        function copyMoreNodesAsync(nodePaths, parentPath, callback) {
+        function _copyMultipleNodes(nodePaths, parentPath) {
             var i,
                 tempFrom,
                 tempTo,
                 helpArray,
                 subPathArray,
                 parent,
-                returnArray,
+                result = {},
+                childrenRelIds,
+                childNode,
+                newNode,
                 checkPaths = function () {
                     var i,
                         result = true;
@@ -123,71 +120,69 @@ define([], function () {
                     return result;
                 };
 
-            if (state.nodes[parentPath] &&
-                typeof state.nodes[parentPath].node === 'object' && checkPaths()) {
+            // In order to preserve the relationships between the copied nodes. These steps are take:
+            // 1) A temporary container tempFrom is created.
+            // 2) The nodes are moved to tempFrom.
+            // 3) tempFrom is copied (including the children) to tempTo
+            // 4) The nodes from tempFrom are moved back to their parent(s).
+            // 5) The nodes from tempTo are moved to the targeted parent.
+            // 6) tempFrom and tempTo are removed.
+
+            if (state.nodes[parentPath] && typeof state.nodes[parentPath].node === 'object' && checkPaths()) {
                 helpArray = {};
                 subPathArray = {};
                 parent = state.nodes[parentPath].node;
-                returnArray = {};
 
-                //creating the 'from' object
+                // 1) creating the 'from' object
                 tempFrom = state.core.createNode({
                     parent: parent,
                     base: state.core.getTypeRoot(state.nodes[nodePaths[0]].node)
                 });
-                //and moving every node under it
+                // 2) and moving every node under it
                 for (i = 0; i < nodePaths.length; i += 1) {
                     helpArray[nodePaths[i]] = {};
-                    helpArray[nodePaths[i]].origparent =
-                        state.core.getParent(state.nodes[nodePaths[i]].node);
-                    helpArray[nodePaths[i]].tempnode =
-                        state.core.moveNode(state.nodes[nodePaths[i]].node, tempFrom);
+                    helpArray[nodePaths[i]].origparent = state.core.getParent(state.nodes[nodePaths[i]].node);
+                    helpArray[nodePaths[i]].tempnode = state.core.moveNode(state.nodes[nodePaths[i]].node, tempFrom);
                     subPathArray[state.core.getRelid(helpArray[nodePaths[i]].tempnode)] = nodePaths[i];
                     delete state.nodes[nodePaths[i]];
                 }
 
-                //do the copy
+                // 3) do the copy
                 tempTo = state.core.copyNode(tempFrom, parent);
 
-                //moving back the temporary source
+                // 4) moving back the temporary source
                 for (i = 0; i < nodePaths.length; i += 1) {
                     helpArray[nodePaths[i]].node = state.core.moveNode(helpArray[nodePaths[i]].tempnode,
                         helpArray[nodePaths[i]].origparent);
                     storeNode(helpArray[nodePaths[i]].node);
                 }
 
-                //gathering the destination nodes
-                state.core.loadChildren(tempTo, function (err, children) {
-                    var newNode;
+                // 5) gathering the destination nodes and move them to targeted parent
+                childrenRelIds = state.core.getChildrenRelids(tempTo);
 
-                    if (!err && children && children.length > 0) {
-                        for (i = 0; i < children.length; i += 1) {
-                            if (subPathArray[state.core.getRelid(children[i])]) {
-                                newNode = state.core.moveNode(children[i], parent);
-                                storeNode(newNode);
-                                returnArray[subPathArray[state.core.getRelid(children[i])]] = newNode;
-                            } else {
-                                state.logger.error('635 - should never happen!!!');
-                            }
-                        }
-                        state.core.deleteNode(tempFrom);
-                        state.core.deleteNode(tempTo);
-                        callback(null, returnArray);
+                for (i = 0; i < childrenRelIds.length; i += 1) {
+                    if (subPathArray[childrenRelIds[i]]) {
+                        childNode = state.core.getChild(tempTo, childrenRelIds[i]);
+                        newNode = state.core.moveNode(childNode, parent);
+                        storeNode(newNode);
+                        result[subPathArray[state.core.getRelid(childNode)]] = newNode;
                     } else {
-                        //clean up the mess and return
-                        state.core.deleteNode(tempFrom);
-                        state.core.deleteNode(tempTo);
-                        callback(err, {});
+                        state.logger.error(new Error('Unexpected error when copying nodes!'));
                     }
-                });
+                }
+
+                // 6) clean up the temporary container nodes.
+                state.core.deleteNode(tempFrom);
+                state.core.deleteNode(tempTo);
             }
+
+            return result;
         }
 
         function moveMoreNodes(parameters, msg) {
             var pathsToMove = [],
                 returnParams = {},
                 i,
-                j,
                 newNode;
 
             for (i in parameters) {
@@ -205,26 +200,11 @@ define([], function () {
                 for (i = 0; i < pathsToMove.length; i += 1) {
                     if (state.nodes[pathsToMove[i]] &&
                         typeof state.nodes[pathsToMove[i]].node === 'object') {
+
                         newNode = state.core.moveNode(state.nodes[pathsToMove[i]].node,
                             state.nodes[parameters.parentId].node);
                         returnParams[pathsToMove[i]] = state.core.getPath(newNode);
-                        if (parameters[pathsToMove[i]].attributes) {
-                            for (j in parameters[pathsToMove[i]].attributes) {
-                                if (parameters[pathsToMove[i]].attributes.hasOwnProperty(j)) {
-                                    state.core.setAttribute(newNode,
-                                        j, parameters[pathsToMove[i]].attributes[j]);
-                                }
-                            }
-                        }
-                        if (parameters[pathsToMove[i]].registry) {
-                            for (j in parameters[pathsToMove[i]].registry) {
-                                if (parameters[pathsToMove[i]].registry.hasOwnProperty(j)) {
-                                    state.core.setRegistry(newNode,
-                                        j, parameters[pathsToMove[i]].registry[j]);
-                                }
-                            }
-                        }
-
+                        _setAttrAndRegistry(newNode, parameters[pathsToMove[i]]);
                         delete state.nodes[pathsToMove[i]];
                         storeNode(newNode, true);
                     }
@@ -277,18 +257,7 @@ define([], function () {
 
             //now for the storage and relation setting
             for (i = 0; i < paths.length; i++) {
-                //attributes
-                names = Object.keys(parameters[paths[i]].attributes || {});
-                for (j = 0; j < names.length; j++) {
-                    state.core.setAttribute(newChildren[i],
-                        names[j], parameters[paths[i]].attributes[names[j]]);
-                }
-                //registry
-                names = Object.keys(parameters[paths[i]].registry || {});
-                for (j = 0; j < names.length; j++) {
-                    state.core.setRegistry(newChildren[i],
-                        names[j], parameters[paths[i]].registry[names[j]]);
-                }
+                _setAttrAndRegistry(newChildren[i], parameters[paths[i]]);
 
                 //relations
                 names = Object.keys(relations[i]);

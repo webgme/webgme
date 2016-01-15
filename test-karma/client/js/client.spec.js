@@ -1569,28 +1569,37 @@ describe('GME client', function () {
             expect(clientNode.getValidSetMemberTypesDetailed('set')).to.deep.equal({'/701504349': true});
         });
 
-        it('should return all meta gme nodes synchronously',function(){
+        it('should return all meta gme nodes synchronously', function () {
             var metaNodes = client.getAllMetaNodes();
             expect(metaNodes).to.have.length(2);
             expect(!!metaNodes[0].getId).to.equal(true);
             expect(!!metaNodes[1].getId).to.equal(true);
         });
 
-        it('should check if the node is [connection]-like',function(){
+        it('should check if the node is [connection]-like', function () {
             expect(clientNode.isConnection()).to.equal(false);
         });
 
-        it('should check if the node is abstract',function(){
+        it('should check if the node is abstract', function () {
             expect(clientNode.isAbstract()).to.equal(false);
         });
 
-        it('should return the list of defined aspect names of the node',function(){
+        it('should return the list of defined aspect names of the node', function () {
             expect(clientNode.getValidAspectNames()).to.eql([]);
         });
         
-        //it('should log the textual representation of the node', function () {
-        //
-        //})
+        it('should copy the node with no parameters', function () {
+            var rootNode = client.getNode(''),
+                startChildren = rootNode.getChildrenIds().length,
+                endChildren,
+                params = {parentId: ''};
+
+            params[clientNode.getId()] = {};
+            client.copyMoreNodes(params);
+
+            endChildren = rootNode.getChildrenIds().length;
+            expect(endChildren).to.equal(startChildren + 1);
+        });
     });
 
     describe('basic territory tests', function () {
@@ -2473,10 +2482,95 @@ describe('GME client', function () {
 
                     client.copyMoreNodes({
                             parentId: '',
-                            '/1697300825': {attributes: {name: 'member2copy'}},
+                            '/1697300825': {attributes: {name: 'member2copy'}, registry: {}},
                             '/1400778473': {attributes: {name: 'member1copy'}}
                         },
                         'basic copy nodes test');
+                    return;
+                }
+
+                if (testState === 'checking') {
+                    //FIXME why the update events missing about the source nodes -
+                    // it works correctly with single node copying
+                    expect(events).to.have.length(8);
+
+                    //find out the new node paths
+                    for (i = 1; i < events.length; i++) {
+                        if (initialPaths.indexOf(events[i].eid) === -1) {
+                            expect(events[i].etype).to.equal('load');
+                            newPaths.push(events[i].eid);
+                        }
+                    }
+
+                    expect(newPaths).to.have.length(2);
+
+                    //old nodes remain untouched
+                    node = client.getNode('/1697300825');
+                    expect(node).not.to.equal(null);
+                    expect(node.getPointer('ptr')).to.deep.equal({to: '/323573539', from: []});
+
+                    node = client.getNode('/1400778473');
+                    expect(node).not.to.equal(null);
+                    expect(node.getPointer('ptr')).to.deep.equal({to: '/323573539', from: []});
+
+                    //the copies keep the target
+                    node = client.getNode(newPaths[0]);
+                    expect(node).not.to.equal(null);
+                    expect(node.getAttribute('name')).to.contain('copy');
+                    expect(node.getPointer('ptr')).to.deep.equal({to: '/323573539', from: []});
+
+                    node = client.getNode(newPaths[1]);
+                    expect(node).not.to.equal(null);
+                    expect(node.getAttribute('name')).to.contain('copy');
+                    expect(node.getPointer('ptr')).to.deep.equal({to: '/323573539', from: []});
+                }
+            });
+        });
+
+        it('should copy the nodes under the given parent using transactions', function (done) {
+            var testState = 'init',
+                testId = 'basicCopyNodesTransaction',
+                node,
+                initialPaths = [],
+                branchStatusHandler = function (status /*, commitQueue, updateQueue*/) {
+                    if (status === client.CONSTANTS.BRANCH_STATUS.SYNC) {
+                        done();
+                    }
+                },
+                newPaths = [],
+                i;
+
+            currentTestId = testId;
+
+            buildUpForTest(testId, {'': {children: 1}}, branchStatusHandler, function (events) {
+                if (testState === 'init') {
+                    testState = 'checking';
+
+                    expect(events).to.have.length(8);
+                    expect(events).to.include({eid: '/1697300825', etype: 'load'});
+                    expect(events).to.include({eid: '/1400778473', etype: 'load'});
+
+                    //save the paths of the initial nodes so that we can figure out the new nodes later
+                    for (i = 1; i < events.length; i++) {
+                        initialPaths.push(events[i].eid);
+                    }
+
+                    node = client.getNode('/1697300825');
+                    expect(node).not.to.equal(null);
+                    expect(node.getPointer('ptr')).to.deep.equal({to: '/323573539', from: []});
+
+                    node = client.getNode('/1400778473');
+                    expect(node).not.to.equal(null);
+                    expect(node.getPointer('ptr')).to.deep.equal({to: '/323573539', from: []});
+
+                    client.startTransaction();
+                    client.copyMoreNodes({
+                            parentId: '',
+                            '/1697300825': {attributes: {name: 'member2copy'}, registry: {}},
+                            '/1400778473': {attributes: {name: 'member1copy'}}
+                        },
+                        'basic copy nodes test');
+                    client.completeTransaction();
                     return;
                 }
 
