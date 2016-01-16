@@ -238,6 +238,11 @@ function loadJsonFile(path) {
 
 function importProject(storage, parameters, callback) {
     var deferred = Q.defer(),
+        extractDeferred = Q.defer(),
+        BC,
+        WR,
+        blobClient,
+        wr,
         projectJson,
         branchName,
         data = {};
@@ -255,17 +260,38 @@ function importProject(storage, parameters, callback) {
     }
 
     if (typeof parameters.projectSeed === 'string') {
-        projectJson = loadJsonFile(parameters.projectSeed);
+        if (parameters.projectSeed.indexOf('.zip') > -1) {
+            BC = require('../src/server/middleware/blob/BlobClientWithFSBackend');
+            WR = require('../src/server/worker/workerrequests');
+            blobClient = new BC(parameters.gmeConfig, parameters.logger);
+            wr = new WR(parameters.logger, parameters.gmeConfig);
+            wr._addZippedExportToBlob(parameters.projectSeed, blobClient)
+                .then(function (projectStr) {
+                    var projectJson = JSON.parse(projectStr);
+                    extractDeferred.resolve(projectJson);
+                })
+                .catch(extractDeferred.reject);
+        } else {
+            try {
+                extractDeferred.resolve(loadJsonFile(parameters.projectSeed));
+            } catch (e) {
+                extractDeferred.reject(e);
+            }
+        }
     } else if (typeof parameters.projectSeed === 'object') {
-        projectJson = parameters.projectSeed;
+        extractDeferred.resolve(parameters.projectSeed);
     } else {
-        deferred.reject('parameters.projectSeed must be filePath or object!');
+        extractDeferred.reject('parameters.projectSeed must be filePath or object!');
     }
     branchName = parameters.branchName || 'master';
     // Parameters check end.
     data.projectName = parameters.projectName;
 
-    storage.createProject(data)
+    extractDeferred.promise
+        .then(function (projectJson_) {
+            projectJson = projectJson_;
+            return storage.createProject(data);
+        })
         .then(function (project) {
             var core = new Core(project, {
                     globConf: parameters.gmeConfig,
@@ -293,7 +319,8 @@ function importProject(storage, parameters, callback) {
                             core: core,
                             jsonProject: projectJson,
                             rootNode: rootNode,
-                            rootHash: persisted.rootHash
+                            rootHash: persisted.rootHash,
+                            blobClient: blobClient //Undefined unless importing from zip.
                         });
                     })
                     .catch(function (err) {
