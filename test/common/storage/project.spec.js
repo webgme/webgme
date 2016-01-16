@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('storage project', function () {
+describe('common storage project', function () {
     'use strict';
     var NodeStorage = testFixture.requirejs('common/storage/nodestorage'),
         STORAGE_CONSTANTS = testFixture.requirejs('common/storage/constants'),
@@ -88,7 +88,6 @@ describe('storage project', function () {
                 done(new Error(err));
                 return;
             }
-
             Q.allDone([
                 gmeAuth.unload()
             ])

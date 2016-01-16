@@ -5,7 +5,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('Artifact', function () {
+describe('Blob Artifact', function () {
     'use strict';
     var Artifact = testFixture.requirejs('blob/Artifact'),
         rimraf = testFixture.rimraf,
