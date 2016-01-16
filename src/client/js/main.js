@@ -78,6 +78,8 @@ require.config({
 
         moment: 'lib/moment/moment.min',
 
+        urlparse:'lib/purl/purl.min',
+
         // Angular and modules
         angular: 'lib/angular/angular-' + _angularVersion + '/angular' + ( DEBUG ? '.min' : '' ),
         'angular-route': 'lib/angular/angular-' + _angularVersion + '/angular-route' + ( DEBUG ? '.min' : '' ),

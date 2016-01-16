@@ -6,7 +6,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define([], function () {
+define(['urlparse'], function (URLPARSE) {
 
     'use strict';
 
@@ -105,12 +105,13 @@ define([], function () {
         },
 
         getURLParameterByName: function (name) {
-            var regex,
-                results;
-            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-            regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-            results = regex.exec(location.search);
-            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+            var queryParams = URLPARSE(location,true).param();
+
+            if(queryParams[name] !== undefined){
+                return queryParams[name];
+            }
+
+            return '';
         },
 
         getObjectFromUrlQuery: function (queryString) {

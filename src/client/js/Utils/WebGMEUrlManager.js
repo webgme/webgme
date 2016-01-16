@@ -24,7 +24,7 @@ define([
             layoutToLoad: util.getURLParameterByName('layout') || WebGMEGlobal.gmeConfig.visualization.layout.default,
             commitToLoad: util.getURLParameterByName('commit').toLowerCase(),
             projectToLoad: util.getURLParameterByName('project'),
-            objectToLoad: util.getURLParameterByName('node').toLowerCase() || CONSTANTS.PROJECT_ROOT_ID,
+            objectToLoad: util.getURLParameterByName('node') || CONSTANTS.PROJECT_ROOT_ID,
             createNewProject: util.getURLParameterByName('create') === 'true',
             branchToLoad: util.getURLParameterByName('branch'),
             tabToSelect: util.getURLParameterByName('tab') || 0,
