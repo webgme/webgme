@@ -3,28 +3,40 @@
  * 
  * Author: Robert Kereskenyi
  */
-.plugin-config-dialog .form-group .row {
-  margin: 0 0; }
-.plugin-config-dialog .form-group .controls .widget span {
-  margin-top: 5px;
-  font-size: 14px;
-  line-height: 20px;
-  display: block; }
-.plugin-config-dialog .form-group .controls .widget .iCheckBox {
-  margin-top: 6px; }
-.plugin-config-dialog .form-group .controls .widget div.color-picker {
-  height: 30px;
-  width: 100%;
-  margin-top: 0;
-  cursor: pointer;
-  border-radius: 4px; }
-.plugin-config-dialog .form-group .controls .widget div.asset-widget {
-  height: 30px;
-  line-height: 30px;
-  width: 100%;
-  margin-top: 0; }
-  .plugin-config-dialog .form-group .controls .widget div.asset-widget .btn-dialog-open {
-    padding: 3px; }
-.plugin-config-dialog .form-group .controls .widget input[type="text"] {
-  width: 100%;
-  padding: 0.5ex; }
+.plugin-config-dialog .model-header {
+  padding: 10px; }
+.plugin-config-dialog .modal-body {
+  padding: 15px; }
+.plugin-config-dialog .modal-footer {
+  padding: 10px;
+  margin-top: 5px; }
+.plugin-config-dialog .form-group {
+  margin-bottom: 10px; }
+  .plugin-config-dialog .form-group .row {
+    margin: 0 0; }
+  .plugin-config-dialog .form-group .controls .widget span {
+    margin-top: 5px;
+    font-size: 14px;
+    line-height: 20px;
+    display: block; }
+  .plugin-config-dialog .form-group .controls .widget .iCheckBox {
+    margin-top: 6px; }
+  .plugin-config-dialog .form-group .controls .widget div.color-picker {
+    height: 30px;
+    width: 100%;
+    margin-top: 0;
+    cursor: pointer;
+    border-radius: 4px; }
+  .plugin-config-dialog .form-group .controls .widget div.asset-widget {
+    height: 30px;
+    line-height: 30px;
+    width: 100%;
+    margin-top: 0; }
+    .plugin-config-dialog .form-group .controls .widget div.asset-widget .btn-dialog-open {
+      padding: 3px; }
+  .plugin-config-dialog .form-group .controls .widget input[type="text"] {
+    width: 100%;
+    padding: 0.5ex; }
+  .plugin-config-dialog .form-group div.desc {
+    font-size: 0.9em;
+    color: #444; }
