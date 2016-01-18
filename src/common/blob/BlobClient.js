@@ -296,12 +296,14 @@ define([
     };
 
     /**
-     * Retrieves object from blob storage.
+     * Retrieves object from blob storage as a Buffer under node and as an ArrayBuffer in the client.
+     * N.B. if the retrieved file is a json-file and running in a browser, the content will be decoded and
+     * the string parsed as a JSON.
      * @param {string} hash - hash of metadata for object.
      * @param {function} [callback] - if provided no promise will be returned.
      * @param {string} [subpath]
      *
-     * @return {external:Promise} On success the promise will be resolved with {string|Buffer|ArrayBuffer|object}
+     * @return {external:Promise} On success the promise will be resolved with {Buffer|ArrayBuffer|object}
      * <b>content</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
@@ -390,6 +392,62 @@ define([
         }
 
         return deferred.promise.nodeify(callback);
+    };
+
+    /**
+     * Retrieves object from blob storage and parses the content as a string.
+     * @param {string} hash - hash of metadata for object.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {string} <b>contentString</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
+    BlobClient.prototype.getObjectAsString = function (hash, callback) {
+        var self = this;
+        return self.getObject(hash)
+            .then(function (content) {
+                if (typeof content === 'string') {
+                    // This does currently not happen..
+                    return content;
+                } else if (typeof Buffer !== 'undefined' && content instanceof Buffer) {
+                    return UINT.uint8ArrayToString(new Uint8Array(content));
+                } else if (content instanceof ArrayBuffer) {
+                    return UINT.uint8ArrayToString(new Uint8Array(content));
+                } else if (content !== null && typeof content === 'object') {
+                    return JSON.stringify(content);
+                } else {
+                    throw new Error('Unknown content encountered: ' + content);
+                }
+            })
+            .nodeify(callback);
+    };
+
+    /**
+     * Retrieves object from blob storage and parses the content as a JSON. (Will resolve with error if not valid JSON.)
+     * @param {string} hash - hash of metadata for object.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {object} <b>contentJSON</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
+    BlobClient.prototype.getObjectAsJSON = function (hash, callback) {
+        var self = this;
+        return self.getObject(hash)
+            .then(function (content) {
+                if (typeof content === 'string') {
+                    // This does currently not happen..
+                    return JSON.parse(content);
+                } else if (typeof Buffer !== 'undefined' && content instanceof Buffer) {
+                    return JSON.parse(UINT.uint8ArrayToString(new Uint8Array(content)));
+                } else if (content instanceof ArrayBuffer) {
+                    return JSON.parse(UINT.uint8ArrayToString(new Uint8Array(content)));
+                } else if (content !== null && typeof content === 'object') {
+                    return content;
+                } else {
+                    throw new Error('Unknown content encountered: ' + content);
+                }
+            })
+            .nodeify(callback);
     };
 
     /**
