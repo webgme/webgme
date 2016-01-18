@@ -298,6 +298,7 @@ define([
                 data: {
                     _mutable: true
                 },
+                baseRawData: {},
                 rootid: ++rootCounter
             };
             root.data[ID_NAME] = '';
@@ -703,6 +704,10 @@ define([
                 result = {rootHash: node.data[ID_NAME], objects: {}};
             }
 
+            if (gmeConfig.storage.pathRootCommunicationEnabled && getRoot(node) === null) {
+                node.baseRawData = node.data;
+            }
+
             return result;
         };
 
@@ -721,6 +726,11 @@ define([
                 data: data,
                 rootid: ++rootCounter
             };
+
+            if (gmeConfig.storage.pathRootCommunicationEnabled) {
+                root.baseRawData = root.data;
+            }
+
             roots.push(root);
 
             __ageRoots();

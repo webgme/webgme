@@ -8,7 +8,11 @@
  * @author mmaroti / https://github.com/mmaroti
  */
 
-define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CONSTANTS) {
+define([
+    'common/util/assert',
+    'common/storage/constants',
+    'common/util/jsonPatcher'
+], function (ASSERT, CONSTANTS, jsonPatcher) {
     'use strict';
     function ProjectCache(storage, projectId, mainLogger, gmeConfig) {
         var self = this,
@@ -23,12 +27,28 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
         this.queuedPersists = {};
 
         function cacheInsert(key, obj) {
+            var patch;
             ASSERT(obj[CONSTANTS.MONGO_ID] === key);
             logger.debug('cacheInsert', key);
 
             //deepFreeze(obj);
             if (!cache[key]) {
-                cache[key] = obj;
+                if(obj.type === 'patch'){
+                    if(cache[obj.base] || backup[obj.base]){
+                        patch = jsonPatcher.apply(cache[obj.base] || backup[obj.base], obj.patch);
+
+                        if(patch.status === 'success'){
+                            cache[key] = patch.result;
+                        } else {
+                            logger.error('error during patch root apply',patch);
+                        }
+                    } else {
+                        logger.debug('base of patch root not available, ignore cache insert');
+                        return true;
+                    }
+                } else {
+                    cache[key] = obj;
+                }
 
                 if (++cacheSize >= gmeConfig.storage.cache) {
                     backup = cache;

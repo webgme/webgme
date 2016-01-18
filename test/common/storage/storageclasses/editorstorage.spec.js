@@ -603,7 +603,11 @@ describe('storage storageclasses editorstorage', function () {
                     projectName2Id(projectName),
                     forkName,
                     [importResult.commitHash],
-                    [persisted.rootHash, importResult.rootHash],
+                    {
+                        newHash: persisted.rootHash,
+                        baseHash: importResult.rootHash,
+                        baseData: importResult.rootNode.rawData
+                    },
                     persisted.objects, 'newer commit');
             })
             .then(function (result) {

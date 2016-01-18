@@ -222,26 +222,23 @@ define([
                 branch.addBranchStatusHandler(branchStatusHandler);
 
                 branch._remoteUpdateHandler = function (_ws, updateData, initCallback) {
-                    var originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
+                    var j,
+                        originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     logger.debug('_remoteUpdateHandler invoked for project, branch', projectId, branchName);
+                    for (j = 0; j < updateData.coreObjects.length; j += 1) {
+                        project.insertObject(updateData.coreObjects[j]);
+                    }
 
-                    self.insertObjects(project, updateData.coreObjects)
-                        .then(function () {
-                            branch.queueUpdate(updateData);
-                            branch.updateHashes(null, originHash);
+                    branch.queueUpdate(updateData);
+                    branch.updateHashes(null, originHash);
 
-                            if (branch.getCommitQueue().length === 0) {
-                                if (branch.getUpdateQueue().length === 1) {
-                                    self._pullNextQueuedCommit(projectId, branchName, initCallback); // hashUpdateHandlers
-                                }
-                            } else {
-                                logger.debug('commitQueue is not empty, only updating originHash.');
-                            }
-                        })
-                        .catch(function (err) {
-                            logger.error('invalid commit arrived');
-                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
-                        });
+                    if (branch.getCommitQueue().length === 0) {
+                        if (branch.getUpdateQueue().length === 1) {
+                            self._pullNextQueuedCommit(projectId, branchName, initCallback); // hashUpdateHandlers
+                        }
+                    } else {
+                        logger.debug('commitQueue is not empty, only updating originHash.');
+                    }
                 };
 
                 branch._remoteUpdateHandler(null, latestCommit, function (err) {
@@ -345,7 +342,7 @@ define([
             commitNext();
         };
 
-        this.makeCommit = function (projectId, branchName, parents, rootHash_es, coreObjects, msg, callback) {
+        this.makeCommit = function (projectId, branchName, parents, rootInfo, coreObjects, msg, callback) {
             var project = projects[projectId],
                 branch,
                 commitId,
@@ -354,46 +351,42 @@ define([
                     projectId: projectId,
                     commitObject: null,
                     coreObjects: null
-                },
-                rootHash = Array.isArray(rootHash_es) ? rootHash_es[0] : rootHash_es,
-                baseRootHash = Array.isArray(rootHash_es) ? rootHash_es[1] : null;
+                };
 
-            commitData.commitObject = self._getCommitObject(projectId, parents, rootHash, msg);
             commitData.coreObjects = coreObjects;
+            self._fillPatchRoot(commitData,rootInfo);
+            commitData.commitObject = self._getCommitObject(projectId, parents, commitData.rootHash, msg);
 
-            self._fillPatchRoot(project, commitData, rootHash, baseRootHash)
-                .then(function () {
-                    if (project) {
-                        project.insertObject(commitData.commitObject);
-                        commitId = commitData.commitObject[CONSTANTS.MONGO_ID];
+            if (project) {
+                project.insertObject(commitData.commitObject);
+                commitId = commitData.commitObject[CONSTANTS.MONGO_ID];
 
-                        commitCallback = function commitCallback() {
-                            delete project.projectCache.queuedPersists[commitId];
-                            self.logger.debug('Removed now persisted core-objects from cache: ',
-                                Object.keys(project.projectCache.queuedPersists).length);
-                            callback.apply(null, arguments);
-                        };
+                commitCallback = function commitCallback() {
+                    delete project.projectCache.queuedPersists[commitId];
+                    self.logger.debug('Removed now persisted core-objects from cache: ',
+                        Object.keys(project.projectCache.queuedPersists).length);
+                    callback.apply(null, arguments);
+                };
 
-                        project.projectCache.queuedPersists[commitId] = coreObjects;
-                        logger.debug('Queued non-persisted core-objects in cache: ',
-                            Object.keys(project.projectCache.queuedPersists).length);
-                    } else {
-                        commitCallback = callback;
-                    }
+                project.projectCache.queuedPersists[commitId] = coreObjects;
+                logger.debug('Queued non-persisted core-objects in cache: ',
+                    Object.keys(project.projectCache.queuedPersists).length);
+            } else {
+                commitCallback = callback;
+            }
 
-                    if (typeof branchName === 'string') {
-                        commitData.branchName = branchName;
-                        branch = project ? project.branches[branchName] : null;
-                    }
+            if (typeof branchName === 'string') {
+                commitData.branchName = branchName;
+                branch = project ? project.branches[branchName] : null;
+            }
 
-                    logger.debug('makeCommit', commitData);
-                    if (branch) {
-                        logger.debug('makeCommit, branch is open will commit using commitQueue. branchName:', branchName);
-                        self._commitToBranch(projectId, branchName, commitData, parents[0], commitCallback);
-                    } else {
-                        webSocket.makeCommit(commitData, commitCallback);
-                    }
-                });
+            logger.debug('makeCommit', commitData);
+            if (branch) {
+                logger.debug('makeCommit, branch is open will commit using commitQueue. branchName:', branchName);
+                self._commitToBranch(projectId, branchName, commitData, parents[0], commitCallback);
+            } else {
+                webSocket.makeCommit(commitData, commitCallback);
+            }
         };
 
         this.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {
