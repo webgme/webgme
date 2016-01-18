@@ -136,7 +136,9 @@ describe('Browser BlobClient', function () {
                 throw new Error('Should have failed!');
             })
             .catch(function (err) {
-                expect(err.message).to.include('Unexpected token');
+                expect(typeof err.message).to.equal('string');
+                // Different error message on different browsers (make sure it failed)..
+                expect(err.message).to.not.include('Should have failed!');
             })
             .nodeify(done);
     });
