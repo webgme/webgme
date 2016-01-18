@@ -6,10 +6,10 @@
 'use strict';
 
 var PluginNodeManagerBase = require('./nodemanagerbase'),
-    BlobClient = requireJS('common/blob/BlobClient');
+    BlobClientClass = requireJS('common/blob/BlobClient');
 
 function PluginNodeManager(webGMESessionId, project, mainLogger, gmeConfig) {
-    var blobClient = new BlobClient({
+    var blobClient = new BlobClientClass({
             serverPort: gmeConfig.server.port,
             httpsecure: false,
             server: '127.0.0.1',

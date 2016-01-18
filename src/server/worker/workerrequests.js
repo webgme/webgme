@@ -10,7 +10,7 @@ var Core = requireJS('common/core/coreQ'),
     Serialization = requireJS('common/core/users/serialization'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
     merger = requireJS('common/core/users/merge'),
-    BlobClient = requireJS('common/blob/BlobClient'),
+    BlobClientClass = requireJS('common/blob/BlobClient'),
     constraint = requireJS('common/core/users/constraintchecker'),
     UINT = requireJS('common/util/uint'),
 
@@ -101,7 +101,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 globConf: gmeConfig,
                 logger: logger.fork('core')
             }),
-            blobClient = new BlobClient({
+            blobClient = new BlobClientClass({
                 serverPort: gmeConfig.server.port,
                 httpsecure: false,
                 server: '127.0.0.1',
@@ -413,7 +413,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 } else if (filename.indexOf('.zip') > -1) {
 
                     logger.debug('Found .zip seed at:', filename);
-                    blobClient = new BlobClient({
+                    blobClient = new BlobClientClass({
                         serverPort: gmeConfig.server.port,
                         httpsecure: false,
                         server: '127.0.0.1',
@@ -451,7 +451,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     }
 
     function _getSeedFromBlob(hash, webGMESessionId) {
-        var blobClient = new BlobClient({
+        var blobClient = new BlobClientClass({
             serverPort: gmeConfig.server.port,
             httpsecure: false,
             server: '127.0.0.1',

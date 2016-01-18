@@ -233,7 +233,7 @@ define([
 
     /**
      * Adds hashes to the artifact using the given file paths.
-     * @param {object.<string, string>} objectHashes - Keys are file paths and values object hashes.
+     * @param {object.<string, string>} objectHashes - Keys are file paths and values metadata hashes.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>hashes</b>.<br>

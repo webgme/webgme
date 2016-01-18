@@ -132,12 +132,12 @@ define([
     };
 
     /**
-     *
+     * Adds a file to the blob storage.
      * @param {string} name - file name.
      * @param {string|Buffer|ArrayBuffer} data - file content.
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise} On success the promise will be resolved with {@link JobInfo} <b>jobInfo</b>.<br>
+     * @return {external:Promise} On success the promise will be resolved with {string} <b>hash</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     BlobClient.prototype.putFile = function (name, data, callback) {
@@ -243,6 +243,14 @@ define([
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Adds multiple files to the blob storage.
+     * @param {object.<string, string|Buffer|ArrayBuffer>} o - Keys are file names and values the content.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {object} <b>hashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.putFiles = function (o, callback) {
         var self = this,
             deferred = Q.defer(),
@@ -289,7 +297,7 @@ define([
 
     /**
      * Retrieves object from blob storage.
-     * @param {string} hash - hash of object.
+     * @param {string} hash - hash of metadata for object.
      * @param {function} [callback] - if provided no promise will be returned.
      * @param {string} [subpath]
      *
@@ -486,7 +494,7 @@ define([
     /**
      * Converts bytes to a human readable string.
      * @param {bytes} - File size in bytes.
-     * @param {boolean} [si] - If true the decimal conversion will be used by default binary is used.
+     * @param {boolean} [si] - If true decimal conversion will be used (by default binary is used).
      * @returns {string}
      */
     BlobClient.prototype.getHumanSize = function (bytes, si) {
