@@ -2,8 +2,9 @@
 /*jshint node:true, browser:true*/
 
 /**
- * This addOn does not make any changes to model, rather it sends a notification on each update.
- *
+ * Simple addOn sending notification on each branch update.
+ * @author pmeijer / https://github.com/pmeijer
+ * @module CoreAddOns:NotificationAddOn
  */
 
 define([

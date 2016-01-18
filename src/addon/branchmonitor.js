@@ -6,7 +6,7 @@
 'use strict';
 
 var Q = require('q'),
-    BlobClient = requireJS('common/blob/BlobClient'),
+    BlobClientClass = requireJS('common/blob/BlobClient'),
     Core = requireJS('common/core/coreQ');
 
 /**
@@ -19,6 +19,7 @@ var Q = require('q'),
  * @param {object} gmeConfig
  * @param {object} mainLogger
  * @constructor
+ * @ignore
  */
 function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger, gmeConfig) {
     var self = this,
@@ -66,7 +67,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
     }
 
     function getConfiguration() {
-        var blobClient = new BlobClient({
+        var blobClient = new BlobClientClass({
             serverPort: gmeConfig.server.port,
             httpsecure: false, // N.B.: addons are running on the server only
             server: '127.0.0.1',

@@ -1,7 +1,7 @@
 /*globals define*/
 /*jshint browser: true, node:true*/
 
-/*
+/**
  * @author lattmann / https://github.com/lattmann
  */
 
@@ -16,8 +16,8 @@ define([
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
      * @param {string} name Artifact's name without extension
-     * @param {blob.BlobClient} blobClient
-     * @param {blob.BlobMetadata} descriptor
+     * @param {BlobClient} blobClient
+     * @param {BlobMetadata} descriptor
      * @constructor
      * @alias Artifact
      */
@@ -38,9 +38,12 @@ define([
 
     /**
      * Adds content to the artifact as a file.
-     * @param {string} name filename
-     * @param {Blob} content File object or Blob
-     * @param {function(err, hash)} callback
+     * @param {string} name - filename
+     * @param {Blob} content - File object or Blob.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addFile = function (name, content, callback) {
         var self = this,
@@ -66,6 +69,15 @@ define([
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Adds files as soft-link.
+     * @param {string} name - filename.
+     * @param {Blob} content - File object or Blob.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>metadataHash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     Artifact.prototype.addFileAsSoftLink = function (name, content, callback) {
         var deferred = Q.defer(),
             self = this,
@@ -95,9 +107,12 @@ define([
 
     /**
      * Adds a hash to the artifact using the given file path.
-     * @param {string} name Path to the file in the artifact. Note: 'a/b/c.txt'
-     * @param {string} hash Metadata hash that has to be added.
-     * @param callback
+     * @param {string} name - Path to the file in the artifact. Note: 'a/b/c.txt'
+     * @param {string} hash - Metadata hash that has to be added.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addObjectHash = function (name, hash, callback) {
         var self = this,
@@ -113,8 +128,8 @@ define([
                 }
 
                 if (self.descriptor.content.hasOwnProperty(name)) {
-                    deferred.reject('Another content with the same name was already added. ' +
-                        JSON.stringify(self.descriptor.content[name]));
+                    deferred.reject(new Error('Another content with the same name was already added. ' +
+                        JSON.stringify(self.descriptor.content[name])));
 
                 } else {
                     self.descriptor.size += metadata.size;
@@ -131,13 +146,23 @@ define([
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Adds a hash to the artifact using the given file path.
+     * @param {string} name - Path to the file in the artifact. Note: 'a/b/c.txt'
+     * @param {string} hash - Metadata hash that has to be added.
+     * @param {number} [size] - Size of the referenced blob.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     Artifact.prototype.addMetadataHash = function (name, hash, size, callback) {
         var self = this,
             deferred = Q.defer(),
             addMetadata = function (size) {
                 if (self.descriptor.content.hasOwnProperty(name)) {
-                    deferred.reject('Another content with the same name was already added. ' +
-                        JSON.stringify(self.descriptor.content[name]));
+                    deferred.reject(new Error('Another content with the same name was already added. ' +
+                        JSON.stringify(self.descriptor.content[name])));
 
                 } else {
                     self.descriptor.size += size;
@@ -156,7 +181,7 @@ define([
         }
 
         if (BlobConfig.hashRegex.test(hash) === false) {
-            deferred.reject('Blob hash is invalid');
+            deferred.reject(new Error('Blob hash is invalid'));
         } else if (size === undefined) {
             self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
                 if (err) {
@@ -175,7 +200,10 @@ define([
     /**
      * Adds multiple files.
      * @param {Object.<string, Blob>} files files to add
-     * @param callback
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>hashes</b>.<br>
+     * On error the promise will be rejected with {@link Error|string} <b>error</b>.
      */
     Artifact.prototype.addFiles = function (files, callback) {
         var self = this,
@@ -189,7 +217,10 @@ define([
     /**
      * Adds multiple files as soft-links.
      * @param {Object.<string, Blob>} files files to add
-     * @param callback
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>metadataHashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addFilesAsSoftLinks = function (files, callback) {
         var self = this,
@@ -202,8 +233,11 @@ define([
 
     /**
      * Adds hashes to the artifact using the given file paths.
-     * @param {object.<string, string>} objectHashes - Keys are file paths and values object hashes.
-     * @param callback
+     * @param {object.<string, string>} objectHashes - Keys are file paths and values metadata hashes.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>hashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addObjectHashes = function (objectHashes, callback) {
         var self = this,
@@ -217,7 +251,10 @@ define([
     /**
      * Adds hashes to the artifact using the given file paths.
      * @param {object.<string, string>} objectHashes - Keys are file paths and values object hashes.
-     * @param callback
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>hashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addMetadataHashes = function (objectHashes, callback) {
         var self = this,
@@ -230,7 +267,10 @@ define([
 
     /**
      * Saves this artifact and uploads the metadata to the server's storage.
-     * @param callback
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.save = function (callback) {
         var deferred = Q.defer();

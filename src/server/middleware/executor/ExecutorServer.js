@@ -1,4 +1,4 @@
-/*globals requireJS, executorBackend*/
+/*globals requireJS*/
 /*jshint node: true, expr: true*/
 
 /**
@@ -29,6 +29,7 @@ var express = require('express'),
  * @param {GmeConfig} options.gmeConfig - gmeConfig
  * @param {function} options.ensureAuthenticated
  * @constructor
+ * @ignore
  */
 function ExecutorServer(options) {
     var self = this,

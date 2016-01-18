@@ -9,7 +9,7 @@
 
 'use strict';
 
-var BlobClient = requireJS('blob/BlobClient'),
+var BlobClientClass = requireJS('blob/BlobClient'),
     BlobMetadata = requireJS('blob/BlobMetadata'),
     Q = require('q'),
     BufferStreamReader = require('../../util/BufferStreamReader'),
@@ -24,12 +24,12 @@ var BlobClient = requireJS('blob/BlobClient'),
  * @constructor
  */
 function BlobRunPluginClient(blobBackend, logger) {
-    BlobClient.call(this, {logger: logger});
+    BlobClientClass.call(this, {logger: logger});
     this.blobBackend = blobBackend;
 }
 
 // Inherits from BlobClient
-BlobRunPluginClient.prototype = Object.create(BlobClient.prototype);
+BlobRunPluginClient.prototype = Object.create(BlobClientClass.prototype);
 
 // Override the constructor with this object's constructor
 BlobRunPluginClient.prototype.constructor = BlobRunPluginClient;

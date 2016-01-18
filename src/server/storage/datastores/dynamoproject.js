@@ -18,6 +18,7 @@ var Q = require('q'),
  * @param {string} projectId - identifier of the project (ownerId + '.' + projectName).
  * @constructor
  * @private
+ * @todo Implement tag functions
  */
 function DynamoProject(projectId, adapter) {
     var logger = adapter.logger.fork(projectId),

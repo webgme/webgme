@@ -2,7 +2,9 @@
 /*jshint node:true, browser:true*/
 
 /**
+ * Plugin for generating visualizers.
  * @author brollb / https://github.com/brollb
+ * @module CorePlugins:VisualizerGenerator
  */
 
 define([

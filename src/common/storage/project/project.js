@@ -85,6 +85,11 @@ define([
                 .nodeify(callback);
         };
 
+        this.getHistory = function (start, number, callback) {
+            return Q.ninvoke(storage, 'getHistory', self.projectId, start, number)
+                .nodeify(callback);
+        };
+
         this.getCommonAncestorCommit = function (commitA, commitB, callback) {
             return Q.ninvoke(storage, 'getCommonAncestorCommit', self.projectId, commitA, commitB)
                 .nodeify(callback);

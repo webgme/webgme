@@ -101,12 +101,22 @@ function ServerWorkerManager(_parameters) {
 
     function freeAllWorkers(callback) {
         logger.debug('closing all workers');
-        var len = Object.keys(_workers).length;
-        logger.debug('there are ' + len + ' worker to close');
+        var len = Object.keys(_workers).length,
+            closeHandlers = {};
+        logger.debug('there are ' + len + ' workers to close');
         Object.keys(_workers).forEach(function (workerPid) {
+            // Clear the previously assigned handlers for the child process.
             _workers[workerPid].childProcess.removeAllListeners('exit');
-            _workers[workerPid].childProcess.on('close', function (/*code, signal*/) {
-                logger.debug('workerPid closed: ' + workerPid);
+            _workers[workerPid].childProcess.removeAllListeners('message');
+
+            // Define and store a close-handler.
+            closeHandlers[workerPid] = function (err) {
+                if (err) {
+                    logger.error(err);
+                }
+                logger.debug('workerPid closed: ' + workerPid + ', nbr left', len - 1);
+                // Reset the handler since both error and close may be triggered.
+                closeHandlers[workerPid].closeHandler = function () {};
 
                 if (_workers[workerPid].type === CONSTANTS.workerTypes.connected) {
                     self.connectedWorkerId = null;
@@ -117,7 +127,12 @@ function ServerWorkerManager(_parameters) {
                 if (len === 0) {
                     callback(null);
                 }
-            });
+            };
+
+            // Assign the close handler to both error and close event.
+            _workers[workerPid].childProcess.on('error', closeHandlers[workerPid]);
+            _workers[workerPid].childProcess.on('close', closeHandlers[workerPid]);
+            // Send kill to child process.
             _workers[workerPid].childProcess.kill('SIGINT');
             logger.debug('request closing workerPid: ' + workerPid);
         });

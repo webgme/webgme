@@ -65,6 +65,7 @@ function _loadHistoryRec(dbProject, nbr, result, added, heads) {
  * @param {number} nbr
  * @param {string[]} heads
  * @returns {*}
+ * @ignore
  */
 function loadHistory(dbProject, nbr, heads) {
     return _loadHistoryRec(dbProject, nbr, [], {}, heads);
@@ -81,6 +82,7 @@ function loadHistory(dbProject, nbr, heads) {
  * @param {string} path
  * @param {boolean} excludeParents - if true will only include the node at the path
  * @returns {function|promise}
+ * @ignore
  */
 function loadPath(dbProject, rootHash, loadedObjects, path, excludeParents) {
     var deferred = Q.defer(),

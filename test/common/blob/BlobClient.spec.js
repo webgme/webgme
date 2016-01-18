@@ -211,6 +211,81 @@ describe('BlobClient', function () {
             });
         });
 
+        it('getObjectAsString should create file from empty buffer and return as string', function (done) {
+            var bc = new BlobClient(bcParam);
+
+            bc.putFile('test2.txt', new Buffer(0))
+                .then(function (hash) {
+                    return bc.getObjectAsString(hash);
+                })
+                .then(function (res) {
+                    expect(typeof res).to.equal('string');
+                    expect(res).to.equal('');
+                })
+                .nodeify(done);
+        });
+
+        it('getObjectAsString should create json and return as string', function (done) {
+            var bc = new BlobClient(bcParam),
+                input = '{"1":2}';
+
+            bc.putFile('test.json', str2ab(input))
+                .then(function (hash) {
+                    return bc.getObjectAsString(hash);
+                })
+                .then(function (res) {
+                    expect(typeof res).to.equal('string');
+                    expect(res).to.equal(input);
+                })
+                .nodeify(done);
+        });
+
+        it('getObjectAsString should create file from unicode and return as string', function (done) {
+            var bc = new BlobClient(bcParam),
+                input = '1111\nmu \u03BC\n1111\n\\U+10400 DESERET CAPITAL LETTER LONG I \uD801\uDC00';
+
+            bc.putFile('1111\u03BC222\uD801\uDC00.bin', input)
+                .then(function (hash) {
+                    return bc.getObjectAsString(hash);
+                })
+                .then(function (res) {
+                    expect(typeof res).to.equal('string');
+                    expect(res).to.equal(input);
+                })
+                .nodeify(done);
+        });
+
+        it('getObjectAsJSON should raise exception on text file', function (done) {
+            var bc = new BlobClient(bcParam);
+
+            bc.putFile('test2.txt', 'txtContent')
+                .then(function (hash) {
+                    return bc.getObjectAsJSON(hash);
+                })
+                .then(function (/*res*/) {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.include('Unexpected token');
+                })
+                .nodeify(done);
+        });
+
+        it('getObjectAsJSON should create json and return as json', function (done) {
+            var bc = new BlobClient(bcParam),
+                input = '{"1":2}';
+
+            bc.putFile('test.json', str2ab(input))
+                .then(function (hash) {
+                    return bc.getObjectAsJSON(hash);
+                })
+                .then(function (res) {
+                    expect(typeof res).to.equal('object');
+                    expect(res).to.deep.equal(JSON.parse(input));
+                })
+                .nodeify(done);
+        });
+
         if (typeof global !== 'undefined') {
             it('should create zip', function (done) {
                 var data = base64DecToArr('UEsDBAoAAAAAACNaNkWtbMPDBwAAAAcAAAAIAAAAZGF0YS5ia' +

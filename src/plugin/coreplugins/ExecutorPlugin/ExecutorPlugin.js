@@ -1,13 +1,18 @@
 /*globals define*/
 /*jshint node:true, browser:true*/
 
-/** This plugin creates a job for the executor and writes back the results to the model.
+/**
+ * This plugin creates a job for the executor and writes back the results to the model. It also illustrates
+ * how to use the ExecutorClient (to create, monitor and receive output of a job).
+ * <br>
  * Requirements
- * 1) The webgme server must run with enableExecutor: true
- * 2) A worker must be attached, see src/middleware/executor/worker/README.txt
- * 3) The worker must have 2.7 >= Python < 3 installed.
+ * <br>
+ * <br> 1) The webgme server must run with enableExecutor: true
+ * <br> 2) A worker must be attached, see src/middleware/executor/worker/README.txt
+ * <br> 3) The worker must have 2.7 >= Python < 3 installed.
  *
  * @author pmeijer / https://github.com/pmeijer
+ * @module CorePlugins:ExecutorPlugin
  */
 
 define([

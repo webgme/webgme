@@ -18,7 +18,8 @@ define([
     'use strict';
 
     /**
-     *
+     * Client to interact with the blob-storage. <br>
+     * FIXME: For some reason the methods do not show up in the generated docs. See source code.
      * @param {object} parameters
      * @param {object} parameters.logger
      * @constructor
@@ -130,6 +131,15 @@ define([
         }
     };
 
+    /**
+     * Adds a file to the blob storage.
+     * @param {string} name - file name.
+     * @param {string|Buffer|ArrayBuffer} data - file content.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.putFile = function (name, data, callback) {
         var deferred = Q.defer(),
             self = this,
@@ -175,7 +185,7 @@ define([
             .send(data)
             .end(function (err, res) {
                 if (err || res.status > 399) {
-                    deferred.reject(err || res.status);
+                    deferred.reject(err || new Error(res.status));
                     return;
                 }
                 var response = res.body;
@@ -219,7 +229,7 @@ define([
             .send(blob)
             .end(function (err, res) {
                 if (err || res.status > 399) {
-                    deferred.reject(err || res.status);
+                    deferred.reject(err || new Error(res.status));
                     return;
                 }
                 // Uploaded.
@@ -233,10 +243,18 @@ define([
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Adds multiple files to the blob storage.
+     * @param {object.<string, string|Buffer|ArrayBuffer>} o - Keys are file names and values the content.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {object} <b>hashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.putFiles = function (o, callback) {
         var self = this,
             deferred = Q.defer(),
-            error = '',
+            error,
             filenames = Object.keys(o),
             remaining = filenames.length,
             hashes = {},
@@ -252,7 +270,8 @@ define([
                 hashes[filename] = hash;
 
                 if (err) {
-                    error += 'putFile error: ' + err.toString();
+                    error = err;
+                    self.logger.error('putFile failed with error', {metadata: err});
                 }
 
                 if (remaining === 0) {
@@ -276,6 +295,18 @@ define([
         return this.getObject(hash, callback, subpath);
     };
 
+    /**
+     * Retrieves object from blob storage as a Buffer under node and as an ArrayBuffer in the client.
+     * N.B. if the retrieved file is a json-file and running in a browser, the content will be decoded and
+     * the string parsed as a JSON.
+     * @param {string} hash - hash of metadata for object.
+     * @param {function} [callback] - if provided no promise will be returned.
+     * @param {string} [subpath]
+     *
+     * @return {external:Promise} On success the promise will be resolved with {Buffer|ArrayBuffer|object}
+     * <b>content</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.getObject = function (hash, callback, subpath) {
         var deferred = Q.defer(),
             self = this;
@@ -319,7 +350,7 @@ define([
             var buffers = new BuffersWritable();
             buffers.on('finish', function () {
                 if (req.req.res.statusCode > 399) {
-                    deferred.reject(req.req.res.statusCode);
+                    deferred.reject(new Error(req.req.res.statusCode));
                 } else {
                     deferred.resolve(Buffer.concat(buffers.buffers));
                 }
@@ -338,7 +369,7 @@ define([
             // req.on('error', callback);
             req.on('end', function () {
                 if (req.xhr.status > 399) {
-                    deferred.reject(req.xhr.status);
+                    deferred.reject(new Error(req.xhr.status));
                 } else {
                     var contentType = req.xhr.getResponseHeader('content-type');
                     var response = req.xhr.response; // response is an arraybuffer
@@ -363,6 +394,70 @@ define([
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Retrieves object from blob storage and parses the content as a string.
+     * @param {string} hash - hash of metadata for object.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {string} <b>contentString</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
+    BlobClient.prototype.getObjectAsString = function (hash, callback) {
+        var self = this;
+        return self.getObject(hash)
+            .then(function (content) {
+                if (typeof content === 'string') {
+                    // This does currently not happen..
+                    return content;
+                } else if (typeof Buffer !== 'undefined' && content instanceof Buffer) {
+                    return UINT.uint8ArrayToString(new Uint8Array(content));
+                } else if (content instanceof ArrayBuffer) {
+                    return UINT.uint8ArrayToString(new Uint8Array(content));
+                } else if (content !== null && typeof content === 'object') {
+                    return JSON.stringify(content);
+                } else {
+                    throw new Error('Unknown content encountered: ' + content);
+                }
+            })
+            .nodeify(callback);
+    };
+
+    /**
+     * Retrieves object from blob storage and parses the content as a JSON. (Will resolve with error if not valid JSON.)
+     * @param {string} hash - hash of metadata for object.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {object} <b>contentJSON</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
+    BlobClient.prototype.getObjectAsJSON = function (hash, callback) {
+        var self = this;
+        return self.getObject(hash)
+            .then(function (content) {
+                if (typeof content === 'string') {
+                    // This does currently not happen..
+                    return JSON.parse(content);
+                } else if (typeof Buffer !== 'undefined' && content instanceof Buffer) {
+                    return JSON.parse(UINT.uint8ArrayToString(new Uint8Array(content)));
+                } else if (content instanceof ArrayBuffer) {
+                    return JSON.parse(UINT.uint8ArrayToString(new Uint8Array(content)));
+                } else if (content !== null && typeof content === 'object') {
+                    return content;
+                } else {
+                    throw new Error('Unknown content encountered: ' + content);
+                }
+            })
+            .nodeify(callback);
+    };
+
+    /**
+     * Retrieves metadata from blob storage.
+     * @param {string} hash - hash of metadata.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {object} <b>metadata</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.getMetadata = function (hash, callback) {
         var req = superagent.get(this.getMetadataURL(hash)),
             deferred = Q.defer(),
@@ -380,7 +475,7 @@ define([
 
         req.end(function (err, res) {
             if (err || res.status > 399) {
-                deferred.reject(err || res.status);
+                deferred.reject(err || new Error(res.status));
             } else {
                 self.logger.debug('getMetadata', res.text);
                 deferred.resolve(JSON.parse(res.text));
@@ -391,9 +486,9 @@ define([
     };
 
     /**
-     *
-     * @param {string} name
-     * @returns {Artifact}
+     * Creates a new artifact and adds it to array of artifacts of the instance.
+     * @param {string} name - Name of artifact
+     * @return {Artifact}
      */
     BlobClient.prototype.createArtifact = function (name) {
         var artifact = new Artifact(name, this);
@@ -401,6 +496,15 @@ define([
         return artifact;
     };
 
+    /**
+     * Retrieves the {@link Artifact} from the blob storage.
+     * @param {hash} metadataHash - SHA hash associated with the artifact.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with
+     * {@link Artifact} <b>artifact</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.getArtifact = function (metadataHash, callback) {
         // TODO: get info check if complex flag is set to true.
         // TODO: get info get name.
@@ -427,6 +531,14 @@ define([
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Saves all the artifacts associated with the current instance.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with
+     * {string[]} <b>artifactHashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.saveAllArtifacts = function (callback) {
         var promises = [];
 
@@ -437,6 +549,12 @@ define([
         return Q.all(promises).nodeify(callback);
     };
 
+    /**
+     * Converts bytes to a human readable string.
+     * @param {bytes} - File size in bytes.
+     * @param {boolean} [si] - If true decimal conversion will be used (by default binary is used).
+     * @returns {string}
+     */
     BlobClient.prototype.getHumanSize = function (bytes, si) {
         var thresh = si ? 1000 : 1024,
             units = si ?

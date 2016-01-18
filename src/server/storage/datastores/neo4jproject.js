@@ -21,6 +21,7 @@ var Q = require('q'),
  * @param {string} projectId - identifier of the project (ownerId + '.' + projectName).
  * @constructor
  * @private
+ * @todo Finalize implementation
  */
 function Neo4jProject(projectId, adapter, projectNodeId) {
     var logger = adapter.logger.fork(projectId);

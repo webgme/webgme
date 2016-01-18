@@ -21,6 +21,7 @@ var redis = require('redis'),
  * @param mainLogger
  * @param gmeConfig
  * @constructor
+ * @ignore
  */
 function RedisAdapter(mainLogger, gmeConfig) {
     var self = this,

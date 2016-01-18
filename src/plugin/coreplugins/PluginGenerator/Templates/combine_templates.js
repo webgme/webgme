@@ -9,6 +9,7 @@
  *
  * @author pmeijer / https://github.com/pmeijer
  * @author lattmann / https://github.com/lattmann
+ * @ignore
  */
 
 var main = function () {

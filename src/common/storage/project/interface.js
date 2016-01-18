@@ -60,7 +60,7 @@ define([
          */
 
         /**
-         * Attempts to load the object with hash key from the database or
+         * Loads the object with hash key from the database or
          * directly from the cache if recently loaded.
          *
          * @param {string} key - Hash of object to load.
@@ -137,7 +137,7 @@ define([
         };
 
         /**
-         * Attempts to update the head of the branch.
+         * Updates the head of the branch.
          * @param {string} branchName - Name of branch to update.
          * @param {module:Storage~CommitHash} newHash - New commit hash for branch head.
          * @param {module:Storage~CommitHash} oldHash - Current state of the branch head inside the database.
@@ -145,7 +145,7 @@ define([
          *
          * @return {external:Promise}  On success the promise will be resolved with
          * {@link module:Storage~CommitResult} <b>result</b>.<br>
-         * On error the promise will be rejected with {Error} <b>error</b>.
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         this.setBranchHash = function (branchName, newHash, oldHash, callback) {
             throw new Error('setBranchHash must be overridden in derived class');
@@ -158,35 +158,35 @@ define([
          *
          * @return {external:Promise}  On success the promise will be resolved with
          * {module:Storage~CommitHash} <b>branchHash</b>.<br>
-         * On error the promise will be rejected with {Error} <b>error</b>.
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         this.getBranchHash = function (branchName, callback) {
             throw new Error('getBranchHash must be overridden in derived class');
         };
 
         /**
-         * Attempts to create a new branch with head pointing to the provided commit hash.
+         * Creates a new branch with head pointing to the provided commit hash.
          * @param {string} branchName - Name of branch to create.
          * @param {module:Storage~CommitHash} newHash - New commit hash for branch head.
          * @param {function} [callback] - if provided no promise will be returned.
          *
          * @return {external:Promise}  On success the promise will be resolved with
          * {@link module:Storage~CommitResult} <b>result</b>.<br>
-         * On error the promise will be rejected with {Error} <b>error</b>.
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         this.createBranch = function (branchName, newHash, callback) {
             throw new Error('createBranch must be overridden in derived class');
         };
 
         /**
-         * Attempts to delete the branch.
+         * Deletes the branch.
          * @param {string} branchName - Name of branch to create.
          * @param {module:Storage~CommitHash} oldHash - Previous commit hash for branch head.
          * @param {function} [callback] - if provided no promise will be returned.
          *
          * @return {external:Promise}  On success the promise will be resolved with
-         * {@link module:Storage~~CommitResult} <b>result</b>.<br>
-         * On error the promise will be rejected with {Error} <b>error</b>.
+         * {@link module:Storage~CommitResult} <b>result</b>.<br>
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         this.deleteBranch = function (branchName, oldHash, callback) {
             throw new Error('deleteBranch must be overridden in derived class');
@@ -198,23 +198,42 @@ define([
          *
          * @return {external:Promise}  On success the promise will be resolved with
          * Object.<string, {@link module:Storage~CommitHash}> <b>result</b>.<br>
-         * On error the promise will be rejected with {Error} <b>error</b>.
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         this.getBranches = function (callback) {
             throw new Error('getBranches must be overridden in derived class');
         };
 
         /**
+         * Retrieves an array of commits starting from a branch(es) and/or commitHash(es).
+         * <br> The result is ordered by the rules (applied in order)
+         * <br> 1. Descendants are always returned before their ancestors.
+         * <br> 2. By their timestamp.
+         * @param {string|module:Storage~CommitHash|Array} start - Branch name, commit hash or array of these.
+         * @param {number} number - Number of commits to load.
+         * @param {function} [callback] - if provided no promise will be returned.
+         *
+         * @return {external:Promise}  On success the promise will be resolved with
+         * Array.<{@link module:Storage~CommitObject}> <b>result</b>.<br>
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
+         */
+        this.getHistory = function (start, number, callback) {
+            throw new Error('getHistory must be overridden in derived class');
+        };
+
+        /**
          * Retrieves and array of the latest (sorted by timestamp) commits for the project.
          * If timestamp is given it will get <b>number</b> of commits strictly before <b>before</b>.
          * If commit hash is specified that commit will be included too.
+         * <br> N.B. due to slight time differences on different machines, ancestors may be returned before
+         * their descendants. Unless looking for 'headless' commits 'getHistory' is the preferred method.
          * @param {number|module:Storage~CommitHash} before - Timestamp or commitHash to load history from.
          * @param {number} number - Number of commits to load.
          * @param {function} [callback] - if provided no promise will be returned.
          *
          * @return {external:Promise}  On success the promise will be resolved with
          * Array.<{@link module:Storage~CommitObject}> <b>result</b>.<br>
-         * On error the promise will be rejected with {Error} <b>error</b>.
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         this.getCommits = function (before, number, callback) {
             throw new Error('getCommits must be overridden in derived class');
@@ -227,7 +246,7 @@ define([
          * @param {function} [callback] - if provided no promise will be returned.
          *
          * @return {external:Promise}  On success the promise will be resolved with nothing.<br>
-         * On error the promise will be rejected with {Error} <b>error</b>.
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         this.createTag = function (tagName, commitHash, callback) {
             throw new Error('createTag must be overridden in derived class');
@@ -239,7 +258,7 @@ define([
          * @param {function} [callback] - if provided no promise will be returned.
          *
          * @return {external:Promise}  On success the promise will be resolved with nothing.<br>
-         * On error the promise will be rejected with {Error} <b>error</b>.
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         this.deleteTag = function (tagName, callback) {
             throw new Error('deleteTag must be overridden in derived class');
@@ -251,22 +270,22 @@ define([
          *
          * @return {external:Promise}  On success the promise will be resolved with
          * Object.<string, {@link module:Storage~CommitHash}> <b>result</b>.<br>
-         * On error the promise will be rejected with {Error} <b>error</b>.
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         this.getTags = function (callback) {
             throw new Error('getTags must be overridden in derived class');
         };
 
         /**
-         * Attempts to retrieve the common ancestor of two commits. If no ancestor exists it will result in an error.
+         * Retrieves the common ancestor of two commits. If no ancestor exists it will result in an error.
          *
-         * @param {string} commitA - Commit hash.
-         * @param {string} commitB - Commit hash.
+         * @param {module:Storage~CommitHash} commitA - Commit hash.
+         * @param {module:Storage~CommitHash} commitB - Commit hash.
          * @param {function} [callback] - if provided no promise will be returned.
          *
          * @return {external:Promise}  On success the promise will be resolved with
          * {@link module:Storage~CommitHash} <b>commonCommitHash</b>.<br>
-         * On error the promise will be rejected with {Error} <b>error</b>.
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         this.getCommonAncestorCommit = function (commitA, commitB, callback) {
             throw new Error('getCommonAncestorCommit must be overridden in derived class');

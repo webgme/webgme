@@ -6,6 +6,7 @@
  *
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 
@@ -13,10 +14,14 @@ define(['superagent', 'q'], function (superagent, Q) {
     'use strict';
 
     /**
+     * Client for creating, monitoring, and receiving output executor jobs.
+     * This client is used by the Executor Workers and some of the API calls are not
+     * meant to be used by "end users".
      *
      * @param {object} parameters
      * @param {object} parameters.logger
      * @constructor
+     * @alias ExecutorClient
      */
     var ExecutorClient = function (parameters) {
         parameters = parameters || {};
@@ -72,13 +77,13 @@ define(['superagent', 'q'], function (superagent, Q) {
     };
 
     /**
-     * Creates a new configuration file for the job execution.
+     * Creates a new configuration object for the job execution.
      *
      * To make the worker post output either the outputInterval and/or outputSegmentSize must be specified.
-     * - If both are negative (or falsy) no output will be given.
-     * - When both are specified a timeout will be set at start (and after each posted output). If the number of lines
+     * <br> - If both are negative (or falsy) no output will be given.
+     * <br> - When both are specified a timeout will be set at start (and after each posted output). If the number of lines
      *  exceeds outputSegmentSize during that timeout, the output will be posted and a new timeout will be triggered.
-     *
+     * <br>
      * N.B. even though a short outputInterval is set, the worker won't post new output until the responses from
      * previous posts have returned. Before the job returns with a "completed" status code, all queued outputs will be
      * posted (and the responses will be ensured to have returned).
@@ -88,7 +93,7 @@ define(['superagent', 'q'], function (superagent, Q) {
      * @param {number} [outputInterval=-1] - max time [ms] between (non-empty) output posts from worker.
      * @param {number} [outputSegmentSize=-1] - number of lines before new output is posted from worker. (N.B. posted
      * segments can still contain more number of lines).
-     * @returns {{cmd: *, resultArtifacts: Array}}
+     * @return {object}
      */
     ExecutorClient.prototype.getNewExecutorConfig = function (cmd, args, outputInterval, outputSegmentSize) {
         var config = {
@@ -118,13 +123,14 @@ define(['superagent', 'q'], function (superagent, Q) {
     };
 
     /**
+     * Creates a new job.
+     *
      * @param {object} jobInfo - initial information about the job must contain the hash.
      * @param {object} jobInfo.hash - a unique id for the job (e.g. the hash of the artifact containing the executor_config.json).
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise}  On success the promise will be resolved with
-     * {JobInfo} <b>result</b>.<br>
-     * On error the promise will be rejected with {Error} <b>error</b>.
+     * @return {external:Promise}  On success the promise will be resolved with {@link JobInfo} <b>result</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     ExecutorClient.prototype.createJob = function (jobInfo, callback) {
         var deferred = Q.defer(),
@@ -168,12 +174,12 @@ define(['superagent', 'q'], function (superagent, Q) {
     };
 
     /**
+     * Retrieves the current state of the job in form of a {@link JobInfo}
      * @param {string} hash - unique id for the job (e.g. the hash of the artifact containing the executor_config.json).
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise}  On success the promise will be resolved with
-     * {JobInfo} <b>result</b>.<br>
-     * On error the promise will be rejected with {Error} <b>error</b>.
+     * @return {external:Promise}  On success the promise will be resolved with {@link JobInfo} <b>jobInfo</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     ExecutorClient.prototype.getInfo = function (hash, callback) {
         var deferred = Q.defer(),
@@ -247,7 +253,10 @@ define(['superagent', 'q'], function (superagent, Q) {
      * @param {string} hash - hash of job related to output.
      * @param {number} [start] - number/id of the output segment to start from (inclusive).
      * @param {number} [end] - number/id of segment to end at (exclusive).
-     * @param {function(Error, OutputInfo[])} [callback]
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {@link OutputInfo} <b>result</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     ExecutorClient.prototype.getOutput = function (hash, start, end, callback) {
         var deferred = Q.defer(),
@@ -298,7 +307,7 @@ define(['superagent', 'q'], function (superagent, Q) {
         return deferred.promise.nodeify(callback);
     };
 
-    // Helper methods
+    //<editor-fold desc="Helper methods">
     ExecutorClient.prototype.getInfoURL = function (hash) {
         return this.origin + this.getRelativeInfoURL(hash);
     };
@@ -362,6 +371,7 @@ define(['superagent', 'q'], function (superagent, Q) {
 //        }
         callback(null, options);
     };
+    //</editor-fold>
 
     return ExecutorClient;
 });

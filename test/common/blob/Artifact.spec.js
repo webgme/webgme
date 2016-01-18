@@ -5,7 +5,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('Artifact', function () {
+describe('Blob Artifact', function () {
     'use strict';
     var Artifact = testFixture.requirejs('blob/Artifact'),
         rimraf = testFixture.rimraf,
@@ -221,7 +221,7 @@ describe('Artifact', function () {
                         return;
                     }
                     artifact.addObjectHash('a.txt', hash, function (err/*, hash*/) {
-                        if (err.indexOf('same name was already added') > -1) {
+                        if (err.message.indexOf('same name was already added') > -1) {
                             done();
                             return;
                         }
@@ -287,7 +287,7 @@ describe('Artifact', function () {
             var bc = new BlobClient(bcParam),
                 artifact = new Artifact('testartifact', bc);
             artifact.addMetadataHash('a.txt', 'invalid hash', function (err/*, hash*/) {
-                if (err.indexOf('hash is invalid') > -1) {
+                if (err.message.indexOf('hash is invalid') > -1) {
                     done();
                     return;
                 }
@@ -310,7 +310,7 @@ describe('Artifact', function () {
                         return;
                     }
                     artifact.addMetadataHash('a.txt', hash, function (err/*, hash*/) {
-                        if (err.indexOf('same name was already added') > -1) {
+                        if (err.message.indexOf('same name was already added') > -1) {
                             done();
                             return;
                         }

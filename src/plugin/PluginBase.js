@@ -3,9 +3,10 @@
 
 /**
  * This is the base class that plugins should inherit from.
- * (Using the plugin-generator - the generated plugin will do that.)
+ * (Using the PluginGenerator - the generated plugin will do that.)
  *
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define([
@@ -36,7 +37,7 @@ define([
         this.logger = null;
 
         /**
-         * @type {null}
+         * @type {BlobClient}
          */
         this.blobClient = null;
 
@@ -92,20 +93,27 @@ define([
         this.notificationHandlers = [];
     };
 
+    /**
+     * By default set to <b>false</b>. Set to <b>true</b> to disable browser executions (from the generic UI).
+     * @type {boolean}
+     */
     PluginBase.disableBrowserExecution = false;
 
+    /**
+     * By default set to <b>false</b>. Set to <b>true</b> to disable server executions (from the generic UI).
+     * @type {boolean}
+     */
     PluginBase.disableServerExecution = false;
 
 
-    //--------------------------------------------------------------------------------------------------------------
-    //---------- Methods must be overridden by the derived classes
+    //<editor-fold desc="Methods must be overridden by the derived classes">
 
     /**
      * Main function for the plugin to execute. This will perform the execution.
      * Notes:
-     * - do NOT use console.log use this.logger.[error,warning,info,debug] instead
-     * - do NOT put any user interaction logic UI, etc. inside this function
-     * - callback always have to be called even if error happened
+     * <br>- Do NOT use console.log use this.logger.[error,warning,info,debug] instead.
+     * <br>- Do NOT put any user interaction logic UI, etc. inside this function.
+     * <br>- callback always have to be called even if error happened.
      *
      * @param {function(string|Error, PluginResult)} callback - the result callback
      */
@@ -123,8 +131,8 @@ define([
             'when the js scripts are minified names are useless.');
     };
 
-    //--------------------------------------------------------------------------------------------------------------
-    //---------- Methods could be overridden by the derived classes
+    //</editor-fold>
+    //<editor-fold desc="Methods could be overridden by the derived classes">
 
     /**
      * Current version of this plugin using semantic versioning.
@@ -184,9 +192,8 @@ define([
     PluginBase.prototype.getConfigStructure = function () {
         return [];
     };
-
-    //--------------------------------------------------------------------------------------------------------------
-    //---------- Methods that can be used by the derived classes
+    //</editor-fold>
+    //<editor-fold desc="Methods that can be used by the derived classes">
 
     /**
      * Updates the current success flag with a new value.
@@ -470,9 +477,8 @@ define([
                 validPlugins + '"');
         }
     };
-
-    //--------------------------------------------------------------------------------------------------------------
-    //---------- Methods that are used by the Plugin Manager. Derived classes should not use these methods
+    //</editor-fold>
+    //<editor-fold desc="Methods that are used by the Plugin Manager. Derived classes should not use these methods">
 
     /**
      * Initializes the plugin with objects that can be reused within the same plugin instance.
@@ -558,6 +564,7 @@ define([
     PluginBase.prototype.setCurrentConfig = function (newConfig) {
         this._currentConfig = newConfig;
     };
+    //</editor-fold>
 
     return PluginBase;
 });

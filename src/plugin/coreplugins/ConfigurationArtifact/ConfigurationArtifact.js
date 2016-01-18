@@ -6,6 +6,7 @@
  * and return artifacts from a plugin.
  *
  * @author pmeijer / https://github.com/pmeijer
+ * @module CorePlugins:ConfigurationArtifact
  */
 
 define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, PluginBase) {

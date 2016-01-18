@@ -263,7 +263,6 @@ function StandAloneServer(gmeConfig) {
         self.isRunning = false;
 
         try {
-
             if (__executorServer) {
                 __executorServer.stop();
             }
@@ -272,7 +271,6 @@ function StandAloneServer(gmeConfig) {
             //kill all remaining workers
             __workerManager.stop(function (err) {
                 var numDestroyedSockets = 0;
-
                 // close storage
                 __storage.closeDatabase(function (err1) {
                     __gmeAuth.unload(function (err2) {

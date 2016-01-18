@@ -82,6 +82,24 @@ describe('UserProject', function () {
             .nodeify(done);
     });
 
+    it('should getHistory from branch', function (done) {
+        project.getHistory('master', 1)
+            .then(function (commits) {
+                expect(commits.length).to.equal(1);
+                expect(commits[0]).to.have.property('message');
+            })
+            .nodeify(done);
+    });
+
+    it('should getHistory from array of branches', function (done) {
+        project.getHistory(['master'], 1)
+            .then(function (commits) {
+                expect(commits.length).to.equal(1);
+                expect(commits[0]).to.have.property('message');
+            })
+            .nodeify(done);
+    });
+
     it('should makeCommit', function (done) {
         var numCommitsBefore;
 
