@@ -4,7 +4,23 @@
  * Author: Robert Kereskenyi
  */
 .plugin-config-dialog {
+
+  .model-header {
+    padding: 10px;
+  }
+
+  .modal-body {
+    padding: 15px;
+  }
+
+  .modal-footer {
+    padding: 10px;
+    margin-top: 5px;
+  }
+
   .form-group {
+    margin-bottom: 10px;
+
     .row {
       margin: 0 0;
     }
@@ -48,6 +64,8 @@
 
     div.desc {
       //margin-left: 180px;
+      font-size: 0.9em;
+      color: #444;
     }
   }
 }
