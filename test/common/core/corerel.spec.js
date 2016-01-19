@@ -37,9 +37,9 @@ describe('corerel', function () {
 
     after(function (done) {
         Q.allDone([
-            storage.closeDatabase(),
-            gmeAuth.unload()
-        ])
+                storage.closeDatabase(),
+                gmeAuth.unload()
+            ])
             .nodeify(done);
     });
 
@@ -158,5 +158,42 @@ describe('corerel', function () {
 
             done();
         }, core.loadChildren(root));
+    });
+
+    it('multiple node copy relid collision', function () {
+        var parent = core.createNode({parent: root}),
+            children = {},
+            i,
+            relid,
+            relidPool = '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM',
+            tempFrom,
+            tempTo,
+            result;
+
+        //creating all 1 length relid
+        for (i = 0; i < relidPool.length; i += 1) {
+            relid = relidPool[i];
+            children[relid] = core.createNode({parent: parent, relid: relid});
+            core.setAttribute(children[relid], 'name', relid);
+        }
+
+        //now we create the tempFrom node
+        tempFrom = core.createNode({parent: parent});
+        expect(core.getRelid(tempFrom)).to.have.length(2);
+
+        //move the children under the tempFrom
+        for (i = 0; i < relidPool.length; i += 1) {
+            children[relidPool[i]] = core.moveNode(children[relidPool[i]], tempFrom);
+        }
+        //copy that node
+        expect(core.getChildrenRelids(parent)).to.eql([core.getRelid(tempFrom)]);
+        tempTo = core.copyNode(tempFrom, parent);
+        expect(core.getRelid(tempTo)).to.have.length(1);
+        expect(children[core.getRelid(tempTo)]).not.to.equal(undefined);
+
+        //try to move the colliding node back
+        result = core.moveNode(children[core.getRelid(tempTo)], parent);
+
+        expect(core.getAttribute(result, 'name')).to.equal(core.getRelid(tempTo));
     });
 });

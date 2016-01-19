@@ -100,6 +100,7 @@ define([], function () {
 
         function _copyMultipleNodes(nodePaths, parentPath) {
             var i,
+                tempContainer,
                 tempFrom,
                 tempTo,
                 helpArray,
@@ -133,11 +134,17 @@ define([], function () {
                 subPathArray = {};
                 parent = state.nodes[parentPath].node;
 
-                // 1) creating the 'from' object
-                tempFrom = state.core.createNode({
-                    parent: parent,
+                // 0) create a container for the tempNodes to preserve the relids of the original nodes
+                tempContainer = state.core.createNode({
+                    parent: state.core.getRoot(parent),
                     base: state.core.getTypeRoot(state.nodes[nodePaths[0]].node)
                 });
+
+                // 1) creating the 'from' object
+                tempFrom = state.core.createNode({
+                    parent: tempContainer
+                });
+
                 // 2) and moving every node under it
                 for (i = 0; i < nodePaths.length; i += 1) {
                     helpArray[nodePaths[i]] = {};
@@ -148,7 +155,7 @@ define([], function () {
                 }
 
                 // 3) do the copy
-                tempTo = state.core.copyNode(tempFrom, parent);
+                tempTo = state.core.copyNode(tempFrom, tempContainer);
 
                 // 4) moving back the temporary source
                 for (i = 0; i < nodePaths.length; i += 1) {
@@ -172,8 +179,8 @@ define([], function () {
                 }
 
                 // 6) clean up the temporary container nodes.
-                state.core.deleteNode(tempFrom);
-                state.core.deleteNode(tempTo);
+                state.core.deleteNode(tempContainer);
+
             }
 
             return result;
