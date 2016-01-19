@@ -1275,7 +1275,6 @@ describe('GME client', function () {
             clientNode,
             factoryConsoleLog = console.log;
 
-
         before(function (done) {
             this.timeout(10000);
             requirejs(['js/client', 'text!gmeConfig.json'], function (Client_, gmeConfigJSON) {
@@ -1587,7 +1586,7 @@ describe('GME client', function () {
         it('should return the list of defined aspect names of the node', function () {
             expect(clientNode.getValidAspectNames()).to.eql([]);
         });
-        
+
         it('should copy the node with no parameters', function () {
             var rootNode = client.getNode(''),
                 startChildren = rootNode.getChildrenIds().length,
@@ -1599,6 +1598,65 @@ describe('GME client', function () {
 
             endChildren = rootNode.getChildrenIds().length;
             expect(endChildren).to.equal(startChildren + 1);
+        });
+
+        it('should preserve the relids of the original nodes', function () {
+            var rootNode = client.getNode(''),
+                container,
+                resultIds,
+                childrenIds = [],
+                copyParams = {},
+                original = 0,
+                copy = 0,
+                relid,
+                relidPool = '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM',
+                node,
+                i;
+
+            container = client.getNode(client.createChild({parentId: ''}));
+
+            copyParams.parentId = container.getId();
+
+            for (i = 0; i < relidPool.length; i += 1) {
+                relid = relidPool[i];
+                node = client.getNode(client.createChild({parentId: container.getId(), relid: relid}));
+                childrenIds.unshift(node.getId());
+                copyParams[childrenIds[0]] = {attributes: {'name': 'copy'}};
+
+                //we aslo set the name
+                client.setAttributes(childrenIds[0], 'name', childrenIds[0]);
+            }
+            expect(childrenIds).to.have.length(62);
+
+            //check names
+            for (i = 0; i < childrenIds.length; i += 1) {
+                node = client.getNode(childrenIds[i]);
+                expect(node.getAttribute('name')).to.equal(childrenIds[i]);
+            }
+
+            //and now copy all under the same container
+            client.copyMoreNodes(copyParams);
+
+            //check if everything is in order
+            resultIds = container.getChildrenIds();
+            expect(resultIds).to.have.length(124);
+
+            for (i = 0; i < resultIds.length; i += 1) {
+                node = client.getNode(resultIds[i]);
+                expect(node).not.to.equal(null);
+                if (childrenIds.indexOf(node.getId()) !== -1) {
+                    //console.log(++original,'original:',node.getId());
+                    original += 1;
+                    expect(node.getAttribute('name')).to.equal(node.getId());
+                } else {
+                    //console.log(++copy,'copy:',node.getId());
+                    copy += 1;
+                    expect(node.getAttribute('name')).to.equal('copy');
+                }
+            }
+
+            expect(original).to.equal(relidPool.length);
+            expect(copy).to.equal(relidPool.length);
         });
     });
 
@@ -2654,7 +2712,6 @@ describe('GME client', function () {
                     expect(node).not.to.equal(null);
                     expect(node.getAttribute('name')).to.equal('check');
 
-
                     client.copyMoreNodes({
                             parentId: '',
                             '/1697300825': {attributes: {name: 'member2copy'}},
@@ -2967,7 +3024,6 @@ describe('GME client', function () {
                     expect(node).not.to.equal(null);
                     expect(node.getAttribute('name')).to.equal('check');
 
-
                     client.createChildren({
                             parentId: '',
                             '/1697300825': {attributes: {name: 'member2copy'}},
@@ -3252,7 +3308,6 @@ describe('GME client', function () {
                         expect(node).not.to.equal(null);
                         expect(node.getMemberIds('newSet')).to.empty;
 
-
                         client.addMember('/323573539', '/1697300825', 'newSet', 'basic add member test');
                         return;
                     }
@@ -3293,7 +3348,6 @@ describe('GME client', function () {
                         expect(node).not.to.equal(null);
                         expect(node.getMemberIds('set')).to.include('/1697300825');
 
-
                         client.removeMember('/323573539', '/1697300825', 'set', 'basic remove member test');
                         return;
                     }
@@ -3333,7 +3387,6 @@ describe('GME client', function () {
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
                         expect(node.getMemberIds('set')).to.include('/1697300825');
-
 
                         client.setMemberAttribute('/323573539',
                             '/1697300825',
@@ -3388,7 +3441,6 @@ describe('GME client', function () {
                         expect(node).not.to.equal(null);
                         expect(node.getMemberIds('set')).to.include('/1697300825');
 
-
                         client.setMemberAttribute('/323573539',
                             '/1697300825',
                             'set',
@@ -3406,7 +3458,6 @@ describe('GME client', function () {
                         expect(node.getMemberIds('set')).to.include('/1697300825');
                         expect(node.getMemberAttributeNames('set', '/1697300825')).to.include('name');
                         expect(node.getMemberAttribute('set', '/1697300825', 'name')).to.equal('set membero');
-
 
                         client.delMemberAttribute('/323573539',
                             '/1697300825',
@@ -3451,7 +3502,6 @@ describe('GME client', function () {
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
                         expect(node.getMemberIds('set')).to.include('/1697300825');
-
 
                         client.setMemberRegistry('/323573539',
                             '/1697300825',
@@ -3507,7 +3557,6 @@ describe('GME client', function () {
                         expect(node).not.to.equal(null);
                         expect(node.getMemberIds('set')).to.include('/1697300825');
 
-
                         client.setMemberRegistry('/323573539',
                             '/1697300825',
                             'set',
@@ -3526,7 +3575,6 @@ describe('GME client', function () {
                         expect(node.getMemberIds('set')).to.include('/1697300825');
                         expect(node.getMemberRegistryNames('set', '/1697300825')).to.include('name');
                         expect(node.getMemberRegistry('set', '/1697300825', 'name')).to.equal('set membere');
-
 
                         client.delMemberRegistry('/323573539',
                             '/1697300825',
@@ -3954,7 +4002,6 @@ describe('GME client', function () {
 
     });
 
-
     //TODO add only proxied functions
     describe('meta rule query and setting tests', function () {
         var Client,
@@ -4147,7 +4194,6 @@ describe('GME client', function () {
             });
         });
 
-
         it.skip('should return the \'children\' portion of the meta rules of the node', function () {
             // getChildrenMeta
 
@@ -4253,7 +4299,6 @@ describe('GME client', function () {
                 },
                 projectId = projectName2Id(projectName, gmeConfig, client);
 
-
             client.seedProject(seedConfig, function (err) {
                 expect(err).to.equal(null);
 
@@ -4289,7 +4334,6 @@ describe('GME client', function () {
                     projectName: projectName
                 },
                 projectId = projectName2Id(projectName, gmeConfig, client);
-
 
             client.seedProject(seedConfig, function (err) {
                 expect(err).to.equal(null);
