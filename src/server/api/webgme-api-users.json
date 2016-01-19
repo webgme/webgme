@@ -9,7 +9,8 @@
       "orgs":[
 
       ],
-      "siteAdmin":false
+      "siteAdmin":false,
+      "data": {}
    },
    {
       "_id":"anonymous",
@@ -138,7 +139,8 @@
       "orgs":[
 
       ],
-      "siteAdmin":false
+      "siteAdmin":false,
+      "data": {}
    },
    {
       "_id":"demo",
@@ -159,6 +161,7 @@
       "orgs":[
 
       ],
-      "siteAdmin":false
+      "siteAdmin":false,
+      "data": {}
    }
 ]

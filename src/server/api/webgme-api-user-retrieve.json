@@ -17,5 +17,6 @@
   "orgs":[
     "ATeam"
   ],
-  "siteAdmin":false
+  "siteAdmin":false,
+  "data": {}
 }
