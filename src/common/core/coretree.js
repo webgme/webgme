@@ -337,20 +337,7 @@ define([
                 throw new Error('invalid node data');
             }
 
-            var relid = RANDOM.generateRelid(node.data);
-            var child = {
-                parent: node,
-                relid: relid,
-                age: 0,
-                children: [],
-                data: __getEmptyData()
-            };
-
-            // TODO: make sure that it is not on the list
-            node.children.push(child);
-
-            __ageRoots();
-            return child;
+            return getChild(node,RANDOM.generateRelid(node.data));
         };
 
         // ------- data manipulation
