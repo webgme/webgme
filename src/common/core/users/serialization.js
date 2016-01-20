@@ -35,7 +35,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             ongoingTaskCounter = 0,
             timerId,
             root = core.getRoot(libraryRoot);
-            
+
         function getAttributes(node) {
             var names = core.getOwnAttributeNames(node).sort(),
                 i,
@@ -1048,10 +1048,14 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 };
 
             //pointers
-            keys = core.getOwnPointerNames(node);
-            for (i = 0; i < keys.length; i++) {
-                core.deletePointer(node, keys[i]);
+            if (toUpdateGuids.indexOf(guid) !== -1) {
+                //delete only if the node is to update
+                keys = core.getOwnPointerNames(node);
+                for (i = 0; i < keys.length; i++) {
+                    core.deletePointer(node, keys[i]);
+                }
             }
+
             keys = Object.keys(jsonNode.pointers);
             for (i = 0; i < keys.length; i++) {
                 target = jsonNode.pointers[keys[i]];
@@ -1068,10 +1072,14 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             }
 
             //sets
-            keys = core.getSetNames(node);
-            for (i = 0; i < keys.length; i++) {
-                core.deleteSet(node, keys[i]);
+            if (toUpdateGuids.indexOf(guid) !== -1) {
+                //delete only if the node is to update
+                keys = core.getSetNames(node);
+                for (i = 0; i < keys.length; i++) {
+                    core.deleteSet(node, keys[i]);
+                }
             }
+
             keys = Object.keys(jsonNode.sets);
             for (i = 0; i < keys.length; i++) {
                 //for every set we create it, go through its members...
@@ -1170,7 +1178,10 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
         }
 
         function updateMeta(guid) {
-            core.clearMetaRules(nodes[guid]);
+            if (toUpdateGuids.indexOf(guid) !== -1) {
+                //clear only if the node is to update
+                core.clearMetaRules(nodes[guid]);
+            }
 
             updateAttributeMeta(guid);
             updateChildrenMeta(guid);
