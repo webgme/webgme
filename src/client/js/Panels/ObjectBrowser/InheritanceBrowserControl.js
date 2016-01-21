@@ -116,6 +116,8 @@ define(['js/logger',
     InheritanceBrowserControl.prototype._onNodeOpen = function (nodeId) {
         //first create dummy elements under the parent representing the children being loaded
         var parent = this._client.getNode(nodeId),
+            childrenDescriptors = [],
+            newNodes,
             parentNode,
             inheritedIDs,
             i,
@@ -144,41 +146,66 @@ define(['js/logger',
                 //check if the node could be retreived from the client
                 if (childNode) {
                     //the node was present on the client side, render ist full data
-                    childTreeNode = this._treeBrowser.createNode(parentNode, {
+                    childrenDescriptors.push({
                         id: currentChildId,
                         name: childNode.getAttribute('name'),
                         hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                        class: this._getNodeClass(childNode)
+                        class: this._getNodeClass(childNode),
+                        // Data used locally here.
+                        STATE: STATE_LOADED,
+                        INHERITANCE: childNode.getCollectionPaths(CONSTANTS.POINTER_BASE),
                     });
 
-                    //store the node's info in the local hashmap
-                    this._nodes[currentChildId] = {
-                        treeNode: childTreeNode,
-                        inheritance: childNode.getCollectionPaths(CONSTANTS.POINTER_BASE),
-                        state: STATE_LOADED
-                    };
+                    //childTreeNode = this._treeBrowser.createNode(parentNode, {
+                    //    id: currentChildId,
+                    //    name: childNode.getAttribute('name'),
+                    //    hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
+                    //    class: this._getNodeClass(childNode)
+                    //});
+                    //
+                    ////store the node's info in the local hashmap
+                    //this._nodes[currentChildId] = {
+                    //    treeNode: childTreeNode,
+                    //    inheritance: childNode.getCollectionPaths(CONSTANTS.POINTER_BASE),
+                    //    state: STATE_LOADED
+                    //};
                 } else {
                     //the node is not present on the client side, render a loading node instead
-                    //create a new node for it in the tree
-                    childTreeNode = this._treeBrowser.createNode(parentNode, {
+                    childrenDescriptors.push({
                         id: currentChildId,
                         name: 'Loading...',
                         hasChildren: false,
-                        class: NODE_PROGRESS_CLASS
+                        class: NODE_PROGRESS_CLASS,
+                        // Data used locally here.
+                        STATE: STATE_LOADING,
+                        INHERITANCE: []
                     });
+                    //childTreeNode = this._treeBrowser.createNode(parentNode, {
+                    //    id: currentChildId,
+                    //    name: 'Loading...',
+                    //    hasChildren: false,
+                    //    class: NODE_PROGRESS_CLASS
+                    //});
+                    //
+                    ////store the node's info in the local hashmap
+                    //this._nodes[currentChildId] = {
+                    //    treeNode: childTreeNode,
+                    //    inheritance: [],
+                    //    state: STATE_LOADING
+                    //};
 
-                    //store the node's info in the local hashmap
-                    this._nodes[currentChildId] = {
-                        treeNode: childTreeNode,
-                        inheritance: [],
-                        state: STATE_LOADING
-                    };
-
-                    this._selfPatterns[currentChildId] = {'children': 0};
+                    this._selfPatterns[currentChildId] = {children: 0};
                 }
             }
 
-            this._treeBrowser.enableUpdate(true);
+            newNodes = this._treeBrowser.createNodes(parentNode, childrenDescriptors);
+            for (i = 0; i < childrenDescriptors.length; i += 1) {
+                this._nodes[childrenDescriptors[i].id] = {
+                    treeNode: newNodes[i],
+                    inheritance: childrenDescriptors[i].INHERITANCE,
+                    state: childrenDescriptors[i].STATE
+                };
+            }
         }
 
         //need to expand the territory

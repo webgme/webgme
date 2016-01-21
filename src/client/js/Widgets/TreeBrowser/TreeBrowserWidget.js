@@ -2,17 +2,17 @@
 /*jshint browser: true*/
 
 /**
+ * WIDGET TreeBrowserWidget based on FancyTree
+ *
  * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author pmeijer / https://github.com/pmeijer
  */
 
-/*
- * WIDGET TreeBrowserWidget based on DynaTree
- */
 define(['js/logger',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',
-    'lib/jquery/jquery.dynatree-1.2.5-patched',
+    'lib/jquery/jquery.fancytree-all',
     'lib/jquery/jquery.contextMenu',
     'css!./styles/TreeBrowserWidget.css'
 ], function (Logger, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
@@ -46,7 +46,7 @@ define(['js/logger',
         this._el.addClass(TREE_BROWSER_CLASS);
 
         //by default use visual animations to reflect changes in the tree
-        this._animation = true;
+        this._animation = false;
 
         //https://github.com/webgme/webgme/issues/347
         this._enableNodeRename = false;
@@ -63,9 +63,9 @@ define(['js/logger',
 
         //hook up jquery.contextMenu
         this._treeEl.contextMenu({
-            selector: '.dynatree-node',
+            selector: '.fancytree-node',
             position: function (selector/*, x, y*/) {
-                var _offset = selector.$trigger.find('.dynatree-title').offset();
+                var _offset = selector.$trigger.find('.fancytree-title').offset();
                 selector.$menu.css({top: _offset.top + 10, left: _offset.left - 10});
             },
             build: function ($trigger/*, e*/) {
@@ -74,8 +74,8 @@ define(['js/logger',
                 // e is the original contextmenu event, containing e.pageX and e.pageY (amongst other data)
                 return {
                     callback: function (key, options) {
-                        var node = $.ui.dynatree.getNode(options.$trigger),
-                            m = 'clicked: \'' + key + '\' on \'' + node.data.title + ' (' + node.data.key + ')\'';
+                        var node = $.ui.fancytree.getNode(options.$trigger),
+                            m = 'clicked: \'' + key + '\' on \'' + node.title + ' (' + node.key + ')\'';
                         alert(m);
                     },
                     items: dynamicContextMenuCreate($trigger)
@@ -83,41 +83,43 @@ define(['js/logger',
             }
         });
 
-        //create tree using DynaTree
-        this._treeEl.dynatree({
+        // Create FancyTree.
+        // http://wwwendt.de/tech/fancytree/doc/jsdoc/global.html#FancytreeOptions
+        // http://wwwendt.de/tech/fancytree/doc/jsdoc/global.html#FancytreeEvents
+        this._treeEl.fancytree({
+            source: [],
+            toggleEffect: false,
             checkbox: false,
             selectMode: 2,
             keyboard: false,
             imagePath: '/',
             debugLevel: 0,
-            noHTML: true,
-            onLazyRead: function (node) {
-                self._logger.debug('onLazyRead node:' + node.data.key);
-                self.onNodeOpen.call(self, node.data.key);
+            quicksearch: true,
+            lazyLoad: function (event, data) {
+                self._logger.debug('onLazyRead node:' + data.node.key);
+                self.onNodeOpen.call(self, data.node.key);
 
-                return false;
+                event.preventDefault();
+                event.stopPropagation();
+            },
+            collapse: function (event, data) {
+                self._logger.debug('Collapsing node:' + data.node.key);
+
+                //remove all children from DOM
+                data.node.resetLazy();
+
+                //call onNodeClose if exist
+                self.onNodeClose.call(self, data.node.key);
             },
 
-            onQueryExpand: function (expand, node) {
-                if (expand === false) {
-                    self._logger.debug('Collapsing node:' + node.data.key);
-
-                    //remove all children from DOM
-                    node.removeChildren();
-
-                    //call onNodeClose if exist
-                    self.onNodeClose.call(self, node.data.key);
-                }
-            },
-
-            onClick: function (/*node, event*/) {
-                //override just to prevent default dynatree behavior
+            click: function (event, data) {
+                //override just to prevent default fancytree behavior
                 //onClick: null, // null: generate focus, expand, activate, select events.
                 self._registerKeyboardListener();
             },
 
-            onFocus: function (/*node*/) {
-                //override just to prevent default dynatree behavior
+            focus: function (/*event, data*/) {
+                //override just to prevent default fancytree behavior
                 //onFocus: null, // null: set focus to node.
                 var tnFocused = this.tnFocused;
                 //NOTE: in WebGMEGlobal.KeyboardManager.captureFocus(); the tnFocused will be cleared out
@@ -127,63 +129,128 @@ define(['js/logger',
                 this.tnFocused = tnFocused;
             },
 
-            onDblClick: function (node, event) {
+            dblclick: function (event, data) {
                 var editNoteTitle = false;
 
-                self._logger.debug('Node double-click: ' + node.data.key);
+                self._logger.debug('Node double-click: ' + data.node.key);
+                event.preventDefault();
+                event.stopPropagation();
 
                 //if Ctrl or Meta pressed for whatever reason (accidentally dblclick with modifier keys, just ignore)
                 if (event.ctrlKey === true || event.metaKey === true) {
-                    return false;// Prevent default processing
+                    return;
+                }
+
+                if (data.targetType === 'expander') {
+                    return;
                 }
 
                 //deselect everyone and select the dblclicked one
                 self._deselectSelectedNodes();
-                node.select(true);
+                data.node.setSelected(true);
 
                 //check if the node is already focused and the title is clicked --> edit title
-                if (node.getEventTargetType(event) === 'title' &&
-                    node.isFocused() === true &&
-                    lastDblClicked === node) {
+                if (data.targetType === 'title' && lastDblClicked === data.node) {
                     editNoteTitle = true;
                 }
 
                 //check what mode should be activated
                 if (editNoteTitle === true) {
-                    self._nodeEdit(node);
+                    self._nodeEdit(data.node);
                 } else {
-                    lastDblClicked = node;
+                    lastDblClicked = data.node;
                     if ($.isFunction(self.onNodeDoubleClicked)) {
-                        self._logger.debug('default double-click handler: ' + node.data.key);
-                        self.onNodeDoubleClicked.call(self, node.data.key);
+                        self._logger.debug('default double-click handler: ' + data.node.key);
+                        self.onNodeDoubleClicked.call(self, data.node.key);
                     }
                 }
             },
 
             //we don't need an activation here, it just messes up the UI
-            onQueryActivate: function () {
+            beforeActivate: function (/*event, data*/) {
                 return false;
             },
 
-            onCreate: function (node/*, span*/) {
-                self._makeNodeDraggable(node);
+            createNode: function (event, data) {
+                self._makeNodeDraggable(data.node);
             }
         });
 
-        this._treeInstance = this._treeEl.dynatree('getTree');
+        this._treeInstance = this._treeEl.fancytree('getTree');
 
         //register keyboard handling whenever user clicks on widget
         this._el.on('mousedown', function (/*event*/) {
             self._registerKeyboardListener(self);
         });
 
-        this._treeEl.on('mousedown', 'span.dynatree-node', function (event) {
-            self._onNodeMouseDown($.ui.dynatree.getNode(this), event);
+        this._treeEl.on('mousedown', 'span.fancytree-node', function (event) {
+            self._onNodeMouseDown($.ui.fancytree.getNode(this), event);
         });
     };
 
-    TreeBrowserWidget.prototype.enableUpdate = function (enable) {
-        this._treeEl.dynatree('getTree').enableUpdate(enable);
+    TreeBrowserWidget.prototype.enableUpdate = function (/*enable*/) {
+        this._logger.warn('TreeBrowserWidget.enableUpdate not valid with fancy tree. ' +
+            'Use TreeBrowserWidgetcreateNodes instead!');
+    };
+
+    /**
+     * Creates multiple new nodes and sorts all children after inserted.
+     *
+     * @param {object} parentNode
+     * @param {objects[]} objDescriptors
+     * @returns {*}
+     */
+    TreeBrowserWidget.prototype.createNodes = function (parentNode, objDescriptors) {
+        var childrenParams = [],
+            prevChildrenKeys,
+            newNodes,
+            i;
+
+        if (parentNode === null) {
+            // Now get the root node object.
+            parentNode = this._treeInstance.getRootNode();
+        }
+
+        if (parentNode.getChildren()) {
+            prevChildrenKeys = {};
+            parentNode.getChildren().forEach(function (childNode) {
+                prevChildrenKeys[childeNode.key] = true;
+            });
+        }
+
+        for (i = 0; i < objDescriptors.length; i += 1) {
+            childrenParams.push({
+                title: objDescriptors[i].name,
+                //tooltip: objDescriptors[i].name,
+                key: objDescriptors[i].id,
+                folder: false,
+                lazy: objDescriptors[i].hasChildren,
+                extraClasses: objDescriptors[i].class || '',
+                icon: objDescriptors[i].icon || null
+            });
+        }
+
+        if (childrenParams.length > 0) {
+            parentNode.addChildren(childrenParams);
+            newNodes = parentNode.getChildren().slice(); // sortChildren sorts newNodes too if no copy!
+            parentNode.sortChildren();
+            //this._animateNode(parentNode.getChildren());
+            this._logger.debug('nodes created', newNodes);
+        } else {
+            newNodes = [];
+            this._logger.debug('no new nodes created');
+        }
+
+        if (prevChildrenKeys) {
+            for (i = newNodes.length - 1; i >= 0; i -= 1) {
+                if (prevChildrenKeys[newNodes[i].key] === true) {
+                    newNodes.splice(i, 1);
+                }
+            }
+        }
+
+
+        return newNodes;
     };
 
     /**
@@ -198,7 +265,7 @@ define(['js/logger',
         //when null, the new node belongs to the root
         if (parentNode === null) {
             // Now get the root node object
-            parentNode = this._treeEl.dynatree('getRoot');
+            parentNode = this._treeInstance.getRootNode();
         }
 
         //find the new node's place in ABC order
@@ -208,7 +275,7 @@ define(['js/logger',
         if (existingChildren) {
 
             for (i = existingChildren.length - 1; i >= 0; i -= 1) {
-                if (objDescriptor.name.toLowerCase() < existingChildren[i].data.title.toLowerCase()) {
+                if (objDescriptor.name.toLowerCase() < existingChildren[i].title.toLowerCase()) {
                     beforeNode = existingChildren[i];
                 } else {
                     break;
@@ -216,19 +283,19 @@ define(['js/logger',
             }
         }
 
-        // Call the DynaTreeNode.addChild() member function and pass options for the new node
-        newNode = parentNode.addChild({
+        // Call the DynaTreeNode.addChildren() and pass options for the new node.
+        newNode = parentNode.addChildren({
             title: objDescriptor.name,
-            tooltip: objDescriptor.name,
+            //tooltip: objDescriptor.name,
             key: objDescriptor.id,
-            isFolder: false,
-            isLazy: objDescriptor.hasChildren,
-            addClass: objDescriptor.class || '',
+            folder: false,
+            lazy: objDescriptor.hasChildren,
+            extraClasses: objDescriptor.class || '',
             icon: objDescriptor.icon || null
         }, beforeNode);
 
         //log
-        this._logger.debug('New node created: ' + newNode.data.key);
+        this._logger.debug('New node created: ' + newNode.key);
 
         //a bit of visual effect
         //this._animateNode(newNode);
@@ -237,7 +304,8 @@ define(['js/logger',
         return newNode;
     };
 
-    /* Deletes the node from the tree
+    /**
+     * Deletes the node from the tree
      * @param node
      */
     TreeBrowserWidget.prototype.deleteNode = function (node) {
@@ -250,10 +318,10 @@ define(['js/logger',
         node.remove();
 
         //log
-        this._logger.debug('Node deleted: ' + node.data.key);
+        this._logger.debug('Node deleted: ' + node.key);
     };
 
-    /*
+    /**
      * Resets the given nodes text tp the given value
      * @param node
      * @param text
@@ -273,28 +341,32 @@ define(['js/logger',
         }
 
         //set new text value (if any)
-        if (node.data.title !== objDescriptor.name) {
+        if (node.title !== objDescriptor.name) {
 
 
             nodeName = objDescriptor.name;
 
-            node.data.title = nodeName;
-            node.data.tooltip = nodeName;
+            node.setTitle(nodeName);
+            //node.toolTip = nodeName;
 
             //mark that change happened
-            nodeDataChanged = true;
+            //nodeDataChanged = true;
             nodeNameChanged = true;
-
         }
 
         //set new children value (if any)
         if (objDescriptor.hasChildren === true || objDescriptor.hasChildren === false) {
-            if (objDescriptor.hasChildren !== node.data.isLazy) {
-                node.data.isLazy = objDescriptor.hasChildren;
 
-                //furthermore if it has no more childrend, collapse node
-                if (objDescriptor.hasChildren === false) {
-                    this.collapse(node);
+            // Has the folder property changed?
+            if (objDescriptor.hasChildren !== node.isFolder()) {
+                node.folder = objDescriptor.hasChildren;
+
+                if (!node.isExpanded() && objDescriptor.hasChildren === true) {
+                    // The node is not expanded and it just got children - the node is 'lazy'.
+                    node.resetLazy();
+                } else if (objDescriptor.hasChildren === false) {
+                    // The node does not have children anymore - so it is not lazy.
+                    node.lazy = false;
                 }
 
                 //mark that change happened
@@ -304,16 +376,16 @@ define(['js/logger',
 
         //set new class (if any)
         if (objDescriptor.class) {
-            if (node.data.addClass !== objDescriptor.class) {
-                node.data.addClass = objDescriptor.class;
+            if (node.extraClasses !== objDescriptor.class) {
+                node.extraClasses = objDescriptor.class;
                 //mark that change happened
                 nodeDataChanged = true;
             }
         }
 
         if (objDescriptor.icon) {
-            if (node.data.icon !== objDescriptor.icon) {
-                node.data.icon = objDescriptor.icon;
+            if (node.icon !== objDescriptor.icon) {
+                node.icon = objDescriptor.icon;
 
                 //mark that change happened
                 nodeDataChanged = true;
@@ -331,13 +403,12 @@ define(['js/logger',
 
         //if there were any change related to this node
         if (nodeDataChanged === true) {
+            //a bit of visual effect
+            //this._animateNode(node);
             node.render();
 
-            //a bit of visual effect
-            this._animateNode(node);
-
             //log
-            this._logger.debug('Node updated: ' + node.data.key);
+            this._logger.debug('Node updated: ' + node.key);
         }
     };
 
@@ -377,14 +448,14 @@ define(['js/logger',
      * Collapses the given node
      */
     TreeBrowserWidget.prototype.collapse = function (node) {
-        node.expand(false);
+        node.setExpanded(false);
     };
 
     /*
      * Expands the given node
      */
     TreeBrowserWidget.prototype.expand = function (node) {
-        node.expand(true);
+        node.setExpanded(true);
     };
 
     TreeBrowserWidget.prototype.isExpanded = function (node) {
@@ -399,15 +470,17 @@ define(['js/logger',
 
 
     TreeBrowserWidget.prototype._animateNode = function (node) {
-
+        var nodes = node instanceof Array ? node : [node];
         //if animation is enabled for the widget
         if (this._animation === true) {
             //force rendering of the node otherwise may happen that its DOM representation is not ready
-            node.render();
+            nodes.forEach(function (node) {
+                node.render();
 
-            var jQureyNode = $(node.span.children[2]);
-            jQureyNode.hide();
-            jQureyNode.fadeIn('fast');
+                var jQureyNode = $(node.span.children[2]);
+                jQureyNode.hide();
+                jQureyNode.fadeIn('fast');
+            });
         }
     };
 
@@ -417,8 +490,8 @@ define(['js/logger',
         if (modifierKey) {
             //modifier key pressed
             //handle multi selection/deselection
-            this._logger.debug('_onNodeMouseDown: ' + node.data.title + ' --> toggleSelect');
-            node.toggleSelect();
+            this._logger.debug('_onNodeMouseDown: ' + node.title + ' --> toggleSelect');
+            node.toggleSelected();
         } else {
             //no modifier key pressed
             //check if the current node is selected or not
@@ -426,11 +499,11 @@ define(['js/logger',
             //if not yet selected, deselect all and select this one only
             if (!node.isSelected()) {
                 //deselect everyone and select the clicked one
-                this._logger.debug('_onNodeMouseDown: ' + node.data.title + ' --> select this one only');
+                this._logger.debug('_onNodeMouseDown: ' + node.title + ' --> select this one only');
                 this._deselectSelectedNodes();
-                node.select(true);
+                node.setSelected(true);
             } else {
-                this._logger.debug('_onNodeMouseDown: ' + node.data.title + ' --> already selected, noop');
+                this._logger.debug('_onNodeMouseDown: ' + node.title + ' --> already selected, noop');
             }
         }
     };
@@ -440,16 +513,16 @@ define(['js/logger',
             self = this;
 
         dragSource.makeDraggable(nodeEl, {
-            'helper': function (event) {
+            helper: function (event) {
                 return self._dragHelper(this, event);
             },
-            'dragItems': function (el) {
+            dragItems: function (el) {
                 return self.getDragItems(el);
             },
-            'dragEffects': function (el) {
+            dragEffects: function (el) {
                 return self.getDragEffects(el);
             },
-            'dragParams': function (el) {
+            dragParams: function (el) {
                 return self.getDragParams(el);
             }
         });
@@ -458,17 +531,17 @@ define(['js/logger',
     /* OVERWRITE DragSource.prototype.dragHelper */
     TreeBrowserWidget.prototype._dragHelper = function (el/*, event*/) {
         var helperEl = el.clone(),
-            wrapper = $('<div class="' + TREE_BROWSER_CLASS + '"><ul class="dynatree-container"><li></li></ul></div>'),
+            wrapper = $('<div class="' + TREE_BROWSER_CLASS + '"><ul class="fancytree-container"><li></li></ul></div>'),
             selectedIds,
             selNodes,
             i, t,
-            removeClasses = ['dynatree-selected',
-                'dynatree-focus',
-                'dynatree-has-children',
-                'dynatree-lazy',
-                'dynatree-lastsib',
-                'dynatree-exp-cdl',
-                'dynatree-ico-c'];
+            removeClasses = ['fancytree-selected',
+                'fancytree-focus',
+                'fancytree-has-children',
+                'fancytree-lazy',
+                'fancytree-lastsib',
+                'fancytree-exp-cdl',
+                'fancytree-ico-c'];
 
         //trim down unnecessary DOM elements from it
         helperEl.children().first().remove();
@@ -479,16 +552,16 @@ define(['js/logger',
         helperEl = wrapper;
 
         selectedIds = [];
-        selNodes = this._treeEl.dynatree('getTree').getSelectedNodes();
+        selNodes = this._treeInstance.getSelectedNodes();
         for (i = 0; i < selNodes.length; i += 1) {
-            if (selNodes[i].data.addClass !== NODE_PROGRESS_CLASS) {
-                selectedIds.push(selNodes[i].data.key);
+            if (selNodes[i].extraClasses !== NODE_PROGRESS_CLASS) {
+                selectedIds.push(selNodes[i].key);
             }
         }
 
         if (selectedIds.length > 1) {
-            t = helperEl.find('.dynatree-title').text();
-            helperEl.find('.dynatree-title').text(t + ' (+' + (selectedIds.length - 1) + ')');
+            t = helperEl.find('.fancytree-title').text();
+            helperEl.find('.fancytree-title').text(t + ' (+' + (selectedIds.length - 1) + ')');
         }
 
         return helperEl;
@@ -515,7 +588,7 @@ define(['js/logger',
         var self = this;
 
         //can not edit 'loading...' node
-        if (nodeToEdit.data.addClass === NODE_PROGRESS_CLASS) {
+        if (nodeToEdit.extraClasses === NODE_PROGRESS_CLASS) {
             return;
         }
 
@@ -523,12 +596,12 @@ define(['js/logger',
             return;
         }
 
-        this._logger.debug('Edit node: ' + nodeToEdit.data.key);
+        this._logger.debug('Edit node: ' + nodeToEdit.key);
 
         $(nodeToEdit.span).find('a').editInPlace({
             class: '',
             onChange: function (oldValue, newValue) {
-                self.onNodeTitleChanged.call(self, nodeToEdit.data.key, oldValue, newValue);
+                self.onNodeTitleChanged.call(self, nodeToEdit.key, oldValue, newValue);
             }
         });
     };
@@ -538,11 +611,11 @@ define(['js/logger',
             selNodes,
             i;
 
-        selNodes = this._treeEl.dynatree('getTree').getSelectedNodes();
+        selNodes = this._treeInstance.getSelectedNodes();
         for (i = 0; i < selNodes.length; i += 1) {
             //can not copy 'loading...' node
-            if (selNodes[i].data.addClass !== NODE_PROGRESS_CLASS) {
-                selectedIds.push(selNodes[i].data.key);
+            if (selNodes[i].extraClasses !== NODE_PROGRESS_CLASS) {
+                selectedIds.push(selNodes[i].key);
             }
         }
 
@@ -554,12 +627,12 @@ define(['js/logger',
 
     TreeBrowserWidget.prototype._nodePaste = function (node) {
         //can not paste to 'loading...' node
-        if (node.data.addClass === NODE_PROGRESS_CLASS) {
+        if (node.extraClasses === NODE_PROGRESS_CLASS) {
             return;
         }
-        this._logger.debug('Paste ' + node.data.key);
+        this._logger.debug('Paste ' + node.key);
         if ($.isFunction(this.onNodePaste)) {
-            this.onNodePaste(node.data.key);
+            this.onNodePaste(node.key);
         }
     };
 
@@ -569,16 +642,16 @@ define(['js/logger',
             i;
 
         //can not delete 'loading...' node
-        if (node.data.addClass === NODE_PROGRESS_CLASS) {
+        if (node.extraClasses === NODE_PROGRESS_CLASS) {
             return;
         }
 
         selectedIds = [];
 
-        selNodes = this._treeEl.dynatree('getTree').getSelectedNodes();
+        selNodes = this._treeInstance.getSelectedNodes();
         for (i = 0; i < selNodes.length; i += 1) {
-            if (selNodes[i].data.addClass !== NODE_PROGRESS_CLASS) {
-                selectedIds.push(selNodes[i].data.key);
+            if (selNodes[i].extraClasses !== NODE_PROGRESS_CLASS) {
+                selectedIds.push(selNodes[i].key);
             }
         }
 
@@ -596,43 +669,43 @@ define(['js/logger',
             selNodes;
 
         //deselect everyone else
-        selNodes = this._treeEl.dynatree('getTree').getSelectedNodes();
+        selNodes = this._treeInstance.getSelectedNodes();
 
         for (i = 0; i < selNodes.length; i += 1) {
-            selNodes[i].select(false);
+            selNodes[i].setSelected(false);
         }
         this._dropSelectionStateWithShift();
     };
 
 
     TreeBrowserWidget.prototype._createContextMenu = function ($trigger) {
-        var node = $.ui.dynatree.getNode($trigger),
+        var node = $.ui.fancytree.getNode($trigger),
             menuItems = {},
             self = this,
             contextMenuOptions = {
-                'rename': this._enableNodeRename,
-                'delete': true
+                rename: this._enableNodeRename,
+                delete: true
             };
 
         //context menu is available for nodes that are not currently in 'loading' state
         if ($trigger.hasClass(NODE_PROGRESS_CLASS) !== true) {
 
-            self.onCreatingContextMenu(node.data.key, contextMenuOptions);
+            self.onCreatingContextMenu(node.key, contextMenuOptions);
             contextMenuOptions.rename = this._enableNodeRename;
 
             // The default set of available items :  Rename, Create, Copy, Paste, Delete
             menuItems = {
-                toggleNode: { // The "open/close" menu item
-                    name: 'Open',
+                toggleNode: { // The "expand/collapse" menu item
+                    name: 'Expand',
                     callback: function (/*key, options*/) {
-                        node.toggleExpand();
+                        node.toggleExpanded();
                     },
                     icon: false
                 },
                 openInVisualizer: { // The "select (aka double-click)" menu item
                     name: 'Open in visualizer',
                     callback: function (/*key, options*/) {
-                        self.onNodeDoubleClicked.call(self, node.data.key);
+                        self.onNodeDoubleClicked.call(self, node.key);
                     },
                     icon: false
                 }
@@ -660,15 +733,15 @@ define(['js/logger',
                 };
             }
 
-            if ($trigger.hasClass('dynatree-has-children') === true) {
+            if ($trigger.hasClass('fancytree-has-children') === true) {
                 if (node.isExpanded()) {
-                    menuItems.toggleNode.name = 'Close';
+                    menuItems.toggleNode.name = 'Collapse';
                 }
             } else {
                 delete menuItems.toggleNode;
             }
 
-            self.onExtendMenuItems(node.data.key, menuItems);
+            self.onExtendMenuItems(node.key, menuItems);
         }
 
         //return the complete action set for this node
@@ -680,10 +753,10 @@ define(['js/logger',
             selNodes,
             i;
 
-        selNodes = this._treeEl.dynatree('getTree').getSelectedNodes();
+        selNodes = this._treeInstance.getSelectedNodes();
         for (i = 0; i < selNodes.length; i += 1) {
-            if (selNodes[i].data.addClass !== NODE_PROGRESS_CLASS) {
-                selectedIds.push(selNodes[i].data.key);
+            if (selNodes[i].extraClasses !== NODE_PROGRESS_CLASS) {
+                selectedIds.push(selNodes[i].key);
             }
         }
 

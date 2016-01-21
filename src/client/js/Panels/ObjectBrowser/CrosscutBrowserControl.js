@@ -88,7 +88,7 @@ define(['js/logger',
         //create a new loading node for root in the tree
         this._treeNodes[PROJECT_ROOT_ID] = this._treeBrowser.createNode(null, {
             id: PROJECT_ROOT_ID,
-            name: 'Initializing...',
+            name: 'Initializing tree...',
             hasChildren: false,
             class: NODE_PROGRESS_CLASS
         });
@@ -109,7 +109,7 @@ define(['js/logger',
         var i,
             len = events.length;
 
-        this._treeBrowser.enableUpdate(false);
+        //this._treeBrowser.enableUpdate(false);
         for (i = 0; i < len; i += 1) {
             switch (events[i].etype) {
                 case CONSTANTS.TERRITORY_EVENT_LOAD:
@@ -119,14 +119,14 @@ define(['js/logger',
                     this._insertOrUpdate(events[i].eid);
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
-                    this._remove(events[i].eid);
+                    this._removeTreeNode(events[i].eid);
                     break;
             }
         }
-        this._treeBrowser.enableUpdate(true);
+        //this._treeBrowser.enableUpdate(true);
     };
 
-    CrosscutBrowserControl.prototype._insertOrUpdate = function (nodeId) {
+    CrosscutBrowserControl.prototype._insertOrUpdate = function (nodeId, parentExpanding) {
         var displayItemInTree = this._needsToBeInTree(nodeId),
             inserted = false;
 
@@ -134,7 +134,7 @@ define(['js/logger',
         if (displayItemInTree) {
             if (!this._treeNodes[nodeId]) {
                 //not in the tree yet
-                inserted = this._createTreeNode(nodeId);
+                inserted = this._createTreeNode(nodeId, parentExpanding);
             } else {
                 this._updateTreeNode(nodeId);
             }
@@ -150,7 +150,7 @@ define(['js/logger',
         return inserted;
     };
 
-    CrosscutBrowserControl.prototype._createTreeNode = function (nodeId) {
+    CrosscutBrowserControl.prototype._createTreeNode = function (nodeId, parentExpanding) {
         var nodeObj = this._client.getNode(nodeId),
             parentId = nodeObj.getParentId(),
             parentTreeNode,
@@ -158,13 +158,13 @@ define(['js/logger',
 
         //only matters if parent is in the tree already and expanded
         if (this._treeNodes[parentId] &&
-            this._treeNodes[parentId].isExpanded()) {
+            (this._treeNodes[parentId].isExpanded() || parentExpanding === true)) {
             parentTreeNode = this._treeNodes[parentId];
 
             //parent is in the tree now, we can create this node
             this._treeNodes[nodeId] = this._treeBrowser.createNode(parentTreeNode, {
                 id: nodeId,
-                name: '...',
+                name: 'Loading...',
                 hasChildren: false,
                 class: NODE_PROGRESS_CLASS
             });
@@ -282,39 +282,39 @@ define(['js/logger',
             //get the treenode representing the parent in the tree
             this._nodes[nodeId] = this._getNodeDescBase();
 
-            this._treeBrowser.enableUpdate(false);
+            //this._treeBrowser.enableUpdate(false);
 
             //get the children IDs of this node and create a node for them in the tree if necessary
             childrenIDs = nodeObj.getChildrenIds();
             for (i = 0; i < childrenIDs.length; i += 1) {
                 currentChildId = childrenIDs[i];
-                if (this._insertOrUpdate(currentChildId)) {
+                if (this._insertOrUpdate(currentChildId, true)) {
                     this._selfPatterns[currentChildId] = {children: 1};
                     this._nodes[nodeId].children.push(currentChildId);
                 }
             }
 
-            //get all the crosscuts of this node and create a node form them in the tree
+            //get all the crosscuts of this node and create a node for them in the tree
 
             _.each(GMEConcepts.getCrosscuts(nodeId), function (crosscut) {
-                self._createXCutTreeNode(nodeId, crosscut);
+                self._createXCutTreeNode(nodeId, crosscut, true);
             });
 
-            this._treeBrowser.enableUpdate(true);
+            //this._treeBrowser.enableUpdate(true);
         }
 
         //need to expand the territory
         this._client.updateTerritory(this._territoryId, this._selfPatterns);
     };
 
-    CrosscutBrowserControl.prototype._createXCutTreeNode = function (nodeId, crosscut) {
+    CrosscutBrowserControl.prototype._createXCutTreeNode = function (nodeId, crosscut, parentExpanding) {
         var parentTreeNode,
             crossCutID = crosscut.SetID,
             fqCrosscutID = this._getFullCrosscutID(nodeId, crossCutID);
 
         //only matters if parent is in the tree already and expanded
         if (this._treeNodes[nodeId] &&
-            this._treeNodes[nodeId].isExpanded()) {
+            (this._treeNodes[nodeId].isExpanded() || parentExpanding === true)) {
 
             parentTreeNode = this._treeNodes[nodeId];
 
@@ -438,20 +438,13 @@ define(['js/logger',
         return result;
     };
 
-    CrosscutBrowserControl.prototype._remove = function (nodeId) {
-        if (this._treeNodes[nodeId]) {
-            //not in the tree yet
-            this._removeTreeNode(nodeId);
-        }
-    };
-
     CrosscutBrowserControl.prototype._removeTreeNode = function (nodeId) {
         var treeNode = this._treeNodes[nodeId];
 
         //only matters if parent is in the tree already and expanded
         if (treeNode) {
             if (treeNode.isExpanded()) {
-                this._treeBrowser.collapse(treeNode);
+                this._onNodeClose(nodeId);
             }
 
             this._treeBrowser.deleteNode(treeNode);

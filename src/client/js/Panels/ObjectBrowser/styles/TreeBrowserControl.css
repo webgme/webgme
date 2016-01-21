@@ -4,16 +4,16 @@
  * Author: Robert Kereskenyi
  */
 /* GME ICON styles for tree nodes */
-.tree-browser ul.dynatree-container span.dynatree-icon {
+.tree-browser ul.fancytree-container span.fancytree-icon {
   margin-left: 0;
   background: url("../../../../img/gmeicons.png") 0 0; }
-.tree-browser ul.dynatree-container span.gme-model span.dynatree-icon {
+.tree-browser ul.fancytree-container span.gme-model span.fancytree-icon {
   background-position: -48px 0 !important; }
-.tree-browser ul.dynatree-container span.gme-atom span.dynatree-icon {
+.tree-browser ul.fancytree-container span.gme-atom span.fancytree-icon {
   background-position: -16px 0 !important; }
-.tree-browser ul.dynatree-container span.gme-aspect span.dynatree-icon {
+.tree-browser ul.fancytree-container span.gme-aspect span.fancytree-icon {
   background-position: -32px 0 !important; }
-.tree-browser ul.dynatree-container span.gme-connection span.dynatree-icon {
+.tree-browser ul.fancytree-container span.gme-connection span.fancytree-icon {
   background-position: -64px 0 !important; }
-.tree-browser ul.dynatree-container span.gme-root span.dynatree-icon {
+.tree-browser ul.fancytree-container span.gme-root span.fancytree-icon {
   background-position: -80px 0 !important; }
