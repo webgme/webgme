@@ -52,6 +52,17 @@ define([
         this.insertObject = this.projectCache.insertObject;
 
         /**
+         * Try to create the full object from the patch object by looking for the base object in the cache.
+         * If the base has been found it applies the patch and inserts the result. If any step fails it simply
+         * ignores the insert.
+         *
+         * @param {module:Storage~CommitObject|module:Core~ObjectData} obj - Object to be inserted in database.
+         * @func
+         * @private
+         */
+        this.insertPatchObject = this.projectCache.insertPatchObject;
+
+        /**
          * Callback for loadObject.
          *
          * @callback ProjectInterface~loadObjectCallback

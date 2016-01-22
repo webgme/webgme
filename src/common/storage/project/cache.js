@@ -27,28 +27,12 @@ define([
         this.queuedPersists = {};
 
         function cacheInsert(key, obj) {
-            var patch;
             ASSERT(obj[CONSTANTS.MONGO_ID] === key);
             logger.debug('cacheInsert', key);
 
             //deepFreeze(obj);
             if (!cache[key]) {
-                if(obj.type === 'patch'){
-                    if(cache[obj.base] || backup[obj.base]){
-                        patch = jsonPatcher.apply(cache[obj.base] || backup[obj.base], obj.patch);
-
-                        if(patch.status === 'success'){
-                            cache[key] = patch.result;
-                        } else {
-                            logger.error('error during patch root apply',patch);
-                        }
-                    } else {
-                        logger.debug('base of patch root not available, ignore cache insert');
-                        return true;
-                    }
-                } else {
-                    cache[key] = obj;
-                }
+                cache[key] = obj;
 
                 if (++cacheSize >= gmeConfig.storage.cache) {
                     backup = cache;
@@ -268,6 +252,32 @@ define([
             }
             if (stackedObjects) {
                 stackedObjects[key] = obj;
+            }
+        };
+
+        this.insertPatchObject = function (obj) {
+            ASSERT(typeof obj === 'object' && obj !== null);
+
+            var base,
+                patch,
+                key = obj[CONSTANTS.MONGO_ID];
+
+            if (obj.base && typeof obj.patch === 'object' && key) {
+                base = getFromCache(obj.base);
+
+                if (base) {
+                    patch = jsonPatcher.apply(base, obj.patch);
+                    if (patch.status === 'success') {
+                        patch.result[CONSTANTS.MONGO_ID] = key;
+                        this.insertObject(patch.result);
+                    } else {
+                        logger.error('patch application failed', patch);
+                    }
+                } else {
+                    logger.debug('the base is not available from the cache so the patch object is ignored');
+                }
+            } else {
+                logger.error('invalid patch object format');
             }
         };
     }
