@@ -39,7 +39,7 @@ define(['js/logger',
                 selfId,
                 selfPatterns = {},
             //local container for accounting the currently opened node list,
-            // its a hashmap with a key of nodeId and a value of { DynaTreeDOMNode, childrenIds[], state }
+            // its a hashmap with a key of nodeId and a value of { FancyTreeNode, childrenIds[], state }
                 nodes = {},
                 refresh,
                 initialize,
@@ -66,7 +66,7 @@ define(['js/logger',
                             initialized = true;
 
                             logger.debug('expanding tree-root', TREE_ROOT);
-                            loadingRootTreeNode.expand(true);
+                            loadingRootTreeNode.setExpanded(true);
                         }
                     });
 
@@ -75,7 +75,7 @@ define(['js/logger',
                     loadingRootTreeNode = treeBrowser.createNode(null, {
                         id: TREE_ROOT,
                         name: 'Initializing tree...',
-                        hasChildren: false,
+                        hasChildren: true,
                         class: NODE_PROGRESS_CLASS
                     });
 
@@ -123,6 +123,8 @@ define(['js/logger',
 
                 //first create dummy elements under the parent representing the childrend being loaded
                 var parent = client.getNode(nodeId),
+                    childrenDescriptors = [],
+                    newNodes,
                     parentNode,
                     childrenIDs,
                     i,
@@ -138,8 +140,6 @@ define(['js/logger',
                     //get the children IDs of the parent
                     childrenIDs = parent.getChildrenIds();
 
-                    treeBrowser.enableUpdate(false);
-
                     for (i = 0; i < childrenIDs.length; i += 1) {
                         currentChildId = childrenIDs[i];
 
@@ -151,39 +151,37 @@ define(['js/logger',
                         //check if the node could be retreived from the client
                         if (childNode) {
                             //the node was present on the client side, render ist full data
-                            childTreeNode = treeBrowser.createNode(parentNode, {
+                            childrenDescriptors.push({
                                 id: currentChildId,
                                 name: childNode.getAttribute('name'),
                                 hasChildren: (childNode.getChildrenIds()).length > 0,
-                                class: getNodeClass(childNode)
+                                class: getNodeClass(childNode),
+                                // Data used locally here.
+                                STATE: stateLoaded,
+                                CHILDREN: childNode.getChildrenIds()
                             });
-
-                            //store the node's info in the local hashmap
-                            nodes[currentChildId] = {
-                                treeNode: childTreeNode,
-                                children: childNode.getChildrenIds(),
-                                state: stateLoaded
-                            };
                         } else {
                             //the node is not present on the client side, render a loading node instead
-                            //create a new node for it in the tree
-                            childTreeNode = treeBrowser.createNode(parentNode, {
+                            childrenDescriptors.push({
                                 id: currentChildId,
                                 name: 'Loading...',
                                 hasChildren: false,
-                                class: NODE_PROGRESS_CLASS
+                                class: NODE_PROGRESS_CLASS,
+                                // Data used locally here.
+                                STATE: stateLoaded,
+                                CHILDREN: []
                             });
-
-                            //store the node's info in the local hashmap
-                            nodes[currentChildId] = {
-                                treeNode: childTreeNode,
-                                children: [],
-                                state: stateLoading
-                            };
                         }
                     }
 
-                    treeBrowser.enableUpdate(true);
+                    newNodes = treeBrowser.createNodes(parentNode, childrenDescriptors);
+                    for (i = 0; i < childrenDescriptors.length; i += 1) {
+                        nodes[childrenDescriptors[i].id] = {
+                            treeNode: newNodes[i],
+                            children: childrenDescriptors[i].CHILDREN,
+                            state: childrenDescriptors[i].STATE
+                        };
+                    }
                 }
 
                 //need to expand the territory
@@ -339,8 +337,14 @@ define(['js/logger',
                         callback: function (/*key, options*/) {
                             var settings = {};
                             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
-                            settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = CROSSCUT_VISUALIZER;
                             WebGMEGlobal.State.set(settings);
+
+                            // Prevent the default to be selected.
+                            setTimeout(function () {
+                                var settings = {};
+                                settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = CROSSCUT_VISUALIZER;
+                                WebGMEGlobal.State.set(settings);
+                            });
                         },
                         icon: false
                     };
@@ -352,8 +356,14 @@ define(['js/logger',
                         callback: function (/*key, options*/) {
                             var settings = {};
                             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
-                            settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = SET_VISUALIZER;
                             WebGMEGlobal.State.set(settings);
+
+                            // Prevent the default to be selected.
+                            setTimeout(function () {
+                                var settings = {};
+                                settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = SET_VISUALIZER;
+                                WebGMEGlobal.State.set(settings);
+                            });
                         },
                         icon: false
                     };

@@ -2,56 +2,56 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 /*IMPORTS*/
-/* original DynaTree Vista-theme css from DynaTree distribution */
-@import url("./../../../../css/dynatree/ui.dynatree.css");
+/* original FancyTree Vista-theme css from FancyTree distribution */
+@import url("./../../../../css/fancytree/ui.fancytree.css");
 @import url("./../../../../css/contextmenu/jquery.contextMenu.css");
 .tree-browser {
-  /* DynaTree Vista-theme overrides */
-  /* END OF --- DynaTree Vista-theme overrides */
+  /* FancyTree Vista-theme overrides */
+  /* END OF --- FancyTree Vista-theme overrides */
   /* OWN STYLES */ }
-  .tree-browser ul.dynatree-container {
+  .tree-browser ul.fancytree-container {
     overflow: visible !important;
     padding-bottom: 0 !important;
     height: auto;
     font-size: 13px;
     background-color: transparent;
     border: none; }
-    .tree-browser ul.dynatree-container a {
+    .tree-browser ul.fancytree-container a {
       border: 1px solid transparent; }
-  .tree-browser .dynatree-has-children span.dynatree-icon {
+  .tree-browser .fancytree-has-children span.fancytree-icon {
     background-position: 0px -16px; }
-  .tree-browser span.dynatree-icon {
+  .tree-browser span.fancytree-icon {
     margin-top: 1px;
     cursor: pointer; }
-  .tree-browser .dynatree-loading span.dynatree-expander {
+  .tree-browser .fancytree-loading span.fancytree-expander {
     background-position: 0 0;
     background-image: url("../../../../img/progress.gif"); }
-  .tree-browser ul.dynatree-container a:focus,
-  .tree-browser span.dynatree-focused a:link {
+  .tree-browser ul.fancytree-container a:focus,
+  .tree-browser span.fancytree-focused a:link {
     background-color: transparent;
     outline: none; }
-  .tree-browser ul.dynatree-container li {
+  .tree-browser ul.fancytree-container li {
     line-height: 16px; }
-    .tree-browser ul.dynatree-container li span.dynatree-node {
+    .tree-browser ul.fancytree-container li span.fancytree-node {
       /* 'Loading' node style with italic gray font and progress bar icon */ }
-      .tree-browser ul.dynatree-container li span.dynatree-node a.dynatree-title {
+      .tree-browser ul.fancytree-container li span.fancytree-node span.fancytree-title {
         margin-left: 0; }
-        .tree-browser ul.dynatree-container li span.dynatree-node a.dynatree-title input[type=text] {
+        .tree-browser ul.fancytree-container li span.fancytree-node span.fancytree-title input[type=text] {
           padding: 0;
           font-size: 12px !important;
           line-height: 12px;
           margin-top: -3px !important;
           width: 100px !important; }
-      .tree-browser ul.dynatree-container li span.dynatree-node.dynatree-selected a.dynatree-title {
+      .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected span.fancytree-title {
         font-style: normal;
-        background: #beebff;
-        border: 1px solid #99defd; }
-      .tree-browser ul.dynatree-container li span.dynatree-node.dynatree-selected.dynatree-focused a.dynatree-title {
+        background: #BEEBFF;
+        border: 1px solid #99DEFD; }
+      .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-focused span.fancytree-title {
         background: #a3d7f3; }
-      .tree-browser ul.dynatree-container li span.dynatree-node.node-progress a.dynatree-title {
-        color: #aaaaaa;
+      .tree-browser ul.fancytree-container li span.fancytree-node.node-progress span.fancytree-title {
+        color: #AAAAAA;
         font-style: italic; }
-      .tree-browser ul.dynatree-container li span.dynatree-node.node-progress span.dynatree-icon {
+      .tree-browser ul.fancytree-container li span.fancytree-node.node-progress span.fancytree-icon {
         background: url("../../../../img/progress.gif") 0 0; }
 
 .context-menu-list li.context-menu-item {
