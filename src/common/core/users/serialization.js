@@ -35,7 +35,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             ongoingTaskCounter = 0,
             timerId,
             root = core.getRoot(libraryRoot);
-            
+
         function getAttributes(node) {
             var names = core.getOwnAttributeNames(node).sort(),
                 i,
@@ -829,9 +829,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             jsonExport,
             nodes,
             logTxt = '',
-            toRemoveGuids = [],
-            toUpdateGuids = [],
-            toInsertGuids = [];
+            guids = {};
 
         function log(txt) {
             logTxt += '\n' + txt;
@@ -958,7 +956,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
         }
 
         function updateNodes(guid, parent, containmentTreeObject) {
-            if (toUpdateGuids.indexOf(guid) !== -1) {
+            if (guids[guid] === 'update') {
                 updateNode(guid, parent);
             }
 
@@ -968,7 +966,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 relid;
 
             for (i = 0; i < keys.length; i++) {
-                if (toUpdateGuids.indexOf(keys[i]) === -1) {
+                if (guids[keys[i]] !== 'update') {
                     relid = updatedLibraryJson.relids[keys[i]];
                     if (core.getChildrenRelids(node).indexOf(relid) !== -1) {
                         relid = undefined;
@@ -1048,16 +1046,21 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 };
 
             //pointers
-            keys = core.getOwnPointerNames(node);
-            for (i = 0; i < keys.length; i++) {
-                core.deletePointer(node, keys[i]);
+            //The base pointer should be always removed, as at this point it could be already set falsly.
+            core.deletePointer(node, 'base');
+            if (guids[guid] === 'update') {
+                keys = core.getOwnPointerNames(node);
+                for (i = 0; i < keys.length; i++) {
+                    core.deletePointer(node, keys[i]);
+                }
             }
+
             keys = Object.keys(jsonNode.pointers);
             for (i = 0; i < keys.length; i++) {
                 target = jsonNode.pointers[keys[i]];
                 if (target === null) {
                     core.setPointer(node, keys[i], null);
-                } else if (nodes[target] && toRemoveGuids.indexOf(target) === -1) {
+                } else if (nodes[target] && guids[target] !== 'remove') {
                     core.setPointer(node, keys[i], nodes[target]);
                 } else if (isCombinedId(target)) {
                     core.setPointer(node, keys[i], getCombinedTarget(target));
@@ -1068,10 +1071,13 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             }
 
             //sets
-            keys = core.getSetNames(node);
-            for (i = 0; i < keys.length; i++) {
-                core.deleteSet(node, keys[i]);
+            if (guids[guid] === 'update') {
+                keys = core.getSetNames(node);
+                for (i = 0; i < keys.length; i++) {
+                    core.deleteSet(node, keys[i]);
+                }
             }
+
             keys = Object.keys(jsonNode.sets);
             for (i = 0; i < keys.length; i++) {
                 //for every set we create it, go through its members...
@@ -1170,7 +1176,9 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
         }
 
         function updateMeta(guid) {
-            core.clearMetaRules(nodes[guid]);
+            if (guids[guid] === 'update') {
+                core.clearMetaRules(nodes[guid]);
+            }
 
             updateAttributeMeta(guid);
             updateChildrenMeta(guid);
@@ -1290,44 +1298,45 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                     //now we fill the insert/update/remove lists of GUIDs
                     var oldkeys = Object.keys(jsonExport.nodes),
                         newkeys = Object.keys(updatedLibraryJson.nodes),
+                        delkeys = [],
+                        parent,
                         i;
 
                     //TODO now we make three rounds although one would be sufficient on ordered lists
                     for (i = 0; i < oldkeys.length; i++) {
-                        if (newkeys.indexOf(oldkeys[i]) === -1) {
+                        if (!updatedLibraryJson.nodes[oldkeys[i]]) {
                             log('node ' + logId(jsonExport.nodes, oldkeys[i]) +
                                 ', all of its sub-types and its children will be removed');
-
-                            toRemoveGuids.push(oldkeys[i]);
+                            guids[oldkeys[i]] = 'remove';
+                            delkeys.push(oldkeys[i]);
                         }
                     }
 
                     for (i = 0; i < oldkeys.length; i++) {
-                        if (newkeys.indexOf(oldkeys[i]) !== -1) {
+                        if (updatedLibraryJson.nodes[oldkeys[i]]) {
                             log('node ' + logId(jsonExport.nodes, oldkeys[i]) + ' will be updated');
-                            toUpdateGuids.push(oldkeys[i]);
+                            guids[oldkeys[i]] = 'update';
                         }
                     }
 
                     for (i = 0; i < newkeys.length; i++) {
-                        if (oldkeys.indexOf(newkeys[i]) === -1) {
+                        if (!jsonExport.nodes[newkeys[i]]) {
                             log('node ' + logId(jsonExport.nodes, newkeys[i]) + ' will be added');
-                            toInsertGuids.push(newkeys[i]);
+                            guids[newkeys[i]] = 'insert';
                         }
                     }
 
-                    //Now we normalize the removedGUIDs by containment and remove them
-                    var toDelete = [],
-                        parent;
-                    for (i = 0; i < toRemoveGuids.length; i++) {
-                        parent = core.getParent(nodes[toRemoveGuids[i]]);
-                        if (parent && toRemoveGuids.indexOf(core.getGuid(parent)) === -1) {
-                            toDelete.push(toRemoveGuids[i]);
+                    // Now we consolidate node list based on containment to minimize the number of deletion.
+                    i = delkeys.length;
+                    while (--i > 0) {
+                        parent = core.getParent(nodes[delkeys[i]]);
+                        if (!parent || guids[core.getGuid(parent)] === 'remove') {
+                            delkeys.splice(i, 1);
                         }
                     }
-                    //and as a final step we remove all that is needed
-                    for (i = 0; i < toDelete.length; i++) {
-                        core.deleteNode(nodes[toDelete[i]]);
+                    // Finally we remove the necessary nodes.
+                    for (i = 0; i < delkeys.length; i += 1) {
+                        core.deleteNode(nodes[delkeys[i]]);
                     }
 
                     //as a second step we should deal with the updated nodes

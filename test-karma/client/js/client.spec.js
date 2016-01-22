@@ -4313,12 +4313,14 @@ describe('GME client', function () {
                         superagent.get(url, function (err, result) {
                             expect(err).to.equal(null);
 
-                            expect(result.body).to.deep.equal(refNodeProj);
                             client.deleteProject(projectId, function (err /*, didExist*/) {
                                 expect(err).to.equal(null, 'deleteProject returned error');
 
                                 done();
                             });
+
+                            expect(result.body).to.deep.equal(refNodeProj);
+
                         });
                     }
                 );
