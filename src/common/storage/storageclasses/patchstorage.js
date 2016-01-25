@@ -32,8 +32,8 @@ define([
                 base: rootInfo.baseHash,
                 patch: jsonPatcher.create(rootInfo.baseData, commitData.coreObjects[rootInfo.newHash])
             };
+            commitData.patchRoot[CONSTANTS.MONGO_ID] = rootInfo.newHash;
         }
-
         commitData.rootHash = typeof rootInfo === 'string' ? rootInfo : rootInfo.newHash;
     };
 

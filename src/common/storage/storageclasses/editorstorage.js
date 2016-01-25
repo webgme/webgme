@@ -226,7 +226,11 @@ define([
                         originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     logger.debug('_remoteUpdateHandler invoked for project, branch', projectId, branchName);
                     for (j = 0; j < updateData.coreObjects.length; j += 1) {
-                        project.insertObject(updateData.coreObjects[j]);
+                        if(updateData.coreObjects[j] && updateData.coreObjects[j].type ==='patch'){
+                            project.insertPatchObject(updateData.coreObjects[j]);
+                        } else {
+                            project.insertObject(updateData.coreObjects[j]);
+                        }
                     }
 
                     branch.queueUpdate(updateData);

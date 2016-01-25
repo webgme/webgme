@@ -606,7 +606,7 @@ describe('storage storageclasses editorstorage', function () {
                     {
                         newHash: persisted.rootHash,
                         baseHash: importResult.rootHash,
-                        baseData: importResult.rootNode.rawData
+                        baseData: importResult.rootNode.baseRawData
                     },
                     persisted.objects, 'newer commit');
             })
