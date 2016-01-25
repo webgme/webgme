@@ -54,11 +54,90 @@ $node-progress-font-color: #AAAAAA;
   }
   /* END OF --- FancyTree Vista-theme overrides */
 
-  /* OWN STYLES */
-  ul.fancytree-container {
 
+  /* OWN STYLES */
+  .filter-container {
+    margin: 1px;
+    padding-top: 1px;
+
+    .filter-form {
+      .filter-toggle-buttons {
+        margin-right: 3px;
+        button.active {
+          //color: red;
+        }
+        button {
+          line-height: 1;
+        }
+      }
+      .input-filter-type {
+        label.btn {
+          font-weight: bold;
+        }
+      }
+    }
+    &.collapsed {
+      .filter-form {
+        display: none;
+      }
+      i.collapse-filter {
+        display: none;
+      }
+      i.expand-filter {
+        display: inline-block;
+      }
+    }
+    i.collapse-filter {
+      display: inline-block;
+    }
+    i.expand-filter {
+      display: none;
+    }
+    .btn-hide-show-filters {
+      position: relative;
+      z-index: 1; // This brings it ontop of the tree.
+    }
+    .btn {
+      margin-bottom: 1px;
+      &.btn-hide-show-filters {
+        padding-left: 3px;
+        .filter-icon {
+          padding-left: 3px;
+        }
+      }
+    }
+
+  }
+
+  span.all-filtered-out {
+    padding: 12px;
+    color: #AAA;
+    font-style: italic;
+  }
+
+  i.gme-connection {
+    background: url("../../../../img/gmeicons.png") 0 0;
+    background-position: -64px 0 !important;
+    width: 16px;
+    height: 16px;
+  }
+
+  i.gme-atom {
+    background: url("../../../../img/gmeicons.png") 0 0;
+    background-position: -16px 0 !important;
+    width: 16px;
+    height: 16px;
+  }
+
+  .fa {
+    line-height: 18px;
+  }
+
+  ul.fancytree-container {
+    outline-width: 0;
     li {
       line-height: 16px;
+      outline-width: 0;
 
       span.fancytree-node {
 
@@ -73,6 +152,10 @@ $node-progress-font-color: #AAAAAA;
             width: 100px !important;
           }
         }
+        span.fancytree-title:hover {
+          background-color: #F2F7FD;
+          border-color: #F2F7FD;
+        }
 
         &.fancytree-selected {
 
@@ -85,7 +168,38 @@ $node-progress-font-color: #AAAAAA;
           &.fancytree-focused {
             span.fancytree-title {
               background: $focused-node-background-color;
+              outline: none;
             }
+          }
+
+          &.fancytree-active {
+            span.fancytree-title {
+              font-style: normal;
+              background: $selected-node-background-color;
+              border: 1px solid $selected-node-border-color;
+            }
+            &.fancytree-focused {
+              span.fancytree-title {
+                background: $focused-node-background-color;
+                outline: none;
+              }
+            }
+          }
+        }
+
+        &.fancytree-active {
+          span.fancytree-title {
+            font-style: normal;
+            background: transparent;
+            border: 1px solid transparent;
+            outline: none;
+          }
+        }
+
+        &.fancytree-focus {
+          span.fancytree-title {
+            background: transparent;
+            outline: none;
           }
         }
 

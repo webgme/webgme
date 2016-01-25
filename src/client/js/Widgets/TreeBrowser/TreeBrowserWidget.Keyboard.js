@@ -69,7 +69,9 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
                 break;
             case 'f2':
                 this._dropSelectionStateWithShift();
-                this._nodeEdit(node);
+                setTimeout(function () {
+                    node.editStart();
+                });
                 ret = false;
                 break;
             case 'up':
