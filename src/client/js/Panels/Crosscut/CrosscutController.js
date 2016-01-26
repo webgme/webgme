@@ -1447,9 +1447,9 @@ define(['js/logger',
         this._initActiveTab = true;
 
         var containerNode = this._client.getNode(this._memberListContainerID),
-            regItem = containerNode.getEditableRegistry(REGISTRY_KEYS.CROSSCUTS),
+            regItem = containerNode ? containerNode.getEditableRegistry(REGISTRY_KEYS.CROSSCUTS) : [],
             i, crosscutId = Number(this._activeCrosscutId),
-            filter;
+            filter = [];
 
 
         for (i = 0; i < regItem.length; i += 1) {
