@@ -163,7 +163,6 @@ define(['js/logger',
         this.diagramDesigner.clear();
     };
 
-
     /**********************************************************/
     /*                LOAD / UPDATE / UNLOAD HANDLER          */
     /**********************************************************/
@@ -202,7 +201,6 @@ define(['js/logger',
     /*       END OF --- LOAD / UPDATE / UNLOAD HANDLER        */
     /**********************************************************/
 
-
     /**********************************************************/
     /*                CUSTOM BUTTON EVENT HANDLERS            */
     /**********************************************************/
@@ -212,7 +210,6 @@ define(['js/logger',
     /**********************************************************/
     /*       END OF --- CUSTOM BUTTON EVENT HANDLERS          */
     /**********************************************************/
-
 
     /***********************************************************/
     /*  PROCESS CURRENT NODE TO HANDLE ADDED / REMOVED ELEMENT */
@@ -307,7 +304,6 @@ define(['js/logger',
     /**********************************************************************/
     /*  END OF --- PROCESS CURRENT NODE TO HANDLE ADDED / REMOVED ELEMENT */
     /**********************************************************************/
-
 
     /**************************************************************************/
     /*  HANDLE OBJECT LOAD  --- DISPLAY IT WITH ALL THE POINTERS / SETS / ETC */
@@ -422,7 +418,6 @@ define(['js/logger',
     /**************************************************************************/
     /*  END OF --- HANDLE OBJECT LOAD DISPLAY IT WITH ALL THE POINTERS / ...  */
     /**************************************************************************/
-
 
     /****************************************************************************/
     /*  HANDLE OBJECT UNLOAD  --- DISPLAY IT WITH ALL THE POINTERS / SETS / ETC */
@@ -547,7 +542,6 @@ define(['js/logger',
     /*                      END OF --- HANDLE OBJECT UNLOAD                     */
     /****************************************************************************/
 
-
     /****************************************************************************/
     /*  CREATE A SPECIFIC TYPE OF CONNECTION BETWEEN 2 GME OBJECTS              */
     /****************************************************************************/
@@ -601,7 +595,6 @@ define(['js/logger',
         }
     };
 
-
     MetaEditorControl.prototype._saveConnectionToWaitingList = function (gmeSrcId, gmeDstId, connType, connTexts) {
         if (this._GMENodes.indexOf(gmeSrcId) !== -1 && this._GMENodes.indexOf(gmeDstId) === -1) {
             //#1 - the destination object is missing from the screen
@@ -623,7 +616,6 @@ define(['js/logger',
             this.logger.error('_saveConnectionToWaitingList both gmeSrcId and gmeDstId is undefined...');
         }
     };
-
 
     MetaEditorControl.prototype._saveConnection = function (gmeSrcId, gmeDstId, connType, connComponentId, connTexts) {
         //save by SRC
@@ -660,7 +652,6 @@ define(['js/logger',
     /****************************************************************************/
     /*  END OF --- CREATE A SPECIFIC TYPE OF CONNECTION BETWEEN 2 GME OBJECTS   */
     /****************************************************************************/
-
 
     /****************************************************************************/
     /*  REMOVES A SPECIFIC TYPE OF CONNECTION FROM 2 GME OBJECTS                */
@@ -719,7 +710,6 @@ define(['js/logger',
     /****************************************************************************/
     /*  END OF --- REMOVES A SPECIFIC TYPE OF CONNECTION FROM 2 GME OBJECTS     */
     /****************************************************************************/
-
 
     /*****************************************************************************/
     /*                UPDATE CONNECTION TEXT                                     */
@@ -828,7 +818,6 @@ define(['js/logger',
     /*                   END OF --- HANDLE OBJECT UPDATE                      */
     /**************************************************************************/
 
-
     /***********************************************************************************/
     /*  DISPLAY META CONTAINMENT RELATIONS AS A CONNECTION FROM CONTAINER TO CONTAINED */
     /***********************************************************************************/
@@ -905,7 +894,6 @@ define(['js/logger',
     /*  END OF --- DISPLAY META CONTAINMENT RELATIONS AS A CONNECTION FROM CONTAINER TO CONTAINED */
     /**********************************************************************************************/
 
-
     /*******************************************************************************/
     /*  DISPLAY META POINTER RELATIONS AS A CONNECTION FROM CONTAINER TO CONTAINED */
     /*******************************************************************************/
@@ -937,7 +925,6 @@ define(['js/logger',
         while (len--) {
             pointerMetaDescriptor = this._client.getValidTargetItems(gmeID, pointerNames[len]);
             pointerOwnMetaTypes = this._client.getOwnValidTargetTypes(gmeID, pointerNames[len]);
-
 
             if (pointerMetaDescriptor) {
                 lenTargets = pointerMetaDescriptor.length;
@@ -1027,7 +1014,6 @@ define(['js/logger',
     /*  END OF --- DISPLAY META POINTER RELATIONS AS A CONNECTION FROM CONTAINER TO CONTAINED */
     /******************************************************************************************/
 
-
     /***********************************************************************************/
     /*  DISPLAY META INHERITANCE RELATIONS AS A CONNECTION FROM PARENT TO OBJECT       */
     /***********************************************************************************/
@@ -1052,7 +1038,6 @@ define(['js/logger',
     /**********************************************************************************************/
     /*  END OF --- DISPLAY META CONTAINMENT RELATIONS AS A CONNECTION FROM PARENT TO OBJECT       */
     /**********************************************************************************************/
-
 
     /****************************************************************************/
     /*        CREATE NEW CONNECTION BUTTONS AND THEIR EVENT HANDLERS            */
@@ -1084,7 +1069,6 @@ define(['js/logger',
     /*    END OF --- CREATE NEW CONNECTION BUTTONS AND THEIR EVENT HANDLERS     */
     /****************************************************************************/
 
-
     /****************************************************************************/
     /*    CREATE NEW CONNECTION BETWEEN TWO ITEMS                               */
     /****************************************************************************/
@@ -1110,7 +1094,6 @@ define(['js/logger',
         }
     };
 
-
     MetaEditorControl.prototype._createContainmentRelationship = function (containerID, objectID) {
         var containerNode = this._client.getNode(containerID),
             objectNode = this._client.getNode(objectID);
@@ -1120,7 +1103,6 @@ define(['js/logger',
         }
     };
 
-
     MetaEditorControl.prototype._deleteContainmentRelationship = function (containerID, objectID) {
         var containerNode = this._client.getNode(containerID),
             objectNode = this._client.getNode(objectID);
@@ -1129,7 +1111,6 @@ define(['js/logger',
             this._client.removeValidChildrenItem(containerID, objectID);
         }
     };
-
 
     MetaEditorControl.prototype._createPointerRelationship = function (sourceID, targetID, isSet) {
         var sourceNode = this._client.getNode(sourceID),
@@ -1207,7 +1188,6 @@ define(['js/logger',
         }
     };
 
-
     MetaEditorControl.prototype._deletePointerRelationship = function (sourceID, targetID, pointerName, isSet) {
         var sourceNode = this._client.getNode(sourceID),
             targetNode = this._client.getNode(targetID),
@@ -1232,7 +1212,6 @@ define(['js/logger',
         }
     };
 
-
     MetaEditorControl.prototype._createInheritanceRelationship = function (objectID, newBaseID) {
         var newBaseNode = this._client.getNode(newBaseID),
             objectNode = this._client.getNode(objectID),
@@ -1251,7 +1230,6 @@ define(['js/logger',
             this._client.setBase(objectID, newBaseID);
         }
     };
-
 
     MetaEditorControl.prototype._deleteInheritanceRelationship = function (parentID, objectID) {
         var objectNode = this._client.getNode(objectID),
@@ -1280,7 +1258,6 @@ define(['js/logger',
     /****************************************************************************/
     /*    END OF --- CREATE NEW CONNECTION BETWEEN TWO ITEMS                    */
     /****************************************************************************/
-
 
     /****************************************************************************/
     /*                  POINTER FILTER PANEL AND EVENT HANDLERS                 */
@@ -1639,7 +1616,6 @@ define(['js/logger',
 
         /************** END OF - CREATE META RELATION CONNECTION TYPES *****************/
 
-
         /************** PRINT NODE DATA *****************/
         // TODO removed, but could be reimplemented if needed such function
         //this._btnPrintNodeMetaData = toolBar.addButton({ "title": "Print node META data",
@@ -1649,7 +1625,6 @@ define(['js/logger',
         //    }});
         //this._toolbarItems.push(this._btnPrintNodeMetaData);
         /************** END OF - PRINT NODE DATA *****************/
-
 
         /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
@@ -1783,7 +1758,16 @@ define(['js/logger',
         if (WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB) !== null &&
             WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB) !== undefined &&
             metaAspectSheetsRegistry.length > WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB)) {
-            selectedSheetID = WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB);
+            //only the active panel should react to the global state
+            if (WebGMEGlobal.PanelManager._activePanel === this) {
+                selectedSheetID = WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB);
+            } else {
+                for (selectedSheetID in this._sheets || {}) {
+                    if (this._sheets[selectedSheetID] === this._selectedMetaAspectSet) {
+                        break;
+                    }
+                }
+            }
         }
 
         if (!selectedSheetID) {
@@ -1798,7 +1782,6 @@ define(['js/logger',
 
         return positionUpdated;
     };
-
 
     MetaEditorControl.prototype._initializeSelectedSheet = function () {
         var len,
@@ -1870,7 +1853,6 @@ define(['js/logger',
 
     //attach MetaEditorControl - DiagramDesigner event handler functions
     _.extend(MetaEditorControl.prototype, MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype);
-
 
     return MetaEditorControl;
 });
