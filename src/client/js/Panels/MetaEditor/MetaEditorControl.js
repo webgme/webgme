@@ -1762,8 +1762,8 @@ define(['js/logger',
             if (WebGMEGlobal.PanelManager._activePanel === this) {
                 selectedSheetID = WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB);
             } else {
-                for(selectedSheetID in this._sheets || {}){
-                    if(this._sheets[selectedSheetID] === this._selectedMetaAspectSet){
+                for (selectedSheetID in this._sheets || {}) {
+                    if (this._sheets[selectedSheetID] === this._selectedMetaAspectSet) {
                         break;
                     }
                 }
