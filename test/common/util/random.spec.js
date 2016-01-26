@@ -85,11 +85,7 @@ describe('random generation', function () {
         }
 
         for (i = 0; i < 100; i += 1) {
-            relid = random.generateRelid(data);
-            expect(relids.indexOf(relid)).to.equal(-1);
-            expect(relid).to.have.length(2);
-            relids.push(relid);
-            data[relid] = {};
+            expect(random.generateRelid(data)).to.have.length(2);
         }
     });
 

@@ -112,8 +112,6 @@ describe('corerel', function () {
             core.getRegistry(copies[0], 'position').should.be.eql(core.getRegistry(copyOne, 'position'));
             core.getPointerPath(copies[1], 'parent').should.be.eql(core.getPointerPath(copies[0], 'parent'));
             core.getPointerPath(grandChild, 'parent').should.be.eql(core.getPointerPath(grandCopy, 'parent'));
-            core.getRelid(grandChild).should.not.be.eql(core.getRelid(copyOne));
-            core.getRelid(grandChild).should.not.be.eql(core.getRelid(grandCopy));
             done();
         }, core.loadChildren(root));
     });
