@@ -572,7 +572,10 @@ function GMEAuth(session, gmeConfig) {
                 if (!userData) {
                     return Q.reject(new Error('no such user [' + userId + ']'));
                 }
+
                 delete userData.passwordHash;
+                userData.data = userData.data || {};
+
                 return userData;
             })
             .nodeify(callback);
@@ -590,40 +593,96 @@ function GMEAuth(session, gmeConfig) {
     }
 
     /**
-     *
-     * @param userId {string}
-     * @param data
-     * @param callback
+     * Updates/overwrites provided fields for the userData.
+     * @param {string} userId
+     * @param {object} userData
+     * @param {function} [callback]
      * @returns {*}
      */
-    function updateUser(userId, data, callback) {
+    function updateUser(userId, userData, callback) {
         return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
-            .then(function (userData) {
-                if (!userData) {
+            .then(function (oldUserData) {
+                if (!oldUserData) {
                     return Q.reject(new Error('no such user [' + userId + ']'));
                 }
 
-                userData.email = data.email || userData.email;
+                oldUserData.email = userData.email || oldUserData.email;
 
-                if (data.hasOwnProperty('canCreate')) {
-                    userData.canCreate = data.canCreate === 'true' || data.canCreate === true;
-                }
-                if (data.hasOwnProperty('siteAdmin')) {
-                    userData.siteAdmin = data.siteAdmin === 'true' || data.siteAdmin === true;
+
+                if (userData.hasOwnProperty('data')) {
+                    if (_isTrueObject(userData.data)) {
+                        oldUserData.data = userData.data;
+                    } else {
+                        throw new Error('supplied userData.data is not an object [' + userData.data + ']');
+                    }
                 }
 
-                if (data.password) {
-                    return Q.ninvoke(bcrypt, 'hash', data.password, gmeConfig.authentication.salts)
+                if (userData.hasOwnProperty('canCreate')) {
+                    oldUserData.canCreate = userData.canCreate === 'true' || userData.canCreate === true;
+                }
+                if (userData.hasOwnProperty('siteAdmin')) {
+                    oldUserData.siteAdmin = userData.siteAdmin === 'true' || userData.siteAdmin === true;
+                }
+
+                if (userData.password) {
+                    return Q.ninvoke(bcrypt, 'hash', userData.password, gmeConfig.authentication.salts)
                         .then(function (hash) {
-                            userData.passwordHash = hash;
-                            return collection.update({_id: userId}, userData, {upsert: true});
+                            oldUserData.passwordHash = hash;
+                            return collection.update({_id: userId}, oldUserData, {upsert: true});
                         });
                 } else {
-                    return collection.update({_id: userId}, userData, {upsert: true});
+                    return collection.update({_id: userId}, oldUserData, {upsert: true});
                 }
             })
             .then(function () {
                 return getUser(userId);
+            })
+            .nodeify(callback);
+    }
+
+    function _isTrueObject(value) {
+        return typeof value === 'object' && value !== null && value instanceof Array === false;
+    }
+
+    function _updateFieldsRec(toData, fromData) {
+        var keys = Object.keys(fromData),
+            i;
+
+        for (i = 0; i < keys.length; i += 1) {
+            if (_isTrueObject(fromData[keys[i]]) && _isTrueObject(toData[keys[i]])) {
+                _updateFieldsRec(toData[keys[i]], fromData[keys[i]]);
+            } else {
+                toData[keys[i]] = fromData[keys[i]];
+            }
+        }
+    }
+
+    /**
+     * Updates the provided fields in data (recursively) within userData.data.
+     * @param {string} userId
+     * @param {object} data
+     * @param {function} [callback]
+     * @returns {*}
+     */
+    function updateUserDataField(userId, data, callback) {
+        return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
+            .then(function (userData) {
+                if (!userData) {
+                    throw new Error('no such user [' + userId + ']');
+                } else if (_isTrueObject(data) === false) {
+                    throw new Error('supplied data is not an object [' + data + ']');
+                }
+
+                userData.data = userData.data || {};
+                _updateFieldsRec(userData.data, data);
+
+                return collection.update({_id: userId}, userData, {upsert: true});
+            })
+            .then(function () {
+                return getUser(userId);
+            })
+            .then(function (userData) {
+                return userData.data;
             })
             .nodeify(callback);
     }
@@ -699,26 +758,43 @@ function GMEAuth(session, gmeConfig) {
     function addUser(userId, email, password, canCreate, options, callback) {
         // TODO: check user/orgId collision
         // FIXME: this will not update the users correctly
-        var data = {
-            _id: userId,
-            email: email,
-            canCreate: canCreate,
-            projects: {},
-            type: CONSTANTS.USER,
-            orgs: [],
-            siteAdmin: options.siteAdmin
-        };
+        var deferred = Q.defer(),
+            rejected = false,
+            data = {
+                _id: userId,
+                email: email,
+                canCreate: canCreate,
+                data: {},
+                projects: {},
+                type: CONSTANTS.USER,
+                orgs: [],
+                siteAdmin: options.siteAdmin
+            };
 
-        return Q.ninvoke(bcrypt, 'hash', password, gmeConfig.authentication.salts)
-            .then(function (hash) {
-                data.passwordHash = hash;
-                if (!options.overwrite) {
-                    return collection.insert(data);
-                } else {
-                    return collection.update({_id: userId}, data, {upsert: true});
-                }
-            })
-            .nodeify(callback);
+        if (options.hasOwnProperty('data')) {
+            if (_isTrueObject(options.data)) {
+                data.data = options.data;
+            } else {
+                deferred.reject(Error('supplied userData.data is not an object [' + options.data + ']'));
+                rejected = true;
+            }
+        }
+
+        if (rejected === false) {
+            Q.ninvoke(bcrypt, 'hash', password, gmeConfig.authentication.salts)
+                .then(function (hash) {
+                    data.passwordHash = hash;
+                    if (!options.overwrite) {
+                        return collection.insert(data);
+                    } else {
+                        return collection.update({_id: userId}, data, {upsert: true});
+                    }
+                })
+                .then(deferred.resolve)
+                .catch(deferred.reject);
+        }
+
+        return deferred.promise.nodeify(callback);
     }
 
     function _getProjectNames(callback) {
@@ -1094,6 +1170,7 @@ function GMEAuth(session, gmeConfig) {
         // user managerment functions
         addUser: addUser,
         updateUser: updateUser,
+        updateUserDataField: updateUserDataField,
         deleteUser: deleteUser,
         getUser: getUser,
         listUsers: listUsers,

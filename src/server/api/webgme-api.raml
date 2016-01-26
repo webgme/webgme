@@ -125,6 +125,16 @@ resourceTypes:
     securedBy: [ basic ]
     responses:
       204:
+  /data:
+    type:
+      collection-item:
+        exampleItem: !include webgme-api-user-data-retrieve.json
+        putBody: !include webgme-api-user-data-retrieve.json
+        patchBody: !include webgme-api-user-data-patch.json
+        getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. N.B. This data will be shared over all projects and apps in a deployment, consider indexing project/app specific data.
+        putDesc: Overwrites the data field.
+        patchDesc: Updates/overwrites the user's data with the sent values for matching keys.
+        deleteDesc: Clears out the user's data field (sets it to empty dictionary). 
 
 /users:
   type:
@@ -137,10 +147,20 @@ resourceTypes:
         exampleItem: !include webgme-api-user-retrieve.json
         putBody: !include webgme-api-user-new.json
         patchBody: !include webgme-api-user-patch.json
-        getDesc:
+        getDesc: 
         putDesc: Requires <b>user.siteAdmin</b>.
         patchDesc: Requires <b>user.siteAdmin</b> if setting siteAdmin.
         deleteDesc: Requires is current user or <b>user.siteAdmin</b>.
+    /data:
+      type:
+        collection-item:
+          exampleItem: !include webgme-api-user-data-retrieve.json
+          putBody: !include webgme-api-user-data-retrieve.json
+          patchBody: !include webgme-api-user-data-patch.json
+          getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. N.B. This data will be shared over all projects and apps in a deployment, consider indexing project/app specific data.
+          putDesc: Overwrites the user's data field. Requires is current user or <b>user.siteAdmin</b>.
+          patchDesc: Updates/overwrites the user's data with the sent values for matching keys. Requires is current user or <b>user.siteAdmin</b>.
+          deleteDesc: Clears out the user's data field (sets it to empty dictionary). Requires is current user or <b>user.siteAdmin</b>.
 
 /orgs:
   get:
