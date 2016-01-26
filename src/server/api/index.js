@@ -5,7 +5,7 @@
  * @module Server:API
  * @author lattmann / https://github.com/lattmann
  * @author pmeijer / https://github.com/pmeijer
- * @author kesco / https://github.com/kesco
+ * @author kecso / https://github.com/kecso
  */
 
 'use strict';
@@ -368,7 +368,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         //"data": {}
         ensureSameUserOrSiteAdmin(req, res)
             .then(function (userData) {
-                if (req.body.hasOwnProperty('siteAdmin') && !userData.siteAdmin) {
+                if (req.body.hasOwnProperty('siteAdmin') && userData.siteAdmin !== true) {
                     res.status(403);
                     throw new Error('setting siteAdmin property requires site admin role');
                 }
@@ -1426,7 +1426,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     }
 
     // FIXME: this should be JSON
-    router.get('/visualizers', ensureAuthenticated, function (req, res, next) {
+    router.get('/visualizers', ensureAuthenticated, function (req, res) {
         var result = getVisualizersDescriptor();
         logger.debug('/visualizers', {metadata: result});
         res.send(result);
@@ -1437,8 +1437,8 @@ function createAPI(app, mountPath, middlewareOpts) {
         next(new Error());
     });
 
-    // error handling
-    router.use(function (err, req, res, next) { // NOTE: it is important to have this function signature with 4 arguments!
+    // error handling (NOTE: it is important to have this function signature with 4 arguments!)
+    router.use(function (err, req, res, next) { //jshint ignore:line
         var errorMessage = {
                 401: 'Authentication required',
                 403: 'Forbidden',
