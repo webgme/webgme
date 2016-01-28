@@ -49,7 +49,9 @@ test_script:
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/scenarios
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/seeds
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/server
-  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/api
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/server/api
+  #- node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/api/addon
+  #- node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/api/plugin
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/server/middleware
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/middleware/auth
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/middleware/blob
