@@ -569,14 +569,15 @@ define([
             }
 
             var keys = Object.keys(node.data),
+                result = [],
                 i = keys.length;
 
             while (--i >= 0) {
-                if (!predicate(keys[i])) {
-                    keys.splice(i, 1);
+                if (predicate(keys[i])) {
+                    result.push(keys[i]);
                 }
             }
-            return keys;
+            return result;
         };
 
         var getRawKeys = function (object, predicate) {
