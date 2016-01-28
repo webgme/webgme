@@ -108,8 +108,8 @@ define([
             var persisted,
                 numberOfPersistedObjects,
                 wrappedCallback,
-                newCommitObject,
-                baseRawData = state.nodes[ROOT_PATH].node.baseRawData; //it has to be saved before persist
+                newCommitObject;
+
             logger.debug('saveRoot msg', msg);
             if (callback) {
                 wrappedCallback = function (err, result) {
@@ -152,13 +152,6 @@ define([
                         logger.warn('Lots of persisted objects', numberOfPersistedObjects);
                     }
 
-                    if (gmeConfig.storage.patchRootCommunicationEnabled) {
-                        persisted.rootHash = {
-                            newHash: persisted.rootHash,
-                            baseHash: state.rootHash,
-                            baseData: baseRawData
-                        };
-                    }
                     // Make the commit on the storage (will emit hashUpdated)
                     newCommitObject = storage.makeCommit(
                         state.project.projectId,

@@ -16,13 +16,14 @@
  */
 
 define([
-    'common/storage/storageclasses/patchstorage',
+    'common/storage/storageclasses/objectloaders',
     'common/storage/constants',
     'common/storage/project/project',
     'common/storage/project/branch',
     'common/util/assert',
-    'common/util/key'
-], function (PatchStorage, CONSTANTS, Project, Branch, ASSERT, GENKEY) {
+    'common/util/key',
+    'common/storage/util'
+], function (StorageObjectLoaders, CONSTANTS, Project, Branch, ASSERT, GENKEY, UTIL) {
     'use strict';
 
     /**
@@ -40,7 +41,7 @@ define([
         self.logger = logger;
         self.userId = null;
 
-        PatchStorage.call(this, webSocket, mainLogger, gmeConfig);
+        StorageObjectLoaders.call(this, webSocket, mainLogger, gmeConfig);
 
         this.open = function (networkHandler) {
             webSocket.connect(function (err, connectionState) {
@@ -226,7 +227,7 @@ define([
                         originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     logger.debug('_remoteUpdateHandler invoked for project, branch', projectId, branchName);
                     for (j = 0; j < updateData.coreObjects.length; j += 1) {
-                        if(updateData.coreObjects[j] && updateData.coreObjects[j].type ==='patch'){
+                        if (updateData.coreObjects[j] && updateData.coreObjects[j].type === 'patch') {
                             project.insertPatchObject(updateData.coreObjects[j]);
                         } else {
                             project.insertObject(updateData.coreObjects[j]);
@@ -346,19 +347,38 @@ define([
             commitNext();
         };
 
-        this.makeCommit = function (projectId, branchName, parents, rootInfo, coreObjects, msg, callback) {
+        this.makeCommit = function (projectId, branchName, parents, rootHash, dataObjects, msg, callback) {
             var project = projects[projectId],
                 branch,
                 commitId,
                 commitCallback,
+                persistQueueElement = {},
                 commitData = {
+                    rootHash: rootHash,
                     projectId: projectId,
                     commitObject: null,
-                    coreObjects: null
-                };
+                    coreObjects: {}
+                },
+                keys = Object.keys(dataObjects),
+                i;
 
-            commitData.coreObjects = coreObjects;
-            self._fillPatchRoot(commitData,rootInfo);
+            //handling patch object creation
+            for (i = 0; i < keys.length; i += 1) {
+                if (dataObjects[keys[i]].oldHash &&
+                    dataObjects[keys[i]].newHash &&
+                    dataObjects[keys[i]].oldData &&
+                    dataObjects[keys[i]].newData) {
+                    //patch type object
+                    persistQueueElement[keys[i]] = dataObjects[keys[i]].newData;
+                    commitData.coreObjects[keys[i]] = UTIL.getPatchObject(dataObjects[keys[i]].oldData,
+                        dataObjects[keys[i]].newData);
+
+                } else {
+                    commitData.coreObjects[keys[i]] = dataObjects[keys[i]];
+                    persistQueueElement[keys[i]] = dataObjects[keys[i]];
+                }
+            }
+
             commitData.commitObject = self._getCommitObject(projectId, parents, commitData.rootHash, msg);
 
             if (project) {
@@ -372,7 +392,7 @@ define([
                     callback.apply(null, arguments);
                 };
 
-                project.projectCache.queuedPersists[commitId] = coreObjects;
+                project.projectCache.queuedPersists[commitId] = persistQueueElement;
                 logger.debug('Queued non-persisted core-objects in cache: ',
                     Object.keys(project.projectCache.queuedPersists).length);
             } else {
@@ -420,7 +440,7 @@ define([
                     self._commitToBranch(projectId, branchName, commitData, oldHash, callback);
                 });
             } else {
-                PatchStorage.prototype.setBranchHash.call(self,
+                StorageObjectLoaders.prototype.setBranchHash.call(self,
                     projectId, branchName, newHash, oldHash, callback);
             }
         };
@@ -721,7 +741,7 @@ define([
         };
     }
 
-    EditorStorage.prototype = Object.create(PatchStorage.prototype);
+    EditorStorage.prototype = Object.create(StorageObjectLoaders.prototype);
     EditorStorage.prototype.constructor = EditorStorage;
 
     return EditorStorage;

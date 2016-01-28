@@ -424,7 +424,11 @@ describe('storage storageclasses editorstorage', function () {
             newCommitHash,
             openingBranch = true,
             updateReceivedDeferred = Q.defer(),
-            forkName = 'pullChanges_fork';
+            forkName = 'pullChanges_fork',
+            coreOther,
+            gmeConfigOther = testFixture.getGmeConfig();
+
+        gmeConfigOther.storage.patchRootCommunicationEnabled = false;
 
         Q.nfcall(storage.openProject, projectName2Id(projectName))
             .then(function (result) {
@@ -466,12 +470,13 @@ describe('storage storageclasses editorstorage', function () {
             })
             .then(function () {
                 var deferred = Q.defer();
+
                 openingBranch = false;
 
                 storageOther = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
                     webGMESessionId,
                     logger,
-                    gmeConfig);
+                    gmeConfigOther);
                 storageOther.open(function (networkState) {
                     if (networkState === STORAGE_CONSTANTS.CONNECTED) {
                         deferred.resolve();
@@ -485,7 +490,11 @@ describe('storage storageclasses editorstorage', function () {
             .then(function () {
                 return Q.nfcall(storageOther.openProject, projectName2Id(projectName));
             })
-            .then(function () {
+            .then(function (project) {
+                coreOther = new testFixture.Core(project[0], {
+                    globConf: gmeConfigOther,
+                    logger: logger
+                });
                 function hashUpdateHandler(data, commitQueue, updateQueue, callback) {
                     callback(null, true);
                 }
@@ -498,9 +507,17 @@ describe('storage storageclasses editorstorage', function () {
                     hashUpdateHandler, branchStatusHandler);
             })
             .then(function () {
+                return coreOther.loadRoot(importResult.rootHash);
+            })
+            .then(function (root) {
                 var persisted;
-                importResult.core.setAttribute(importResult.rootNode, 'name', 'New name'); // FIXME: Bogus modification to get makeCommit working.
-                persisted = importResult.core.persist(importResult.rootNode);
+                coreOther.setAttribute(root, 'name', 'New name'); // FIXME: Bogus modification to get makeCommit working.
+                persisted = coreOther.persist(root);
+
+                expect(persisted.rootHash).not.to.equal(undefined);
+                expect(persisted.objects[persisted.rootHash]).not.to.have.keys(
+                    ['oldHash', 'newHash', 'oldData', 'newData']);
+
                 return Q.ninvoke(storageOther, 'makeCommit', projectName2Id(projectName), forkName,
                     [importResult.commitHash], persisted.rootHash, persisted.objects, 'new commit');
             })
@@ -596,18 +613,22 @@ describe('storage storageclasses editorstorage', function () {
                     hashUpdateHandler, branchStatusHandler);
             })
             .then(function () {
+                return importResult.core.loadRoot(importResult.rootHash);
+
+            })
+            .then(function (root) {
                 var persisted;
-                importResult.core.setAttribute(importResult.rootNode, 'name', 'New name'); // FIXME: Bogus modification to get makeCommit working.
-                persisted = importResult.core.persist(importResult.rootNode);
+                importResult.core.setAttribute(root, 'name', 'New name'); // FIXME: Bogus modification to get makeCommit working.
+                persisted = importResult.core.persist(root);
+
+                expect(persisted.rootHash).not.to.equal(undefined);
+                expect(persisted.objects[persisted.rootHash]).to.have.keys(['newHash', 'oldHash', 'newData', 'oldData']);
+
                 return Q.ninvoke(storageOther, 'makeCommit',
                     projectName2Id(projectName),
                     forkName,
                     [importResult.commitHash],
-                    {
-                        newHash: persisted.rootHash,
-                        baseHash: importResult.rootHash,
-                        baseData: importResult.rootNode.baseRawData
-                    },
+                    persisted.rootHash,
                     persisted.objects, 'newer commit');
             })
             .then(function (result) {

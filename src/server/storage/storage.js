@@ -13,7 +13,7 @@ var Q = require('q'),
     storageHelpers = require('./storagehelpers'),
     EventDispatcher = requireJS('common/EventDispatcher'),
     CONSTANTS = requireJS('common/storage/constants'),
-    jsonPatcher = requireJS('common/util/jsonPatcher');
+    UTIL = requireJS('common/storage/util');
 
 function Storage(database, logger, gmeConfig) {
     EventDispatcher.call(this);
@@ -174,15 +174,16 @@ Storage.prototype.makeCommit = function (data, callback) {
             }
 
             function handlePatchRoot() {
-                var patchRootDeferred = Q.defer();
-                if (data.coreObjects[data.commitObject.root] &&
-                    data.coreObjects[data.commitObject.root].type === 'patch') {
-                    project.loadObject(data.coreObjects[data.commitObject.root].base)
+                var patchRootDeferred = Q.defer(),
+                    rootObject = data.coreObjects[data.commitObject.root];
+                if (rootObject &&
+                    rootObject.type === 'patch') {
+                    project.loadObject(rootObject.base)
                         .then(function (base) {
-                            var rootResult = jsonPatcher.apply(base, data.coreObjects[data.commitObject.root].patch);
+                            var rootResult = UTIL.applyPatch(base, rootObject.patch);
 
                             if (rootResult.status === 'success') {
-                                patchRoot = data.coreObjects[data.commitObject.root];
+                                patchRoot = rootObject;
                                 rootResult.result[CONSTANTS.MONGO_ID] = patchRoot[CONSTANTS.MONGO_ID];
                                 data.coreObjects[data.commitObject.root] = rootResult.result;
                                 patchRootDeferred.resolve();
@@ -192,6 +193,16 @@ Storage.prototype.makeCommit = function (data, callback) {
                             }
                         })
                         .catch(patchRootDeferred.reject);
+                } else if (rootObject &&
+                    rootObject.oldHash &&
+                    rootObject.newHash &&
+                    rootObject.oldData &&
+                    rootObject.newData) {
+                    //direct connected user send complex coreObject instead of a single patchObject
+                    patchRoot = UTIL.getPatchObject(rootObject.oldData, rootObject.newData);
+                    data.coreObjects[data.commitObject.root] = rootObject.newData;
+
+                    patchRootDeferred.resolve();
                 } else {
                     patchRootDeferred.resolve();
                 }

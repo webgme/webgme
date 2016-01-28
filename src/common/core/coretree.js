@@ -298,7 +298,7 @@ define([
                 data: {
                     _mutable: true
                 },
-                baseRawData: {},
+                initial: null,
                 rootid: ++rootCounter
             };
             root.data[ID_NAME] = '';
@@ -338,7 +338,7 @@ define([
                 throw new Error('invalid node data');
             }
 
-            return getChild(node,RANDOM.generateRelid(node.data));
+            return getChild(node, RANDOM.generateRelid(node.data));
         };
 
         // ------- data manipulation
@@ -690,6 +690,9 @@ define([
 
             node = normalize(node);
 
+            //currently there is no reason to call the persist on a non-root object
+            node = getRoot(node);
+
             if (!__isMutableData(node.data)) {
                 return {rootHash: node.data[ID_NAME], objects: {}};
             }
@@ -703,9 +706,22 @@ define([
             } else {
                 result = {rootHash: node.data[ID_NAME], objects: {}};
             }
+            if (result.objects[result.rootHash]) {
+                if (gmeConfig.storage.patchRootCommunicationEnabled && node.initial) {
+                    //TODO this method will change when we will pack similar data for every node
+                    result.objects[result.rootHash] = {
+                        newData: result.objects[result.rootHash],
+                        newHash: result.rootHash,
+                        oldData: node.initial.data,
+                        oldHash: node.initial.hash
+                    };
+                }
 
-            if (gmeConfig.storage.pathRootCommunicationEnabled && getRoot(node) === null) {
-                node.baseRawData = node.data;
+                node.initial = {
+                    data: result.objects[result.rootHash].newData || result.objects[result.rootHash],
+                    hash: result.rootHash
+                }
+
             }
 
             return result;
@@ -724,6 +740,10 @@ define([
                 age: 0,
                 children: [],
                 data: data,
+                initial: {
+                    hash: data[storage.ID_NAME],
+                    data: data
+                },
                 rootid: ++rootCounter
             };
 
