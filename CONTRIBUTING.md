@@ -19,7 +19,7 @@
   - `socket.io-client`
   - `mongodb@1.4.XX`
 5. Update superagent in `src/client/lib/superagent` see `src/client/lib/superagent/UPGRADE`
-6. Update q `cp node_modules/q/q.js src/client/lib/q/q.js` 
+6. Update q `cp node_modules/q/q.js src/client/lib/q/q.js`
 
 # Development
 
@@ -93,3 +93,8 @@ FILL IN...
 This section is for maintainers of webgme.
 
 FILL IN...
+
+Update CHANGELOG.md file using [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator) (Note: a single run eats up to 1500 requests, the rate limit is 5000/hour)
+- New release: `github_changelog_generator --future-release <next_release> -t <your_github_token>`
+- Generating for existing releases: `github_changelog_generator --no-unreleased -t <your_github_token>`
+- For more information see: `github_changelog_generator --help`
