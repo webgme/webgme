@@ -747,10 +747,6 @@ define([
                 rootid: ++rootCounter
             };
 
-            if (gmeConfig.storage.pathRootCommunicationEnabled) {
-                root.baseRawData = root.data;
-            }
-
             roots.push(root);
 
             __ageRoots();

@@ -23,8 +23,8 @@
  * }
  * @example
  * {
-         *   hash: '<hash from makeCommit with no branch provided>'
-         * }
+ *   hash: '<hash from makeCommit with no branch provided>'
+ * }
  */
 
 /**
@@ -46,7 +46,7 @@
  *   time: 1430169614741,
  *   message: "createChildren({\"/1008889918/1998840078\":\"/1182870936/737997118/1736829087/1966323860\"})",
  *   type: 'commit'
- *}
+ * }
  */
 
 /**
@@ -62,7 +62,7 @@
  *   base: '#04009ecd1e68117cd3e9d39c87aadd9ed1ee5cb3',
  *   type: 'patch',
  *   patch: [{op: 'add', path: '/atr/new', value: 'value'}]
- *}
+ * }
  */
 define([], function () {
     'use strict';
