@@ -16,6 +16,7 @@ describe('CoreTree', function () {
         requirejs = require('requirejs'),
         projectName = 'CoreTreeTest',
         projectId = testFixture.projectName2Id(projectName),
+        project,
         CoreTree = requirejs('common/core/coretree'),
 
         logger = testFixture.logger.fork('coretree.spec'),
@@ -36,7 +37,7 @@ describe('CoreTree', function () {
                 return storage.createProject({projectName: projectName});
             })
             .then(function (dbProject) {
-                var project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
+                project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
                 coreTree = new CoreTree(project, {
                     globConf: gmeConfig,
                     logger: testFixture.logger.fork('CoreTree:core')
@@ -124,7 +125,6 @@ describe('CoreTree', function () {
 
             coreTree.getLevel(grandChild).should.be.equal(2);
         });
-
 
     });
 
@@ -313,6 +313,102 @@ describe('CoreTree', function () {
             (function () {
                 coreTree.getCommonPathPrefixData('', ' /invalid');
             }).should.throw();
+        });
+
+    });
+
+    describe('core.persist', function () {
+
+        it('should always generate regular object for the first time', function () {
+            var root = coreTree.createRoot(),
+                persisted;
+
+            coreTree.setProperty(root, 'prop', 'valueOne');
+
+            persisted = coreTree.persist(root);
+
+            expect(persisted.rootHash).not.to.equal(undefined);
+            expect(Object.keys(persisted.objects)).to.have.length(1);
+            expect(persisted.objects[persisted.rootHash]).not.to.have.keys(['oldData', 'newData', 'oldHash', 'nesHash']);
+            expect(root.initial).not.to.equal(null);
+            expect(root.initial).not.to.equal(undefined);
+        });
+
+        it('should keep the \'initial\' info up-to-date throughout multiple persists', function () {
+            var root = coreTree.createRoot(),
+                persisted,
+                child,
+                hashes = [];
+
+            coreTree.setProperty(root, 'prop', 'valueOne');
+
+            persisted = coreTree.persist(root);
+
+            expect(persisted.rootHash).not.to.equal(undefined);
+            hashes.unshift(persisted.rootHash);
+
+            expect(coreTree.getProperty(root, 'prop')).to.equal('valueOne');
+            child = coreTree.createChild(root);
+
+            expect(root.initial.hash).to.equal(hashes[0]);
+
+            coreTree.setProperty(child, 'prop', 'childValue');
+            coreTree.setProperty(root, 'prop', 'secondValue');
+
+            persisted = coreTree.persist(root);
+            expect(persisted.rootHash).not.to.equal(undefined);
+
+            hashes.unshift(persisted.rootHash);
+            expect(root.initial.hash).to.equal(hashes[0]);
+
+            expect(coreTree.getProperty(root, 'prop')).to.equal('secondValue');
+            expect(coreTree.getProperty(child, 'prop')).to.equal('childValue');
+
+            child = coreTree.getChild(root, coreTree.getRelid(child));
+            expect(coreTree.getProperty(child, 'prop')).to.equal('childValue');
+
+            coreTree.setProperty(child, 'prop', 'finalValue');
+
+            persisted = coreTree.persist(root);
+            expect(persisted.rootHash).not.to.equal(undefined);
+
+            hashes.unshift(persisted.rootHash);
+            expect(root.initial.hash).to.equal(hashes[0]);
+
+            expect(coreTree.getProperty(root, 'prop')).to.equal('secondValue');
+            expect(coreTree.getProperty(child, 'prop')).to.equal('finalValue');
+
+        });
+
+        it('should always persist a regular object if patchRootCommunication is not enabled', function () {
+            var otherGmeConfig = testFixture.getGmeConfig(),
+                core,
+                root,
+                persisted;
+
+            otherGmeConfig.storage.patchRootCommunicationEnabled = false;
+
+            core = new CoreTree(project, {
+                globConf: otherGmeConfig,
+                logger: testFixture.logger.fork('CoreTree:core-noPatch')
+            });
+
+            root = core.createRoot();
+
+            core.setProperty(root, 'prop', 'value');
+
+            persisted = core.persist(root);
+
+            expect(Object.keys(persisted.objects)).to.have.length(1);
+            expect(persisted.objects[persisted.rootHash]).not.to.have.keys(['oldData', 'newData', 'oldHash', 'nesHash']);
+
+            core.setProperty(root, 'prop', 'changed');
+
+            persisted = core.persist(root);
+
+            expect(Object.keys(persisted.objects)).to.have.length(1);
+            expect(persisted.objects[persisted.rootHash]).not.to.have.keys(['oldData', 'newData', 'oldHash', 'nesHash']);
+
         });
     });
 

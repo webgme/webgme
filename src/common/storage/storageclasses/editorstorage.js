@@ -21,8 +21,9 @@ define([
     'common/storage/project/project',
     'common/storage/project/branch',
     'common/util/assert',
-    'common/util/key'
-], function (StorageObjectLoaders, CONSTANTS, Project, Branch, ASSERT, GENKEY) {
+    'common/util/key',
+    'common/storage/util'
+], function (StorageObjectLoaders, CONSTANTS, Project, Branch, ASSERT, GENKEY, UTIL) {
     'use strict';
 
     /**
@@ -226,7 +227,11 @@ define([
                         originHash = updateData.commitObject[CONSTANTS.MONGO_ID];
                     logger.debug('_remoteUpdateHandler invoked for project, branch', projectId, branchName);
                     for (j = 0; j < updateData.coreObjects.length; j += 1) {
-                        project.insertObject(updateData.coreObjects[j]);
+                        if (updateData.coreObjects[j] && updateData.coreObjects[j].type === 'patch') {
+                            project.insertPatchObject(updateData.coreObjects[j]);
+                        } else {
+                            project.insertObject(updateData.coreObjects[j]);
+                        }
                     }
 
                     branch.queueUpdate(updateData);
@@ -347,14 +352,34 @@ define([
                 branch,
                 commitId,
                 commitCallback,
+                persistQueueElement = {},
                 commitData = {
+                    rootHash: rootHash,
                     projectId: projectId,
                     commitObject: null,
-                    coreObjects: null
-                };
+                    coreObjects: {}
+                },
+                keys = Object.keys(coreObjects),
+                i;
 
-            commitData.commitObject = self._getCommitObject(projectId, parents, rootHash, msg);
-            commitData.coreObjects = coreObjects;
+            //handling patch object creation
+            for (i = 0; i < keys.length; i += 1) {
+                if (coreObjects[keys[i]].oldHash &&
+                    coreObjects[keys[i]].newHash &&
+                    coreObjects[keys[i]].oldData &&
+                    coreObjects[keys[i]].newData) {
+                    //patch type object
+                    persistQueueElement[keys[i]] = coreObjects[keys[i]].newData;
+                    commitData.coreObjects[keys[i]] = UTIL.getPatchObject(coreObjects[keys[i]].oldData,
+                        coreObjects[keys[i]].newData);
+
+                } else {
+                    commitData.coreObjects[keys[i]] = coreObjects[keys[i]];
+                    persistQueueElement[keys[i]] = coreObjects[keys[i]];
+                }
+            }
+
+            commitData.commitObject = self._getCommitObject(projectId, parents, commitData.rootHash, msg);
 
             if (project) {
                 project.insertObject(commitData.commitObject);
@@ -367,7 +392,7 @@ define([
                     callback.apply(null, arguments);
                 };
 
-                project.projectCache.queuedPersists[commitId] = coreObjects;
+                project.projectCache.queuedPersists[commitId] = persistQueueElement;
                 logger.debug('Queued non-persisted core-objects in cache: ',
                     Object.keys(project.projectCache.queuedPersists).length);
             } else {

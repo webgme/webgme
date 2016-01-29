@@ -109,6 +109,7 @@ define([
                 numberOfPersistedObjects,
                 wrappedCallback,
                 newCommitObject;
+
             logger.debug('saveRoot msg', msg);
             if (callback) {
                 wrappedCallback = function (err, result) {
@@ -224,7 +225,6 @@ define([
             }
 
         }
-
 
         nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode);
 
@@ -1409,7 +1409,6 @@ define([
             //first we have to set the internal counter as the actual load can get synchronous :(
             loadRequestCounter = keys.length;
 
-
             for (i = 0; i < keys.length; i += 1) {
                 if (state.inLoading) {
                     state.ongoingLoadPatternsCounter += 1;
@@ -1512,7 +1511,6 @@ define([
                     basic: true,
                     hash: getStringHash(root)
                 };
-
 
                 //we first only set the counter of patterns but we also generate a completely separate pattern queue
                 //as we cannot be sure if all the users will remain at the point of giving the actual load command!!!
@@ -1967,7 +1965,6 @@ define([
 
         this.gmeConfig = gmeConfig;
     }
-
 
     // Inherit from the EventDispatcher
     Client.prototype = Object.create(EventDispatcher.prototype);

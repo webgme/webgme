@@ -23,8 +23,8 @@
  * }
  * @example
  * {
-         *   hash: '<hash from makeCommit with no branch provided>'
-         * }
+ *   hash: '<hash from makeCommit with no branch provided>'
+ * }
  */
 
 /**
@@ -46,7 +46,23 @@
  *   time: 1430169614741,
  *   message: "createChildren({\"/1008889918/1998840078\":\"/1182870936/737997118/1736829087/1966323860\"})",
  *   type: 'commit'
- *}
+ * }
+ */
+
+/**
+ * @typedef {object} PatchObject
+ * @prop {module:Core~ObjectHash} _id - Hash of the expected result object.
+ * @prop {module:Core~ObjectHash} base - Hash of the base object where the patch should be applied.
+ * @prop {string} type - 'patch'.
+ * @prop {object} patch - The patch instructions (based on [RFC6902]{@link http://tools.ietf.org/html/rfc6902}).
+ *
+ * @example
+ * {
+ *   _id: '#5496cf226542fcceccf89056f0d27564abc88c99',
+ *   base: '#04009ecd1e68117cd3e9d39c87aadd9ed1ee5cb3',
+ *   type: 'patch',
+ *   patch: [{op: 'add', path: '/atr/new', value: 'value'}]
+ * }
  */
 define([], function () {
     'use strict';

@@ -8,7 +8,11 @@
  * @author mmaroti / https://github.com/mmaroti
  */
 
-define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CONSTANTS) {
+define([
+    'common/util/assert',
+    'common/storage/constants',
+    'common/util/jsonPatcher'
+], function (ASSERT, CONSTANTS, jsonPatcher) {
     'use strict';
     function ProjectCache(storage, projectId, mainLogger, gmeConfig) {
         var self = this,
@@ -248,6 +252,33 @@ define(['common/util/assert', 'common/storage/constants'], function (ASSERT, CON
             }
             if (stackedObjects) {
                 stackedObjects[key] = obj;
+            }
+        };
+
+        this.insertPatchObject = function (obj) {
+            ASSERT(typeof obj === 'object' && obj !== null);
+
+            var base,
+                patch,
+                key = obj[CONSTANTS.MONGO_ID];
+
+            if (obj.base && typeof obj.patch === 'object' && key) {
+                base = getFromCache(obj.base);
+
+                if (base) {
+                    patch = jsonPatcher.apply(base, obj.patch);
+                    if (patch.status === 'success') {
+                        patch.result[CONSTANTS.MONGO_ID] = key;
+                        this.insertObject(patch.result);
+                    } else {
+                        logger.error('patch application failed', patch);
+                    }
+                } else {
+                    logger.debug('the base [' +
+                        obj.base + '] is not available from the cache so the patch object is ignored');
+                }
+            } else {
+                logger.error('invalid patch object format', obj);
             }
         };
     }

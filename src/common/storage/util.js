@@ -4,7 +4,7 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-define(['common/storage/constants'], function (CONSTANTS) {
+define(['common/storage/constants', 'common/util/jsonPatcher'], function (CONSTANTS, jsonPatcher) {
     'use strict';
     return {
         CONSTANTS: CONSTANTS,
@@ -41,6 +41,17 @@ define(['common/storage/constants'], function (CONSTANTS) {
                 return hash[0] === '#' ? hash : '#' + hash;
             }
             return hash;
-        }
+        },
+        getPatchObject: function (oldData, newData) {
+            var patchObject = {
+                type: 'patch',
+                base: oldData[CONSTANTS.MONGO_ID],
+                patch: jsonPatcher.create(oldData, newData)
+            };
+            patchObject[CONSTANTS.MONGO_ID] = newData[CONSTANTS.MONGO_ID];
+
+            return patchObject;
+        },
+        applyPatch: jsonPatcher.apply
     };
 });
