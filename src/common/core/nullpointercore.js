@@ -5,57 +5,58 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert'], function (ASSERT) {
+define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTANTS) {
     'use strict';
 
-    var NULLPTR_NAME = '_null_pointer';
-    var NULLPTR_RELID = '_nullptr';
-
-
-    function nullPointerCore(_innerCore, options) {
+    function NullPointerCore(innerCore, options) {
         ASSERT(typeof options === 'object');
         ASSERT(typeof options.globConf === 'object');
         ASSERT(typeof options.logger !== 'undefined');
-        var _core = {},
-            logger = options.logger.fork('nullpointercore');
-        for (var i in _innerCore) {
-            _core[i] = _innerCore[i];
-        }
-        logger.debug('initialized');
 
-        //extra functions
-        _core.setPointer = function (node, name, target) {
+        var logger = options.logger,
+            core = {},
+            key;
+
+        for (key in innerCore) {
+            core[key] = innerCore[key];
+        }
+
+        logger.debug('initialized NullPointerCore');
+
+        //<editor-fold=Modified Methods>
+        core.setPointer = function (node, name, target) {
             if (target === null) {
-                var nullChild = _innerCore.getChild(node, NULLPTR_RELID);
-                _innerCore.setAttribute(nullChild, 'name', NULLPTR_NAME);
-                _innerCore.setPointer(node, name, nullChild);
+                var nullChild = innerCore.getChild(node, CONSTANTS.NULLPTR_RELID);
+                innerCore.setAttribute(nullChild, 'name', CONSTANTS.NULLPTR_NAME);
+                innerCore.setPointer(node, name, nullChild);
             } else {
-                _innerCore.setPointer(node, name, target);
+                innerCore.setPointer(node, name, target);
             }
         };
 
-        _core.getPointerPath = function (node, name) {
-            var path = _innerCore.getPointerPath(node, name);
-            if (path && path.indexOf(NULLPTR_RELID) !== -1) {
+        core.getPointerPath = function (node, name) {
+            var path = innerCore.getPointerPath(node, name);
+            if (path && path.indexOf(CONSTANTS.NULLPTR_RELID) !== -1) {
                 return null;
             } else {
                 return path;
             }
         };
 
-        _core.loadPointer = function (node, name) {
-            var path = _core.getPointerPath(node, name);
+        core.loadPointer = function (node, name) {
+            var path = core.getPointerPath(node, name);
             if (path === null) {
                 return null;
             } else {
-                return _innerCore.loadPointer(node, name);
+                return innerCore.loadPointer(node, name);
             }
         };
+        //</editor-fold>
 
-        return _core;
+        return core;
     }
 
-    return nullPointerCore;
+    return NullPointerCore;
 });
 
 

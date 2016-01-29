@@ -10,14 +10,14 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
 
     // ----------------- CoreUnwrap -----------------
 
-    var CoreUnwrap = function (oldcore, options) {
+    var CoreUnwrap = function (innercore, options) {
         ASSERT(typeof options === 'object');
         ASSERT(typeof options.globConf === 'object');
         ASSERT(typeof options.logger !== 'undefined');
         var logger = options.logger.fork('coreunwrap');
 
         function checkNode(node) {
-            if (node === null || oldcore.isValidNode(node)) {
+            if (node === null || innercore.isValidNode(node)) {
                 return node;
             } else {
                 throw new Error('Invalid result node');
@@ -29,7 +29,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
 
             var i;
             for (i = 0; i < nodes.length; ++i) {
-                if (!oldcore.isValidNode(nodes[i])) {
+                if (!innercore.isValidNode(nodes[i])) {
                     throw new Error('Invalid result node array');
                 }
             }
@@ -39,53 +39,53 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
 
         // copy all operations
         var core = {};
-        for (var key in oldcore) {
-            core[key] = oldcore[key];
+        for (var key in innercore) {
+            core[key] = innercore[key];
         }
         logger.debug('initialized');
-        core.loadRoot = TASYNC.unwrap(oldcore.loadRoot);
+        core.loadRoot = TASYNC.unwrap(innercore.loadRoot);
         //core.persist = TASYNC.unwrap(oldcore.persist);
 
         // core.loadChild = TASYNC.unwrap(oldcore.loadChild);
         core.loadChild = TASYNC.unwrap(function (node, relid) {
-            return TASYNC.call(checkNode, oldcore.loadChild(node, relid));
+            return TASYNC.call(checkNode, innercore.loadChild(node, relid));
         });
 
         // core.loadByPath = TASYNC.unwrap(oldcore.loadByPath);
         core.loadByPath = TASYNC.unwrap(function (node, path) {
-            return TASYNC.call(checkNode, oldcore.loadByPath(node, path));
+            return TASYNC.call(checkNode, innercore.loadByPath(node, path));
         });
 
         // core.loadChildren = TASYNC.unwrap(oldcore.loadChildren);
         core.loadChildren = TASYNC.unwrap(function (node) {
-            return TASYNC.call(checkNodes, oldcore.loadChildren(node));
+            return TASYNC.call(checkNodes, innercore.loadChildren(node));
         });
 
         // core.loadOwnChildren = TASYNC.unwrap(oldcore.loadOwnChildren);
         core.loadOwnChildren = TASYNC.unwrap(function (node) {
-            return TASYNC.call(checkNodes, oldcore.loadOwnChildren(node));
+            return TASYNC.call(checkNodes, innercore.loadOwnChildren(node));
         });
 
-        core.loadPointer = TASYNC.unwrap(oldcore.loadPointer);
-        core.loadCollection = TASYNC.unwrap(oldcore.loadCollection);
+        core.loadPointer = TASYNC.unwrap(innercore.loadPointer);
+        core.loadCollection = TASYNC.unwrap(innercore.loadCollection);
 
-        core.loadSubTree = TASYNC.unwrap(oldcore.loadSubTree);
-        core.loadOwnSubTree = TASYNC.unwrap(oldcore.loadOwnSubTree);
-        core.loadTree = TASYNC.unwrap(oldcore.loadTree);
+        core.loadSubTree = TASYNC.unwrap(innercore.loadSubTree);
+        core.loadOwnSubTree = TASYNC.unwrap(innercore.loadOwnSubTree);
+        core.loadTree = TASYNC.unwrap(innercore.loadTree);
 
-        core.setGuid = TASYNC.unwrap(oldcore.setGuid);
+        core.setGuid = TASYNC.unwrap(innercore.setGuid);
 
         //core diff async functions
-        if (typeof oldcore.generateTreeDiff === 'function') {
-            core.generateTreeDiff = TASYNC.unwrap(oldcore.generateTreeDiff);
+        if (typeof innercore.generateTreeDiff === 'function') {
+            core.generateTreeDiff = TASYNC.unwrap(innercore.generateTreeDiff);
         }
 
-        if (typeof oldcore.generateLightTreeDiff === 'function') {
-            core.generateLightTreeDiff = TASYNC.unwrap(oldcore.generateLightTreeDiff);
+        if (typeof innercore.generateLightTreeDiff === 'function') {
+            core.generateLightTreeDiff = TASYNC.unwrap(innercore.generateLightTreeDiff);
         }
 
-        if (typeof oldcore.applyTreeDiff === 'function') {
-            core.applyTreeDiff = TASYNC.unwrap(oldcore.applyTreeDiff);
+        if (typeof innercore.applyTreeDiff === 'function') {
+            core.applyTreeDiff = TASYNC.unwrap(innercore.applyTreeDiff);
         }
 
         return core;

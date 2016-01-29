@@ -24,23 +24,17 @@ define([
         ASSERT(typeof options.logger !== 'undefined');
 
         var gmeConfig = options.globConf,
-            logger = options.logger.fork('coretree'),
-            MAX_AGE = 3, // MAGIC NUMBER
-            MAX_TICKS = 2000, // MAGIC NUMBER
-            MAX_MUTATE = 30000, // MAGIC NUMBER
-
+            logger = options.logger.fork('core'),
             ID_NAME = storage.ID_NAME,
-            __getEmptyData = function () {
-                return {};
-            },
             roots = [],
             ticks = 0,
+            mutateCount = 0,
+            checkValidTreeRunning = true,
             stackedObjects = {};
 
         storage.loadObject = TASYNC.wrap(storage.loadObject);
 
         // ------- static methods
-
         var getParent = function (node) {
             ASSERT(typeof node.parent === 'object');
 
@@ -130,11 +124,11 @@ define([
         // ------- memory management
 
         var __detachChildren = function (node) {
-            ASSERT(node.children instanceof Array && node.age >= MAX_AGE - 1);
+            ASSERT(node.children instanceof Array && node.age >= CONSTANTS.MAX_AGE - 1);
 
             var children = node.children;
             node.children = null;
-            node.age = MAX_AGE;
+            node.age = CONSTANTS.MAX_AGE;
 
             for (var i = 0; i < children.length; ++i) {
                 __detachChildren(children[i]);
@@ -148,8 +142,8 @@ define([
             while (--i >= 0) {
                 var node = nodes[i];
 
-                ASSERT(node.age < MAX_AGE);
-                if (++node.age >= MAX_AGE) {
+                ASSERT(node.age < CONSTANTS.MAX_AGE);
+                if (++node.age >= CONSTANTS.MAX_AGE) {
                     nodes.splice(i, 1);
                     __detachChildren(node);
                 } else {
@@ -159,7 +153,7 @@ define([
         };
 
         var __ageRoots = function () {
-            if (++ticks >= MAX_TICKS) {
+            if (++ticks >= CONSTANTS.MAX_TICKS) {
                 ticks = 0;
                 __ageNodes(roots);
             }
@@ -199,7 +193,7 @@ define([
             var parent;
 
             if (node.children === null) {
-                ASSERT(node.age === MAX_AGE);
+                ASSERT(node.age === CONSTANTS.MAX_AGE);
 
                 if (node.parent !== null) {
                     parent = normalize(node.parent);
@@ -378,12 +372,15 @@ define([
             }
         };
 
+        var __getEmptyData = function () {
+            return {};
+        };
+
         var __areEquivalent = function (data1, data2) {
             return data1 === data2 || (typeof data1 === 'string' && data1 === __getChildData(data2, ID_NAME)) ||
                 (__isEmptyData(data1) && __isEmptyData(data2));
         };
 
-        var mutateCount = 0;
         var mutate = function (node) {
             ASSERT(isValidNode(node));
 
@@ -398,7 +395,7 @@ define([
 
             // TODO: infinite cycle if MAX_MUTATE is smaller than depth!
             // gmeConfig.storage.autoPersist is removed and always false
-            if (false && ++mutateCount > MAX_MUTATE) {
+            if (false && ++mutateCount > CONSTANTS.MAX_MUTATE) {
                 mutateCount = 0;
 
                 for (var i = 0; i < roots.length; ++i) {
@@ -721,7 +718,7 @@ define([
                 node.initial = {
                     data: result.objects[result.rootHash].newData || result.objects[result.rootHash],
                     hash: result.rootHash
-                }
+                };
 
             }
 
@@ -863,9 +860,6 @@ define([
             }
         };
 
-        // disable checking for now
-        var checkValidTreeRunning = true;
-
         var isValidNode = function (node) {
             try {
                 __test('object', typeof node === 'object' && node !== null);
@@ -873,9 +867,9 @@ define([
                 __test('parent', typeof node.parent === 'object');
                 __test('relid', typeof node.relid === 'string' || node.relid === null);
                 __test('parent 2', (node.parent === null) === (node.relid === null));
-                __test('age', node.age >= 0 && node.age <= MAX_AGE);
+                __test('age', node.age >= 0 && node.age <= CONSTANTS.MAX_AGE);
                 __test('children', node.children === null || node.children instanceof Array);
-                __test('children 2', (node.age === MAX_AGE) === (node.children === null));
+                __test('children 2', (node.age === CONSTANTS.MAX_AGE) === (node.children === null));
                 __test('data', typeof node.data === 'object' || typeof node.data === 'string' ||
                     typeof node.data === 'number');
 
@@ -944,7 +938,8 @@ define([
 
             loadPaths: TASYNC.wrap(storage.loadPaths),
 
-            constants: CONSTANTS
+            constants: CONSTANTS,
+            logger: logger
         };
     };
 });

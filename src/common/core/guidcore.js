@@ -8,22 +8,31 @@ define([
     'common/util/assert',
     'common/core/tasync',
     'common/regexp',
-    'common/util/random'
-], function (ASSERT, TASYNC, REGEXP, RANDOM) {
+    'common/util/random',
+    'common/core/constants',
+], function (ASSERT, TASYNC, REGEXP, RANDOM, CONSTANTS) {
 
     'use strict';
 
-    var OWN_GUID = '_relguid',
-        relidToInteger = RANDOM.relidToInteger,
-        NULL_GUID = '00000000-0000-0000-0000-000000000000',
+    var relidToInteger = RANDOM.relidToInteger,
         GUID = RANDOM.generateGuid;
 
-    function guidCore(_innerCore, options) {
+    function GuidCore(innerCore, options) {
         ASSERT(typeof options === 'object');
         ASSERT(typeof options.globConf === 'object');
         ASSERT(typeof options.logger !== 'undefined');
-        var logger = options.logger.fork('guidCore');
-        //helper functions
+
+        var logger = options.logger,
+            core = {},
+            key;
+
+        for (key in innerCore) {
+            core[key] = innerCore[key];
+        }
+
+        logger.debug('initialized GuidCore');
+
+        //<editor-fold=Helper Functions>
         function toInternalGuid(myGuid) {
             return myGuid.replace(/-/g, '');
         }
@@ -47,7 +56,7 @@ define([
         function getRelidGuid(node) {
             //TODO we always should know what structure we should expect as a relid -
             // now we think it is a number so it can be converted to 0xsomething
-            var relid = _core.getRelid(node);
+            var relid = core.getRelid(node);
             //relid = Number(relid);
             relid = relidToInteger(relid);
             if (relid === 'NaN') {
@@ -86,48 +95,71 @@ define([
         }
 
         function setDataGuid(node, guid) {
-            _core.setAttribute(node, OWN_GUID,
+            core.setAttribute(node, CONSTANTS.OWN_GUID,
                 xorGuids(
                     toInternalGuid(guid),
                     xorGuids(
                         getRelidGuid(node),
                         toInternalGuid(
-                            _core.getGuid(
-                                _core.getParent(node)
+                            core.getGuid(
+                                core.getParent(node)
                             )
                         )
                     )
                 )
             );
         }
+        //</editor-fold>
 
-        var _core = {};
-        for (var i in _innerCore) {
-            _core[i] = _innerCore[i];
-        }
+        //<editor-fold=Modified Methods>
+        core.createNode = function (parameters) {
+            parameters = parameters || {};
 
-        //new functions
-        _core.getGuid = function (node) {
+            var guid = parameters.guid || GUID(),
+                node;
+
+            ASSERT(REGEXP.GUID.test(guid));
+
+            node = innerCore.createNode(parameters);
+
+            setDataGuid(node, guid);
+
+            return node;
+        };
+
+        core.moveNode = function (node, parent) {
+            var oldGuid = core.getGuid(node);
+
+            node = innerCore.moveNode(node, parent);
+
+            setDataGuid(node, oldGuid);
+
+            return node;
+        };
+        //</editor-fold>
+
+        //<editor-fold=Added Methods>
+        core.getGuid = function (node) {
             if (node) {
                 return toExternalGuid(
                     xorGuids(
                         getRelidGuid(node),
                         xorGuids(
-                            _core.getAttribute(node, OWN_GUID),
+                            core.getAttribute(node, CONSTANTS.OWN_GUID),
                             toInternalGuid(
-                                _core.getGuid(
-                                    _core.getParent(node)
+                                core.getGuid(
+                                    core.getParent(node)
                                 )
                             )
                         )
                     )
                 );
             } else {
-                return NULL_GUID;
+                return CONSTANTS.NULL_GUID;
             }
         };
 
-        _core.setGuid = function (node, guid) {
+        core.setGuid = function (node, guid) {
             ASSERT(REGEXP.GUID.test(guid));
             return TASYNC.call(function (children) {
                 var i,
@@ -135,7 +167,7 @@ define([
 
                 //save children guids
                 for (i = 0; i < children.length; i += 1) {
-                    childrenGuids.push(_core.getGuid(children[i]));
+                    childrenGuids.push(core.getGuid(children[i]));
                 }
 
                 //setting own dataGuid
@@ -145,38 +177,12 @@ define([
                 for (i = 0; i < children.length; i += 1) {
                     setDataGuid(children[i], childrenGuids[i]);
                 }
-            }, _core.loadChildren(node));
+            }, core.loadChildren(node));
         };
+        //</editor-fold>
 
-        //modified functions
-        _core.createNode = function (parameters) {
-            parameters = parameters || {};
-
-            var guid = parameters.guid || GUID(),
-                node;
-
-            ASSERT(REGEXP.GUID.test(guid));
-
-            node = _innerCore.createNode(parameters);
-
-            setDataGuid(node, guid);
-
-            return node;
-        };
-
-        _core.moveNode = function (node, parent) {
-            var oldGuid = _core.getGuid(node);
-
-            node = _innerCore.moveNode(node, parent);
-
-            setDataGuid(node, oldGuid);
-
-            return node;
-        };
-
-        logger.debug('initialized');
-        return _core;
+        return core;
     }
 
-    return guidCore;
+    return GuidCore;
 });

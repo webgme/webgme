@@ -5,58 +5,78 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
+define([
+    'common/util/assert',
+    'common/core/tasync',
+    'common/core/constants'
+], function (ASSERT, TASYNC, CONSTANTS) {
         'use strict';
 
-        var MetaCacheCore = function (oldcore, options) {
+        var MetaCacheCore = function (innerCore, options) {
             ASSERT(typeof options === 'object');
             ASSERT(typeof options.globConf === 'object');
             ASSERT(typeof options.logger !== 'undefined');
-            // copy all operations
-            var core = {},
-                META_SET_NAME = 'MetaAspectSet',
-                logger = options.logger.fork('MetaCacheCore');
-            for (var key in oldcore) {
-                core[key] = oldcore[key];
-            }
-            logger.debug('initialized');
 
+            var logger = options.logger,
+                core = {},
+                key;
+
+            for (key in innerCore) {
+                core[key] = innerCore[key];
+            }
+
+            logger.debug('initialized MetaCacheCore');
+
+            //<editor-fold=Helper Functions>
             function loadMetaSet(root) {
-                var paths = oldcore.getMemberPaths(root, META_SET_NAME),
+                var paths = innerCore.getMemberPaths(root, CONSTANTS.META_SET_NAME),
                     i,
                     metaNodes = [];
 
                 return TASYNC.call(function () {
                     for (i = 0; i < paths.length; i += 1) {
-                        metaNodes.push(oldcore.loadByPath(root, paths[i]));
+                        metaNodes.push(innerCore.loadByPath(root, paths[i]));
                     }
 
                     return TASYNC.lift(metaNodes);
                 }, core.loadPaths(core.getHash(root), JSON.parse(JSON.stringify(paths))));
             }
 
+            function sensitiveFilter(validNodes) {
+                var i;
+
+                i = validNodes.length;
+                while (i--) {
+                    if (core.isConnection(validNodes[i]) || core.isAbstract(validNodes[i])) {
+                        validNodes.splice(i, 1);
+                    }
+                }
+            }
+            //</editor-fold>
+
+            //<editor-fold=Modified Methods>
             core.loadRoot = function (hash) {
                 return TASYNC.call(function (root) {
                     return TASYNC.call(function (elements) {
                         var i = 0;
                         root.metaNodes = {};
                         for (i = 0; i < elements.length; i += 1) {
-                            root.metaNodes[oldcore.getPath(elements[i])] = elements[i];
+                            root.metaNodes[innerCore.getPath(elements[i])] = elements[i];
                         }
                         return root;
                     }, loadMetaSet(root));
-                }, oldcore.loadRoot(hash));
+                }, innerCore.loadRoot(hash));
             };
 
             core.loadByPath = function (node, path) {
                 return TASYNC.call(function () {
-                    return oldcore.loadByPath(node, path);
+                    return innerCore.loadByPath(node, path);
                 }, core.loadPaths(core.getHash(node), [path]));
             };
 
             //functions where the cache may needs to be updated
             core.createNode = function (parameters) {
-                var node = oldcore.createNode(parameters);
+                var node = innerCore.createNode(parameters);
 
                 if (!parameters || !parameters.parent) {
                     //a root just have been created
@@ -68,20 +88,20 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
 
             core.addMember = function (node, setName, member) {
                 var root = core.getRoot(node);
-                oldcore.addMember(node, setName, member);
+                innerCore.addMember(node, setName, member);
 
                 //check if our cache needs to be updated
-                if (setName === META_SET_NAME && core.getPath(node) === core.getPath(root)) {
+                if (setName === CONSTANTS.META_SET_NAME && core.getPath(node) === core.getPath(root)) {
                     root.metaNodes[core.getPath(member)] = member;
                 }
             };
 
             core.delMember = function (node, setName, memberPath) {
                 var root = core.getRoot(node);
-                oldcore.delMember(node, setName, memberPath);
+                innerCore.delMember(node, setName, memberPath);
 
                 //check if our cache needs to be updated
-                if (setName === META_SET_NAME && core.getPath(node) === core.getPath(root)) {
+                if (setName === CONSTANTS.META_SET_NAME && core.getPath(node) === core.getPath(root)) {
                     delete root.metaNodes[memberPath];
                 }
             };
@@ -91,13 +111,13 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                 if (root.metaNodes[core.getPath(node)]) {
                     delete root.metaNodes[core.getPath(node)];
                 }
-                oldcore.deleteNode(node, technical);
+                innerCore.deleteNode(node, technical);
             };
 
             core.moveNode = function (node, parent) {
                 var root = core.getRoot(node),
                     oldpath = core.getPath(node),
-                    moved = oldcore.moveNode(node, parent);
+                    moved = innerCore.moveNode(node, parent);
 
                 if (root.metaNodes[oldpath]) {
                     delete root.metaNodes[oldpath];
@@ -106,8 +126,9 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
 
                 return moved;
             };
+            //</editor-fold>
 
-            //additional inquiry functions
+            //<editor-fold=Added Methods>
             core.isMetaNode = function (node) {
                 var root = core.getRoot(node);
                 if (root.metaNodes && root.metaNodes[core.getPath(node)]) {
@@ -132,28 +153,22 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
             };
 
             core.isConnection = function (node) {
-                var validPtrNames = oldcore.getValidPointerNames(node);
+                var validPtrNames = innerCore.getValidPointerNames(node);
 
                 return validPtrNames.indexOf('dst') !== -1 && validPtrNames.indexOf('src') !== -1;
             };
 
-            function sensitiveFilter(validNodes) {
-                var i;
-
-                i = validNodes.length;
-                while (i--) {
-                    if (core.isConnection(validNodes[i]) || core.isAbstract(validNodes[i])) {
-                        validNodes.splice(i, 1);
-                    }
-                }
-            }
-
-            //parameters
-            // node - the node in question
-            // children - the current children of the node, so that multiplicity can be checked
-            // sensitive - if true the function do not return the connection and abstract types
-            // multiplicity - if true the function filters out possibilities that fail multiplicity check
-            // aspect - if given the function also filters out valid children type meta nodes based on aspect rule
+            /**
+             *
+             * @param {object} parameters
+             * @param {object} parameters.node - the node in question.
+             * @param {bool} [parameters.sensitive] - if true connections and abstract types excluded.
+             * @param {bool} [parameters.multiplicity] - if true the function filters out possibilities that
+             * fail multiplicity check.
+             * @param {string} [parameters.aspect] - if given the function also filters out valid children
+             * type meta nodes based on aspect rule.
+             * @returns {objects[]}
+             */
             core.getValidChildrenMetaNodes = function (parameters) {
                 var validNodes = [],
                     node = parameters.node,
@@ -166,16 +181,16 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     inAspect,
                     temp;
 
-                rules = oldcore.getChildrenMeta(node) || {};
+                rules = innerCore.getChildrenMeta(node) || {};
 
                 for (i = 0; i < keys.length; i += 1) {
                     temp = metaNodes[keys[i]];
                     while (temp) {
-                        if (rules[oldcore.getPath(temp)]) {
+                        if (rules[innerCore.getPath(temp)]) {
                             validNodes.push(metaNodes[keys[i]]);
                             break;
                         }
-                        temp = oldcore.getBase(temp);
+                        temp = innerCore.getBase(temp);
                     }
                     //if (core.isValidChildOf(metaNodes[keys[i]], node)) {
                     //    validNodes.push(metaNodes[keys[i]]);
@@ -197,7 +212,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                 }
 
                 if (parameters.multiplicity === true) {
-                    if (rules.max && rules.max > -1 && oldcore.getChildrenRelids(node).length >= rules.max) {
+                    if (rules.max && rules.max > -1 && innerCore.getChildrenRelids(node).length >= rules.max) {
                         validNodes = [];
                         return validNodes;
                     }
@@ -222,7 +237,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     keys = Object.keys(rules);
                     for (i = 0; i < children.length; i += 1) {
                         for (j = 0; j < keys.length; j += 1) {
-                            if (oldcore.isTypeOf(children[i], metaNodes[keys[j]])) {
+                            if (innerCore.isTypeOf(children[i], metaNodes[keys[j]])) {
                                 typeCounters[keys[j]] += 1;
                             }
                         }
@@ -235,7 +250,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                             if (rules[keys[j]].max &&
                                 rules[keys[j]].max > -1 &&
                                 rules[keys[j]].max <= typeCounters[keys[j]] &&
-                                oldcore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
+                                innerCore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
                                 validNodes.splice(i, 1);
                                 break;
                             }
@@ -250,13 +265,13 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
 
 
                 if (parameters.aspect) {
-                    keys = oldcore.getAspectMeta(node, parameters.aspect);
+                    keys = innerCore.getAspectMeta(node, parameters.aspect);
                     i = validNodes.length;
 
                     while (i--) {
                         inAspect = false;
                         for (j = 0; j < keys.length; j += 1) {
-                            if (oldcore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
+                            if (innerCore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
                                 inAspect = true;
                                 break;
                             }
@@ -269,12 +284,17 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                 return validNodes;
             };
 
-            //parameters
-            // node - the node in question
-            // name - the name of the set
-            // members - the current members of the set, so that multiplicity can be checked
-            // sensitive - if true the function do not return the connection and abstract types
-            // multiplicity - if true the function filters out possibilities that fail multiplicity check
+            /**
+             *
+             * @param {object} parameters
+             * @param {object} parameters.node - the node in question.
+             * @param {string} parameters.name - the name of the set.
+             * @param {object[]} parameters.members - the current members (nodes) of the set, so that multiplicity
+             * can be checked.
+             * @param {bool} [parameters.multiplicity] - if true the function filters out possibilities that
+             * fail multiplicity check.
+             * @returns {objects[]}
+             */
             core.getValidSetElementsMetaNodes = function (parameters) {
                 var validNodes = [],
                     node = parameters.node,
@@ -289,11 +309,11 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                 for (i = 0; i < keys.length; i += 1) {
                     temp = metaNodes[keys[i]];
                     while (temp) {
-                        if (rules[oldcore.getPath(temp)]) {
+                        if (rules[innerCore.getPath(temp)]) {
                             validNodes.push(metaNodes[keys[i]]);
                             break;
                         }
-                        temp = oldcore.getBase(temp);
+                        temp = innerCore.getBase(temp);
                     }
                 }
 
@@ -312,7 +332,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                 }
 
                 if (parameters.multiplicity === true) {
-                    if (rules.max && rules.max > -1 && oldcore.getMemberPaths(node).length >= rules.max) {
+                    if (rules.max && rules.max > -1 && innerCore.getMemberPaths(node).length >= rules.max) {
                         validNodes = [];
                         return validNodes;
                     }
@@ -338,7 +358,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     keys = Object.keys(rules);
                     for (i = 0; i < members.length; i += 1) {
                         for (j = 0; j < keys.length; j += 1) {
-                            if (oldcore.isTypeOf(members[i], metaNodes[keys[j]])) {
+                            if (innerCore.isTypeOf(members[i], metaNodes[keys[j]])) {
                                 typeCounters[keys[j]] += 1;
                             }
                         }
@@ -351,7 +371,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                             if (rules[keys[j]].max &&
                                 rules[keys[j]].max > -1 &&
                                 rules[keys[j]].max <= typeCounters[keys[j]] &&
-                                oldcore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
+                                innerCore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
                                 validNodes.splice(i, 1);
                                 break;
                             }
@@ -361,10 +381,11 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
 
                 return validNodes;
             };
+            //</editor-fold>
+
             return core;
         };
 
         return MetaCacheCore;
     }
-)
-;
+);
