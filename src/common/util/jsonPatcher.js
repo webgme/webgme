@@ -91,11 +91,12 @@ define(['common/util/canon', 'underscore'], function (CANON, _) {
             result = {
                 status: 'success',
                 faults: [],
+                patch: patch,
                 result: targetJson
             };
 
         for (i = 0; i < patch.length; i += 1) {
-            pathArray = (patch[i].path+'').split('/').slice(1);
+            pathArray = (patch[i].path + '').split('/').slice(1);
             parent = targetJson;
 
             for (j = 0; j < pathArray.length; j += 1) {

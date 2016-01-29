@@ -347,7 +347,7 @@ define([
             commitNext();
         };
 
-        this.makeCommit = function (projectId, branchName, parents, rootHash, dataObjects, msg, callback) {
+        this.makeCommit = function (projectId, branchName, parents, rootHash, coreObjects, msg, callback) {
             var project = projects[projectId],
                 branch,
                 commitId,
@@ -359,23 +359,23 @@ define([
                     commitObject: null,
                     coreObjects: {}
                 },
-                keys = Object.keys(dataObjects),
+                keys = Object.keys(coreObjects),
                 i;
 
             //handling patch object creation
             for (i = 0; i < keys.length; i += 1) {
-                if (dataObjects[keys[i]].oldHash &&
-                    dataObjects[keys[i]].newHash &&
-                    dataObjects[keys[i]].oldData &&
-                    dataObjects[keys[i]].newData) {
+                if (coreObjects[keys[i]].oldHash &&
+                    coreObjects[keys[i]].newHash &&
+                    coreObjects[keys[i]].oldData &&
+                    coreObjects[keys[i]].newData) {
                     //patch type object
-                    persistQueueElement[keys[i]] = dataObjects[keys[i]].newData;
-                    commitData.coreObjects[keys[i]] = UTIL.getPatchObject(dataObjects[keys[i]].oldData,
-                        dataObjects[keys[i]].newData);
+                    persistQueueElement[keys[i]] = coreObjects[keys[i]].newData;
+                    commitData.coreObjects[keys[i]] = UTIL.getPatchObject(coreObjects[keys[i]].oldData,
+                        coreObjects[keys[i]].newData);
 
                 } else {
-                    commitData.coreObjects[keys[i]] = dataObjects[keys[i]];
-                    persistQueueElement[keys[i]] = dataObjects[keys[i]];
+                    commitData.coreObjects[keys[i]] = coreObjects[keys[i]];
+                    persistQueueElement[keys[i]] = coreObjects[keys[i]];
                 }
             }
 

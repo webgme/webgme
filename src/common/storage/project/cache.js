@@ -274,10 +274,11 @@ define([
                         logger.error('patch application failed', patch);
                     }
                 } else {
-                    logger.debug('the base is not available from the cache so the patch object is ignored');
+                    logger.debug('the base [' +
+                        obj.base + '] is not available from the cache so the patch object is ignored');
                 }
             } else {
-                logger.error('invalid patch object format');
+                logger.error('invalid patch object format', obj);
             }
         };
     }
