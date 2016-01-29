@@ -91,18 +91,18 @@ define(['js/util',
             addArtifactUL;
 
         addArtifactUL = function (hash, ulE, bc) {
-            bc.getArtifact(hash, function (err, artifact) {
+            bc.getMetadata(hash, function (err, metadata) {
                 if (err) {
                     self.logger.error(err);
                     return;
                 }
-                var size = bc.getHumanSize(artifact.descriptor.size);
+                var size = bc.getHumanSize(metadata.size);
                 artifactEntry = ARTIFACT_ENTRY_BASE.clone();
                 artifactEntryA = artifactEntry.find('a');
                 //TODO: set the correct URL here
                 artifactEntryA.attr('href', bc.getDownloadURL(hash));
                 //TODO: set the correct link text here
-                artifactEntryA.text(artifact.name + ' (' + size + ')');
+                artifactEntryA.text(metadata.name + ' (' + size + ')');
                 ulE.append(artifactEntry);
             });
         };
