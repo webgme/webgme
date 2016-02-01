@@ -31,7 +31,7 @@
     "buffer-equal-constant-time": "=1.0.1",
     "commander": "=2.9.0",
     "compression": "=1.6.1",
-    "connect-mongo": "=1.1.0",
+    "connect-mongo": "=0.8.2",
     "connect-multiparty": "=2.0.0",
     "connect-redis": "=3.0.2",
     "content-disposition": "=0.5.1",
