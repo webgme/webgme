@@ -39,7 +39,7 @@ describe('corediff apply', function () {
         ]).nodeify(done);
     });
 
-    describe('apply', function () {
+    describe('basic', function () {
 
         beforeEach(function (done) {
             storage.deleteProject({projectId: projectId})
@@ -66,7 +66,6 @@ describe('corediff apply', function () {
         //    storage.deleteProject({projectId: projectId})
         //        .nodeify(done);
         //});
-
 
         it('should modify several attributes', function (done) {
             var diff = {attr: {name: 'ROOTy'}, 1: {attr: {name: 'FCOy'}}};
@@ -403,15 +402,14 @@ describe('corediff apply', function () {
                     //now check the elements of the new set
                     expect(core.getMemberPaths(rootNode, 'MetaAspectSet_8c441f46-baab-0014-b3f3-c46ff333a7f4'))
                         .to.have.members(['/175547009/1104061497',
-                            '/175547009/1817665259',
-                            '/1',
-                            '/175547009/471466181',
-                            '/175547009/871430202']);
+                        '/175547009/1817665259',
+                        '/1',
+                        '/175547009/471466181',
+                        '/175547009/871430202']);
                     done();
                 })
                 .catch(done);
         });
-
 
         it('should add new META rules containment, pointers, sets', function (done) {
             var diff = {
@@ -567,6 +565,269 @@ describe('corediff apply', function () {
                     done();
                 })
                 .catch(done);
+        });
+
+    });
+
+    describe('pointer changes', function () {
+        var pointerProjectName = 'applyPointerChangesTst',
+            pointerProjectId = testFixture.projectName2Id(pointerProjectName),
+            pointerGmeConfig = testFixture.getGmeConfig(),
+            pointerLogger = logger.fork('pointer changes'),
+            pointerProject,
+            pointerCore,
+            pointerRootNode,
+            pointerBaseCommitHash;
+
+        beforeEach(function (done) {
+            storage.getProjects({})
+                .then(function (projects) {
+                    var remove = false,
+                        i;
+                    for (i=0;i<projects.length;i+=1) {
+                        if (projects[i]._id === pointerProjectId) {
+                            remove = true;
+                        }
+                    }
+
+                    if (remove) {
+                        return storage.deleteProject({projectId: pointerProjectId});
+                    } else {
+                        return;
+                    }
+                })
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'test/common/core/corediff/base002.json',
+                        projectName: pointerProjectName,
+                        branchName: 'base',
+                        gmeConfig: pointerGmeConfig,
+                        logger: pointerLogger
+                    });
+                })
+                .then(function (result) {
+                    pointerProject = result.project;
+                    pointerCore = result.core;
+                    pointerRootNode = result.rootNode;
+                    pointerBaseCommitHash = result.commitHash;
+                })
+                .nodeify(done);
+        });
+
+        it('should set a pointer target that was also moved', function (done) {
+            // move /579542227/1532094116 under root
+            // set dst of /579542227/275896267 to the moved node
+            var patch = {
+                "579542227": {
+                    "275896267": {
+                        "guid": "ef8775b4-c7fd-12ae-8db1-cc46f807249b",
+                        "oGuids": {
+                            "ef8775b4-c7fd-12ae-8db1-cc46f807249b": true,
+                            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
+                            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                            "6856a087-613e-3740-ca5d-87a41990c562": true,
+                            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        },
+                        "pointer": {
+                            "dst": "/1532094116"
+                        }
+                    },
+                    "651215756": {
+                        "guid": "ed1a1ef7-7eb3-af75-11a8-7994220003e6",
+                        "oGuids": {
+                            "ed1a1ef7-7eb3-af75-11a8-7994220003e6": true,
+                            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
+                            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
+                            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "684921282": {
+                        "guid": "cd8757f7-0ee5-404c-74f3-c700879b9637",
+                        "oGuids": {
+                            "cd8757f7-0ee5-404c-74f3-c700879b9637": true,
+                            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
+                            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                            "6856a087-613e-3740-ca5d-87a41990c562": true,
+                            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "2088994530": {
+                        "guid": "32e4adfc-deac-43ae-2504-3563b9d58b97",
+                        "oGuids": {
+                            "32e4adfc-deac-43ae-2504-3563b9d58b97": true,
+                            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
+                            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
+                            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "childrenListChanged": true,
+                    "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
+                    "oGuids": {
+                        "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
+                        "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                        "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
+                        "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    }
+                },
+                "960660211": {
+                    "1365653822": {
+                        "guid": "ef6d34f0-e1b2-f134-0fa1-d642815d0afa",
+                        "oGuids": {
+                            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
+                            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "2141283821": {
+                        "guid": "6856a087-613e-3740-ca5d-87a41990c562",
+                        "oGuids": {
+                            "6856a087-613e-3740-ca5d-87a41990c562": true,
+                            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "8f6f4417-55b5-bf91-e4d6-447f6ced13e6",
+                    "oGuids": {
+                        "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                        "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    }
+                },
+                "1532094116": {
+                    "reg": {
+                        "position": {
+                            "x": 484,
+                            "y": 176
+                        }
+                    },
+                    "guid": "99fab26a-2b18-2dd7-0b7b-836340b62398",
+                    "oGuids": {
+                        "99fab26a-2b18-2dd7-0b7b-836340b62398": true,
+                        "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                        "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
+                        "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    },
+                    "movedFrom": "/579542227/1532094116",
+                    "ooGuids": {
+                        "99fab26a-2b18-2dd7-0b7b-836340b62398": true,
+                        "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
+                        "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                        "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
+                        "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    }
+                },
+                "1786679144": {
+                    "guid": "8b636e17-3e94-e0c6-2678-1a24ee5e6ae7",
+                    "oGuids": {
+                        "8b636e17-3e94-e0c6-2678-1a24ee5e6ae7": true,
+                        "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                        "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
+                        "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    }
+                },
+                "childrenListChanged": true,
+                "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
+                "oGuids": {
+                    "e687d284-a04a-7cbc-93ed-ea941752d57a": true
+                }
+            };
+            Q.nfcall(pointerCore.applyTreeDiff, pointerRootNode, patch)
+                .then(function(){
+                    return Q.allDone([
+                        pointerCore.loadByPath(pointerRootNode,'/579542227/275896267'),
+                        pointerCore.loadByPath(pointerRootNode,'/1532094116')
+                    ]);
+                })
+                .then(function(nodes){
+                    expect(nodes).to.have.length(2);
+                    expect(pointerCore.getPointerPath(nodes[0],'dst')).to.equal(pointerCore.getPath(nodes[1]));
+                })
+                .nodeify(done);
+        });
+
+        it('should set a pointer target while changig the name of the target as well', function (done) {
+            // change /579542227/1532094116 name to 3_1
+            // set dst of /579542227/275896267 to the changed node
+            var patch = {
+                "579542227": {
+                    "275896267": {
+                        "pointer": {
+                            "dst": "/579542227/1532094116"
+                        },
+                        "guid": "ef8775b4-c7fd-12ae-8db1-cc46f807249b",
+                        "oGuids": {
+                            "ef8775b4-c7fd-12ae-8db1-cc46f807249b": true,
+                            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
+                            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                            "6856a087-613e-3740-ca5d-87a41990c562": true,
+                            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "684921282": {
+                        "guid": "cd8757f7-0ee5-404c-74f3-c700879b9637",
+                        "oGuids": {
+                            "cd8757f7-0ee5-404c-74f3-c700879b9637": true,
+                            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
+                            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                            "6856a087-613e-3740-ca5d-87a41990c562": true,
+                            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "1532094116": {
+                        "attr": {
+                            "name": "3_1"
+                        },
+                        "guid": "99fab26a-2b18-2dd7-0b7b-836340b62398",
+                        "oGuids": {
+                            "99fab26a-2b18-2dd7-0b7b-836340b62398": true,
+                            "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
+                            "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                            "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
+                            "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                        }
+                    },
+                    "guid": "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3",
+                    "oGuids": {
+                        "3637e2ee-0d4b-15b1-52c6-4d1248e67ea3": true,
+                        "e687d284-a04a-7cbc-93ed-ea941752d57a": true,
+                        "ef6d34f0-e1b2-f134-0fa1-d642815d0afa": true,
+                        "8f6f4417-55b5-bf91-e4d6-447f6ced13e6": true,
+                        "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": true
+                    }
+                },
+                "guid": "e687d284-a04a-7cbc-93ed-ea941752d57a",
+                "oGuids": {
+                    "e687d284-a04a-7cbc-93ed-ea941752d57a": true
+                }
+            };
+
+            Q.nfcall(pointerCore.applyTreeDiff, pointerRootNode, patch)
+                .then(function(){
+                    return Q.allDone([
+                        pointerCore.loadByPath(pointerRootNode,'/579542227/275896267'),
+                        pointerCore.loadByPath(pointerRootNode,'/579542227/1532094116')
+                    ]);
+                })
+                .then(function(nodes){
+                    expect(nodes).to.have.length(2);
+                    expect(pointerCore.getPointerPath(nodes[0],'dst')).to.equal(pointerCore.getPath(nodes[1]));
+                })
+                .nodeify(done);
         });
     });
 });

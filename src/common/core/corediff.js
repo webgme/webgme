@@ -29,8 +29,6 @@ define(['common/util/canon',
             _DIFF = {},
             _needChecking = true,
             _rounds = 0,
-        //toFrom = {}, //TODO should not be global
-        //fromTo = {}, //TODO should not be global
             _concatResult,
             _diffMoves = {},
             _conflictItems = [],
@@ -1040,10 +1038,6 @@ define(['common/util/canon',
             if (target === null) {
                 targetNode = null;
             } else {
-                //FIXME: These are always undefined!
-                if (fromTo[target]) {
-                    target = fromTo[target];
-                }
                 targetNode = core.loadByPath(core.getRoot(node), target);
             }
             return TASYNC.call(function (t) {
@@ -1347,46 +1341,6 @@ define(['common/util/canon',
             base[relid] = JSON.parse(JSON.stringify(object));
             return;
         }
-
-        //FIXME check if it is really depreciated
-        //function changeMovedPaths(singleNode) {
-        //    var keys, i;
-        //    keys = Object.keys(singleNode);
-        //    for (i = 0; i < keys.length; i++) {
-        //        if (_concatMoves.fromTo[keys[i]]) {
-        //            singleNode[_concatMoves.fromTo[keys[i]]] = singleNode[keys[i]];
-        //            delete singleNode[keys[i]];
-        //            if (typeof singleNode[_concatMoves.fromTo[keys[i]]] === 'object' &&
-        //                singleNode[_concatMoves.fromTo[keys[i]]] !== null) {
-        //
-        //                changeMovedPaths(singleNode[_concatMoves.fromTo[keys[i]]]);
-        //            }
-        //        } else {
-        //            if (typeof singleNode[keys[i]] === 'string' && keys[i] !== 'movedFrom' &&
-        //                _concatMoves.fromTo[singleNode[keys[i]]]) {
-        //
-        //                singleNode[keys[i]] = _concatMoves.fromTo[keys[i]];
-        //            }
-        //
-        //            if (typeof singleNode[keys[i]] === 'object' && singleNode[keys[i]] !== null) {
-        //                changeMovedPaths(singleNode[keys[i]]);
-        //            }
-        //        }
-        //
-        //    }
-        //    if (typeof singleNode === 'object' && singleNode !== null) {
-        //        keys = Object.keys(singleNode);
-        //        for (i = 0; i < keys.length; i++) {
-        //            if (_concatMoves.fromTo[keys[i]]) {
-        //                singleNode[_concatMoves.fromTo[keys[i]]] = singleNode[keys[i]];
-        //                delete singleNode[keys[i]];
-        //            }
-        //        }
-        //    } else if (typeof singleNode === 'string') {
-        //
-        //    }
-        //
-        //}
 
         function getSingleNode(node) {
             //removes the children from the node
@@ -2414,10 +2368,6 @@ define(['common/util/canon',
         };
 
         core.applyTreeDiff = function (root, diff) {
-            //toFrom = {};
-            //fromTo = {};
-            //getMoveSources(diff, '', toFrom, fromTo);
-
             return TASYNC.join(makeInitialContainmentChanges(root, diff), applyNodeChange(root, '', diff));
         };
 
@@ -2450,6 +2400,7 @@ define(['common/util/canon',
             result.theirs = _conflictTheirs;
             result.merge = _concatBase;
             harmonizeConflictPaths(result.merge);
+
             return result;
         };
 
