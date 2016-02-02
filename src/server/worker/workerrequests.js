@@ -296,7 +296,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         }
 
 
-        logger.info('executePlugin', pluginName);
+        logger.info('executePlugin', pluginName, socketId);
 
         logger.debug('executePlugin context', {metadata: context});
 
