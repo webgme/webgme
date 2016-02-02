@@ -30,29 +30,95 @@
   .tree-browser span.fancytree-focused a:link {
     background-color: transparent;
     outline: none; }
-  .tree-browser ul.fancytree-container li {
-    line-height: 16px; }
-    .tree-browser ul.fancytree-container li span.fancytree-node {
-      /* 'Loading' node style with italic gray font and progress bar icon */ }
-      .tree-browser ul.fancytree-container li span.fancytree-node span.fancytree-title {
-        margin-left: 0; }
-        .tree-browser ul.fancytree-container li span.fancytree-node span.fancytree-title input[type=text] {
-          padding: 0;
-          font-size: 12px !important;
-          line-height: 12px;
-          margin-top: -3px !important;
-          width: 100px !important; }
-      .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected span.fancytree-title {
-        font-style: normal;
-        background: #BEEBFF;
-        border: 1px solid #99DEFD; }
-      .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-focused span.fancytree-title {
-        background: #a3d7f3; }
-      .tree-browser ul.fancytree-container li span.fancytree-node.node-progress span.fancytree-title {
-        color: #AAAAAA;
-        font-style: italic; }
-      .tree-browser ul.fancytree-container li span.fancytree-node.node-progress span.fancytree-icon {
-        background: url("../../../../img/progress.gif") 0 0; }
+  .tree-browser .filter-container {
+    margin: 1px;
+    padding-top: 1px; }
+    .tree-browser .filter-container .filter-form .filter-toggle-buttons {
+      margin-right: 3px; }
+      .tree-browser .filter-container .filter-form .filter-toggle-buttons button {
+        line-height: 1; }
+    .tree-browser .filter-container .filter-form .input-filter-type label.btn {
+      font-weight: bold; }
+    .tree-browser .filter-container.collapsed .filter-form {
+      display: none; }
+    .tree-browser .filter-container.collapsed i.collapse-filter {
+      display: none; }
+    .tree-browser .filter-container.collapsed i.expand-filter {
+      display: inline-block; }
+    .tree-browser .filter-container i.collapse-filter {
+      display: inline-block; }
+    .tree-browser .filter-container i.expand-filter {
+      display: none; }
+    .tree-browser .filter-container .btn-hide-show-filters {
+      position: relative;
+      z-index: 1; }
+    .tree-browser .filter-container .btn {
+      margin-bottom: 1px; }
+      .tree-browser .filter-container .btn.btn-hide-show-filters {
+        padding-left: 3px; }
+        .tree-browser .filter-container .btn.btn-hide-show-filters .filter-icon {
+          padding-left: 3px; }
+  .tree-browser span.all-filtered-out {
+    padding: 12px;
+    color: #AAA;
+    font-style: italic; }
+  .tree-browser i.gme-connection {
+    background: url("../../../../img/gmeicons.png") 0 0;
+    background-position: -64px 0 !important;
+    width: 16px;
+    height: 16px; }
+  .tree-browser i.gme-atom {
+    background: url("../../../../img/gmeicons.png") 0 0;
+    background-position: -16px 0 !important;
+    width: 16px;
+    height: 16px; }
+  .tree-browser .fa {
+    line-height: 18px; }
+  .tree-browser ul.fancytree-container {
+    outline-width: 0; }
+    .tree-browser ul.fancytree-container li {
+      line-height: 16px;
+      outline-width: 0; }
+      .tree-browser ul.fancytree-container li span.fancytree-node {
+        /* 'Loading' node style with italic gray font and progress bar icon */ }
+        .tree-browser ul.fancytree-container li span.fancytree-node span.fancytree-title {
+          margin-left: 0; }
+          .tree-browser ul.fancytree-container li span.fancytree-node span.fancytree-title input[type=text] {
+            padding: 0;
+            font-size: 12px !important;
+            line-height: 12px;
+            margin-top: -3px !important;
+            width: 100px !important; }
+        .tree-browser ul.fancytree-container li span.fancytree-node span.fancytree-title:hover {
+          background-color: #F2F7FD;
+          border-color: #F2F7FD; }
+        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected span.fancytree-title {
+          font-style: normal;
+          background: #BEEBFF;
+          border: 1px solid #99DEFD; }
+        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-focused span.fancytree-title {
+          background: #a3d7f3;
+          outline: none; }
+        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-active span.fancytree-title {
+          font-style: normal;
+          background: #BEEBFF;
+          border: 1px solid #99DEFD; }
+        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-active.fancytree-focused span.fancytree-title {
+          background: #a3d7f3;
+          outline: none; }
+        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-active span.fancytree-title {
+          font-style: normal;
+          background: transparent;
+          border: 1px solid transparent;
+          outline: none; }
+        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-focus span.fancytree-title {
+          background: transparent;
+          outline: none; }
+        .tree-browser ul.fancytree-container li span.fancytree-node.node-progress span.fancytree-title {
+          color: #AAAAAA;
+          font-style: italic; }
+        .tree-browser ul.fancytree-container li span.fancytree-node.node-progress span.fancytree-icon {
+          background: url("../../../../img/progress.gif") 0 0; }
 
 .context-menu-list li.context-menu-item {
   display: list-item; }

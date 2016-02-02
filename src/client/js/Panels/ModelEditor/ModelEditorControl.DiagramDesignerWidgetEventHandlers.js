@@ -1413,9 +1413,15 @@ define(['js/logger',
 
         // Get the gmeIds and filter out connections.
         selectedIds.forEach(function (id) {
-            var gmeId = self._ComponentID2GmeID[id];
+            var gmeId = self._ComponentID2GmeID[id],
+                objDesc;
             if (self._GMEModels.indexOf(gmeId) > -1) {
-                selectedModels.push(self._getObjectDescriptor(gmeId));
+                objDesc = self._getObjectDescriptor(gmeId);
+                if (objDesc) {
+                    selectedModels.push(objDesc);
+                } else {
+                    self.logger.warn('_onAlignSelection, could not get objectDescriptor for a selectedIds', gmeId);
+                }
             }
         });
 
@@ -1426,7 +1432,12 @@ define(['js/logger',
 
         if (type.indexOf('MOVE_TO_') === 0) {
             self._GMEModels.forEach(function (gmeId) {
-                allModels.push(self._getObjectDescriptor(gmeId));
+                var objDesc = self._getObjectDescriptor(gmeId);
+                if (objDesc) {
+                    allModels.push(objDesc);
+                } else {
+                    self.logger.warn('_onAlignSelection, could not get objectDescriptor for a _GMEModels', gmeId);
+                }
             });
 
             target = self._alignMenu.getExtremePosition(allModels, type);

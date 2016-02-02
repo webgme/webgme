@@ -27,7 +27,6 @@ define(['js/logger',
 
         this._client = client;
         this._treeBrowser = treeBrowser;
-        this._treeBrowser._enableNodeRename = false;
         this._logger = Logger.create('gme:Panels:ObjectBrowser:CrosscutBrowserControl',
             WebGMEGlobal.gmeConfig.client.log);
 
