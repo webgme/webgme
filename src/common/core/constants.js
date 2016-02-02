@@ -37,7 +37,7 @@ define([], function () {
         META_CHILDREN: 'children',
         META_NODE: '_meta',
         META_POINTER_PREFIX: '_p_',
-        META_ATTRIBUTE_PREFIX: '_a_',
+        META_ASPECT_PREFIX: '_a_',
 
         MAX_AGE: 3,
         MAX_TICKS: 2000,

@@ -60,7 +60,7 @@ define([
             return null;
         }
 
-        function _MetaPointerNode(node, name) {
+        function metaPointerNode(node, name) {
             //this function always gives back a node, use this if you just want to create the node as well
             core.setPointer(getMetaNode(node), name, null);
             return core.getChild(getMetaNode(node), CONSTANTS.META_POINTER_PREFIX + name);
@@ -74,17 +74,17 @@ define([
             var aspectNode = getMetaAspectsNode(node),
                 names = core.getPointerNames(aspectNode) || [];
             if (names.indexOf(name) !== -1) {
-                return core.getChild(aspectNode, CONSTANTS.META_ATTRIBUTE_PREFIX + name);
+                return core.getChild(aspectNode, CONSTANTS.META_ASPECT_PREFIX + name);
             }
             return null;
         }
 
-        function _MetaAspectNode(node, name) {
+        function metaAspectNode(node, name) {
             //this function always gives back a node, use this if you just want to create the node as well
             var aspectNode = core.getChild(getMetaNode(node), CONSTANTS.META_ASPECTS);
 
             core.setPointer(aspectNode, name, null);
-            return core.getChild(aspectNode, CONSTANTS.META_ATTRIBUTE_PREFIX + name);
+            return core.getChild(aspectNode, CONSTANTS.META_ASPECT_PREFIX + name);
         }
 
         function getMetaObjectDiff(bigger, smaller) {
@@ -515,12 +515,12 @@ define([
         };
 
         core.setPointerMetaTarget = function (node, name, target, min, max) {
-            core.addMember(_MetaPointerNode(node, name), CONSTANTS.SET_ITEMS, target);
+            core.addMember(metaPointerNode(node, name), CONSTANTS.SET_ITEMS, target);
             min = min || -1;
-            core.setMemberAttribute(_MetaPointerNode(node, name), CONSTANTS.SET_ITEMS, core.getPath(target),
+            core.setMemberAttribute(metaPointerNode(node, name), CONSTANTS.SET_ITEMS, core.getPath(target),
                 CONSTANTS.SET_ITEMS_MIN, min);
             max = max || -1;
-            core.setMemberAttribute(_MetaPointerNode(node, name), CONSTANTS.SET_ITEMS, core.getPath(target),
+            core.setMemberAttribute(metaPointerNode(node, name), CONSTANTS.SET_ITEMS, core.getPath(target),
                 CONSTANTS.SET_ITEMS_MAX, max);
         };
 
@@ -533,15 +533,15 @@ define([
 
         core.setPointerMetaLimits = function (node, name, min, max) {
             if (min) {
-                core.setAttribute(_MetaPointerNode(node, name), CONSTANTS.SET_ITEMS_MIN, min);
+                core.setAttribute(metaPointerNode(node, name), CONSTANTS.SET_ITEMS_MIN, min);
             }
             if (max) {
-                core.setAttribute(_MetaPointerNode(node, name), CONSTANTS.SET_ITEMS_MAX, max);
+                core.setAttribute(metaPointerNode(node, name), CONSTANTS.SET_ITEMS_MAX, max);
             }
         };
 
         core.delPointerMeta = function (node, name) {
-            core.deleteNode(_MetaPointerNode(node, name), true);
+            core.deleteNode(metaPointerNode(node, name), true);
             core.deletePointer(getMetaNode(node), name);
         };
 
@@ -590,7 +590,7 @@ define([
         };
 
         core.setAspectMetaTarget = function (node, name, target) {
-            core.addMember(_MetaAspectNode(node, name), CONSTANTS.SET_ITEMS, target);
+            core.addMember(metaAspectNode(node, name), CONSTANTS.SET_ITEMS, target);
         };
 
         core.delAspectMetaTarget = function (node, name, targetPath) {
@@ -601,7 +601,7 @@ define([
         };
 
         core.delAspectMeta = function (node, name) {
-            core.deleteNode(_MetaAspectNode(node, name), true);
+            core.deleteNode(metaAspectNode(node, name), true);
             core.deletePointer(getMetaAspectsNode(node), name);
         };
 

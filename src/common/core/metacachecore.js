@@ -158,17 +158,6 @@ define([
                 return validPtrNames.indexOf('dst') !== -1 && validPtrNames.indexOf('src') !== -1;
             };
 
-            /**
-             *
-             * @param {object} parameters
-             * @param {object} parameters.node - the node in question.
-             * @param {bool} [parameters.sensitive] - if true connections and abstract types excluded.
-             * @param {bool} [parameters.multiplicity] - if true the function filters out possibilities that
-             * fail multiplicity check.
-             * @param {string} [parameters.aspect] - if given the function also filters out valid children
-             * type meta nodes based on aspect rule.
-             * @returns {objects[]}
-             */
             core.getValidChildrenMetaNodes = function (parameters) {
                 var validNodes = [],
                     node = parameters.node,
@@ -284,17 +273,6 @@ define([
                 return validNodes;
             };
 
-            /**
-             *
-             * @param {object} parameters
-             * @param {object} parameters.node - the node in question.
-             * @param {string} parameters.name - the name of the set.
-             * @param {object[]} parameters.members - the current members (nodes) of the set, so that multiplicity
-             * can be checked.
-             * @param {bool} [parameters.multiplicity] - if true the function filters out possibilities that
-             * fail multiplicity check.
-             * @returns {objects[]}
-             */
             core.getValidSetElementsMetaNodes = function (parameters) {
                 var validNodes = [],
                     node = parameters.node,
