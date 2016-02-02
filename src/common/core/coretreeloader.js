@@ -8,21 +8,23 @@
 define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
     'use strict';
 
-    // ----------------- CoreTreeLoader -----------------
-
-    var MetaCore = function (innerCore, options) {
+    var CoreTreeLoader = function (innerCore, options) {
         ASSERT(typeof options === 'object');
         ASSERT(typeof options.globConf === 'object');
         ASSERT(typeof options.logger !== 'undefined');
-        var core = {},
-            key,
-            logger = options.logger.fork('coretreeloader');
+
+        var logger = options.logger,
+            core = {},
+            key;
+
         for (key in innerCore) {
             core[key] = innerCore[key];
         }
-        logger.debug('initialized');
-        //adding load functions
-        var loadSubTree = function (root, own) {
+
+        logger.debug('initialized CoreTreeLoader');
+
+        //<editor-fold=Helper Functions>
+        function loadSubTree(root, own) {
             var loadSubTrees = function (nodes) {
                     for (var i = 0; i < nodes.length; i++) {
                         nodes[i] = core.loadSubTree(nodes[i], own);
@@ -46,8 +48,10 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     }, loadSubTrees(children));
                 }
             }, childLoading(root));
-        };
+        }
+        //</editor-fold>
 
+        //<editor-fold=Added Methods>
         core.loadTree = function (rootHash) {
             return TASYNC.call(core.loadSubTree, core.loadRoot(rootHash));
         };
@@ -59,8 +63,10 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         core.loadOwnSubTree = function (root) {
             return loadSubTree(root, true);
         };
+        //</editor-fold>
 
         return core;
     };
-    return MetaCore;
+
+    return CoreTreeLoader;
 });

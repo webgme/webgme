@@ -11,21 +11,24 @@ define(['common/util/canon',
     'common/core/tasync',
     'common/util/assert',
     'common/regexp',
-    'common/util/random'
-], function (CANON, TASYNC, ASSERT, REGEXP, RANDOM) {
+    'common/util/random',
+    'common/core/constants',
+], function (CANON, TASYNC, ASSERT, REGEXP, RANDOM, CONSTANTS) {
     'use strict';
 
-    function diffCore(_innerCore, options) {
+    function DiffCore(innerCore, options) {
         ASSERT(typeof options === 'object');
         ASSERT(typeof options.globConf === 'object');
         ASSERT(typeof options.logger !== 'undefined');
-        var _core = {},
-            logger = options.logger.fork('corediff'),
+
+        var logger = options.logger,
+            core = {},
+            key,
+        //FIXME: There shouldn't be state.
             _yetToCompute = {},
             _DIFF = {},
             _needChecking = true,
             _rounds = 0,
-            TODELETESTRING = '*to*delete*',
         //toFrom = {}, //TODO should not be global
         //fromTo = {}, //TODO should not be global
             _concatResult,
@@ -38,11 +41,16 @@ define(['common/util/canon',
             _concatBaseRemovals,
             _concatMoves;
 
-        logger.debug('initialized');
-        for (var i in _innerCore) {
-            _core[i] = _innerCore[i];
+        for (key in innerCore) {
+            core[key] = innerCore[key];
         }
 
+        //we remove some low level functions as they should not be used on high level
+        delete core.overlayInsert;
+
+        logger.debug('initialized DiffCore');
+
+        //<editor-fold=Helper Functions>
         function normalize(obj) {
             if (!obj) {
                 return obj;
@@ -79,25 +87,25 @@ define(['common/util/canon',
         }
 
         function attrDiff(source, target) {
-            var sNames = _core.getOwnAttributeNames(source),
-                tNames = _core.getOwnAttributeNames(target),
+            var sNames = core.getOwnAttributeNames(source),
+                tNames = core.getOwnAttributeNames(target),
                 i,
                 diff = {};
 
             for (i = 0; i < sNames.length; i++) {
                 if (tNames.indexOf(sNames[i]) === -1) {
-                    diff[sNames[i]] = TODELETESTRING;
+                    diff[sNames[i]] = CONSTANTS.TO_DELETE_STRING;
                 }
             }
 
             for (i = 0; i < tNames.length; i++) {
-                if (_core.getAttribute(source, tNames[i]) === undefined) {
-                    diff[tNames[i]] = _core.getAttribute(target, tNames[i]);
+                if (core.getAttribute(source, tNames[i]) === undefined) {
+                    diff[tNames[i]] = core.getAttribute(target, tNames[i]);
                 } else {
-                    if (CANON.stringify(_core.getAttribute(source, tNames[i])) !==
-                        CANON.stringify(_core.getAttribute(target, tNames[i]))) {
+                    if (CANON.stringify(core.getAttribute(source, tNames[i])) !==
+                        CANON.stringify(core.getAttribute(target, tNames[i]))) {
 
-                        diff[tNames[i]] = _core.getAttribute(target, tNames[i]);
+                        diff[tNames[i]] = core.getAttribute(target, tNames[i]);
                     }
                 }
             }
@@ -106,25 +114,25 @@ define(['common/util/canon',
         }
 
         function regDiff(source, target) {
-            var sNames = _core.getOwnRegistryNames(source),
-                tNames = _core.getOwnRegistryNames(target),
+            var sNames = core.getOwnRegistryNames(source),
+                tNames = core.getOwnRegistryNames(target),
                 i,
                 diff = {};
 
             for (i = 0; i < sNames.length; i++) {
                 if (tNames.indexOf(sNames[i]) === -1) {
-                    diff[sNames[i]] = TODELETESTRING;
+                    diff[sNames[i]] = CONSTANTS.TO_DELETE_STRING;
                 }
             }
 
             for (i = 0; i < tNames.length; i++) {
-                if (_core.getRegistry(source, tNames[i]) === undefined) {
-                    diff[tNames[i]] = _core.getRegistry(target, tNames[i]);
+                if (core.getRegistry(source, tNames[i]) === undefined) {
+                    diff[tNames[i]] = core.getRegistry(target, tNames[i]);
                 } else {
-                    if (CANON.stringify(_core.getRegistry(source, tNames[i])) !==
-                        CANON.stringify(_core.getRegistry(target, tNames[i]))) {
+                    if (CANON.stringify(core.getRegistry(source, tNames[i])) !==
+                        CANON.stringify(core.getRegistry(target, tNames[i]))) {
 
-                        diff[tNames[i]] = _core.getRegistry(target, tNames[i]);
+                        diff[tNames[i]] = core.getRegistry(target, tNames[i]);
                     }
                 }
             }
@@ -133,10 +141,10 @@ define(['common/util/canon',
         }
 
         function childrenDiff(source, target) {
-            var sRelids = _core.getChildrenRelids(source),
-                tRelids = _core.getChildrenRelids(target),
-                tHashes = _core.getChildrenHashes(target),
-                sHashes = _core.getChildrenHashes(source),
+            var sRelids = core.getChildrenRelids(source),
+                tRelids = core.getChildrenRelids(target),
+                tHashes = core.getChildrenHashes(target),
+                sHashes = core.getChildrenHashes(source),
                 i,
                 diff = {added: [], removed: []};
 
@@ -159,10 +167,10 @@ define(['common/util/canon',
         function pointerDiff(source, target) {
             var getPointerData = function (node) {
                     var data = {},
-                        names = _core.getPointerNames(node),
+                        names = core.getPointerNames(node),
                         i;
                     for (i = 0; i < names.length; i++) {
-                        data[names[i]] = _core.getPointerPath(node, names[i]);
+                        data[names[i]] = core.getPointerPath(node, names[i]);
                     }
                     return data;
                 },
@@ -180,20 +188,20 @@ define(['common/util/canon',
                     var data = {},
                         names, targets, keys, i, j, k;
 
-                    names = _core.getSetNames(node);
+                    names = core.getSetNames(node);
                     for (i = 0; i < names.length; i++) {
                         data[names[i]] = {};
-                        targets = _core.getMemberPaths(node, names[i]);
+                        targets = core.getMemberPaths(node, names[i]);
                         for (j = 0; j < targets.length; j++) {
                             data[names[i]][targets[j]] = {attr: {}, reg: {}};
-                            keys = _core.getMemberOwnAttributeNames(node, names[i], targets[j]);
+                            keys = core.getMemberOwnAttributeNames(node, names[i], targets[j]);
                             for (k = 0; k < keys.length; k++) {
-                                data[names[i]][targets[j]].attr[keys[k]] = _core.getMemberAttribute(node,
+                                data[names[i]][targets[j]].attr[keys[k]] = core.getMemberAttribute(node,
                                     names[i], targets[j], keys[k]);
                             }
-                            keys = _core.getMemberRegistryNames(node, names[i], targets[j]);
+                            keys = core.getMemberRegistryNames(node, names[i], targets[j]);
                             for (k = 0; k < keys.length; k++) {
-                                data[names[i]][targets[j]].reg[keys[k]] = _core.getMemberRegistry(node,
+                                data[names[i]][targets[j]].reg[keys[k]] = core.getMemberRegistry(node,
                                     names[i], targets[j], keys[k]);
                             }
                         }
@@ -214,9 +222,9 @@ define(['common/util/canon',
         function ovrDiff(source, target) {
             var getOvrData = function (node) {
                     var paths, names, i, j,
-                        ovr = _core.getProperty(node, _core.constants.OVERLAYS_PROPERTY) || {},
+                        ovr = core.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {},
                         data = {},
-                        base = _core.getPath(node);
+                        base = core.getPath(node);
 
                     paths = Object.keys(ovr);
                     for (i = 0; i < paths.length; i++) {
@@ -229,7 +237,7 @@ define(['common/util/canon',
                                 } else if (names[j].slice(-4) !== '-inv' && names[j].indexOf('_') === -1 &&
                                     ovr[paths[i]][names[j]].indexOf('_') === -1) {
 
-                                    data[paths[i]][names[j]] = _core.joinPaths(base, ovr[paths[i]][names[j]]);
+                                    data[paths[i]][names[j]] = core.joinPaths(base, ovr[paths[i]][names[j]]);
                                 }
                             }
                         }
@@ -281,8 +289,8 @@ define(['common/util/canon',
                     }
                     return jsonMeta;
                 },
-                sMeta = convertJsonMeta(_core.getOwnJsonMeta(source)),
-                tMeta = convertJsonMeta(_core.getOwnJsonMeta(target));
+                sMeta = convertJsonMeta(core.getOwnJsonMeta(source)),
+                tMeta = convertJsonMeta(core.getOwnJsonMeta(target));
             if (CANON.stringify(sMeta) !== CANON.stringify(tMeta)) {
                 return {source: sMeta, target: tMeta};
             }
@@ -422,11 +430,11 @@ define(['common/util/canon',
         }
 
         function updateDiff(sourceRoot, targetRoot) {
-            var diff = _core.nodeDiff(sourceRoot, targetRoot) || {},
+            var diff = core.nodeDiff(sourceRoot, targetRoot) || {},
                 oDiff = ovrDiff(sourceRoot, targetRoot),
                 getChild = function (childArray, relid) {
                     for (var i = 0; i < childArray.length; i++) {
-                        if (_core.getRelid(childArray[i]) === relid) {
+                        if (core.getRelid(childArray[i]) === relid) {
                             return childArray[i];
                         }
                     }
@@ -446,8 +454,8 @@ define(['common/util/canon',
                     diff.childrenListChanged = true;
                     child = getChild(sChildren, tDiff[i].relid);
                     if (child) {
-                        guid = _core.getGuid(child);
-                        diff[tDiff[i].relid] = {guid: guid, removed: true, hash: _core.getHash(child)};
+                        guid = core.getGuid(child);
+                        diff[tDiff[i].relid] = {guid: guid, removed: true, hash: core.getHash(child)};
                         _yetToCompute[guid] = _yetToCompute[guid] || {};
                         _yetToCompute[guid].from = child;
                         _yetToCompute[guid].fromExpanded = false;
@@ -459,13 +467,13 @@ define(['common/util/canon',
                     diff.childrenListChanged = true;
                     child = getChild(tChildren, tDiff[i].relid);
                     if (child) {
-                        guid = _core.getGuid(child);
-                        base = _core.getBase(child);
+                        guid = core.getGuid(child);
+                        base = core.getBase(child);
                         diff[tDiff[i].relid] = {
                             guid: guid,
                             removed: false,
-                            hash: _core.getHash(child),
-                            pointer: {source: {}, target: {base: base === null ? null : _core.getPath(base)}}
+                            hash: core.getHash(child),
+                            pointer: {source: {}, target: {base: base === null ? null : core.getPath(base)}}
                         };
                         _yetToCompute[guid] = _yetToCompute[guid] || {};
                         _yetToCompute[guid].to = child;
@@ -474,10 +482,10 @@ define(['common/util/canon',
                 }
 
                 for (i = 0; i < tChildren.length; i++) {
-                    child = getChild(sChildren, _core.getRelid(tChildren[i]));
-                    if (child && _core.getHash(tChildren[i]) !== _core.getHash(child)) {
+                    child = getChild(sChildren, core.getRelid(tChildren[i]));
+                    if (child && core.getHash(tChildren[i]) !== core.getHash(child)) {
                         done = TASYNC.call(childComputationFinished,
-                            updateDiff(child, tChildren[i]), _core.getRelid(child), done);
+                            updateDiff(child, tChildren[i]), core.getRelid(child), done);
                     }
                 }
                 return TASYNC.call(function () {
@@ -485,8 +493,8 @@ define(['common/util/canon',
                     extendDiffWithOvr(diff, oDiff);
                     normalize(diff);
                     if (Object.keys(diff).length > 0) {
-                        diff.guid = _core.getGuid(targetRoot);
-                        diff.hash = _core.getHash(targetRoot);
+                        diff.guid = core.getGuid(targetRoot);
+                        diff.hash = core.getHash(targetRoot);
                         diff.oGuids = gatherObstructiveGuids(targetRoot);
                         return TASYNC.call(function (finalDiff) {
                             return finalDiff;
@@ -496,20 +504,20 @@ define(['common/util/canon',
                     }
 
                 }, done);
-            }, _core.loadChildren(sourceRoot), _core.loadChildren(targetRoot));
+            }, core.loadChildren(sourceRoot), core.loadChildren(targetRoot));
         }
 
         function gatherObstructiveGuids(node) {
             var result = {},
                 putParents = function (n) {
                     while (n) {
-                        result[_core.getGuid(n)] = true;
-                        n = _core.getParent(n);
+                        result[core.getGuid(n)] = true;
+                        n = core.getParent(n);
                     }
                 };
             while (node) {
                 putParents(node);
-                node = _core.getBase(node);
+                node = core.getBase(node);
             }
             return result;
         }
@@ -533,28 +541,28 @@ define(['common/util/canon',
                     return diff;
                 } else {
                     return TASYNC.call(function (child) {
-                        diff.guid = _core.getGuid(child);
-                        diff.hash = _core.getHash(child);
+                        diff.guid = core.getGuid(child);
+                        diff.hash = core.getHash(child);
                         diff.oGuids = gatherObstructiveGuids(child);
                         return diff;
-                    }, _core.loadByPath(root, path));
+                    }, core.loadByPath(root, path));
                 }
             }, done);
         }
 
         function expandDiff(root, isDeleted) {
             var diff = {
-                guid: _core.getGuid(root),
-                hash: _core.getHash(root),
+                guid: core.getGuid(root),
+                hash: core.getHash(root),
                 removed: isDeleted === true
             };
             return TASYNC.call(function (children) {
                 var guid;
                 for (var i = 0; i < children.length; i++) {
-                    guid = _core.getGuid(children[i]);
-                    diff[_core.getRelid(children[i])] = {
+                    guid = core.getGuid(children[i]);
+                    diff[core.getRelid(children[i])] = {
                         guid: guid,
-                        hash: _core.getHash(children[i]),
+                        hash: core.getHash(children[i]),
                         removed: isDeleted === true
                     };
 
@@ -569,7 +577,7 @@ define(['common/util/canon',
                     }
                 }
                 return diff;
-            }, _core.loadChildren(root));
+            }, core.loadChildren(root));
         }
 
         function insertIntoDiff(path, diff) {
@@ -592,7 +600,7 @@ define(['common/util/canon',
                 tDiff, i;
             for (i = 0; i < sKeys.length; i++) {
                 if (tKeys.indexOf(sKeys[i]) === -1) {
-                    diff[sKeys[i]] = TODELETESTRING;
+                    diff[sKeys[i]] = CONSTANTS.TO_DELETE_STRING;
                 }
             }
             for (i = 0; i < tKeys.length; i++) {
@@ -686,25 +694,25 @@ define(['common/util/canon',
                 done, ytc,
                 i,
                 computingMove = function (mDiff, info) {
-                    mDiff.guid = _core.getGuid(info.from);
-                    mDiff.movedFrom = _core.getPath(info.from);
+                    mDiff.guid = core.getGuid(info.from);
+                    mDiff.movedFrom = core.getPath(info.from);
                     mDiff.ooGuids = gatherObstructiveGuids(info.from);
-                    _diffMoves[_core.getPath(info.from)] = _core.getPath(info.to);
-                    insertAtPath(_DIFF, _core.getPath(info.to), mDiff);
+                    _diffMoves[core.getPath(info.from)] = core.getPath(info.to);
+                    insertAtPath(_DIFF, core.getPath(info.to), mDiff);
                     return null;
                 },
                 expandFrom = function (mDiff, info) {
-                    mDiff.hash = _core.getHash(info.from);
+                    mDiff.hash = core.getHash(info.from);
                     mDiff.removed = true;
-                    insertIntoDiff(_core.getPath(info.from), mDiff);
+                    insertIntoDiff(core.getPath(info.from), mDiff);
                     return null;
                 },
                 expandTo = function (mDiff, info) {
                     if (!mDiff.hash) {
-                        mDiff.hash = _core.getHash(info.to);
+                        mDiff.hash = core.getHash(info.to);
                     }
                     mDiff.removed = false;
-                    insertIntoDiff(_core.getPath(info.to), mDiff);
+                    insertIntoDiff(core.getPath(info.to), mDiff);
                     return null;
                 };
 
@@ -738,37 +746,6 @@ define(['common/util/canon',
             }
             return TASYNC.call(checkRound, done);
         }
-
-        _core.nodeDiff = function (source, target) {
-            var diff = {
-                children: childrenDiff(source, target),
-                attr: attrDiff(source, target),
-                reg: regDiff(source, target),
-                pointer: pointerDiff(source, target),
-                set: setDiff(source, target),
-                meta: metaDiff(source, target)
-            };
-
-            normalize(diff);
-
-            return isEmptyNodeDiff(diff) ? null : diff;
-        };
-
-        _core.generateTreeDiff = function (sRoot, tRoot) {
-            _yetToCompute = {};
-            _DIFF = {};
-            _diffMoves = {};
-            _needChecking = true;
-            _rounds = 0;
-            return TASYNC.call(function (d) {
-                _DIFF = d;
-                return checkRound();
-            }, updateDiff(sRoot, tRoot));
-        };
-
-        _core.generateLightTreeDiff = function (sRoot, tRoot) {
-            return updateDiff(sRoot, tRoot);
-        };
 
         function getDiffChildrenRelids(diff) {
             var keys = Object.keys(diff || {}),
@@ -888,7 +865,7 @@ define(['common/util/canon',
         }
 
         function getAncestor(node, path) {
-            var ownPath = _core.getPath(node),
+            var ownPath = core.getPath(node),
                 ancestorPath = '',
                 i, ownPathArray, pathArray;
             pathArray = path.split('/');
@@ -903,8 +880,8 @@ define(['common/util/canon',
                 }
             }
             while (ownPath !== ancestorPath) {
-                node = _core.getParent(node);
-                ownPath = _core.getPath(node);
+                node = core.getParent(node);
+                ownPath = core.getPath(node);
             }
             return node;
         }
@@ -912,10 +889,10 @@ define(['common/util/canon',
         function setBaseOfNewNode(node, relid, basePath) {
             //TODO this is a kind of low level hack so maybe there should be another way to do this
             var ancestor = getAncestor(node, basePath),
-                sourcePath = _core.getPath(node).substr(_core.getPath(ancestor).length),
-                targetPath = basePath.substr(_core.getPath(ancestor).length);
+                sourcePath = core.getPath(node).substr(core.getPath(ancestor).length),
+                targetPath = basePath.substr(core.getPath(ancestor).length);
             sourcePath = sourcePath + '/' + relid;
-            _innerCore.overlayInsert(_core.getChild(ancestor, _core.constants.OVERLAYS_PROPERTY),
+            innerCore.overlayInsert(core.getChild(ancestor, CONSTANTS.OVERLAYS_PROPERTY),
                 sourcePath, 'base', targetPath);
         }
 
@@ -948,8 +925,8 @@ define(['common/util/canon',
                 moving = function (n, di, r, p, m/*, d*/) {
                     var nRelid;
                     if (m === true) {
-                        n = _core.moveNode(n, p);
-                        nRelid = _core.getRelid(n);
+                        n = core.moveNode(n, p);
+                        nRelid = core.getRelid(n);
 
                         if (r !== nRelid) {
                             //we have to make additional changes to our move table
@@ -965,7 +942,7 @@ define(['common/util/canon',
                 if (diff[relids[i]].movedFrom) {
                     //moved node
                     moved = true;
-                    child = _core.loadByPath(_core.getRoot(node), diff[relids[i]].movedFrom);
+                    child = core.loadByPath(core.getRoot(node), diff[relids[i]].movedFrom);
                 } else if (diff[relids[i]].removed === false) {
                     //added node
                     //first we hack the pointer, then we create the node
@@ -974,15 +951,15 @@ define(['common/util/canon',
                         setBaseOfNewNode(node, relids[i], diff[relids[i]].pointer.base);
                     }
                     if (diff[relids[i]].hash) {
-                        _core.setProperty(node, relids[i], diff[relids[i]].hash);
-                        child = _core.loadChild(node, relids[i]);
+                        core.setProperty(node, relids[i], diff[relids[i]].hash);
+                        child = core.loadChild(node, relids[i]);
                     } else {
-                        child = _core.getChild(node, relids[i]);
-                        _core.setHashed(child, true);
+                        child = core.getChild(node, relids[i]);
+                        core.setHashed(child, true);
                     }
                 } else {
                     //simple node
-                    child = _core.loadChild(node, relids[i]);
+                    child = core.loadChild(node, relids[i]);
                 }
 
                 done = TASYNC.call(moving, child, diff[relids[i]], relids[i], node, moved, done);
@@ -996,14 +973,14 @@ define(['common/util/canon',
         function applyNodeChange(root, path, nodeDiff) {
             //check for move
             var node;
-            node = _core.loadByPath(root, path);
+            node = core.loadByPath(root, path);
 
             return TASYNC.call(function (n) {
                 var done,
                     relids = getDiffChildrenRelids(nodeDiff),
                     i;
                 if (nodeDiff.removed === true) {
-                    _core.deleteNode(n);
+                    core.deleteNode(n);
                     return;
                 }
                 applyAttributeChanges(n, nodeDiff.attr || {});
@@ -1025,10 +1002,10 @@ define(['common/util/canon',
                  }, done);*/
 
                 //we should check for possible guid change and restore the expected guid
-                if (_core.getGuid(n) !== nodeDiff.guid && nodeDiff.guid) {
+                if (core.getGuid(n) !== nodeDiff.guid && nodeDiff.guid) {
                     done = TASYNC.call(function () {
                         return null;
-                    }, _core.setGuid(n, nodeDiff.guid), done);
+                    }, core.setGuid(n, nodeDiff.guid), done);
                 }
                 return done;
             }, node);
@@ -1038,10 +1015,10 @@ define(['common/util/canon',
             var i, keys;
             keys = Object.keys(attrDiff);
             for (i = 0; i < keys.length; i++) {
-                if (attrDiff[keys[i]] === TODELETESTRING) {
-                    _core.delAttribute(node, keys[i]);
+                if (attrDiff[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                    core.delAttribute(node, keys[i]);
                 } else {
-                    _core.setAttribute(node, keys[i], attrDiff[keys[i]]);
+                    core.setAttribute(node, keys[i], attrDiff[keys[i]]);
                 }
             }
         }
@@ -1050,10 +1027,10 @@ define(['common/util/canon',
             var i, keys;
             keys = Object.keys(regDiff);
             for (i = 0; i < keys.length; i++) {
-                if (regDiff[keys[i]] === TODELETESTRING) {
-                    _core.delRegistry(node, keys[i]);
+                if (regDiff[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                    core.delRegistry(node, keys[i]);
                 } else {
-                    _core.setRegistry(node, keys[i], regDiff[keys[i]]);
+                    core.setRegistry(node, keys[i], regDiff[keys[i]]);
                 }
             }
         }
@@ -1063,14 +1040,15 @@ define(['common/util/canon',
             if (target === null) {
                 targetNode = null;
             } else {
+                //FIXME: These are always undefined!
                 if (fromTo[target]) {
                     target = fromTo[target];
                 }
-                targetNode = _core.loadByPath(_core.getRoot(node), target);
+                targetNode = core.loadByPath(core.getRoot(node), target);
             }
             return TASYNC.call(function (t) {
                 //TODO watch if handling of base changes!!!
-                _core.setPointer(node, name, t);
+                core.setPointer(node, name, t);
                 return;
             }, targetNode);
         }
@@ -1081,8 +1059,8 @@ define(['common/util/canon',
                 keys = Object.keys(pointerDiff),
                 i;
             for (i = 0; i < keys.length; i++) {
-                if (pointerDiff[keys[i]] === TODELETESTRING) {
-                    _core.deletePointer(node, keys[i]);
+                if (pointerDiff[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                    core.deletePointer(node, keys[i]);
                 } else if (diff.removed !== false || keys[i] !== 'base') {
                     done = setPointer(node, keys[i], pointerDiff[keys[i]]);
                 }
@@ -1096,35 +1074,35 @@ define(['common/util/canon',
 
         function addMember(node, name, target, data) {
             var memberAttrSetting = function (diff) {
-                    var keys = _core.getMemberOwnAttributeNames(node, name, target),
+                    var keys = core.getMemberOwnAttributeNames(node, name, target),
                         i;
                     for (i = 0; i < keys.length; i++) {
-                        _core.delMemberAttribute(node, name, target, keys[i]);
+                        core.delMemberAttribute(node, name, target, keys[i]);
                     }
 
                     keys = Object.keys(diff);
                     for (i = 0; i < keys.length; i++) {
-                        _core.setMemberAttribute(node, name, target, keys[i], diff[keys[i]]);
+                        core.setMemberAttribute(node, name, target, keys[i], diff[keys[i]]);
                     }
                 },
                 memberRegSetting = function (diff) {
-                    var keys = _core.getMemberOwnRegistryNames(node, name, target),
+                    var keys = core.getMemberOwnRegistryNames(node, name, target),
                         i;
                     for (i = 0; i < keys.length; i++) {
-                        _core.delMemberRegistry(node, name, target, keys[i]);
+                        core.delMemberRegistry(node, name, target, keys[i]);
                     }
 
                     keys = Object.keys(diff);
                     for (i = 0; i < keys.length; i++) {
-                        _core.setMemberRegistry(node, name, target, keys[i], diff[keys[i]]);
+                        core.setMemberRegistry(node, name, target, keys[i], diff[keys[i]]);
                     }
                 };
             return TASYNC.call(function (t) {
-                _core.addMember(node, name, t);
+                core.addMember(node, name, t);
                 memberAttrSetting(data.attr || {});
                 memberRegSetting(data.reg || {});
                 return;
-            }, _core.loadByPath(_core.getRoot(node), target));
+            }, core.loadByPath(core.getRoot(node), target));
         }
 
         function applySetChanges(node, setDiff) {
@@ -1132,14 +1110,14 @@ define(['common/util/canon',
                 setNames = Object.keys(setDiff),
                 elements, i, j;
             for (i = 0; i < setNames.length; i++) {
-                if (setDiff[setNames[i]] === TODELETESTRING) {
-                    _core.deleteSet(node, setNames[i]);
+                if (setDiff[setNames[i]] === CONSTANTS.TO_DELETE_STRING) {
+                    core.deleteSet(node, setNames[i]);
                 } else {
-                    _core.createSet(node, setNames[i]);
+                    core.createSet(node, setNames[i]);
                     elements = Object.keys(setDiff[setNames[i]]);
                     for (j = 0; j < elements.length; j++) {
-                        if (setDiff[setNames[i]][elements[j]] === TODELETESTRING) {
-                            _core.delMember(node, setNames[i], elements[j]);
+                        if (setDiff[setNames[i]][elements[j]] === CONSTANTS.TO_DELETE_STRING) {
+                            core.delMember(node, setNames[i], elements[j]);
                         } else {
                             done = addMember(node, setNames[i], elements[j], setDiff[setNames[i]][elements[j]]);
                         }
@@ -1155,20 +1133,20 @@ define(['common/util/canon',
 
         function applyMetaAttributes(node, metaAttrDiff) {
             var i, keys, newValue;
-            if (metaAttrDiff === TODELETESTRING) {
+            if (metaAttrDiff === CONSTANTS.TO_DELETE_STRING) {
                 //we should delete all MetaAttributes
-                keys = _core.getValidAttributeNames(node);
+                keys = core.getValidAttributeNames(node);
                 for (i = 0; i < keys.length; i++) {
-                    _core.delAttributeMeta(node, keys[i]);
+                    core.delAttributeMeta(node, keys[i]);
                 }
             } else {
                 keys = Object.keys(metaAttrDiff);
                 for (i = 0; i < keys.length; i++) {
-                    if (metaAttrDiff[keys[i]] === TODELETESTRING) {
-                        _core.delAttributeMeta(node, keys[i]);
+                    if (metaAttrDiff[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                        core.delAttributeMeta(node, keys[i]);
                     } else {
-                        newValue = jsonConcat(_core.getAttributeMeta(node, keys[i]) || {}, metaAttrDiff[keys[i]]);
-                        _core.setAttributeMeta(node, keys[i], newValue);
+                        newValue = jsonConcat(core.getAttributeMeta(node, keys[i]) || {}, metaAttrDiff[keys[i]]);
+                        core.setAttributeMeta(node, keys[i], newValue);
                     }
                 }
             }
@@ -1176,19 +1154,19 @@ define(['common/util/canon',
 
         function applyMetaConstraints(node, metaConDiff) {
             var keys, i;
-            if (metaConDiff === TODELETESTRING) {
+            if (metaConDiff === CONSTANTS.TO_DELETE_STRING) {
                 //remove all constraints
-                keys = _core.getConstraintNames(node);
+                keys = core.getConstraintNames(node);
                 for (i = 0; i < keys.length; i++) {
-                    _core.delConstraint(node, keys[i]);
+                    core.delConstraint(node, keys[i]);
                 }
             } else {
                 keys = Object.keys(metaConDiff);
                 for (i = 0; i < keys.length; i++) {
-                    if (metaConDiff[keys[i]] === TODELETESTRING) {
-                        _core.delConstraint(node, keys[i]);
+                    if (metaConDiff[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                        core.delConstraint(node, keys[i]);
                     } else {
-                        _core.setConstraint(node, keys[i], jsonConcat(_core.getConstraint(node, keys[i]) || {},
+                        core.setConstraint(node, keys[i], jsonConcat(core.getConstraint(node, keys[i]) || {},
                             metaConDiff[keys[i]]));
                     }
                 }
@@ -1198,24 +1176,24 @@ define(['common/util/canon',
         function applyMetaChildren(node, metaChildrenDiff) {
             var keys, i, done,
                 setChild = function (target, data/*, d*/) {
-                    _core.setChildMeta(node, target, data.min, data.max);
+                    core.setChildMeta(node, target, data.min, data.max);
                 };
-            if (metaChildrenDiff === TODELETESTRING) {
+            if (metaChildrenDiff === CONSTANTS.TO_DELETE_STRING) {
                 //remove all valid child
-                keys = _core.getValidChildrenPaths(node);
+                keys = core.getValidChildrenPaths(node);
                 for (i = 0; i < keys.length; i++) {
-                    _core.delChildMeta(node, keys[i]);
+                    core.delChildMeta(node, keys[i]);
                 }
             } else {
-                _core.setChildrenMetaLimits(node, metaChildrenDiff.min, metaChildrenDiff.max);
+                core.setChildrenMetaLimits(node, metaChildrenDiff.min, metaChildrenDiff.max);
                 delete metaChildrenDiff.max; //TODO we do not need it anymore, but maybe there is a better way
                 delete metaChildrenDiff.min;
                 keys = Object.keys(metaChildrenDiff);
                 for (i = 0; i < keys.length; i++) {
-                    if (metaChildrenDiff[keys[i]] === TODELETESTRING) {
-                        _core.delChildMeta(node, keys[i]);
+                    if (metaChildrenDiff[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                        core.delChildMeta(node, keys[i]);
                     } else {
-                        done = TASYNC.call(setChild, _core.loadByPath(_core.getRoot(node), keys[i]),
+                        done = TASYNC.call(setChild, core.loadByPath(core.getRoot(node), keys[i]),
                             metaChildrenDiff[keys[i]], done);
                     }
                 }
@@ -1229,38 +1207,38 @@ define(['common/util/canon',
         function applyMetaPointers(node, metaPointerDiff) {
             var names, targets, i, j, done,
                 setPointer = function (name, target, data/*, d*/) {
-                    _core.setPointerMetaTarget(node, name, target, data.min, data.max);
+                    core.setPointerMetaTarget(node, name, target, data.min, data.max);
                 };
-            if (metaPointerDiff === TODELETESTRING) {
+            if (metaPointerDiff === CONSTANTS.TO_DELETE_STRING) {
                 //remove all pointers,sets and their targets
-                names = _core.getValidPointerNames(node);
+                names = core.getValidPointerNames(node);
                 for (i = 0; i < names.length; i++) {
-                    _core.delPointerMeta(node, names[i]);
+                    core.delPointerMeta(node, names[i]);
                 }
 
-                names = _core.getValidSetNames(node);
+                names = core.getValidSetNames(node);
                 for (i = 0; i < names.length; i++) {
-                    _core.delPointerMeta(node, names[i]);
+                    core.delPointerMeta(node, names[i]);
                 }
                 return;
             }
 
             names = Object.keys(metaPointerDiff);
             for (i = 0; i < names.length; i++) {
-                if (metaPointerDiff[names[i]] === TODELETESTRING) {
-                    _core.delPointerMeta(node, names[i]);
+                if (metaPointerDiff[names[i]] === CONSTANTS.TO_DELETE_STRING) {
+                    core.delPointerMeta(node, names[i]);
                 } else {
-                    _core.setPointerMetaLimits(node, names[i], metaPointerDiff[names[i]].min,
+                    core.setPointerMetaLimits(node, names[i], metaPointerDiff[names[i]].min,
                         metaPointerDiff[names[i]].max);
                     //TODO we do not need it anymore, but maybe there is a better way
                     delete metaPointerDiff[names[i]].max;
                     delete metaPointerDiff[names[i]].min;
                     targets = Object.keys(metaPointerDiff[names[i]]);
                     for (j = 0; j < targets.length; j++) {
-                        if (metaPointerDiff[names[i]][targets[j]] === TODELETESTRING) {
-                            _core.delPointerMetaTarget(node, names[i], targets[j]);
+                        if (metaPointerDiff[names[i]][targets[j]] === CONSTANTS.TO_DELETE_STRING) {
+                            core.delPointerMetaTarget(node, names[i], targets[j]);
                         } else {
-                            done = TASYNC.call(setPointer, names[i], _core.loadByPath(_core.getRoot(node), targets[j]),
+                            done = TASYNC.call(setPointer, names[i], core.loadByPath(core.getRoot(node), targets[j]),
                                 metaPointerDiff[names[i]][targets[j]], done);
                         }
                     }
@@ -1275,28 +1253,28 @@ define(['common/util/canon',
         function applyMetaAspects(node, metaAspectsDiff) {
             var names, targets, i, j, done,
                 setAspect = function (name, target/*, d*/) {
-                    _core.setAspectMetaTarget(node, name, target);
+                    core.setAspectMetaTarget(node, name, target);
                 };
-            if (metaAspectsDiff === TODELETESTRING) {
+            if (metaAspectsDiff === CONSTANTS.TO_DELETE_STRING) {
                 //remove all aspects
-                names = _core.getValidAspectNames(node);
+                names = core.getValidAspectNames(node);
                 for (i = 0; i < names.length; i++) {
-                    _core.delAspectMeta(node, names[i]);
+                    core.delAspectMeta(node, names[i]);
                 }
                 return;
             }
 
             names = Object.keys(metaAspectsDiff);
             for (i = 0; i < names.length; i++) {
-                if (metaAspectsDiff[names[i]] === TODELETESTRING) {
-                    _core.delAspectMeta(node, names[i]);
+                if (metaAspectsDiff[names[i]] === CONSTANTS.TO_DELETE_STRING) {
+                    core.delAspectMeta(node, names[i]);
                 } else {
                     targets = metaAspectsDiff[names[i]];
                     for (j = 0; j < targets.length; j++) {
-                        if (metaAspectsDiff[names[i]][targets[j]] === TODELETESTRING) {
-                            _core.delAspectMetaTarget(node, names[i], targets[j]);
+                        if (metaAspectsDiff[names[i]][targets[j]] === CONSTANTS.TO_DELETE_STRING) {
+                            core.delAspectMetaTarget(node, names[i], targets[j]);
                         } else {
-                            done = TASYNC.call(setAspect, names[i], _core.loadByPath(_core.getRoot(node), targets[j]),
+                            done = TASYNC.call(setAspect, names[i], core.loadByPath(core.getRoot(node), targets[j]),
                                 done);
                         }
                     }
@@ -1310,24 +1288,16 @@ define(['common/util/canon',
 
         function applyMetaChanges(node, metaDiff) {
             var done;
-            applyMetaAttributes(node, metaDiff.attributes || TODELETESTRING);
-            applyMetaConstraints(node, metaDiff.constraints || TODELETESTRING);
-            done = applyMetaChildren(node, metaDiff.children || TODELETESTRING);
-            done = TASYNC.call(applyMetaPointers, node, metaDiff.pointers || TODELETESTRING, done);
-            done = TASYNC.call(applyMetaAspects, node, metaDiff.aspects || TODELETESTRING, done);
+            applyMetaAttributes(node, metaDiff.attributes || CONSTANTS.TO_DELETE_STRING);
+            applyMetaConstraints(node, metaDiff.constraints || CONSTANTS.TO_DELETE_STRING);
+            done = applyMetaChildren(node, metaDiff.children || CONSTANTS.TO_DELETE_STRING);
+            done = TASYNC.call(applyMetaPointers, node, metaDiff.pointers || CONSTANTS.TO_DELETE_STRING, done);
+            done = TASYNC.call(applyMetaAspects, node, metaDiff.aspects || CONSTANTS.TO_DELETE_STRING, done);
 
             TASYNC.call(function (/*d*/) {
                 return null;
             }, done);
         }
-
-        _core.applyTreeDiff = function (root, diff) {
-            //toFrom = {};
-            //fromTo = {};
-            //getMoveSources(diff, '', toFrom, fromTo);
-
-            return TASYNC.join(makeInitialContainmentChanges(root, diff), applyNodeChange(root, '', diff));
-        };
 
         function getNodeByGuid(diff, guid) {
             var relids, i, node;
@@ -1592,16 +1562,19 @@ define(['common/util/canon',
             createSingleKeyValuePairConflicts(path + '/pointer', diffNode.pointer || {});
 
             if (diffNode.set) {
-                if (diffNode.set === TODELETESTRING) {
-                    conflict[path + '/set'] = conflict[path + '/set'] || {value: TODELETESTRING, conflictingPaths: {}};
+                if (diffNode.set === CONSTANTS.TO_DELETE_STRING) {
+                    conflict[path + '/set'] = conflict[path + '/set'] || {
+                            value: CONSTANTS.TO_DELETE_STRING,
+                            conflictingPaths: {}
+                        };
                     conflict[path + '/set'].conflictingPaths[opposingPath] = true;
                     opposingConflict.conflictingPaths[path + '/set'] = true;
                 } else {
                     keys = Object.keys(diffNode.set);
                     for (i = 0; i < keys.length; i++) {
-                        if (diffNode.set[keys[i]] === TODELETESTRING) {
+                        if (diffNode.set[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
                             conflict[path + '/set/' + keys[i]] = conflict[path + '/set/' + keys[i]] || {
-                                    value: TODELETESTRING,
+                                    value: CONSTANTS.TO_DELETE_STRING,
                                     conflictingPaths: {}
                                 };
                             conflict[path + '/set/' + keys[i]].conflictingPaths[opposingPath] = true;
@@ -1640,10 +1613,10 @@ define(['common/util/canon',
                 opposingConflict = _conflictMine[opposingPath];
             }
             for (i = 0; i < relids.length; i++) {
-                if (diffSet[relids[i]] === TODELETESTRING) {
+                if (diffSet[relids[i]] === CONSTANTS.TO_DELETE_STRING) {
                     //single conflict as the element was removed
                     conflict[path + '/' + relids[i] + '/'] = conflict[path + '/' + relids[i] + '/'] || {
-                            value: TODELETESTRING,
+                            value: CONSTANTS.TO_DELETE_STRING,
                             conflictingPaths: {}
                         };
                     conflict[path + '/' + relids[i] + '/'].conflictingPaths[opposingPath] = true;
@@ -1678,7 +1651,7 @@ define(['common/util/canon',
             keys = Object.keys(extension);
             for (i = 0; i < keys.length; i++) {
                 temp = extension[keys[i]];
-                if (typeof temp === 'string' && temp !== TODELETESTRING) {
+                if (typeof temp === 'string' && temp !== CONSTANTS.TO_DELETE_STRING) {
                     temp = getCommonPathForConcat(temp);
                 }
                 if (base[keys[i]] !== undefined && CANON.stringify(base[keys[i]]) !== CANON.stringify(temp)) {
@@ -1699,17 +1672,23 @@ define(['common/util/canon',
 
             for (i = 0; i < names.length; i++) {
                 if (base[names[i]]) {
-                    if (base[names[i]] === TODELETESTRING) {
-                        if (extension[names[i]] !== TODELETESTRING) {
+                    if (base[names[i]] === CONSTANTS.TO_DELETE_STRING) {
+                        if (extension[names[i]] !== CONSTANTS.TO_DELETE_STRING) {
                             //whole set conflict
-                            _conflictMine[path + '/' + names[i]] = {value: TODELETESTRING, conflictingPaths: {}};
+                            _conflictMine[path + '/' + names[i]] = {
+                                value: CONSTANTS.TO_DELETE_STRING,
+                                conflictingPaths: {}
+                            };
                             gatherFullSetConflicts(extension[names[i]],
                                 false, path + '/' + names[i], path + '/' + names[i]);
                         }
                     } else {
-                        if (extension[names[i]] === TODELETESTRING) {
+                        if (extension[names[i]] === CONSTANTS.TO_DELETE_STRING) {
                             //whole set conflict
-                            _conflictTheirs[path + '/' + names[i]] = {value: TODELETESTRING, conflictingPaths: {}};
+                            _conflictTheirs[path + '/' + names[i]] = {
+                                value: CONSTANTS.TO_DELETE_STRING,
+                                conflictingPaths: {}
+                            };
                             gatherFullSetConflicts(base[names[i]], true, path + '/' + names[i], path + '/' + names[i]);
                         } else {
                             //now we can only have member or sub-member conflicts...
@@ -1717,11 +1696,11 @@ define(['common/util/canon',
                             for (j = 0; j < members.length; j++) {
                                 memberPath = getCommonPathForConcat(members[j]);
                                 if (base[names[i]][memberPath]) {
-                                    if (base[names[i]][memberPath] === TODELETESTRING) {
-                                        if (extension[names[i]][members[j]] !== TODELETESTRING) {
+                                    if (base[names[i]][memberPath] === CONSTANTS.TO_DELETE_STRING) {
+                                        if (extension[names[i]][members[j]] !== CONSTANTS.TO_DELETE_STRING) {
                                             //whole member conflict
                                             _conflictMine[path + '/' + names[i] + '/' + memberPath + '//'] = {
-                                                value: TODELETESTRING,
+                                                value: CONSTANTS.TO_DELETE_STRING,
                                                 conflictingPaths: {}
                                             };
                                             gatherFullNodeConflicts(extension[names[i]][members[j]],
@@ -1730,10 +1709,10 @@ define(['common/util/canon',
                                                 '/' + names[i] + '/' + memberPath + '//');
                                         }
                                     } else {
-                                        if (extension[names[i]][members[j]] === TODELETESTRING) {
+                                        if (extension[names[i]][members[j]] === CONSTANTS.TO_DELETE_STRING) {
                                             //whole member conflict
                                             _conflictTheirs[path + '/' + names[i] + '/' + memberPath + '//'] = {
-                                                value: TODELETESTRING,
+                                                value: CONSTANTS.TO_DELETE_STRING,
                                                 conflictingPaths: {}
                                             };
                                             gatherFullNodeConflicts(base[names[i]][memberPath],
@@ -1793,8 +1772,8 @@ define(['common/util/canon',
                 opposingConflict = _conflictMine[opposingPath];
             }
 
-            if (diffMeta === TODELETESTRING) {
-                conflict[path] = conflict[path] || {value: TODELETESTRING, conflictingPaths: {}};
+            if (diffMeta === CONSTANTS.TO_DELETE_STRING) {
+                conflict[path] = conflict[path] || {value: CONSTANTS.TO_DELETE_STRING, conflictingPaths: {}};
                 conflict[path].conflictingPaths[opposingPath] = true;
                 opposingConflict.conflictingPaths[path] = true;
                 return; //there is no other conflict
@@ -1802,9 +1781,9 @@ define(['common/util/canon',
 
             //children
             if (diffMeta.children) {
-                if (diffMeta.children === TODELETESTRING) {
+                if (diffMeta.children === CONSTANTS.TO_DELETE_STRING) {
                     conflict[path + '/children'] = conflict[path + '/children'] || {
-                            value: TODELETESTRING,
+                            value: CONSTANTS.TO_DELETE_STRING,
                             conflictingPaths: {}
                         };
                     conflict[path + '/children'].conflictingPaths[opposingPath] = true;
@@ -1839,9 +1818,9 @@ define(['common/util/canon',
             }
             //attributes
             if (diffMeta.attributes) {
-                if (diffMeta.attributes === TODELETESTRING) {
+                if (diffMeta.attributes === CONSTANTS.TO_DELETE_STRING) {
                     conflict[path + '/attributes'] = conflict[path + '/attributes'] || {
-                            value: TODELETESTRING,
+                            value: CONSTANTS.TO_DELETE_STRING,
                             conflictingPaths: {}
                         };
                     conflict[path + '/attributes'].conflictingPaths[opposingPath] = true;
@@ -1861,9 +1840,9 @@ define(['common/util/canon',
             }
             //pointers
             if (diffMeta.pointers) {
-                if (diffMeta.pointers === TODELETESTRING) {
+                if (diffMeta.pointers === CONSTANTS.TO_DELETE_STRING) {
                     conflict[path + '/pointers'] = conflict[path + '/pointers'] || {
-                            value: TODELETESTRING,
+                            value: CONSTANTS.TO_DELETE_STRING,
                             conflictingPaths: {}
                         };
                     conflict[path + '/pointers'].conflictingPaths[opposingPath] = true;
@@ -1871,9 +1850,9 @@ define(['common/util/canon',
                 } else {
                     keys = Object.keys(diffMeta.pointers);
                     for (i = 0; i < keys.length; i++) {
-                        if (diffMeta.pointers[keys[i]] === TODELETESTRING) {
+                        if (diffMeta.pointers[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
                             conflict[path + '/pointers/' + keys[i]] = conflict[path + '/pointers/' + keys[i]] || {
-                                    value: TODELETESTRING,
+                                    value: CONSTANTS.TO_DELETE_STRING,
                                     conflictingPaths: {}
                                 };
                             conflict[path + '/pointers/' + keys[i]].conflictingPaths[opposingPath] = true;
@@ -1905,8 +1884,10 @@ define(['common/util/canon',
                                         value: diffMeta.pointers[keys[i]][relids[j]],
                                         conflictingPaths: {}
                                     };
-                                conflict[path + '/pointers/' + keys[i] + '/' + tPath + '//'].conflictingPaths[opposingPath] = true;
-                                opposingConflict.conflictingPaths[path + '/pointers/' + keys[i] + '/' + tPath + '//'] = true;
+                                conflict[path + '/pointers/' + keys[i] + '/' + tPath + '//']
+                                    .conflictingPaths[opposingPath] = true;
+                                opposingConflict.conflictingPaths[path + '/pointers/' +
+                                keys[i] + '/' + tPath + '//'] = true;
                             }
                         }
                     }
@@ -1921,7 +1902,7 @@ define(['common/util/canon',
                 mergeMetaItems = function (bPath, bData, eData) {
                     var bKeys, tKeys, i, tPath, t2Path;
                     //delete checks
-                    if (bData === TODELETESTRING || eData === TODELETESTRING) {
+                    if (bData === CONSTANTS.TO_DELETE_STRING || eData === CONSTANTS.TO_DELETE_STRING) {
                         if (CANON.stringify(bData) !== CANON.stringify(eData)) {
                             _conflictMine[bPath] = _conflictMine[bPath] || {value: bData, conflictingPaths: {}};
                             _conflictMine[bPath].conflictingPaths[bPath] = true;
@@ -1992,13 +1973,16 @@ define(['common/util/canon',
                     }
                 };
             if (CANON.stringify(base) !== CANON.stringify(extension)) {
-                if (base === TODELETESTRING) {
-                    _conflictMine[path] = _conflictMine[path] || {value: TODELETESTRING, conflictingPaths: {}};
+                if (base === CONSTANTS.TO_DELETE_STRING) {
+                    _conflictMine[path] = _conflictMine[path] || {
+                            value: CONSTANTS.TO_DELETE_STRING,
+                            conflictingPaths: {}
+                        };
                     gatherFullMetaConflicts(extension, false, path, path);
                 } else {
-                    if (extension === TODELETESTRING) {
+                    if (extension === CONSTANTS.TO_DELETE_STRING) {
                         _conflictTheirs[path] = _conflictTheirs[path] || {
-                                value: TODELETESTRING,
+                                value: CONSTANTS.TO_DELETE_STRING,
                                 conflictingPaths: {}
                             };
                         gatherFullMetaConflicts(base, true, path, path);
@@ -2018,7 +2002,8 @@ define(['common/util/canon',
                         if (extension.pointers) {
                             if (base.pointers) {
                                 //complete deletion
-                                if (base.pointers === TODELETESTRING || extension.pointers === TODELETESTRING) {
+                                if (base.pointers === CONSTANTS.TO_DELETE_STRING ||
+                                    extension.pointers === CONSTANTS.TO_DELETE_STRING) {
                                     if (CANON.stringify(base.pointers) !== CANON.stringify(extension.pointers)) {
                                         tPath = path + '/pointers';
                                         _conflictMine[tPath] = _conflictMine[tPath] || {
@@ -2050,7 +2035,8 @@ define(['common/util/canon',
                         //attributes
                         if (extension.attributes) {
                             if (base.attributes) {
-                                if (extension.attributes === TODELETESTRING || base.attributes === TODELETESTRING) {
+                                if (extension.attributes === CONSTANTS.TO_DELETE_STRING ||
+                                    base.attributes === CONSTANTS.TO_DELETE_STRING) {
                                     if (CANON.stringify(base.attributes) !== CANON.stringify(extension.attributes)) {
                                         tPath = path + '/attributes';
                                         _conflictMine[tPath] = _conflictMine[tPath] || {
@@ -2068,8 +2054,8 @@ define(['common/util/canon',
                                     keys = Object.keys(extension.attributes);
                                     for (i = 0; i < keys.length; i++) {
                                         if (base.attributes[keys[i]]) {
-                                            if (extension.attributes[keys[i]] === TODELETESTRING ||
-                                                base.attributes[keys[i]] === TODELETESTRING) {
+                                            if (extension.attributes[keys[i]] === CONSTANTS.TO_DELETE_STRING ||
+                                                base.attributes[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
 
                                                 if (CANON.stringify(base.attributes[keys[i]]) !==
                                                     CANON.stringify(extension.attributes[keys[i]])) {
@@ -2104,7 +2090,8 @@ define(['common/util/canon',
                         //aspects
                         if (extension.aspects) {
                             if (base.aspects) {
-                                if (extension.aspects === TODELETESTRING || base.aspects === TODELETESTRING) {
+                                if (extension.aspects === CONSTANTS.TO_DELETE_STRING ||
+                                    base.aspects === CONSTANTS.TO_DELETE_STRING) {
                                     if (CANON.stringify(base.aspects) !== CANON.stringify(extension.aspects)) {
                                         tPath = path + '/aspects';
                                         _conflictMine[tPath] = _conflictMine[tPath] || {
@@ -2122,8 +2109,8 @@ define(['common/util/canon',
                                     keys = Object.keys(extension.aspects);
                                     for (i = 0; i < keys.length; i++) {
                                         if (base.aspects[keys[i]]) {
-                                            if (extension.aspects[keys[i]] === TODELETESTRING ||
-                                                base.aspects[keys[i]] === TODELETESTRING) {
+                                            if (extension.aspects[keys[i]] === CONSTANTS.TO_DELETE_STRING ||
+                                                base.aspects[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
                                                 if (CANON.stringify(base.aspects[keys[i]]) !==
                                                     CANON.stringify(extension.aspects[keys[i]])) {
                                                     tPath = path + '/aspects/' + keys[i];
@@ -2342,38 +2329,6 @@ define(['common/util/canon',
             }
         }
 
-        _core.tryToConcatChanges = function (base, extension) {
-            var result = {};
-            _conflictItems = [];
-            _conflictMine = {};
-            _conflictTheirs = {};
-            _concatBase = base;
-            _concatExtension = extension;
-            _concatBaseRemovals = {};
-            _concatMoves = {
-                getBaseSourceFromDestination: {},
-                getBaseDestinationFromSource: {},
-                getExtensionSourceFromDestination: {},
-                getExtensionDestinationFromSource: {}
-            };
-
-            getMoveSources(base,
-                '', _concatMoves.getBaseSourceFromDestination, _concatMoves.getBaseDestinationFromSource);
-            getMoveSources(extension,
-                '', _concatMoves.getExtensionSourceFromDestination, _concatMoves.getExtensionDestinationFromSource);
-            getConcatBaseRemovals(base);
-
-            fixCollision('', null, _concatBase, _concatExtension);
-            tryToConcatNodeChange(_concatExtension, '');
-
-            result.items = generateConflictItems();
-            result.mine = _conflictMine;
-            result.theirs = _conflictTheirs;
-            result.merge = _concatBase;
-            harmonizeConflictPaths(result.merge);
-            return result;
-        };
-
         function depthOfPath(path) {
             ASSERT(typeof path === 'string');
             return path.split('/').length;
@@ -2424,8 +2379,81 @@ define(['common/util/canon',
                 }
             }
         }
+        //</editor-fold>
 
-        _core.applyResolution = function (conflictObject) {
+        //<editor-fold=Added Methods>
+        core.nodeDiff = function (source, target) {
+            var diff = {
+                children: childrenDiff(source, target),
+                attr: attrDiff(source, target),
+                reg: regDiff(source, target),
+                pointer: pointerDiff(source, target),
+                set: setDiff(source, target),
+                meta: metaDiff(source, target)
+            };
+
+            normalize(diff);
+
+            return isEmptyNodeDiff(diff) ? null : diff;
+        };
+
+        core.generateTreeDiff = function (sRoot, tRoot) {
+            _yetToCompute = {};
+            _DIFF = {};
+            _diffMoves = {};
+            _needChecking = true;
+            _rounds = 0;
+            return TASYNC.call(function (d) {
+                _DIFF = d;
+                return checkRound();
+            }, updateDiff(sRoot, tRoot));
+        };
+
+        core.generateLightTreeDiff = function (sRoot, tRoot) {
+            return updateDiff(sRoot, tRoot);
+        };
+
+        core.applyTreeDiff = function (root, diff) {
+            //toFrom = {};
+            //fromTo = {};
+            //getMoveSources(diff, '', toFrom, fromTo);
+
+            return TASYNC.join(makeInitialContainmentChanges(root, diff), applyNodeChange(root, '', diff));
+        };
+
+        core.tryToConcatChanges = function (base, extension) {
+            var result = {};
+            _conflictItems = [];
+            _conflictMine = {};
+            _conflictTheirs = {};
+            _concatBase = base;
+            _concatExtension = extension;
+            _concatBaseRemovals = {};
+            _concatMoves = {
+                getBaseSourceFromDestination: {},
+                getBaseDestinationFromSource: {},
+                getExtensionSourceFromDestination: {},
+                getExtensionDestinationFromSource: {}
+            };
+
+            getMoveSources(base,
+                '', _concatMoves.getBaseSourceFromDestination, _concatMoves.getBaseDestinationFromSource);
+            getMoveSources(extension,
+                '', _concatMoves.getExtensionSourceFromDestination, _concatMoves.getExtensionDestinationFromSource);
+            getConcatBaseRemovals(base);
+
+            fixCollision('', null, _concatBase, _concatExtension);
+            tryToConcatNodeChange(_concatExtension, '');
+
+            result.items = generateConflictItems();
+            result.mine = _conflictMine;
+            result.theirs = _conflictTheirs;
+            result.merge = _concatBase;
+            harmonizeConflictPaths(result.merge);
+            return result;
+        };
+
+        core.applyResolution = function (conflictObject) {
             //we apply conflict items to the merge and return it as a diff
             var i;
             resolveMoves(conflictObject);
@@ -2439,12 +2467,10 @@ define(['common/util/canon',
 
             return conflictObject.merge;
         };
+        //</editor-fold>
 
-        //we remove some low level functions as they should not be used on high level
-        delete _core.overlayInsert;
-
-        return _core;
+        return core;
     }
 
-    return diffCore;
+    return DiffCore;
 });
