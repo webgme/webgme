@@ -84,7 +84,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 prevNbrOfSockets: 0
             };
 
-        if (socket.rooms.indexOf(roomName) !== -1) {
+        if (socket.rooms.hasOwnProperty(roomName) === true) {
+            // Socket is already in given room - no need to account for it.
             deferred.resolve();
         } else {
             Q.ninvoke(socket, 'join', roomName)
@@ -114,7 +115,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         return deferred.promise;
     }
 
-    function leaveBranchRoom(socket, projectId, branchName, disconnected) {
+    function leaveBranchRoom(socket, projectId, branchName/*, disconnected*/) {
         var deferred = Q.defer(),
             roomName = projectId + CONSTANTS.ROOM_DIVIDER + branchName,
             eventData = {
@@ -124,7 +125,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 prevNbrOfSockets: 0
             };
 
-        if (socket.rooms.indexOf(roomName) === -1) {
+        if (socket.rooms.hasOwnProperty(roomName) === false) {
+            // Socket was never in or had already left given room - no need to account for it.
             deferred.resolve();
         } else {
             eventData.prevNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
@@ -221,14 +223,14 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             // Inject into socket.onclose in order to see which rooms socket was in.
             var originalOnClose = socket.onclose;
             socket.onclose = function () {
-                var i,
+                var roomId,
                     projectIdBranchName;
-                logger.debug('onclose: socket was in rooms: ', socket.rooms);
+
                 if (webSocket) {
-                    for (i = 0; i < socket.rooms.length; i += 1) {
-                        if (socket.rooms[i].indexOf(CONSTANTS.ROOM_DIVIDER) > -1) {
-                            logger.debug('Socket was in branchRoom', socket.rooms[i]);
-                            projectIdBranchName = socket.rooms[i].split(CONSTANTS.ROOM_DIVIDER);
+                    for (roomId in socket.rooms) {
+                        if (socket.rooms.hasOwnProperty(roomId) && roomId.indexOf(CONSTANTS.ROOM_DIVIDER) > -1) {
+                            logger.debug('Socket was in branchRoom', roomId);
+                            projectIdBranchName = roomId.split(CONSTANTS.ROOM_DIVIDER);
                             // We cannot wait for this since socket.onclose is synchronous.
                             leaveBranchRoom(socket, projectIdBranchName[0], projectIdBranchName[1], true)
                                 .fail(logger.error);
@@ -241,7 +243,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('disconnect', function () {
                 // When this event is triggered, the disconnect socket has already left all rooms.
-                logger.debug('disconnect socket is in rooms: ', socket.rooms);
+                logger.debug('disconnect socket is in rooms: ', socket.id, {metadata: socket.rooms});
             });
 
             socket.on('getUserId', function (callback) {
@@ -418,9 +420,15 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 var commitStatus;
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName) > -1) {
-                            data.socket = socket;
+                        var roomName;
+                        if (data.branchName) {
+                            roomName = data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName;
+                            if (socket.rooms.hasOwnProperty(roomName)) {
+                                // The committer is in the branch-room, make sure we broadcast only to other users.
+                                data.socket = socket;
+                            }
                         }
+
                         data.username = userId;
                         return storage.makeCommit(data);
                     })
@@ -487,9 +495,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 var status;
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(data.projectId) > -1) {
+                        if (socket.rooms.hasOwnProperty(data.projectId)) {
                             data.socket = socket;
                         }
+
                         data.username = userId;
                         return storage.setBranchHash(data);
                     })
@@ -556,9 +565,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('deleteProject', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
+                        if (socket.rooms.hasOwnProperty(CONSTANTS.DATABASE_ROOM)) {
                             data.socket = socket;
                         }
+
                         data.username = userId;
                         return storage.deleteProject(data);
                     })
@@ -577,9 +587,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('createProject', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
+                        if (socket.rooms.hasOwnProperty(CONSTANTS.DATABASE_ROOM)) {
                             data.socket = socket;
                         }
+
                         data.username = userId;
                         return storage.createProject(data);
                     })
@@ -598,9 +609,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('transferProject', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
+                        if (socket.rooms.hasOwnProperty(CONSTANTS.DATABASE_ROOM)) {
                             data.socket = socket;
                         }
+
                         data.username = userId;
                         return storage.transferProject(data);
                     })
@@ -619,9 +631,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('duplicateProject', function (data, callback) {
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (socket.rooms.indexOf(CONSTANTS.DATABASE_ROOM) > -1) {
+                        if (socket.rooms.hasOwnProperty(CONSTANTS.DATABASE_ROOM)) {
                             data.socket = socket;
                         }
+
                         data.username = userId;
                         return storage.duplicateProject(data);
                     })
@@ -827,6 +840,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('notification', function (data, callback) {
+                logger.debug('Incoming notification from', socket.id, {metadata: data});
                 if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
                     if (data.socketId) {
                         webSocket.to(data.socketId).emit(CONSTANTS.NOTIFICATION, data);
@@ -846,9 +860,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
     this.stop = function () {
         //disconnect clients
+        var socketIds;
         if (webSocket) {
-            webSocket.sockets.sockets.forEach(function (socket) {
-                socket.disconnect();
+            socketIds = Object.keys(webSocket.sockets.connected);
+            socketIds.forEach(function (socketId) {
+                webSocket.sockets.connected[socketId].disconnect();
             });
             webSocket = null;
         }
