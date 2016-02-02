@@ -46,7 +46,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             this.$panelHeaderTitle.remove();
         }
 
-        this.widget = new MetaEditorWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new MetaEditorWidget(this.$el, {toolBar: this.toolBar});
 
         this.widget.setTitle = function (/* title */) {
             //self.setTitle(title);

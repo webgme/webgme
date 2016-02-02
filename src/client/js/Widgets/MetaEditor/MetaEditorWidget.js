@@ -32,7 +32,7 @@ define([
         params.loggerName = 'gme:Widgets:MetaEditor:MetaEditorWidget';
 
         //disable line style parameter controls in toolbar
-        params.lineStyleControls = true;
+        params.lineStyleControls = false;
 
         params.tabsEnabled = true;
         params.addTabs = true;
