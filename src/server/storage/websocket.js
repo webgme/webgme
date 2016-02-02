@@ -223,14 +223,16 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             // Inject into socket.onclose in order to see which rooms socket was in.
             var originalOnClose = socket.onclose;
             socket.onclose = function () {
-                var roomId,
+                var i,
+                    roomIds,
                     projectIdBranchName;
 
                 if (webSocket) {
-                    for (roomId in socket.rooms) {
-                        if (socket.rooms.hasOwnProperty(roomId) && roomId.indexOf(CONSTANTS.ROOM_DIVIDER) > -1) {
-                            logger.debug('Socket was in branchRoom', roomId);
-                            projectIdBranchName = roomId.split(CONSTANTS.ROOM_DIVIDER);
+                    roomIds = Object.keys(socket.rooms);
+                    for (i = 0; i < roomIds.length; i += 1) {
+                        if (roomIds[i].indexOf(CONSTANTS.ROOM_DIVIDER) > -1) {
+                            logger.debug('Socket was in branchRoom', roomIds[i]);
+                            projectIdBranchName = roomIds[i].split(CONSTANTS.ROOM_DIVIDER);
                             // We cannot wait for this since socket.onclose is synchronous.
                             leaveBranchRoom(socket, projectIdBranchName[0], projectIdBranchName[1], true)
                                 .fail(logger.error);
@@ -243,7 +245,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('disconnect', function () {
                 // When this event is triggered, the disconnect socket has already left all rooms.
-                logger.debug('disconnect socket is in rooms: ', socket.id, {metadata: socket.rooms});
+                logger.debug('disconnect socket is in rooms: ', socket.id, Object.keys(socket.rooms));
             });
 
             socket.on('getUserId', function (callback) {
