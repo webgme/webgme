@@ -611,11 +611,13 @@ define(['js/logger',
             }
         }
 
-        this.diagramDesigner.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionTypeSelected);
-        this.diagramDesigner.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionTypeSelected);
-        this.diagramDesigner.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionTypeSelected);
-        this.diagramDesigner.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionTypeSelected);
-        this.diagramDesigner.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionTypeSelected);
+        // lineStyleControls are disabled in meta-editor.
+
+        //this.diagramDesigner.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionTypeSelected);
+        //this.diagramDesigner.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionTypeSelected);
+        //this.diagramDesigner.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionTypeSelected);
+        //this.diagramDesigner.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionTypeSelected);
+        //this.diagramDesigner.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionTypeSelected);
 
         WebGMEGlobal.State.registerActiveSelection(gmeIDs);
     };
