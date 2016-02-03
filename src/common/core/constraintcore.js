@@ -27,11 +27,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         ASSERT(typeof options.logger !== 'undefined');
 
         var logger = options.logger,
-            core = {},
+            self = this,
             key;
 
         for (key in innerCore) {
-            core[key] = innerCore[key];
+            this[key] = innerCore[key];
         }
 
         logger.debug('initialized ConstraintCore');
@@ -65,7 +65,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         //</editor-fold>
 
         //<editor-fold=Added Methods>
-        core.getConstraint = function (node, name) {
+        this.getConstraint = function (node, name) {
             ASSERT(innerCore.isValidNode(node));
             var constraintsNode = innerCore.getChild(node, CONSTANTS.CONSTRAINTS_RELID);
             var constRelId = getConstraintRelId(constraintsNode, name);
@@ -81,7 +81,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             }
         };
 
-        core.setConstraint = function (node, name, constraintObj) {
+        this.setConstraint = function (node, name, constraintObj) {
             ASSERT(innerCore.isValidNode(node));
             ASSERT(typeof constraintObj === 'object' && typeof name === 'string');
             var constraintsNode = innerCore.getChild(node, CONSTANTS.CONSTRAINTS_RELID);
@@ -103,7 +103,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 (innerCore.getRegistry(node, getRegConstName(name)) || 0) + 1);
         };
 
-        core.delConstraint = function (node, name) {
+        this.delConstraint = function (node, name) {
             ASSERT(innerCore.isValidNode(node));
             var constraintsNode = innerCore.getChild(node, CONSTANTS.CONSTRAINTS_RELID);
             var constRelId = getConstraintRelId(constraintsNode, name);
@@ -114,7 +114,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             innerCore.delRegistry(node, getRegConstName(name));
         };
 
-        core.getConstraintNames = function (node) {
+        this.getConstraintNames = function (node) {
             ASSERT(innerCore.isValidNode(node));
             var constraintsNode = innerCore.getChild(node, CONSTANTS.CONSTRAINTS_RELID);
             var relIds = innerCore.getChildrenRelids(constraintsNode);
@@ -126,15 +126,15 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         };
 
         //TODO this means we always have to have this layer above type/inheritance layer
-        core.getOwnConstraintNames = function (node) {
+        this.getOwnConstraintNames = function (node) {
             ASSERT(innerCore.isValidNode(node));
-            var names = core.getConstraintNames(node),
-                base = core.getBase(node),
+            var names = self.getConstraintNames(node),
+                base = self.getBase(node),
                 baseNames = [],
                 i, index;
 
             if (base) {
-                baseNames = core.getConstraintNames(base);
+                baseNames = self.getConstraintNames(base);
             }
 
             for (i = 0; i < baseNames.length; i++) {
@@ -147,8 +147,6 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return names;
         };
         //</editor-fold>
-
-        return core;
     }
 
     return ConstraintCore;

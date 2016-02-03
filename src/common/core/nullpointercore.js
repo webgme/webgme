@@ -14,17 +14,17 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         ASSERT(typeof options.logger !== 'undefined');
 
         var logger = options.logger,
-            core = {},
+            self = this,
             key;
 
         for (key in innerCore) {
-            core[key] = innerCore[key];
+            this[key] = innerCore[key];
         }
 
         logger.debug('initialized NullPointerCore');
 
         //<editor-fold=Modified Methods>
-        core.setPointer = function (node, name, target) {
+        this.setPointer = function (node, name, target) {
             if (target === null) {
                 var nullChild = innerCore.getChild(node, CONSTANTS.NULLPTR_RELID);
                 innerCore.setAttribute(nullChild, 'name', CONSTANTS.NULLPTR_NAME);
@@ -34,7 +34,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             }
         };
 
-        core.getPointerPath = function (node, name) {
+        this.getPointerPath = function (node, name) {
             var path = innerCore.getPointerPath(node, name);
             if (path && path.indexOf(CONSTANTS.NULLPTR_RELID) !== -1) {
                 return null;
@@ -43,8 +43,8 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             }
         };
 
-        core.loadPointer = function (node, name) {
-            var path = core.getPointerPath(node, name);
+        this.loadPointer = function (node, name) {
+            var path = self.getPointerPath(node, name);
             if (path === null) {
                 return null;
             } else {
@@ -53,7 +53,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         };
         //</editor-fold>
 
-        return core;
+        return self;
     }
 
     return NullPointerCore;

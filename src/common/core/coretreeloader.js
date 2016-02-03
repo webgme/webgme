@@ -14,11 +14,11 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         ASSERT(typeof options.logger !== 'undefined');
 
         var logger = options.logger,
-            core = {},
+            self = this,
             key;
 
         for (key in innerCore) {
-            core[key] = innerCore[key];
+            this[key] = innerCore[key];
         }
 
         logger.debug('initialized CoreTreeLoader');
@@ -27,12 +27,12 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         function loadSubTree(root, own) {
             var loadSubTrees = function (nodes) {
                     for (var i = 0; i < nodes.length; i++) {
-                        nodes[i] = core.loadSubTree(nodes[i], own);
+                        nodes[i] = self.loadSubTree(nodes[i], own);
                     }
                     return TASYNC.lift(nodes);
 
                 },
-                childLoading = own === true ? core.loadOwnChildren : core.loadChildren;
+                childLoading = own === true ? self.loadOwnChildren : self.loadChildren;
             return TASYNC.call(function (children) {
                 if (children.length < 1) {
                     return [root];
@@ -52,20 +52,18 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         //</editor-fold>
 
         //<editor-fold=Added Methods>
-        core.loadTree = function (rootHash) {
-            return TASYNC.call(core.loadSubTree, core.loadRoot(rootHash));
+        this.loadTree = function (rootHash) {
+            return TASYNC.call(self.loadSubTree, self.loadRoot(rootHash));
         };
 
-        core.loadSubTree = function (root) {
+        this.loadSubTree = function (root) {
             return loadSubTree(root, false);
         };
 
-        core.loadOwnSubTree = function (root) {
+        this.loadOwnSubTree = function (root) {
             return loadSubTree(root, true);
         };
         //</editor-fold>
-
-        return core;
     };
 
     return CoreTreeLoader;

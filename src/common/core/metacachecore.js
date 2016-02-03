@@ -18,11 +18,11 @@ define([
             ASSERT(typeof options.logger !== 'undefined');
 
             var logger = options.logger,
-                core = {},
+                self = this,
                 key;
 
             for (key in innerCore) {
-                core[key] = innerCore[key];
+                this[key] = innerCore[key];
             }
 
             logger.debug('initialized MetaCacheCore');
@@ -39,7 +39,7 @@ define([
                     }
 
                     return TASYNC.lift(metaNodes);
-                }, core.loadPaths(core.getHash(root), JSON.parse(JSON.stringify(paths))));
+                }, self.loadPaths(self.getHash(root), JSON.parse(JSON.stringify(paths))));
             }
 
             function sensitiveFilter(validNodes) {
@@ -47,7 +47,7 @@ define([
 
                 i = validNodes.length;
                 while (i--) {
-                    if (core.isConnection(validNodes[i]) || core.isAbstract(validNodes[i])) {
+                    if (self.isConnection(validNodes[i]) || self.isAbstract(validNodes[i])) {
                         validNodes.splice(i, 1);
                     }
                 }
@@ -55,7 +55,7 @@ define([
             //</editor-fold>
 
             //<editor-fold=Modified Methods>
-            core.loadRoot = function (hash) {
+            this.loadRoot = function (hash) {
                 return TASYNC.call(function (root) {
                     return TASYNC.call(function (elements) {
                         var i = 0;
@@ -68,14 +68,14 @@ define([
                 }, innerCore.loadRoot(hash));
             };
 
-            core.loadByPath = function (node, path) {
+            this.loadByPath = function (node, path) {
                 return TASYNC.call(function () {
                     return innerCore.loadByPath(node, path);
-                }, core.loadPaths(core.getHash(node), [path]));
+                }, self.loadPaths(self.getHash(node), [path]));
             };
 
             //functions where the cache may needs to be updated
-            core.createNode = function (parameters) {
+            this.createNode = function (parameters) {
                 var node = innerCore.createNode(parameters);
 
                 if (!parameters || !parameters.parent) {
@@ -86,42 +86,42 @@ define([
                 return node;
             };
 
-            core.addMember = function (node, setName, member) {
-                var root = core.getRoot(node);
+            this.addMember = function (node, setName, member) {
+                var root = self.getRoot(node);
                 innerCore.addMember(node, setName, member);
 
                 //check if our cache needs to be updated
-                if (setName === CONSTANTS.META_SET_NAME && core.getPath(node) === core.getPath(root)) {
-                    root.metaNodes[core.getPath(member)] = member;
+                if (setName === CONSTANTS.META_SET_NAME && self.getPath(node) === self.getPath(root)) {
+                    root.metaNodes[self.getPath(member)] = member;
                 }
             };
 
-            core.delMember = function (node, setName, memberPath) {
-                var root = core.getRoot(node);
+            this.delMember = function (node, setName, memberPath) {
+                var root = self.getRoot(node);
                 innerCore.delMember(node, setName, memberPath);
 
                 //check if our cache needs to be updated
-                if (setName === CONSTANTS.META_SET_NAME && core.getPath(node) === core.getPath(root)) {
+                if (setName === CONSTANTS.META_SET_NAME && self.getPath(node) === self.getPath(root)) {
                     delete root.metaNodes[memberPath];
                 }
             };
 
-            core.deleteNode = function (node, technical) {
-                var root = core.getRoot(node);
-                if (root.metaNodes[core.getPath(node)]) {
-                    delete root.metaNodes[core.getPath(node)];
+            this.deleteNode = function (node, technical) {
+                var root = self.getRoot(node);
+                if (root.metaNodes[self.getPath(node)]) {
+                    delete root.metaNodes[self.getPath(node)];
                 }
                 innerCore.deleteNode(node, technical);
             };
 
-            core.moveNode = function (node, parent) {
-                var root = core.getRoot(node),
-                    oldpath = core.getPath(node),
+            this.moveNode = function (node, parent) {
+                var root = self.getRoot(node),
+                    oldpath = self.getPath(node),
                     moved = innerCore.moveNode(node, parent);
 
                 if (root.metaNodes[oldpath]) {
                     delete root.metaNodes[oldpath];
-                    root.metaNodes[core.getPath(moved)] = moved;
+                    root.metaNodes[self.getPath(moved)] = moved;
                 }
 
                 return moved;
@@ -129,17 +129,17 @@ define([
             //</editor-fold>
 
             //<editor-fold=Added Methods>
-            core.isMetaNode = function (node) {
-                var root = core.getRoot(node);
-                if (root.metaNodes && root.metaNodes[core.getPath(node)]) {
+            this.isMetaNode = function (node) {
+                var root = self.getRoot(node);
+                if (root.metaNodes && root.metaNodes[self.getPath(node)]) {
                     return true;
                 }
 
                 return false;
             };
 
-            core.getAllMetaNodes = function (node) {
-                var root = core.getRoot(node);
+            this.getAllMetaNodes = function (node) {
+                var root = self.getRoot(node);
 
                 if (root.metaNodes) {
                     return root.metaNodes;
@@ -148,20 +148,20 @@ define([
                 return [];
             };
 
-            core.isAbstract = function (node) {
-                return core.getRegistry(node, 'isAbstract') === true;
+            this.isAbstract = function (node) {
+                return self.getRegistry(node, 'isAbstract') === true;
             };
 
-            core.isConnection = function (node) {
+            this.isConnection = function (node) {
                 var validPtrNames = innerCore.getValidPointerNames(node);
 
                 return validPtrNames.indexOf('dst') !== -1 && validPtrNames.indexOf('src') !== -1;
             };
 
-            core.getValidChildrenMetaNodes = function (parameters) {
+            this.getValidChildrenMetaNodes = function (parameters) {
                 var validNodes = [],
                     node = parameters.node,
-                    metaNodes = core.getRoot(node).metaNodes,
+                    metaNodes = self.getRoot(node).metaNodes,
                     keys = Object.keys(metaNodes || {}),
                     i, j,
                     typeCounters = {},
@@ -273,15 +273,15 @@ define([
                 return validNodes;
             };
 
-            core.getValidSetElementsMetaNodes = function (parameters) {
+            this.getValidSetElementsMetaNodes = function (parameters) {
                 var validNodes = [],
                     node = parameters.node,
-                    metaNodes = core.getRoot(node).metaNodes,
+                    metaNodes = self.getRoot(node).metaNodes,
                     keys = Object.keys(metaNodes || {}),
                     i, j,
                     typeCounters = {},
                     members = parameters.members || [],
-                    rules = core.getPointerMeta(node, parameters.name) || {},
+                    rules = self.getPointerMeta(node, parameters.name) || {},
                     temp;
 
                 for (i = 0; i < keys.length; i += 1) {
@@ -360,8 +360,6 @@ define([
                 return validNodes;
             };
             //</editor-fold>
-
-            return core;
         };
 
         return MetaCacheCore;
