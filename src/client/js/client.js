@@ -226,6 +226,34 @@ define([
 
         }
 
+        function checkMixinErrors(core, rootNode) {
+            var metaNodes = core.getAllMetaNodes(rootNode),
+                i, j,
+                notifications = {},
+                notificationKeys = [],
+                errors;
+
+            for (i in metaNodes) {
+                errors = core.getMixinErrors(metaNodes[i]);
+
+                for (j = 0; j < errors.length; j += 1) {
+                    notifications[errors[j].message] = {
+                        type: 'META',
+                        severity: errors[j].severity,
+                        message: errors[j].message,
+                        hint: errors[j].hint
+                    };
+                    notificationKeys.push(errors[j].message);
+                }
+            }
+
+            //now sort simply by the messages
+            notificationKeys.sort();
+            for (i = 0; i < notificationKeys.length; i += 1) {
+                self.dispatchEvent(CONSTANTS.NOTIFICATION, notifications[notificationKeys[i]]);
+            }
+        }
+
         nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode);
 
         for (monkeyPatchKey in nodeSetterFunctions) {
@@ -1470,6 +1498,7 @@ define([
             state.loading.commitHash = null;
 
             checkMetaNameCollision(state.core, state.nodes[ROOT_PATH].node);
+            checkMixinErrors(state.core, state.nodes[ROOT_PATH].node);
 
             for (i in state.users) {
                 if (state.users.hasOwnProperty(i)) {

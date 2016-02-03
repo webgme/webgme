@@ -36,13 +36,6 @@ define([
             return false;
         }
 
-        function realNode(node) { //TODO we have to make some more sophisticated distinction
-            if (self.getPath(node).indexOf('_') !== -1) {
-                return false;
-            }
-            return true;
-        }
-
         function getMetaNode(node) {
             return self.getChild(node, CONSTANTS.META_NODE);
         }
@@ -208,9 +201,6 @@ define([
 
         //<editor-fold=Added Methods>
         this.isTypeOf = function (node, typeNode) {
-            if (!realNode(node)) {
-                return false;
-            }
             while (node) {
                 if (sameNode(node, typeNode)) {
                     return true;
@@ -221,9 +211,6 @@ define([
         };
 
         this.isValidChildOf = function (node, parentNode) {
-            if (!realNode(node)) {
-                return true;
-            }
             var validChildTypePaths = self.getMemberPaths(getMetaChildrenNode(parentNode), CONSTANTS.SET_ITEMS) || [];
             while (node) {
                 if (validChildTypePaths.indexOf(self.getPath(node)) !== -1) {
@@ -242,6 +229,24 @@ define([
             for (i = 0; i < validNames.length; i++) {
                 metaPointerNode = getMetaPointerNode(node, validNames[i]);
                 max = self.getAttribute(metaPointerNode, CONSTANTS.SET_ITEMS_MAX);
+                if (max === 1) {
+                    //TODO Specify what makes something a pointer and what a set???
+                    //TODO Can you extend a pointer to a set????
+                    validPointerNames.push(validNames[i]);
+                }
+            }
+
+            return validPointerNames;
+        };
+
+        this.getOwnValidPointerNames = function (node) {
+            var validNames = self.getOwnPointerNames(getMetaNode(node)) || [],
+                i,
+                validPointerNames = [],
+                metaPointerNode, max;
+            for (i = 0; i < validNames.length; i++) {
+                metaPointerNode = getMetaPointerNode(node, validNames[i]);
+                max = self.getOwnAttribute(metaPointerNode, CONSTANTS.SET_ITEMS_MAX);
                 if (max === 1) {
                     //TODO Specify what makes something a pointer and what a set???
                     //TODO Can you extend a pointer to a set????
@@ -271,12 +276,28 @@ define([
             return validSetNames;
         };
 
-        this.isValidTargetOf = function (node, source, name) {
-            if (!realNode(source) || node === null) { //we position ourselves over the null-pointer layer
-                return true;
+        this.getOwnValidSetNames = function (node) {
+            var validNames = self.getOwnPointerNames(getMetaNode(node)) || [],
+                i,
+                validSetNames = [],
+                metaPointerNode, max;
+
+            for (i = 0; i < validNames.length; i++) {
+                metaPointerNode = getMetaPointerNode(node, validNames[i]);
+                max = self.getOwnAttribute(metaPointerNode, CONSTANTS.SET_ITEMS_MAX);
+                if (max === undefined || max === -1 || max > 1) {
+                    //TODO specify what makes something a pointer and what a set???
+                    //TODO can you extend a pointer to a set????
+                    validSetNames.push(validNames[i]);
+                }
             }
+
+            return validSetNames;
+        };
+
+        this.isValidTargetOf = function (node, source, name) {
             var pointerMetaNode = getMetaPointerNode(source, name);
-            
+
             if (pointerMetaNode) {
                 var validTargetTypePaths = self.getMemberPaths(pointerMetaNode, CONSTANTS.SET_ITEMS) || [];
                 while (node) {
@@ -290,20 +311,16 @@ define([
         };
 
         this.getValidAttributeNames = function (node) {
-            var names = [];
+            return self.getAttributeNames(getMetaNode(node)) || [];
+        };
 
-            if (realNode(node)) {
-                names = self.getAttributeNames(getMetaNode(node)) || [];
-            }
-            return names;
+        this.getOwnValidAttributeNames = function (node) {
+            return self.getOwnAttributeNames(getMetaNode(node)) || [];
         };
 
         this.isValidAttributeValueOf = function (node, name, value) {
             var typedValue;
 
-            if (!realNode(node)) {
-                return true;
-            }
             if (self.getValidAttributeNames(node).indexOf(name) === -1) {
                 return false;
             }
@@ -360,6 +377,10 @@ define([
 
         this.getValidAspectNames = function (node) {
             return self.getPointerNames(getMetaAspectsNode(node)) || [];
+        };
+
+        this.getOwnValidAspectNames = function (node) {
+            return self.getOwnPointerNames(getMetaAspectsNode(node)) || [];
         };
 
         this.getAspectMeta = function (node, name) {
@@ -466,6 +487,10 @@ define([
 
         this.getValidChildrenPaths = function (node) {
             return self.getMemberPaths(getMetaChildrenNode(node), CONSTANTS.SET_ITEMS);
+        };
+
+        this.getOwnValidChildrenPaths = function (node) {
+            return self.getOwnMemberPaths(getMetaChildrenNode(node), CONSTANTS.SET_ITEMS);
         };
 
         this.getChildrenMeta = function (node) {
@@ -587,6 +612,22 @@ define([
             }
 
             return pointerMeta;
+        };
+
+        this.getValidTargetPaths = function (node, name) {
+            var pointerNode = getMetaPointerNode(node, name);
+            if (pointerNode === null) {
+                return [];
+            }
+            return self.getMemberPaths(pointerNode, CONSTANTS.SET_ITEMS);
+        };
+
+        this.getOwnValidTargetPaths = function (node, name) {
+            var pointerNode = getMetaPointerNode(node, name);
+            if (pointerNode === null) {
+                return [];
+            }
+            return self.getOwnMemberPaths(pointerNode, CONSTANTS.SET_ITEMS);
         };
 
         this.setAspectMetaTarget = function (node, name, target) {

@@ -50,6 +50,7 @@ define(['js/logger',
         this.diagramDesigner.onCreateNewConnection = function (params) {
             var sourceId = self._ComponentID2GMEID[params.src],
                 targetId = self._ComponentID2GMEID[params.dst],
+                mixinCheckResult,
                 node,
                 baseNode,
                 oldBaseNode;
@@ -120,6 +121,20 @@ define(['js/logger',
                     }
                 }
                 return;
+            } else if (self._connType === MetaRelations.META_RELATIONS.MIXIN) {
+                node = self._client.getNode(sourceId);
+                if (node) {
+                    mixinCheckResult = node.canSetAsMixin(targetId);
+
+                    if (mixinCheckResult.isOk === false) {
+                        dialog.alert('Invalid mixin target',
+                            mixinCheckResult.reason,
+                            function () {
+
+                            });
+                        return;
+                    }
+                }
             }
 
             //not inheritance type connection creation
@@ -266,7 +281,6 @@ define(['js/logger',
     /**********************************************************/
     /*  END OF --- HANDLE OBJECT DRAG & DROP ACCEPTANCE       */
     /**********************************************************/
-
 
     /**********************************************************/
     /*  HANDLE OBJECT DRAG & DROP TO SHEET                    */
@@ -449,7 +463,6 @@ define(['js/logger',
     /*  END OF --- HANDLE OBJECT DRAG & DROP TO SHEET         */
     /**********************************************************/
 
-
     /*************************************************************/
     /*  HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /*************************************************************/
@@ -479,6 +492,10 @@ define(['js/logger',
                 self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, false);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
                 self._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
+            } else if (connDesc.type === MetaRelations.META_RELATIONS.MIXIN) {
+                self._deleteMixinRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
+            } else if (connDesc.type === MetaRelations.META_RELATIONS.MIXIN) {
+                self._deleteMixinRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.SET) {
                 self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, true);
             }
@@ -557,7 +574,6 @@ define(['js/logger',
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /************************************************************************/
 
-
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragParams = function (selectedElements, event) {
         var oParams = this._oGetDragParams.call(this.diagramDesigner, selectedElements, event),
             params = {positions: {}},
@@ -574,7 +590,6 @@ define(['js/logger',
 
         return params;
     };
-
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragItems = function (selectedElements) {
         var draggedItems = [],
@@ -804,7 +819,6 @@ define(['js/logger',
             _client.completeTransaction();
         };
 
-
         //first figure out if the deleted-to-be items are present in any other meta sheet
         //if not, ask the user to confirm delete
         len = itemsOfAspect.length;
@@ -853,7 +867,6 @@ define(['js/logger',
         }
     };
 
-
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabsSorted = function (newTabIDOrder) {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
@@ -888,7 +901,6 @@ define(['js/logger',
 
         this._client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
     };
-
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers
         .prototype._onSelectionFillColorChanged = function (selectedElements, color) {
@@ -931,7 +943,7 @@ define(['js/logger',
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionAlignMenu = function (selectedIds,
-                                                                                                     mousePos) {
+                                                                                                    mousePos) {
         var menuPos = this.diagramDesigner.posToPageXY(mousePos.mX, mousePos.mY),
             self = this;
 

@@ -138,6 +138,7 @@ describe('meta', function () {
                 expect(meta.getMeta('/1')).not.to.deep.equal(fileMeta);
             } else if (savePhase === 'full') {
                 savePhase = 'done';
+
                 expect(meta.getMeta('/1')).to.deep.equal(fileMeta);
                 done();
             } else {
@@ -156,7 +157,7 @@ describe('meta', function () {
         meta.setAttributeSchema('/1', 'enumText', {type: 'string', enum: ['one', 'two', 'three']});
         meta.setPointerMeta('/1', 'ptr', {items: [{id: '/1', min: undefined, max: 1}], min: 1, max: 1});
         savePhase = 'full';
-        meta.setMetaAspect('/1', 'testAspect', {items: ['/1']});
+        meta.setMetaAspect('/1', 'testAspect', ['/1']);
 
     });
 

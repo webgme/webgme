@@ -321,10 +321,20 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getValidAspectNames(this._state.nodes[this._id].node);
     };
 
+    //MIXINS
+    GMENode.prototype.getMixinPaths = function () {
+        return this._state.core.getMixinPaths(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.canSetAsMixin = function(mixinPath){
+        return this._state.core.canSetAsMixin(this._state.nodes[this._id].node,mixinPath);
+    };
+
     //getNode
     function getNode(_id, logger, state, meta, storeNode) {
         if (state.nodes[_id]) {
             return new GMENode(_id, logger, state, meta, storeNode);
+
         } else {
             //logger.warn('Tried to get node with path "' + _id + '" but was not in state.nodes');
         }

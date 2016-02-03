@@ -421,11 +421,11 @@ define(['js/logger',
 
     PropertyEditorController.prototype._getNodeAttributeValues = function (node) {
         var result = {},
-            attrNames = node.getAttributeNames(),
+            attrNames = _.union(node.getAttributeNames() || [], node.getValidAttributeNames() || []),
             len = attrNames.length;
 
         while (--len >= 0) {
-            result[attrNames[len]] = node.getAttribute(attrNames[len]);
+            result[attrNames[len]] = node.getAttribute(attrNames[len]) || "";
         }
 
         return util.flattenObject(result);
@@ -684,7 +684,7 @@ define(['js/logger',
 
     PropertyEditorController.prototype._buildCommonAttrMeta = function (commonAttrMeta, node, initPhase) {
         var nodeId = node.getId(),
-            nodeAttributeNames = node.getAttributeNames(nodeId) || [],
+            nodeAttributeNames = _.union(node.getAttributeNames() || [], node.getValidAttributeNames() || []),
             len = nodeAttributeNames.length,
             attrMetaDescriptor,
             attrName,

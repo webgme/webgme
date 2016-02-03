@@ -1185,6 +1185,17 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             }
         }
 
+        function updateMixinMeta(guid) {
+            var mixinGuids = updatedLibraryJson.nodes[guid].meta.mixins || [],
+                i;
+
+            for (i = 0; i < mixinGuids.length; i += 1) {
+                if (nodes[mixinGuids[i]]) {
+                    core.addMixin(nodes[guid], core.getPath(nodes[mixinGuids[i]]));
+                }
+            }
+        }
+
         function updateMeta(guid) {
             if (guids[guid] === 'update') {
                 core.clearMetaRules(nodes[guid]);
@@ -1195,6 +1206,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             updatePointerMeta(guid, meta);
             updateAspectMeta(guid, meta);
             updateConstraintMeta(guid, meta);
+            updateMixinMeta(guid);
         }
 
         function updateMetaRules(guid, containmentTreeObject) {

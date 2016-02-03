@@ -41,7 +41,7 @@ define(['q'], function (Q) {
             i;
 
         for (i = 0; i < pointerNames.length; i += 1) {
-            if (meta.pointers[pointerNames[i]].min !== undefined) {
+            if (meta.pointers[pointerNames[i]].max === 1) {
                 // These are single target pointers (e.g. connections).
                 result.pointers[pointerNames[i]] = meta.pointers[pointerNames[i]];
             } else {
