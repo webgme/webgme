@@ -135,6 +135,10 @@ function validateConfig(configOrFileName) {
     assertEnum('config.client.defaultConnectionRouter', config.client.defaultConnectionRouter,
         'basic', 'basic2', 'basic3');
 
+    // components
+    expectedKeys.push('components');
+    assertObject('config.components', config.components);
+
     // core
     expectedKeys.push('core');
     assertBoolean('config.core.enableCustomConstraints', config.core.enableCustomConstraints);

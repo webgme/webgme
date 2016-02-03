@@ -665,6 +665,10 @@ define([
             return state.project && state.project.projectId;
         };
 
+        this.getActiveProjectName = function () {
+            return state.project && state.project.projectName;
+        };
+
         this.getActiveBranchName = function () {
             return state.branchName;
         };

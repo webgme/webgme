@@ -29,9 +29,10 @@ define(['js/logger',
         GME_ASPECT_ICON = 'gme-aspect',
         CROSSCUT_VISUALIZER = 'Crosscut',
         SET_VISUALIZER = 'SetEditor',
+        COMPONENT_GUID = '7786674bf30f48b6835a0f134b5ba73e',
         TREE_ROOT = CONSTANTS.PROJECT_ROOT_ID;
 
-    function TreeBrowserControl(client, treeBrowser) {
+    function TreeBrowserControl(client, treeBrowser, config) {
         var logger,
             stateLoading = 0,
             stateLoaded = 1,
@@ -53,43 +54,73 @@ define(['js/logger',
 
         this._client = client;
 
+        this._treeRootId = TREE_ROOT;
+
+        function setTreeRoot() {
+            var projectId = client.getActiveProjectId(),
+                projectName = client.getActiveProjectName();
+
+            if (config.treeRoot.byProjectId.hasOwnProperty(projectId)) {
+                self._treeRootId = config.treeRoot.byProjectId[projectId];
+            } else if (config.treeRoot.byProjectName.hasOwnProperty(projectName)) {
+                self._treeRootId = config.treeRoot.byProjectName[projectName];
+            } else {
+                self._treeRootId = config.treeRoot.general;
+            }
+        }
+
+        function refreshTreeRoot() {
+            // Create a new loading node for it in the tree.
+            var loadingRootTreeNode = treeBrowser.createNode(null, {
+                id: self._treeRootId,
+                name: 'Initializing tree...',
+                hasChildren: true,
+                class: NODE_PROGRESS_CLASS
+            });
+
+            // Store the node's info in the local hash-map.
+            nodes[self._treeRootId] = {
+                treeNode: loadingRootTreeNode,
+                children: [],
+                state: stateLoading
+            };
+
+            // Add the tree-root to the query and update the territory.
+            selfPatterns = {};
+            selfPatterns[self._treeRootId] = {children: 2};
+            client.updateTerritory(selfId, selfPatterns);
+        }
+
         initialize = function () {
             var rootNode = client.getNode(CONSTANTS.PROJECT_ROOT_ID);
             logger.debug('entered initialize');
+            setTreeRoot();
+
             if (rootNode) {
-                var loadingRootTreeNode;
                 logger.debug('rootNode avaliable now');
                 selfId = client.addUI(self, function (events) {
                     self._eventCallback(events);
                     if (initialized === false) {
-                        logger.debug('loaded territory from rootNode at initialize');
-                        initialized = true;
+                        if (client.getNode(self._treeRootId)) {
+                            logger.debug('loaded territory from "' + self._treeRootId + '" at initialize');
+                            initialized = true;
 
-                        logger.debug('expanding tree-root', TREE_ROOT);
-                        loadingRootTreeNode.setExpanded(true);
+                            logger.debug('expanding tree-root', self._treeRootId);
+                            nodes[self._treeRootId].treeNode.setExpanded(true);
+                        } else {
+                            logger.error('Specified tree-root ' + self._treeRootId + ' did not exist in model - falling' +
+                                ' back on root-node.');
+
+                            treeBrowser.deleteNode(nodes[self._treeRootId].treeNode);
+                            self._treeRootId = CONSTANTS.PROJECT_ROOT_ID;
+                            nodes = {};
+
+                            refreshTreeRoot();
+                        }
                     }
                 });
 
-                //add "root" with its children to territory
-                //create a new loading node for it in the tree
-                loadingRootTreeNode = treeBrowser.createNode(null, {
-                    id: TREE_ROOT,
-                    name: 'Initializing tree...',
-                    hasChildren: true,
-                    class: NODE_PROGRESS_CLASS
-                });
-
-                //store the node's info in the local hashmap
-                nodes[TREE_ROOT] = {
-                    treeNode: loadingRootTreeNode,
-                    children: [],
-                    state: stateLoading
-                };
-
-                //add the root to the query
-                selfPatterns = {};
-                selfPatterns[TREE_ROOT] = {children: 2};
-                client.updateTerritory(selfId, selfPatterns);
+                refreshTreeRoot();
             } else {
                 logger.debug('rootNode not avaliable at initialize');
                 setTimeout(initialize, 500);
@@ -671,7 +702,7 @@ define(['js/logger',
             //forget the old territory
             client.removeUI(selfId);
 
-            treeBrowser.deleteNode(nodes[TREE_ROOT].treeNode);
+            treeBrowser.deleteNode(nodes[self._treeRootId].treeNode);
 
             selfPatterns = {};
             nodes = {};
@@ -685,6 +716,31 @@ define(['js/logger',
 
         setTimeout(initialize, 250);
     }
+
+    TreeBrowserControl.getDefaultConfig = function () {
+        return {
+            filters: {
+                toggled: {
+                    hideConnections: false,
+                    hideAbstracts: false,
+                    hideLeaves: false
+                }
+            },
+            treeRoot: {
+                general: '',
+                byProjectName: {
+                    //'projectName': '/E'
+                },
+                byProjectId: {
+                    //'user+projectName': '/n'
+                }
+            }
+        };
+    };
+
+    TreeBrowserControl.getComponentGUID = function () {
+        return COMPONENT_GUID;
+    };
 
     TreeBrowserControl.prototype._getValidChildrenTypes = function (nodeId) {
         var types = [],

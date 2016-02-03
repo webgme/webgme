@@ -14,6 +14,7 @@ var Mongodb = require('mongodb'),
     GUID = requireJS('common/util/guid'),
 
     storageUtil = requireJS('common/storage/util'),
+    UTIL = requireJS('common/util/util'),
 
     Logger = require('../../logger'),
 
@@ -610,7 +611,7 @@ function GMEAuth(session, gmeConfig) {
 
 
                 if (userData.hasOwnProperty('data')) {
-                    if (_isTrueObject(userData.data)) {
+                    if (UTIL.isTrueObject(userData.data)) {
                         oldUserData.data = userData.data;
                     } else {
                         throw new Error('supplied userData.data is not an object [' + userData.data + ']');
@@ -640,23 +641,6 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-    function _isTrueObject(value) {
-        return typeof value === 'object' && value !== null && value instanceof Array === false;
-    }
-
-    function _updateFieldsRec(toData, fromData) {
-        var keys = Object.keys(fromData),
-            i;
-
-        for (i = 0; i < keys.length; i += 1) {
-            if (_isTrueObject(fromData[keys[i]]) && _isTrueObject(toData[keys[i]])) {
-                _updateFieldsRec(toData[keys[i]], fromData[keys[i]]);
-            } else {
-                toData[keys[i]] = fromData[keys[i]];
-            }
-        }
-    }
-
     /**
      * Updates the provided fields in data (recursively) within userData.data.
      * @param {string} userId
@@ -669,12 +653,12 @@ function GMEAuth(session, gmeConfig) {
             .then(function (userData) {
                 if (!userData) {
                     throw new Error('no such user [' + userId + ']');
-                } else if (_isTrueObject(data) === false) {
+                } else if (UTIL.isTrueObject(data) === false) {
                     throw new Error('supplied data is not an object [' + data + ']');
                 }
 
                 userData.data = userData.data || {};
-                _updateFieldsRec(userData.data, data);
+                UTIL.updateFieldsRec(userData.data, data);
 
                 return collection.update({_id: userId}, userData, {upsert: true});
             })
@@ -772,7 +756,7 @@ function GMEAuth(session, gmeConfig) {
             };
 
         if (options.hasOwnProperty('data')) {
-            if (_isTrueObject(options.data)) {
+            if (UTIL.isTrueObject(options.data)) {
                 data.data = options.data;
             } else {
                 deferred.reject(Error('supplied userData.data is not an object [' + options.data + ']'));

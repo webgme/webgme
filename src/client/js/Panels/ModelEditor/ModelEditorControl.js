@@ -28,6 +28,7 @@ define(['js/logger',
     'use strict';
 
     var ModelEditorControl,
+        COMPONENT_GUID = 'f8c3cab5bf2c4cdc893a027b0c96a45e',
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
         DEFAULT_DECORATOR = 'ModelDecorator',
@@ -35,14 +36,15 @@ define(['js/logger',
         SRC_POINTER_NAME = CONSTANTS.POINTER_SOURCE,
         DST_POINTER_NAME = CONSTANTS.POINTER_TARGET;
 
-    ModelEditorControl = function (options) {
+    ModelEditorControl = function (options, config) {
         this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:ModelEditor:' +
                                                                             'ModelEditorControl',
             WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
-
+        this._config = config;
         this._firstLoad = false;
+        this._topNode = CONSTANTS.PROJECT_ROOT_ID;
 
         //initialize core collections and variables
         this.designerCanvas = options.widget;
@@ -75,6 +77,7 @@ define(['js/logger',
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDiagramDesignerWidgetEventHandlers();
 
+        this._updateTopNode();
         this.logger.debug('ModelEditorControl ctor finished');
     };
 
@@ -984,15 +987,37 @@ define(['js/logger',
         }
     };
 
+    ModelEditorControl.prototype._activeProjectChanged = function (model, activeProjectId) {
+        this._updateTopNode();
+    };
+
+    ModelEditorControl.prototype._updateTopNode = function () {
+        var projectId = this._client.getActiveProjectId(),
+            projectName;
+
+        if (projectId) {
+            projectName = this._client.getActiveProjectName();
+            if (this._config.topNode.byProjectId.hasOwnProperty(projectId)) {
+                this._topNode = this._config.topNode.byProjectId[projectId];
+            } else if (this._config.topNode.byProjectName.hasOwnProperty(projectName)) {
+                this._topNode = this._config.topNode.byProjectName[projectName];
+            } else {
+                this._topNode = this._config.topNode.general;
+            }
+        }
+    };
+
     ModelEditorControl.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged, this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_PROJECT_NAME, this._activeProjectChanged, this);
     };
 
     ModelEditorControl.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_PROJECT_NAME, this._activeProjectChanged, this);
     };
 
     ModelEditorControl.prototype.onActivate = function () {
@@ -1077,8 +1102,7 @@ define(['js/logger',
     };
 
     ModelEditorControl.prototype._refreshBtnModelHierarchyUp = function () {
-        if (this.currentNodeInfo.parentId ||
-            this.currentNodeInfo.parentId === CONSTANTS.PROJECT_ROOT_ID) {
+        if (this.currentNodeInfo.id && this.currentNodeInfo.id !== this._topNode) {
             this.$btnModelHierarchyUp.show();
         } else {
             this.$btnModelHierarchyUp.hide();
@@ -1182,6 +1206,32 @@ define(['js/logger',
         return {};
     };
 
+    ModelEditorControl.getDefaultConfig = function () {
+        return {
+            startNode: {
+                general: '',
+                byProjectName: {
+                    //'projectName': '/E'
+                },
+                byProjectId: {
+                    //'user+projectName': '/n'
+                }
+            },
+            topNode: {
+                general: '',
+                byProjectName: {
+                    //'projectName': '/E'
+                },
+                byProjectId: {
+                    //'user+projectName': '/n'
+                }
+            }
+        };
+    };
+
+    ModelEditorControl.getComponentGUID = function () {
+        return COMPONENT_GUID;
+    };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
     _.extend(ModelEditorControl.prototype, ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype);
