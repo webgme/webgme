@@ -228,8 +228,10 @@ define(['js/logger',
                         delete nodes[childNodeId];
 
                         //and collect the nodeId from territory removal
-                        removeFromTerritory.push({nodeid: childNodeId});
-                        delete selfPatterns[childNodeId];
+                        if (selfPatterns[childNodeId]) {
+                            removeFromTerritory.push({nodeid: childNodeId});
+                            delete selfPatterns[childNodeId];
+                        }
                     }
                 }
             };
@@ -440,7 +442,7 @@ define(['js/logger',
                     updatedObject = client.getNode(objectId);
 
                     if (updatedObject) {
-
+                        currentChildren = updatedObject.getChildrenIds();
                         //check what state the object is in according to the local hashmap
                         if (nodes[objectId].state === stateLoading) {
                             //if the object is in "loading" state, meaning we were waiting for it
@@ -452,7 +454,7 @@ define(['js/logger',
                             //create the node's descriptor for the tree-browser widget
                             nodeDescriptor = {
                                 name: updatedObject.getAttribute('name'),
-                                hasChildren: (updatedObject.getChildrenIds()).length > 0,
+                                hasChildren: currentChildren.length > 0,
                                 class: objType,
                                 isConnection: updatedObject.isConnection(),
                                 isAbstract: updatedObject.isAbstract(),
@@ -463,7 +465,7 @@ define(['js/logger',
                             treeBrowser.updateNode(nodes[objectId].treeNode, nodeDescriptor);
 
                             //update the object's children list in the local hashmap
-                            nodes[objectId].children = updatedObject.getChildrenIds();
+                            nodes[objectId].children = currentChildren;
 
                             //finally update the object's state showing loaded
                             nodes[objectId].state = stateLoaded;
@@ -476,7 +478,7 @@ define(['js/logger',
                             //create the node's descriptor for the treebrowser widget
                             nodeDescriptor = {
                                 name: updatedObject.getAttribute('name'),
-                                hasChildren: (updatedObject.getChildrenIds()).length > 0,
+                                hasChildren: currentChildren.length > 0,
                                 class: objType,
                                 isConnection: updatedObject.isConnection(),
                                 isAbstract: updatedObject.isAbstract(),
@@ -487,7 +489,6 @@ define(['js/logger',
                             treeBrowser.updateNode(nodes[objectId].treeNode, nodeDescriptor);
 
                             oldChildren = nodes[objectId].children;
-                            currentChildren = updatedObject.getChildrenIds();
 
                             //the concrete child deletion is important only if the node is open in the tree
                             if (treeBrowser.isExpanded(nodes[objectId].treeNode)) {
@@ -509,8 +510,10 @@ define(['js/logger',
                                         delete nodes[childNodeId];
 
                                         //and collect the nodeId from territory removal
-                                        removeFromTerritory.push({nodeid: childNodeId});
-                                        delete selfPatterns[childNodeId];
+                                        if (selfPatterns[childNodeId]) {
+                                            removeFromTerritory.push({nodeid: childNodeId});
+                                            delete selfPatterns[childNodeId];
+                                        }
                                     }
                                 };
 
@@ -587,14 +590,16 @@ define(['js/logger',
                             }
 
                             //update the object's children list in the local hashmap
-                            nodes[objectId].children = updatedObject.getChildrenIds();
+                            nodes[objectId].children = currentChildren;
 
                             //finally update the object's state showing loaded
                             nodes[objectId].state = stateLoaded;
 
-                            //if there is no more children of the current node, remove it from the territory
-                            if ((updatedObject.getChildrenIds()).length === 0 &&
-                                objectId !== CONSTANTS.PROJECT_ROOT_ID) {
+                            // When there is no more children of the current node, remove it from the territory
+                            // if it was there and it is not the root node.
+                            if (objectId !== CONSTANTS.PROJECT_ROOT_ID && selfPatterns[objectId] &&
+                                currentChildren.length === 0) {
+
                                 removeFromTerritory.push({nodeid: objectId});
                                 delete selfPatterns[objectId];
                             }
