@@ -14,11 +14,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         ASSERT(typeof options.logger !== 'undefined');
 
         var logger = options.logger,
-            core = {},
+            self = this,
             key;
 
         for (key in innerCore) {
-            core[key] = innerCore[key];
+            this[key] = innerCore[key];
         }
 
         logger.debug('initialized SetCore');
@@ -72,9 +72,9 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 keys, i;
 
             do {
-                setInfo = core.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
+                setInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
                 if (setInfo && setInfo[setName]) {
-                    keys = core.getRawKeys(setInfo[setName], relIdSelector);
+                    keys = self.getRawKeys(setInfo[setName], relIdSelector);
                     for (i = 0; i < keys.length; i += 1) {
                         if (innerCore.getPointerPathFrom(node, '/' + CONSTANTS.ALL_SETS_PROPERTY +
                                     '/' + setName + '/' + keys[i], CONSTANTS.MEMBER_RELATION) ===
@@ -83,7 +83,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                         }
                     }
                 }
-                node = core.getBase(node);
+                node = self.getBase(node);
             } while (node);
 
             return null;
@@ -104,7 +104,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 setsInfo,
                 keys, i;
             do {
-                setsInfo = core.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
+                setsInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
                 if (setsInfo &&
                     setsInfo[CONSTANTS.OVERLAYS_PROPERTY] &&
                     setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']) {
@@ -115,7 +115,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                         }
                     }
                 }
-                node = core.getBase(node);
+                node = self.getBase(node);
             } while (node);
 
             return sets;
@@ -127,23 +127,23 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 keys, i;
 
             do {
-                setInfo = core.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
+                setInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
                 if (setInfo && setInfo[setName]) {
-                    keys = core.getRawKeys(setInfo[setName], relIdSelector);
+                    keys = self.getRawKeys(setInfo[setName], relIdSelector);
                     for (i = 0; i < keys.length; i += 1) {
                         if (relids.indexOf(keys[i]) === -1) {
                             relids.push(keys[i]);
                         }
                     }
                 }
-                node = core.getBase(node);
+                node = self.getBase(node);
             } while (node);
 
             return relids;
         }
 
         function getContainerNodePath(node) {
-            var ownPath = core.getPath(node);
+            var ownPath = self.getPath(node);
             return ownPath.substring(0, ownPath.indexOf('/_'));
         }
 
@@ -160,7 +160,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                         break;
                     }
                 }
-                node = core.getBase(node);
+                node = self.getBase(node);
             } while (node);
 
             return path;
@@ -175,7 +175,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             do {
                 relId = getMemberRelId(node, setName, memberPath);
                 if (relId) {
-                    memberInfo = core.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY) || {};
+                    memberInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY) || {};
                     memberInfo = memberInfo[setName] || {};
                     memberInfo = memberInfo[relId] || {};
                     memberInfo = memberInfo[propertyName] || {};
@@ -188,7 +188,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 } else {
                     return names; //because there is no more relation towards the given path
                 }
-                node = core.getBase(node);
+                node = self.getBase(node);
             } while (node);
 
             return names;
@@ -202,7 +202,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
             relId = getMemberRelId(node, setName, memberPath);
             if (relId) {
-                memberInfo = core.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY) || {};
+                memberInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY) || {};
                 memberInfo = memberInfo[setName] || {};
                 memberInfo = memberInfo[relId] || {};
                 memberInfo = memberInfo[propertyName] || {};
@@ -225,7 +225,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             do {
                 relId = getMemberRelId(node, setName, memberPath);
                 if (relId) {
-                    memberInfo = core.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY) || {};
+                    memberInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY) || {};
                     memberInfo = memberInfo[setName] || {};
                     memberInfo = memberInfo[relId] || {};
                     memberInfo = memberInfo[propertyCollectionName] || {};
@@ -236,7 +236,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 } else {
                     return undefined; //because there is no more relation towards the given path
                 }
-                node = core.getBase(node);
+                node = self.getBase(node);
             } while (node);
 
             return undefined;
@@ -262,13 +262,13 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             //the function checks if there is no set defined on the node's level and create it
             var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY);
             if (innerCore.getOwnPointerPath(setsNode, setName) === undefined) {
-                core.createSet(node, setName);
+                self.createSet(node, setName);
             }
         }
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
-        core.getPointerNames = function (node) {
+        this.getPointerNames = function (node) {
             var sorted = [],
                 raw = innerCore.getPointerNames(node);
             for (var i = 0; i < raw.length; i++) {
@@ -279,7 +279,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return sorted;
         };
 
-        core.getCollectionNames = function (node) {
+        this.getCollectionNames = function (node) {
             var sorted = [],
                 raw = innerCore.getCollectionNames(node);
             for (var i = 0; i < raw.length; i++) {
@@ -292,12 +292,12 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         //</editor-fold>
 
         //<editor-fold=Added Methods>
-        core.getSetNames = function (node) {
+        this.getSetNames = function (node) {
             //return innerCore.getPointerNames(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY)) || [];
             return collectSetNames(node);
         };
 
-        core.getMemberPaths = function (node, setName) {
+        this.getMemberPaths = function (node, setName) {
             var memberRelids = collectInternalMemberRelids(node, setName),
                 //pathPrefix = '/' + CONSTANTS.ALL_SETS_PROPERTY + '/' + setName + '/',
                 i, path,
@@ -311,10 +311,10 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return memberPaths;
         };
 
-        core.getOwnMemberPaths = function (node, setName) {
-            var setInfo = core.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY),
-                relids = setInfo && setInfo[setName] ? core.getRawKeys(setInfo[setName], relIdSelector) : [],
-                allPaths = core.getMemberPaths(node, setName),
+        this.getOwnMemberPaths = function (node, setName) {
+            var setInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY),
+                relids = setInfo && setInfo[setName] ? self.getRawKeys(setInfo[setName], relIdSelector) : [],
+                allPaths = self.getMemberPaths(node, setName),
                 paths = [],
                 i;
 
@@ -327,7 +327,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return paths;
         };
 
-        core.delMember = function (node, setName, memberPath) {
+        this.delMember = function (node, setName, memberPath) {
             ASSERT(typeof setName === 'string');
             //we only need the path of the member so we allow to enter only it
             if (typeof memberPath !== 'string') {
@@ -345,11 +345,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             }
         };
 
-        core.addMember = function (node, setName, member) {
+        this.addMember = function (node, setName, member) {
             ASSERT(typeof setName === 'string');
             var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY),
                 setNode = innerCore.getChild(setsNode, setName),
-                setMemberRelId = getMemberRelId(node, setName, core.getPath(member));
+                setMemberRelId = getMemberRelId(node, setName, self.getPath(member));
             if (setMemberRelId === null) {
                 createSetOnDemand(node, setName);
                 var setMember = innerCore.getChild(setNode, createNewMemberRelid(setNode));
@@ -358,7 +358,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 //TODO hack, somehow the empty children have been removed during persist
                 innerCore.setRegistry(setMember, '_', '_');
                 setModified(node);
-            } else if (!core.isFullyOverriddenMember(node, setName, core.getPath(member))) {
+            } else if (!self.isFullyOverriddenMember(node, setName, self.getPath(member))) {
                 //it was an inherited member, now we override it
                 var newMemberNode = innerCore.copyNode(innerCore.getChild(setNode, setMemberRelId), setNode);
 
@@ -370,19 +370,19 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             }
         };
 
-        core.getMemberAttributeNames = function (node, setName, memberPath) {
+        this.getMemberAttributeNames = function (node, setName, memberPath) {
             return collectPropertyNames(node, setName, memberPath, CONSTANTS.ATTRIBUTES_PROPERTY);
         };
 
-        core.getMemberOwnAttributeNames = function (node, setName, memberPath) {
+        this.getMemberOwnAttributeNames = function (node, setName, memberPath) {
             return collectOwnPropertyNames(node, setName, memberPath, CONSTANTS.ATTRIBUTES_PROPERTY);
         };
 
-        core.getMemberAttribute = function (node, setName, memberPath, attrName) {
+        this.getMemberAttribute = function (node, setName, memberPath, attrName) {
             return getPropertyValue(node, setName, memberPath, CONSTANTS.ATTRIBUTES_PROPERTY, attrName);
         };
 
-        core.setMemberAttribute = function (node, setName, memberPath, attrName, attrValue) {
+        this.setMemberAttribute = function (node, setName, memberPath, attrName, attrValue) {
             ASSERT(typeof setName === 'string' && typeof attrName === 'string' && attrValue !== undefined);
             var memberRelId = getMemberRelId(node, setName, memberPath);
             if (memberRelId) {
@@ -395,7 +395,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             }
         };
 
-        core.delMemberAttribute = function (node, setName, memberPath, attrName) {
+        this.delMemberAttribute = function (node, setName, memberPath, attrName) {
             ASSERT(typeof setName === 'string' && typeof attrName === 'string');
             var memberRelId = getMemberRelId(node, setName, memberPath);
             if (memberRelId) {
@@ -408,19 +408,19 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             }
         };
 
-        core.getMemberRegistryNames = function (node, setName, memberPath) {
+        this.getMemberRegistryNames = function (node, setName, memberPath) {
             return collectPropertyNames(node, setName, memberPath, CONSTANTS.REGISTRY_PROPERTY);
         };
 
-        core.getMemberOwnRegistryNames = function (node, setName, memberPath) {
+        this.getMemberOwnRegistryNames = function (node, setName, memberPath) {
             return collectOwnPropertyNames(node, setName, memberPath, CONSTANTS.REGISTRY_PROPERTY);
         };
 
-        core.getMemberRegistry = function (node, setName, memberPath, regName) {
+        this.getMemberRegistry = function (node, setName, memberPath, regName) {
             return getPropertyValue(node, setName, memberPath, CONSTANTS.REGISTRY_PROPERTY, regName);
         };
 
-        core.setMemberRegistry = function (node, setName, memberPath, regName, regValue) {
+        this.setMemberRegistry = function (node, setName, memberPath, regName, regValue) {
             ASSERT(typeof setName === 'string' && typeof regName === 'string' && regValue !== undefined);
             var memberRelId = getMemberRelId(node, setName, memberPath);
             if (memberRelId) {
@@ -433,7 +433,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             }
         };
 
-        core.delMemberRegistry = function (node, setName, memberPath, regName) {
+        this.delMemberRegistry = function (node, setName, memberPath, regName) {
             ASSERT(typeof setName === 'string' && typeof regName === 'string');
             var memberRelId = getMemberRelId(node, setName, memberPath);
             if (memberRelId) {
@@ -446,7 +446,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             }
         };
 
-        core.createSet = function (node, setName) {
+        this.createSet = function (node, setName) {
             ASSERT(typeof setName === 'string');
             var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY),
                 setNode = innerCore.getChild(setsNode, setName);
@@ -458,7 +458,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             setModified(node);
         };
 
-        core.deleteSet = function (node, setName) {
+        this.deleteSet = function (node, setName) {
             ASSERT(typeof setName === 'string');
             var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY),
                 setNode = innerCore.getChild(setsNode, setName);
@@ -467,9 +467,9 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             setModified(node);
         };
 
-        core.isMemberOf = function (node) {
+        this.isMemberOf = function (node) {
             //TODO we should find a proper way to do this - or at least some support from lower layers would be fine
-            var coll = core.getCollectionPaths(node, CONSTANTS.MEMBER_RELATION);
+            var coll = self.getCollectionPaths(node, CONSTANTS.MEMBER_RELATION);
             var sets = {};
             for (var i = 0; i < coll.length; i++) {
                 var pathArray = coll[i].split('/');
@@ -489,7 +489,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return sets;
         };
 
-        core.isFullyOverriddenMember = function (node, setName, memberPath) {
+        this.isFullyOverriddenMember = function (node, setName, memberPath) {
             var setNames = collectSetNames(node),
                 ownRelId,
                 baseRelId;
@@ -509,8 +509,6 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return false;
         };
         //</editor-fold>
-
-        return core;
     }
 
     return SetCore;

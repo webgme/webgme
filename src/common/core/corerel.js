@@ -20,11 +20,11 @@ define([
         ASSERT(typeof innerCore === 'object');
 
         var logger = innerCore.logger,
-            core = {},
+            self = this,
             key;
 
         for (key in innerCore) {
-            core[key] = innerCore[key];
+            this[key] = innerCore[key];
         }
 
         logger.debug('initialized CoreRel');
@@ -37,9 +37,9 @@ define([
         }
 
         function overlayRemove(overlays, source, name, target) {
-            ASSERT(core.isValidNode(overlays));
+            ASSERT(self.isValidNode(overlays));
             ASSERT(innerCore.getRelid(overlays) === CONSTANTS.OVERLAYS_PROPERTY);
-            ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && core.isPointerName(name));
+            ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && self.isPointerName(name));
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
             // console.log('remove', overlays.parent.data.atr.name, source, name, target);
@@ -80,7 +80,7 @@ define([
         }
 
         function overlayQuery(overlays, prefix) {
-            ASSERT(core.isValidNode(overlays) && innerCore.isValidPath(prefix));
+            ASSERT(self.isValidNode(overlays) && innerCore.isValidPath(prefix));
 
             var prefix2 = prefix + '/';
             var list = [];
@@ -94,7 +94,7 @@ define([
 
                     for (var j = 0; j < names.length; ++j) {
                         var name = names[j];
-                        if (core.isPointerName(name)) {
+                        if (self.isPointerName(name)) {
                             list.push({
                                 s: path,
                                 n: name,
@@ -126,7 +126,7 @@ define([
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
-        core.isValidNode = function (node) {
+        this.isValidNode = function (node) {
             try {
                 test('coretree', innerCore.isValidNode(node));
                 test('isobject', innerCore.isObject(node));
@@ -140,7 +140,7 @@ define([
         //</editor-fold>
 
         //<editor-fold=Added Methods>
-        core.isPointerName = function (name) {
+        this.isPointerName = function (name) {
             ASSERT(typeof name === 'string');
             //TODO this is needed as now we work with modified data as well
             if (name === '_mutable') {
@@ -150,8 +150,8 @@ define([
                 CONSTANTS.COLLECTION_NAME_SUFFIX;
         };
 
-        core.getAttributeNames = function (node) {
-            ASSERT(core.isValidNode(node));
+        this.getAttributeNames = function (node) {
+            ASSERT(self.isValidNode(node));
 
             var data,
                 keys,
@@ -172,8 +172,8 @@ define([
             return keys;
         };
 
-        core.getRegistryNames = function (node) {
-            ASSERT(core.isValidNode(node));
+        this.getRegistryNames = function (node) {
+            ASSERT(self.isValidNode(node));
 
             var data,
                 keys,
@@ -194,42 +194,42 @@ define([
             return keys;
         };
 
-        core.getAttribute = function (node, name) {
+        this.getAttribute = function (node, name) {
             /*node = coretree.getChild(node, coretree.constants.ATTRIBUTES_PROPERTY);
              return coretree.getProperty(node, name);*/
             return (innerCore.getProperty(node, CONSTANTS.ATTRIBUTES_PROPERTY) || {})[name];
         };
 
-        core.delAttribute = function (node, name) {
+        this.delAttribute = function (node, name) {
             node = innerCore.getChild(node, CONSTANTS.ATTRIBUTES_PROPERTY);
             innerCore.deleteProperty(node, name);
         };
 
-        core.setAttribute = function (node, name, value) {
+        this.setAttribute = function (node, name, value) {
             node = innerCore.getChild(node, CONSTANTS.ATTRIBUTES_PROPERTY);
             innerCore.setProperty(node, name, value);
         };
 
-        core.getRegistry = function (node, name) {
+        this.getRegistry = function (node, name) {
             /*node = coretree.getChild(node, coretree.constants.REGISTRY_PROPERTY);
              return coretree.getProperty(node, name);*/
             return (innerCore.getProperty(node, CONSTANTS.REGISTRY_PROPERTY) || {})[name];
         };
 
-        core.delRegistry = function (node, name) {
+        this.delRegistry = function (node, name) {
             node = innerCore.getChild(node, CONSTANTS.REGISTRY_PROPERTY);
             innerCore.deleteProperty(node, name);
         };
 
-        core.setRegistry = function (node, name, value) {
+        this.setRegistry = function (node, name, value) {
             node = innerCore.getChild(node, CONSTANTS.REGISTRY_PROPERTY);
             innerCore.setProperty(node, name, value);
         };
 
-        core.overlayInsert = function (overlays, source, name, target) {
-            ASSERT(core.isValidNode(overlays));
+        this.overlayInsert = function (overlays, source, name, target) {
+            ASSERT(self.isValidNode(overlays));
             ASSERT(innerCore.getRelid(overlays) === CONSTANTS.OVERLAYS_PROPERTY);
-            ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && core.isPointerName(name));
+            ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && self.isPointerName(name));
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
             // console.log('insert', overlays.parent.data.atr.name, source, name, target);
@@ -255,12 +255,12 @@ define([
             innerCore.setProperty(node, name, array);
         };
 
-        core.createNode = function (parameters) {
+        this.createNode = function (parameters) {
             parameters = parameters || {};
             var relid = parameters.relid,
                 parent = parameters.parent;
 
-            ASSERT(!parent || core.isValidNode(parent));
+            ASSERT(!parent || self.isValidNode(parent));
             ASSERT(!relid || typeof relid === 'string');
 
             var node;
@@ -278,8 +278,8 @@ define([
             return node;
         };
 
-        core.deleteNode = function (node) {
-            ASSERT(core.isValidNode(node));
+        this.deleteNode = function (node) {
+            ASSERT(self.isValidNode(node));
 
             var parent = innerCore.getParent(node);
             var prefix = '/' + innerCore.getRelid(node);
@@ -301,9 +301,9 @@ define([
             }
         };
 
-        core.copyNode = function (node, parent) {
-            ASSERT(core.isValidNode(node));
-            ASSERT(!parent || core.isValidNode(parent));
+        this.copyNode = function (node, parent) {
+            ASSERT(self.isValidNode(node));
+            ASSERT(!parent || self.isValidNode(parent));
 
             node = innerCore.normalize(node);
             var newNode;
@@ -372,7 +372,7 @@ define([
                                 overlays = baseOverlays;
                             }
 
-                            core.overlayInsert(overlays, source, entry.n, target);
+                            self.overlayInsert(overlays, source, entry.n, target);
                         }
                     }
 
@@ -387,7 +387,7 @@ define([
             return newNode;
         };
 
-        core.copyNodes = function (nodes, parent) {
+        this.copyNodes = function (nodes, parent) {
             //copying multiple nodes at once for keeping their internal relations
             var paths = [],
                 i, j, index, names, pointer,
@@ -401,10 +401,10 @@ define([
             }
 
             for (i = 0; i < nodes.length; i++) {
-                names = core.getPointerNames(nodes[i]);
+                names = self.getPointerNames(nodes[i]);
                 pointer = {};
                 for (j = 0; j < names.length; j++) {
-                    index = paths.indexOf(core.getPointerPath(nodes[i], names[j]));
+                    index = paths.indexOf(self.getPointerPath(nodes[i], names[j]));
                     if (index !== -1) {
                         pointer[names[j]] = index;
                     }
@@ -414,22 +414,22 @@ define([
 
             //now we use our simple copy
             for (i = 0; i < nodes.length; i++) {
-                copiedNodes.push(core.copyNode(nodes[i], parent));
+                copiedNodes.push(self.copyNode(nodes[i], parent));
             }
 
             //and now back to the relations
             for (i = 0; i < internalRelationPaths.length; i++) {
                 names = Object.keys(internalRelationPaths[i]);
                 for (j = 0; j < names.length; j++) {
-                    core.setPointer(copiedNodes[i], names[j], copiedNodes[internalRelationPaths[i][names[j]]]);
+                    self.setPointer(copiedNodes[i], names[j], copiedNodes[internalRelationPaths[i][names[j]]]);
                 }
             }
 
             return copiedNodes;
         };
 
-        core.moveNode = function (node, parent) {
-            ASSERT(core.isValidNode(node) && core.isValidNode(parent));
+        this.moveNode = function (node, parent) {
+            ASSERT(self.isValidNode(node) && self.isValidNode(parent));
 
             node = innerCore.normalize(node);
             var ancestor = innerCore.getAncestor(node, parent);
@@ -520,28 +520,28 @@ define([
                     }
 
                     //console.log(source, target);
-                    core.overlayInsert(overlays, source, entry.n, target);
+                    self.overlayInsert(overlays, source, entry.n, target);
                 }
 
                 baseOldPath = '/' + innerCore.getRelid(base) + baseOldPath;
                 base = innerCore.getParent(base);
             }
 
-            core.deleteNode(oldNode);
+            self.deleteNode(oldNode);
 
             return node;
         };
 
-        core.getChildrenRelids = function (node) {
-            ASSERT(core.isValidNode(node));
+        this.getChildrenRelids = function (node) {
+            ASSERT(self.isValidNode(node));
 
-            return innerCore.getKeys(node, core.isValidRelid);
+            return innerCore.getKeys(node, self.isValidRelid);
         };
 
-        core.getChildrenPaths = function (node) {
+        this.getChildrenPaths = function (node) {
             var path = innerCore.getPath(node);
 
-            var relids = core.getChildrenRelids(node);
+            var relids = self.getChildrenRelids(node);
             for (var i = 0; i < relids.length; ++i) {
                 relids[i] = path + '/' + relids[i];
             }
@@ -549,10 +549,10 @@ define([
             return relids;
         };
 
-        core.loadChildren = function (node) {
-            ASSERT(core.isValidNode(node));
+        this.loadChildren = function (node) {
+            ASSERT(self.isValidNode(node));
 
-            var children = innerCore.getKeys(node, core.isValidRelid);
+            var children = innerCore.getKeys(node, self.isValidRelid);
             for (var i = 0; i < children.length; ++i) {
                 children[i] = innerCore.loadChild(node, children[i]);
             }
@@ -560,8 +560,8 @@ define([
             return TASYNC.lift(children);
         };
 
-        core.getPointerNames = function (node) {
-            ASSERT(core.isValidNode(node));
+        this.getPointerNames = function (node) {
+            ASSERT(self.isValidNode(node));
 
             //var source = '';
             //var names = [];
@@ -583,10 +583,10 @@ define([
             //
             //return names;
 
-            return core.getPointerNamesFrom(node, '');
+            return self.getPointerNamesFrom(node, '');
         };
 
-        core.getPointerNamesFrom = function (node, source) {
+        this.getPointerNamesFrom = function (node, source) {
             var names = [];
 
             do {
@@ -594,7 +594,7 @@ define([
                 if (child) {
                     for (var name in child) {
                         ASSERT(names.indexOf(name) === -1);
-                        if (core.isPointerName(name)) {
+                        if (self.isPointerName(name)) {
                             names.push(name);
                         }
                     }
@@ -607,8 +607,8 @@ define([
             return names;
         };
 
-        core.getPointerPath = function (node, name) {
-            ASSERT(core.isValidNode(node) && typeof name === 'string');
+        this.getPointerPath = function (node, name) {
+            ASSERT(self.isValidNode(node) && typeof name === 'string');
 
             //var source = '';
             //var target;
@@ -632,11 +632,11 @@ define([
             //}
             //
             //return target;
-            return core.getPointerPathFrom(node, '', name);
+            return self.getPointerPathFrom(node, '', name);
         };
 
-        core.getPointerPathFrom = function (node, source, name) {
-            ASSERT(core.isValidNode(node) && typeof source === 'string' && typeof name === 'string');
+        this.getPointerPathFrom = function (node, source, name) {
+            ASSERT(self.isValidNode(node) && typeof source === 'string' && typeof name === 'string');
             var target,
                 ovrInfo;
 
@@ -662,8 +662,8 @@ define([
             return target;
         };
 
-        core.loadPointer = function (node, name) {
-            ASSERT(core.isValidNode(node) && name);
+        this.loadPointer = function (node, name) {
+            ASSERT(self.isValidNode(node) && name);
 
             var source = '';
             var target;
@@ -689,8 +689,8 @@ define([
             }
         };
 
-        core.getCollectionNames = function (node) {
-            ASSERT(core.isValidNode(node));
+        this.getCollectionNames = function (node) {
+            ASSERT(self.isValidNode(node));
 
             var target = '';
             var names = [];
@@ -700,9 +700,9 @@ define([
                     target);
                 if (child) {
                     for (var name in child) {
-                        if (!core.isPointerName(name) && name !== '_mutable') {
+                        if (!self.isPointerName(name) && name !== '_mutable') {
                             name = name.slice(0, -CONSTANTS.COLLECTION_NAME_SUFFIX.length);
-                            if (core.isPointerName(name) && names.indexOf(name) < 0) {
+                            if (self.isPointerName(name) && names.indexOf(name) < 0) {
                                 names.push(name);
                             }
                         }
@@ -716,8 +716,8 @@ define([
             return names;
         };
 
-        core.loadCollection = function (node, name) {
-            ASSERT(core.isValidNode(node) && name);
+        this.loadCollection = function (node, name) {
+            ASSERT(self.isValidNode(node) && name);
 
             name += CONSTANTS.COLLECTION_NAME_SUFFIX;
 
@@ -746,8 +746,8 @@ define([
             return TASYNC.lift(collection);
         };
 
-        core.getCollectionPaths = function (node, name) {
-            ASSERT(core.isValidNode(node) && name);
+        this.getCollectionPaths = function (node, name) {
+            ASSERT(self.isValidNode(node) && name);
 
             name += CONSTANTS.COLLECTION_NAME_SUFFIX;
 
@@ -778,8 +778,8 @@ define([
             return result;
         };
 
-        core.deletePointer = function (node, name) {
-            ASSERT(core.isValidNode(node) && typeof name === 'string');
+        this.deletePointer = function (node, name) {
+            ASSERT(self.isValidNode(node) && typeof name === 'string');
 
             var source = '';
 
@@ -800,10 +800,10 @@ define([
             return false;
         };
 
-        core.setPointer = function (node, name, target) {
-            ASSERT(core.isValidNode(node) && typeof name === 'string' && (!target || core.isValidNode(target)));
+        this.setPointer = function (node, name, target) {
+            ASSERT(self.isValidNode(node) && typeof name === 'string' && (!target || self.isValidNode(target)));
 
-            core.deletePointer(node, name);
+            self.deletePointer(node, name);
 
             if (target) {
                 var ancestor = innerCore.getAncestor(node, target);
@@ -812,12 +812,12 @@ define([
                 var sourcePath = innerCore.getPath(node, ancestor);
                 var targetPath = innerCore.getPath(target, ancestor);
 
-                core.overlayInsert(overlays, sourcePath, name, targetPath);
+                self.overlayInsert(overlays, sourcePath, name, targetPath);
             }
         };
 
-        core.getChildrenHashes = function (node) {
-            var keys = core.getChildrenRelids(node),
+        this.getChildrenHashes = function (node) {
+            var keys = self.getChildrenRelids(node),
                 i, hashes = {};
 
             for (i = 0; i < keys.length; i++) {
@@ -827,9 +827,9 @@ define([
             return hashes;
         };
 
-        core.isValidRelid = RANDOM.isValidRelid;
+        this.isValidRelid = RANDOM.isValidRelid;
 
-        core.isContainerPath = function (path, parentPath) {
+        this.isContainerPath = function (path, parentPath) {
             var pathArray = (path || '').split('/'),
                 parentArray = (parentPath || '').split('/'),
                 i;
@@ -843,8 +843,6 @@ define([
             return true;
         };
         //</editor-fold>
-
-        return core;
     }
 
     return CoreRel;

@@ -23,11 +23,11 @@ define([
         ASSERT(typeof options.logger !== 'undefined');
 
         var logger = options.logger,
-            core = {},
+            self = this,
             key;
 
         for (key in innerCore) {
-            core[key] = innerCore[key];
+            this[key] = innerCore[key];
         }
 
         logger.debug('initialized GuidCore');
@@ -56,7 +56,7 @@ define([
         function getRelidGuid(node) {
             //TODO we always should know what structure we should expect as a relid -
             // now we think it is a number so it can be converted to 0xsomething
-            var relid = core.getRelid(node);
+            var relid = self.getRelid(node);
             //relid = Number(relid);
             relid = relidToInteger(relid);
             if (relid === 'NaN') {
@@ -95,14 +95,14 @@ define([
         }
 
         function setDataGuid(node, guid) {
-            core.setAttribute(node, CONSTANTS.OWN_GUID,
+            self.setAttribute(node, CONSTANTS.OWN_GUID,
                 xorGuids(
                     toInternalGuid(guid),
                     xorGuids(
                         getRelidGuid(node),
                         toInternalGuid(
-                            core.getGuid(
-                                core.getParent(node)
+                            self.getGuid(
+                                self.getParent(node)
                             )
                         )
                     )
@@ -112,7 +112,7 @@ define([
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
-        core.createNode = function (parameters) {
+        this.createNode = function (parameters) {
             parameters = parameters || {};
 
             var guid = parameters.guid || GUID(),
@@ -127,8 +127,8 @@ define([
             return node;
         };
 
-        core.moveNode = function (node, parent) {
-            var oldGuid = core.getGuid(node);
+        this.moveNode = function (node, parent) {
+            var oldGuid = self.getGuid(node);
 
             node = innerCore.moveNode(node, parent);
 
@@ -139,16 +139,16 @@ define([
         //</editor-fold>
 
         //<editor-fold=Added Methods>
-        core.getGuid = function (node) {
+        this.getGuid = function (node) {
             if (node) {
                 return toExternalGuid(
                     xorGuids(
                         getRelidGuid(node),
                         xorGuids(
-                            core.getAttribute(node, CONSTANTS.OWN_GUID),
+                            self.getAttribute(node, CONSTANTS.OWN_GUID),
                             toInternalGuid(
-                                core.getGuid(
-                                    core.getParent(node)
+                                self.getGuid(
+                                    self.getParent(node)
                                 )
                             )
                         )
@@ -159,7 +159,7 @@ define([
             }
         };
 
-        core.setGuid = function (node, guid) {
+        this.setGuid = function (node, guid) {
             ASSERT(REGEXP.GUID.test(guid));
             return TASYNC.call(function (children) {
                 var i,
@@ -167,7 +167,7 @@ define([
 
                 //save children guids
                 for (i = 0; i < children.length; i += 1) {
-                    childrenGuids.push(core.getGuid(children[i]));
+                    childrenGuids.push(self.getGuid(children[i]));
                 }
 
                 //setting own dataGuid
@@ -177,11 +177,9 @@ define([
                 for (i = 0; i < children.length; i += 1) {
                     setDataGuid(children[i], childrenGuids[i]);
                 }
-            }, core.loadChildren(node));
+            }, self.loadChildren(node));
         };
         //</editor-fold>
-
-        return core;
     }
 
     return GuidCore;

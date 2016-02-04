@@ -114,8 +114,8 @@ define([
         coreLayers.push(Constraint);
         coreLayers.push(MetaCore);
         coreLayers.push(CoreDiff);
-        coreLayers.push(TreeLoader);
         coreLayers.push(MetaCacheCore);
+        coreLayers.push(TreeLoader);
 
         if (options.usertype !== 'tasync') {
             coreLayers.push(UnWrap);
