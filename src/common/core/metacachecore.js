@@ -145,7 +145,7 @@ define([
                     return root.metaNodes;
                 }
 
-                return [];
+                return {};
             };
 
             this.isAbstract = function (node) {
