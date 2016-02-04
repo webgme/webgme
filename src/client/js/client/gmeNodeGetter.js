@@ -3,369 +3,336 @@
 /**
  * @author kecso / https://github.com/kecso
  */
+
 define(['js/RegistryKeys'], function (REG_KEYS) {
     'use strict';
+
+    var initialized = false;
+
+    /**
+     * @param _id
+     * @constructor
+     */
+    function GMENode(_id) {
+        this._id = _id;
+    }
+
+    GMENode.prototype.getParentId = function () {
+        //just for sure, as it may missing from the cache
+        return this.storeNode(this.state.core.getParent(this.state.nodes[this._id].node));
+    };
+
+    GMENode.prototype.getId = function () {
+        return this._id;
+    };
+
+    GMENode.prototype.getGuid = function () {
+        return this.state.core.getGuid(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getChildrenIds = function () {
+        return this.state.core.getChildrenPaths(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getBaseId = function () {
+        var base = this.state.core.getBase(this.state.nodes[this._id].node);
+        if (base) {
+            return this.storeNode(base);
+        } else {
+            return null;
+        }
+
+    };
+
+    GMENode.prototype.getInheritorIds = function () {
+        return [];
+    };
+
+    GMENode.prototype.getAttribute = function (name) {
+        return this.state.core.getAttribute(this.state.nodes[this._id].node, name);
+    };
+
+    GMENode.prototype.getOwnAttribute = function (name) {
+        return this.state.core.getOwnAttribute(this.state.nodes[this._id].node, name);
+    };
+
+    GMENode.prototype.getEditableAttribute = function (name) {
+        var value = this.state.core.getAttribute(this.state.nodes[this._id].node, name);
+        if (typeof value === 'object') {
+            return JSON.parse(JSON.stringify(value));
+        }
+        return value;
+    };
+
+    GMENode.prototype.getOwnEditableAttribute = function (name) {
+        var value = this.state.core.getOwnAttribute(this.state.nodes[this._id].node, name);
+        if (typeof value === 'object') {
+            return JSON.parse(JSON.stringify(value));
+        }
+        return value;
+    };
+
+    GMENode.prototype.getRegistry = function (name) {
+        return this.state.core.getRegistry(this.state.nodes[this._id].node, name);
+    };
+
+    GMENode.prototype.getOwnRegistry = function (name) {
+        return this.state.core.getOwnRegistry(this.state.nodes[this._id].node, name);
+    };
+
+    GMENode.prototype.getEditableRegistry = function (name) {
+        var value = this.state.core.getRegistry(this.state.nodes[this._id].node, name);
+        if (typeof value === 'object') {
+            return JSON.parse(JSON.stringify(value));
+        }
+        return value;
+    };
+
+    GMENode.prototype.getOwnEditableRegistry = function (name) {
+        var value = this.state.core.getOwnRegistry(this.state.nodes[this._id].node, name);
+        if (typeof value === 'object') {
+            return JSON.parse(JSON.stringify(value));
+        }
+        return value;
+    };
+
+    GMENode.prototype.getPointer = function (name) {
+        //return _core.getPointerPath(_nodes[this._id].node,name);
+        if (name === 'base') {
+            //base is a special case as it complicates with inherited children
+            return {
+                to: this.state.core.getPath(this.state.core.getBase(this.state.nodes[this._id].node)),
+                from: []
+            };
+        }
+        return {to: this.state.core.getPointerPath(this.state.nodes[this._id].node, name), from: []};
+    };
+
+    GMENode.prototype.getOwnPointer = function (name) {
+        return {to: this.state.core.getOwnPointerPath(this.state.nodes[this._id].node, name), from: []};
+    };
+
+    GMENode.prototype.getPointerNames = function () {
+        return this.state.core.getPointerNames(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getOwnPointerNames = function () {
+        return this.state.core.getOwnPointerNames(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getAttributeNames = function () {
+        return this.state.core.getAttributeNames(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getOwnAttributeNames = function () {
+        return this.state.core.getOwnAttributeNames(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getRegistryNames = function () {
+        return this.state.core.getRegistryNames(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getOwnRegistryNames = function () {
+        return this.state.core.getOwnRegistryNames(this.state.nodes[this._id].node);
+    };
+
+    //SET
+    GMENode.prototype.getMemberIds = function (setid) {
+        return this.state.core.getMemberPaths(this.state.nodes[this._id].node, setid);
+    };
+
+    GMENode.prototype.getSetNames = function () {
+        return this.state.core.getSetNames(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getMemberAttributeNames = function (setid, memberid) {
+        return this.state.core.getMemberAttributeNames(this.state.nodes[this._id].node, setid, memberid);
+    };
+
+    GMENode.prototype.getMemberAttribute = function (setid, memberid, name) {
+        return this.state.core.getMemberAttribute(this.state.nodes[this._id].node, setid, memberid, name);
+    };
+
+    GMENode.prototype.getEditableMemberAttribute = function (setid, memberid, name) {
+        var attr = this.state.core.getMemberAttribute(this.state.nodes[this._id].node, setid, memberid, name);
+        if (attr !== null && attr !== undefined) {
+            return JSON.parse(JSON.stringify(attr));
+        }
+        return null;
+    };
+
+    GMENode.prototype.getMemberRegistryNames = function (setid, memberid) {
+        return this.state.core.getMemberRegistryNames(this.state.nodes[this._id].node, setid, memberid);
+    };
+
+    GMENode.prototype.getMemberRegistry = function (setid, memberid, name) {
+        return this.state.core.getMemberRegistry(this.state.nodes[this._id].node, setid, memberid, name);
+    };
+
+    GMENode.prototype.getEditableMemberRegistry = function (setid, memberid, name) {
+        var attr = this.state.core.getMemberRegistry(this.state.nodes[this._id].node, setid, memberid, name);
+        if (attr !== null && attr !== undefined) {
+            return JSON.parse(JSON.stringify(attr));
+        }
+        return null;
+    };
+
+    //META
+    GMENode.prototype.getValidChildrenTypes = function () {
+        //return getMemberIds('ValidChildren');
+        return this.meta.getValidChildrenTypes(this._id);
+    };
+
+    GMENode.prototype.getValidAttributeNames = function () {
+        return this.state.core.getValidAttributeNames(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getValidPointerNames = function () {
+        return this.state.core.getValidPointerNames(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getValidSetNames = function () {
+        return this.state.core.getValidSetNames(this.state.nodes[this._id].node);
+    };
+
+    //constraint functions
+    GMENode.prototype.getConstraintNames = function () {
+        return this.state.core.getConstraintNames(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getOwnConstraintNames = function () {
+        return this.state.core.getOwnConstraintNames(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getConstraint = function (name) {
+        return this.state.core.getConstraint(this.state.nodes[this._id].node, name);
+    };
+
+    GMENode.prototype.toString = function () {
+        return this.state.core.getAttribute(this.state.nodes[this._id].node, 'name') + ' (' + this._id + ')';
+    };
+
+    GMENode.prototype.getCollectionPaths = function (name) {
+        return this.state.core.getCollectionPaths(this.state.nodes[this._id].node, name);
+    };
+
+    //adding functionality to get rid of GMEConcepts
+    GMENode.prototype.isConnection = function () {
+        return this.state.core.isConnection(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.isAbstract = function () {
+        return this.state.core.isAbstract(this.state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getCrosscutsInfo = function () {
+        return this.state.core.getRegistry(this.state.nodes[this._id].node, REG_KEYS.CROSSCUTS) || [];
+    };
+
+    GMENode.prototype.getValidChildrenTypesDetailed = function (aspect, noFilter) {
+        var parameters = {
+                node: this.state.nodes[this._id].node,
+                children: [],
+                sensitive: !noFilter,
+                multiplicity: false,
+                aspect: aspect
+            },
+            fullList,
+            filteredList,
+            validTypes = {},
+            keys = this.getChildrenIds(),
+            i;
+
+        for (i = 0; i < keys.length; i++) {
+            if (this.state.nodes[keys[i]]) {
+                parameters.children.push(this.state.nodes[keys[i]].node);
+            }
+        }
+
+        fullList = this.state.core.getValidChildrenMetaNodes(parameters);
+
+        parameters.multiplicity = true;
+        filteredList = this.state.core.getValidChildrenMetaNodes(parameters);
+
+        for (i = 0; i < fullList.length; i += 1) {
+            validTypes[this.state.core.getPath(fullList[i])] = false;
+        }
+
+        for (i = 0; i < filteredList.length; i += 1) {
+            validTypes[this.state.core.getPath(filteredList[i])] = true;
+        }
+
+        return validTypes;
+    };
+
+    GMENode.prototype.getValidSetMemberTypesDetailed = function (setName) {
+        var parameters = {
+                node: this.state.nodes[this._id].node,
+                children: [],
+                sensitive: true,
+                multiplicity: false,
+                name: setName
+            },
+            fullList,
+            filteredList,
+            validTypes = {},
+            keys = this.getChildrenIds(),
+            i;
+
+        for (i = 0; i < keys.length; i++) {
+            if (this.state.nodes[keys[i]]) {
+                parameters.children.push(this.state.nodes[keys[i]].node);
+            }
+        }
+
+        fullList = this.state.core.getValidSetElementsMetaNodes(parameters);
+
+        parameters.multiplicity = true;
+        filteredList = this.state.core.getValidSetElementsMetaNodes(parameters);
+
+        for (i = 0; i < fullList.length; i += 1) {
+            validTypes[this.state.core.getPath(fullList[i])] = false;
+        }
+
+        for (i = 0; i < filteredList.length; i += 1) {
+            validTypes[this.state.core.getPath(filteredList[i])] = true;
+        }
+
+        return validTypes;
+    };
+
+    GMENode.prototype.getMetaTypeId = function () {
+        var metaType = this.state.core.getMetaType(this.state.nodes[this._id].node);
+
+        if (metaType) {
+            return this.storeNode(metaType);
+        } else {
+            return null;
+        }
+    };
+
+    GMENode.prototype.getValidAspectNames = function () {
+        return this.state.core.getValidAspectNames(this.state.nodes[this._id].node);
+    };
+
+    function initialize(logger, state, meta, storeNode) {
+        GMENode.prototype.logger = logger;
+        GMENode.prototype.state = state;
+        GMENode.prototype.meta = meta;
+        GMENode.prototype.storeNode = storeNode;
+
+        initialized = true;
+    }
 
     //getNode
     function getNode(_id, logger, state, meta, storeNode) {
 
-        function getParentId() {
-            //just for sure, as it may missing from the cache
-            return storeNode(state.core.getParent(state.nodes[_id].node));
-        }
-
-        function getId() {
-            return _id;
-        }
-
-        function getGuid() {
-            return state.core.getGuid(state.nodes[_id].node);
-        }
-
-        function getChildrenIds() {
-            return state.core.getChildrenPaths(state.nodes[_id].node);
-        }
-
-        function getBaseId() {
-            var base = state.core.getBase(state.nodes[_id].node);
-            if (base) {
-                return storeNode(base);
-            } else {
-                return null;
-            }
-
-        }
-
-        function getInheritorIds() {
-            return [];
-        }
-
-        function getAttribute(name) {
-            return state.core.getAttribute(state.nodes[_id].node, name);
-        }
-
-        function getOwnAttribute(name) {
-            return state.core.getOwnAttribute(state.nodes[_id].node, name);
-        }
-
-        function getEditableAttribute(name) {
-            var value = state.core.getAttribute(state.nodes[_id].node, name);
-            if (typeof value === 'object') {
-                return JSON.parse(JSON.stringify(value));
-            }
-            return value;
-        }
-
-        function getOwnEditableAttribute(name) {
-            var value = state.core.getOwnAttribute(state.nodes[_id].node, name);
-            if (typeof value === 'object') {
-                return JSON.parse(JSON.stringify(value));
-            }
-            return value;
-        }
-
-        function getRegistry(name) {
-            return state.core.getRegistry(state.nodes[_id].node, name);
-        }
-
-        function getOwnRegistry(name) {
-            return state.core.getOwnRegistry(state.nodes[_id].node, name);
-        }
-
-        function getEditableRegistry(name) {
-            var value = state.core.getRegistry(state.nodes[_id].node, name);
-            if (typeof value === 'object') {
-                return JSON.parse(JSON.stringify(value));
-            }
-            return value;
-        }
-
-        function getOwnEditableRegistry(name) {
-            var value = state.core.getOwnRegistry(state.nodes[_id].node, name);
-            if (typeof value === 'object') {
-                return JSON.parse(JSON.stringify(value));
-            }
-            return value;
-        }
-
-        function getPointer(name) {
-            //return _core.getPointerPath(_nodes[_id].node,name);
-            if (name === 'base') {
-                //base is a special case as it complicates with inherited children
-                return {
-                    to: state.core.getPath(state.core.getBase(state.nodes[_id].node)),
-                    from: []
-                };
-            }
-            return {to: state.core.getPointerPath(state.nodes[_id].node, name), from: []};
-        }
-
-        function getOwnPointer(name) {
-            return {to: state.core.getOwnPointerPath(state.nodes[_id].node, name), from: []};
-        }
-
-        function getPointerNames() {
-            return state.core.getPointerNames(state.nodes[_id].node);
-        }
-
-        function getOwnPointerNames() {
-            return state.core.getOwnPointerNames(state.nodes[_id].node);
-        }
-
-        function getAttributeNames() {
-            return state.core.getAttributeNames(state.nodes[_id].node);
-        }
-
-        function getOwnAttributeNames() {
-            return state.core.getOwnAttributeNames(state.nodes[_id].node);
-        }
-
-        function getRegistryNames() {
-            return state.core.getRegistryNames(state.nodes[_id].node);
-        }
-
-        function getOwnRegistryNames() {
-            return state.core.getOwnRegistryNames(state.nodes[_id].node);
-        }
-
-        //SET
-        function getMemberIds(setid) {
-            return state.core.getMemberPaths(state.nodes[_id].node, setid);
-        }
-
-        function getSetNames() {
-            return state.core.getSetNames(state.nodes[_id].node);
-        }
-
-        function getMemberAttributeNames(setid, memberid) {
-            return state.core.getMemberAttributeNames(state.nodes[_id].node, setid, memberid);
-        }
-
-        function getMemberAttribute(setid, memberid, name) {
-            return state.core.getMemberAttribute(state.nodes[_id].node, setid, memberid, name);
-        }
-
-        function getEditableMemberAttribute(setid, memberid, name) {
-            var attr = state.core.getMemberAttribute(state.nodes[_id].node, setid, memberid, name);
-            if (attr !== null && attr !== undefined) {
-                return JSON.parse(JSON.stringify(attr));
-            }
-            return null;
-        }
-
-        function getMemberRegistryNames(setid, memberid) {
-            return state.core.getMemberRegistryNames(state.nodes[_id].node, setid, memberid);
-        }
-
-        function getMemberRegistry(setid, memberid, name) {
-            return state.core.getMemberRegistry(state.nodes[_id].node, setid, memberid, name);
-        }
-
-        function getEditableMemberRegistry(setid, memberid, name) {
-            var attr = state.core.getMemberRegistry(state.nodes[_id].node, setid, memberid, name);
-            if (attr !== null && attr !== undefined) {
-                return JSON.parse(JSON.stringify(attr));
-            }
-            return null;
-        }
-
-        //META
-        function getValidChildrenTypes() {
-            //return getMemberIds('ValidChildren');
-            return meta.getValidChildrenTypes(_id);
-        }
-
-        function getValidAttributeNames() {
-            return state.core.getValidAttributeNames(state.nodes[_id].node);
-        }
-
-        function getValidPointerNames() {
-            return state.core.getValidPointerNames(state.nodes[_id].node);
-        }
-
-        function getValidSetNames() {
-            return state.core.getValidSetNames(state.nodes[_id].node);
-        }
-
-        //constraint functions
-        function getConstraintNames() {
-            return state.core.getConstraintNames(state.nodes[_id].node);
-        }
-
-        function getOwnConstraintNames() {
-            return state.core.getOwnConstraintNames(state.nodes[_id].node);
-        }
-
-        function getConstraint(name) {
-            return state.core.getConstraint(state.nodes[_id].node, name);
-        }
-
-        function toString() {
-            return state.core.getAttribute(state.nodes[_id].node, 'name') + ' (' + _id + ')';
-        }
-
-        function getCollectionPaths(name) {
-            return state.core.getCollectionPaths(state.nodes[_id].node, name);
-        }
-
-        //adding functionality to get rid of GMEConcepts
-        function isConnection() {
-            return state.core.isConnection(state.nodes[_id].node);
-        }
-
-        function isAbstract() {
-            return state.core.isAbstract(state.nodes[_id].node);
-        }
-
-        function getCrosscutsInfo() {
-            return state.core.getRegistry(state.nodes[_id].node, REG_KEYS.CROSSCUTS) || [];
-        }
-
-        function getValidChildrenTypesDetailed(aspect, noFilter) {
-            var parameters = {
-                    node: state.nodes[_id].node,
-                    children: [],
-                    sensitive: !noFilter,
-                    multiplicity: false,
-                    aspect: aspect
-                },
-                fullList,
-                filteredList,
-                validTypes = {},
-                keys = getChildrenIds(),
-                i;
-
-            for (i = 0; i < keys.length; i++) {
-                if (state.nodes[keys[i]]) {
-                    parameters.children.push(state.nodes[keys[i]].node);
-                }
-            }
-
-            fullList = state.core.getValidChildrenMetaNodes(parameters);
-
-            parameters.multiplicity = true;
-            filteredList = state.core.getValidChildrenMetaNodes(parameters);
-
-            for (i = 0; i < fullList.length; i += 1) {
-                validTypes[state.core.getPath(fullList[i])] = false;
-            }
-
-            for (i = 0; i < filteredList.length; i += 1) {
-                validTypes[state.core.getPath(filteredList[i])] = true;
-            }
-
-            return validTypes;
-        }
-
-        function getValidSetMemberTypesDetailed(setName) {
-            var parameters = {
-                    node: state.nodes[_id].node,
-                    children: [],
-                    sensitive: true,
-                    multiplicity: false,
-                    name: setName
-                },
-                fullList,
-                filteredList,
-                validTypes = {},
-                keys = getChildrenIds(),
-                i;
-
-            for (i = 0; i < keys.length; i++) {
-                if (state.nodes[keys[i]]) {
-                    parameters.children.push(state.nodes[keys[i]].node);
-                }
-            }
-
-            fullList = state.core.getValidSetElementsMetaNodes(parameters);
-
-            parameters.multiplicity = true;
-            filteredList = state.core.getValidSetElementsMetaNodes(parameters);
-
-            for (i = 0; i < fullList.length; i += 1) {
-                validTypes[state.core.getPath(fullList[i])] = false;
-            }
-
-            for (i = 0; i < filteredList.length; i += 1) {
-                validTypes[state.core.getPath(filteredList[i])] = true;
-            }
-
-            return validTypes;
-        }
-
-        function getMetaTypeId() {
-            var metaType = state.core.getMetaType(state.nodes[_id].node);
-
-            if (metaType) {
-                return storeNode(metaType);
-            } else {
-                return null;
-            }
-        }
-
-        function getValidAspectNames() {
-            return state.core.getValidAspectNames(state.nodes[_id].node);
+        if (initialized === false) {
+            initialize(logger, state, meta, storeNode);
         }
 
         if (state.nodes[_id]) {
-            return {
-                getParentId: getParentId,
-                getId: getId,
-                getGuid: getGuid,
-                getChildrenIds: getChildrenIds,
-                getBaseId: getBaseId,
-                getInheritorIds: getInheritorIds,
-                getAttribute: getAttribute,
-                getEditableAttribute: getEditableAttribute,
-                getRegistry: getRegistry,
-                getEditableRegistry: getEditableRegistry,
-                getOwnAttribute: getOwnAttribute,
-                getOwnEditableAttribute: getOwnEditableAttribute,
-                getOwnRegistry: getOwnRegistry,
-                getOwnEditableRegistry: getOwnEditableRegistry,
-                getPointer: getPointer,
-                getPointerNames: getPointerNames,
-                getAttributeNames: getAttributeNames,
-                getRegistryNames: getRegistryNames,
-                getOwnAttributeNames: getOwnAttributeNames,
-                getOwnRegistryNames: getOwnRegistryNames,
-                getOwnPointer: getOwnPointer,
-                getOwnPointerNames: getOwnPointerNames,
-
-                //SetFunctions
-                getMemberIds: getMemberIds,
-                getSetNames: getSetNames,
-                getMemberAttributeNames: getMemberAttributeNames,
-                getMemberAttribute: getMemberAttribute,
-                getEditableMemberAttribute: getEditableMemberAttribute,
-                getMemberRegistryNames: getMemberRegistryNames,
-                getMemberRegistry: getMemberRegistry,
-                getEditableMemberRegistry: getEditableMemberRegistry,
-
-                //META functions
-                getValidChildrenTypes: getValidChildrenTypes,
-                getValidAttributeNames: getValidAttributeNames,
-                getValidPointerNames: getValidPointerNames,
-                getValidSetNames: getValidSetNames,
-                getValidChildrenTypesDetailed: getValidChildrenTypesDetailed,
-                getValidSetMemberTypesDetailed: getValidSetMemberTypesDetailed,
-                getValidAspectNames: getValidAspectNames,
-                isConnection: isConnection,
-                isAbstract: isAbstract,
-                getCrosscutsInfo: getCrosscutsInfo,
-
-                getMetaTypeId: getMetaTypeId,
-
-                //constraint functions
-                getConstraintNames: getConstraintNames,
-                getOwnConstraintNames: getOwnConstraintNames,
-                getConstraint: getConstraint,
-
-                toString: toString,
-
-                getCollectionPaths: getCollectionPaths
-
-            };
+            return new GMENode(_id);
         } else {
             //logger.warn('Tried to get node with path "' + _id + '" but was not in state.nodes');
         }

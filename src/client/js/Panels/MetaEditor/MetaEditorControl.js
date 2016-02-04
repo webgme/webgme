@@ -74,6 +74,7 @@ define(['js/logger',
         this._metaAspectMembersCoordinatesGlobal = {};
         this._metaAspectMembersCoordinatesPerSheet = {};
         this._selectedMetaAspectSheetMembers = [];
+        this._selectedSheetID = null;
 
         //set default connection type to containment
         this._setNewConnectionType(MetaRelations.META_RELATIONS.CONTAINMENT);
@@ -1537,6 +1538,9 @@ define(['js/logger',
     };
 
     MetaEditorControl.prototype.onActivate = function () {
+        if (this._selectedSheetID) {
+            WebGMEGlobal.State.registerActiveTab(this._selectedSheetID);
+        }
         this._attachClientEventListeners();
         this._displayToolbarItems();
     };
@@ -1755,12 +1759,12 @@ define(['js/logger',
         }
 
         //setting selectedSheetID from global STATE
-        if (WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB) !== null &&
-            WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB) !== undefined &&
-            metaAspectSheetsRegistry.length > WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB)) {
+        if (WebGMEGlobal.State.getActiveTab() !== null && WebGMEGlobal.State.getActiveTab() !== undefined &&
+            metaAspectSheetsRegistry.length > WebGMEGlobal.State.getActiveTab()) {
+
             //only the active panel should react to the global state
-            if (WebGMEGlobal.PanelManager._activePanel === this) {
-                selectedSheetID = WebGMEGlobal.State.get(CONSTANTS.STATE_ACTIVE_TAB);
+            if (WebGMEGlobal.PanelManager._activePanel.control === this) {
+                selectedSheetID = WebGMEGlobal.State.getActiveTab().toString();
             } else {
                 for (selectedSheetID in this._sheets || {}) {
                     if (this._sheets[selectedSheetID] === this._selectedMetaAspectSet) {
@@ -1778,6 +1782,7 @@ define(['js/logger',
             }
         }
 
+        this._selectedSheetID = selectedSheetID;
         this.diagramDesigner.selectTab(selectedSheetID);
 
         return positionUpdated;

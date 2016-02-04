@@ -469,7 +469,7 @@ define(['js/logger',
             this.logger.debug('_selectedMemberListID changed to : ' + this._selectedMemberListID);
 
             this._initializeSelectedMemberList();
-            WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, tabID);
+            WebGMEGlobal.State.registerActiveTab(tabID);
         }
     };
 
@@ -1589,7 +1589,7 @@ define(['js/logger',
                 //i is the new order number
                 //newTabIDOrder[i] is the tab identifier
                 if (urlTab === newTabIDOrder[i]) {
-                    WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, i);
+                    WebGMEGlobal.State.registerActiveTab(i);
                 }
                 setID = oldIDList[newTabIDOrder[i]];
                 this._tabIDMemberListID[i] = setID;

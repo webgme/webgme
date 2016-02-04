@@ -390,6 +390,15 @@ div.diagram-designer-drag-outline {
               }
             }
 
+            i.delete-tab-btn {
+              cursor: pointer;
+              font-size: 100%;
+              margin-left: 5px;
+              &:hover {
+                color: #b30404;
+              }
+            }
+
             [class^="icon-"],
             [class*=" icon-"] {
               margin-top: -2px;

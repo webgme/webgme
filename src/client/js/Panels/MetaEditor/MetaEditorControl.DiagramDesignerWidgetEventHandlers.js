@@ -730,10 +730,10 @@ define(['js/logger',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectedTabChanged = function (tabID) {
         if (this._sheets && tabID && this._selectedMetaAspectSet !== this._sheets[tabID]) {
             this._selectedMetaAspectSet = this._sheets[tabID];
-
+            this._selectedSheetID = tabID.toString();
             this.logger.debug('selectedAspectChanged: ' + this._selectedMetaAspectSet);
 
-            WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, tabID);
+            WebGMEGlobal.State.registerActiveTab(tabID);
             this._initializeSelectedSheet();
         }
     };
@@ -865,7 +865,7 @@ define(['js/logger',
             //i is the new order number
             //newTabIDOrder[i] is the sheet identifier
             if (urlTab === newTabIDOrder[i]) {
-                WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, i);
+                WebGMEGlobal.State.registerActiveTab(i);
             }
             setID = this._sheets[newTabIDOrder[i]];
             for (j = 0; j < metaAspectSheetsRegistry.length; j += 1) {

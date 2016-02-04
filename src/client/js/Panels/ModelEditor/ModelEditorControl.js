@@ -987,7 +987,7 @@ define(['js/logger',
         }
     };
 
-    ModelEditorControl.prototype._activeProjectChanged = function (model, activeProjectId) {
+    ModelEditorControl.prototype._activeProjectChanged = function (/*model, activeProjectId*/) {
         this._updateTopNode();
     };
 
@@ -1023,6 +1023,9 @@ define(['js/logger',
     ModelEditorControl.prototype.onActivate = function () {
         this._attachClientEventListeners();
         this._displayToolbarItems();
+        if (this._selectedAspect) {
+            WebGMEGlobal.State.registerActiveAspect(this._selectedAspect);
+        }
 
         if (this.currentNodeInfo && typeof this.currentNodeInfo.id === 'string') {
             WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.id);
@@ -1132,6 +1135,10 @@ define(['js/logger',
         this._aspects = {};
         this.designerCanvas.clearTabs();
 
+        if (WebGMEGlobal.PanelManager._activePanel.control === this) {
+            this._selectedAspect = WebGMEGlobal.State.getActiveAspect();
+        }
+
         if (objId || objId === CONSTANTS.PROJECT_ROOT_ID) {
             aspects = this._client.getMetaAspectNames(objId) || [];
 
@@ -1168,7 +1175,7 @@ define(['js/logger',
             }
         }
 
-        this.designerCanvas.selectTab(selectedTabID);
+        this.designerCanvas.selectTab(selectedTabID.toString());
 
         //check if the node's aspect rules has changed or not, and if so, initialize with that
         if (this._selectedAspect !== CONSTANTS.ASPECT_ALL) {
@@ -1197,7 +1204,7 @@ define(['js/logger',
 
     ModelEditorControl.prototype._initializeSelectedAspect = function (tabID) {
         WebGMEGlobal.State.registerActiveAspect(this._selectedAspect);
-        WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, tabID);
+        WebGMEGlobal.State.registerActiveTab(tabID);
 
         this.selectedObjectChanged(this.currentNodeInfo.id);
     };
@@ -1208,15 +1215,6 @@ define(['js/logger',
 
     ModelEditorControl.getDefaultConfig = function () {
         return {
-            startNode: {
-                general: '',
-                byProjectName: {
-                    //'projectName': '/E'
-                },
-                byProjectId: {
-                    //'user+projectName': '/n'
-                }
-            },
             topNode: {
                 general: '',
                 byProjectName: {

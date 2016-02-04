@@ -234,7 +234,8 @@ define([
                         }
                     })
                     .then(function () {
-                        selectObject();
+                        selectObject(initialThingsToDo.objectToLoad, initialThingsToDo.activeSelectionToLoad,
+                        initialThingsToDo.visualizerToLoad, initialThingsToDo.tabToSelect);
                     })
                     .catch(function (err) {
                         logger.error('error during startup', err);
@@ -264,25 +265,22 @@ define([
                 }
             }
 
-            function selectObject() {
+            function selectObject(nodeId, selectionIds, vizualizer, tab) {
                 var user = {},
                     userPattern = {},
                     activeNodeUI,
-                    nodePath = initialThingsToDo.objectToLoad === 'root' ?
-                        CONSTANTS.PROJECT_ROOT_ID : initialThingsToDo.objectToLoad;
+                    nodePath = nodeId === 'root' ? CONSTANTS.PROJECT_ROOT_ID : nodeId;
 
                 userPattern[nodePath] = {children: 0};
-                logger.debug('selectObject', initialThingsToDo.objectToLoad);
-                logger.debug('activeSelectionToLoad', initialThingsToDo.activeSelectionToLoad);
-                if (initialThingsToDo.activeSelectionToLoad && initialThingsToDo.activeSelectionToLoad.length > 0) {
+                logger.debug('selectObject', nodeId);
+                logger.debug('activeSelectionToLoad', selectionIds);
+                if (selectionIds && selectionIds.length > 0) {
                     userPattern[nodePath] = {children: 1};
                 } else {
                     userPattern[nodePath] = {children: 0};
                 }
 
                 //we try to set the visualizer first so we will not change it later with the other settings
-                WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_VISUALIZER, initialThingsToDo.visualizerToLoad);
-
                 //TODO when there will be a new global state element, it has to be added here
                 function eventHandler(events) {
                     var i,
@@ -303,29 +301,43 @@ define([
                         if (events[i].eid === nodePath) {
                             activeNode = client.getNode(nodePath);
                             if (activeNode) {
-                                updatedState[CONSTANTS.STATE_ACTIVE_OBJECT] = nodePath;
+                                // First register the activeObject and let it pick the visualizer.
+                                WebGMEGlobal.State.registerActiveObject(nodePath);
 
-                                initialThingsToDo.activeSelectionToLoad = initialThingsToDo.activeSelectionToLoad || [];
+                                // In the next tick we set the other preferences.
+                                setTimeout(function () {
+                                    //WebGMEGlobal.State.registerActiveVisualizer(vizualizer);
+                                    updatedState[CONSTANTS.STATE_ACTIVE_VISUALIZER] = vizualizer;
+                                    //updatedState[CONSTANTS.STATE_ACTIVE_OBJECT] = nodePath;
 
-                                if (initialThingsToDo.activeSelectionToLoad.length > 0) {
-                                    updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] =
-                                        initialThingsToDo.activeSelectionToLoad;
-                                }
+                                    selectionIds = selectionIds || [];
 
-                                if (initialThingsToDo.tabToSelect !== null &&
-                                    initialThingsToDo.tabToSelect !== undefined) {
-                                    updatedState[CONSTANTS.STATE_ACTIVE_TAB] = initialThingsToDo.tabToSelect;
+                                    if (selectionIds.length > 0) {
+                                        updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] = selectionIds;
+                                    }
 
-                                    //we also have to set the selected aspect according to the selectedTabIndex
-                                    //TODO this is not the best solution,
-                                    // but as the node always orders the aspects based on their names, it is fine
-                                    aspectNames = client.getMetaAspectNames(nodePath);
-                                    aspectNames.unshift('All');
-                                    updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] =
-                                        aspectNames[initialThingsToDo.tabToSelect] || 'All';
-                                }
+                                    tab = parseInt(tab, 10);
+                                    if (tab >= 0 && vizualizer) {
+                                        updatedState[CONSTANTS.STATE_ACTIVE_TAB] = tab;
 
-                                WebGMEGlobal.State.set(updatedState);
+                                        //we also have to set the selected aspect according to the selectedTabIndex
+                                        //TODO this is not the best solution,
+                                        // but as the node always orders the aspects based on their names, it is fine
+                                        if (vizualizer === 'ModelEditor') {
+                                            aspectNames = client.getMetaAspectNames(nodePath);
+                                            aspectNames.sort(function (a, b) {
+                                                var an = a.toLowerCase(),
+                                                    bn = b.toLowerCase();
+
+                                                return (an < bn) ? -1 : 1;
+                                            });
+                                            aspectNames.unshift('All');
+                                            updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] = aspectNames[tab] || 'All';
+                                        }
+                                    }
+
+                                    WebGMEGlobal.State.set(updatedState);
+                                });
                                 break;
                             }
                         }
@@ -393,7 +405,8 @@ define([
                         }
                     })
                     .then(function () {
-                        selectObject();
+                        selectObject(initialThingsToDo.objectToLoad, initialThingsToDo.activeSelectionToLoad,
+                            initialThingsToDo.visualizerToLoad, initialThingsToDo.tabToSelect);
                     })
                     .catch(function (err) {
                         logger.error('error during startup', err);
