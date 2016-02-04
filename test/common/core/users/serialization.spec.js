@@ -101,6 +101,8 @@ describe('serialization', function () {
                 //TODO check if really all member of the sheets have been inserted
                 expect(contextTo.core.getChildrenRelids(contextTo.rootNode)).to.have.length(2);
                 expect(contextTo.core.getMemberPaths(contextTo.rootNode, 'MetaAspectSet')).to.have.length.above(1);
+                expect(contextTo.core.getSetNames(contextTo.rootNode))
+                    .to.include.members(Object.keys(libraryJson.metaSheets));
                 done();
             })
             .catch(done);

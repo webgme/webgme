@@ -1216,10 +1216,32 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                             registry[keys[i]]);
                     }
                 },
+                getCurrentShortSheetInfo = function () {
+                    //we collect all the current sheet info, as they are more appropriate to being updated
+                    var metaNodes = core.getAllMetaNodes(root),
+                        sheets = {},
+                        i,
+                        keys = core.getSetNames(root),
+                        j,
+                        members;
+
+                    for (i = 0; i < keys.length; i += 1) {
+                        if (keys[i].indexOf('MetaAspectSet') === 0) {
+                            members = core.getMemberPaths(root, keys[i]);
+                            for (j = 0; j < members.length; j += 1) {
+                                sheets[keys[i]] = sheets[keys[i]] || {};
+                                sheets[keys[i]][core.getGuid(metaNodes[members[j]])] = {};
+                            }
+                        }
+                    }
+
+                    return sheets;
+                },
                 updateSheet = function (name) {
                     //if some element is extra in the place of import, then it stays untouched
                     var oldMemberGuids = Object.keys(oldSheets[name]),
-                        newMemberGuids = Object.keys(newSheets[name]);
+                        newMemberGuids = Object.keys(newSheets[name]),
+                        i;
 
                     for (i = 0; i < newMemberGuids.length; i += 1) {
                         if (oldMemberGuids.indexOf(newMemberGuids[i]) === -1 && nodes[newMemberGuids[i]]) {
@@ -1260,7 +1282,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                     }
                 },
                 oldSheets = updatedLibraryJson.metaSheets || {},
-                newSheets = jsonExport.metaSheets || {},
+                newSheets = getCurrentShortSheetInfo(),
                 oldSheetNames = Object.keys(oldSheets),
                 newSheetNames = Object.keys(newSheets),
                 i;
