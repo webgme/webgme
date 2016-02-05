@@ -618,6 +618,14 @@ function GMEAuth(session, gmeConfig) {
                     }
                 }
 
+                if (userData.hasOwnProperty('settings')) {
+                    if (UTIL.isTrueObject(userData.settings)) {
+                        oldUserData.settings = userData.settings;
+                    } else {
+                        throw new Error('supplied userData.settings is not an object [' + userData.settings + ']');
+                    }
+                }
+
                 if (userData.hasOwnProperty('canCreate')) {
                     oldUserData.canCreate = userData.canCreate === 'true' || userData.canCreate === true;
                 }
@@ -641,32 +649,70 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-    /**
-     * Updates the provided fields in data (recursively) within userData.data.
-     * @param {string} userId
-     * @param {object} data
-     * @param {function} [callback]
-     * @returns {*}
-     */
-    function updateUserDataField(userId, data, callback) {
+    function _updateUserObjectField(userId, keys, newValue, overwrite) {
         return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
             .then(function (userData) {
+                var currentValue,
+                    update = {$set: {}},
+                    jointKey = keys.join('.');
+
                 if (!userData) {
                     throw new Error('no such user [' + userId + ']');
-                } else if (UTIL.isTrueObject(data) === false) {
-                    throw new Error('supplied data is not an object [' + data + ']');
+                } else if (UTIL.isTrueObject(newValue) === false) {
+                    throw new Error('supplied value is not an object [' + newValue + ']');
                 }
 
-                userData.data = userData.data || {};
-                UTIL.updateFieldsRec(userData.data, data);
+                currentValue = userData[keys.shift()] || {};
 
-                return collection.update({_id: userId}, userData, {upsert: true});
+                keys.forEach(function (key) {
+                    currentValue = currentValue[key] || {};
+                });
+
+                if (overwrite) {
+                    currentValue = newValue;
+                } else {
+                    UTIL.updateFieldsRec(currentValue, newValue);
+                }
+
+                update.$set[jointKey] = currentValue;
+                return collection.update({_id: userId}, update, {upsert: true});
             })
             .then(function () {
                 return getUser(userId);
             })
             .then(function (userData) {
+                return userData;
+            });
+    }
+    /**
+     * Updates the provided fields in data (recursively) within userData.data.
+     * @param {string} userId
+     * @param {object} data
+     * @param {boolean} [overwrite]  - if true the settings for the key will be overwritten.
+     * @param {function} [callback]
+     * @returns {*}
+     */
+    function updateUserDataField(userId, data, overwrite, callback) {
+        return _updateUserObjectField(userId, ['data'], data, overwrite)
+            .then(function (userData) {
                 return userData.data;
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     * Updates the provided fields in the settings stored at given guid.
+     * @param {string} userId
+     * @param {string} componentId
+     * @param {object} settings
+     * @param {boolean} [overwrite] - if true the settings for the key will be overwritten.
+     * @param {function} [callback]
+     * @returns {*}
+     */
+    function updateUserSettings(userId, componentId, settings, overwrite, callback) {
+        return _updateUserObjectField(userId, ['settings', settingsId], settings, overwrite)
+            .then(function (userData) {
+                return userData.settings[componentId];
             })
             .nodeify(callback);
     }
@@ -759,7 +805,16 @@ function GMEAuth(session, gmeConfig) {
             if (UTIL.isTrueObject(options.data)) {
                 data.data = options.data;
             } else {
-                deferred.reject(Error('supplied userData.data is not an object [' + options.data + ']'));
+                deferred.reject(new Error('supplied userData.data is not an object [' + options.data + ']'));
+                rejected = true;
+            }
+        }
+
+        if (options.hasOwnProperty('settings')) {
+            if (UTIL.isTrueObject(options.settings)) {
+                data.settings = options.settings;
+            } else {
+                deferred.reject(new Error('supplied userData.settings is not an object [' + options.settings + ']'));
                 rejected = true;
             }
         }
@@ -1155,6 +1210,7 @@ function GMEAuth(session, gmeConfig) {
         addUser: addUser,
         updateUser: updateUser,
         updateUserDataField: updateUserDataField,
+        updateUserSettings: updateUserSettings,
         deleteUser: deleteUser,
         getUser: getUser,
         listUsers: listUsers,

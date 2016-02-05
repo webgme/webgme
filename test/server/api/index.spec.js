@@ -888,7 +888,7 @@ describe('REST API', function () {
                     });
             });
 
-            it('should overwrite user data basic authentication PUT /api/v1/user/data', function (done) {
+            it.only('should overwrite user data basic authentication PUT /api/v1/user/data', function (done) {
                 agent.put(server.getUrl() + '/api/v1/user/data')
                     .send({b: 1})
                     .set('Authorization', 'Basic ' + new Buffer('user_w_data2:plaintext').toString('base64'))

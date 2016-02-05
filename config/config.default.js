@@ -61,49 +61,6 @@ var path = require('path'),
             enableCustomConstraints: false,
         },
 
-        components: {
-            // TreeBrowser
-            '7786674bf30f48b6835a0f134b5ba73e': {
-                filters: {
-                    toggled: {
-                        hideConnections: false,
-                        hideAbstracts: false,
-                        hideLeaves: false
-                    }
-                },
-                treeRoot: {
-                    general: '',
-                    byProjectName: {
-                        'Constraints': '/E'
-                    },
-                    byProjectId: {
-                        'guest+ass': '/n'
-                    }
-                }
-            },
-            // ModelEditor
-            f8c3cab5bf2c4cdc893a027b0c96a45e: {
-                startNode: {
-                    general: '',
-                    byProjectName: {
-                        //'projectName': '/E'
-                    },
-                    byProjectId: {
-                        //'user+projectName': '/n'
-                    }
-                },
-                topNode: {
-                    general: '',
-                    byProjectName: {
-                        'Constraints': '/E'
-                    },
-                    byProjectId: {
-                        'guest+ass': '/n'
-                    }
-                }
-            }
-        },
-
         debug: false,
 
         executor: {

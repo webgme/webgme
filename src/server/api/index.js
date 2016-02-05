@@ -238,72 +238,95 @@ function createAPI(app, mountPath, middlewareOpts) {
         });
     });
 
-    router.get('/user/data', ensureAuthenticated, function (req, res) {
+    //TODO: Consider using projects in gmeAuth and use them here from getting data/settings
+    router.get('/user/data', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.getUser(userId, function (err, userData) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
-
-            res.json(userData.data);
-        });
+        gmeAuth.getUser(userId)
+            .then(function (userData) {
+                res.json(userData.data);
+            })
+            .catch(next);
     });
 
-    router.put('/user/data', function (req, res) {
+    router.put('/user/data', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUser(userId, {data: req.body}, function (err, userData) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
-
-            res.json(userData.data);
-        });
+        gmeAuth.updateUserDataField(userId, req.body, true)
+            .then(function (data) {
+                res.json(data);
+            })
+            .catch(next);
     });
 
-    router.patch('/user/data', function (req, res) {
+    router.patch('/user/data', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUserDataField(userId, req.body, function (err, data) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
-
-            res.json(data);
-        });
+        gmeAuth.updateUserDataField(userId, req.body)
+            .then(function (data) {
+                res.json(data);
+            })
+            .catch(next);
     });
 
-    router.delete('/user/data', function (req, res) {
+    router.delete('/user/data', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUser(userId, {data: {}}, function (err/*, data*/) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
+        gmeAuth.updateUserDataField(userId, {}, true)
+            .then(function (/*data*/) {
+                res.sendStatus(204);
+            })
+            .catch(next);
+    });
 
-            res.sendStatus(204);
-        });
+    router.get('/user/settings', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.getUser(userId)
+            .then(function (userData) {
+                res.json(userData.settings);
+            })
+            .catch(next);
+    });
+
+    router.get('/user/settings/:componentId', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.getUser(userId)
+            .then(function (userData) {
+                res.json(userData.settings[req.componentId] || {});
+            })
+            .catch(next);
+    });
+
+    router.put('/user/settings/:componentId', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.updateUserSettings(userId, req.componentId, req.body, true)
+            .then(function (settings) {
+                res.json(settings);
+            })
+            .catch(next);
+    });
+
+    router.patch('/user/settings/:componentId', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.updateUserSettings(userId, req.componentId, req.body)
+            .then(function (settings) {
+                res.json(settings);
+            })
+            .catch(next);
+    });
+
+    router.delete('/user/settings/:componentId', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.updateUserSettings(userId, req.componentId, {})
+            .then(function () {
+                res.sendStatus(204);
+            })
+            .catch(next);
     });
 
     router.get('/users', function (req, res) {

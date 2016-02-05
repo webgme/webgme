@@ -494,5 +494,4 @@ define([
             start: webGMEStart
         };
     }
-)
-;
+);
