@@ -7,8 +7,6 @@
 define(['js/RegistryKeys'], function (REG_KEYS) {
     'use strict';
 
-    var initialized = false;
-
     /**
      * @param _id
      * @constructor
@@ -320,15 +318,14 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         GMENode.prototype.state = state;
         GMENode.prototype.meta = meta;
         GMENode.prototype.storeNode = storeNode;
-
-        initialized = true;
     }
 
     //getNode
     function getNode(_id, logger, state, meta, storeNode) {
 
-        if (initialized === false) {
+        if (state.nodeGettersInitialized === false) {
             initialize(logger, state, meta, storeNode);
+            state.nodeGettersInitialized = true;
         }
 
         if (state.nodes[_id]) {
