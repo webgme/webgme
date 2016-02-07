@@ -238,7 +238,6 @@ function createAPI(app, mountPath, middlewareOpts) {
         });
     });
 
-    //TODO: Consider using projects in gmeAuth and use them here from getting data/settings
     router.get('/user/data', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
 
@@ -279,12 +278,73 @@ function createAPI(app, mountPath, middlewareOpts) {
             .catch(next);
     });
 
+    router.get('/componentSettings', function (req, res, next) {
+        var componentsPath = path.join(process.cwd(), 'config', 'components.json');
+        logger.info('Reading in default componentSettings at:', componentsPath);
+        // TODO: Consider using a file watcher and cache the file between updates..
+
+        Q.nfcall(fs.readFile, componentsPath, 'utf8')
+            .then(function (content) {
+                res.json(JSON.parse(content));
+            })
+            .catch(function (err) {
+                logger.error(err);
+                next(err);
+            });
+    });
+
+    router.get('/componentSettings/:componentId', function (req, res, next) {
+        var componentsPath = path.join(process.cwd(), 'config', 'components.json');
+        logger.info('Reading in default componentSettings at:', componentsPath);
+        // TODO: Consider using a file watcher and cache the file between updates..
+
+        Q.nfcall(fs.readFile, componentsPath, 'utf8')
+            .then(function (content) {
+                var contentObj = JSON.parse(content);
+                res.json(contentObj[req.params.componentId] || {});
+            })
+            .catch(function (err) {
+                logger.error(err);
+                next(err);
+            });
+    });
+
     router.get('/user/settings', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
 
         gmeAuth.getUser(userId)
             .then(function (userData) {
-                res.json(userData.settings);
+                res.json(userData.settings || {});
+            })
+            .catch(next);
+    });
+
+    router.put('/user/settings', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.updateUserSettings(userId, req.body, true)
+            .then(function (settings) {
+                res.json(settings);
+            })
+            .catch(next);
+    });
+
+    router.patch('/user/settings', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.updateUserSettings(userId, req.body)
+            .then(function (settings) {
+                res.json(settings);
+            })
+            .catch(next);
+    });
+
+    router.delete('/user/settings', function (req, res, next) {
+        var userId = getUserId(req);
+
+        gmeAuth.updateUserSettings(userId, {}, true)
+            .then(function () {
+                res.sendStatus(204);
             })
             .catch(next);
     });
@@ -294,7 +354,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
         gmeAuth.getUser(userId)
             .then(function (userData) {
-                res.json(userData.settings[req.componentId] || {});
+                res.json(userData.settings[req.params.componentId] || {});
             })
             .catch(next);
     });
@@ -302,7 +362,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.put('/user/settings/:componentId', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUserSettings(userId, req.componentId, req.body, true)
+        gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body, true)
             .then(function (settings) {
                 res.json(settings);
             })
@@ -312,7 +372,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.patch('/user/settings/:componentId', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUserSettings(userId, req.componentId, req.body)
+        gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body)
             .then(function (settings) {
                 res.json(settings);
             })
@@ -322,7 +382,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.delete('/user/settings/:componentId', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUserSettings(userId, req.componentId, {})
+        gmeAuth.updateUserComponentSettings(userId, req.params.componentId, {}, true)
             .then(function () {
                 res.sendStatus(204);
             })
@@ -451,10 +511,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.put('/users/:username/data', function (req, res, next) {
         ensureSameUserOrSiteAdmin(req, res)
             .then(function () {
-                return gmeAuth.updateUser(req.params.username, {data: req.body});
+                return gmeAuth.updateUserDataField(req.params.username, req.body, true);
             })
-            .then(function (userData) {
-                res.json(userData.data);
+            .then(function (data) {
+                res.json(data);
             })
             .catch(function (err) {
                 if (err.message.indexOf('no such user [' + req.params.username) === 0) {
@@ -485,9 +545,143 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.delete('/users/:username/data', function (req, res, next) {
         ensureSameUserOrSiteAdmin(req, res)
             .then(function () {
-                return gmeAuth.updateUser(req.params.username, {data: {}});
+                return gmeAuth.updateUserDataField(req.params.username, {}, true);
             })
             .then(function (/*userData*/) {
+                res.sendStatus(204);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [' + req.params.username) === 0) {
+                    res.status(404);
+                }
+
+                next(err);
+            });
+    });
+
+    router.get('/users/:username/settings', function (req, res) {
+        // TODO: Should settings be hidden from other (non-siteAdmin) users?
+        gmeAuth.getUser(req.params.username, function (err, userData) {
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+
+            res.json(userData.settings || {});
+        });
+    });
+
+    router.put('/users/:username/settings', function (req, res, next) {
+        ensureSameUserOrSiteAdmin(req, res)
+            .then(function () {
+                return gmeAuth.updateUserSettings(req.params.username, req.body, true);
+            })
+            .then(function (settings) {
+                res.json(settings);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [' + req.params.username) === 0) {
+                    res.status(404);
+                }
+
+                next(err);
+            });
+    });
+
+    router.patch('/users/:username/settings', function (req, res, next) {
+        ensureSameUserOrSiteAdmin(req, res)
+            .then(function () {
+                return gmeAuth.updateUserSettings(req.params.username, req.body);
+            })
+            .then(function (settings) {
+                res.json(settings);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [' + req.params.username) === 0) {
+                    res.status(404);
+                }
+
+                next(err);
+            });
+    });
+
+    router.delete('/users/:username/settings', function (req, res, next) {
+        ensureSameUserOrSiteAdmin(req, res)
+            .then(function () {
+                return gmeAuth.updateUserSettings(req.params.username, {}, true);
+            })
+            .then(function (/*settings*/) {
+                res.sendStatus(204);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [' + req.params.username) === 0) {
+                    res.status(404);
+                }
+
+                next(err);
+            });
+    });
+
+    router.get('/users/:username/settings/:componentId', function (req, res) {
+        // TODO: Should settings be hidden from other (non-siteAdmin) users?
+        gmeAuth.getUser(req.params.username, function (err, userData) {
+            if (err) {
+                res.status(404);
+                res.json({
+                    message: 'Requested resource was not found',
+                    error: err
+                });
+                return;
+            }
+
+            res.json(userData.settings[req.params.componentId] || {});
+        });
+    });
+
+    router.put('/users/:username/settings/:componentId', function (req, res, next) {
+        ensureSameUserOrSiteAdmin(req, res)
+            .then(function () {
+                return gmeAuth.updateUserComponentSettings(req.params.username, req.params.componentId, req.body, true);
+            })
+            .then(function (settings) {
+                res.json(settings);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [' + req.params.username) === 0) {
+                    res.status(404);
+                }
+
+                next(err);
+            });
+    });
+
+    router.patch('/users/:username/settings/:componentId', function (req, res, next) {
+        ensureSameUserOrSiteAdmin(req, res)
+            .then(function () {
+                return gmeAuth.updateUserComponentSettings(req.params.username, req.params.componentId, req.body);
+            })
+            .then(function (settings) {
+                res.json(settings);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [' + req.params.username) === 0) {
+                    res.status(404);
+                }
+
+                next(err);
+            });
+    });
+
+    router.delete('/users/:username/settings/:componentId', function (req, res, next) {
+        ensureSameUserOrSiteAdmin(req, res)
+            .then(function () {
+                return gmeAuth.updateUserComponentSettings(req.params.username, req.params.componentId, {}, true);
+            })
+            .then(function (/*settings*/) {
                 res.sendStatus(204);
             })
             .catch(function (err) {

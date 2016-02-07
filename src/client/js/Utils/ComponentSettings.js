@@ -9,20 +9,46 @@ define(['common/util/util'], function (UTIL) {
     'use strict';
 
     /**
-     * //TODO: Add a method that takes user settings into account (async).
-     * @param {GmeConfig} gmeConfig
-     * @param {string} guid - unique key for ui component.
-     * @param {object} defaultSettings - defined in the component.
+     * Updates the defaultSettings based on passed settings.
+     *
+     * @param {object} defaultSettings - hardcoded in the component.
+     * @param {object} [deploymentSettings] - defined on the server at config/components.json.
+     * @param {object} [userSettings] - defined for the specific user.
      */
-    function resolveSettings(gmeConfig, guid, defaultSettings) {
-        if (!gmeConfig.components[guid]) {
-            return defaultSettings;
+    function resolveSettings(defaultSettings, deploymentSettings, userSettings) {
+        if (deploymentSettings && typeof deploymentSettings === 'object') {
+            UTIL.updateFieldsRec(defaultSettings, deploymentSettings);
         }
 
-        UTIL.updateFieldsRec(defaultSettings, gmeConfig.components[guid]);
+        if (userSettings && typeof userSettings === 'object') {
+            UTIL.updateFieldsRec(defaultSettings, userSettings);
+        }
+
+        return defaultSettings;
+    }
+
+    /**
+     * Updates the defaultSettings trying ot extract values from WebGMEGlobal.
+     *
+     * @param {object} defaultSettings - hardcoded in the component.
+     * @param {string} componentID - UniqueId for component.
+     */
+    function resolveWithWebGMEGlobal(defaultSettings, componentId) {
+        var deploymentSettings,
+            userSettings;
+
+        if (typeof WebGMEGlobal === 'undefined') {
+            throw new Error('WebGMEGlobal must be defined for this function, use resolveSettings');
+        }
+
+        deploymentSettings = WebGMEGlobal.componentSettings[componentId];
+        userSettings = WebGMEGlobal.userInfo.settings[componentId];
+
+        return resolveSettings(defaultSettings, deploymentSettings, defaultSettings);
     }
 
     return {
-        resolveSettings: resolveSettings
+        resolveSettings: resolveSettings,
+        resolveWithWebGMEGlobal: resolveWithWebGMEGlobal
     };
 });

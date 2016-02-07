@@ -576,6 +576,7 @@ function GMEAuth(session, gmeConfig) {
 
                 delete userData.passwordHash;
                 userData.data = userData.data || {};
+                userData.settings = userData.settings || {};
 
                 return userData;
             })
@@ -679,9 +680,6 @@ function GMEAuth(session, gmeConfig) {
             })
             .then(function () {
                 return getUser(userId);
-            })
-            .then(function (userData) {
-                return userData;
             });
     }
     /**
@@ -701,7 +699,7 @@ function GMEAuth(session, gmeConfig) {
     }
 
     /**
-     * Updates the provided fields in the settings stored at given guid.
+     * Updates the provided fields in the settings stored at given componentId.
      * @param {string} userId
      * @param {string} componentId
      * @param {object} settings
@@ -709,10 +707,26 @@ function GMEAuth(session, gmeConfig) {
      * @param {function} [callback]
      * @returns {*}
      */
-    function updateUserSettings(userId, componentId, settings, overwrite, callback) {
-        return _updateUserObjectField(userId, ['settings', settingsId], settings, overwrite)
+    function updateUserComponentSettings(userId, componentId, settings, overwrite, callback) {
+        return _updateUserObjectField(userId, ['settings', componentId], settings, overwrite)
             .then(function (userData) {
                 return userData.settings[componentId];
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     * Updates the provided fields in the settings.
+     * @param {string} userId
+     * @param {object} settings
+     * @param {boolean} [overwrite] - if true the settings for the key will be overwritten.
+     * @param {function} [callback]
+     * @returns {*}
+     */
+    function updateUserSettings(userId, settings, overwrite, callback) {
+        return _updateUserObjectField(userId, ['settings'], settings, overwrite)
+            .then(function (userData) {
+                return userData.settings;
             })
             .nodeify(callback);
     }
@@ -733,6 +747,7 @@ function GMEAuth(session, gmeConfig) {
                 var i;
                 for (i = 0; i < userDataArray.length; i += 1) {
                     delete userDataArray[i].passwordHash;
+                    // TODO: Consider removing settings and data here.
                 }
                 return userDataArray;
             })
@@ -795,6 +810,7 @@ function GMEAuth(session, gmeConfig) {
                 email: email,
                 canCreate: canCreate,
                 data: {},
+                settings: {},
                 projects: {},
                 type: CONSTANTS.USER,
                 orgs: [],
@@ -1211,6 +1227,7 @@ function GMEAuth(session, gmeConfig) {
         updateUser: updateUser,
         updateUserDataField: updateUserDataField,
         updateUserSettings: updateUserSettings,
+        updateUserComponentSettings: updateUserComponentSettings,
         deleteUser: deleteUser,
         getUser: getUser,
         listUsers: listUsers,

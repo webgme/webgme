@@ -41,7 +41,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
     _.extend(ModelEditorPanel.prototype, IActivePanel.prototype);
 
     ModelEditorPanel.prototype._initialize = function () {
-        var self = this;
+        var self = this,
+            controllerSettings;
 
         this.widget = new ModelEditorWidget(this.$el, {'toolBar': this.toolBar});
 
@@ -54,15 +55,13 @@ define(['js/PanelBase/PanelBaseWithHeader',
             WebGMEGlobal.KeyboardManager.setListener(self.widget);
         };
 
-        this.componentSettings = ModelEditorControl.getDefaultConfig();
-        ComponentSettings.resolveSettings(WebGMEGlobal.gmeConfig, ModelEditorControl.getComponentGUID(),
-            this.componentSettings);
-
+        controllerSettings = ModelEditorControl.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(controllerSettings, ModelEditorControl.getComponentId());
 
         this.control = new ModelEditorControl({
             client: this._client,
             widget: this.widget
-        }, this.componentSettings);
+        }, controllerSettings);
 
         this.onActivate();
     };

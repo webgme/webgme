@@ -76,8 +76,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //set Widget title
         this.setTitle('Object Browser');
         compositionSettings = TreeBrowserControl.getDefaultConfig();
-        ComponentSettings.resolveSettings(WebGMEGlobal.gmeConfig, TreeBrowserControl.getComponentGUID(),
-            compositionSettings);
+        ComponentSettings.resolveWithWebGMEGlobal(compositionSettings, TreeBrowserControl.getComponentId());
 
         compositionTreeBrowserWidget = new TreeBrowserWidget(this.$el.find('div#composition').first(), {
             enableEdit: true,

@@ -29,7 +29,6 @@ define(['js/logger',
         GME_ASPECT_ICON = 'gme-aspect',
         CROSSCUT_VISUALIZER = 'Crosscut',
         SET_VISUALIZER = 'SetEditor',
-        COMPONENT_GUID = '7786674bf30f48b6835a0f134b5ba73e',
         TREE_ROOT = CONSTANTS.PROJECT_ROOT_ID;
 
     function TreeBrowserControl(client, treeBrowser, config) {
@@ -60,12 +59,12 @@ define(['js/logger',
             var projectId = client.getActiveProjectId(),
                 projectName = client.getActiveProjectName();
 
-            if (config.treeRoot.byProjectId.hasOwnProperty(projectId)) {
-                self._treeRootId = config.treeRoot.byProjectId[projectId];
-            } else if (config.treeRoot.byProjectName.hasOwnProperty(projectName)) {
-                self._treeRootId = config.treeRoot.byProjectName[projectName];
+            if (config.byProjectId.treeRoot.hasOwnProperty(projectId)) {
+                self._treeRootId = config.byProjectId.treeRoot[projectId];
+            } else if (config.byProjectName.treeRoot.hasOwnProperty(projectName)) {
+                self._treeRootId = config.byProjectName.treeRoot[projectName];
             } else {
-                self._treeRootId = config.treeRoot.general;
+                self._treeRootId = config.treeRoot;
             }
         }
 
@@ -719,6 +718,7 @@ define(['js/logger',
 
     TreeBrowserControl.getDefaultConfig = function () {
         return {
+            treeRoot: '',
             filters: {
                 toggled: {
                     hideConnections: false,
@@ -726,20 +726,19 @@ define(['js/logger',
                     hideLeaves: false
                 }
             },
-            treeRoot: {
-                general: '',
-                byProjectName: {
-                    //'projectName': '/E'
-                },
-                byProjectId: {
-                    //'user+projectName': '/n'
+            byProjectName: {
+                treeRoot: {
+                }
+            },
+            byProjectId: {
+                treeRoot: {
                 }
             }
         };
     };
 
-    TreeBrowserControl.getComponentGUID = function () {
-        return COMPONENT_GUID;
+    TreeBrowserControl.getComponentId = function () {
+        return 'GenericUITreeBrowserControl';
     };
 
     TreeBrowserControl.prototype._getValidChildrenTypes = function (nodeId) {

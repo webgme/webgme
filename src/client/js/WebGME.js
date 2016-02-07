@@ -99,6 +99,7 @@ define([
             layoutManager.loadLayout(initialThingsToDo.layoutToLoad, function () {
                 var panels = [],
                     layoutPanels = layoutManager._currentLayout.panels,
+                    decorators,
                     len = layoutPanels ? layoutPanels.length : 0,
                     i;
 
@@ -147,42 +148,30 @@ define([
                     WebGMEGlobal.State.clear();
                 });
 
-
                 client.decoratorManager = new DecoratorManager();
-                populateAvailableExtensionPoints(function (err) {
-                    var decorators = gmeConfig.visualization.decoratorsToPreload || WebGMEGlobal.allDecorators || [];
+                decorators = gmeConfig.visualization.decoratorsToPreload || WebGMEGlobal.allDecorators || [];
+
+                client.decoratorManager.downloadAll(decorators, function (err) {
                     if (err) {
-                        logger.error('Failed loading extension points', err);
+                        logger.error(err);
+                    }
+                    for (i = 0; i < len; i += 1) {
+                        panels.push({
+                            panel: layoutPanels[i].panel,
+                            container: layoutPanels[i].container,
+                            control: layoutPanels[i].control,
+                            params: {client: client}
+                        });
                     }
 
-                    populateUserInfo(function (err) {
-                        if (err) {
-                            logger.error('Failed to set WebGMEGlobal.userInfo', err);
-                        }
+                    //load the panels
+                    loadPanels(panels);
 
-                        client.decoratorManager.downloadAll(decorators, function (err) {
-                            if (err) {
-                                logger.error(err);
-                            }
-                            for (i = 0; i < len; i += 1) {
-                                panels.push({
-                                    panel: layoutPanels[i].panel,
-                                    container: layoutPanels[i].container,
-                                    control: layoutPanels[i].control,
-                                    params: {client: client}
-                                });
-                            }
-
-                            //load the panels
-                            loadPanels(panels);
-
-                            //as of now it's a global variable just to make access to it easier
-                            //TODO: might need to be changed
-                            WebGMEGlobal.KeyboardManager = KeyboardManager;
-                            WebGMEGlobal.KeyboardManager.setEnabled(true);
-                            WebGMEGlobal.PanelManager = new PanelManager(client);
-                        });
-                    });
+                    //as of now it's a global variable just to make access to it easier
+                    //TODO: might need to be changed
+                    WebGMEGlobal.KeyboardManager = KeyboardManager;
+                    WebGMEGlobal.KeyboardManager.setEnabled(true);
+                    WebGMEGlobal.PanelManager = new PanelManager(client);
                 });
             });
 
@@ -218,7 +207,7 @@ define([
                 Q.nfcall(client.selectProject, initialThingsToDo.projectToLoad, undefined)
                     .then(function () {
                         if (!initialThingsToDo.branchToLoad) {
-                            return Q({});
+                            return {};
                         }
 
                         return Q.nfcall(client.getBranches, initialThingsToDo.projectToLoad);
@@ -411,81 +400,6 @@ define([
                     .catch(function (err) {
                         logger.error('error during startup', err);
                         openProjectLoadDialog(false);
-                    });
-            }
-
-            function populateAvailableExtensionPoints(callback) {
-
-                function capitalizeFirstLetter(string) {
-                    return string.charAt(0).toUpperCase() + string.slice(1);
-                }
-
-                function requestExtensionPoint(name) {
-                    var deferred = Q.defer();
-                    logger.debug('requestExtensionPoint', name);
-                    superagent.get('/api/' + name)
-                        .end(function (err, res) {
-                            var keyName = 'all' + capitalizeFirstLetter(name);
-
-                            if (res.status === 200) {
-                                WebGMEGlobal[keyName] = res.body;
-                                logger.debug('/api/' + name, WebGMEGlobal[keyName]);
-                                deferred.resolve();
-                            } else {
-                                logger.error('/api/' + name + 'failed');
-                                WebGMEGlobal[keyName] = [];
-                                deferred.reject(err);
-                            }
-                        });
-
-                    return deferred.promise;
-                }
-
-                return Q.all([
-                    requestExtensionPoint('visualizers'),
-                    requestExtensionPoint('plugins'),
-                    requestExtensionPoint('decorators'),
-                    requestExtensionPoint('seeds'),
-                    requestExtensionPoint('addOns')
-                ]).nodeify(callback);
-            }
-
-            function populateUserInfo(callback) {
-                var userInfo;
-
-                function checkIfAdminInOrg(userId, orgId) {
-                    var deferred = Q.defer();
-                    superagent.get('/api/orgs/' + orgId)
-                        .end(function (err, res) {
-                            if (res.status === 200) {
-                                if (res.body.admins.indexOf(userId) > -1) {
-                                    userInfo.adminOrgs.push(res.body);
-                                }
-                            } else {
-                                logger.error('failed getting org info', err);
-                            }
-                            deferred.resolve();
-                        });
-
-                    return deferred.promise;
-                }
-
-                superagent.get('/api/user')
-                    .end(function (err, res) {
-                        if (res.status === 200) {
-                            userInfo = res.body || {_id: 'N/A', orgs: []};
-                            userInfo.adminOrgs = [];
-
-                            Q.allSettled(userInfo.orgs.map(function (orgId) {
-                                return checkIfAdminInOrg(userInfo._id, orgId);
-                            }))
-                                .then(function () {
-                                    WebGMEGlobal.userInfo = userInfo;
-                                })
-                                .nodeify(callback);
-                        } else {
-                            callback(err);
-                        }
                     });
             }
         }

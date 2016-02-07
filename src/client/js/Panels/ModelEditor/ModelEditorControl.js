@@ -28,7 +28,6 @@ define(['js/logger',
     'use strict';
 
     var ModelEditorControl,
-        COMPONENT_GUID = 'f8c3cab5bf2c4cdc893a027b0c96a45e',
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
         DEFAULT_DECORATOR = 'ModelDecorator',
@@ -997,12 +996,12 @@ define(['js/logger',
 
         if (projectId) {
             projectName = this._client.getActiveProjectName();
-            if (this._config.topNode.byProjectId.hasOwnProperty(projectId)) {
-                this._topNode = this._config.topNode.byProjectId[projectId];
-            } else if (this._config.topNode.byProjectName.hasOwnProperty(projectName)) {
-                this._topNode = this._config.topNode.byProjectName[projectName];
+            if (this._config.byProjectId.topNode.hasOwnProperty(projectId)) {
+                this._topNode = this._config.byProjectId.topNode[projectId];
+            } else if (this._config.byProjectName.topNode.hasOwnProperty(projectName)) {
+                this._topNode = this._config.byProjectName.topNode[projectName];
             } else {
-                this._topNode = this._config.topNode.general;
+                this._topNode = this._config.topNode;
             }
         }
     };
@@ -1215,20 +1214,20 @@ define(['js/logger',
 
     ModelEditorControl.getDefaultConfig = function () {
         return {
-            topNode: {
-                general: '',
-                byProjectName: {
-                    //'projectName': '/E'
-                },
-                byProjectId: {
-                    //'user+projectName': '/n'
+            topNode: '',
+            byProjectName: {
+                topNode: {
+                }
+            },
+            byProjectId: {
+                topNode: {
                 }
             }
         };
     };
 
-    ModelEditorControl.getComponentGUID = function () {
-        return COMPONENT_GUID;
+    ModelEditorControl.getComponentId = function () {
+        return 'GenericUIModelEditorControl';
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
