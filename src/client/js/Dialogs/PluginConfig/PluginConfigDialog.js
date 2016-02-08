@@ -35,12 +35,13 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         this._initDialog(pluginConfigs);
 
         this._dialog.on('hidden.bs.modal', function () {
+            var save = self._saveConfigurationCb.find('input').is(':checked');
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
 
             if (self._fnCallback && self._updatedConfig) {
-                self._fnCallback(self._updatedConfig);
+                self._fnCallback(self._updatedConfig, save);
             }
         });
 
@@ -71,6 +72,8 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         this._btnSave = this._dialog.find('.btn-save');
 
         this._divContainer = this._dialog.find('.modal-body');
+
+        this._saveConfigurationCb = this._dialog.find('.save-configuration');
 
         this._title = this._dialog.find('.modal-title');
         this._title.text((new this._currentPluginClass()).getName());

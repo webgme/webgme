@@ -56,7 +56,6 @@ define([
                 loadNodes: {},
                 // FIXME: This should be the same as nodes (need to make sure they are not modified in meta).
                 metaNodes: {},
-                nodeGettersInitialized: false,
 
                 rootHash: null,
                 rootObject: null,

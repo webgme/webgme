@@ -8,11 +8,19 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     'use strict';
 
     /**
-     * @param _id
+     * @param {string} _id - Path of node.
+     * @param {GmeLogger} logger - logger.
+     * @param {object} state - state of the client.
+     * @param {object} meta - collected meta nodes.
+     * @param {function} storeNode - invoked when storing new nodes.
      * @constructor
      */
-    function GMENode(_id) {
+    function GMENode(_id, logger, state, meta, storeNode) {
         this._id = _id;
+        this.logger = logger;
+        this.state = state;
+        this.meta = meta;
+        this.storeNode = storeNode;
     }
 
     GMENode.prototype.getParentId = function () {
@@ -313,23 +321,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this.state.core.getValidAspectNames(this.state.nodes[this._id].node);
     };
 
-    function initialize(logger, state, meta, storeNode) {
-        GMENode.prototype.logger = logger;
-        GMENode.prototype.state = state;
-        GMENode.prototype.meta = meta;
-        GMENode.prototype.storeNode = storeNode;
-    }
-
     //getNode
     function getNode(_id, logger, state, meta, storeNode) {
-
-        if (state.nodeGettersInitialized === false) {
-            initialize(logger, state, meta, storeNode);
-            state.nodeGettersInitialized = true;
-        }
-
         if (state.nodes[_id]) {
-            return new GMENode(_id);
+            return new GMENode(_id, logger, state, meta, storeNode);
         } else {
             //logger.warn('Tried to get node with path "' + _id + '" but was not in state.nodes');
         }

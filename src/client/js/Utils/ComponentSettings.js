@@ -1,10 +1,10 @@
-/*globals define*/
+/*globals define, WebGMEGlobal*/
 
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['common/util/util'], function (UTIL) {
+define(['common/util/util', 'superagent'], function (UTIL, superagent) {
 
     'use strict';
 
@@ -41,14 +41,44 @@ define(['common/util/util'], function (UTIL) {
             throw new Error('WebGMEGlobal must be defined for this function, use resolveSettings');
         }
 
-        deploymentSettings = WebGMEGlobal.componentSettings[componentId];
-        userSettings = WebGMEGlobal.userInfo.settings[componentId];
+        deploymentSettings = WebGMEGlobal.componentSettings && WebGMEGlobal.componentSettings[componentId];
+        userSettings = WebGMEGlobal.userInfo && WebGMEGlobal.userInfo.settings &&
+            WebGMEGlobal.userInfo.settings[componentId];
 
-        return resolveSettings(defaultSettings, deploymentSettings, defaultSettings);
+        return resolveSettings(defaultSettings, deploymentSettings, userSettings);
+    }
+
+
+    function updateComponentSettings(componentId, newSettings, callback) {
+        superagent.patch('api/user/settings/' + componentId)
+            .send(newSettings)
+            .end(function (err, res) {
+                if (err || res.status !== 200) {
+                    callback(err || new Error('Did not return status 200: ' + res.status));
+                    return;
+                }
+
+                callback(null, res.body);
+            });
+    }
+
+    function overwriteComponentSettings(componentId, newSettings, callback) {
+        superagent.put('api/user/settings/' + componentId)
+            .send(newSettings)
+            .end(function (err, res) {
+                if (err || res.status !== 200) {
+                    callback(err || new Error('Did not return status 200: ' + res.status));
+                    return;
+                }
+
+                callback(null, res.body);
+            });
     }
 
     return {
         resolveSettings: resolveSettings,
-        resolveWithWebGMEGlobal: resolveWithWebGMEGlobal
+        resolveWithWebGMEGlobal: resolveWithWebGMEGlobal,
+        updateComponentSettings: updateComponentSettings,
+        overwriteComponentSettings: overwriteComponentSettings
     };
 });
