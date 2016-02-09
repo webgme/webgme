@@ -280,7 +280,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.get('/componentSettings', function (req, res, next) {
         var componentsPath = path.join(process.cwd(), 'config', 'components.json');
-        logger.info('Reading in default componentSettings at:', componentsPath);
+        logger.debug('Reading in default componentSettings at:', componentsPath);
         // TODO: Consider using a file watcher and cache the file between updates..
 
         Q.nfcall(fs.readFile, componentsPath, 'utf8')
