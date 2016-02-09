@@ -288,7 +288,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(JSON.parse(content));
             })
             .catch(function (err) {
-                logger.error(err);
+                logger.error('Errors reading in: ', componentsPath, err);
                 next(err);
             });
     });
