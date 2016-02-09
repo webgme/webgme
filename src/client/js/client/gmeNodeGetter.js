@@ -17,15 +17,15 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
      */
     function GMENode(_id, logger, state, meta, storeNode) {
         this._id = _id;
-        this.logger = logger;
-        this.state = state;
-        this.meta = meta;
-        this.storeNode = storeNode;
+        this._logger = logger;
+        this._state = state;
+        this._meta = meta;
+        this._storeNode = storeNode;
     }
 
     GMENode.prototype.getParentId = function () {
         //just for sure, as it may missing from the cache
-        return this.storeNode(this.state.core.getParent(this.state.nodes[this._id].node));
+        return this._storeNode(this._state.core.getParent(this._state.nodes[this._id].node));
     };
 
     GMENode.prototype.getId = function () {
@@ -33,17 +33,17 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.getGuid = function () {
-        return this.state.core.getGuid(this.state.nodes[this._id].node);
+        return this._state.core.getGuid(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getChildrenIds = function () {
-        return this.state.core.getChildrenPaths(this.state.nodes[this._id].node);
+        return this._state.core.getChildrenPaths(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getBaseId = function () {
-        var base = this.state.core.getBase(this.state.nodes[this._id].node);
+        var base = this._state.core.getBase(this._state.nodes[this._id].node);
         if (base) {
-            return this.storeNode(base);
+            return this._storeNode(base);
         } else {
             return null;
         }
@@ -55,15 +55,15 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.getAttribute = function (name) {
-        return this.state.core.getAttribute(this.state.nodes[this._id].node, name);
+        return this._state.core.getAttribute(this._state.nodes[this._id].node, name);
     };
 
     GMENode.prototype.getOwnAttribute = function (name) {
-        return this.state.core.getOwnAttribute(this.state.nodes[this._id].node, name);
+        return this._state.core.getOwnAttribute(this._state.nodes[this._id].node, name);
     };
 
     GMENode.prototype.getEditableAttribute = function (name) {
-        var value = this.state.core.getAttribute(this.state.nodes[this._id].node, name);
+        var value = this._state.core.getAttribute(this._state.nodes[this._id].node, name);
         if (typeof value === 'object') {
             return JSON.parse(JSON.stringify(value));
         }
@@ -71,7 +71,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.getOwnEditableAttribute = function (name) {
-        var value = this.state.core.getOwnAttribute(this.state.nodes[this._id].node, name);
+        var value = this._state.core.getOwnAttribute(this._state.nodes[this._id].node, name);
         if (typeof value === 'object') {
             return JSON.parse(JSON.stringify(value));
         }
@@ -79,15 +79,15 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.getRegistry = function (name) {
-        return this.state.core.getRegistry(this.state.nodes[this._id].node, name);
+        return this._state.core.getRegistry(this._state.nodes[this._id].node, name);
     };
 
     GMENode.prototype.getOwnRegistry = function (name) {
-        return this.state.core.getOwnRegistry(this.state.nodes[this._id].node, name);
+        return this._state.core.getOwnRegistry(this._state.nodes[this._id].node, name);
     };
 
     GMENode.prototype.getEditableRegistry = function (name) {
-        var value = this.state.core.getRegistry(this.state.nodes[this._id].node, name);
+        var value = this._state.core.getRegistry(this._state.nodes[this._id].node, name);
         if (typeof value === 'object') {
             return JSON.parse(JSON.stringify(value));
         }
@@ -95,7 +95,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.getOwnEditableRegistry = function (name) {
-        var value = this.state.core.getOwnRegistry(this.state.nodes[this._id].node, name);
+        var value = this._state.core.getOwnRegistry(this._state.nodes[this._id].node, name);
         if (typeof value === 'object') {
             return JSON.parse(JSON.stringify(value));
         }
@@ -107,60 +107,60 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         if (name === 'base') {
             //base is a special case as it complicates with inherited children
             return {
-                to: this.state.core.getPath(this.state.core.getBase(this.state.nodes[this._id].node)),
+                to: this._state.core.getPath(this._state.core.getBase(this._state.nodes[this._id].node)),
                 from: []
             };
         }
-        return {to: this.state.core.getPointerPath(this.state.nodes[this._id].node, name), from: []};
+        return {to: this._state.core.getPointerPath(this._state.nodes[this._id].node, name), from: []};
     };
 
     GMENode.prototype.getOwnPointer = function (name) {
-        return {to: this.state.core.getOwnPointerPath(this.state.nodes[this._id].node, name), from: []};
+        return {to: this._state.core.getOwnPointerPath(this._state.nodes[this._id].node, name), from: []};
     };
 
     GMENode.prototype.getPointerNames = function () {
-        return this.state.core.getPointerNames(this.state.nodes[this._id].node);
+        return this._state.core.getPointerNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getOwnPointerNames = function () {
-        return this.state.core.getOwnPointerNames(this.state.nodes[this._id].node);
+        return this._state.core.getOwnPointerNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getAttributeNames = function () {
-        return this.state.core.getAttributeNames(this.state.nodes[this._id].node);
+        return this._state.core.getAttributeNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getOwnAttributeNames = function () {
-        return this.state.core.getOwnAttributeNames(this.state.nodes[this._id].node);
+        return this._state.core.getOwnAttributeNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getRegistryNames = function () {
-        return this.state.core.getRegistryNames(this.state.nodes[this._id].node);
+        return this._state.core.getRegistryNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getOwnRegistryNames = function () {
-        return this.state.core.getOwnRegistryNames(this.state.nodes[this._id].node);
+        return this._state.core.getOwnRegistryNames(this._state.nodes[this._id].node);
     };
 
     //SET
     GMENode.prototype.getMemberIds = function (setid) {
-        return this.state.core.getMemberPaths(this.state.nodes[this._id].node, setid);
+        return this._state.core.getMemberPaths(this._state.nodes[this._id].node, setid);
     };
 
     GMENode.prototype.getSetNames = function () {
-        return this.state.core.getSetNames(this.state.nodes[this._id].node);
+        return this._state.core.getSetNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getMemberAttributeNames = function (setid, memberid) {
-        return this.state.core.getMemberAttributeNames(this.state.nodes[this._id].node, setid, memberid);
+        return this._state.core.getMemberAttributeNames(this._state.nodes[this._id].node, setid, memberid);
     };
 
     GMENode.prototype.getMemberAttribute = function (setid, memberid, name) {
-        return this.state.core.getMemberAttribute(this.state.nodes[this._id].node, setid, memberid, name);
+        return this._state.core.getMemberAttribute(this._state.nodes[this._id].node, setid, memberid, name);
     };
 
     GMENode.prototype.getEditableMemberAttribute = function (setid, memberid, name) {
-        var attr = this.state.core.getMemberAttribute(this.state.nodes[this._id].node, setid, memberid, name);
+        var attr = this._state.core.getMemberAttribute(this._state.nodes[this._id].node, setid, memberid, name);
         if (attr !== null && attr !== undefined) {
             return JSON.parse(JSON.stringify(attr));
         }
@@ -168,15 +168,15 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.getMemberRegistryNames = function (setid, memberid) {
-        return this.state.core.getMemberRegistryNames(this.state.nodes[this._id].node, setid, memberid);
+        return this._state.core.getMemberRegistryNames(this._state.nodes[this._id].node, setid, memberid);
     };
 
     GMENode.prototype.getMemberRegistry = function (setid, memberid, name) {
-        return this.state.core.getMemberRegistry(this.state.nodes[this._id].node, setid, memberid, name);
+        return this._state.core.getMemberRegistry(this._state.nodes[this._id].node, setid, memberid, name);
     };
 
     GMENode.prototype.getEditableMemberRegistry = function (setid, memberid, name) {
-        var attr = this.state.core.getMemberRegistry(this.state.nodes[this._id].node, setid, memberid, name);
+        var attr = this._state.core.getMemberRegistry(this._state.nodes[this._id].node, setid, memberid, name);
         if (attr !== null && attr !== undefined) {
             return JSON.parse(JSON.stringify(attr));
         }
@@ -186,58 +186,58 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     //META
     GMENode.prototype.getValidChildrenTypes = function () {
         //return getMemberIds('ValidChildren');
-        return this.meta.getValidChildrenTypes(this._id);
+        return this._meta.getValidChildrenTypes(this._id);
     };
 
     GMENode.prototype.getValidAttributeNames = function () {
-        return this.state.core.getValidAttributeNames(this.state.nodes[this._id].node);
+        return this._state.core.getValidAttributeNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getValidPointerNames = function () {
-        return this.state.core.getValidPointerNames(this.state.nodes[this._id].node);
+        return this._state.core.getValidPointerNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getValidSetNames = function () {
-        return this.state.core.getValidSetNames(this.state.nodes[this._id].node);
+        return this._state.core.getValidSetNames(this._state.nodes[this._id].node);
     };
 
     //constraint functions
     GMENode.prototype.getConstraintNames = function () {
-        return this.state.core.getConstraintNames(this.state.nodes[this._id].node);
+        return this._state.core.getConstraintNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getOwnConstraintNames = function () {
-        return this.state.core.getOwnConstraintNames(this.state.nodes[this._id].node);
+        return this._state.core.getOwnConstraintNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getConstraint = function (name) {
-        return this.state.core.getConstraint(this.state.nodes[this._id].node, name);
+        return this._state.core.getConstraint(this._state.nodes[this._id].node, name);
     };
 
     GMENode.prototype.toString = function () {
-        return this.state.core.getAttribute(this.state.nodes[this._id].node, 'name') + ' (' + this._id + ')';
+        return this._state.core.getAttribute(this._state.nodes[this._id].node, 'name') + ' (' + this._id + ')';
     };
 
     GMENode.prototype.getCollectionPaths = function (name) {
-        return this.state.core.getCollectionPaths(this.state.nodes[this._id].node, name);
+        return this._state.core.getCollectionPaths(this._state.nodes[this._id].node, name);
     };
 
     //adding functionality to get rid of GMEConcepts
     GMENode.prototype.isConnection = function () {
-        return this.state.core.isConnection(this.state.nodes[this._id].node);
+        return this._state.core.isConnection(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.isAbstract = function () {
-        return this.state.core.isAbstract(this.state.nodes[this._id].node);
+        return this._state.core.isAbstract(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getCrosscutsInfo = function () {
-        return this.state.core.getRegistry(this.state.nodes[this._id].node, REG_KEYS.CROSSCUTS) || [];
+        return this._state.core.getRegistry(this._state.nodes[this._id].node, REG_KEYS.CROSSCUTS) || [];
     };
 
     GMENode.prototype.getValidChildrenTypesDetailed = function (aspect, noFilter) {
         var parameters = {
-                node: this.state.nodes[this._id].node,
+                node: this._state.nodes[this._id].node,
                 children: [],
                 sensitive: !noFilter,
                 multiplicity: false,
@@ -250,22 +250,22 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
             i;
 
         for (i = 0; i < keys.length; i++) {
-            if (this.state.nodes[keys[i]]) {
-                parameters.children.push(this.state.nodes[keys[i]].node);
+            if (this._state.nodes[keys[i]]) {
+                parameters.children.push(this._state.nodes[keys[i]].node);
             }
         }
 
-        fullList = this.state.core.getValidChildrenMetaNodes(parameters);
+        fullList = this._state.core.getValidChildrenMetaNodes(parameters);
 
         parameters.multiplicity = true;
-        filteredList = this.state.core.getValidChildrenMetaNodes(parameters);
+        filteredList = this._state.core.getValidChildrenMetaNodes(parameters);
 
         for (i = 0; i < fullList.length; i += 1) {
-            validTypes[this.state.core.getPath(fullList[i])] = false;
+            validTypes[this._state.core.getPath(fullList[i])] = false;
         }
 
         for (i = 0; i < filteredList.length; i += 1) {
-            validTypes[this.state.core.getPath(filteredList[i])] = true;
+            validTypes[this._state.core.getPath(filteredList[i])] = true;
         }
 
         return validTypes;
@@ -273,7 +273,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
 
     GMENode.prototype.getValidSetMemberTypesDetailed = function (setName) {
         var parameters = {
-                node: this.state.nodes[this._id].node,
+                node: this._state.nodes[this._id].node,
                 children: [],
                 sensitive: true,
                 multiplicity: false,
@@ -286,39 +286,39 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
             i;
 
         for (i = 0; i < keys.length; i++) {
-            if (this.state.nodes[keys[i]]) {
-                parameters.children.push(this.state.nodes[keys[i]].node);
+            if (this._state.nodes[keys[i]]) {
+                parameters.children.push(this._state.nodes[keys[i]].node);
             }
         }
 
-        fullList = this.state.core.getValidSetElementsMetaNodes(parameters);
+        fullList = this._state.core.getValidSetElementsMetaNodes(parameters);
 
         parameters.multiplicity = true;
-        filteredList = this.state.core.getValidSetElementsMetaNodes(parameters);
+        filteredList = this._state.core.getValidSetElementsMetaNodes(parameters);
 
         for (i = 0; i < fullList.length; i += 1) {
-            validTypes[this.state.core.getPath(fullList[i])] = false;
+            validTypes[this._state.core.getPath(fullList[i])] = false;
         }
 
         for (i = 0; i < filteredList.length; i += 1) {
-            validTypes[this.state.core.getPath(filteredList[i])] = true;
+            validTypes[this._state.core.getPath(filteredList[i])] = true;
         }
 
         return validTypes;
     };
 
     GMENode.prototype.getMetaTypeId = function () {
-        var metaType = this.state.core.getMetaType(this.state.nodes[this._id].node);
+        var metaType = this._state.core.getMetaType(this._state.nodes[this._id].node);
 
         if (metaType) {
-            return this.storeNode(metaType);
+            return this._storeNode(metaType);
         } else {
             return null;
         }
     };
 
     GMENode.prototype.getValidAspectNames = function () {
-        return this.state.core.getValidAspectNames(this.state.nodes[this._id].node);
+        return this._state.core.getValidAspectNames(this._state.nodes[this._id].node);
     };
 
     //getNode
