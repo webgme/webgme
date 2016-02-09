@@ -77,6 +77,10 @@ define([
                 return this.get(CONSTANTS.STATE_ACTIVE_COMMIT);
             },
 
+            registerActiveTab: function (tab) {
+                this.set(CONSTANTS.STATE_ACTIVE_TAB, parseInt(tab, 10));
+            },
+
             getActiveTab: function () {
                 return this.get(CONSTANTS.STATE_ACTIVE_TAB);
             }
@@ -88,6 +92,7 @@ define([
                 logger = Logger.create('gme:Utils:StateManager', WebGMEGlobal.gmeConfig.client.log);
                 _WebGMEState = new WebGMEStateModel();
                 _WebGMEState.registerActiveAspect(CONSTANTS.ASPECT_ALL);
+                //_WebGMEState.registerActiveTab('0');
                 _WebGMEState.on('change', function (model, options) {
                     logger.debug('', model, options);
                 });

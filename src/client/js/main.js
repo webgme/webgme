@@ -131,7 +131,6 @@ require.config({
 
 require(
     [
-        'domReady',
         'jquery',
         'jquery-ui',
         'jquery-ui-iPad',
@@ -144,6 +143,8 @@ require(
         'js/util',
         'text!/gmeConfig.json',
         'js/logger',
+        'superagent',
+        'q',
 
         'angular',
         //'angular-route',
@@ -155,15 +156,19 @@ require(
         'css!bower_components/isis-ui-components/dist/isis-ui-components'
 
     ],
-    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
-              backbone, webGME, util, gmeConfigJson, Logger) {
+    function (jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore,
+              backbone, webGME, util, gmeConfigJson, Logger, superagent, Q) {
 
         'use strict';
-        var gmeConfig = JSON.parse(gmeConfigJson);
+        var gmeConfig = JSON.parse(gmeConfigJson),
+            log = Logger.create('gme:main', gmeConfig.client.log),
+            domDeferred = Q.defer();
+
         WebGMEGlobal.gmeConfig = gmeConfig;
-        domReady(function () {
-            var log,
-                d,
+
+        // domDeferred will be resolved (with gmeApp) when the dom is ready (i.e. $ function invoked).
+        $(function () {
+            var d,
                 keys,
                 i,
                 gmeApp;
@@ -172,9 +177,7 @@ require(
                 DEBUG = gmeConfig.debug;
             }
 
-            log = Logger.create('gme:main', gmeConfig.client.log);
             log.debug('domReady, got gmeConfig');
-
 
             //#2 check URL
             d = util.getURLParameterByName('debug').toLowerCase();
@@ -231,15 +234,121 @@ require(
                     });
                 });
 
-            webGME.start(function (client) {
-
-                gmeApp.value('gmeClient', client);
-//                gmeApp.value('gmeClient', null);
-
-                angular.bootstrap(document, ['gmeApp']);
-
-            });
-
+            domDeferred.resolve(gmeApp);
         });
+
+        function populateAvailableExtensionPoints(callback) {
+
+            function capitalizeFirstLetter(string) {
+                return string.charAt(0).toUpperCase() + string.slice(1);
+            }
+
+            function requestExtensionPoint(name) {
+                var deferred = Q.defer();
+                log.debug('requestExtensionPoint', name);
+                superagent.get('/api/' + name)
+                    .end(function (err, res) {
+                        var keyName = 'all' + capitalizeFirstLetter(name);
+
+                        if (res.status === 200) {
+                            WebGMEGlobal[keyName] = res.body;
+                            log.debug('/api/' + name, WebGMEGlobal[keyName]);
+                            deferred.resolve();
+                        } else {
+                            log.error('/api/' + name + 'failed');
+                            WebGMEGlobal[keyName] = [];
+                            deferred.reject(err);
+                        }
+                    });
+
+                return deferred.promise;
+            }
+
+            return Q.all([
+                requestExtensionPoint('visualizers'),
+                requestExtensionPoint('plugins'),
+                requestExtensionPoint('decorators'),
+                requestExtensionPoint('seeds'),
+                requestExtensionPoint('addOns')
+            ]).nodeify(callback);
+        }
+
+        function populateUserInfo(callback) {
+            var userInfo,
+                userDeferred = Q.defer();
+
+            function checkIfAdminInOrg(userId, orgId) {
+                var deferred = Q.defer();
+                superagent.get('/api/orgs/' + orgId)
+                    .end(function (err, res) {
+                        if (res.status === 200) {
+                            if (res.body.admins.indexOf(userId) > -1) {
+                                userInfo.adminOrgs.push(res.body);
+                            }
+                        } else {
+                            log.error('failed getting org info', err);
+                        }
+                        deferred.resolve();
+                    });
+
+                return deferred.promise;
+            }
+
+            superagent.get('/api/user')
+                .end(function (err, res) {
+                    if (res.status === 200) {
+                        userInfo = res.body || {_id: 'N/A', orgs: []};
+                        userInfo.adminOrgs = [];
+
+                        Q.allSettled(userInfo.orgs.map(function (orgId) {
+                            return checkIfAdminInOrg(userInfo._id, orgId);
+                        }))
+                            .then(function () {
+                                WebGMEGlobal.userInfo = userInfo;
+                                userDeferred.resolve(userInfo);
+                            })
+                            .catch(userDeferred.reject);
+                    } else {
+                        userDeferred.reject(err);
+                    }
+                });
+
+            return userDeferred.promise.nodeify(callback);
+        }
+
+        function getDefaultComponentSettings (callback) {
+            var deferred = Q.defer();
+            superagent.get('/api/componentSettings')
+                .end(function (err, res) {
+                    if (res.status === 200) {
+                        WebGMEGlobal.componentSettings = res.body;
+                    } else {
+                        log.warn('Could not obtain any default component settings (./config/components.json');
+                        WebGMEGlobal.componentSettings = {};
+                    }
+
+                    deferred.resolve();
+                });
+
+            return deferred.promise.nodeify(callback);
+        }
+
+        Q.all([
+            domDeferred.promise,
+            populateAvailableExtensionPoints(),
+            populateUserInfo(),
+            getDefaultComponentSettings()
+        ])
+            .then(function (result) {
+                var gmeApp = result[0];
+                webGME.start(function (client) {
+                    gmeApp.value('gmeClient', client);
+                    angular.bootstrap(document, ['gmeApp']);
+                });
+            })
+            .catch(function (err) {
+                log.error('Error at start up', err);
+                throw err;
+            });
     }
 );

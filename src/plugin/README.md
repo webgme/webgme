@@ -12,7 +12,7 @@
 * Plugins can have a configuration.
 * Plugin configuration can specify default values.
 * Plugin configuration can be serialized and deserialized.
-* Plugin configuration can be changed before execution by the user.
+* Plugin configuration can be changed before execution by the user, see further [Component Settings](https://github.com/webgme/webgme/wiki/Component-Settings#plugins).
 * Common UI for the plugin configuration.
 * Plugins can generate messages that are linked to objects.
 * Plugin messages can be serialized and deserialized.

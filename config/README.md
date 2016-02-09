@@ -29,6 +29,10 @@ ubuntu
 
 `NODE_ENV=mine npm start`
 
+### components.json
+To configure the default behaviour of individual components (e.g. plugins) that also support user settings, see [Component Settings](https://github.com/webgme/webgme/wiki/Component-Settings).
+
+
 ### Configuration groups
 
 ##### addOn

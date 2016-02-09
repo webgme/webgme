@@ -451,7 +451,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed!');
             })
             .catch(function (err) {
-                expect(err.message).to.include('supplied data is not an object [aString]');
+                expect(err.message).to.include('supplied value is not an object [aString]');
             })
             .nodeify(done);
     });
@@ -468,7 +468,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed!');
             })
             .catch(function (err) {
-                expect(err.message).to.include('supplied data is not an object [null]');
+                expect(err.message).to.include('supplied value is not an object [null]');
             })
             .nodeify(done);
     });
@@ -484,7 +484,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed!');
             })
             .catch(function (err) {
-                expect(err.message).to.include('supplied data is not an object [undefined]');
+                expect(err.message).to.include('supplied value is not an object [undefined]');
             })
             .nodeify(done);
     });
@@ -500,7 +500,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed!');
             })
             .catch(function (err) {
-                expect(err.message).to.include('supplied data is not an object [1,2]');
+                expect(err.message).to.include('supplied value is not an object [1,2]');
             })
             .nodeify(done);
     });
@@ -512,6 +512,137 @@ describe('GME authentication', function () {
             })
             .catch(function (err) {
                 expect(err.message).to.include('no such user [does_not_exist]');
+            })
+            .nodeify(done);
+    });
+
+    it('should add a user without settings', function (done) {
+        var userId = 'user_w_settings1';
+
+        auth.addUser(userId, 'e@mail', 'pass', true, {overwrite: true})
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (userData) {
+                expect(userData.settings).to.deep.equal({});
+            })
+            .nodeify(done);
+    });
+
+    it('should add a user with settings', function (done) {
+        var userId = 'user_w_settings2',
+            initSettings = {a: {b: 1}};
+
+        auth.addUser(userId, 'e@mail', 'pass', true, {overwrite: true, settings: initSettings})
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (userData) {
+                expect(userData.settings).to.deep.equal(initSettings);
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to a add a user with non-object settings', function (done) {
+        var userId = 'user_w_settings3',
+            initSettings = 'aString';
+
+        auth.addUser(userId, 'e@mail', 'pass', true, {overwrite: true, settings: initSettings})
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('supplied userData.settings is not an object [aString]');
+            })
+            .nodeify(done);
+    });
+
+    it('should overwrite settings when updateUser', function (done) {
+        var userId = 'user_w_settings4',
+            initSettings = {a: {b: 1}},
+            newSettings = {b: {a: 2}};
+
+        auth.addUser(userId, 'e@mail', 'pass', true, {overwrite: true, settings: initSettings})
+            .then(function () {
+                return auth.updateUser(userId, {settings: newSettings});
+            })
+            .then(function (userData) {
+                expect(userData.settings).to.deep.equal(newSettings);
+            })
+            .nodeify(done);
+    });
+
+    it('should merge settings when updateUserSettings', function (done) {
+        var userId = 'user_w_settings5',
+            initSettings = {a: {b: 1}},
+            newSettings = {b: {a: 2}};
+
+        auth.addUser(userId, 'e@mail', 'pass', true, {overwrite: true, settings: initSettings})
+            .then(function () {
+                return auth.updateUserSettings(userId, newSettings);
+            })
+            .then(function (settings) {
+                expect(settings).to.deep.equal({a: {b: 1}, b: {a: 2}});
+            })
+            .nodeify(done);
+    });
+
+    it('should overwrite settings when updateUserSettings overwrite=true', function (done) {
+        var userId = 'user_w_settings6',
+            initSettings = {a: {b: 1}},
+            newSettings = {b: {a: 2}};
+
+        auth.addUser(userId, 'e@mail', 'pass', true, {overwrite: true, settings: initSettings})
+            .then(function () {
+                return auth.updateUserSettings(userId, newSettings, true);
+            })
+            .then(function (settings) {
+                expect(settings).to.deep.equal(newSettings);
+            })
+            .nodeify(done);
+    });
+
+    it('should merge settings when updateUserComponentSettings', function (done) {
+        var userId = 'user_w_settings7',
+            initSettings = {a: {b: 1, c: 2}},
+            newSettings = {b: 2};
+
+        auth.addUser(userId, 'e@mail', 'pass', true, {overwrite: true, settings: initSettings})
+            .then(function () {
+                return auth.updateUserComponentSettings(userId, 'a', newSettings);
+            })
+            .then(function (componentSettings) {
+                expect(componentSettings).to.deep.equal({b: 2, c: 2});
+            })
+            .nodeify(done);
+    });
+
+    it('should overwrite settings when updateUserComponentSettings overwrite=true', function (done) {
+        var userId = 'user_w_settings7',
+            initSettings = {a: {b: 1}},
+            newSettings = {c: 2};
+
+        auth.addUser(userId, 'e@mail', 'pass', true, {overwrite: true, settings: initSettings})
+            .then(function () {
+                return auth.updateUserComponentSettings(userId, 'a', newSettings, true);
+            })
+            .then(function (componentSettings) {
+                expect(componentSettings).to.deep.equal({c: 2});
+            })
+            .nodeify(done);
+    });
+
+    it('should add settings when updateUserComponentSettings', function (done) {
+        var userId = 'user_w_settings8',
+            initSettings = {},
+            newSettings = {c: 2};
+
+        auth.addUser(userId, 'e@mail', 'pass', true, {overwrite: true, settings: initSettings})
+            .then(function () {
+                return auth.updateUserComponentSettings(userId, 'a', newSettings);
+            })
+            .then(function (componentSettings) {
+                expect(componentSettings).to.deep.equal({c: 2});
             })
             .nodeify(done);
     });

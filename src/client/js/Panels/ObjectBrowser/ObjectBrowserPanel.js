@@ -12,13 +12,15 @@ define(['js/PanelBase/PanelBaseWithHeader',
     './InheritanceBrowserControl',
     './CrosscutBrowserControl',
     'js/Widgets/TreeBrowser/TreeBrowserWidget',
+    'js/Utils/ComponentSettings',
     'css!./styles/ObjectBrowserPanel.css'
 ], function (PanelBaseWithHeader,
              CONSTANTS,
              TreeBrowserControl,
              InheritanceBrowserControl,
              CrosscutBrowserControl,
-             TreeBrowserWidget) {
+             TreeBrowserWidget,
+             ComponentSettings) {
     'use strict';
 
 
@@ -54,6 +56,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             inheritanceTreeBrowserControl,
             crosscutTreeBrowserWidget,
             crosscutTreeBrowserControl,
+            compositionSettings,
             compositionEl;
 
         this.$el.addClass(OBJECT_BROWSER_CLASS);
@@ -72,13 +75,14 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
         //set Widget title
         this.setTitle('Object Browser');
+        compositionSettings = TreeBrowserControl.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(compositionSettings, TreeBrowserControl.getComponentId());
 
-        // TODO: where to grab these settings?
         compositionTreeBrowserWidget = new TreeBrowserWidget(this.$el.find('div#composition').first(), {
             enableEdit: true,
-            hideConnections: false,
-            hideAbstracts: false,
-            hideLeaves: false,
+            hideConnections: compositionSettings.filters.toggled.hideConnections,
+            hideAbstracts: compositionSettings.filters.toggled.hideAbstracts,
+            hideLeaves: compositionSettings.filters.toggled.hideLeaves,
             titleFilter: {
                 text: '',
                 type: 'caseInsensitive' //caseSensitive, regex
@@ -88,7 +92,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
                 type: 'caseInsensitive' //caseSensitive, regex
             },
         });
-        compositionTreeBrowserControl = new TreeBrowserControl(this._client, compositionTreeBrowserWidget);
+        compositionTreeBrowserControl = new TreeBrowserControl(this._client, compositionTreeBrowserWidget,
+            compositionSettings);
 
         inheritanceTreeBrowserWidget = new TreeBrowserWidget(this.$el.find('div#inheritance').first(), {
             titleFilter: {

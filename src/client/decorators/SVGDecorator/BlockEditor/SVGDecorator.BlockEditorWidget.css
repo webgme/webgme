@@ -252,6 +252,12 @@ div.diagram-designer-drag-outline {
             text-overflow: ellipsis; }
             .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li > a .tab-title input {
               min-width: 50px !important; }
+          .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li > a i.delete-tab-btn {
+            cursor: pointer;
+            font-size: 100%;
+            margin-left: 5px; }
+            .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li > a i.delete-tab-btn:hover {
+              color: #b30404; }
           .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li > a [class^="icon-"],
           .diagram-designer-tabs-container div.tab-list-container ul.nav.nav-tabs > li > a [class*=" icon-"] {
             margin-top: -2px;

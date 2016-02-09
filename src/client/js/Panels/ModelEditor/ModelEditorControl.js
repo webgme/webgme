@@ -35,14 +35,15 @@ define(['js/logger',
         SRC_POINTER_NAME = CONSTANTS.POINTER_SOURCE,
         DST_POINTER_NAME = CONSTANTS.POINTER_TARGET;
 
-    ModelEditorControl = function (options) {
+    ModelEditorControl = function (options, config) {
         this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:ModelEditor:' +
                                                                             'ModelEditorControl',
             WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
-
+        this._config = config;
         this._firstLoad = false;
+        this._topNode = CONSTANTS.PROJECT_ROOT_ID;
 
         //initialize core collections and variables
         this.designerCanvas = options.widget;
@@ -75,6 +76,7 @@ define(['js/logger',
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDiagramDesignerWidgetEventHandlers();
 
+        this._updateTopNode();
         this.logger.debug('ModelEditorControl ctor finished');
     };
 
@@ -984,20 +986,45 @@ define(['js/logger',
         }
     };
 
+    ModelEditorControl.prototype._activeProjectChanged = function (/*model, activeProjectId*/) {
+        this._updateTopNode();
+    };
+
+    ModelEditorControl.prototype._updateTopNode = function () {
+        var projectId = this._client.getActiveProjectId(),
+            projectName;
+
+        if (projectId) {
+            projectName = this._client.getActiveProjectName();
+            if (this._config.byProjectId.topNode.hasOwnProperty(projectId)) {
+                this._topNode = this._config.byProjectId.topNode[projectId];
+            } else if (this._config.byProjectName.topNode.hasOwnProperty(projectName)) {
+                this._topNode = this._config.byProjectName.topNode[projectName];
+            } else {
+                this._topNode = this._config.topNode;
+            }
+        }
+    };
+
     ModelEditorControl.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged, this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_PROJECT_NAME, this._activeProjectChanged, this);
     };
 
     ModelEditorControl.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_PROJECT_NAME, this._activeProjectChanged, this);
     };
 
     ModelEditorControl.prototype.onActivate = function () {
         this._attachClientEventListeners();
         this._displayToolbarItems();
+        if (this._selectedAspect) {
+            WebGMEGlobal.State.registerActiveAspect(this._selectedAspect);
+        }
 
         if (this.currentNodeInfo && typeof this.currentNodeInfo.id === 'string') {
             WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.id);
@@ -1077,8 +1104,7 @@ define(['js/logger',
     };
 
     ModelEditorControl.prototype._refreshBtnModelHierarchyUp = function () {
-        if (this.currentNodeInfo.parentId ||
-            this.currentNodeInfo.parentId === CONSTANTS.PROJECT_ROOT_ID) {
+        if (this.currentNodeInfo.id && this.currentNodeInfo.id !== this._topNode) {
             this.$btnModelHierarchyUp.show();
         } else {
             this.$btnModelHierarchyUp.hide();
@@ -1107,6 +1133,10 @@ define(['js/logger',
 
         this._aspects = {};
         this.designerCanvas.clearTabs();
+
+        if (WebGMEGlobal.PanelManager._activePanel.control === this) {
+            this._selectedAspect = WebGMEGlobal.State.getActiveAspect();
+        }
 
         if (objId || objId === CONSTANTS.PROJECT_ROOT_ID) {
             aspects = this._client.getMetaAspectNames(objId) || [];
@@ -1144,7 +1174,7 @@ define(['js/logger',
             }
         }
 
-        this.designerCanvas.selectTab(selectedTabID);
+        this.designerCanvas.selectTab(selectedTabID.toString());
 
         //check if the node's aspect rules has changed or not, and if so, initialize with that
         if (this._selectedAspect !== CONSTANTS.ASPECT_ALL) {
@@ -1173,7 +1203,7 @@ define(['js/logger',
 
     ModelEditorControl.prototype._initializeSelectedAspect = function (tabID) {
         WebGMEGlobal.State.registerActiveAspect(this._selectedAspect);
-        WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_TAB, tabID);
+        WebGMEGlobal.State.registerActiveTab(tabID);
 
         this.selectedObjectChanged(this.currentNodeInfo.id);
     };
@@ -1182,6 +1212,23 @@ define(['js/logger',
         return {};
     };
 
+    ModelEditorControl.getDefaultConfig = function () {
+        return {
+            topNode: '',
+            byProjectName: {
+                topNode: {
+                }
+            },
+            byProjectId: {
+                topNode: {
+                }
+            }
+        };
+    };
+
+    ModelEditorControl.getComponentId = function () {
+        return 'GenericUIModelEditorControl';
+    };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
     _.extend(ModelEditorControl.prototype, ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype);

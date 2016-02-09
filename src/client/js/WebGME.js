@@ -99,6 +99,7 @@ define([
             layoutManager.loadLayout(initialThingsToDo.layoutToLoad, function () {
                 var panels = [],
                     layoutPanels = layoutManager._currentLayout.panels,
+                    decorators,
                     len = layoutPanels ? layoutPanels.length : 0,
                     i;
 
@@ -147,42 +148,30 @@ define([
                     WebGMEGlobal.State.clear();
                 });
 
-
                 client.decoratorManager = new DecoratorManager();
-                populateAvailableExtensionPoints(function (err) {
-                    var decorators = gmeConfig.visualization.decoratorsToPreload || WebGMEGlobal.allDecorators || [];
+                decorators = gmeConfig.visualization.decoratorsToPreload || WebGMEGlobal.allDecorators || [];
+
+                client.decoratorManager.downloadAll(decorators, function (err) {
                     if (err) {
-                        logger.error('Failed loading extension points', err);
+                        logger.error(err);
+                    }
+                    for (i = 0; i < len; i += 1) {
+                        panels.push({
+                            panel: layoutPanels[i].panel,
+                            container: layoutPanels[i].container,
+                            control: layoutPanels[i].control,
+                            params: {client: client}
+                        });
                     }
 
-                    populateUserInfo(function (err) {
-                        if (err) {
-                            logger.error('Failed to set WebGMEGlobal.userInfo', err);
-                        }
+                    //load the panels
+                    loadPanels(panels);
 
-                        client.decoratorManager.downloadAll(decorators, function (err) {
-                            if (err) {
-                                logger.error(err);
-                            }
-                            for (i = 0; i < len; i += 1) {
-                                panels.push({
-                                    panel: layoutPanels[i].panel,
-                                    container: layoutPanels[i].container,
-                                    control: layoutPanels[i].control,
-                                    params: {client: client}
-                                });
-                            }
-
-                            //load the panels
-                            loadPanels(panels);
-
-                            //as of now it's a global variable just to make access to it easier
-                            //TODO: might need to be changed
-                            WebGMEGlobal.KeyboardManager = KeyboardManager;
-                            WebGMEGlobal.KeyboardManager.setEnabled(true);
-                            WebGMEGlobal.PanelManager = new PanelManager(client);
-                        });
-                    });
+                    //as of now it's a global variable just to make access to it easier
+                    //TODO: might need to be changed
+                    WebGMEGlobal.KeyboardManager = KeyboardManager;
+                    WebGMEGlobal.KeyboardManager.setEnabled(true);
+                    WebGMEGlobal.PanelManager = new PanelManager(client);
                 });
             });
 
@@ -218,7 +207,7 @@ define([
                 Q.nfcall(client.selectProject, initialThingsToDo.projectToLoad, undefined)
                     .then(function () {
                         if (!initialThingsToDo.branchToLoad) {
-                            return Q({});
+                            return {};
                         }
 
                         return Q.nfcall(client.getBranches, initialThingsToDo.projectToLoad);
@@ -234,7 +223,8 @@ define([
                         }
                     })
                     .then(function () {
-                        selectObject();
+                        selectObject(initialThingsToDo.objectToLoad, initialThingsToDo.activeSelectionToLoad,
+                        initialThingsToDo.visualizerToLoad, initialThingsToDo.tabToSelect);
                     })
                     .catch(function (err) {
                         logger.error('error during startup', err);
@@ -264,25 +254,22 @@ define([
                 }
             }
 
-            function selectObject() {
+            function selectObject(nodeId, selectionIds, vizualizer, tab) {
                 var user = {},
                     userPattern = {},
                     activeNodeUI,
-                    nodePath = initialThingsToDo.objectToLoad === 'root' ?
-                        CONSTANTS.PROJECT_ROOT_ID : initialThingsToDo.objectToLoad;
+                    nodePath = nodeId === 'root' ? CONSTANTS.PROJECT_ROOT_ID : nodeId;
 
                 userPattern[nodePath] = {children: 0};
-                logger.debug('selectObject', initialThingsToDo.objectToLoad);
-                logger.debug('activeSelectionToLoad', initialThingsToDo.activeSelectionToLoad);
-                if (initialThingsToDo.activeSelectionToLoad && initialThingsToDo.activeSelectionToLoad.length > 0) {
+                logger.debug('selectObject', nodeId);
+                logger.debug('activeSelectionToLoad', selectionIds);
+                if (selectionIds && selectionIds.length > 0) {
                     userPattern[nodePath] = {children: 1};
                 } else {
                     userPattern[nodePath] = {children: 0};
                 }
 
                 //we try to set the visualizer first so we will not change it later with the other settings
-                WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_VISUALIZER, initialThingsToDo.visualizerToLoad);
-
                 //TODO when there will be a new global state element, it has to be added here
                 function eventHandler(events) {
                     var i,
@@ -303,29 +290,43 @@ define([
                         if (events[i].eid === nodePath) {
                             activeNode = client.getNode(nodePath);
                             if (activeNode) {
-                                updatedState[CONSTANTS.STATE_ACTIVE_OBJECT] = nodePath;
+                                // First register the activeObject and let it pick the visualizer.
+                                WebGMEGlobal.State.registerActiveObject(nodePath);
 
-                                initialThingsToDo.activeSelectionToLoad = initialThingsToDo.activeSelectionToLoad || [];
+                                // In the next tick we set the other preferences.
+                                setTimeout(function () {
+                                    //WebGMEGlobal.State.registerActiveVisualizer(vizualizer);
+                                    updatedState[CONSTANTS.STATE_ACTIVE_VISUALIZER] = vizualizer;
+                                    //updatedState[CONSTANTS.STATE_ACTIVE_OBJECT] = nodePath;
 
-                                if (initialThingsToDo.activeSelectionToLoad.length > 0) {
-                                    updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] =
-                                        initialThingsToDo.activeSelectionToLoad;
-                                }
+                                    selectionIds = selectionIds || [];
 
-                                if (initialThingsToDo.tabToSelect !== null &&
-                                    initialThingsToDo.tabToSelect !== undefined) {
-                                    updatedState[CONSTANTS.STATE_ACTIVE_TAB] = initialThingsToDo.tabToSelect;
+                                    if (selectionIds.length > 0) {
+                                        updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] = selectionIds;
+                                    }
 
-                                    //we also have to set the selected aspect according to the selectedTabIndex
-                                    //TODO this is not the best solution,
-                                    // but as the node always orders the aspects based on their names, it is fine
-                                    aspectNames = client.getMetaAspectNames(nodePath);
-                                    aspectNames.unshift('All');
-                                    updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] =
-                                        aspectNames[initialThingsToDo.tabToSelect] || 'All';
-                                }
+                                    tab = parseInt(tab, 10);
+                                    if (tab >= 0 && vizualizer) {
+                                        updatedState[CONSTANTS.STATE_ACTIVE_TAB] = tab;
 
-                                WebGMEGlobal.State.set(updatedState);
+                                        //we also have to set the selected aspect according to the selectedTabIndex
+                                        //TODO this is not the best solution,
+                                        // but as the node always orders the aspects based on their names, it is fine
+                                        if (vizualizer === 'ModelEditor') {
+                                            aspectNames = client.getMetaAspectNames(nodePath);
+                                            aspectNames.sort(function (a, b) {
+                                                var an = a.toLowerCase(),
+                                                    bn = b.toLowerCase();
+
+                                                return (an < bn) ? -1 : 1;
+                                            });
+                                            aspectNames.unshift('All');
+                                            updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] = aspectNames[tab] || 'All';
+                                        }
+                                    }
+
+                                    WebGMEGlobal.State.set(updatedState);
+                                });
                                 break;
                             }
                         }
@@ -393,86 +394,12 @@ define([
                         }
                     })
                     .then(function () {
-                        selectObject();
+                        selectObject(initialThingsToDo.objectToLoad, initialThingsToDo.activeSelectionToLoad,
+                            initialThingsToDo.visualizerToLoad, initialThingsToDo.tabToSelect);
                     })
                     .catch(function (err) {
                         logger.error('error during startup', err);
                         openProjectLoadDialog(false);
-                    });
-            }
-
-            function populateAvailableExtensionPoints(callback) {
-
-                function capitalizeFirstLetter(string) {
-                    return string.charAt(0).toUpperCase() + string.slice(1);
-                }
-
-                function requestExtensionPoint(name) {
-                    var deferred = Q.defer();
-                    logger.debug('requestExtensionPoint', name);
-                    superagent.get('/api/' + name)
-                        .end(function (err, res) {
-                            var keyName = 'all' + capitalizeFirstLetter(name);
-
-                            if (res.status === 200) {
-                                WebGMEGlobal[keyName] = res.body;
-                                logger.debug('/api/' + name, WebGMEGlobal[keyName]);
-                                deferred.resolve();
-                            } else {
-                                logger.error('/api/' + name + 'failed');
-                                WebGMEGlobal[keyName] = [];
-                                deferred.reject(err);
-                            }
-                        });
-
-                    return deferred.promise;
-                }
-
-                return Q.all([
-                    requestExtensionPoint('visualizers'),
-                    requestExtensionPoint('plugins'),
-                    requestExtensionPoint('decorators'),
-                    requestExtensionPoint('seeds'),
-                    requestExtensionPoint('addOns')
-                ]).nodeify(callback);
-            }
-
-            function populateUserInfo(callback) {
-                var userInfo;
-
-                function checkIfAdminInOrg(userId, orgId) {
-                    var deferred = Q.defer();
-                    superagent.get('/api/orgs/' + orgId)
-                        .end(function (err, res) {
-                            if (res.status === 200) {
-                                if (res.body.admins.indexOf(userId) > -1) {
-                                    userInfo.adminOrgs.push(res.body);
-                                }
-                            } else {
-                                logger.error('failed getting org info', err);
-                            }
-                            deferred.resolve();
-                        });
-
-                    return deferred.promise;
-                }
-
-                superagent.get('/api/user')
-                    .end(function (err, res) {
-                        if (res.status === 200) {
-                            userInfo = res.body || {_id: 'N/A', orgs: []};
-                            userInfo.adminOrgs = [];
-
-                            Q.allSettled(userInfo.orgs.map(function (orgId) {
-                                return checkIfAdminInOrg(userInfo._id, orgId);
-                            }))
-                                .then(function () {
-                                    WebGMEGlobal.userInfo = userInfo;
-                                })
-                                .nodeify(callback);
-                        } else {
-                            callback(err);
-                        }
                     });
             }
         }
@@ -481,5 +408,4 @@ define([
             start: webGMEStart
         };
     }
-)
-;
+);

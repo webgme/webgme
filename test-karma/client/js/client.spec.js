@@ -1783,7 +1783,7 @@ describe('GME client', function () {
 
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
-                        expect(node).to.include.keys('getId', 'getBaseId', 'getParentId');
+                        expect(node.__proto__).to.include.keys('getId', 'getBaseId', 'getParentId');
 
                         client.removeUI(guid);
                         done();
@@ -2109,8 +2109,8 @@ describe('GME client', function () {
                     client.selectProject(projectId, null, function (err) {
                         expect(err).to.equal(null);
                         baseCommitHash = client.getActiveCommitHash();
-                        console.log('ProjectName, branchName, commitHash',
-                            client.getActiveProjectId(), client.getActiveBranchName(), client.getActiveCommitHash());
+                        //console.log('ProjectName, branchName, commitHash',
+                        //    client.getActiveProjectId(), client.getActiveBranchName(), client.getActiveCommitHash());
                         done();
                     });
                 });

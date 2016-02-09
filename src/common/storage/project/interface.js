@@ -9,7 +9,8 @@
 define([
     'common/storage/project/cache',
     'common/storage/constants',
-], function (ProjectCache, CONSTANTS) {
+    'common/storage/util'
+], function (ProjectCache, CONSTANTS, UTIL) {
     'use strict';
 
     /**
@@ -31,6 +32,7 @@ define([
          * @type {string}
          */
         this.projectId = projectId;
+        this.projectName = UTIL.getProjectNameFromProjectId(projectId);
 
         this.CONSTANTS = CONSTANTS;
 

@@ -54,6 +54,42 @@ describe('REST API', function () {
                         gmeAuth.addUser('user_w_data6', 'e@mail.com', 'plaintext', false, {overwrite: true, data: {a: 1}}),
                         gmeAuth.addUser('user_w_data7', 'e@mail.com', 'plaintext', false, {overwrite: true, data: {a: 1}}),
                         gmeAuth.addUser('user_w_data8', 'e@mail.com', 'plaintext', false, {overwrite: true, data: {a: 1}}),
+                        gmeAuth.addUser('user_w_settings1', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('user_w_settings2', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('user_w_settings3', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('user_w_settings4', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('user_w_c_settings1', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('user_w_c_settings2', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('user_w_c_settings3', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('user_w_c_settings4', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('user_w_c_settings5', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('users_w_settings1', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('users_w_settings2', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('users_w_settings3', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('users_w_settings4', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('users_w_c_settings1', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('users_w_c_settings2', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('users_w_c_settings3', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('users_w_c_settings4', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}}),
+                        gmeAuth.addUser('users_w_c_settings5', 'e@mail.com', 'plaintext', false, {overwrite: true,
+                            settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}})
                     ]);
                 })
                 .then(function () {
@@ -868,16 +904,6 @@ describe('REST API', function () {
                     });
             });
 
-            it('should get empty user data basic authentication GET /api/v1/user/data', function (done) {
-                agent.get(server.getUrl() + '/api/v1/user/data')
-                    .set('Authorization', 'Basic ' + new Buffer('user_w_data:plaintext').toString('base64'))
-                    .end(function (err, res) {
-                        expect(res.status).equal(200, err);
-                        expect(res.body).to.deep.equal({});
-                        done();
-                    });
-            });
-
             it('should get user data basic authentication GET /api/v1/user/data', function (done) {
                 agent.get(server.getUrl() + '/api/v1/user/data')
                     .set('Authorization', 'Basic ' + new Buffer('user_w_data1:plaintext').toString('base64'))
@@ -985,6 +1011,334 @@ describe('REST API', function () {
                     });
             });
 
+            // Component Settings
+            it('should get empty user settings basic authentication GET /api/v1/componentSettings', function (done) {
+                agent.get(server.getUrl() + '/api/v1/componentSettings')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({});
+                        done();
+                    });
+            });
+
+            it('should get empty user settings basic authentication GET /api/v1/componentSettings/componentId', function (done) {
+                agent.get(server.getUrl() + '/api/v1/componentSettings/componentId')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({});
+                        done();
+                    });
+            });
+
+            // User setting methods /user/settings
+            it('should get empty user settings basic authentication GET /api/v1/user/settings', function (done) {
+                agent.get(server.getUrl() + '/api/v1/user/settings')
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_data:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({});
+                        done();
+                    });
+            });
+
+            it('should get user settings basic authentication GET /api/v1/user/settings', function (done) {
+                agent.get(server.getUrl() + '/api/v1/user/settings')
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_settings1:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}});
+                        done();
+                    });
+            });
+
+            it('should overwrite user settings basic authentication PUT /api/v1/user/settings', function (done) {
+                agent.put(server.getUrl() + '/api/v1/user/settings')
+                    .send({comp3: {a: 1, b: 1}})
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_settings2:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({comp3: {a: 1, b: 1}});
+                        gmeAuth.getUser('user_w_settings2')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({comp3: {a: 1, b: 1}});
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            it('should update user settings basic authentication PATCH /api/v1/user/settings', function (done) {
+                agent.patch(server.getUrl() + '/api/v1/user/settings')
+                    .send({comp2: {a: 1, b: 1}})
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_settings3:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({comp1: {a: 1, b: 1}, comp2: {a: 1, b: 1}});
+                        gmeAuth.getUser('user_w_settings3')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({comp1: {a: 1, b: 1}, comp2: {a: 1, b: 1}});
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            it('should delete user settings basic authentication DELETE /api/v1/user/settings', function (done) {
+                agent.del(server.getUrl() + '/api/v1/user/settings')
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_settings4:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(204, err);
+                        gmeAuth.getUser('user_w_settings4')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({});
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            // User setting methods /user/settings/:componentId
+            it('should get empty user settings basic authentication GET /api/v1/user/settings/comp', function (done) {
+                agent.get(server.getUrl() + '/api/v1/user/settings/comp')
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_data:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({});
+                        done();
+                    });
+            });
+
+            it('should get user settings basic authentication GET /api/v1/user/settings/comp1', function (done) {
+                agent.get(server.getUrl() + '/api/v1/user/settings/comp1')
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_c_settings1:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({a: 1, b: 1});
+                        done();
+                    });
+            });
+
+            it('should add user settings basic authentication PUT /api/v1/user/settings/comp3', function (done) {
+                agent.put(server.getUrl() + '/api/v1/user/settings/comp3')
+                    .send({a: 3, b: 3})
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_c_settings2:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({a: 3, b: 3});
+                        gmeAuth.getUser('user_w_c_settings2')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({
+                                    comp1: {a: 1, b: 1},
+                                    comp2: {a: 2, b: 2},
+                                    comp3: {a: 3, b: 3}
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            it('should overwrite user settings basic authentication PUT /api/v1/user/settings/comp2', function (done) {
+                agent.put(server.getUrl() + '/api/v1/user/settings/comp2')
+                    .send({a: 3})
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_c_settings3:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({a: 3});
+                        gmeAuth.getUser('user_w_c_settings3')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({
+                                    comp1: {a: 1, b: 1},
+                                    comp2: {a: 3}
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            it('should update user settings basic authentication PATCH /api/v1/user/settings/comp2', function (done) {
+                agent.patch(server.getUrl() + '/api/v1/user/settings/comp2')
+                    .send({b: 1})
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_c_settings4:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({a: 2, b: 1});
+                        gmeAuth.getUser('user_w_c_settings4')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({
+                                    comp1: {a: 1, b: 1},
+                                    comp2: {a: 2, b: 1}
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            it('should delete user settings basic authentication DELETE /api/v1/user/settings/comp2', function (done) {
+                agent.del(server.getUrl() + '/api/v1/user/settings/comp2')
+                    .set('Authorization', 'Basic ' + new Buffer('user_w_c_settings5:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(204, err);
+                        gmeAuth.getUser('user_w_c_settings5')
+                            .then(function (userData) {
+                                expect(userData.settings.comp2).to.deep.equal({});
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            // User settings methods /users/:username/settings
+            it('should get empty user settings basic authentication GET /api/v1/user/:username/settings', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/user_w_data/settings')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({});
+                        done();
+                    });
+            });
+
+            it('should get user settings basic authentication GET /api/v1/users/:username/settings', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/users_w_settings1/settings')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}});
+                        done();
+                    });
+            });
+
+            it('should overwrite user settings basic authentication PUT /api/v1/users/:username/settings', function (done) {
+                agent.put(server.getUrl() + '/api/v1/users/users_w_settings2/settings')
+                    .send({comp3: {a: 1, b: 1}})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({comp3: {a: 1, b: 1}});
+                        gmeAuth.getUser('users_w_settings2')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({comp3: {a: 1, b: 1}});
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            it('should update user settings basic authentication PATCH /api/v1/users/:username/settings', function (done) {
+                agent.patch(server.getUrl() + '/api/v1/users/users_w_settings3/settings')
+                    .send({comp2: {a: 1, b: 1}})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({comp1: {a: 1, b: 1}, comp2: {a: 1, b: 1}});
+                        gmeAuth.getUser('users_w_settings3')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({comp1: {a: 1, b: 1}, comp2: {a: 1, b: 1}});
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            it('should delete user settings basic authentication DELETE /api/v1/users/:username/settings', function (done) {
+                agent.del(server.getUrl() + '/api/v1/users/users_w_settings4/settings')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(204, err);
+                        gmeAuth.getUser('users_w_settings4')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({});
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            // User setting methods /users/:userId/settings/:componentId
+            it('should get empty user settings basic authentication GET /api/v1/users/:username/settings/comp', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/user_w_data/settings/comp')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({});
+                        done();
+                    });
+            });
+
+            it('should get user settings basic authentication GET /api/v1/users/:username/settings/comp1', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/users_w_c_settings1/settings/comp1')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({a: 1, b: 1});
+                        done();
+                    });
+            });
+
+            it('should add user settings basic authentication PUT /api/v1/users/:username/settings/comp3', function (done) {
+                agent.put(server.getUrl() + '/api/v1/users/users_w_c_settings2/settings/comp3')
+                    .send({a: 3, b: 3})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({a: 3, b: 3});
+                        gmeAuth.getUser('users_w_c_settings2')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({
+                                    comp1: {a: 1, b: 1},
+                                    comp2: {a: 2, b: 2},
+                                    comp3: {a: 3, b: 3}
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            it('should overwrite user settings basic authentication PUT /api/v1/users/:username/settings/comp2', function (done) {
+                agent.put(server.getUrl() + '/api/v1/users/users_w_c_settings3/settings/comp2')
+                    .send({a: 3})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({a: 3});
+                        gmeAuth.getUser('users_w_c_settings3')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({
+                                    comp1: {a: 1, b: 1},
+                                    comp2: {a: 3}
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            it('should update user settings basic authentication PATCH /api/v1/users/:username/settings/comp2', function (done) {
+                agent.patch(server.getUrl() + '/api/v1/users/users_w_c_settings4/settings/comp2')
+                    .send({b: 1})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.deep.equal({a: 2, b: 1});
+                        gmeAuth.getUser('users_w_c_settings4')
+                            .then(function (userData) {
+                                expect(userData.settings).to.deep.equal({
+                                    comp1: {a: 1, b: 1},
+                                    comp2: {a: 2, b: 1}
+                                });
+                            })
+                            .nodeify(done);
+                    });
+            });
+
+            it('should delete user settings basic authentication DELETE /api/v1/users/:username/settings/comp2', function (done) {
+                agent.del(server.getUrl() + '/api/v1/users/users_w_c_settings5/settings/comp2')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(204, err);
+                        gmeAuth.getUser('users_w_c_settings5')
+                            .then(function (userData) {
+                                expect(userData.settings.comp2).to.deep.equal({});
+                            })
+                            .nodeify(done);
+                    });
+            });
+            // Fail cases
+
             it('should 404 basic authentication "admin" GET /api/v1/users/doesNotExist/data', function (done) {
                 agent.get(server.getUrl() + '/api/v1/users/doesNotExist/data')
                     .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
@@ -1029,6 +1383,82 @@ describe('REST API', function () {
                     .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(403, err);
+                        done();
+                    });
+            });
+
+            it('should 404 basic authentication "admin" GET /api/v1/users/doesNotExist/settings', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/doesNotExist/settings')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should 404 basic authentication "admin" PUT /api/v1/users/doesNotExist/settings', function (done) {
+                agent.put(server.getUrl() + '/api/v1/users/doesNotExist/settings')
+                    .send({b: 1})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should 404 basic authentication "admin" PATCH /api/v1/users/doesNotExist/settings', function (done) {
+                agent.patch(server.getUrl() + '/api/v1/users/doesNotExist/settings')
+                    .send({b: 1})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should 404 basic authentication "admin" DELETE /api/v1/users/doesNotExist/settings', function (done) {
+                agent.del(server.getUrl() + '/api/v1/users/doesNotExist/settings')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should 404 basic authentication "admin" GET /api/v1/users/doesNotExist/settings/comp', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/doesNotExist/settings/comp')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should 404 basic authentication "admin" PUT /api/v1/users/doesNotExist/settings/comp', function (done) {
+                agent.put(server.getUrl() + '/api/v1/users/doesNotExist/settings/comp')
+                    .send({b: 1})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should 404 basic authentication "admin" PATCH /api/v1/users/doesNotExist/settings/comp', function (done) {
+                agent.patch(server.getUrl() + '/api/v1/users/doesNotExist/settings/comp')
+                    .send({b: 1})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should 404 basic authentication "admin" DELETE /api/v1/users/doesNotExist/settings/comp', function (done) {
+                agent.del(server.getUrl() + '/api/v1/users/doesNotExist/settings/comp')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
                         done();
                     });
             });

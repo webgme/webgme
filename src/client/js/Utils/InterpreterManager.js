@@ -14,8 +14,10 @@ define([
     'plugin/PluginMessage',
     'blob/BlobClient',
     'js/Dialogs/PluginConfig/PluginConfigDialog',
-    'js/logger'
-], function (Core, PluginManagerBase, PluginResult, PluginMessage, BlobClient, PluginConfigDialog, Logger) {
+    'js/logger',
+    'js/Utils/ComponentSettings'
+], function (Core, PluginManagerBase, PluginResult, PluginMessage, BlobClient, PluginConfigDialog, Logger,
+             ComponentSettings) {
 
     'use strict';
 
@@ -28,8 +30,10 @@ define([
         this.logger.debug('InterpreterManager ctor');
     };
 
+    InterpreterManager.prototype.GLOBAL_OPTIONS = 'Global Options';
+
     var getPlugin = function (name, callback) {
-        if (WebGMEGlobal && WebGMEGlobal.plugins && WebGMEGlobal.plugins.hasOwnProperty(name)) {
+        if (typeof WebGMEGlobal !== 'undefined' && WebGMEGlobal.plugins && WebGMEGlobal.plugins.hasOwnProperty(name)) {
             callback(null, WebGMEGlobal.plugins[name]);
         } else {
             requirejs(['/plugin/' + name + '/' + name + '/' + name],
@@ -99,10 +103,10 @@ define([
                             valueType: 'boolean',
                             readOnly: false
                         },
-                        hackedConfig = {
-                            'Global Options': [runOptions]
-                        },
+                        hackedConfig = {},
                         i, j, d, len;
+
+                    hackedConfig[self.GLOBAL_OPTIONS] = [runOptions];
 
                     if (serverAllowedGlobal === false && browserAllowedGlobal === false) {
                         callback(getPluginErrorResult(name, 'Plugin execution is disabled!', startTime, projectId));
@@ -156,8 +160,8 @@ define([
                             hackedConfig[i] = pluginConfigs[i];
 
                             // retrieve user settings from previous run
-                            if (self._savedConfigs.hasOwnProperty(i)) {
-                                var iConfig = self._savedConfigs[i];
+                            var iConfig = self.getStoredConfiguration(i, plugin);
+                            if (iConfig) {
                                 len = hackedConfig[i].length;
 
                                 while (len--) {
@@ -165,7 +169,6 @@ define([
                                         hackedConfig[i][len].value = iConfig[hackedConfig[i][len].name];
                                     }
                                 }
-
                             }
                         }
                     }
@@ -268,7 +271,13 @@ define([
                     } else {
                         d = new PluginConfigDialog();
                         silentPluginCfg = {};
-                        d.show(hackedConfig, plugin, runWithConfiguration);
+                        d.show(hackedConfig, plugin, function (userConfig, save) {
+                            if (save === true) {
+                                self.saveSettingsInUser(name, plugin, userConfig);
+                            }
+
+                            runWithConfiguration(userConfig);
+                        });
                     }
                 });
             } else {
@@ -277,6 +286,50 @@ define([
                 callback(getPluginErrorResult(name, 'Unable to load plugin, err:' + err, startTime, projectId));
             }
         });
+    };
+
+    InterpreterManager.prototype.getStoredConfiguration = function (pluginId, plugin) {
+        var config,
+            componentId = this.getPluginComponentId(pluginId, plugin);
+
+        // Always use the configuration stored from a previous run if it's available.
+        if (this._savedConfigs.hasOwnProperty(pluginId)) {
+            config = this._savedConfigs[pluginId];
+        } else if (typeof WebGMEGlobal !== 'undefined') {
+            config = {};
+            ComponentSettings.resolveWithWebGMEGlobal(config, componentId);
+        }
+
+        return config;
+    };
+
+    InterpreterManager.prototype.saveSettingsInUser = function (pluginId, plugin, pluginConfig, callback) {
+        var self = this,
+            componentId = this.getPluginComponentId(pluginId, plugin);
+
+        this.logger.debug('Saving plugin config in user', componentId, pluginConfig);
+
+        ComponentSettings.overwriteComponentSettings(componentId, pluginConfig[pluginId], function (err, newSettings) {
+            if (callback) {
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null, newSettings);
+                }
+            } else {
+                if (err) {
+                    self.logger.error(new Error('Failed storing settings for user'), err);
+                } else {
+                    self.logger.debug('Stored new settings for plugin at', componentId, newSettings);
+                }
+            }
+        });
+    };
+
+    InterpreterManager.prototype.getPluginComponentId = function (pluginId, plugin) {
+        var componentId = 'Plugin_' + pluginId + '__' + plugin.prototype.getVersion().split('.').join('_');
+        this.logger.debug('Resolved componentId for plugin "' + componentId + '"');
+        return componentId;
     };
 
     //TODO: Somehow it would feel more right if we do run in async mode, but if not then we should provide getState and
