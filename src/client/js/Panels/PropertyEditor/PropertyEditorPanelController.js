@@ -284,11 +284,10 @@ define(['js/logger',
         var onlyRootSelected = selectedObjIDs.length === 1 && selectedObjIDs[0] === CONSTANTS.PROJECT_ROOT_ID,
             keys = Object.keys(src),
             key,
+            range,
             i,
             extKey,
-            keyParts,
-
-            doDisplay;
+            keyParts;
 
         if (prefix !== '') {
             prefix += '.';
@@ -296,116 +295,126 @@ define(['js/logger',
 
         for (i = 0; i < keys.length; i += 1) {
             key = keys[i];
-            doDisplay = !(isAttribute && !commonAttrMeta.hasOwnProperty(key));
 
-            if (doDisplay) {
-                extKey = prefix + key;
-                keyParts = key.split('.');
+            if (isAttribute) {
+                if (commonAttrMeta.hasOwnProperty(key) === false) {
+                    continue;
+                }
+            }
 
-                dst[extKey] = {
-                    name: keyParts[keyParts.length - 1],
-                    value: src[key].value,
-                    valueType: src[key].valueType,
-                    options: src[key].options
-                };
+            extKey = prefix + key;
+            keyParts = key.split('.');
 
-                if (key === 'position.x' || key === 'position.y') {
-                    dst[extKey].minValue = 0;
-                    dst[extKey].stepValue = 10;
+            dst[extKey] = {
+                name: keyParts[keyParts.length - 1],
+                value: src[key].value,
+                valueType: src[key].valueType,
+                options: src[key].options
+            };
+
+            if (key === 'position.x' || key === 'position.y') {
+                dst[extKey].minValue = 0;
+                dst[extKey].stepValue = 10;
+            }
+
+            if (src[key].readOnly === false || src[key].readOnly === true) {
+                dst[extKey].readOnly = src[key].readOnly;
+            }
+
+            if (src[key].isCommon === false) {
+                dst[extKey].value = '';
+                dst[extKey].options = {textColor: NO_COMMON_VALUE_COLOR};
+            }
+
+            if (isAttribute === true) {
+                //is it inherited??? if so, it can be reseted to the inherited value
+                if (this._isResettableAttribute(selectedObjIDs, keyParts[0])) {
+                    dst[extKey].options = dst[extKey].options || {};
+                    dst[extKey].options.resetable = true;
                 }
 
-                if (src[key].readOnly === false || src[key].readOnly === true) {
-                    dst[extKey].readOnly = src[key].readOnly;
+                //if it is an attribute it might be invalid according the current meta rules
+                if (this._isInvalidAttribute(selectedObjIDs, keyParts[0])) {
+                    dst[extKey].options = dst[extKey].options || {};
+                    dst[extKey].options.invalid = true;
                 }
 
-                if (src[key].isCommon === false) {
-                    dst[extKey].value = '';
-                    dst[extKey].options = {textColor: NO_COMMON_VALUE_COLOR};
+                //if the attribute value is an enum, display the enum values
+                if (commonAttrMeta[key].enum && commonAttrMeta[key].enum.length > 0) {
+                    dst[extKey].valueItems = commonAttrMeta[key].enum.slice(0);
+                    dst[extKey].valueItems.sort();
                 }
 
-                if (isAttribute === true) {
-                    //is it inherited??? if so, it can be reseted to the inherited value
-                    if (this._isResettableAttribute(selectedObjIDs, keyParts[0])) {
-                        dst[extKey].options = dst[extKey].options || {};
-                        dst[extKey].options.resetable = true;
-                    }
+                // Get the min max for floats and integers
+                if (dst[extKey].valueType === 'float' || dst[extKey].valueType === 'integer') {
+                    range = this._getAttributeRange(selectedObjIDs, keyParts[0]);
+                    dst[extKey].minValue = range.min;
+                    dst[extKey].maxValue = range.max;
+                }
+            } else if (isRegistry === true) {
+                //is it inherited??? if so, it can be reseted to the inherited value
+                if (this._isResettableRegistry(selectedObjIDs, keyParts[0])) {
+                    dst[extKey].options = dst[extKey].options || {};
+                    dst[extKey].options.resetable = true;
+                }
 
-                    //if it is an attribute it might be invalid according the current meta rules
-                    if (this._isInvalidAttribute(selectedObjIDs, keyParts[0])) {
-                        dst[extKey].options = dst[extKey].options || {};
-                        dst[extKey].options.invalid = true;
-                    }
-
-                    //if the attribute value is an enum, display the enum values
-                    if (commonAttrMeta[key].enum && commonAttrMeta[key].enum.length > 0) {
-                        dst[extKey].valueItems = commonAttrMeta[key].enum.slice(0);
-                        dst[extKey].valueItems.sort();
-                    }
-                } else if (isRegistry === true) {
-                    //is it inherited??? if so, it can be reseted to the inherited value
-                    if (this._isResettableRegistry(selectedObjIDs, keyParts[0])) {
-                        dst[extKey].options = dst[extKey].options || {};
-                        dst[extKey].options.resetable = true;
-                    }
-
-                    if (prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.') {
-                        if (onlyRootSelected === false) {
-                            //decorator value should be rendered as an option list
-                            if (key === REGISTRY_KEYS.DECORATOR) {
-                                //dstList[extKey].valueType = "option";
-                                //FIXME: only the decorators for DiagramDesigner are listed so far
-                                dst[extKey].valueItems = decoratorNames;
-                            } else if (key === REGISTRY_KEYS.SVG_ICON || key === REGISTRY_KEYS.PORT_SVG_ICON) {
-                                dst[extKey].widget = PropertyGridWidgets.DIALOG_WIDGET;
-                                dst[extKey].dialog = DecoratorSVGExplorerDialog;
-                            }
+                if (prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.') {
+                    if (onlyRootSelected === false) {
+                        //decorator value should be rendered as an option list
+                        if (key === REGISTRY_KEYS.DECORATOR) {
+                            //dstList[extKey].valueType = "option";
+                            //FIXME: only the decorators for DiagramDesigner are listed so far
+                            dst[extKey].valueItems = decoratorNames;
+                        } else if (key === REGISTRY_KEYS.SVG_ICON || key === REGISTRY_KEYS.PORT_SVG_ICON) {
+                            dst[extKey].widget = PropertyGridWidgets.DIALOG_WIDGET;
+                            dst[extKey].dialog = DecoratorSVGExplorerDialog;
                         }
-                    } else if (prefix === CONSTANTS.PROPERTY_GROUP_META + '.') {
-                        if (key === REGISTRY_KEYS.VALID_VISUALIZERS) {
+                    }
+                } else if (prefix === CONSTANTS.PROPERTY_GROUP_META + '.') {
+                    if (key === REGISTRY_KEYS.VALID_VISUALIZERS) {
+                        dst[extKey].value = dst[extKey].value === undefined ?
+                            '' : dst[extKey].value;
+                        dst[extKey].regex = '/[^\w\W]/';
+                        dst[extKey].regexMessage = this._getHintMessage('Visualizers');
+                    } else if (key === REGISTRY_KEYS.VALID_PLUGINS) {
+                        dst[extKey].value = dst[extKey].value === undefined ?
+                            '' : dst[extKey].value;
+                        dst[extKey].regex = '/[^\w\W]/';
+                        dst[extKey].regexMessage = this._getHintMessage('Plugins');
+                    } else if (onlyRootSelected) {
+                        if (key === REGISTRY_KEYS.VALID_DECORATORS) {
                             dst[extKey].value = dst[extKey].value === undefined ?
                                 '' : dst[extKey].value;
                             dst[extKey].regex = '/[^\w\W]/';
-                            dst[extKey].regexMessage = this._getHintMessage('Visualizers');
-                        } else if (key === REGISTRY_KEYS.VALID_PLUGINS) {
+                            dst[extKey].regexMessage = this._getHintMessage('Decorators');
+                        } else if (key === REGISTRY_KEYS.USED_ADDONS) {
                             dst[extKey].value = dst[extKey].value === undefined ?
                                 '' : dst[extKey].value;
                             dst[extKey].regex = '/[^\w\W]/';
-                            dst[extKey].regexMessage = this._getHintMessage('Plugins');
-                        } else if (onlyRootSelected) {
-                            if (key === REGISTRY_KEYS.VALID_DECORATORS) {
-                                dst[extKey].value = dst[extKey].value === undefined ?
-                                    '' : dst[extKey].value;
-                                dst[extKey].regex = '/[^\w\W]/';
-                                dst[extKey].regexMessage = this._getHintMessage('Decorators');
-                            } else if (key === REGISTRY_KEYS.USED_ADDONS) {
-                                dst[extKey].value = dst[extKey].value === undefined ?
-                                    '' : dst[extKey].value;
-                                dst[extKey].regex = '/[^\w\W]/';
-                                dst[extKey].regexMessage = this._getHintMessage('AddOns');
-                            }
+                            dst[extKey].regexMessage = this._getHintMessage('AddOns');
                         }
                     }
-                } else if (isPointer === true) {
-                    if (NON_INVALID_PTRS.indexOf(keyParts[0]) === -1 &&
-                        this._isResettablePointer(selectedObjIDs, keyParts[0])) {
-                        //what is non_invalid, cannot be reset
-                        dst[extKey].options = dst[extKey].options || {};
-                        dst[extKey].options.resetable = true;
-                    }
-
-                    if (this._isInvalidPointer(selectedObjIDs, keyParts[0])) {
-                        dst[extKey].options = dst[extKey].options || {};
-                        dst[extKey].options.invalid = true;
-                    }
-
-                    //pointers have a custom widget that allows following the pointer
-                    dst[extKey].widget = PointerWidget;
-                    //add custom widget specific values
-                    dst[extKey].client = this._client;
                 }
-                if (dst[extKey].value === undefined) {
-                    delete dst[extKey];
+            } else if (isPointer === true) {
+                if (NON_INVALID_PTRS.indexOf(keyParts[0]) === -1 &&
+                    this._isResettablePointer(selectedObjIDs, keyParts[0])) {
+                    //what is non_invalid, cannot be reset
+                    dst[extKey].options = dst[extKey].options || {};
+                    dst[extKey].options.resetable = true;
                 }
+
+                if (this._isInvalidPointer(selectedObjIDs, keyParts[0])) {
+                    dst[extKey].options = dst[extKey].options || {};
+                    dst[extKey].options.invalid = true;
+                }
+
+                //pointers have a custom widget that allows following the pointer
+                dst[extKey].widget = PointerWidget;
+                //add custom widget specific values
+                dst[extKey].client = this._client;
+            }
+            if (dst[extKey].value === undefined) {
+                delete dst[extKey];
             }
         }
     };
@@ -465,6 +474,33 @@ define(['js/logger',
         }
 
         return true;
+    };
+
+    PropertyEditorController.prototype._getAttributeRange = function (selectedObjIDs, attrName) {
+        var i = selectedObjIDs.length,
+            range = {},
+            schema;
+
+        while (i--) {
+            schema = this._client.getAttributeSchema(selectedObjIDs[i], attrName);
+            if (schema.hasOwnProperty('min')) {
+                if (range.hasOwnProperty('min')) {
+                    range.min = schema.min > range.min ? schema.min : range.min;
+                } else {
+                    range.min = schema.min;
+                }
+            }
+
+            if (schema.hasOwnProperty('max')) {
+                if (range.hasOwnProperty('max')) {
+                    range.max = schema.max < range.max ? schema.max : range.max;
+                } else {
+                    range.max = schema.max;
+                }
+            }
+        }
+
+        return range;
     };
 
     PropertyEditorController.prototype._isInvalidPointer = function (selectedObjIDs, pointerName) {

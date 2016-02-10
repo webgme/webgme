@@ -31,7 +31,7 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
         });
 
         this.__input.on('keydown', function (e) {
-              // When pressing entire, you can be as precise as you want.
+            // When pressing entire, you can be as precise as you want.
             if (e.keyCode === 13) {
                 self.__truncationSuspended = true;
                 this.blur();

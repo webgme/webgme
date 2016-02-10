@@ -1,4 +1,4 @@
-/*globals define, _, $, WebGMEGlobal*/
+/*globals define, $, WebGMEGlobal*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi

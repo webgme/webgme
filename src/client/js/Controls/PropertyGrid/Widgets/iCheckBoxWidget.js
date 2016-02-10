@@ -1,4 +1,4 @@
-/*globals define, _*/
+/*globals define*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi

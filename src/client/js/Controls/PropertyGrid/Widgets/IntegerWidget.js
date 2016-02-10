@@ -30,12 +30,16 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
             attr.max = propertyDesc.maxValue;
         }
 
+        if (attr) {
+            this._input.attr(attr);
+        }
+
         this._input.on('change', function (/* e */) {
             self._onChange();
         });
 
         this._input.on('blur', function (/* e */) {
-            self._onBlur();
+            this.blur();
         });
 
         this._input.on('keydown', function (e) {

@@ -11,8 +11,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         INPUT_BASE = $('<input/>', {type: 'text'});
 
     FloatWidget = function (propertyDesc) {
-        var self = this,
-            attr;
+        var self = this;
 
         WidgetBase.call(this, propertyDesc);
 
@@ -20,14 +19,14 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
         this._input.val(propertyDesc.value);
 
+        this.min = null;
         if (typeof propertyDesc.minValue === 'number') {
-            attr = {};
-            attr.min = propertyDesc.minValue;
+            this.min = propertyDesc.minValue;
         }
 
+        this.max = null;
         if (typeof propertyDesc.maxValue === 'number') {
-            attr = attr || {};
-            attr.max = propertyDesc.maxValue;
+            this.max = propertyDesc.maxValue;
         }
 
         this._input.on('change', function (/* e */) {
@@ -40,7 +39,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
         this._input.on('keydown', function (e) {
             if (e.keyCode === 13) {
-                self._onBlur();
+                this.blur();
             }
         });
 
@@ -58,7 +57,17 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
     FloatWidget.prototype._onChange = function () {
         var currentVal = parseFloat(this._input.val());
-        this.setValue(currentVal);
+        if (isNaN(currentVal)) {
+            this._input.val(this.getValue());
+        } else {
+            if (this.min !== null && currentVal < this.min) {
+                this._input.val(this.getValue());
+            } else if (this.max !== null && currentVal > this.max) {
+                this._input.val(this.getValue());
+            } else {
+                this.setValue(currentVal);
+            }
+        }
     };
 
     FloatWidget.prototype._onBlur = function () {
