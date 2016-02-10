@@ -334,7 +334,9 @@ define([
         self.projects = {};
 
         callback = callback || function (err) {
-                self.logger.error(err);
+                if (err) {
+                    self.logger.error(err);
+                }
             };
 
         self.gmeClient.getProjects(params, function (err, projectsData) {
