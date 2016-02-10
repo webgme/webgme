@@ -12,7 +12,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         LABEL_BASE = $('<span/>', {class: 'user-select-on'});
 
     LabelWidget = function (propertyDesc) {
-        LabelWidget.superclass.call(this, propertyDesc);
+        WidgetBase.call(this, propertyDesc);
 
         this.__label = LABEL_BASE.clone();
 
@@ -21,14 +21,13 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         this.el.append(this.__label);
     };
 
-    LabelWidget.superclass = WidgetBase;
-
-    _.extend(LabelWidget.prototype, WidgetBase.prototype);
+    LabelWidget.prototype = Object.create(WidgetBase.prototype);
+    LabelWidget.prototype.constructor = LabelWidget;
 
     LabelWidget.prototype.updateDisplay = function () {
         this.__label.text(this.propertyValue);
         this.__label.attr('title', this.propertyValue);
-        return LabelWidget.superclass.prototype.updateDisplay.call(this);
+        return WidgetBase.prototype.updateDisplay.call(this);
     };
 
     return LabelWidget;

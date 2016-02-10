@@ -18,7 +18,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
             i,
             opt;
 
-        OptionWidget.superclass.call(this, propertyDesc);
+        WidgetBase.call(this, propertyDesc);
 
         this.__select = $('<select/>');
 
@@ -57,21 +57,17 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         this.el.append(this.__select);
     };
 
-    OptionWidget.superclass = WidgetBase;
-
-    _.extend(
-        OptionWidget.prototype,
-        WidgetBase.prototype
-    );
+    OptionWidget.prototype = Object.create(WidgetBase.prototype);
+    OptionWidget.prototype.constructor = OptionWidget;
 
     OptionWidget.prototype.updateDisplay = function () {
         this.__select.val(this.getValue());
 
-        return OptionWidget.superclass.prototype.updateDisplay.call(this);
+        return WidgetBase.prototype.updateDisplay.call(this);
     };
 
     OptionWidget.prototype.setReadOnly = function (isReadOnly) {
-        OptionWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+        WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         if (isReadOnly === true) {
             this.__select.attr('disabled', 'disabled');

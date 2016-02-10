@@ -25,7 +25,7 @@ define([
 
         this._enabled = true;
 
-        ColorPickerWidget.superclass.call(this, propertyDesc);
+        WidgetBase.call(this, propertyDesc);
 
         this.__colorDiv = DIV_BASE.clone();
 
@@ -49,22 +49,18 @@ define([
         this.el.append(this.__colorDiv);
     };
 
-    ColorPickerWidget.superclass = WidgetBase;
-
-    _.extend(
-        ColorPickerWidget.prototype,
-        WidgetBase.prototype
-    );
+    ColorPickerWidget.prototype = Object.create(WidgetBase.prototype);
+    ColorPickerWidget.prototype.constructor = ColorPickerWidget;
 
     ColorPickerWidget.prototype.updateDisplay = function () {
         this.__colorDiv.css('background-color', this.getValue());
 
-        return ColorPickerWidget.superclass.prototype.updateDisplay.call(this);
+        return WidgetBase.prototype.updateDisplay.call(this);
     };
 
     ColorPickerWidget.prototype.setReadOnly = function (isReadOnly) {
 
-        ColorPickerWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+        WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         this._enabled = !isReadOnly;
     };

@@ -14,7 +14,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
     StringWidget = function (propertyDesc) {
         var self = this;
 
-        StringWidget.superclass.call(this, propertyDesc);
+        WidgetBase.call(this, propertyDesc);
 
         this.__input = INPUT_BASE.clone();
         this.__input.val(this.propertyValue);
@@ -47,12 +47,8 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         this.el.append(this.__input);
     };
 
-    StringWidget.superclass = WidgetBase;
-
-    _.extend(
-        StringWidget.prototype,
-        WidgetBase.prototype
-    );
+    StringWidget.prototype = Object.create(WidgetBase.prototype);
+    StringWidget.prototype.constructor = StringWidget;
 
     StringWidget.prototype.updateDisplay = function () {
         // Stops the caret from moving on account of:
@@ -60,11 +56,11 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         if (document.activeElement !== this.__input[0]) {
             this.__input.val(this.getValue());
         }
-        return StringWidget.superclass.prototype.updateDisplay.call(this);
+        return WidgetBase.prototype.updateDisplay.call(this);
     };
 
     StringWidget.prototype.setReadOnly = function (isReadOnly) {
-        StringWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+        WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         if (isReadOnly === true) {
             this.__input.attr('disabled', 'disabled');
