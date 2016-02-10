@@ -15,6 +15,8 @@ define([
     'js/Utils/ColorUtil',
     'js/Controls/PropertyGrid/Widgets/DialogWidget',
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
+    'js/Controls/PropertyGrid/Widgets/FloatWidget',
+    'js/Controls/PropertyGrid/Widgets/IntegerWidget',
     './PropertyGridWidgets'
 ], function (StringWidget,
              NumberBoxWidget,
@@ -26,6 +28,8 @@ define([
              colorUtil,
              DialogWidget,
              AssetWidget,
+             FloatWidget,
+             IntegerWidget,
              PropertyGridWidgets) {
 
     'use strict';
@@ -42,7 +46,6 @@ define([
             isOption = _.isArray(propDesc.valueItems),
             isColor = colorUtil.isColor(propDesc.value),
             SpecificWidget = propDesc.widget,
-            isAsset = type === 'asset',
             widget;
 
         if (readOnly && type !== 'boolean') {
@@ -60,11 +63,15 @@ define([
             widget = new OptionWidget(propDesc);
         } else if (isColor) {
             widget = new ColorPickerWidget(propDesc);
+        } else if (type === 'asset') {
+            widget = new AssetWidget(propDesc);
+        } else if (type === 'float') {
+            widget = new FloatWidget(propDesc);
+        } else if (type === 'integer') {
+            widget = new IntegerWidget(propDesc);
         } else {
             if (this._registeredWidgets[type]) {
                 widget = new this._registeredWidgets[type](propDesc);
-            } else if (isAsset) {
-                widget = new AssetWidget(propDesc);
             } else if (type === 'number') {
                 widget = new NumberBoxWidget(propDesc);
             } else if (type === 'boolean') {
