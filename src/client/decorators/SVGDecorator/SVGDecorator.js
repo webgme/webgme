@@ -7,11 +7,9 @@
 
 define([
     'js/Decorators/DecoratorBase',
-    './BlockEditor/SVGDecorator.BlockEditorWidget',
     './DiagramDesigner/SVGDecorator.DiagramDesignerWidget',
     './PartBrowser/SVGDecorator.PartBrowserWidget'
 ], function (DecoratorBase,
-             SVGDecoratorBlockEditorWidget,
              SVGDecoratorDiagramDesignerWidget,
              SVGDecoratorPartBrowserWidget) {
 
@@ -37,8 +35,7 @@ define([
 
         this.supportedWidgetMap = {
             DiagramDesigner: SVGDecoratorDiagramDesignerWidget,
-            PartBrowser: SVGDecoratorPartBrowserWidget,
-            BlockEditor: SVGDecoratorBlockEditorWidget
+            PartBrowser: SVGDecoratorPartBrowserWidget
         };
 
     };
