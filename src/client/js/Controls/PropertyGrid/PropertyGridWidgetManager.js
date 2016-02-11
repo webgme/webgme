@@ -17,6 +17,9 @@ define([
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
     'js/Controls/PropertyGrid/Widgets/FloatWidget',
     'js/Controls/PropertyGrid/Widgets/IntegerWidget',
+    'js/Controls/PropertyGrid/Widgets/PointerWidget',
+    'js/Controls/PropertyGrid/Widgets/MetaTypeWidget',
+    'js/Controls/PropertyGrid/Widgets/MultiSelectWidget',
     './PropertyGridWidgets'
 ], function (StringWidget,
              NumberBoxWidget,
@@ -30,7 +33,10 @@ define([
              AssetWidget,
              FloatWidget,
              IntegerWidget,
-             PropertyGridWidgets) {
+             PointerWidget,
+             MetaTypeWidget,
+             MultiSelectWidget,
+             PROPERTY_GRID_WIDGETS) {
 
     'use strict';
 
@@ -52,8 +58,17 @@ define([
             widget = new LabelWidget(propDesc);
         } else if (SpecificWidget) {
             switch (SpecificWidget) {
-                case PropertyGridWidgets.DIALOG_WIDGET:
+                case PROPERTY_GRID_WIDGETS.DIALOG_WIDGET:
                     widget = new DialogWidget(propDesc);
+                    break;
+                case PROPERTY_GRID_WIDGETS.META_TYPE_WIDGET:
+                    widget = new MetaTypeWidget(propDesc);
+                    break;
+                case PROPERTY_GRID_WIDGETS.POINTER_WIDGET:
+                    widget = new PointerWidget(propDesc);
+                    break;
+                case PROPERTY_GRID_WIDGETS.MULTI_SELECT_WIDGET:
+                    widget = new MultiSelectWidget(propDesc);
                     break;
                 default:
                     widget = new SpecificWidget(propDesc);

@@ -13,9 +13,7 @@ define(['js/logger',
     'js/Constants',
     'js/Utils/DisplayFormat',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
-    'js/Controls/PropertyGrid/PropertyGridWidgets',
-    './PointerWidget',
-    './MetaTypeWidget'
+    'js/Controls/PropertyGrid/PropertyGridWidgets'
 ], function (Logger,
              util,
              nodePropertyNames,
@@ -23,9 +21,7 @@ define(['js/logger',
              CONSTANTS,
              displayFormat,
              DecoratorSVGExplorerDialog,
-             PropertyGridWidgets,
-             PointerWidget,
-             MetaTypeWidget) {
+             PROPERTY_GRID_WIDGETS) {
 
     'use strict';
 
@@ -224,7 +220,7 @@ define(['js/logger',
                         name: 'Meta type',
                         value: metaTypeId,
                         isCommon: true,
-                        widget: MetaTypeWidget,
+                        widget: PROPERTY_GRID_WIDGETS.META_TYPE_WIDGET,
                         client: self._client
                     };
                 }
@@ -370,7 +366,7 @@ define(['js/logger',
                             //FIXME: only the decorators for DiagramDesigner are listed so far
                             dst[extKey].valueItems = decoratorNames;
                         } else if (key === REGISTRY_KEYS.SVG_ICON || key === REGISTRY_KEYS.PORT_SVG_ICON) {
-                            dst[extKey].widget = PropertyGridWidgets.DIALOG_WIDGET;
+                            dst[extKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
                             dst[extKey].dialog = DecoratorSVGExplorerDialog;
                         }
                     }
@@ -383,19 +379,19 @@ define(['js/logger',
                     } else if (key === REGISTRY_KEYS.VALID_PLUGINS) {
                         dst[extKey].value = dst[extKey].value === undefined ?
                             '' : dst[extKey].value;
-                        dst[extKey].regex = '/[^\w\W]/';
-                        dst[extKey].regexMessage = this._getHintMessage('Plugins');
+                        dst[extKey].valueItems = WebGMEGlobal.allPlugins;
+                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.MULTI_SELECT_WIDGET;
                     } else if (onlyRootSelected) {
                         if (key === REGISTRY_KEYS.VALID_DECORATORS) {
                             dst[extKey].value = dst[extKey].value === undefined ?
                                 '' : dst[extKey].value;
-                            dst[extKey].regex = '/[^\w\W]/';
-                            dst[extKey].regexMessage = this._getHintMessage('Decorators');
+                            dst[extKey].valueItems = WebGMEGlobal.allDecorators;
+                            dst[extKey].widget = PROPERTY_GRID_WIDGETS.MULTI_SELECT_WIDGET;
                         } else if (key === REGISTRY_KEYS.USED_ADDONS) {
                             dst[extKey].value = dst[extKey].value === undefined ?
                                 '' : dst[extKey].value;
-                            dst[extKey].regex = '/[^\w\W]/';
-                            dst[extKey].regexMessage = this._getHintMessage('AddOns');
+                            dst[extKey].valueItems = WebGMEGlobal.allAddOns;
+                            dst[extKey].widget = PROPERTY_GRID_WIDGETS.MULTI_SELECT_WIDGET;
                         }
                     }
                 }
@@ -413,7 +409,7 @@ define(['js/logger',
                 }
 
                 //pointers have a custom widget that allows following the pointer
-                dst[extKey].widget = PointerWidget;
+                dst[extKey].widget = PROPERTY_GRID_WIDGETS.POINTER_WIDGET;
                 //add custom widget specific values
                 dst[extKey].client = this._client;
             }

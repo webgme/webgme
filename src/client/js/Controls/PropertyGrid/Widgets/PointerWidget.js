@@ -108,15 +108,13 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
     };
 
     PointerWidget.prototype._destroyDroppable = function () {
-        var self = this;
-
         if (this.propertyName === 'base' || !this._gmeNodeId) {
             return;
         }
 
-        self._div.removeClass('drop-area');
+        this._div.removeClass('drop-area');
 
-        dropTarget.destroyDroppable(self.__nodeDropTarget);
+        dropTarget.destroyDroppable(this.__nodeDropTarget);
         this.__iconAssignNullPointer.detach();
     };
 
@@ -219,6 +217,17 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
                 }
             }
         }
+    };
+
+    PointerWidget.prototype.destroy = function () {
+        this._removeTerritory();
+        //this._destroyDroppable();
+        if (this.__iconAssignNullPointer) {
+            this.__iconAssignNullPointer.off('click');
+        }
+        this.__label.off('click');
+
+        WidgetBase.prototype.destroy.call(this);
     };
 
     return PointerWidget;

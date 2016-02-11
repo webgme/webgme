@@ -1,0 +1,42 @@
+/**
+ * @author pmeijer / https://github.com/pmeijer
+ */
+@import url("./../../../../../css/bootstrap-multiselect/bootstrap-multiselect.css");
+.multiselect-widget div.btn-group {
+  width: 100%; }
+  .multiselect-widget div.btn-group button.multiselect {
+    font-size: 11px;
+    padding: 6px 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left; }
+  .multiselect-widget div.btn-group.open {
+    position: absolute;
+    width: inherit; }
+  .multiselect-widget div.btn-group ul.multiselect-container.dropdown-menu {
+    max-height: 200px;
+    min-width: 0;
+    padding: 0;
+    width: calc(100% - 6px); }
+    .multiselect-widget div.btn-group ul.multiselect-container.dropdown-menu li {
+      font-size: 11px;
+      padding: 0;
+      height: 17px;
+      border-bottom: none; }
+      .multiselect-widget div.btn-group ul.multiselect-container.dropdown-menu li .checkbox {
+        padding: 0 0 0 17px;
+        height: 11px; }
+      .multiselect-widget div.btn-group ul.multiselect-container.dropdown-menu li input[type=checkbox] {
+        height: 11px;
+        margin-top: 3px;
+        margin-left: -14px; }
+      .multiselect-widget div.btn-group ul.multiselect-container.dropdown-menu li label {
+        padding: 0 0 0 0;
+        overflow: hidden;
+        text-overflow: ellipsis; }
+      .multiselect-widget div.btn-group ul.multiselect-container.dropdown-menu li.multiselect-group {
+        margin-left: 4px;
+        margin-bottom: 8px; }
+      .multiselect-widget div.btn-group ul.multiselect-container.dropdown-menu li a {
+        background-image: none; }

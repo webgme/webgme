@@ -1,0 +1,60 @@
+/**
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+
+@import url("./../../../../../css/bootstrap-multiselect/bootstrap-multiselect.css");
+
+.multiselect-widget {
+  div.btn-group {
+    width: 100%;
+
+    button.multiselect {
+      font-size: 11px;
+      padding: 6px 0;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+    }
+
+    &.open {
+      position: absolute;
+      width: inherit;
+    }
+
+    ul.multiselect-container.dropdown-menu {
+      max-height: 200px;
+      min-width: 0;
+      padding: 0;
+      width: calc(100% - 6px);
+      li {
+        font-size: 11px;
+        padding: 0;
+        height: 17px;
+        border-bottom: none;
+        .checkbox {
+          padding: 0 0 0 17px;
+          height: 11px;
+        }
+        input[type=checkbox] {
+          height: 11px;
+          margin-top: 3px;
+          margin-left: -14px;
+        }
+        label {
+          padding: 0 0 0 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        &.multiselect-group {
+          margin-left: 4px;
+          margin-bottom: 8px;
+        }
+        a {
+          background-image: none;
+        }
+      }
+    }
+  }
+}
