@@ -7,7 +7,7 @@
  patch generation is specialized to the expected input form
  */
 
-define(['common/util/canon', 'underscore'], function (CANON, _) {
+define(['common/util/canon'], function (CANON) {
 
     function _strEncode(str) {
         //we should replace the '/' in the patch paths
@@ -21,33 +21,38 @@ define(['common/util/canon', 'underscore'], function (CANON, _) {
     function create(sourceJson, targetJson) {
         var patch = [],
             diff = function (source, target, basePath, excludeList, noUpdate) {
-                var sKeys, tKeys, keys, i;
-                sKeys = _.difference(Object.keys(source), excludeList);
-                tKeys = _.difference(Object.keys(target), excludeList);
+                var i;
 
                 //add
-                keys = _.difference(tKeys, sKeys);
-                for (i = 0; i < keys.length; i += 1) {
-                    patch.push({op: 'add', path: basePath + _strEncode(keys[i]), value: target[keys[i]]});
+                for (i in target) {
+                    if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
+                        if (!source.hasOwnProperty(i)) {
+                            patch.push({op: 'add', path: basePath + _strEncode(i), value: target[i]});
+                        }
+                    }
                 }
 
                 //update
                 if (!noUpdate) {
-                    keys = _.intersection(tKeys, sKeys);
-                    for (i = 0; i < keys.length; i += 1) {
-                        if (CANON.stringify(source[keys[i]]) !== CANON.stringify(target[keys[i]])) {
-                            patch.push({op: 'replace', path: basePath + _strEncode(keys[i]), value: target[keys[i]]});
+                    for (i in target) {
+                        if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
+                            if (source.hasOwnProperty(i) && CANON.stringify(source[i]) !== CANON.stringify(target[i])) {
+                                patch.push({op: 'replace', path: basePath + _strEncode(i), value: target[i]});
+                            }
                         }
                     }
                 }
 
                 //remove
-                keys = _.difference(sKeys, tKeys);
-                for (i = 0; i < keys.length; i += 1) {
-                    patch.push({op: 'remove', path: basePath + _strEncode(keys[i])});
+                for (i in source) {
+                    if (excludeList.indexOf(i) === -1 && source.hasOwnProperty(i)) {
+                        if (!target.hasOwnProperty(i)) {
+                            patch.push({op: 'remove', path: basePath + _strEncode(i)});
+                        }
+                    }
                 }
             },
-            keys, i;
+            key;
 
         //main level diff
         diff(sourceJson, targetJson, '/', ['_id', '_nullptr', 'ovr', 'atr', 'reg', '_sets'], false);
@@ -61,21 +66,20 @@ define(['common/util/canon', 'underscore'], function (CANON, _) {
         //ovr add+remove
         diff(sourceJson.ovr || {}, targetJson.ovr || {}, '/ovr/', [], true);
 
-        //in case of update, we go field by field
-        keys = _.intersection(Object.keys(sourceJson.ovr || {}), Object.keys(targetJson.ovr || {}));
-
-        for (i = 0; i < keys.length; i += 1) {
-            diff(sourceJson.ovr[keys[i]], targetJson.ovr[keys[i]], '/ovr/' + _strEncode(keys[i]) + '/', [], false);
+        for (key in targetJson.ovr) {
+            if (targetJson.ovr.hasOwnProperty(key) && sourceJson.ovr.hasOwnProperty(key)) {
+                diff(sourceJson.ovr[key], targetJson.ovr[key], '/ovr/' + _strEncode(key) + '/', [], false);
+            }
         }
 
         //complete set addition or removal
         diff(sourceJson._sets || {}, targetJson._sets || {}, '/_sets/', [], true);
 
         //update done set-by-set
-        keys = _.intersection(Object.keys(sourceJson._sets || {}), Object.keys(targetJson._sets || {}));
-
-        for (i = 0; i < keys.length; i += 1) {
-            diff(sourceJson._sets[keys[i]], targetJson._sets[keys[i]], '/_sets/' + _strEncode(keys[i]) + '/', [], false);
+        for (key in sourceJson._sets) {
+            if (targetJson._sets.hasOwnProperty(key)) {
+                diff(sourceJson._sets[key], targetJson._sets[key], '/_sets/' + _strEncode(key) + '/', [], false);
+            }
         }
 
         return patch;

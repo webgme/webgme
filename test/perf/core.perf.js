@@ -4,9 +4,12 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 var testFixture = require('../_globals.js'),
-    PROJECT_FILE = 'seeds/ActivePanels.json';
+    PROJECT_FILE = 'seeds/ActivePanels.json',
+    jsonPatcher = testFixture.requirejs('common/util/jsonPatcher'),
+    getPatchObject = testFixture.requirejs('common/storage/util').getPatchObject,
+    serializer = testFixture.requirejs('common/core/users/serialization');
     //"C:\\Users\\Zsolt\\Downloads\\Nagx3.json"
-
+    
 describe.skip('Core Performance test', function () {
     'use strict';
 
@@ -58,9 +61,9 @@ describe.skip('Core Performance test', function () {
 
     after(function (done) {
         Q.allDone([
-            storage.closeDatabase(),
-            gmeAuth.unload()
-        ])
+                storage.closeDatabase(),
+                gmeAuth.unload()
+            ])
             .nodeify(done);
     });
 
@@ -187,6 +190,93 @@ describe.skip('Core Performance test', function () {
                 console.log('#Cnt', cnt);
             })
             .nodeify(done);
+    });
+
+    describe('on huge project', function () {
+        var core,
+            projectName = 'hugeProjectTest',
+            projectId = testFixture.projectName2Id(projectName),
+            project,
+            rootHash,
+            baseCommitHash;
+
+        before(function (done) {
+            this.timeout(40000); //this should be only changed if the time increase is accepted due to some new feature
+            testFixture.importProject(storage,
+                {
+                    projectSeed: 'test/perf/hugeProj.json',
+                    projectName: projectName,
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                })
+                .then(function (importResult) {
+                    expect(importResult.projectId).to.contain(projectName);
+                    project = importResult.project;
+                    rootHash = importResult.rootHash;
+                    core = importResult.core;
+                    baseCommitHash = importResult.commitHash;
+                })
+                .nodeify(done);
+        });
+
+        it('should persist small change quickly', function (done) {
+            //set the registry of node /Q/t/W/8
+            console.time('init');
+            core.loadRoot(rootHash)
+                .then(function (root) {
+                    return core.loadByPath(root, '/Q/t/W/8');
+                })
+                .then(function (node) {
+                    expect(core.getGuid(node)).to.equal('8e16e5dd-8137-66c3-1d08-3f331a686282');
+
+                    console.timeEnd('init');
+                    core.setRegistry(node, 'position', {x: 500, y: 500});
+
+                    var persisted = core.persist(core.getRoot(node));
+
+                    console.time('patchCreation');
+                    var patch = jsonPatcher.create(persisted.objects[persisted.rootHash].oldData,
+                        persisted.objects[persisted.rootHash].newData);
+                    console.timeEnd('patchCreation');
+
+                    console.log('patch', patch);
+                    console.time('patchApplication');
+                    var patchResult = jsonPatcher.apply(persisted.objects[persisted.rootHash].oldData, patch);
+                    console.timeEnd('patchApplication');
+
+                    patchResult.result._id = persisted.objects[persisted.rootHash].newHash;
+                    expect(patchResult.status).to.equal('success');
+
+                    //TODO this should be used in the code as well to make it simpler
+                    persisted.objects[persisted.rootHash] = getPatchObject(persisted.objects[persisted.rootHash].oldData,
+                        persisted.objects[persisted.rootHash].newData);
+
+                    console.time('makeCommit');
+                    Q.nfcall(project.makeCommit,
+                        projectId,
+                        'master',
+                        [baseCommitHash],
+                        persisted.rootHash, persisted.objects, 'single reposition');
+
+                })
+                .then(function () {
+                    console.timeEnd('makeCommit');
+                })
+                .nodeify(done);
+        });
+
+        it('should export quickly',function(done){
+            this.timeout(60000);
+            core.loadRoot(rootHash)
+                .then(function(root){
+                    return Q.nfcall(serializer.export,core,root);
+                })
+                .then(function(jsonProject){
+                    expect(jsonProject.nodes['8e16e5dd-8137-66c3-1d08-3f331a686282']).not.to.equal(undefined);
+                })
+                .nodeify(done);
+        });
     });
 
 });
