@@ -11,15 +11,15 @@ $hover-lighten: 5%;
 $border-lighten: 7%;
 $active-lighten: 10%;
 
-$asset-border-color: #E8E8E8;
+$asset-border-color: $background-color;
 $number-color: #2FA1D6;
-$integer-color: black;
+$integer-color: $text-color;
 $integer-border-color: #806787;
-$float-color: black;
-$float-border-color: #2FA1D6;
-$boolean-border-color: #E8E8E8;
-$string-border-color: #E8E8E8;
-$string-color: #1ed36f;
+$float-color: $text-color;
+$float-border-color: $number-color;
+$boolean-border-color: $background-color;
+$string-border-color: $background-color;
+$string-color: $text-color;
 $custom-color: #FFFF00;
 $type-border-width: 3px;
 
