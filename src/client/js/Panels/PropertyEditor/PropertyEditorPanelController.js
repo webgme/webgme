@@ -450,7 +450,7 @@ define(['js/logger',
 
         while (len--) {
             ptrTo = node.getPointer(availablePointers[len]).to;
-            ptrTo = ptrTo === null ? '_nullptr' : ptrTo;
+            ptrTo = ptrTo === null ? CONSTANTS.CORE.NULLPTR_RELID : ptrTo;
             result[availablePointers[len]] = ptrTo || '';
         }
 

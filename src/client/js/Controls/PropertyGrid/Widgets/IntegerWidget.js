@@ -39,12 +39,12 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         });
 
         this._input.on('blur', function (/* e */) {
-            this.blur();
+            self._onBlur();
         });
 
         this._input.on('keydown', function (e) {
             if (e.keyCode === 13) {
-                self._onBlur();
+                this.blur();
             }
         });
 
@@ -63,7 +63,8 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
     IntegerWidget.prototype._onChange = function () {
         var currentVal = this._input.val();
-        this.setValue(parseInt(currentVal, 10));
+        currentVal = parseFloat(currentVal);
+        this.setValue(Math.round(currentVal));
     };
 
     IntegerWidget.prototype._onBlur = function () {
