@@ -64,7 +64,12 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
     IntegerWidget.prototype._onChange = function () {
         var currentVal = this._input.val();
         currentVal = parseFloat(currentVal);
-        this.setValue(Math.round(currentVal));
+
+        if (isNaN(currentVal)) {
+            this._input.val(this.getValue());
+        } else {
+            this.setValue(Math.round(currentVal));
+        }
     };
 
     IntegerWidget.prototype._onBlur = function () {

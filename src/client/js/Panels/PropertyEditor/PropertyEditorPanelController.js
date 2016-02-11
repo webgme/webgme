@@ -235,7 +235,8 @@ define(['js/logger',
             propList[CONSTANTS.PROPERTY_GROUP_ATTRIBUTES] = {
                 name: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
                 text: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
-                value: undefined
+                value: undefined,
+                isFolder: true
             };
 
             this._addItemsToResultList(selectedObjIDs, commonAttrMeta, decoratorNames,
@@ -246,7 +247,8 @@ define(['js/logger',
             propList[CONSTANTS.PROPERTY_GROUP_PREFERENCES] = {
                 name: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
                 text: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
-                value: undefined
+                value: undefined,
+                isFolder: true
             };
 
             this._addItemsToResultList(selectedObjIDs, commonAttrMeta, decoratorNames,
@@ -257,7 +259,8 @@ define(['js/logger',
             propList[CONSTANTS.PROPERTY_GROUP_META] = {
                 name: CONSTANTS.PROPERTY_GROUP_META,
                 text: CONSTANTS.PROPERTY_GROUP_META,
-                value: undefined
+                value: undefined,
+                isFolder: true
             };
 
             this._addItemsToResultList(selectedObjIDs, commonAttrMeta, decoratorNames,
@@ -268,7 +271,8 @@ define(['js/logger',
             propList[CONSTANTS.PROPERTY_GROUP_POINTERS] = {
                 name: CONSTANTS.PROPERTY_GROUP_POINTERS,
                 text: CONSTANTS.PROPERTY_GROUP_POINTERS,
-                value: undefined
+                value: undefined,
+                isFolder: true
             };
 
             this._addItemsToResultList(selectedObjIDs, commonAttrMeta, decoratorNames,

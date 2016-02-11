@@ -112,7 +112,7 @@ define(['js/logger',
             attrID.splice(0, 1);
             this._addPropertyItem(attrID, parentFolderKey + '.', propDesc, this._folders[parentFolderKey]);
         } else {
-            if (propDesc.value === undefined || propDesc.value === null) {
+            if (propDesc.isFolder === true) {
                 this._folders[propDesc.name] = guiObj.addFolder(propDesc.name, propDesc.text);
             } else {
                 this._widgets[propDesc.id] = guiObj.add(propDesc);
