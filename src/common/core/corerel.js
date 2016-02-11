@@ -123,13 +123,22 @@ define([
             return list;
         }
 
+        function isObject(node) {
+            node = innerCore.normalize(node);
+            return typeof node.data === 'object' && node.data !== null;
+        }
+
+        function isValidNodeThrow(node) {
+            test('coretree', innerCore.isValidNode(node));
+            test('isobject', isObject(node));
+        }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
         this.isValidNode = function (node) {
             try {
-                test('coretree', innerCore.isValidNode(node));
-                test('isobject', innerCore.isObject(node));
+                isValidNodeThrow(node);
 
                 return true;
             } catch (error) {
@@ -147,7 +156,7 @@ define([
                 return false;
             }
             return name.slice(-CONSTANTS.COLLECTION_NAME_SUFFIX.length) !==
-                CONSTANTS.COLLECTION_NAME_SUFFIX;
+                   CONSTANTS.COLLECTION_NAME_SUFFIX;
         };
 
         this.getAttributeNames = function (node) {
@@ -155,21 +164,26 @@ define([
 
             var data,
                 keys,
-                i;
+                i,
+                result = [],
+                key;
 
             data = (innerCore.getProperty(node, CONSTANTS.ATTRIBUTES_PROPERTY) || {});
             keys = Object.keys(data);
             i = keys.length;
             while (--i >= 0) {
-                if (keys[i].charAt(0) === '') {
+                key = keys[i];
+                if (key.charAt(0) === '') {
                     logger.error('empty named attribute found in node [' + innerCore.getPath(node) + ']');
-                    keys.splice(i, 1);
-                } else if (keys[i].charAt(0) === '_') {
-                    keys.splice(i, 1);
+                    //keys.splice(i, 1);
+                } else if (key.charAt(0) === '_') {
+                    //keys.splice(i, 1);
+                } else {
+                    result.push(key);
                 }
             }
 
-            return keys;
+            return result;
         };
 
         this.getRegistryNames = function (node) {
@@ -177,21 +191,26 @@ define([
 
             var data,
                 keys,
-                i;
+                i,
+                result = [],
+                key;
 
             data = (innerCore.getProperty(node, CONSTANTS.REGISTRY_PROPERTY) || {});
             keys = Object.keys(data);
             i = keys.length;
             while (--i >= 0) {
+                key = keys[i];
                 if (keys[i].charAt(0) === '') {
                     logger.error('empty named attribute found in node [' + innerCore.getPath(node) + ']');
-                    keys.splice(i, 1);
+                    //keys.splice(i, 1);
                 } else if (keys[i].charAt(0) === '_') {
-                    keys.splice(i, 1);
+                    //keys.splice(i, 1);
+                } else {
+                    result.push(key);
                 }
             }
 
-            return keys;
+            return result;
         };
 
         this.getAttribute = function (node, name) {
@@ -261,7 +280,7 @@ define([
                 parent = parameters.parent;
 
             ASSERT(!parent || self.isValidNode(parent));
-            ASSERT(!relid || typeof relid === 'string');
+            // ASSERT(!relid || typeof relid === 'string');
 
             var node;
             if (parent) {
@@ -561,32 +580,12 @@ define([
         };
 
         this.getPointerNames = function (node) {
-            ASSERT(self.isValidNode(node));
-
-            //var source = '';
-            //var names = [];
-            //
-            //do {
-            //    var child = (coretree.getProperty(node, coretree.constants.OVERLAYS_PROPERTY) || {})[source];
-            //    if (child) {
-            //        for (var name in child) {
-            //            ASSERT(names.indexOf(name) === -1);
-            //            if (isPointerName(name)) {
-            //                names.push(name);
-            //            }
-            //        }
-            //    }
-            //
-            //    source = '/' + coretree.getRelid(node) + source;
-            //    node = coretree.getParent(node);
-            //} while (node);
-            //
-            //return names;
-
             return self.getPointerNamesFrom(node, '');
         };
 
         this.getPointerNamesFrom = function (node, source) {
+            ASSERT(self.isValidNode(node));
+
             var names = [];
 
             do {
@@ -608,30 +607,6 @@ define([
         };
 
         this.getPointerPath = function (node, name) {
-            ASSERT(self.isValidNode(node) && typeof name === 'string');
-
-            //var source = '';
-            //var target;
-            //
-            //do {
-            //    var child = (coretree.getProperty(node, coretree.constants.OVERLAYS_PROPERTY) || {})[source];
-            //    if (child) {
-            //        target = child[name];
-            //        if (target !== undefined) {
-            //            break;
-            //        }
-            //    }
-            //
-            //    source = '/' + coretree.getRelid(node) + source;
-            //    node = coretree.getParent(node);
-            //} while (node);
-            //
-            //if (target !== undefined) {
-            //    ASSERT(node);
-            //    target = coretree.joinPaths(coretree.getPath(node), target);
-            //}
-            //
-            //return target;
             return self.getPointerPathFrom(node, '', name);
         };
 
@@ -655,7 +630,6 @@ define([
             } while (node);
 
             if (target !== undefined) {
-                ASSERT(node);
                 target = innerCore.joinPaths(innerCore.getPath(node), target);
             }
 
@@ -682,7 +656,6 @@ define([
             } while (node);
 
             if (target !== undefined) {
-                ASSERT(typeof target === 'string' && node);
                 return innerCore.loadByPath(node, target);
             } else {
                 return null;

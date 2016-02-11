@@ -97,7 +97,7 @@ define([
 
             if (typeof data === 'object' && data !== null) {
                 data = data[relid];
-                return typeof data === 'undefined' ? __getEmptyData() : data;
+                return data === undefined ? __getEmptyData() : data;
             } else {
                 return null;
             }
@@ -148,20 +148,22 @@ define([
 
             var done = __getEmptyData(),
                 keys = Object.keys(data),
+                key,
                 i, child, sub, hash;
 
             delete data._mutable;
 
             for (i = 0; i < keys.length; i++) {
-                child = data[keys[i]];
+                key = keys[i];
+                child = data[key];
                 if (__isMutableData(child)) {
                     sub = __saveData(child);
                     if (sub === __getEmptyData()) {
-                        delete data[keys[i]];
+                        delete data[key];
                     } else {
                         done = sub;
                         if (typeof child[ID_NAME] === 'string') {
-                            data[keys[i]] = child[ID_NAME];
+                            data[key] = child[ID_NAME];
                         }
                     }
                 } else {
@@ -171,7 +173,7 @@ define([
 
             if (done !== __getEmptyData()) {
                 hash = data[ID_NAME];
-                ASSERT(hash === '' || typeof hash === 'undefined');
+                ASSERT(hash === '' || hash === undefined);
 
                 if (hash === '') {
                     hash = '#' + GENKEY(data, gmeConfig);
@@ -275,6 +277,30 @@ define([
                     }
                 }
             }
+        }
+
+        function isValidNodeThrow(node) {
+          __test('object', typeof node === 'object' && node !== null);
+          __test('object 2', node.hasOwnProperty('parent') && node.hasOwnProperty('relid'));
+          __test('parent', typeof node.parent === 'object');
+          __test('relid', typeof node.relid === 'string' || node.relid === null);
+          __test('parent 2', (node.parent === null) === (node.relid === null));
+          __test('age', node.age >= 0 && node.age <= CONSTANTS.MAX_AGE);
+          __test('children', node.children === null || node.children instanceof Array);
+          __test('children 2', (node.age === CONSTANTS.MAX_AGE) === (node.children === null));
+          __test('data', typeof node.data === 'object' || typeof node.data === 'string' ||
+              typeof node.data === 'number');
+
+          if (node.parent !== null) {
+              __test('age 2', node.age >= node.parent.age);
+              __test('mutable', !__isMutableData(node.data) || __isMutableData(node.parent.data));
+          }
+
+          if (!checkValidTreeRunning) {
+              checkValidTreeRunning = true;
+              __checkValidTree(self.getRoot(node));
+              checkValidTreeRunning = false;
+          }
         }
 
         // ------- static methods
@@ -520,10 +546,7 @@ define([
             return __isMutableData(node.data);
         };
 
-        this.isObject = function (node) {
-            node = self.normalize(node);
-            return typeof node.data === 'object' && node.data !== null;
-        };
+
 
         this.isEmpty = function (node) {
             node = self.normalize(node);
@@ -695,29 +718,18 @@ define([
         };
 
         this.getKeys = function (node, predicate) {
-            ASSERT(typeof predicate === 'undefined' || typeof predicate === 'function');
-
+            var result;
             node = self.normalize(node);
-            predicate = predicate || __noUnderscore;
 
             if (typeof node.data !== 'object' || node.data === null) {
                 return null;
             }
 
-            var keys = Object.keys(node.data),
-                result = [],
-                i = keys.length;
-
-            while (--i >= 0) {
-                if (predicate(keys[i])) {
-                    result.push(keys[i]);
-                }
-            }
+            result = this.getRawKeys(node.data, predicate);
             return result;
         };
 
         this.getRawKeys = function (object, predicate) {
-            ASSERT(typeof predicate === 'undefined' || typeof predicate === 'function');
             predicate = predicate || __noUnderscore;
 
             var keys = Object.keys(object);
@@ -749,7 +761,7 @@ define([
                 hash = node.data[ID_NAME];
             }
 
-            ASSERT(typeof hash === 'string' || typeof hash === 'undefined');
+            ASSERT(typeof hash === 'string' || hash === undefined);
             return hash;
         };
 
@@ -774,7 +786,7 @@ define([
                 delete node.data[ID_NAME];
             }
 
-            ASSERT(typeof node.children[ID_NAME] === 'undefined');
+            ASSERT(node.children[ID_NAME] === undefined);
         };
 
         this.persist = function (node) {
@@ -831,12 +843,14 @@ define([
 
             node = self.getChild(node, relid);
 
-            if (REGEXP.DB_HASH.test(node.data)) {
+            if (typeof node.data === 'object') {
+                return node.data !== null ? node : null;
+            } else if (REGEXP.DB_HASH.test(node.data)) {
                 // TODO: this is a hack, we should avoid loading it multiple
                 // times
                 return TASYNC.call(__loadChild2, node, storage.loadObject(node.data));
             } else {
-                return typeof node.data === 'object' && node.data !== null ? node : null;
+                return null;
             }
         };
 
@@ -845,12 +859,14 @@ define([
 
             node = self.getChild(node, relid);
 
-            if (REGEXP.DB_HASH.test(node.data)) {
+            if (typeof node.data === 'object') {
+                return node.data !== null ? self.getHash(node) : null;
+            } else if (REGEXP.DB_HASH.test(node.data)) {
                 // TODO: this is a hack, we should avoid loading it multiple
                 // times
                 return node.data;
             } else {
-                return typeof node.data === 'object' && node.data !== null ? self.getHash(node) : null;
+                return null;
             }
         };
 
@@ -863,31 +879,9 @@ define([
         };
 
         // ------- valid -------
-
         this.isValidNode = function (node) {
             try {
-                __test('object', typeof node === 'object' && node !== null);
-                __test('object 2', node.hasOwnProperty('parent') && node.hasOwnProperty('relid'));
-                __test('parent', typeof node.parent === 'object');
-                __test('relid', typeof node.relid === 'string' || node.relid === null);
-                __test('parent 2', (node.parent === null) === (node.relid === null));
-                __test('age', node.age >= 0 && node.age <= CONSTANTS.MAX_AGE);
-                __test('children', node.children === null || node.children instanceof Array);
-                __test('children 2', (node.age === CONSTANTS.MAX_AGE) === (node.children === null));
-                __test('data', typeof node.data === 'object' || typeof node.data === 'string' ||
-                    typeof node.data === 'number');
-
-                if (node.parent !== null) {
-                    __test('age 2', node.age >= node.parent.age);
-                    __test('mutable', !__isMutableData(node.data) || __isMutableData(node.parent.data));
-                }
-
-                if (!checkValidTreeRunning) {
-                    checkValidTreeRunning = true;
-                    __checkValidTree(self.getRoot(node));
-                    checkValidTreeRunning = false;
-                }
-
+                isValidNodeThrow(node);
                 return true;
             } catch (error) {
                 logger.error(error.message, {stack: error.stack, node: node});

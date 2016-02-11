@@ -831,18 +831,18 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             logTxt = '',
             guids = {};
 
-        function log(txt) {
-            logTxt += '\n' + txt;
-        }
+        //function log(txt) {
+        //    logTxt += '\n' + txt;
+        //}
 
-        function logId(nodes, id) {
-            var txtId = id + '';
-            if (nodes[id] && nodes[id].attributes && nodes[id].attributes.name) {
-                txtId = nodes[id].attributes.name + '(' + id + ')';
-            }
-
-            return txtId;
-        }
+        //function logId(nodes, id) {
+        //    var txtId = id + '';
+        //    if (nodes[id] && nodes[id].attributes && nodes[id].attributes.name) {
+        //        txtId = nodes[id].attributes.name + '(' + id + ')';
+        //    }
+        //
+        //    return txtId;
+        //}
 
         function loadImportBases(callback) {
             var needed = [],
@@ -890,7 +890,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
         }
 
         function updateRegistry(guid) {
-            var keys, i,
+            var keys, i, key,
                 node = nodes[guid],
                 jsonNode = updatedLibraryJson.nodes[guid];
 
@@ -898,14 +898,15 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             for (i = 0; i < keys.length; i++) {
                 core.delRegistry(node, keys[i]);
             }
-            keys = Object.keys(jsonNode.registry);
-            for (i = 0; i < keys.length; i++) {
-                core.setRegistry(node, keys[i], jsonNode.registry[keys[i]]);
+            //keys = Object.keys(jsonNode.registry);
+            //for (i = 0; i < keys.length; i++) {
+            for (key in jsonNode.registry) {
+                core.setRegistry(node, key, jsonNode.registry[key]);
             }
         }
 
         function updateAttributes(guid) {
-            var keys, i,
+            var keys, i, key,
                 node = nodes[guid],
                 jsonNode = updatedLibraryJson.nodes[guid];
 
@@ -913,14 +914,15 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             for (i = 0; i < keys.length; i++) {
                 core.delAttribute(node, keys[i]);
             }
-            keys = Object.keys(jsonNode.attributes);
-            for (i = 0; i < keys.length; i++) {
-                core.setAttribute(node, keys[i], jsonNode.attributes[keys[i]]);
+            // keys = Object.keys(jsonNode.attributes);
+            // for (i = 0; i < keys.length; i++) {
+            for (key in jsonNode.attributes) {
+                core.setAttribute(node, key, jsonNode.attributes[key]);
             }
         }
 
         function updateConstraints(guid) {
-            var keys, i,
+            var keys, i, key,
                 node = nodes[guid],
                 jsonNode = updatedLibraryJson.nodes[guid];
             keys = core.getOwnConstraintNames(node);
@@ -928,9 +930,10 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 core.delConstraint(node, keys[i]);
             }
 
-            keys = Object.keys(jsonNode.constraints || {});
-            for (i = 0; i < keys.length; i++) {
-                core.setConstraint(node, keys[i], jsonNode.constraints[keys[i]]);
+            // keys = Object.keys(jsonNode.constraints || {});
+            // for (i = 0; i < keys.length; i++) {
+            for (key in jsonNode.constraints) {
+                core.setConstraint(node, key, jsonNode.constraints[key]);
             }
         }
 
@@ -1019,31 +1022,33 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             return inheritanceOrdered;
         }
 
+        function getCombinedTarget(combinedId) {
+            var idArray = combinedId.split('@'),
+                node = nodes[idArray[0]],
+                pathArray = (idArray[1] || '').split('/'),
+                i;
+
+            pathArray.shift();
+
+            for (i = 0; i < pathArray.length; i += 1) {
+                node = core.createNode({parent: node, relid: pathArray[i]});
+            }
+
+            return node;
+        };
+
+        function isCombinedId(id) {
+            var idArray = id.split('@');
+            return idArray.length === 2 && nodes[idArray[0]] && idArray[1][0] === '/';
+        };
+
         function updateNodeRelations(guid) {
             // Although it is possible that we set the base pointer at this point
             // we should go through inheritance just to be sure.
             var node = nodes[guid],
                 jsonNode = updatedLibraryJson.nodes[guid],
                 keys, i, j, k, target, memberGuid, member,
-                baseMemberPaths, base,
-                isCombinedId = function (id) {
-                    var idArray = id.split('@');
-                    return idArray.length === 2 && nodes[idArray[0]] && idArray[1][0] === '/';
-                },
-                getCombinedTarget = function (combinedId) {
-                    var idArray = combinedId.split('@'),
-                        node = nodes[idArray[0]],
-                        pathArray = (idArray[1] || '').split('/'),
-                        i;
-
-                    pathArray.shift();
-
-                    for (i = 0; i < pathArray.length; i += 1) {
-                        node = core.createNode({parent: node, relid: pathArray[i]});
-                    }
-
-                    return node;
-                };
+                baseMemberPaths, base, key, set, setj;
 
             //pointers
             //The base pointer should be always removed, as at this point it could be already set falsly.
@@ -1055,50 +1060,55 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 }
             }
 
-            keys = Object.keys(jsonNode.pointers);
-            for (i = 0; i < keys.length; i++) {
-                target = jsonNode.pointers[keys[i]];
+            // keys = Object.keys(jsonNode.pointers);
+            // for (i = 0; i < keys.length; i++) {
+            for (key in jsonNode.pointers) {
+                target = jsonNode.pointers[key];
                 if (target === null) {
-                    core.setPointer(node, keys[i], null);
+                    core.setPointer(node, key, null);
                 } else if (nodes[target] && guids[target] !== 'remove') {
-                    core.setPointer(node, keys[i], nodes[target]);
+                    core.setPointer(node, key, nodes[target]);
                 } else if (isCombinedId(target)) {
-                    core.setPointer(node, keys[i], getCombinedTarget(target));
+                    core.setPointer(node, key, getCombinedTarget(target));
                 } else {
                     throw new Error('invalid pointer target found [' + target +
-                        '] for pointer [' + keys[i] + '] of node [' + guid + ']');
+                        '] for pointer [' + key + '] of node [' + guid + ']');
                 }
             }
 
             //sets
             if (guids[guid] === 'update') {
                 keys = core.getSetNames(node);
-                for (i = 0; i < keys.length; i++) {
+                for (i = 0; i < keys.length; i += 1) {
                     core.deleteSet(node, keys[i]);
                 }
             }
 
-            keys = Object.keys(jsonNode.sets);
-            for (i = 0; i < keys.length; i++) {
+            // keys = Object.keys(jsonNode.sets);
+            // for (i = 0; i < keys.length; i++) {
+            for (key in jsonNode.sets) {
+                set = jsonNode.sets[key];
                 //for every set we create it, go through its members...
                 base = core.getBase(node);
-                baseMemberPaths = base !== null ? core.getMemberPaths(base, keys[i]) : [];
-                core.createSet(node, keys[i]);
-                for (j = 0; j < jsonNode.sets[keys[i]].length; j++) {
-                    memberGuid = jsonNode.sets[keys[i]][j].guid;
+                baseMemberPaths = base !== null ? core.getMemberPaths(base, key) : [];
+                core.createSet(node, key);
+                for (j = 0; j < set.length; j++) {
+                    setj = set[j];
+                    memberGuid = setj.guid;
                     if (nodes[memberGuid] || isCombinedId(memberGuid)) {
                         member = getCombinedTarget(memberGuid);
-                        if (baseMemberPaths.indexOf(core.getPath(member)) === -1 ||
-                            jsonNode.sets[keys[i]][j].overridden === true) {
-                            core.addMember(node, keys[i], member);
+                        var memberPath = core.getPath(member);
+                        if (baseMemberPaths.indexOf(memberPath) === -1 ||
+                            setj.overridden === true) {
+                            core.addMember(node, key, member);
                         }
-                        for (k in jsonNode.sets[keys[i]][j].attributes) {
-                            core.setMemberAttribute(node, keys[i], core.getPath(member), k,
-                                jsonNode.sets[keys[i]][j].attributes[k]);
+                        for (k in setj.attributes) {
+                            core.setMemberAttribute(node, key, memberPath, k,
+                                setj.attributes[k]);
                         }
-                        for (k in jsonNode.sets[keys[i]][j].registry) {
-                            core.setMemberRegistry(node, keys[i], core.getPath(member), k,
-                                jsonNode.sets[keys[i]][j].registry[k]);
+                        for (k in setj.registry) {
+                            core.setMemberRegistry(node, key, memberPath, k,
+                                setj.registry[k]);
                         }
                     }
                 }
@@ -1113,8 +1123,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             }
         }
 
-        function updateAttributeMeta(guid) {
-            var jsonMeta = updatedLibraryJson.nodes[guid].meta.attributes || {},
+        function updateAttributeMeta(guid, meta) {
+            var jsonMeta = meta.attributes || {},
                 node = nodes[guid],
                 keys, i;
 
@@ -1124,8 +1134,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             }
         }
 
-        function updateChildrenMeta(guid) {
-            var jsonMeta = updatedLibraryJson.nodes[guid].meta.children || {items: [], minItems: [], maxItems: []},
+        function updateChildrenMeta(guid, meta) {
+            var jsonMeta = meta.children || {items: [], minItems: [], maxItems: []},
                 i;
             ASSERT(jsonMeta.items.length === jsonMeta.minItems.length &&
                 jsonMeta.minItems.length === jsonMeta.maxItems.length);
@@ -1136,8 +1146,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             }
         }
 
-        function updatePointerMeta(guid) {
-            var jsonMeta = updatedLibraryJson.nodes[guid].meta.pointers || {},
+        function updatePointerMeta(guid, meta) {
+            var jsonMeta = meta.pointers || {},
                 keys = Object.keys(jsonMeta),
                 i, j;
 
@@ -1153,8 +1163,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             }
         }
 
-        function updateAspectMeta(guid) {
-            var jsonMeta = updatedLibraryJson.nodes[guid].meta.aspects || {},
+        function updateAspectMeta(guid, meta) {
+            var jsonMeta = meta.aspects || {},
                 keys = Object.keys(jsonMeta),
                 i, j;
 
@@ -1165,8 +1175,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             }
         }
 
-        function updateConstraintMeta(guid) {
-            var jsonMeta = updatedLibraryJson.nodes[guid].meta.constraints || {},
+        function updateConstraintMeta(guid, meta) {
+            var jsonMeta = meta.constraints || {},
                 keys = Object.keys(jsonMeta),
                 i;
 
@@ -1179,12 +1189,12 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             if (guids[guid] === 'update') {
                 core.clearMetaRules(nodes[guid]);
             }
-
-            updateAttributeMeta(guid);
-            updateChildrenMeta(guid);
-            updatePointerMeta(guid);
-            updateAspectMeta(guid);
-            updateConstraintMeta(guid);
+            var meta = updatedLibraryJson.nodes[guid].meta;
+            updateAttributeMeta(guid, meta);
+            updateChildrenMeta(guid, meta);
+            updatePointerMeta(guid, meta);
+            updateAspectMeta(guid, meta);
+            updateConstraintMeta(guid, meta);
         }
 
         function updateMetaRules(guid, containmentTreeObject) {
@@ -1327,8 +1337,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                     //TODO now we make three rounds although one would be sufficient on ordered lists
                     for (i = 0; i < oldkeys.length; i++) {
                         if (!updatedLibraryJson.nodes[oldkeys[i]]) {
-                            log('node ' + logId(jsonExport.nodes, oldkeys[i]) +
-                                ', all of its sub-types and its children will be removed');
+                            //log('node ' + logId(jsonExport.nodes, oldkeys[i]) +
+                            //    ', all of its sub-types and its children will be removed');
                             guids[oldkeys[i]] = 'remove';
                             delkeys.push(oldkeys[i]);
                         }
@@ -1336,14 +1346,14 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
 
                     for (i = 0; i < oldkeys.length; i++) {
                         if (updatedLibraryJson.nodes[oldkeys[i]]) {
-                            log('node ' + logId(jsonExport.nodes, oldkeys[i]) + ' will be updated');
+                            //log('node ' + logId(jsonExport.nodes, oldkeys[i]) + ' will be updated');
                             guids[oldkeys[i]] = 'update';
                         }
                     }
 
                     for (i = 0; i < newkeys.length; i++) {
                         if (!jsonExport.nodes[newkeys[i]]) {
-                            log('node ' + logId(jsonExport.nodes, newkeys[i]) + ' will be added');
+                            //log('node ' + logId(jsonExport.nodes, newkeys[i]) + ' will be added');
                             guids[newkeys[i]] = 'insert';
                         }
                     }
@@ -1378,7 +1388,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                     //after everything is done we try to synchronize the metaSheet info
                     importMetaSheetInfo(core.getRoot(originLibraryRoot));
 
-                    callback(null, logTxt);
+                    callback(null, logTxt || 'No information is available.');
                 });
             });
         });
