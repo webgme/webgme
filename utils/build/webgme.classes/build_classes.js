@@ -33,8 +33,22 @@ var requirejs = require('requirejs'),
         include:[path]
     };
 
-requirejs.optimize(config, function (data) {
-    console.log(data);
-}, function (err) {
-    console.log(err);
-});
+function doBuild(callback) {
+    requirejs.optimize(config, function (data) {
+        callback(null, data);
+    }, function (err) {
+        callback(err);
+    });
+}
+
+if (require.main === module) {
+    doBuild(function (err, data) {
+        if (err) {
+            console.error(err);
+        } else {
+            console.log(data);
+        }
+    });
+}
+
+module.exports = doBuild;

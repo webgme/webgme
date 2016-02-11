@@ -100,7 +100,8 @@ function createAPI(app, mountPath, middlewareOpts) {
             organization_url: getFullUrl(req, '/orgs/{org}'), //jshint ignore: line
             project_url: getFullUrl(req, '/projects/{owner}/{project}'), //jshint ignore: line
             user_url: getFullUrl(req, '/users/{user}'), //jshint ignore: line
-            documentation_url: req.protocol + '://' + req.headers.host + apiDocumentationMountPoint//jshint ignore: line
+            api_documentation_url: req.protocol + '://' + req.headers.host + apiDocumentationMountPoint, //jshint ignore: line
+            source_code_documentation_url: req.protocol + '://' + req.headers.host + '/docs/source/index.html'//jshint ignore: line
         });
     });
 
