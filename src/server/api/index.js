@@ -288,8 +288,13 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(JSON.parse(content));
             })
             .catch(function (err) {
-                logger.error('Errors reading in: ', componentsPath, err);
-                next(err);
+                if (err.code === 'ENOENT') {
+                    logger.debug('File did not exist returning empty obj', componentsPath);
+                    res.json({});
+                } else {
+                    logger.error('Errors reading in: ', componentsPath, err);
+                    next(err);
+                }
             });
     });
 
@@ -304,8 +309,13 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(contentObj[req.params.componentId] || {});
             })
             .catch(function (err) {
-                logger.error(err);
-                next(err);
+                if (err.code === 'ENOENT') {
+                    logger.debug('File did not exist returning empty obj', componentsPath);
+                    res.json({});
+                } else {
+                    logger.error('Errors reading in: ', componentsPath, err);
+                    next(err);
+                }
             });
     });
 
