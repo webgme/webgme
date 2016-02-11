@@ -16,7 +16,7 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
 
         this.__truncationSuspended = false;
 
-        NumberBoxWidget.superclass.call(this, propertyDesc);
+        NumberWidgetBase.call(this, propertyDesc);
 
         this.__input = INPUT_BASE.clone();
         this.__input.val(this.propertyValue);
@@ -31,7 +31,7 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
         });
 
         this.__input.on('keydown', function (e) {
-              // When pressing entire, you can be as precise as you want.
+            // When pressing entire, you can be as precise as you want.
             if (e.keyCode === 13) {
                 self.__truncationSuspended = true;
                 this.blur();
@@ -44,12 +44,8 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
         this.el.append(this.__input);
     };
 
-    NumberBoxWidget.superclass = NumberWidgetBase;
-
-    _.extend(
-        NumberBoxWidget.prototype,
-        NumberWidgetBase.prototype
-    );
+    NumberBoxWidget.prototype = Object.create(NumberWidgetBase.prototype);
+    NumberBoxWidget.prototype.constructor = NumberBoxWidget;
 
     /*OVERRIDE INHERITED PROPERTIES*/
 
@@ -59,7 +55,7 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
             this._roundToDecimal(this.getValue(), this.__precision);
 
         this.__input.val(val);
-        return NumberBoxWidget.superclass.prototype.updateDisplay.call(this);
+        return NumberWidgetBase.prototype.updateDisplay.call(this);
     };
 
     /*DEFINE CUSTOM PROPERTIES*/
@@ -86,7 +82,7 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
     };
 
     NumberBoxWidget.prototype.setReadOnly = function (isReadOnly) {
-        NumberBoxWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+        NumberWidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         if (isReadOnly === true) {
             this.__input.attr('disabled', 'disabled');

@@ -6,7 +6,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define([], function () {
+define(['common/core/constants'], function (CoreConstants) {
     'use strict';
     //return string constants
     return {
@@ -47,7 +47,9 @@ define([], function () {
         /*
          * Dedicated RELATION names
          */
-        RELATION_CONTAINMENT: 'containment'
+        RELATION_CONTAINMENT: 'containment',
+
+        CORE: CoreConstants
 
     };
 });

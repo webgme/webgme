@@ -1,4 +1,4 @@
-/*globals define, _, $, WebGMEGlobal*/
+/*globals define, $, WebGMEGlobal*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -23,7 +23,7 @@ define([
         ASSET_LINK = $('<a href="" target="_self"/>');
 
     AssetWidget = function (propertyDesc) {
-        AssetWidget.superclass.call(this, propertyDesc);
+        WidgetBase.call(this, propertyDesc);
         this._logger = Logger.create('gme:js:Controls:PropertyGrid:Widgets:AssetWidget',
             WebGMEGlobal.gmeConfig.client.log);
 
@@ -45,9 +45,8 @@ define([
         this.updateDisplay();
     };
 
-    AssetWidget.superclass = WidgetBase;
-
-    _.extend(AssetWidget.prototype, WidgetBase.prototype);
+    AssetWidget.prototype = Object.create(WidgetBase.prototype);
+    AssetWidget.prototype.constructor = AssetWidget;
 
     AssetWidget.prototype._attachFileDropHandlers = function () {
         var self = this;
@@ -130,11 +129,11 @@ define([
             });
         }
 
-        return AssetWidget.superclass.prototype.updateDisplay.call(this);
+        return WidgetBase.prototype.updateDisplay.call(this);
     };
 
     AssetWidget.prototype.setReadOnly = function (isReadOnly) {
-        AssetWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+        WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         if (this.__btnAttach) {
             if (isReadOnly === true) {

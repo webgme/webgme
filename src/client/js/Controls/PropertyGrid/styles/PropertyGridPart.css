@@ -26,7 +26,7 @@
       .pgp ul li.folder {
         border-bottom: 0;
         padding: 0;
-        border-left: 4px solid rgba(0, 0, 0, 0); }
+        border-left: 4px solid transparent; }
       .pgp ul li.title {
         padding-left: 14px;
         background: gainsboro url(data:image/gif;base64,R0lGODlhBQAFAPcAAAAAAAAAMwAAZgAAmQAAzAAA/wAzAAAzMwAzZgAzmQAzzAAz/wBmAABmMwBmZgBmmQBmzABm/wCZAACZMwCZZgCZmQCZzACZ/wDMAADMMwDMZgDMmQDMzADM/wD/AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMzADMzMzMzZjMzmTMzzDMz/zNmADNmMzNmZjNmmTNmzDNm/zOZADOZMzOZZjOZmTOZzDOZ/zPMADPMMzPMZjPMmTPMzDPM/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYAmWYAzGYA/2YzAGYzM2YzZmYzmWYzzGYz/2ZmAGZmM2ZmZmZmmWZmzGZm/2aZAGaZM2aZZmaZmWaZzGaZ/2bMAGbMM2bMZmbMmWbMzGbM/2b/AGb/M2b/Zmb/mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5kzAJkzM5kzZpkzmZkzzJkz/5lmAJlmM5lmZplmmZlmzJlm/5mZAJmZM5mZZpmZmZmZzJmZ/5nMAJnMM5nMZpnMmZnMzJnM/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wzAMwzM8wzZswzmcwzzMwz/8xmAMxmM8xmZsxmmcxmzMxm/8yZAMyZM8yZZsyZmcyZzMyZ/8zMAMzMM8zMZszMmczMzMzM/8z/AMz/M8z/Zsz/mcz/zMz///8AAP8AM/8AZv8Amf8AzP8A//8zAP8zM/8zZv8zmf8zzP8z//9mAP9mM/9mZv9mmf9mzP9m//+ZAP+ZM/+ZZv+Zmf+ZzP+Z///MAP/MM//MZv/Mmf/MzP/M////AP//M///Zv//mf//zP////X19QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAANgALAAAAAAFAAUAAAgQALEJHEgQgEGD2A4OBCAwIAA7) 4px 10px no-repeat;
@@ -35,22 +35,32 @@
         margin-left: -4px; }
       .pgp ul li.cr {
         clear: both;
-        border-left: 3px solid rgba(0, 0, 0, 0);
+        border-left: 3px solid transparent;
         /** Name-half (left) */
         /** Controllers */
         /** Controller-half (right) */ }
+        .pgp ul li.cr.asset {
+          border-left-color: #E8E8E8; }
         .pgp ul li.cr.boolean {
+          border-left-color: #E8E8E8; }
+        .pgp ul li.cr.integer {
           border-left-color: #806787; }
+          .pgp ul li.cr.integer input[type=text] {
+            color: black; }
+        .pgp ul li.cr.float {
+          border-left-color: #2FA1D6; }
+          .pgp ul li.cr.float input[type=text] {
+            color: black; }
         .pgp ul li.cr.number {
-          border-left-color: #2fa1d6; }
+          border-left-color: #2FA1D6; }
           .pgp ul li.cr.number input[type=text] {
-            color: #2fa1d6; }
+            color: #2FA1D6; }
         .pgp ul li.cr.string {
-          border-left-color: #1ed36f; }
+          border-left-color: #E8E8E8; }
           .pgp ul li.cr.string input[type=text] {
             color: #1ed36f; }
         .pgp ul li.cr.custom {
-          border-left-color: yellow; }
+          border-left-color: #FFFF00; }
         .pgp ul li.cr .property-name {
           cursor: default;
           float: left;
@@ -89,6 +99,15 @@
             margin-top: -2px;
             margin-bottom: 0;
             padding: 3px;
+            width: 100%;
+            outline: none; }
+          .pgp ul li.cr .c input[type=number] {
+            border: 0;
+            margin-top: -2px;
+            margin-bottom: 0;
+            padding-left: 2px;
+            padding-bottom: 0;
+            padding-top: 0;
             width: 100%;
             outline: none; }
           .pgp ul li.cr .c input[type=text]:not([disabled]) {

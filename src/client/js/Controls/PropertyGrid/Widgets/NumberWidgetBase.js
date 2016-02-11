@@ -1,4 +1,4 @@
-/*globals define, _ */
+/*globals define*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -12,7 +12,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
     NumberWidgetBase = function (propertyDesc) {
 
-        NumberWidgetBase.superclass.call(this, propertyDesc);
+        WidgetBase.call(this, propertyDesc);
 
         this.__min = propertyDesc.minValue;
         this.__max = propertyDesc.maxValue;
@@ -33,12 +33,8 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
     };
 
     /* 'INHERIT' FROM WidgetBase */
-    NumberWidgetBase.superclass = WidgetBase;
-
-    _.extend(
-        NumberWidgetBase.prototype,
-        WidgetBase.prototype
-    );
+    NumberWidgetBase.prototype = Object.create(WidgetBase.prototype);
+    NumberWidgetBase.prototype.constructor = NumberWidgetBase;
 
     /*OVERRIDE INHERITED PROPERTIES*/
     NumberWidgetBase.prototype.setValue = function (v) {
@@ -53,7 +49,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
             v = Math.round(v / this.__step) * this.__step;
         }
 
-        NumberWidgetBase.superclass.prototype.setValue.call(this, v);
+        WidgetBase.prototype.setValue.call(this, v);
         this.updateDisplay();
 
         return this;

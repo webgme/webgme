@@ -1,4 +1,4 @@
-/*globals define, _, $*/
+/*globals define, $*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -15,7 +15,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
     BooleanWidget = function (propertyDesc) {
         var self = this;
 
-        BooleanWidget.superclass.call(this, propertyDesc);
+        WidgetBase.call(this, propertyDesc);
 
         this.__checkbox = CHECKBOX_BASE.clone();
         this.__checkbox.prop('checked', this.propertyValue);
@@ -30,12 +30,8 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         this.el.append(this.__checkbox);
     };
 
-    BooleanWidget.superclass = WidgetBase;
-
-    _.extend(
-        BooleanWidget.prototype,
-        WidgetBase.prototype
-    );
+    BooleanWidget.prototype = Object.create(WidgetBase.prototype);
+    BooleanWidget.prototype.constructor = BooleanWidget;
 
     BooleanWidget.prototype.updateDisplay = function () {
 
@@ -45,11 +41,11 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
             this.__checkbox.attr('checked', false);
         }
 
-        return BooleanWidget.superclass.prototype.updateDisplay.call(this);
+        return WidgetBase.prototype.updateDisplay.call(this);
     };
 
     BooleanWidget.prototype.setReadOnly = function (isReadOnly) {
-        BooleanWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+        WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         if (isReadOnly === true) {
             this.__checkbox.attr('disabled', 'disabled');

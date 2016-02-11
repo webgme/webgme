@@ -1,4 +1,4 @@
-/*globals define, _, $*/
+/*globals define, $*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -15,7 +15,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
     DialogWidget = function (propertyDesc) {
         var self = this;
 
-        DialogWidget.superclass.call(this, propertyDesc);
+        WidgetBase.call(this, propertyDesc);
 
         this.__label = LABEL_BASE.clone();
         this.el.append(this.__label);
@@ -42,21 +42,17 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         this.updateDisplay();
     };
 
-    DialogWidget.superclass = WidgetBase;
-
-    _.extend(
-        DialogWidget.prototype,
-        WidgetBase.prototype
-    );
+    DialogWidget.prototype = Object.create(WidgetBase.prototype);
+    DialogWidget.prototype.constructor = DialogWidget;
 
     DialogWidget.prototype.updateDisplay = function () {
         this.__label.text(this.propertyValue);
         this.__label.attr('title', this.propertyValue);
-        return DialogWidget.superclass.prototype.updateDisplay.call(this);
+        return WidgetBase.prototype.updateDisplay.call(this);
     };
 
     DialogWidget.prototype.setReadOnly = function (isReadOnly) {
-        DialogWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+        WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         if (this.__btnDialogOpen) {
             if (isReadOnly === true) {

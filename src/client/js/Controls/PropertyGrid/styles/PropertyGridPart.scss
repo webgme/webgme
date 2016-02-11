@@ -11,8 +11,14 @@ $hover-lighten: 5%;
 $border-lighten: 7%;
 $active-lighten: 10%;
 
+$asset-border-color: #E8E8E8;
 $number-color: #2FA1D6;
-$boolean-color: #806787;
+$integer-color: black;
+$integer-border-color: #806787;
+$float-color: black;
+$float-border-color: #2FA1D6;
+$boolean-border-color: #E8E8E8;
+$string-border-color: #E8E8E8;
 $string-color: #1ed36f;
 $custom-color: #FFFF00;
 $type-border-width: 3px;
@@ -73,8 +79,26 @@ $input-color: lighten($background-color, 18.5%);
         clear: both;
         border-left: $type-border-width solid rgba(0, 0, 0, 0);
 
+        &.asset {
+          border-left-color: $asset-border-color;
+        }
+
         &.boolean {
-          border-left-color: $boolean-color;
+          border-left-color: $boolean-border-color;
+        }
+
+        &.integer {
+          border-left-color: $integer-border-color;
+          input[type=text] {
+            color: $integer-color;
+          }
+        }
+
+        &.float {
+          border-left-color: $float-border-color;
+          input[type=text] {
+            color: $float-color;
+          }
         }
 
         &.number {
@@ -85,7 +109,7 @@ $input-color: lighten($background-color, 18.5%);
         }
 
         &.string {
-          border-left-color: $string-color;
+          border-left-color: $string-border-color;
           input[type=text] {
             color: $string-color;
           }
@@ -152,6 +176,17 @@ $input-color: lighten($background-color, 18.5%);
             margin-top: -2px;
             margin-bottom: 0;
             padding: 3px;
+            width: 100%;
+            outline: none;
+          }
+
+          input[type=number] {
+            border: 0;
+            margin-top: -2px;
+            margin-bottom: 0;
+            padding-left: 2px;
+            padding-bottom: 0;
+            padding-top: 0;
             width: 100%;
             outline: none;
           }
