@@ -118,6 +118,7 @@ require.config({
             'js/jquery.WebGME',
 
             'css!globcss/main.css',
+            'css!globcss/print.css',
             'css!globcss/themes/dawn.css',
             'css!fonts/font-awesome/css/font-awesome.min.css',
             'css!fonts/webgme-icons/style.css'
