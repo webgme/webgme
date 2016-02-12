@@ -5,6 +5,7 @@
  */
 var testFixture = require('../_globals.js'),
     PROJECT_FILE = 'seeds/ActivePanels.json';
+    //"C:\\Users\\Zsolt\\Downloads\\Nagx3.json"
 
 describe.skip('Core Performance test', function () {
     'use strict';
@@ -21,7 +22,8 @@ describe.skip('Core Performance test', function () {
         rootHash,
         keysCnt,
         objKeys = Object.keys,
-        gmeAuth;
+        gmeAuth,
+        timeout = 500000;
 
     before(function (done) {
         gmeConfig = testFixture.getGmeConfig();
@@ -30,6 +32,7 @@ describe.skip('Core Performance test', function () {
         Q = testFixture.Q;
         Core = testFixture.Core;
 
+        this.timeout(timeout);
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
@@ -69,7 +72,7 @@ describe.skip('Core Performance test', function () {
 
         keysCnt = 0;
 
-        Object.keys = function () {
+        Object.keys = function (obj) {
             keysCnt += 1;
             return objKeys.apply(null, arguments);
         };
@@ -83,6 +86,7 @@ describe.skip('Core Performance test', function () {
     it('should traverse the entire-model and get all attributes', function (done) {
         var nodeCnt = 0,
             cnt = 0;
+        this.timeout(timeout);
         console.log('\n### attributes ###');
         core.loadTree(rootHash)
             .then(function (nodes) {
@@ -104,6 +108,7 @@ describe.skip('Core Performance test', function () {
     it('should traverse the entire-model and get all pointer paths', function (done) {
         var nodeCnt = 0,
             cnt = 0;
+        this.timeout(timeout);
         console.log('\n### pointers ###');
         core.loadTree(rootHash)
             .then(function (nodes) {
@@ -125,6 +130,7 @@ describe.skip('Core Performance test', function () {
     it('should traverse the entire-model and get all collections paths', function (done) {
         var nodeCnt = 0,
             cnt = 0;
+        this.timeout(timeout);
         console.log('\n### collections ###');
         core.loadTree(rootHash)
             .then(function (nodes) {
@@ -146,7 +152,7 @@ describe.skip('Core Performance test', function () {
     it('should traverse the entire-model and get set-members paths', function (done) {
         var nodeCnt = 0,
             cnt = 0;
-
+        this.timeout(timeout);
         console.log('\n### sets ###');
         core.loadTree(rootHash)
             .then(function (nodes) {
@@ -168,7 +174,7 @@ describe.skip('Core Performance test', function () {
     it('should traverse the entire-model and get all meta nodes', function (done) {
         var nodeCnt = 0,
             cnt = 0;
-
+        this.timeout(timeout);
         console.log('\n### meta-nodes ###');
         core.loadTree(rootHash)
             .then(function (nodes) {

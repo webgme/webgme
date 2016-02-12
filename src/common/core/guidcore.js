@@ -46,9 +46,9 @@ define([
             if (guid === null || guid === undefined) {
                 return [0, 0, 0, 0, 0, 0, 0, 0];
             }
-            var array = [];
-            for (var i = 0; i < guid.length / 4; i++) {
-                array.push(parseInt(guid.substr(4 * i, 4), 16));
+            var array = new Array(8);
+            for (var i = 0; i < guid.length / 4; i += 1) {
+                array[i] = parseInt(guid.substr(4 * i, 4), 16);
             }
             return array;
         }

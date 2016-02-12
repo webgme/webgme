@@ -39,14 +39,11 @@ define([
 
         function isFalseNode(node) {
             //TODO this hack should be removed, but now it seems just fine :)
-            if (typeof innerCore.getPointerPath(node, CONSTANTS.BASE_POINTER) === 'undefined') {
-                return true;
-            }
-            return false;
+            return innerCore.getPointerPath(node, CONSTANTS.BASE_POINTER) === undefined;
         }
 
         function loadRoot2(node) {
-            ASSERT(typeof node.base === 'undefined' || node.base === null);
+            ASSERT(node.base === undefined || node.base === null);
             //kecso - TODO it should be undefined, but maybe because of the cache it can be null
 
             node.base = null;
@@ -87,9 +84,9 @@ define([
 
         function loadBase(node) {
             var path = innerCore.getPath(node);
-            ASSERT(node === null || typeof node.base === 'undefined' || typeof node.base === 'object');
+            ASSERT(node === null || node.base === undefined || typeof node.base === 'object');
 
-            if (typeof node.base === 'undefined') {
+            if (node.base === undefined) {
                 if (self.isEmpty(node)) {
                     //empty nodes do not have a base
                     node.base = null;
@@ -130,7 +127,7 @@ define([
                 //TODO somehow the object already loaded properly and we do no know about it!!!
                 return node;
             } else {
-                ASSERT(typeof node.base === 'undefined' || node.base === null); //kecso
+                ASSERT(node.base === undefined || node.base === null); //kecso
 
                 if (target === null) {
                     node.base = null;
@@ -216,6 +213,26 @@ define([
             return names;
         }
 
+        function notOverwritten(sNode, eNode, source, name) {
+            var result = true,
+                tNode = sNode,
+                child, target;
+
+            while (self.getPath(tNode) !== self.getPath(eNode)) {
+                child = innerCore.getChild(tNode, CONSTANTS.OVERLAYS_PROPERTY);
+                child = innerCore.getChild(child, source);
+                if (child) {
+                    target = innerCore.getProperty(child, name);
+                    if (target) {
+                        return false;
+                    }
+                }
+                tNode = self.getBase(tNode);
+            }
+
+            return result;
+        }
+
         function getInheritedCollectionPaths(node, name) {
             var target = '',
                 result = [],
@@ -224,26 +241,7 @@ define([
                 prefixStart = startNode,
                 prefixNode = prefixStart,
                 exit,
-                collName = name + CONSTANTS.COLLECTION_NAME_SUFFIX,
-                notOverwritten = function (sNode, eNode, source) {
-                    var result = true,
-                        tNode = sNode,
-                        child, target;
-
-                    while (self.getPath(tNode) !== self.getPath(eNode)) {
-                        child = innerCore.getChild(tNode, CONSTANTS.OVERLAYS_PROPERTY);
-                        child = innerCore.getChild(child, source);
-                        if (child) {
-                            target = innerCore.getProperty(child, name);
-                            if (target) {
-                                return false;
-                            }
-                        }
-                        tNode = self.getBase(tNode);
-                    }
-
-                    return result;
-                };
+                collName = name + CONSTANTS.COLLECTION_NAME_SUFFIX;
 
             if (self.getPath(startNode) === self.getPath(endNode)) {
                 return result;
@@ -270,7 +268,7 @@ define([
                             var prefix = innerCore.getPath(prefixNode);
 
                             for (var i = 0; i < sources.length; ++i) {
-                                if (notOverwritten(prefixNode, node, sources[i])) {
+                                if (notOverwritten(prefixNode, node, sources[i], name)) {
                                     result.push(innerCore.joinPaths(prefix, sources[i]));
                                 }
                             }
@@ -300,13 +298,85 @@ define([
 
             return names;
         }
+
+        function isValidNodeThrow(node) {
+            test('core', innerCore.isValidNode(node));
+            test('base', typeof node.base === 'object');
+        }
+
+
+        function getProperty(node, name) {
+            var property;
+            while (property === undefined && node !== null) {
+                property = innerCore.getProperty(node, name);
+                node = self.getBase(node);
+            }
+            return property;
+        }
+
+        function getSimpleBasePath(node, source, name) {
+            var path = innerCore.getPointerPathFrom(node, source, name);
+            if (path === undefined) {
+                if (node.base !== null && node.base !== undefined) {
+                    return getSimpleBasePath(node.base, source, name);
+                } else {
+                    return undefined;
+                }
+            } else {
+                return path;
+            }
+        }
+
+        function getParentOfBasePath(node) {
+            var parent;
+            if (node.base) {
+                parent = self.getParent(node.base);
+                if (parent) {
+                    return self.getPath(parent);
+                } else {
+                    return undefined;
+                }
+            } else {
+                return undefined;
+            }
+        }
+
+        function getBaseOfParentPath(node) {
+            var parent = self.getParent(node);
+            if (parent) {
+                if (parent.base) {
+                    return self.getPath(parent.base);
+                } else {
+                    return undefined;
+                }
+            } else {
+                return undefined;
+            }
+        }
+
+        function getTargetRelPath(node, relSource, name) {
+            var ovr = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
+                source = self.getChild(ovr, relSource);
+            return getProperty(source, name);
+        }
+
+        function checkCollNames(node, draft) {
+            var filtered = [],
+                i, sources;
+            for (i = 0; i < draft.length; i++) {
+                sources = self.getCollectionPaths(node, draft[i]);
+                if (sources.length > 0) {
+                    filtered.push(draft[i]);
+                }
+            }
+            return filtered;
+        }
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
         this.isValidNode = function (node) {
             try {
-                test('core', innerCore.isValidNode(node));
-                test('base', typeof node.base === 'object');
+                isValidNodeThrow(node);
                 return true;
             } catch (error) {
                 logger.error(error.message, {stack: error.stack, node: node});
@@ -322,7 +392,7 @@ define([
             return TASYNC.call(function (child) {
                 if (child && self.isInheritanceContainmentCollision(child, self.getParent(child))) {
                     logger.error('node[' + self.getPath(child) +
-                        '] was deleted due to inheritance-containment collision');
+                                 '] was deleted due to inheritance-containment collision');
                     self.deleteNode(child);
                     //core.persist(core.getRoot(child));
                     return null;
@@ -356,7 +426,7 @@ define([
         };
 
         this.getChild = function (node, relid) {
-            ASSERT(self.isValidNode(node) && (typeof node.base === 'undefined' || typeof node.base === 'object'));
+            ASSERT(self.isValidNode(node) && (node.base === undefined || typeof node.base === 'object'));
             var child = innerCore.getChild(node, relid);
             if (node.base !== null && node.base !== undefined) {
                 if (child.base === null || child.base === undefined) {
@@ -400,19 +470,8 @@ define([
 
         this.getCollectionNames = function (node) {
             ASSERT(self.isValidNode(node));
-            var checkCollNames = function (draft) {
-                    var filtered = [],
-                        i, sources;
-                    for (i = 0; i < draft.length; i++) {
-                        sources = self.getCollectionPaths(node, draft[i]);
-                        if (sources.length > 0) {
-                            filtered.push(draft[i]);
-                        }
-                    }
-                    return filtered;
-                },
-                ownNames = innerCore.getCollectionNames(node),
-                inhNames = checkCollNames(getInheritedCollectionNames(node)),
+            var ownNames = innerCore.getCollectionNames(node),
+                inhNames = checkCollNames(node, getInheritedCollectionNames(node)),
                 i;
             for (i = 0; i < ownNames.length; i++) {
                 if (inhNames.indexOf(ownNames[i]) < 0) {
@@ -592,7 +651,7 @@ define([
             do {
                 value = innerCore.getAttribute(node, name);
                 node = node.base;
-            } while (typeof value === 'undefined' && node !== null);
+            } while (value === undefined && node !== null);
 
             return value;
         };
@@ -603,7 +662,7 @@ define([
             do {
                 value = innerCore.getRegistry(node, name);
                 node = node.base;
-            } while (typeof value === 'undefined' && node !== null);
+            } while (value === undefined && node !== null);
 
             return value;
         };
@@ -654,58 +713,9 @@ define([
             }
             var target,
                 basePath,
-                hasNullTarget = false,
-                getProperty = function (node, name) {
-                    var property;
-                    while (property === undefined && node !== null) {
-                        property = innerCore.getProperty(node, name);
-                        node = self.getBase(node);
-                    }
-                    return property;
-                },
-                getSimpleBasePath = function (node) {
-                    var path = innerCore.getPointerPathFrom(node, source, name);
-                    if (path === undefined) {
-                        if (node.base !== null && node.base !== undefined) {
-                            return getSimpleBasePath(node.base);
-                        } else {
-                            return undefined;
-                        }
-                    } else {
-                        return path;
-                    }
-                },
-                getParentOfBasePath = function (node) {
-                    if (node.base) {
-                        var parent = self.getParent(node.base);
-                        if (parent) {
-                            return self.getPath(parent);
-                        } else {
-                            return undefined;
-                        }
-                    } else {
-                        return undefined;
-                    }
-                },
-                getBaseOfParentPath = function (node) {
-                    var parent = self.getParent(node);
-                    if (parent) {
-                        if (parent.base) {
-                            return self.getPath(parent.base);
-                        } else {
-                            return undefined;
-                        }
-                    } else {
-                        return undefined;
-                    }
-                },
-                getTargetRelPath = function (node, relSource, name) {
-                    var ovr = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
-                    var source = self.getChild(ovr, relSource);
-                    return getProperty(source, name);
-                };
+                hasNullTarget = false;
 
-            basePath = node.base ? getSimpleBasePath(node.base) : undefined;
+            basePath = node.base ? getSimpleBasePath(node.base, source, name) : undefined;
 
             while (node) {
                 target = getTargetRelPath(node, source, name);
@@ -745,107 +755,7 @@ define([
         };
 
         this.getPointerPath = function (node, name) {
-
             return self.getPointerPathFrom(node, '', name);
-            //ASSERT(core.isValidNode(node) && typeof name === 'string');
-            //
-            //var ownPointerPath = oldcore.getPointerPath(node, name);
-            //if (ownPointerPath !== undefined) {
-            //    return ownPointerPath;
-            //}
-            //var source = '',
-            //    target,
-            //    coretree = core.getCoreTree(),
-            //    basePath,
-            //    hasNullTarget = false,
-            //    getProperty = function (node, name) {
-            //        var property;
-            //        while (property === undefined && node !== null) {
-            //            property = coretree.getProperty(node, name);
-            //            node = core.getBase(node);
-            //        }
-            //        return property;
-            //    },
-            //    getSimpleBasePath = function (node) {
-            //        var path = oldcore.getPointerPath(node, name);
-            //        if (path === undefined) {
-            //            if (node.base !== null && node.base !== undefined) {
-            //                return getSimpleBasePath(node.base);
-            //            } else {
-            //                return undefined;
-            //            }
-            //        } else {
-            //            return path;
-            //        }
-            //    },
-            //    getParentOfBasePath = function (node) {
-            //        if (node.base) {
-            //            var parent = core.getParent(node.base);
-            //            if (parent) {
-            //                return core.getPath(parent);
-            //            } else {
-            //                return undefined;
-            //            }
-            //        } else {
-            //            return undefined;
-            //        }
-            //    },
-            //    getBaseOfParentPath = function (node) {
-            //        var parent = core.getParent(node);
-            //        if (parent) {
-            //            if (parent.base) {
-            //                return core.getPath(parent.base);
-            //            } else {
-            //                return undefined;
-            //            }
-            //        } else {
-            //            return undefined;
-            //        }
-            //    },
-            //    getTargetRelPath = function (node, relSource, name) {
-            //        var ovr = core.getChild(node, 'ovr');
-            //        var source = core.getChild(ovr, relSource);
-            //        return getProperty(source, name);
-            //    };
-            //
-            //basePath = node.base ? getSimpleBasePath(node.base) : undefined;
-            //
-            //while (node) {
-            //    target = getTargetRelPath(node, source, name);
-            //    if (target !== undefined) {
-            //        if (target.indexOf('_nullptr') !== -1) {
-            //            hasNullTarget = true;
-            //            target = undefined;
-            //        } else {
-            //            break;
-            //        }
-            //    }
-            //
-            //    source = '/' + core.getRelid(node) + source;
-            //    if (getParentOfBasePath(node) === getBaseOfParentPath(node)) {
-            //        node = core.getParent(node);
-            //    } else {
-            //        node = null;
-            //    }
-            //}
-            //
-            //
-            //if (target !== undefined) {
-            //    ASSERT(node);
-            //    target = coretree.joinPaths(oldcore.getPath(node), target);
-            //}
-            //
-            //if (typeof target === 'string') {
-            //    return target;
-            //}
-            //if (typeof basePath === 'string') {
-            //    return basePath;
-            //}
-            //if (hasNullTarget === true) {
-            //    return null;
-            //}
-            //return undefined;
-
         };
 
         this.getChildrenPaths = function (node) {
@@ -897,7 +807,7 @@ define([
             //TODO this restriction should be removed after clarification of the different scenarios and outcomes
             //changing base from or to a node which has children is not allowed currently
             ASSERT((base === null || oldBase === null) ||
-                (self.getChildrenRelids(base).length === 0 && self.getChildrenRelids(oldBase).length === 0));
+                   (self.getChildrenRelids(base).length === 0 && self.getChildrenRelids(oldBase).length === 0));
 
             if (!!base) {
                 //TODO maybe this is not the best way, needs to be double checked

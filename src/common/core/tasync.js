@@ -460,7 +460,7 @@
             throw new Error('function argument is expected');
         }
 
-        if (typeof func.tasync_wraped === 'undefined') {
+        if (func.tasync_wraped === undefined) {
             func.tasync_wraped = function () {
                 var args = arguments;
                 var future = new Future();
@@ -510,7 +510,7 @@
             throw new Error('function argument is expected');
         }
 
-        if (typeof func.tasync_unwraped === 'undefined') {
+        if (func.tasync_unwraped === undefined) {
             func.tasync_unwraped = function () {
                 var args = arguments;
 
