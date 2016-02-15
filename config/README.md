@@ -133,6 +133,7 @@ To configure the default behaviour of individual components (e.g. plugins) that 
 ##### requirejsPaths
 - `config.requirejsPaths = {}`
  - Custom paths that will be added to the `paths` of [requirejs configuration](http://requirejs.org/docs/api.html#config).
+ Paths added here will also be served under the given key, i.e. `{myPath: './aPath/aSubPath/'}` will expose files at `<host>/myPath/someFile.js`.
 
 
 ##### rest
@@ -192,6 +193,8 @@ To configure the default behaviour of individual components (e.g. plugins) that 
  - Type of database to store the data (metadata e.g. _users is always stored in mongo), can be `'mongo'`, `'redis'` or `'memory'`.
 - `config.storage.database.options = '{}'`
  - Options passed to database client (unless mongo is specified, in that case `config.mongo.options` are used).
+- `config.storage.patchRootCommunicationEnabled = true`
+ - If true, changes in the root object are communicated via small diff/patch files rather than complete objects. 
 
 ##### visualization
 - `config.visualization.decoratorPaths = ['./src/client/decorators']`

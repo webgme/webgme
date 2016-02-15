@@ -1884,6 +1884,8 @@ define([
             for (i = 0; i < validPlugins.length; i += 1) {
                 if (pluginNames.indexOf(validPlugins[i]) > -1) {
                     filteredNames.push(validPlugins[i]);
+                } else if (validPlugins[i] === '') {
+                    // Skip empty strings..
                 } else {
                     logger.warn('Registered plugin for node at path "' + nodePath +
                         '" is not amongst available plugins', pluginNames);

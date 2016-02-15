@@ -1,5 +1,57 @@
 # Change Log
 
+## [v1.5.0](https://github.com/webgme/webgme/tree/v1.5.0) (2016-02-15)
+[Full Changelog](https://github.com/webgme/webgme/compare/v1.4.1...v1.5.0)
+
+**Implemented enhancements:**
+
+- Make a Widget for validPlugins, useAddOns, validDecorators etc. [\#828](https://github.com/webgme/webgme/issues/828)
+- Add default support for storing plugin config in users. [\#824](https://github.com/webgme/webgme/issues/824)
+- Server side plugins with dependencies [\#779](https://github.com/webgme/webgme/issues/779)
+- Filter everything for page print except the center panel. [\#833](https://github.com/webgme/webgme/pull/833) ([lattmann](https://github.com/lattmann))
+- Closes \#828 multi select widget [\#831](https://github.com/webgme/webgme/pull/831) ([pmeijer](https://github.com/pmeijer))
+- Generate source as part of postinstall and serve it. [\#830](https://github.com/webgme/webgme/pull/830) ([pmeijer](https://github.com/pmeijer))
+- Core layers uses self/this when adding when adding and modifying methods. [\#822](https://github.com/webgme/webgme/pull/822) ([pmeijer](https://github.com/pmeijer))
+- Make components configurable. Closes \#823 and closes \#824. [\#819](https://github.com/webgme/webgme/pull/819) ([pmeijer](https://github.com/pmeijer))
+- TreeBrowser added filters, editing, sorting and locate. [\#815](https://github.com/webgme/webgme/pull/815) ([pmeijer](https://github.com/pmeijer))
+- Update npm packages to the latest. [\#814](https://github.com/webgme/webgme/pull/814) ([lattmann](https://github.com/lattmann))
+- Core layers consistency [\#813](https://github.com/webgme/webgme/pull/813) ([pmeijer](https://github.com/pmeijer))
+- PluginResultDialog accepts any metadata as artifact. [\#811](https://github.com/webgme/webgme/pull/811) ([pmeijer](https://github.com/pmeijer))
+- Generating CHANGELOG.md for releases [\#810](https://github.com/webgme/webgme/pull/810) ([lattmann](https://github.com/lattmann))
+- Updated appveyor config to skip frequently failing tests. [\#808](https://github.com/webgme/webgme/pull/808) ([lattmann](https://github.com/lattmann))
+- Add support for custom user data. [\#803](https://github.com/webgme/webgme/pull/803) ([pmeijer](https://github.com/pmeijer))
+- Use FancyTree library for TreeBrowsers. [\#801](https://github.com/webgme/webgme/pull/801) ([pmeijer](https://github.com/pmeijer))
+- Optimized import project functionality. [\#800](https://github.com/webgme/webgme/pull/800) ([kecso](https://github.com/kecso))
+- Patch Root Communication feature [\#789](https://github.com/webgme/webgme/pull/789) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- Visualizer URL not respected and meta editor tabs neither. [\#823](https://github.com/webgme/webgme/issues/823)
+- Importing an instance model duplicates the meta-sheets. [\#820](https://github.com/webgme/webgme/issues/820)
+- Missing name attributes in export [\#812](https://github.com/webgme/webgme/issues/812)
+- Exception in CrosscutController. [\#806](https://github.com/webgme/webgme/issues/806)
+- Multiple Meta views in Split View changes the tabs unexpectedly. [\#802](https://github.com/webgme/webgme/issues/802)
+- Attribute types Integer and Float are not respected in Property Editor. [\#616](https://github.com/webgme/webgme/issues/616)
+- Update executor readme with OSX and added dependent packages [\#835](https://github.com/webgme/webgme/pull/835) ([lattmann](https://github.com/lattmann))
+- Fix json patch performance [\#834](https://github.com/webgme/webgme/pull/834) ([kecso](https://github.com/kecso))
+- Guard against assigning null in IntegerWidget. [\#829](https://github.com/webgme/webgme/pull/829) ([pmeijer](https://github.com/pmeijer))
+- Closes \#616 Attribute types Integer and Float are not respected in Property Editor [\#827](https://github.com/webgme/webgme/pull/827) ([pmeijer](https://github.com/pmeijer))
+- ProjectNavigator sometimes logs empty errors. [\#825](https://github.com/webgme/webgme/pull/825) ([pmeijer](https://github.com/pmeijer))
+- Core layers uses self/this when adding when adding and modifying methods. [\#822](https://github.com/webgme/webgme/pull/822) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#820 Importing an instance model duplicates the meta-sheets. [\#821](https://github.com/webgme/webgme/pull/821) ([kecso](https://github.com/kecso))
+- Fixes setPointer function of corediff.applyTreeDiff [\#817](https://github.com/webgme/webgme/pull/817) ([kecso](https://github.com/kecso))
+- Disable line-style controls in Meta Editor. [\#816](https://github.com/webgme/webgme/pull/816) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#806 Exception in CrosscutController. [\#807](https://github.com/webgme/webgme/pull/807) ([kecso](https://github.com/kecso))
+- Fix test cases with non-deterministic results. [\#805](https://github.com/webgme/webgme/pull/805) ([kecso](https://github.com/kecso))
+- Fixes \#802 Multiple Meta views in Split View changes the tabs unexpectedly. [\#804](https://github.com/webgme/webgme/pull/804) ([kecso](https://github.com/kecso))
+
+**Merged pull requests:**
+
+- Performance improvements for core layers [\#832](https://github.com/webgme/webgme/pull/832) ([lattmann](https://github.com/lattmann))
+- Remove BlockEditor from webgme-repo. [\#826](https://github.com/webgme/webgme/pull/826) ([pmeijer](https://github.com/pmeijer))
+- TreeBrowserControl perf avoid updateTerritories. [\#818](https://github.com/webgme/webgme/pull/818) ([pmeijer](https://github.com/pmeijer))
+- Use push and new array in coretree.getKeys. [\#809](https://github.com/webgme/webgme/pull/809) ([pmeijer](https://github.com/pmeijer))
+
 ## [v1.4.1](https://github.com/webgme/webgme/tree/v1.4.1) (2016-01-20)
 [Full Changelog](https://github.com/webgme/webgme/compare/v1.4.0...v1.4.1)
 

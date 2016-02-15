@@ -12,7 +12,7 @@ define(['js/logger',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',
-    'lib/jquery/jquery.fancytree-all',
+    'lib/jquery/jquery.fancytree-all.min',
     'lib/jquery/jquery.contextMenu',
     'css!./styles/TreeBrowserWidget.css'
 ], function (Logger, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
