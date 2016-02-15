@@ -104,7 +104,6 @@ define([
         this.__btnAttach.off('click');
     };
 
-
     AssetWidget.prototype.updateDisplay = function () {
         var bc = new BlobClient({logger: this._logger.fork('BlobClient')}),
             urlDownload = this.propertyValue ? bc.getDownloadURL(this.propertyValue) : '',
@@ -227,6 +226,11 @@ define([
         } while (bytes >= thresh);
 
         return bytes.toFixed(1) + ' ' + units[u];
+    };
+
+    AssetWidget.prototype.destroy = function () {
+        this._detachFileDropHandlers();
+        WidgetBase.prototype.destroy.call(this);
     };
 
     return AssetWidget;
