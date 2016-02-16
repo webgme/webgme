@@ -1946,7 +1946,7 @@ describe('GME client', function () {
                 } else if (tOneState === 'modified') {
                     //finally our modification should generate events
                     //the number of events should remain the same as the newObject will not generate one!
-                    expect(events).to.have.length(8);
+                    expect(events).to.have.length(5);
                     eventPaths = getEventPaths(events);
                     expect(eventPaths).not.to.include.members([newNodePath]);
                     for (i = 1; i < events.length; i += 1) {
@@ -2012,7 +2012,7 @@ describe('GME client', function () {
                 } else if (tOneState === 'modified') {
                     //finally our modification should generate events
                     //the number of events should remain the same as the newObject will not generate one!
-                    expect(events).to.have.length(8);
+                    expect(events).to.have.length(5);
                     eventPaths = getEventPaths(events);
                     expect(eventPaths).not.to.include.members([newnodePath]);
                     for (i = 1; i < events.length; i += 1) {
@@ -2413,7 +2413,8 @@ describe('GME client', function () {
                     }
 
                     if (testState === 'checking') {
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3,
+                            'should set the given pointer of the node to the specified target');
                         expect(events).to.include({eid: '/323573539', etype: 'update'});
                         expect(events).to.include({eid: '/1', etype: 'update'});
 
@@ -2550,7 +2551,7 @@ describe('GME client', function () {
                 if (testState === 'checking') {
                     //FIXME why the update events missing about the source nodes -
                     // it works correctly with single node copying
-                    expect(events).to.have.length(8);
+                    expect(events).to.have.length(6);
 
                     //find out the new node paths
                     for (i = 1; i < events.length; i++) {
@@ -2635,7 +2636,7 @@ describe('GME client', function () {
                 if (testState === 'checking') {
                     //FIXME why the update events missing about the source nodes -
                     // it works correctly with single node copying
-                    expect(events).to.have.length(8);
+                    expect(events).to.have.length(6);
 
                     //find out the new node paths
                     for (i = 1; i < events.length; i++) {
@@ -2723,7 +2724,10 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'checking') {
-                    expect(events).to.have.length(8);
+                    events.forEach(function (e) {
+                        console.log(e);
+                    });
+                    expect(events).to.have.length(6);
 
                     //find out the new node paths
                     for (i = 1; i < events.length; i++) {
@@ -2815,7 +2819,7 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'checking') {
-                    expect(events).to.have.length(9);
+                    expect(events).to.have.length(5);
 
                     //find out the new node paths
                     for (i = 1; i < events.length; i++) {
@@ -2902,7 +2906,7 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'checking') {
-                    expect(events).to.have.length(9);
+                    expect(events).to.have.length(4);
                     expect(events).to.include({eid: '', etype: 'update'});
 
                     for (i = 1; i < events.length; i++) {
@@ -2921,7 +2925,7 @@ describe('GME client', function () {
                     expect(node).not.to.equal(null);
                     expect(node.getAttribute('name')).to.equal('check');
                     expect(node.getRegistry('position')).to.deep.equal({x: 200, y: 300});
-                    expect(node.getChildrenIds()).to.have.length(3);
+                    expect(node.getChildrenIds()).to.have.length(3, 'should create a child');
                 }
             });
         });
@@ -2959,7 +2963,7 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'checking') {
-                    expect(events).to.have.length(9);
+                    expect(events).to.have.length(4);
                     expect(events).to.include({eid: '', etype: 'update'});
 
                     for (i = 1; i < events.length; i++) {
@@ -2977,7 +2981,7 @@ describe('GME client', function () {
                     expect(node).not.to.equal(null);
                     expect(node.getAttribute('name')).to.equal('check');
                     expect(node.getRegistry('position')).to.deep.equal({x: 100, y: 100});
-                    expect(node.getChildrenIds()).to.have.length(3);
+                    expect(node.getChildrenIds()).to.have.length(3, 'should create a child at default position');
                 }
             });
         });
@@ -3035,7 +3039,7 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'checking') {
-                    expect(events).to.have.length(11);
+                    expect(events).to.have.length(8);
 
                     //find out the new node paths
                     for (i = 1; i < events.length; i++) {
@@ -3130,7 +3134,7 @@ describe('GME client', function () {
                 if (testState === 'containerCreated') {
                     testState = 'territoryExtended';
 
-                    expect(events).to.have.length(9);
+                    expect(events).to.have.length(4);
 
                     for (i = 1; i < events.length; i++) {
                         if (initialPaths.indexOf(events[i].eid) === -1) {
@@ -3166,7 +3170,7 @@ describe('GME client', function () {
 
                 if (testState === 'final') {
 
-                    expect(events).to.have.length(11);
+                    expect(events).to.have.length(9);
                     expect(events).to.include({eid: '/1697300825', etype: 'unload'});
                     expect(events).to.include({eid: '/1400778473', etype: 'unload'});
                     expect(events).to.include({eid: containerId + '/1697300825', etype: 'load'});
@@ -3300,7 +3304,8 @@ describe('GME client', function () {
                     if (testState === 'init') {
                         testState = 'checking';
 
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3,
+                            '[first] should add the given node as a new member to the specified set of our node');
                         expect(events).to.include({eid: '/323573539', etype: 'load'});
                         expect(events).to.include({eid: '/1697300825', etype: 'load'});
 
@@ -3313,7 +3318,8 @@ describe('GME client', function () {
                     }
 
                     if (testState === 'checking') {
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3,
+                            '[second] should add the given node as a new member to the specified set of our node');
 
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
@@ -3340,7 +3346,8 @@ describe('GME client', function () {
                     if (testState === 'init') {
                         testState = 'checking';
 
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3,
+                            '[first] should remove the given member of the specified set of the node');
                         expect(events).to.include({eid: '/323573539', etype: 'load'});
                         expect(events).to.include({eid: '/1697300825', etype: 'load'});
 
@@ -3353,7 +3360,8 @@ describe('GME client', function () {
                     }
 
                     if (testState === 'checking') {
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3,
+                            '[second] should remove the given member of the specified set of the node');
 
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
@@ -3380,7 +3388,8 @@ describe('GME client', function () {
                     if (testState === 'init') {
                         testState = 'checking';
 
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3,
+                            'should set the given attribute of the specified member of the set');
                         expect(events).to.include({eid: '/323573539', etype: 'load'});
                         expect(events).to.include({eid: '/1697300825', etype: 'load'});
 
@@ -3398,7 +3407,7 @@ describe('GME client', function () {
                     }
 
                     if (testState === 'checking') {
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(2);
 
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
@@ -3433,7 +3442,8 @@ describe('GME client', function () {
                 function (events) {
                     if (testState === 'init') {
                         testState = 'add';
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3,
+                            'should remove the specific attribute of the set member');
                         expect(events).to.include({eid: '/323573539', etype: 'load'});
                         expect(events).to.include({eid: '/1697300825', etype: 'load'});
 
@@ -3452,7 +3462,7 @@ describe('GME client', function () {
 
                     if (testState === 'add') {
                         testState = 'del';
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(2);
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
                         expect(node.getMemberIds('set')).to.include('/1697300825');
@@ -3468,7 +3478,7 @@ describe('GME client', function () {
                     }
 
                     if (testState === 'del') {
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(2);
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
                         expect(node.getMemberIds('set')).to.include('/1697300825');
@@ -3495,7 +3505,7 @@ describe('GME client', function () {
                     if (testState === 'init') {
                         testState = 'checking';
 
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3, 'should set the given registry key of the set member');
                         expect(events).to.include({eid: '/323573539', etype: 'load'});
                         expect(events).to.include({eid: '/1697300825', etype: 'load'});
 
@@ -3513,7 +3523,7 @@ describe('GME client', function () {
                     }
 
                     if (testState === 'checking') {
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(2);
 
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
@@ -3549,7 +3559,8 @@ describe('GME client', function () {
                     if (testState === 'init') {
                         testState = 'add';
 
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3,
+                            '[first] should remove the specified registry key of the set member');
                         expect(events).to.include({eid: '/323573539', etype: 'load'});
                         expect(events).to.include({eid: '/1697300825', etype: 'load'});
 
@@ -3568,7 +3579,8 @@ describe('GME client', function () {
 
                     if (testState === 'add') {
                         testState = 'del';
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(2,
+                            '[second] should remove the specified registry key of the set member');
 
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
@@ -3585,7 +3597,8 @@ describe('GME client', function () {
                     }
 
                     if (testState === 'del') {
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(2,
+                            '[thrid] should remove the specified registry key of the set member');
 
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
@@ -3651,7 +3664,8 @@ describe('GME client', function () {
                     if (testState === 'init') {
                         testState = 'checking';
 
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3,
+                            '[first] should remove the given set of the node');
                         expect(events).to.include({eid: '/323573539', etype: 'load'});
                         expect(events).to.include({eid: '/701504349', etype: 'load'});
 
@@ -3668,7 +3682,8 @@ describe('GME client', function () {
                     }
 
                     if (testState === 'checking') {
-                        expect(events).to.have.length(3);
+                        expect(events).to.have.length(3,
+                            '[second] should remove the given set of the node');
 
                         node = client.getNode('/701504349');
                         expect(node).not.to.equal(null);
@@ -3726,7 +3741,7 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'checking') {
-                    expect(events).to.have.length(9);
+                    expect(events).to.have.length(4);
                     expect(events).to.include({eid: newId, etype: 'load'});
 
                     node = client.getNode(newId);
@@ -3774,7 +3789,7 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'checking') {
-                    expect(events).to.have.length(9);
+                    expect(events).to.have.length(3);
                     expect(events).to.include({eid: newId, etype: 'load'});
 
                     node = client.getNode(newId);

@@ -374,27 +374,42 @@ define([
                     rootHash: rootHash,
                     projectId: projectId,
                     commitObject: null,
-                    coreObjects: {}
+                    coreObjects: {},
+                    changedNodes: null
                 },
                 keys = Object.keys(coreObjects),
                 i;
 
             //handling patch object creation
+            //console.time('patch-computation');
             for (i = 0; i < keys.length; i += 1) {
-                if (coreObjects[keys[i]].oldHash &&
-                    coreObjects[keys[i]].newHash &&
-                    coreObjects[keys[i]].oldData &&
-                    coreObjects[keys[i]].newData) {
-                    //patch type object
+                if (UTIL.isPatchObjectFromCore(coreObjects[keys[i]])) {
+                    // Patch type object.
                     persistQueueElement[keys[i]] = coreObjects[keys[i]].newData;
+                    if (keys[i] === rootHash) {
+                        //console.time('root-patch-computation');
+                    }
                     commitData.coreObjects[keys[i]] = UTIL.getPatchObject(coreObjects[keys[i]].oldData,
                         coreObjects[keys[i]].newData);
-
+                    if (keys[i] === rootHash) {
+                        //console.timeEnd('root-patch-computation');
+                    }
+                } else if (coreObjects[keys[i]].newData) {
+                    // A new object with no previous data (send the entire data).
+                    commitData.coreObjects[keys[i]] = coreObjects[keys[i]].newData;
+                    persistQueueElement[keys[i]] = coreObjects[keys[i]].newData;
                 } else {
+                    // A regular object.
+                    // TODO: Is this deprecated?
+                    logger.error('deprecated object passed to makeCommit');
                     commitData.coreObjects[keys[i]] = coreObjects[keys[i]];
-                    persistQueueElement[keys[i]] = coreObjects[keys[i]];
                 }
             }
+            //console.timeEnd('patch-computation');
+            //console.time('getChangedNodes');
+            commitData.changedNodes = UTIL.getChangedNodes(commitData.coreObjects, rootHash);
+
+            //console.timeEnd('getChangedNodes');
 
             commitData.commitObject = self._getCommitObject(projectId, parents, commitData.rootHash, msg);
 
@@ -450,7 +465,8 @@ define([
                     commitData = {
                         projectId: projectId,
                         branchName: branchName,
-                        coreObjects: [],
+                        coreObjects: {},
+                        changedNodes: null,
                         commitObject: commitObject,
                         oldHash: oldHash
                     };

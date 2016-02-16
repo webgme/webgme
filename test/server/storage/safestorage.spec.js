@@ -916,6 +916,7 @@ describe('SafeStorage', function () {
                         project.createBranch('branchUpdated', importResult.commitHash),
                         project.createBranch('branchUpdatedCommitWithNodes', importResult.commitHash),
                         project.createBranch('branchUpdatedCommitWithOutNodes', importResult.commitHash),
+                        project.createBranch('newNodeEmitted', importResult.commitHash)
                     ]);
                 })
                 .then(function (result) {
@@ -984,54 +985,59 @@ describe('SafeStorage', function () {
             project.setBranchHash('branchUpdated', newBranchHash, importResult.commitHash).catch(done);
         });
 
-        it('should emit BRANCH_UPDATED when makeCommit and include root when root was provided', function (done) {
-            var eventHandler = function (_storage, eventData) {
-                    expect(eventData.branchName).to.equal('branchUpdatedCommitWithNodes');
-                    expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
-                    expect(eventData.commitObject.root).to.equal(newRootHash);
-                    expect(eventData.coreObjects instanceof Array).to.equal(true);
-                    expect(eventData.coreObjects.length).to.equal(1);
-                    expect(eventData.coreObjects[0]._id).to.equal(newRootHash);
-                    safeStorage.clearAllEvents();
-                    done();
-                },
-                rootNode,
-                newRootHash;
+        it('should emit BRANCH_UPDATED when makeCommit and include two patches when nodes were provided',
+            function (done) {
+                var eventHandler = function (_storage, eventData) {
+                        expect(eventData.branchName).to.equal('branchUpdatedCommitWithNodes');
+                        expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
+                        expect(eventData.commitObject.root).to.equal(newRootHash);
+                        expect(eventData.coreObjects instanceof Array).to.equal(true);
+                        expect(eventData.coreObjects.length).to.equal(2);
+                        expect(eventData.coreObjects[0].hasOwnProperty('patch')).to.equal(true);
+                        expect(eventData.coreObjects[1].hasOwnProperty('patch')).to.equal(true);
+                        expect(eventData.changedNodes !== null && typeof eventData.changedNodes === 'object')
+                            .to.equal(true);
+                        safeStorage.clearAllEvents();
+                        done();
+                    },
+                    rootNode,
+                    newRootHash;
 
-            safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
-            Q.ninvoke(importResult.core, 'loadRoot', importResult.rootHash)
-                .then(function (rootNode_) {
-                    rootNode = rootNode_;
-                    return Q.ninvoke(importResult.core, 'loadByPath', rootNode, '/1');
-                })
-                .then(function (fcoNode) {
-                    var persisted;
-                    importResult.core.setAttribute(fcoNode, 'name', 'branchUpdatedCommitWithNodes');
-                    persisted = importResult.core.persist(rootNode);
-                    expect(Object.keys(persisted.objects).length).to.equal(2);
-                    newRootHash = persisted.rootHash;
-                    return project.makeCommit(
-                        'branchUpdatedCommitWithNodes',
-                        [importResult.commitHash],
-                        persisted.rootHash,
-                        persisted.objects,
-                        'branchUpdatedCommitWithNodes'
-                    );
-                })
-                .catch(function (err) {
-                    err = err instanceof Error ? err : new Error(err);
-                    done(err);
-                });
-        });
+                safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+                Q.ninvoke(importResult.core, 'loadRoot', importResult.rootHash)
+                    .then(function (rootNode_) {
+                        rootNode = rootNode_;
+                        return Q.ninvoke(importResult.core, 'loadByPath', rootNode, '/1');
+                    })
+                    .then(function (fcoNode) {
+                        var persisted;
+                        importResult.core.setAttribute(fcoNode, 'name', 'branchUpdatedCommitWithNodes');
+                        persisted = importResult.core.persist(rootNode);
+                        expect(Object.keys(persisted.objects).length).to.equal(2);
+                        newRootHash = persisted.rootHash;
+                        return project.makeCommit(
+                            'branchUpdatedCommitWithNodes',
+                            [importResult.commitHash],
+                            persisted.rootHash,
+                            persisted.objects,
+                            'branchUpdatedCommitWithNodes'
+                        );
+                    })
+                    .catch(function (err) {
+                        err = err instanceof Error ? err : new Error(err);
+                        done(err);
+                    });
+            }
+        );
 
-        it('should emit BRANCH_UPDATED when makeCommit and include root when root was not provided', function (done) {
+        it('should emit BRANCH_UPDATED when makeCommit and include no nodes when none were included', function (done) {
             var eventHandler = function (_storage, eventData) {
                 expect(eventData.branchName).to.equal('branchUpdatedCommitWithOutNodes');
                 expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
                 expect(eventData.commitObject.root).to.equal(importResult.rootHash);
                 expect(eventData.coreObjects instanceof Array).to.equal(true);
-                expect(eventData.coreObjects.length).to.equal(1);
-                expect(eventData.coreObjects[0]._id).to.equal(importResult.rootHash);
+                expect(eventData.coreObjects.length).to.equal(0);
+                expect(eventData.changedNodes).to.equal(null);
                 safeStorage.clearAllEvents();
                 done();
             };
@@ -1047,9 +1053,72 @@ describe('SafeStorage', function () {
             )
                 .catch(done);
         });
+
+        it('should emit BRANCH_UPDATED when makeCommit with new nodes and include all new node-data', function (done) {
+            var eventHandler = function (_storage, eventData) {
+                    expect(eventData.branchName).to.equal('newNodeEmitted');
+                    expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
+                    expect(eventData.commitObject.root).to.equal(newRootHash);
+                    expect(eventData.coreObjects instanceof Array).to.equal(true);
+                    expect(eventData.coreObjects.length).to.equal(3);
+                    if (eventData.coreObjects[0].hasOwnProperty('patch')) {
+                        expect(eventData.coreObjects[1].hasOwnProperty('patch')).to.equal(false);
+                        expect(eventData.coreObjects[2].hasOwnProperty('patch')).to.equal(false);
+                    } else if (eventData.coreObjects[1].hasOwnProperty('patch')) {
+                        expect(eventData.coreObjects[0].hasOwnProperty('patch')).to.equal(false);
+                        expect(eventData.coreObjects[2].hasOwnProperty('patch')).to.equal(false);
+                    } else if (eventData.coreObjects[2].hasOwnProperty('patch')) {
+                        expect(eventData.coreObjects[0].hasOwnProperty('patch')).to.equal(false);
+                        expect(eventData.coreObjects[1].hasOwnProperty('patch')).to.equal(false);
+                    } else {
+                        done(new Error('no patch provided for root!'));
+                        return;
+                    }
+
+
+                    expect(eventData.changedNodes !== null && typeof eventData.changedNodes === 'object')
+                        .to.equal(true);
+                    safeStorage.clearAllEvents();
+                    done();
+                },
+                rootNode,
+                newRootHash;
+
+            safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+            Q.ninvoke(importResult.core, 'loadRoot', importResult.rootHash)
+                .then(function (rootNode_) {
+                    rootNode = rootNode_;
+                    return Q.ninvoke(importResult.core, 'loadByPath', rootNode, '/1');
+                })
+                .then(function (fcoNode) {
+                    var persisted;
+                    importResult.core.createNode({
+                        parent: rootNode,
+                        base: fcoNode
+                    });
+                    importResult.core.createNode({
+                        parent: rootNode,
+                        base: fcoNode
+                    });
+                    persisted = importResult.core.persist(rootNode);
+                    expect(Object.keys(persisted.objects).length).to.equal(3);
+                    newRootHash = persisted.rootHash;
+                    return project.makeCommit(
+                        'newNodeEmitted',
+                        [importResult.commitHash],
+                        persisted.rootHash,
+                        persisted.objects,
+                        'newNodeEmitted'
+                    );
+                })
+                .catch(function (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    done(err);
+                });
+        });
     });
 
-    describe('gmeConfig.storage.emitCommittedCoreObjects', function () {
+    describe('gmeConfig.storage.maxEmittedCoreObjects=0', function () {
         var safeStorage,
             project,
             projectId,
@@ -1057,7 +1126,7 @@ describe('SafeStorage', function () {
             importResult;
 
         before(function (done) {
-            gmeConfigEmit.storage.emitCommittedCoreObjects = true;
+            gmeConfigEmit.storage.maxEmittedCoreObjects = 1;
             safeStorage = testFixture.getMemoryStorage(logger, gmeConfigEmit, gmeAuth);
 
             safeStorage.openDatabase()
@@ -1075,7 +1144,9 @@ describe('SafeStorage', function () {
                     projectId = project.projectId;
                     return Q.allDone([
                         project.createBranch('emitAllWithNodes', importResult.commitHash),
-                        project.createBranch('emitAllNoNodes', importResult.commitHash)
+                        project.createBranch('emitAllNoNodes', importResult.commitHash),
+                        project.createBranch('newNodesNotEmitted', importResult.commitHash),
+                        project.createBranch('newNodesNotEmitted2', importResult.commitHash)
                     ]);
                 })
                 .nodeify(done);
@@ -1085,13 +1156,15 @@ describe('SafeStorage', function () {
             safeStorage.closeDatabase(done);
         });
 
-        it('should emit BRANCH_UPDATED when makeCommit and include all object provided', function (done) {
+        it('should emit BRANCH_UPDATED when makeCommit and include patches for all objects provided', function (done) {
             var eventHandler = function (_storage, eventData) {
                     expect(eventData.branchName).to.equal('emitAllWithNodes');
                     expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
                     expect(eventData.commitObject.root).to.equal(newRootHash);
                     expect(eventData.coreObjects instanceof Array).to.equal(true);
                     expect(eventData.coreObjects.length).to.equal(2);
+                    expect(eventData.coreObjects[0].hasOwnProperty('patch')).to.equal(true);
+                    expect(eventData.coreObjects[1].hasOwnProperty('patch')).to.equal(true);
                     safeStorage.clearAllEvents();
                     done();
                 },
@@ -1124,32 +1197,125 @@ describe('SafeStorage', function () {
                 });
         });
 
-        it('should emit BRANCH_UPDATED when makeCommit and include root when root was not provided', function (done) {
-            var eventHandler = function (_storage, eventData) {
-                expect(eventData.branchName).to.equal('emitAllNoNodes');
-                expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
-                expect(eventData.commitObject.root).to.equal(importResult.rootHash);
-                expect(eventData.coreObjects instanceof Array).to.equal(true);
-                expect(eventData.coreObjects.length).to.equal(1);
-                expect(eventData.coreObjects[0]._id).to.equal(importResult.rootHash);
-                safeStorage.clearAllEvents();
-                done();
-            };
+        it('should emit BRANCH_UPDATED when makeCommit with new node and include the one new node-data',
+            function (done) {
+                var eventHandler = function (_storage, eventData) {
+                        expect(eventData.branchName).to.equal('newNodesNotEmitted');
+                        expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
+                        expect(eventData.commitObject.root).to.equal(newRootHash);
+                        expect(eventData.coreObjects instanceof Array).to.equal(true);
+                        expect(eventData.coreObjects.length).to.equal(2);
 
-            safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+                        if (eventData.coreObjects[0].hasOwnProperty('patch')) {
+                            expect(eventData.coreObjects[1].hasOwnProperty('patch')).to.equal(false);
+                        } else if (eventData.coreObjects[1].hasOwnProperty('patch')) {
+                            expect(eventData.coreObjects[0].hasOwnProperty('patch')).to.equal(false);
+                        } else {
+                            done(new Error('no patch provided for root!'));
+                            return;
+                        }
 
-            project.makeCommit(
-                'emitAllNoNodes',
-                [importResult.commitHash],
-                importResult.rootHash,
-                {},
-                'emitAllNoNodes'
-            )
-                .catch(done);
-        });
+                        expect(eventData.changedNodes !== null && typeof eventData.changedNodes === 'object')
+                            .to.equal(true);
+                        safeStorage.clearAllEvents();
+                        done();
+                    },
+                    rootNode,
+                    newRootHash;
+
+                safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+                Q.ninvoke(importResult.core, 'loadRoot', importResult.rootHash)
+                    .then(function (rootNode_) {
+                        rootNode = rootNode_;
+                        return Q.ninvoke(importResult.core, 'loadByPath', rootNode, '/1');
+                    })
+                    .then(function (fcoNode) {
+                        var persisted;
+                        importResult.core.createNode({
+                            parent: rootNode,
+                            base: fcoNode
+                        });
+                        persisted = importResult.core.persist(rootNode);
+                        expect(Object.keys(persisted.objects).length).to.equal(2);
+                        newRootHash = persisted.rootHash;
+                        console.log(persisted);
+                        return project.makeCommit(
+                            'newNodesNotEmitted',
+                            [importResult.commitHash],
+                            persisted.rootHash,
+                            persisted.objects,
+                            'newNodesNotEmitted'
+                        );
+                    })
+                    .catch(function (err) {
+                        err = err instanceof Error ? err : new Error(err);
+                        done(err);
+                    });
+            }
+        );
+
+        it('should emit BRANCH_UPDATED when makeCommit with new nodes and include only one new node-data',
+            function (done) {
+                var eventHandler = function (_storage, eventData) {
+                        expect(eventData.branchName).to.equal('newNodesNotEmitted2');
+                        expect(eventData.commitObject._id).to.not.equal(importResult.commitHash);
+                        expect(eventData.commitObject.root).to.equal(newRootHash);
+                        expect(eventData.coreObjects instanceof Array).to.equal(true);
+                        expect(eventData.coreObjects.length).to.equal(2);
+
+                        if (eventData.coreObjects[0].hasOwnProperty('patch')) {
+                            expect(eventData.coreObjects[1].hasOwnProperty('patch')).to.equal(false);
+                        } else if (eventData.coreObjects[1].hasOwnProperty('patch')) {
+                            expect(eventData.coreObjects[0].hasOwnProperty('patch')).to.equal(false);
+                        } else {
+                            done(new Error('no patch provided for root!'));
+                            return;
+                        }
+
+                        expect(eventData.changedNodes !== null && typeof eventData.changedNodes === 'object')
+                            .to.equal(true);
+                        safeStorage.clearAllEvents();
+                        done();
+                    },
+                    rootNode,
+                    newRootHash;
+
+                safeStorage.addEventListener(project.CONSTANTS.BRANCH_UPDATED, eventHandler);
+                Q.ninvoke(importResult.core, 'loadRoot', importResult.rootHash)
+                    .then(function (rootNode_) {
+                        rootNode = rootNode_;
+                        return Q.ninvoke(importResult.core, 'loadByPath', rootNode, '/1');
+                    })
+                    .then(function (fcoNode) {
+                        var persisted;
+                        importResult.core.createNode({
+                            parent: rootNode,
+                            base: fcoNode
+                        });
+                        importResult.core.createNode({
+                            parent: rootNode,
+                            base: fcoNode
+                        });
+                        persisted = importResult.core.persist(rootNode);
+                        expect(Object.keys(persisted.objects).length).to.equal(3);
+                        newRootHash = persisted.rootHash;
+                        return project.makeCommit(
+                            'newNodesNotEmitted2',
+                            [importResult.commitHash],
+                            persisted.rootHash,
+                            persisted.objects,
+                            'newNodesNotEmitted2'
+                        );
+                    })
+                    .catch(function (err) {
+                        err = err instanceof Error ? err : new Error(err);
+                        done(err);
+                    });
+            }
+        );
     });
 
-    describe('gmeConfig.storage.patchRootCommunicationEnabled', function () {
+    describe('Patch-objects Communication', function () {
 
         var storages = [],
             initTest = function (parameters) {
@@ -1172,7 +1338,7 @@ describe('SafeStorage', function () {
                             parameters.branchName,
                             result.commitHash);
                     })
-                    .then(function(){
+                    .then(function () {
                         storages.push(parameters.storage);
                         deferred.resolve();
                     })
@@ -1192,10 +1358,10 @@ describe('SafeStorage', function () {
                 .nodeify(done);
         });
 
-        it('should broadcast complete object even when the commit contains a patch root', function (done) {
+        it('should patch when the commit contains a patch root', function (done) {
             var parameters = {
                     projectName: 'patchOff',
-                    branchName:'patchOffBranch',
+                    branchName: 'patchOffBranch',
                     gmeConfig: testFixture.getGmeConfig()
                 },
                 eventHandler = function (_storage, eventData) {
@@ -1205,7 +1371,7 @@ describe('SafeStorage', function () {
                     expect(eventData.coreObjects instanceof Array).to.equal(true);
                     expect(eventData.coreObjects.length).to.equal(1);
                     expect(eventData.coreObjects[0][CONSTANTS.MONGO_ID]).to.equal(newRoot[CONSTANTS.MONGO_ID]);
-                    expect(eventData.coreObjects[0]).to.eql(newRoot);
+                    expect(eventData.coreObjects[0]).to.eql(patchRoot);
                     parameters.storage.clearAllEvents();
                     done();
                 },
@@ -1216,7 +1382,8 @@ describe('SafeStorage', function () {
 
             parameters.gmeConfig.storage.patchRootCommunicationEnabled = false;
             initTest(parameters)
-                .then(function(){
+                .then(function () {
+                    var commitData = {};
                     patchRoot = {
                         type: 'patch',
                         base: parameters.result.rootHash,
@@ -1236,14 +1403,13 @@ describe('SafeStorage', function () {
                     coreObjects[newRoot[CONSTANTS.MONGO_ID]] = patchRoot;
 
                     parameters.storage.addEventListener(parameters.project.CONSTANTS.BRANCH_UPDATED, eventHandler);
-
-                    parameters.project.makeCommit(
-                        parameters.branchName,
-                        [parameters.result.commitHash],
-                        newRoot[CONSTANTS.MONGO_ID],
-                        coreObjects,
-                        'patchRootSent'
-                        )
+                    commitData.projectId = parameters.project.projectId;
+                    commitData.branchName = parameters.branchName;
+                    commitData.coreObjects = coreObjects;
+                    commitData.username = parameters.project.userName;
+                    commitData.commitObject = parameters.project.createCommitObject([parameters.result.commitHash],
+                        newRoot[CONSTANTS.MONGO_ID], commitData.username, 'patchRootSent');
+                    parameters.storage.makeCommit(commitData)
                         .catch(done);
                 })
                 .catch(done);
@@ -1252,7 +1418,7 @@ describe('SafeStorage', function () {
         it('should broadcast patch root when function is enabled', function (done) {
             var parameters = {
                     projectName: 'patchOn',
-                    branchName:'patchOnBranch',
+                    branchName: 'patchOnBranch',
                     gmeConfig: testFixture.getGmeConfig()
                 },
                 eventHandler = function (_storage, eventData) {
@@ -1273,7 +1439,7 @@ describe('SafeStorage', function () {
 
             parameters.gmeConfig.storage.patchRootCommunicationEnabled = true;
             initTest(parameters)
-                .then(function(){
+                .then(function () {
                     patchRoot = {
                         type: 'patch',
                         base: parameters.result.rootHash,
@@ -1309,7 +1475,7 @@ describe('SafeStorage', function () {
         it('should broadcast patch root when function is enabled and only root is sent', function (done) {
             var parameters = {
                     projectName: 'patchOnOnlyRoot',
-                    branchName:'patchOnBranch',
+                    branchName: 'patchOnBranch',
                     gmeConfig: testFixture.getGmeConfig()
                 },
                 eventHandler = function (_storage, eventData) {
@@ -1331,7 +1497,7 @@ describe('SafeStorage', function () {
             parameters.gmeConfig.storage.patchRootCommunicationEnabled = true;
             parameters.gmeConfig.storage.emitCommittedCoreObjects = false;
             initTest(parameters)
-                .then(function(){
+                .then(function () {
                     patchRoot = {
                         type: 'patch',
                         base: parameters.result.rootHash,
@@ -1368,10 +1534,10 @@ describe('SafeStorage', function () {
         it('should fail to handle faulty patch root object', function (done) {
             var parameters = {
                     projectName: 'patchOnFaultyPatch',
-                    branchName:'patchOnBranch',
+                    branchName: 'patchOnBranch',
                     gmeConfig: testFixture.getGmeConfig()
                 },
-                eventHandler = function (_storage, eventData) {
+                eventHandler = function (/*_storage, eventData*/) {
                     parameters.storage.clearAllEvents();
                     done(new Error('missing fault handling'));
                 },
@@ -1380,10 +1546,9 @@ describe('SafeStorage', function () {
                 newRoot,
                 coreObjects = {};
 
-            parameters.gmeConfig.storage.patchRootCommunicationEnabled = true;
-            parameters.gmeConfig.storage.emitCommittedCoreObjects = false;
             initTest(parameters)
-                .then(function(){
+                .then(function () {
+                    var commitData = {};
                     patchRoot = {
                         type: 'patch',
                         base: parameters.result.rootHash,
@@ -1405,17 +1570,18 @@ describe('SafeStorage', function () {
 
                     parameters.storage.addEventListener(parameters.project.CONSTANTS.BRANCH_UPDATED, eventHandler);
 
-                    parameters.project.makeCommit(
-                        parameters.branchName,
-                        [parameters.result.commitHash],
-                        newRoot[CONSTANTS.MONGO_ID],
-                        coreObjects,
-                        'patchRootSent'
-                        )
-                        .catch(function(err){
+                    commitData.projectId = parameters.project.projectId;
+                    commitData.branchName = parameters.branchName;
+                    commitData.coreObjects = coreObjects;
+                    commitData.username = parameters.project.userName;
+                    commitData.commitObject = parameters.project.createCommitObject([parameters.result.commitHash],
+                        newRoot[CONSTANTS.MONGO_ID], commitData.username, 'patchRootSent');
+                    parameters.storage.makeCommit(commitData)
+                        .catch(function (err) {
                             expect(err.message).to.contain('error during patch application');
                             done();
-                        });
+                        })
+                        .done();
                 })
                 .catch(done);
         });
@@ -1424,10 +1590,10 @@ describe('SafeStorage', function () {
         it('should fail to handle patch root object with faulty base', function (done) {
             var parameters = {
                     projectName: 'patchOnFaultyBase',
-                    branchName:'patchOnBranch',
+                    branchName: 'patchOnBranch',
                     gmeConfig: testFixture.getGmeConfig()
                 },
-                eventHandler = function (_storage, eventData) {
+                eventHandler = function (/*_storage, eventData*/) {
                     parameters.storage.clearAllEvents();
                     done(new Error('missing fault handling'));
                 },
@@ -1436,10 +1602,8 @@ describe('SafeStorage', function () {
                 newRoot,
                 coreObjects = {};
 
-            parameters.gmeConfig.storage.patchRootCommunicationEnabled = true;
-            parameters.gmeConfig.storage.emitCommittedCoreObjects = false;
             initTest(parameters)
-                .then(function(){
+                .then(function () {
                     patchRoot = {
                         type: 'patch',
                         base: parameters.result.rootHash,
@@ -1468,11 +1632,11 @@ describe('SafeStorage', function () {
                         coreObjects,
                         'patchRootSent'
                         )
-                        .catch(function(err){
-                            expect(err.message).to.contain('object does not exist '+newRoot[CONSTANTS.MONGO_ID]);
+                        .catch(function (err) {
+                            expect(err.message).to.contain('object does not exist ' + newRoot[CONSTANTS.MONGO_ID]);
                             done();
-                        }).
-                    done();
+                        })
+                        .done();
                 })
                 .catch(done);
         });

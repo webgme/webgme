@@ -646,7 +646,8 @@ describe('storage storageclasses editorstorage', function () {
             .nodeify(done);
     });
 
-    it('makeCommit should failed in a branch referring to a non-existing rootObject', function (done) {
+    it.skip('makeCommit should failed in a branch referring to a non-existing rootObject', function (done) {
+        // We no longer load the root node in these cases.
         var project,
             branches,
             access,
@@ -703,14 +704,13 @@ describe('storage storageclasses editorstorage', function () {
             branches,
             access,
             storageOther,
+            projectOther,
             newCommitHash,
             openingBranch = true,
             updateReceivedDeferred = Q.defer(),
             forkName = 'pullChanges_fork',
             coreOther,
             gmeConfigOther = testFixture.getGmeConfig();
-
-        gmeConfigOther.storage.patchRootCommunicationEnabled = false;
 
         Q.nfcall(storage.openProject, projectName2Id(projectName))
             .then(function (result) {
@@ -773,7 +773,8 @@ describe('storage storageclasses editorstorage', function () {
                 return Q.nfcall(storageOther.openProject, projectName2Id(projectName));
             })
             .then(function (project) {
-                coreOther = new testFixture.Core(project[0], {
+                projectOther = project[0];
+                coreOther = new testFixture.Core(projectOther, {
                     globConf: gmeConfigOther,
                     logger: logger
                 });
@@ -793,15 +794,15 @@ describe('storage storageclasses editorstorage', function () {
             })
             .then(function (root) {
                 var persisted;
-                coreOther.setAttribute(root, 'name', 'New name'); // FIXME: Bogus modification to get makeCommit working.
+                coreOther.setAttribute(root, 'name', 'New name');
                 persisted = coreOther.persist(root);
 
                 expect(persisted.rootHash).not.to.equal(undefined);
-                expect(persisted.objects[persisted.rootHash]).not.to.have.keys(
+                expect(persisted.objects[persisted.rootHash]).to.have.keys(
                     ['oldHash', 'newHash', 'oldData', 'newData']);
 
-                return Q.ninvoke(storageOther, 'makeCommit', projectName2Id(projectName), forkName,
-                    [importResult.commitHash], persisted.rootHash, persisted.objects, 'new commit');
+                return projectOther.makeCommit(forkName, [importResult.commitHash], persisted.rootHash,
+                    persisted.objects, 'new commit');
             })
             .then(function (result) {
                 newCommitHash = result.hash;
@@ -809,6 +810,7 @@ describe('storage storageclasses editorstorage', function () {
             })
             .then(function (commit) {
                 expect(commit.commitObject._id).to.equal(newCommitHash);
+                expect(commit.changedNodes.update['']).to.equal(true);
             })
             .nodeify(done);
     });

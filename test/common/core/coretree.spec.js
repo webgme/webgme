@@ -350,7 +350,7 @@ describe('CoreTree', function () {
             expect(coreTree.getProperty(root, 'prop')).to.equal('valueOne');
             child = coreTree.createChild(root);
 
-            expect(root.initial.hash).to.equal(hashes[0]);
+            expect(root.initial[''].hash).to.equal(hashes[0]);
 
             coreTree.setProperty(child, 'prop', 'childValue');
             coreTree.setProperty(root, 'prop', 'secondValue');
@@ -359,7 +359,7 @@ describe('CoreTree', function () {
             expect(persisted.rootHash).not.to.equal(undefined);
 
             hashes.unshift(persisted.rootHash);
-            expect(root.initial.hash).to.equal(hashes[0]);
+            expect(root.initial[''].hash).to.equal(hashes[0]);
 
             expect(coreTree.getProperty(root, 'prop')).to.equal('secondValue');
             expect(coreTree.getProperty(child, 'prop')).to.equal('childValue');
@@ -373,7 +373,7 @@ describe('CoreTree', function () {
             expect(persisted.rootHash).not.to.equal(undefined);
 
             hashes.unshift(persisted.rootHash);
-            expect(root.initial.hash).to.equal(hashes[0]);
+            expect(root.initial[''].hash).to.equal(hashes[0]);
 
             expect(coreTree.getProperty(root, 'prop')).to.equal('secondValue');
             expect(coreTree.getProperty(child, 'prop')).to.equal('finalValue');

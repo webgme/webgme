@@ -9,6 +9,7 @@
 
 var CONSTANTS = requireJS('common/storage/constants'),
     GENKEY = requireJS('common/util/key'),
+    UTIL = requireJS('common/storage/util'),
     ProjectInterface = requireJS('common/storage/project/interface');
 
 /**
@@ -76,13 +77,32 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     // Functions defined in ProjectInterface
     this.makeCommit = function (branchName, parents, rootHash, coreObjects, msg, callback) {
         var self = this,
+            keys = Object.keys(coreObjects),
             data = {
                 username: self.userName,
                 projectId: self.projectId,
                 commitObject: self.createCommitObject(parents, rootHash, null, msg),
-                coreObjects: coreObjects
-            };
+                coreObjects: {},
+                changedNodes: null
+            },
+            i;
 
+        for (i = 0; i < keys.length; i += 1) {
+            if (UTIL.isPatchObjectFromCore(coreObjects[keys[i]])) {
+                // Patch type object.
+                data.coreObjects[keys[i]] = UTIL.getPatchObject(coreObjects[keys[i]].oldData,
+                    coreObjects[keys[i]].newData);
+            } else if (coreObjects[keys[i]].newData) {
+                // A new object with no previous data (send the entire data).
+                data.coreObjects[keys[i]] = coreObjects[keys[i]].newData;
+            } else {
+                // A regular object.
+                // TODO: Is this deprecated?
+                data.coreObjects[keys[i]] = coreObjects[keys[i]];
+            }
+        }
+
+        data.changedNodes = UTIL.getChangedNodes(data.coreObjects, rootHash);
         if (branchName) {
             data.branchName = branchName;
         }

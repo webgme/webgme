@@ -5,12 +5,16 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['common/storage/constants'], function (STORAGE_CONSTANTS) {
+define([
+    'common/storage/constants',
+    'common/core/constants'
+], function (STORAGE_CONSTANTS, CORE_CONSTANTS) {
     'use strict';
 
     return {
 
         STORAGE: STORAGE_CONSTANTS,
+        CORE: CORE_CONSTANTS,
 
         BRANCH_STATUS: STORAGE_CONSTANTS.BRANCH_STATUS,
 

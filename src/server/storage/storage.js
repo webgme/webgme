@@ -166,170 +166,116 @@ Storage.prototype.makeCommit = function (data, callback) {
     this.database.openProject(data.projectId)
         .then(function (project) {
             var objectHashes = Object.keys(data.coreObjects),
-                rootProvided,
-                patchRoot = null;
+                newObjCnt = 0,
+                emitObjects = [];
 
             function insertObj(hash) {
-                return project.insertObject(data.coreObjects[hash]);
-            }
+                if (data.coreObjects[hash].type === 'patch') {
+                    emitObjects.push(data.coreObjects[hash]);
 
-            function handlePatchRoot() {
-                var patchRootDeferred = Q.defer(),
-                    rootObject = data.coreObjects[data.commitObject.root];
-                if (rootObject &&
-                    rootObject.type === 'patch') {
-                    project.loadObject(rootObject.base)
+                    return project.loadObject(data.coreObjects[hash].base)
                         .then(function (base) {
-                            var rootResult = UTIL.applyPatch(base, rootObject.patch);
+                            var patchResult = UTIL.applyPatch(base, data.coreObjects[hash].patch);
 
-                            if (rootResult.status === 'success') {
-                                patchRoot = rootObject;
-                                rootResult.result[CONSTANTS.MONGO_ID] = patchRoot[CONSTANTS.MONGO_ID];
-                                data.coreObjects[data.commitObject.root] = rootResult.result;
-                                patchRootDeferred.resolve();
+                            if (patchResult.status === 'success') {
+                                // Overwrite the id of the generated result
+                                patchResult.result[CONSTANTS.MONGO_ID] = hash;
+                                return project.insertObject(patchResult.result);
                             } else {
-                                self.logger.error('failed root patching', rootResult);
-                                patchRootDeferred.reject(new Error('error during patch application'));
+                                self.logger.error('failed patching', patchResult);
+                                throw new Error('error during patch application', hash);
                             }
-                        })
-                        .catch(patchRootDeferred.reject);
-                } else if (rootObject &&
-                    rootObject.oldHash &&
-                    rootObject.newHash &&
-                    rootObject.oldData &&
-                    rootObject.newData) {
-                    //direct connected user send complex coreObject instead of a single patchObject
-                    patchRoot = UTIL.getPatchObject(rootObject.oldData, rootObject.newData);
-                    data.coreObjects[data.commitObject.root] = rootObject.newData;
+                        });
+                } else if (data.coreObjects[hash][CONSTANTS.MONGO_ID]) {
+                    // A new object was sent.
 
-                    patchRootDeferred.resolve();
+                    if (self.gmeConfig.storage.maxEmittedCoreObjects === -1 ||
+                        newObjCnt < self.gmeConfig.storage.maxEmittedCoreObjects) {
+                        // We are still under the limit and can add the coreObject to the emitted data.
+                        emitObjects.push(data.coreObjects[hash]);
+                    }
+
+                    newObjCnt += 1;
+
+                    return project.insertObject(data.coreObjects[hash]);
                 } else {
-                    patchRootDeferred.resolve();
+                    throw new Error('Unexpected core object type received', Object.keys(data.coreObjects[hash]));
                 }
-
-                return patchRootDeferred.promise;
             }
 
-            function loadRootObject() {
-                var rootDeferred = Q.defer(),
-                    rootObject = data.coreObjects[data.commitObject.root];
-
-                if (rootObject) {
-                    rootProvided = true;
-                    rootDeferred.resolve(rootObject);
-                } else {
-                    rootProvided = false;
-                    project.loadObject(data.commitObject.root)
-                        .then(rootDeferred.resolve)
-                        .catch(rootDeferred.reject);
-                }
-
-                return rootDeferred.promise;
-            }
-
-            handlePatchRoot()
-                .then(function () {
-                    return Q.allSettled(objectHashes.map(insertObj));
-                })
+            Q.allSettled(objectHashes.map(insertObj))
                 .then(function (insertResults) {
                     var failedInserts = [];
-                    insertResults.map(function (res) {
+                    insertResults.forEach(function (res) {
                         if (res.state === 'rejected') {
                             self.logger.error(res.reason);
                             failedInserts.push(res);
                         }
                     });
+
                     if (failedInserts.length > 0) {
                         // TODO: How to add meta data to error and decide on error codes.
-                        deferred.reject(new Error('Failed inserting coreObjects'));
+                        deferred.reject(failedInserts[0].reason);
                     } else {
-                        loadRootObject()
-                            .then(function (rootObject) {
-                                project.insertObject(data.commitObject)
-                                    .then(function () {
-                                        if (data.branchName) {
-                                            var newHash = data.commitObject[CONSTANTS.MONGO_ID],
-                                                oldHash = data.oldHash || data.commitObject.parents[0],
-                                                result = {
-                                                    status: null, // SYNCED, FORKED, (MERGED)
-                                                    hash: newHash
+                        project.insertObject(data.commitObject)
+                            .then(function () {
+                                if (data.branchName) {
+                                    var newHash = data.commitObject[CONSTANTS.MONGO_ID],
+                                        oldHash = data.oldHash || data.commitObject.parents[0],
+                                        result = {
+                                            status: null, // SYNCED, FORKED, (MERGED)
+                                            hash: newHash
+                                        };
+                                    project.setBranchHash(data.branchName, oldHash, newHash)
+                                        .then(function () {
+                                            var fullEventData = {
+                                                    projectId: data.projectId,
+                                                    branchName: data.branchName,
+                                                    commitObject: data.commitObject,
+                                                    coreObjects: emitObjects,
+                                                    changedNodes: data.changedNodes // TODO: This doesn't need to passed
+                                                },
+                                                eventData = {
+                                                    projectId: data.projectId,
+                                                    branchName: data.branchName,
+                                                    newHash: newHash,
+                                                    oldHash: oldHash
                                                 };
-                                            project.setBranchHash(data.branchName, oldHash, newHash)
-                                                .then(function () {
-                                                    var fullEventData = {
-                                                            projectId: data.projectId,
-                                                            branchName: data.branchName,
-                                                            commitObject: data.commitObject,
-                                                            coreObjects: []
-                                                        },
-                                                        eventData = {
-                                                            projectId: data.projectId,
-                                                            branchName: data.branchName,
-                                                            newHash: newHash,
-                                                            oldHash: oldHash
-                                                        };
 
-                                                    if (data.hasOwnProperty('socket')) {
-                                                        fullEventData.socket = data.socket;
-                                                        if (self.gmeConfig.storage.broadcastProjectEvents) {
-                                                            eventData.socket = data.socket;
-                                                        }
-                                                    }
+                                            if (data.hasOwnProperty('socket')) {
+                                                fullEventData.socket = data.socket;
+                                                if (self.gmeConfig.storage.broadcastProjectEvents) {
+                                                    eventData.socket = data.socket;
+                                                }
+                                            }
 
-                                                    if (self.gmeConfig.storage.emitCommittedCoreObjects &&
-                                                        rootProvided) {
-                                                        if (self.gmeConfig.storage.patchRootCommunicationEnabled &&
-                                                            patchRoot !== null) {
-                                                            data.coreObjects[patchRoot[CONSTANTS.MONGO_ID]] = patchRoot;
-                                                        }
-                                                        //https://github.com/webgme/webgme/issues/474
-                                                        Object.keys(data.coreObjects).map(function (obj) {
-                                                            fullEventData.coreObjects.push(data.coreObjects[obj]);
-                                                        });
-
-                                                        self.logger.debug('Will emit committed core objects');
-                                                    } else {
-                                                        if (self.gmeConfig.storage.patchRootCommunicationEnabled &&
-                                                            patchRoot !== null) {
-                                                            rootObject = patchRoot;
-                                                        }
-                                                        fullEventData.coreObjects.push(rootObject);
-                                                    }
-
-                                                    result.status = CONSTANTS.SYNCED;
-                                                    self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
-                                                    self.dispatchEvent(CONSTANTS.BRANCH_UPDATED, fullEventData);
-                                                    self.logger.debug('Branch update succeeded.');
-                                                    deferred.resolve(result);
-                                                })
-                                                .catch(function (err) {
-                                                    if (err.message === 'branch hash mismatch') {
-                                                        // TODO: Need to check error better here..
-                                                        self.logger.debug('user got forked');
-                                                        result.status = CONSTANTS.FORKED;
-                                                        deferred.resolve(result);
-                                                    } else {
-                                                        self.logger.error('Failed updating hash', err);
-                                                        // TODO: How to add meta data to error and decide on error codes
-                                                        deferred.reject(err);
-                                                    }
-                                                });
-                                        } else {
-                                            deferred.resolve({hash: data.commitObject[CONSTANTS.MONGO_ID]});
-                                        }
-                                    })
-                                    .catch(function (err) {
-                                        // TODO: How to add meta data to error and decide on error codes.
-                                        self.logger.error(err);
-                                        deferred.reject(new Error('Failed inserting commitObject'));
-                                    });
+                                            result.status = CONSTANTS.SYNCED;
+                                            self.dispatchEvent(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
+                                            self.dispatchEvent(CONSTANTS.BRANCH_UPDATED, fullEventData);
+                                            self.logger.debug('Branch update succeeded.');
+                                            deferred.resolve(result);
+                                        })
+                                        .catch(function (err) {
+                                            if (err.message === 'branch hash mismatch') {
+                                                // TODO: Need to check error better here..
+                                                self.logger.debug('user got forked');
+                                                result.status = CONSTANTS.FORKED;
+                                                deferred.resolve(result);
+                                            } else {
+                                                self.logger.error('Failed updating hash', err);
+                                                // TODO: How to add meta data to error and decide on error codes
+                                                deferred.reject(err);
+                                            }
+                                        });
+                                } else {
+                                    deferred.resolve({hash: data.commitObject[CONSTANTS.MONGO_ID]});
+                                }
                             })
                             .catch(function (err) {
                                 // TODO: How to add meta data to error and decide on error codes.
                                 self.logger.error(err);
-                                deferred.reject(new Error('Failed loading referred rootObject'));
+                                deferred.reject(new Error('Failed inserting commitObject'));
                             });
-
                     }
                 })
                 .catch(deferred.reject);
