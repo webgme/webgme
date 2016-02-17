@@ -1,13 +1,17 @@
+/*globals define*/
+/*jshint browser:true, node:true*/
+
 /**
+ * This is a partial implementation of RFC 6902
+ * the generated patch is fully compliant though the
+ * patch generation is specialized to the expected input form.
+ *
  * @author kecso / https://github.com/kecso
- */
-/*
- this is a partial implementation of RFC 6902
- the generated patch is fully compliant though the
- patch generation is specialized to the expected input form
  */
 
 define(['common/util/canon'], function (CANON) {
+
+    'use strict';
 
     function _strEncode(str) {
         //we should replace the '/' in the patch paths
@@ -66,9 +70,11 @@ define(['common/util/canon'], function (CANON) {
         //ovr add+remove
         diff(sourceJson.ovr || {}, targetJson.ovr || {}, '/ovr/', [], true);
 
-        for (key in targetJson.ovr) {
-            if (targetJson.ovr.hasOwnProperty(key) && sourceJson.ovr.hasOwnProperty(key)) {
-                diff(sourceJson.ovr[key], targetJson.ovr[key], '/ovr/' + _strEncode(key) + '/', [], false);
+        if (targetJson.hasOwnProperty('ovr') && sourceJson.hasOwnProperty('ovr')) {
+            for (key in targetJson.ovr) {
+                if (targetJson.ovr.hasOwnProperty(key) && sourceJson.ovr.hasOwnProperty(key)) {
+                    diff(sourceJson.ovr[key], targetJson.ovr[key], '/ovr/' + _strEncode(key) + '/', [], false);
+                }
             }
         }
 
@@ -76,9 +82,11 @@ define(['common/util/canon'], function (CANON) {
         diff(sourceJson._sets || {}, targetJson._sets || {}, '/_sets/', [], true);
 
         //update done set-by-set
-        for (key in sourceJson._sets) {
-            if (targetJson._sets.hasOwnProperty(key)) {
-                diff(sourceJson._sets[key], targetJson._sets[key], '/_sets/' + _strEncode(key) + '/', [], false);
+        if (targetJson.hasOwnProperty('_sets') && sourceJson.hasOwnProperty('_sets')) {
+            for (key in sourceJson._sets) {
+                if (targetJson._sets.hasOwnProperty(key)) {
+                    diff(sourceJson._sets[key], targetJson._sets[key], '/_sets/' + _strEncode(key) + '/', [], false);
+                }
             }
         }
 
@@ -177,5 +185,5 @@ define(['common/util/canon'], function (CANON) {
     return {
         create: create,
         apply: apply
-    }
+    };
 });
