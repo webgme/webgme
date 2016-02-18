@@ -22,15 +22,12 @@ cache:
 node_js:
   - "4.3"
   - "0.12"
-  - "0.10"
 
 env:
   - BROWSER=true
-  - TEST_FOLDER=test
-  - TEST_FOLDER=test/addon RECURSIVE=true
+  - TEST_FOLDER="test/addon test/plugin" RECURSIVE=true
   - TEST_FOLDER=test/common RECURSIVE=true
   - TEST_FOLDER="test/bin test/config test/issue test/seeds" RECURSIVE=true
-  - TEST_FOLDER=test/plugin RECURSIVE=true
   - TEST_FOLDER=test/server RECURSIVE=true
 
 before_script:

@@ -30,7 +30,7 @@ test_script:
   - node --version
   - npm --version
   # N.B. a few tests are skipped, because they can randomly fail on windows
-  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test
+  #- node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test
   #- node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/addon
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/bin
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/common
