@@ -5,7 +5,7 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-var testFixture = require('./_globals.js');
+var testFixture = require('../_globals.js');
 
 
 describe('webgme', function () {

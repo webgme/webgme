@@ -16,34 +16,21 @@ cache:
   directories:
     - node_modules
 
+# git:
+#   depth: 5
+
 node_js:
-  - "4.2"
+  - "4.3"
   - "0.12"
-  - "0.10"
+
+env:
+  - TEST_BROWSER=true
+  - TEST_FOLDER="test/addon test/plugin" RECURSIVE=true
+  - TEST_FOLDER="test/bin test/config test/common test/issue test/seeds" RECURSIVE=true
+  - TEST_FOLDER=test/server RECURSIVE=true
 
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
-script:
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/addon"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/bin"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/common"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/blob"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/core"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/executor"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/storage"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/util"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/config"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/issue"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/plugin"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/scenarios"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/seeds"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 test/server"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/api"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/middleware"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/storage"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/util"
-  - "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/worker"
-  - "npm run test_browser"
+
+script: ./test/travis.sh
