@@ -104,8 +104,13 @@ $tabs-container-height: 26px;
 
         &.move {
           top: -13px;
-          left: 50%;
+          left: -13px;
           margin-left: -13px;
+        }
+
+        &.open {
+          top: -13px;
+          left: -13px;
         }
 
         &:hover {
