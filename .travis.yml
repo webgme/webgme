@@ -26,8 +26,7 @@ node_js:
 env:
   - TEST_BROWSER=true
   - TEST_FOLDER="test/addon test/plugin" RECURSIVE=true
-  - TEST_FOLDER=test/common RECURSIVE=true
-  - TEST_FOLDER="test/bin test/config test/issue test/seeds" RECURSIVE=true
+  - TEST_FOLDER="test/bin test/config test/common test/issue test/seeds" RECURSIVE=true
   - TEST_FOLDER=test/server RECURSIVE=true
 
 before_script:

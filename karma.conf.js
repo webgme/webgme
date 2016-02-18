@@ -197,6 +197,7 @@ module.exports = function (config) {
         // forward these requests to the webgme server. All other files are server by the karma web server
         proxies: {
             '/base/gmeConfig.json': 'http://localhost:' + gmeConfig.server.port + '/gmeConfig.json',
+            '/docs': 'http://localhost:' + gmeConfig.server.port + '/docs',
             '/rest': 'http://localhost:' + gmeConfig.server.port + '/rest',
             '/api': 'http://localhost:' + gmeConfig.server.port + '/api'
         }

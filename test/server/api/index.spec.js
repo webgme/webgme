@@ -157,18 +157,6 @@ describe('REST API', function () {
                 });
             });
 
-            it('should get source-code documentation link', function (done) {
-                /*jshint camelcase: false */
-                agent.get(server.getUrl() + '/api').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    expect(res.body.hasOwnProperty('source_code_documentation_url')).true;
-                    agent.get(res.body.source_code_documentation_url).end(function (err, res) {
-                        expect(res.status).equal(200, err);
-                        done();
-                    });
-                });
-            });
-
             it('should get api v1 links /api/v1', function (done) {
                 agent.get(server.getUrl() + '/api/v1').end(function (err, res) {
                     expect(res.status).equal(200, err);
@@ -749,19 +737,6 @@ describe('REST API', function () {
                     });
                 });
             });
-
-            it('should get source code documentation link', function (done) {
-                /*jshint camelcase: false */
-                agent.get(server.getUrl() + '/api').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    expect(res.body.hasOwnProperty('source_code_documentation_url')).true;
-                    agent.get(res.body.source_code_documentation_url).end(function (err, res) {
-                        expect(res.status).equal(200, err);
-                        done();
-                    });
-                });
-            });
-
 
             it('should get api v1 links /api/v1', function (done) {
                 agent.get(server.getUrl() + '/api/v1').end(function (err, res) {
@@ -1522,19 +1497,6 @@ describe('REST API', function () {
                     });
                 });
             });
-
-            it('should get source code documentation link', function (done) {
-                /*jshint camelcase: false */
-                agent.get(server.getUrl() + '/api').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    expect(res.body.hasOwnProperty('source_code_documentation_url')).true;
-                    agent.get(res.body.source_code_documentation_url).end(function (err, res) {
-                        expect(res.status).equal(200, err);
-                        done();
-                    });
-                });
-            });
-
 
             it('should get api v1 links /api/v1', function (done) {
                 agent.get(server.getUrl() + '/api/v1').end(function (err, res) {
