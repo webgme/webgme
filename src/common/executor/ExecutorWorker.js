@@ -246,6 +246,14 @@ define([
                                 // TODO: maybe put in the same file as stdout
                                 child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt')));
 
+                                // Need to use logger here since node webkit does not have process.stdout/err.
+                                child.stdout.on('data', function (data) {
+                                    self.logger.info(data.toString());
+                                });
+                                child.stderr.on('data', function (data) {
+                                    self.logger.error(data.toString());
+                                });
+
                                 // FIXME can it happen that the close event arrives before error?
                                 child.on('error', childExit);
                                 child.on('close', childExit);
