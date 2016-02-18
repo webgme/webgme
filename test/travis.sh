@@ -1,10 +1,10 @@
 #!/bin/bash
 
-echo "BROWSER = $BROWSER"
+echo "BROWSER = $TEST_BROWSER"
 echo "TEST_FOLDER = $TEST_FOLDER"
 echo "RECURSIVE = $RECURSIVE"
 
-if [ "$BROWSER" == "true" ]
+if [ "$TEST_BROWSER" == "true" ]
 then
   export COMMAND="node ./node_modules/karma/bin/karma start karma.conf.js --browsers Firefox --single-run"
 else
