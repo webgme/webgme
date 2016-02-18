@@ -30,6 +30,10 @@ define([
 
     _.extend(ModelEditorWidget.prototype, DiagramDesignerWidget.prototype);
 
+    ModelEditorWidget.prototype._afterManagersInitialized = function () {
+        //turn on open btn
+        this.enableOpenButton(true);
+    };
 
     ModelEditorWidget.prototype.getDragEffects = function (selectedElements, event) {
         var ctrlKey = event.ctrlKey || event.metaKey,

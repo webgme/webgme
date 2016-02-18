@@ -918,6 +918,9 @@ define([
             case 'align':
                 this.onSelectionAlignMenu(selectedIds, this.getAdjustedMousePos(event));
                 break;
+            case 'open':
+                this.onDesignerItemDoubleClick(selectedIds[0]);
+                break;
         }
     };
 
@@ -1237,6 +1240,10 @@ define([
 
     DiagramDesignerWidget.prototype.enableAlign = function (enabled) {
         this.selectionManager.enableAlign(enabled);
+    };
+
+    DiagramDesignerWidget.prototype.enableOpenButton = function (enabled) {
+        this.selectionManager.enableOpenButton(enabled);
     };
 
     /*************** SELECTION API ******************************************/

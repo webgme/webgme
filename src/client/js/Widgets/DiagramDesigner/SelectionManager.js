@@ -34,6 +34,7 @@ define([
         this._selectedElements = [];
         this._rotationEnabled = true;
         this._alignEnabled = true;
+        this._openEnabled = true;
 
         this.logger.debug('SelectionManager ctor finished');
     };
@@ -592,13 +593,13 @@ define([
         class: 's-btn delete',
         command: 'delete'
     });
-    DELETE_BUTTON_BASE.html('<i class="glyphicon glyphicon-remove"></i>');
+    DELETE_BUTTON_BASE.html('<i class="glyphicon glyphicon-remove" title="Delete"></i>');
 
     var CONTEXT_MENU_BUTTON_BASE = $('<div/>', {
         class: 's-btn contextmenu',
         command: 'contextmenu'
     });
-    CONTEXT_MENU_BUTTON_BASE.html('<i class="glyphicon glyphicon-list"></i>');
+    CONTEXT_MENU_BUTTON_BASE.html('<i class="glyphicon glyphicon-list" title="Action Menu"></i>');
 
     var MOVE_BUTTON_BASE = $('<div/>', {
         class: 's-btn move',
@@ -606,15 +607,22 @@ define([
     });
     MOVE_BUTTON_BASE.html('<i class="glyphicon glyphicon-move"></i>');
 
+    var OPEN_BUTTON_BASE = $('<div/>', {
+        class: 's-btn open',
+        command: 'open'
+    });
+    OPEN_BUTTON_BASE.html('<i class="glyphicon glyphicon-circle-arrow-down" title="Open"></i>');
+
     var ALIGN_BUTTON_BASE = $('<div/>', {
         class: 's-btn align',
         command: 'align'
     });
-    ALIGN_BUTTON_BASE.html('<i class="glyphicon glyphicon-th"></i>');
+    ALIGN_BUTTON_BASE.html('<i class="glyphicon glyphicon-th" title="Align Menu"></i>');
 
     SelectionManager.prototype._renderSelectionActions = function () {
         var self = this,
             deleteBtn,
+            openBtn,
             contextMenuBtn,
             alignBtn;
 
@@ -630,6 +638,11 @@ define([
                 alignBtn = ALIGN_BUTTON_BASE.clone();
                 this._diagramDesigner.skinParts.$selectionOutline.append(alignBtn);
             }
+        }
+
+        if (this._openBtnEnabled === true && this._selectedElements.length === 1) {
+            openBtn = OPEN_BUTTON_BASE.clone();
+            this._diagramDesigner.skinParts.$selectionOutline.append(openBtn);
         }
 
         //context menu
@@ -843,6 +856,12 @@ define([
     SelectionManager.prototype.enableAlign = function (enabled) {
         if (this._alignEnabled !== enabled) {
             this._alignEnabled = enabled;
+        }
+    };
+
+    SelectionManager.prototype.enableOpenButton = function (enabled) {
+        if (this._openBtnEnabled !== enabled) {
+            this._openBtnEnabled = enabled;
         }
     };
 

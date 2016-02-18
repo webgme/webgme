@@ -48,8 +48,11 @@
           left: -13px; }
         .diagram-designer .items .selection-outline .s-btn.move {
           top: -13px;
-          left: 50%;
+          left: -13px;
           margin-left: -13px; }
+        .diagram-designer .items .selection-outline .s-btn.open {
+          top: -13px;
+          left: -13px; }
         .diagram-designer .items .selection-outline .s-btn:hover {
           background-color: #428bca; }
       .diagram-designer .items .selection-outline .rotation-deg {
