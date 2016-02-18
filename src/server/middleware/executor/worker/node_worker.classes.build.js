@@ -2282,6 +2282,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function (BlobConfig) {
      * @param {boolean} [metadata.isPublic=false]
      * @param {string[]} [metadata.tags=[]]
      * @constructor
+     * @alias BlobMetadata
      */
     var BlobMetadata = function (metadata) {
         var key;
@@ -2819,7 +2820,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function (BlobConfig) {
             throw new Error('function argument is expected');
         }
 
-        if (typeof func.tasync_wraped === 'undefined') {
+        if (func.tasync_wraped === undefined) {
             func.tasync_wraped = function () {
                 var args = arguments;
                 var future = new Future();
@@ -2869,7 +2870,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function (BlobConfig) {
             throw new Error('function argument is expected');
         }
 
-        if (typeof func.tasync_unwraped === 'undefined') {
+        if (func.tasync_unwraped === undefined) {
             func.tasync_unwraped = function () {
                 var args = arguments;
 
@@ -3114,7 +3115,7 @@ define('blob/BlobMetadata',['blob/BlobConfig'], function (BlobConfig) {
 /*globals define*/
 /*jshint browser: true, node:true*/
 
-/*
+/**
  * @author lattmann / https://github.com/lattmann
  */
 
@@ -3129,8 +3130,8 @@ define('blob/Artifact',[
     /**
      * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
      * @param {string} name Artifact's name without extension
-     * @param {blob.BlobClient} blobClient
-     * @param {blob.BlobMetadata} descriptor
+     * @param {BlobClient} blobClient
+     * @param {BlobMetadata} descriptor
      * @constructor
      * @alias Artifact
      */
@@ -3151,9 +3152,12 @@ define('blob/Artifact',[
 
     /**
      * Adds content to the artifact as a file.
-     * @param {string} name filename
-     * @param {Blob} content File object or Blob
-     * @param {function(err, hash)} callback
+     * @param {string} name - filename
+     * @param {Blob} content - File object or Blob.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addFile = function (name, content, callback) {
         var self = this,
@@ -3179,6 +3183,15 @@ define('blob/Artifact',[
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Adds files as soft-link.
+     * @param {string} name - filename.
+     * @param {Blob} content - File object or Blob.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>metadataHash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     Artifact.prototype.addFileAsSoftLink = function (name, content, callback) {
         var deferred = Q.defer(),
             self = this,
@@ -3208,9 +3221,12 @@ define('blob/Artifact',[
 
     /**
      * Adds a hash to the artifact using the given file path.
-     * @param {string} name Path to the file in the artifact. Note: 'a/b/c.txt'
-     * @param {string} hash Metadata hash that has to be added.
-     * @param callback
+     * @param {string} name - Path to the file in the artifact. Note: 'a/b/c.txt'
+     * @param {string} hash - Metadata hash that has to be added.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addObjectHash = function (name, hash, callback) {
         var self = this,
@@ -3226,8 +3242,8 @@ define('blob/Artifact',[
                 }
 
                 if (self.descriptor.content.hasOwnProperty(name)) {
-                    deferred.reject('Another content with the same name was already added. ' +
-                        JSON.stringify(self.descriptor.content[name]));
+                    deferred.reject(new Error('Another content with the same name was already added. ' +
+                        JSON.stringify(self.descriptor.content[name])));
 
                 } else {
                     self.descriptor.size += metadata.size;
@@ -3244,13 +3260,23 @@ define('blob/Artifact',[
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Adds a hash to the artifact using the given file path.
+     * @param {string} name - Path to the file in the artifact. Note: 'a/b/c.txt'
+     * @param {string} hash - Metadata hash that has to be added.
+     * @param {number} [size] - Size of the referenced blob.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     Artifact.prototype.addMetadataHash = function (name, hash, size, callback) {
         var self = this,
             deferred = Q.defer(),
             addMetadata = function (size) {
                 if (self.descriptor.content.hasOwnProperty(name)) {
-                    deferred.reject('Another content with the same name was already added. ' +
-                        JSON.stringify(self.descriptor.content[name]));
+                    deferred.reject(new Error('Another content with the same name was already added. ' +
+                        JSON.stringify(self.descriptor.content[name])));
 
                 } else {
                     self.descriptor.size += size;
@@ -3269,7 +3295,7 @@ define('blob/Artifact',[
         }
 
         if (BlobConfig.hashRegex.test(hash) === false) {
-            deferred.reject('Blob hash is invalid');
+            deferred.reject(new Error('Blob hash is invalid'));
         } else if (size === undefined) {
             self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
                 if (err) {
@@ -3288,7 +3314,10 @@ define('blob/Artifact',[
     /**
      * Adds multiple files.
      * @param {Object.<string, Blob>} files files to add
-     * @param callback
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>hashes</b>.<br>
+     * On error the promise will be rejected with {@link Error|string} <b>error</b>.
      */
     Artifact.prototype.addFiles = function (files, callback) {
         var self = this,
@@ -3302,7 +3331,10 @@ define('blob/Artifact',[
     /**
      * Adds multiple files as soft-links.
      * @param {Object.<string, Blob>} files files to add
-     * @param callback
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>metadataHashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addFilesAsSoftLinks = function (files, callback) {
         var self = this,
@@ -3315,8 +3347,11 @@ define('blob/Artifact',[
 
     /**
      * Adds hashes to the artifact using the given file paths.
-     * @param {object.<string, string>} objectHashes - Keys are file paths and values object hashes.
-     * @param callback
+     * @param {object.<string, string>} objectHashes - Keys are file paths and values metadata hashes.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>hashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addObjectHashes = function (objectHashes, callback) {
         var self = this,
@@ -3330,7 +3365,10 @@ define('blob/Artifact',[
     /**
      * Adds hashes to the artifact using the given file paths.
      * @param {object.<string, string>} objectHashes - Keys are file paths and values object hashes.
-     * @param callback
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>hashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addMetadataHashes = function (objectHashes, callback) {
         var self = this,
@@ -3343,7 +3381,10 @@ define('blob/Artifact',[
 
     /**
      * Saves this artifact and uploads the metadata to the server's storage.
-     * @param callback
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.save = function (callback) {
         var deferred = Q.defer();
@@ -3406,7 +3447,8 @@ define('blob/BlobClient',[
     'use strict';
 
     /**
-     *
+     * Client to interact with the blob-storage. <br>
+     * FIXME: For some reason the methods do not show up in the generated docs. See source code.
      * @param {object} parameters
      * @param {object} parameters.logger
      * @constructor
@@ -3518,6 +3560,15 @@ define('blob/BlobClient',[
         }
     };
 
+    /**
+     * Adds a file to the blob storage.
+     * @param {string} name - file name.
+     * @param {string|Buffer|ArrayBuffer} data - file content.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.putFile = function (name, data, callback) {
         var deferred = Q.defer(),
             self = this,
@@ -3563,7 +3614,7 @@ define('blob/BlobClient',[
             .send(data)
             .end(function (err, res) {
                 if (err || res.status > 399) {
-                    deferred.reject(err || res.status);
+                    deferred.reject(err || new Error(res.status));
                     return;
                 }
                 var response = res.body;
@@ -3607,7 +3658,7 @@ define('blob/BlobClient',[
             .send(blob)
             .end(function (err, res) {
                 if (err || res.status > 399) {
-                    deferred.reject(err || res.status);
+                    deferred.reject(err || new Error(res.status));
                     return;
                 }
                 // Uploaded.
@@ -3621,10 +3672,18 @@ define('blob/BlobClient',[
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Adds multiple files to the blob storage.
+     * @param {object.<string, string|Buffer|ArrayBuffer>} o - Keys are file names and values the content.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {object} <b>hashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.putFiles = function (o, callback) {
         var self = this,
             deferred = Q.defer(),
-            error = '',
+            error,
             filenames = Object.keys(o),
             remaining = filenames.length,
             hashes = {},
@@ -3640,7 +3699,8 @@ define('blob/BlobClient',[
                 hashes[filename] = hash;
 
                 if (err) {
-                    error += 'putFile error: ' + err.toString();
+                    error = err;
+                    self.logger.error('putFile failed with error', {metadata: err});
                 }
 
                 if (remaining === 0) {
@@ -3664,6 +3724,18 @@ define('blob/BlobClient',[
         return this.getObject(hash, callback, subpath);
     };
 
+    /**
+     * Retrieves object from blob storage as a Buffer under node and as an ArrayBuffer in the client.
+     * N.B. if the retrieved file is a json-file and running in a browser, the content will be decoded and
+     * the string parsed as a JSON.
+     * @param {string} hash - hash of metadata for object.
+     * @param {function} [callback] - if provided no promise will be returned.
+     * @param {string} [subpath]
+     *
+     * @return {external:Promise} On success the promise will be resolved with {Buffer|ArrayBuffer|object}
+     * <b>content</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.getObject = function (hash, callback, subpath) {
         var deferred = Q.defer(),
             self = this;
@@ -3707,7 +3779,7 @@ define('blob/BlobClient',[
             var buffers = new BuffersWritable();
             buffers.on('finish', function () {
                 if (req.req.res.statusCode > 399) {
-                    deferred.reject(req.req.res.statusCode);
+                    deferred.reject(new Error(req.req.res.statusCode));
                 } else {
                     deferred.resolve(Buffer.concat(buffers.buffers));
                 }
@@ -3726,7 +3798,7 @@ define('blob/BlobClient',[
             // req.on('error', callback);
             req.on('end', function () {
                 if (req.xhr.status > 399) {
-                    deferred.reject(req.xhr.status);
+                    deferred.reject(new Error(req.xhr.status));
                 } else {
                     var contentType = req.xhr.getResponseHeader('content-type');
                     var response = req.xhr.response; // response is an arraybuffer
@@ -3751,6 +3823,70 @@ define('blob/BlobClient',[
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Retrieves object from blob storage and parses the content as a string.
+     * @param {string} hash - hash of metadata for object.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {string} <b>contentString</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
+    BlobClient.prototype.getObjectAsString = function (hash, callback) {
+        var self = this;
+        return self.getObject(hash)
+            .then(function (content) {
+                if (typeof content === 'string') {
+                    // This does currently not happen..
+                    return content;
+                } else if (typeof Buffer !== 'undefined' && content instanceof Buffer) {
+                    return UINT.uint8ArrayToString(new Uint8Array(content));
+                } else if (content instanceof ArrayBuffer) {
+                    return UINT.uint8ArrayToString(new Uint8Array(content));
+                } else if (content !== null && typeof content === 'object') {
+                    return JSON.stringify(content);
+                } else {
+                    throw new Error('Unknown content encountered: ' + content);
+                }
+            })
+            .nodeify(callback);
+    };
+
+    /**
+     * Retrieves object from blob storage and parses the content as a JSON. (Will resolve with error if not valid JSON.)
+     * @param {string} hash - hash of metadata for object.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {object} <b>contentJSON</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
+    BlobClient.prototype.getObjectAsJSON = function (hash, callback) {
+        var self = this;
+        return self.getObject(hash)
+            .then(function (content) {
+                if (typeof content === 'string') {
+                    // This does currently not happen..
+                    return JSON.parse(content);
+                } else if (typeof Buffer !== 'undefined' && content instanceof Buffer) {
+                    return JSON.parse(UINT.uint8ArrayToString(new Uint8Array(content)));
+                } else if (content instanceof ArrayBuffer) {
+                    return JSON.parse(UINT.uint8ArrayToString(new Uint8Array(content)));
+                } else if (content !== null && typeof content === 'object') {
+                    return content;
+                } else {
+                    throw new Error('Unknown content encountered: ' + content);
+                }
+            })
+            .nodeify(callback);
+    };
+
+    /**
+     * Retrieves metadata from blob storage.
+     * @param {string} hash - hash of metadata.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise} On success the promise will be resolved with {object} <b>metadata</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.getMetadata = function (hash, callback) {
         var req = superagent.get(this.getMetadataURL(hash)),
             deferred = Q.defer(),
@@ -3768,7 +3904,7 @@ define('blob/BlobClient',[
 
         req.end(function (err, res) {
             if (err || res.status > 399) {
-                deferred.reject(err || res.status);
+                deferred.reject(err || new Error(res.status));
             } else {
                 self.logger.debug('getMetadata', res.text);
                 deferred.resolve(JSON.parse(res.text));
@@ -3779,9 +3915,9 @@ define('blob/BlobClient',[
     };
 
     /**
-     *
-     * @param {string} name
-     * @returns {Artifact}
+     * Creates a new artifact and adds it to array of artifacts of the instance.
+     * @param {string} name - Name of artifact
+     * @return {Artifact}
      */
     BlobClient.prototype.createArtifact = function (name) {
         var artifact = new Artifact(name, this);
@@ -3789,6 +3925,15 @@ define('blob/BlobClient',[
         return artifact;
     };
 
+    /**
+     * Retrieves the {@link Artifact} from the blob storage.
+     * @param {hash} metadataHash - SHA hash associated with the artifact.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with
+     * {@link Artifact} <b>artifact</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.getArtifact = function (metadataHash, callback) {
         // TODO: get info check if complex flag is set to true.
         // TODO: get info get name.
@@ -3815,6 +3960,14 @@ define('blob/BlobClient',[
         return deferred.promise.nodeify(callback);
     };
 
+    /**
+     * Saves all the artifacts associated with the current instance.
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with
+     * {string[]} <b>artifactHashes</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
+     */
     BlobClient.prototype.saveAllArtifacts = function (callback) {
         var promises = [];
 
@@ -3825,6 +3978,12 @@ define('blob/BlobClient',[
         return Q.all(promises).nodeify(callback);
     };
 
+    /**
+     * Converts bytes to a human readable string.
+     * @param {bytes} - File size in bytes.
+     * @param {boolean} [si] - If true decimal conversion will be used (by default binary is used).
+     * @returns {string}
+     */
     BlobClient.prototype.getHumanSize = function (bytes, si) {
         var thresh = si ? 1000 : 1024,
             units = si ?
@@ -3855,6 +4014,7 @@ define('blob/BlobClient',[
  *
  * @author lattmann / https://github.com/lattmann
  * @author ksmyth / https://github.com/ksmyth
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 
@@ -3862,10 +4022,14 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     'use strict';
 
     /**
+     * Client for creating, monitoring, and receiving output executor jobs.
+     * This client is used by the Executor Workers and some of the API calls are not
+     * meant to be used by "end users".
      *
      * @param {object} parameters
      * @param {object} parameters.logger
      * @constructor
+     * @alias ExecutorClient
      */
     var ExecutorClient = function (parameters) {
         parameters = parameters || {};
@@ -3921,13 +4085,13 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     };
 
     /**
-     * Creates a new configuration file for the job execution.
+     * Creates a new configuration object for the job execution.
      *
      * To make the worker post output either the outputInterval and/or outputSegmentSize must be specified.
-     * - If both are negative (or falsy) no output will be given.
-     * - When both are specified a timeout will be set at start (and after each posted output). If the number of lines
+     * <br> - If both are negative (or falsy) no output will be given.
+     * <br> - When both are specified a timeout will be set at start (and after each posted output). If the number of lines
      *  exceeds outputSegmentSize during that timeout, the output will be posted and a new timeout will be triggered.
-     *
+     * <br>
      * N.B. even though a short outputInterval is set, the worker won't post new output until the responses from
      * previous posts have returned. Before the job returns with a "completed" status code, all queued outputs will be
      * posted (and the responses will be ensured to have returned).
@@ -3937,7 +4101,7 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
      * @param {number} [outputInterval=-1] - max time [ms] between (non-empty) output posts from worker.
      * @param {number} [outputSegmentSize=-1] - number of lines before new output is posted from worker. (N.B. posted
      * segments can still contain more number of lines).
-     * @returns {{cmd: *, resultArtifacts: Array}}
+     * @return {object}
      */
     ExecutorClient.prototype.getNewExecutorConfig = function (cmd, args, outputInterval, outputSegmentSize) {
         var config = {
@@ -3967,13 +4131,14 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     };
 
     /**
+     * Creates a new job.
+     *
      * @param {object} jobInfo - initial information about the job must contain the hash.
      * @param {object} jobInfo.hash - a unique id for the job (e.g. the hash of the artifact containing the executor_config.json).
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise}  On success the promise will be resolved with
-     * {JobInfo} <b>result</b>.<br>
-     * On error the promise will be rejected with {Error} <b>error</b>.
+     * @return {external:Promise}  On success the promise will be resolved with {@link JobInfo} <b>result</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     ExecutorClient.prototype.createJob = function (jobInfo, callback) {
         var deferred = Q.defer(),
@@ -4017,12 +4182,12 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
     };
 
     /**
+     * Retrieves the current state of the job in form of a {@link JobInfo}
      * @param {string} hash - unique id for the job (e.g. the hash of the artifact containing the executor_config.json).
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise}  On success the promise will be resolved with
-     * {JobInfo} <b>result</b>.<br>
-     * On error the promise will be rejected with {Error} <b>error</b>.
+     * @return {external:Promise}  On success the promise will be resolved with {@link JobInfo} <b>jobInfo</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     ExecutorClient.prototype.getInfo = function (hash, callback) {
         var deferred = Q.defer(),
@@ -4096,7 +4261,10 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
      * @param {string} hash - hash of job related to output.
      * @param {number} [start] - number/id of the output segment to start from (inclusive).
      * @param {number} [end] - number/id of segment to end at (exclusive).
-     * @param {function(Error, OutputInfo[])} [callback]
+     * @param {function} [callback] - if provided no promise will be returned.
+     *
+     * @return {external:Promise}  On success the promise will be resolved with {@link OutputInfo} <b>result</b>.<br>
+     * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     ExecutorClient.prototype.getOutput = function (hash, start, end, callback) {
         var deferred = Q.defer(),
@@ -4147,7 +4315,7 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
         return deferred.promise.nodeify(callback);
     };
 
-    // Helper methods
+    //<editor-fold desc="Helper methods">
     ExecutorClient.prototype.getInfoURL = function (hash) {
         return this.origin + this.getRelativeInfoURL(hash);
     };
@@ -4211,6 +4379,7 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
 //        }
         callback(null, options);
     };
+    //</editor-fold>
 
     return ExecutorClient;
 });
@@ -4254,20 +4423,85 @@ define('executor/WorkerInfo',[], function () {
 define('executor/JobInfo',[], function () {
     'use strict';
 
+    /**
+     * Class describing an executor job. The data is used for communication between the
+     * initiator/a monitor of the job and the worker executing the job.
+     *
+     * @param {object} parameters
+     * @param {hash} parameters.hash - Job identifier.
+     * @constructor
+     * @alias JobInfo
+     */
     var JobInfo = function (parameters) {
+
+        /**
+         * Job identifier.
+         * @type {string}
+         */
         this.hash = parameters.hash;
+
+        /**
+         * Array of hashes to {@link Artifact}s containing each requested result.
+         * @type {string[]}
+         */
         this.resultHashes = parameters.resultHashes || [];
+
+        /**
+         * Hash to an {@link Artifact} containing the union of all requests results.
+         * @type {string}
+         */
         this.resultSuperSet = parameters.resultSuperSet || null;
+
         this.userId = parameters.userId || [];
+
+        /**
+         * Current status of the job.
+         * @type {string}
+         */
         this.status = parameters.status || null;
+
+        /**
+         * Timestamp of when the job was created.
+         * @type {string}
+         */
         this.createTime = parameters.createTime || null;
+
+        /**
+         * Timestamp of when the job execution started by a worker.
+         * @type {string}
+         */
         this.startTime = parameters.startTime || null;
+
+        /**
+         * Timestamp of when the job execution finished on the worker.
+         * @type {string}
+         */
         this.finishTime = parameters.finishTime || null;
+
+        /**
+         * Id/label of the worker processing the job.
+         * @type {string}
+         */
         this.worker = parameters.worker || null;
+
+        /**
+         * Array of labels for the job.
+         * @type {string[]}
+         */
         this.labels = parameters.labels || [];
-        this.outputNumber = parameters.outputNumber || null;
+
+        /**
+         * The (id) outputNumber (0, 1, 2, ...) of the latest {@link OutputInfo} (for this job) available on the server.
+         * When no output is available the number is <b>null</b>.
+         * @type {number}
+         */
+        this.outputNumber = typeof parameters.outputNumber === 'number' ? parameters.outputNumber : null;
     };
 
+    /**
+     * Array of statuses where the job hash finished and won't proceed.
+     * @type {string[]}
+     */
     JobInfo.finishedStatuses = [
         'SUCCESS',
         'FAILED_TO_EXECUTE',
@@ -4281,10 +4515,20 @@ define('executor/JobInfo',[], function () {
         'FAILED_TO_ADD_OBJECT_HASHES',
         'FAILED_TO_SAVE_ARTIFACT'];
 
+    /**
+     * Returns true of the provided status is a finished status.
+     * @param {string} status - The status of a job.
+     * @returns {boolean}
+     */
     JobInfo.isFinishedStatus = function (status) {
         return JobInfo.finishedStatuses.indexOf(status) !== -1;
     };
 
+    /**
+     * Returns true if the provided status is a failed finished status.
+     * @param {string} status - The status of a job.
+     * @returns {boolean}
+     */
     JobInfo.isFailedFinishedStatus = function (status) {
         return JobInfo.isFinishedStatus(status) && status !== 'SUCCESS';
     };
@@ -4301,16 +4545,32 @@ define('executor/OutputInfo',[], function () {
     'use strict';
 
     /**
-     *
-     * @param {string} jobHash
+     * Class describing an output from an execution. The data is used for communication between the
+     * initiator/a monitor of the job and the worker executing the job.
+     * @param {string} jobHash - Identifier for the job.
      * @param {object} params
      * @param {string} params.output - The output string.
      * @param {number} params.outputNumber - Ordered id of output (0, 1, 2..)
+     * @alias OutputInfo
      * @constructor
      */
     function OutputInfo(jobHash, params) {
+        /**
+         * Job identifier
+         * @type {string}
+         */
         this.hash = jobHash;
+
+        /**
+         * Ordered id of output (0, 1, 2..)
+         * @type {number}
+         */
         this.outputNumber = params.outputNumber;
+
+        /**
+         * String output.
+         * @type {string}
+         */
         this.output = params.output;
 
         this._id = this.hash + '+' + this.outputNumber;
@@ -4685,6 +4945,14 @@ define('executor/ExecutorWorker',[
                                     jobInfo.hash.substr(0, 6) + '_stdout.txt')));
                                 // TODO: maybe put in the same file as stdout
                                 child.stderr.pipe(fs.createWriteStream(path.join(jobDir, 'job_stderr.txt')));
+
+                                // Need to use logger here since node webkit does not have process.stdout/err.
+                                child.stdout.on('data', function (data) {
+                                    self.logger.info(data.toString());
+                                });
+                                child.stderr.on('data', function (data) {
+                                    self.logger.error(data.toString());
+                                });
 
                                 // FIXME can it happen that the close event arrives before error?
                                 child.on('error', childExit);
