@@ -197,6 +197,9 @@ define(['js/logger',
             createNode: function (event, data) {
                 self._makeNodeDraggable(data.node);
             },
+            removeNode: function (event, data) {
+                self._destroyDraggable(data.node);
+            },
 
             // Extensions
             extensions: ['edit', 'filter'],
@@ -552,6 +555,12 @@ define(['js/logger',
                 return self._dragHelper(this, event);
             },
             dragItems: function (el) {
+                if (node.isSelected() === false) {
+                    self._deselectSelectedNodes();
+                    node.setSelected(true);
+                    node.setFocus(true);
+                }
+
                 return self.getDragItems(el);
             },
             dragEffects: function (el) {
@@ -561,6 +570,12 @@ define(['js/logger',
                 return self.getDragParams(el);
             }
         });
+    };
+
+    TreeBrowserWidget.prototype._destroyDraggable = function (node) {
+        var nodeEl = $(node.span);
+
+        dragSource.destroyDraggable(nodeEl);
     };
 
     /* OVERWRITE DragSource.prototype.dragHelper */
