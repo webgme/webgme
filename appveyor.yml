@@ -1,5 +1,5 @@
 # https://www.appveyor.com/docs/how-to/repository-shallow-clone#downloading-repository-via-github-or-bitbucket-api
-shallow_clone: true
+#shallow_clone: true
 
 environment:
   matrix:

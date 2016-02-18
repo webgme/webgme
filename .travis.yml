@@ -16,8 +16,8 @@ cache:
   directories:
     - node_modules
 
-git:
-  depth: 1
+# git:
+#   depth: 5
 
 node_js:
   - "4.3"
