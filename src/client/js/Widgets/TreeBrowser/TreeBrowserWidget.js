@@ -146,6 +146,11 @@ define(['js/logger',
                         data.node.setFocus(false);
                     }
                 }
+
+                if (data.targetType !== 'expander') {
+                    event.preventDefault();
+                    return;
+                }
             },
 
             collapse: function (event, data) {
@@ -181,16 +186,11 @@ define(['js/logger',
                 self._deselectSelectedNodes();
                 data.node.setSelected(true);
 
-                // Check if the node is already focused and the title is clicked --> edit title.
-                if (data.targetType === 'title' && lastDblClicked === data.node && self.enableEdit === true) {
-                    // Skip the onNodeDoubleClicked behaviour if edit is enabled.
-                } else {
-                    lastDblClicked = data.node;
-                    if ($.isFunction(self.onNodeDoubleClicked)) {
-                        self._logger.debug('default double-click handler: ' + data.node.key);
-                        self.onNodeDoubleClicked.call(self, data.node.key);
-                        event.preventDefault();
-                    }
+                lastDblClicked = data.node;
+                if ($.isFunction(self.onNodeDoubleClicked)) {
+                    self._logger.debug('default double-click handler: ' + data.node.key);
+                    self.onNodeDoubleClicked.call(self, data.node.key);
+                    event.preventDefault();
                 }
             },
 
@@ -208,7 +208,7 @@ define(['js/logger',
                 allowEmpty: true,
                 inputCss: {minWidth: '3em'},
                 triggerCancel: ['enter'],
-                triggerStart: ['dblclick'],
+                triggerStart: [],
                 beforeEdit: function (event, data) {
                     self._logger.debug('beforeEdit', event, data);
                     if (data.node.extraClasses === NODE_PROGRESS_CLASS || self.enableEdit === false) {
