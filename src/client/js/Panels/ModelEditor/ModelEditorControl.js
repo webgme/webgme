@@ -973,7 +973,12 @@ define(['js/logger',
     };
 
     ModelEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
-        this.selectedObjectChanged(activeObjectId);
+        if (this.currentNodeInfo && this.currentNodeInfo.id === activeObjectId) {
+            // [patrik] added this check to avoid redrawing when becoming active in split panel mode.
+            this.logger.debug('Disregarding activeObject changed when it is already the same.');
+        } else {
+            this.selectedObjectChanged(activeObjectId);
+        }
     };
 
     ModelEditorControl.prototype._stateActiveSelectionChanged = function (model, activeSelection) {

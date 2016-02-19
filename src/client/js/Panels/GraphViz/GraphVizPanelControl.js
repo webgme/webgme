@@ -231,7 +231,12 @@ define(['js/logger',
     };
 
     GraphVizControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
-        this.selectedObjectChanged(activeObjectId);
+        if (this._currentNodeId === activeObjectId) {
+            // [patrik] added this check to avoid redrawing when becoming active in split panel mode.
+            this._logger.debug('Disregarding activeObject changed when it is already the same.');
+        } else {
+            this.selectedObjectChanged(activeObjectId);
+        }
     };
 
     GraphVizControl.prototype._attachClientEventListeners = function () {

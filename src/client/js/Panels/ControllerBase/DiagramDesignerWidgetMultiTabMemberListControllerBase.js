@@ -199,7 +199,12 @@ define(['js/logger',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
-        this.selectedObjectChanged(activeObjectId);
+        if (this._memberListContainerID === activeObjectId) {
+            // [patrik] added this check to avoid redrawing when becoming active in split panel mode.
+            this.logger.debug('Disregarding activeObject changed when it is already the same.');
+        } else {
+            this.selectedObjectChanged(activeObjectId);
+        }
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveTabChanged = function (model, tabId) {
