@@ -106,7 +106,7 @@
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
     "test_ci": "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test",
     "test_cover": "node ./node_modules/istanbul/lib/cli.js --hook-run-in-context cover node_modules/mocha/bin/_mocha -- -R spec --timeout 10000 --recursive test",
-    "test_browser": "node ./node_modules/karma/bin/karma start karma.conf.js --browsers Firefox --single-run",
+    "test_browser": "node ./node_modules/karma/bin/karma start karma.conf.js --browsers Firefox --single-run --no-auto-watch",
     "postinstall": "node ./utils/postinstall.js -c jsdoc_conf.json",
     "apply": "node ./src/bin/apply.js",
     "diff": "node ./src/bin/diff.js",
