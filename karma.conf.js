@@ -63,7 +63,7 @@ var testFixture = require('./test/_globals.js'),
             function importProject(projectInfo) {
                 var branchName = projectInfo.hasOwnProperty('branches') ?
                     projectInfo.branches[0] : 'master';
-
+                console.log((new Date()).toISOString(), ' importing ' + projectInfo.name);
                 return testFixture.importProject(storage, {
                     projectSeed: projectInfo.path,
                     projectName: projectInfo.name,
@@ -112,6 +112,7 @@ var testFixture = require('./test/_globals.js'),
         .catch(function (err) {
             console.error(err);
         });
+
 }());
 
 
@@ -131,12 +132,24 @@ module.exports = function (config) {
 
         // list of files / patterns to load in the browser
         files: [
-            {pattern: 'src/**/*.js', included: false},
+            // {pattern: 'src/**/*.js', included: false}, // THIS IS SLOW: SPECIFY EXPLICITLY WHAT WE NEED.
+            {pattern: 'src/common/**/*.js', included: false},
+            {pattern: 'src/client/js/*.js', included: false},
+            {pattern: 'src/client/js/**/*.js', included: false},
+            {pattern: 'src/client/lib/debug/debug.js', included: false},
+            {pattern: 'src/client/lib/jquery/*.js', included: false},
+            {pattern: 'src/client/lib/require/**/*.js', included: false},
+            {pattern: 'src/client/lib/superagent/*.js', included: false},
+            {pattern: 'src/client/lib/q/*.js', included: false},
+            {pattern: 'src/plugin/*.js', included: false},
+            {pattern: 'src/plugin/coreplugins/MinimalWorkingExample/**/*.js', included: false},
+            {pattern: 'src/plugin/coreplugins/PluginGenerator/**/*.js', included: false},
+            {pattern: 'src/*.js', included: false},
             {pattern: 'utils/build/empty/empty.js', included: false},
             {pattern: 'test/plugin/scenarios/plugins/**/*.js', included: false},
             {pattern: 'seeds/*.json', included: false}, //seeds
             {pattern: 'test-karma/**/*.spec.js', included: false},
-            {pattern: 'test-karma/**/*.inc.js', included: false}, //test include scripts
+            // {pattern: 'test-karma/**/*.inc.js', included: false}, //test include scripts
             {pattern: 'test-karma/**/*.json', included: false}, //test assets
             'test-main.js'
         ],
@@ -144,7 +157,6 @@ module.exports = function (config) {
 
         // list of files to exclude
         exclude: [
-            'src/server/middleware/executor/worker/node_modules/**/*.js'
         ],
 
 
@@ -183,6 +195,7 @@ module.exports = function (config) {
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: ['Chrome', 'Firefox'],
 
+        reportSlowerThan: 1000,
 
         // to avoid DISCONNECTED messages
         browserDisconnectTimeout: 10000, // default 2000
