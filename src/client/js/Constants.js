@@ -83,6 +83,7 @@ define([
         STATE_ACTIVE_BRANCH_NAME: 'activeBranchName',
         STATE_ACTIVE_CROSSCUT: 'activeCrosscut',
         STATE_ACTIVE_TAB: 'activeTab',
+        STATE_SUPPRESS_VISUALIZER_FROM_NODE: 'suppressVisualizerFromNode',
 
         /* ASPECTS */
         ASPECT_ALL: 'All',

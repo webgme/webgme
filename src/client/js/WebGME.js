@@ -291,42 +291,41 @@ define([
                             activeNode = client.getNode(nodePath);
                             if (activeNode) {
                                 // First register the activeObject and let it pick the visualizer.
-                                WebGMEGlobal.State.registerActiveObject(nodePath);
+                                updatedState[CONSTANTS.STATE_ACTIVE_OBJECT] = nodePath;
 
-                                // In the next tick we set the other preferences.
-                                setTimeout(function () {
-                                    //WebGMEGlobal.State.registerActiveVisualizer(vizualizer);
+                                selectionIds = selectionIds || [];
+
+                                if (selectionIds.length > 0) {
+                                    updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] = selectionIds;
+                                }
+
+                                tab = parseInt(tab, 10);
+                                if (tab >= 0 && vizualizer) {
                                     updatedState[CONSTANTS.STATE_ACTIVE_VISUALIZER] = vizualizer;
-                                    //updatedState[CONSTANTS.STATE_ACTIVE_OBJECT] = nodePath;
+                                    updatedState[CONSTANTS.STATE_ACTIVE_TAB] = tab;
 
-                                    selectionIds = selectionIds || [];
+                                    // Suppress the node determining the visualizer.
+                                    updatedState[CONSTANTS.STATE_SUPPRESS_VISUALIZER_FROM_NODE] = true;
 
-                                    if (selectionIds.length > 0) {
-                                        updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] = selectionIds;
+                                    // We also have to set the selected aspect according to the selectedTabIndex,
+                                    //TODO this is not the best solution,
+                                    // but as the node always orders the aspects based on their names, it is fine.
+                                    if (vizualizer === 'ModelEditor') {
+                                        aspectNames = client.getMetaAspectNames(nodePath);
+                                        aspectNames.sort(function (a, b) {
+                                            var an = a.toLowerCase(),
+                                                bn = b.toLowerCase();
+
+                                            return (an < bn) ? -1 : 1;
+                                        });
+                                        aspectNames.unshift('All');
+                                        updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] = aspectNames[tab] || 'All';
                                     }
+                                }
 
-                                    tab = parseInt(tab, 10);
-                                    if (tab >= 0 && vizualizer) {
-                                        updatedState[CONSTANTS.STATE_ACTIVE_TAB] = tab;
-
-                                        //we also have to set the selected aspect according to the selectedTabIndex
-                                        //TODO this is not the best solution,
-                                        // but as the node always orders the aspects based on their names, it is fine
-                                        if (vizualizer === 'ModelEditor') {
-                                            aspectNames = client.getMetaAspectNames(nodePath);
-                                            aspectNames.sort(function (a, b) {
-                                                var an = a.toLowerCase(),
-                                                    bn = b.toLowerCase();
-
-                                                return (an < bn) ? -1 : 1;
-                                            });
-                                            aspectNames.unshift('All');
-                                            updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] = aspectNames[tab] || 'All';
-                                        }
-                                    }
-
-                                    WebGMEGlobal.State.set(updatedState);
-                                });
+                                WebGMEGlobal.State.set(updatedState);
+                                // After the state has been updated, make sure to allow node look-up again.
+                                WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
                                 break;
                             }
                         }
