@@ -71,7 +71,7 @@ buildPaths = {
 },
 
 gulp = require( 'gulp' ),
-jshint = require( 'gulp-jshint' ),
+eslint = require('gulp-eslint'),
 browserify = require( 'browserify' ),
 source = require( 'vinyl-source-stream' ),
 concat = require( 'gulp-concat' ),
@@ -86,7 +86,9 @@ server = express(),
 livereload = require( 'connect-livereload' ),
 refresh = require( 'gulp-livereload' ),
 lrserver = require( 'tiny-lr' )(),
+sourcemaps = require('gulp-sourcemaps'),
 prettify = require( 'gulp-js-prettify' );
+
 
 // Utility tasks
 
@@ -105,8 +107,8 @@ gulp.task( 'lint-docs', function () {
   console.log( 'Linting docs...' );
 
   gulp.src( sourcePaths.docsScripts )
-  .pipe( jshint() )
-  .pipe( jshint.reporter( 'default' ) );
+    .pipe(eslint())
+    .pipe(eslint.format());
 
 } );
 
@@ -146,10 +148,12 @@ gulp.task( 'compile-docs-styles', function () {
   console.log( 'Compiling styles...' );
 
   gulp.src( sourcePaths.docsStyles )
+  .pipe(sourcemaps.init())
   .pipe( sass( {
     errLogToConsole: true,
     sourceComments: 'map'
   } ) )
+  .pipe(sourcemaps.write())
   .pipe( rename( function ( path ) {
     path.dirname = '';
   } ) )
@@ -177,8 +181,8 @@ gulp.task( 'lint-library', function () {
   console.log( 'Linting library...' );
 
   gulp.src( sourcePaths.libraryScripts )
-  .pipe( jshint() )
-  .pipe( jshint.reporter( 'default' ) );
+    .pipe(eslint())
+    .pipe(eslint.format());
 
 } );
 
@@ -222,10 +226,12 @@ gulp.task( 'compile-library-styles', function () {
 
   gulp.src( sourcePaths.libraryStyles )
     // The onerror handler prevents Gulp from crashing when you make a mistake in your SASS
+  .pipe(sourcemaps.init())
   .pipe( sass( {
     errLogToConsole: true,
     sourceComments: 'map'
   } ) )
+  .pipe(sourcemaps.write())
   .pipe( rename( function ( path ) {
     path.dirname = '';
   } ) )

@@ -233,7 +233,15 @@ demoApp.controller('ItemListDemoController', function ($scope) {
 
     config = {
 
-        sortable: true,
+        //sortable: true,
+        onItemDragStart: function(e, item) {
+            console.log('Start dragging', item);
+        },
+
+        onItemDragEnd: function(e, item) {
+            console.log('Finish dragging', item);
+        },
+
         secondaryItemMenu: true,
         detailsCollapsible: true,
         showDetailsLabel: 'Show details',

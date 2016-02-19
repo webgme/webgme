@@ -27,6 +27,7 @@ the following properties:
 The following options are allowed in `config`:
 
 * `sortable`: {boolean}, defaults to true,
+* `onItemDragStart` and `onItemDragEnd`: {function}, if both these callbacks are set, items are draggable. Will not work if sortable is turned on.
 * `secondaryItemMenu`:  {boolean}, defaults to true, controls if context menu should be offered as drop-down in top right corner,
 * `detailsCollapsible`: {true},
 * `showDetailsLabel`: {string}, default: "Show details",

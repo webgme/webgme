@@ -11,11 +11,10 @@
             </li>
 
             <li
-                ng-init="itemIsDisabled=item.disabled || parentItem.disabled"
                 data-ng-repeat="item in menuItemGroup.items | limitTo:menuItemGroup.totalItems || 100"
-                data-ng-class="{ 'dropdown-submenu':item.menu, 'selected': item.isSelected, 'disabled': itemIsDisabled }">
+                data-ng-class="{ 'dropdown-submenu':item.menu, 'selected': item.isSelected, 'disabled': item.disabled || parentItem.disabled }">
                 <a data-ng-class="'action-' + item.id"
-                   data-ng-click="!itemIsDisabled && item.action(item.actionData, $event)">
+                   data-ng-click="!(item.disabled || parentItem.disabled) && item.action(item.actionData, $event)">
                     <i data-ng-if="item.iconClass && !item.iconPullRight" data-ng-class="item.iconClass" class="item-icon"></i>
                     {{item.label}}
                     <i data-ng-if="item.iconClass && item.iconPullRight" data-ng-class="item.iconClass"></i>

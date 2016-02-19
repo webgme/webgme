@@ -11,7 +11,8 @@ ul.dropdown-navigator {
     line-height: 2.22em;
     position: relative; }
     ul.dropdown-navigator > li > .hierarchical-menu {
-      display: none;
+      visibility: hidden;
+      transition: visibility 0s, opacity 0.2s linear;
       position: absolute; }
     ul.dropdown-navigator > li .label-container {
       height: 100%;
@@ -20,7 +21,9 @@ ul.dropdown-navigator {
     background-color: #00235B;
     cursor: pointer; }
     ul.dropdown-navigator > li:not(.separator):hover > .hierarchical-menu {
-      display: block; }
+      transition-delay: 0.3s;
+      visibility: visible;
+      opacity: 1; }
   ul.dropdown-navigator li.selected {
     background-color: #EFF5FD; }
   ul.dropdown-navigator li.gme-root {

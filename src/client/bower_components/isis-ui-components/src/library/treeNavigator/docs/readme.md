@@ -9,13 +9,9 @@ __`treeData`__ - Data to render in a recursive structure with the following node
   * `nodeData`: {object} arbitrary data object,
   * `iconClass`: {string} css classes for setting the node icon,
   * `draggable`: {boolean} if node is draggable,
-  * `dragChannel`: {string} in which channel dragging happens,
-  * `dropChannel`: {string} from which channel should accept drops,
   * `collapsedIconClass`: {string} to overwrite global setting,
   * `expandedIconClass`: {string} to overwrite global setting,
   * `unCollapsible`: {boolean} if true, node can not collapse.
-
-Drag-and-drop depends on https://github.com/angular-dragdrop/angular-dragdrop. Include it in your app to make it function.
 
 __`config`__ - Object with options and tree state.
 

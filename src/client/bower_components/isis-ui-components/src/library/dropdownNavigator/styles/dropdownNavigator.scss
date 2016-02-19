@@ -18,7 +18,8 @@ ul.dropdown-navigator {
     position: relative;
 
     > .hierarchical-menu {
-      display: none;
+      visibility: hidden;
+      transition: visibility 0s, opacity 0.2s linear;
       position: absolute;
     }
 
@@ -34,7 +35,9 @@ ul.dropdown-navigator {
     cursor: pointer;
 
     > .hierarchical-menu{
-      display: block;
+      transition-delay: 0.3s;
+      visibility: visible;
+      opacity: 1;
     }
 
   }
