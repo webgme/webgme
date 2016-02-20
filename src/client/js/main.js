@@ -10,7 +10,6 @@ var DEBUG = false,
     _jqueryVersion = '2.1.0',
     _jqueryUIVersion = '1.10.4',
     _bootstrapVersion = '3.1.1',
-    _angularVersion = '1.3.15',
     WebGMEGlobal = WebGMEGlobal || {};
 
 
@@ -21,7 +20,7 @@ require.config({
     //TODO paths should be fixed as the rules collide with each other
     map: {
         '*': {
-            css: 'lib/require/require-css/css',
+            css: 'lib/require/require-css/css' + ( DEBUG ? '' : '.min' ),
             text: 'lib/require/require-text/text',
             'globcss':'anything/../css'
         }
@@ -33,21 +32,21 @@ require.config({
         domReady: 'lib/require/require-domready/domReady',
 
         //jQuery and stuff
-        jquery: 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '.min' : '' ),
-        'jquery-ui': 'lib/jquery/jquery-ui-' + _jqueryUIVersion + ( DEBUG ? '.min' : '' ),
+        jquery: 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '' : '.min' ),
+        'jquery-ui': 'lib/jquery/jquery-ui-' + _jqueryUIVersion + ( DEBUG ? '' : '.min' ),
         'jquery-ui-iPad': 'lib/jquery/jquery.ui.ipad',
-        'jquery-dataTables': 'lib/jquery/jquery.dataTables.min',
+        'jquery-dataTables': 'lib/jquery/jquery.dataTables' + ( DEBUG ? '' : '.min' ),
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
-        'jquery-spectrum': 'lib/jquery/jquery.spectrum',
+        'jquery-spectrum': 'lib/jquery/jquery.spectrum' + ( DEBUG ? '' : '.min' ),
 
         //Bootsrap stuff
-        bootstrap: 'bower_components/bootstrap/dist/js/bootstrap' + ( DEBUG ? '.min' : '' ),
+        bootstrap: 'bower_components/bootstrap/dist/js/bootstrap' + ( DEBUG ? '' : '.min' ),
 
         //Other modules
-        AutoRouterActionApplier: 'lib/autorouter/action-applier',
+        AutoRouterActionApplier: 'lib/autorouter/action-applier' + ( DEBUG ? '' : '.min' ),
         underscore: 'bower_components/underscore/underscore-min',
         backbone: 'bower_components/backbone/backbone',
-        d3: 'bower_components/d3/d3.min',
+        d3: 'bower_components/d3/d3' + ( DEBUG ? '' : '.min' ),
         jscolor: 'lib/jscolor/jscolor',
 
         //RaphaelJS family
@@ -66,7 +65,7 @@ require.config({
         panel: '/panel',
 
         //node_modules
-        jszip: 'bower_components/jszip/jszip',
+        jszip: 'bower_components/jszip/dist/jszip' + ( DEBUG ? '' : '.min' ),
         superagent: 'lib/superagent/superagent',
         debug: 'bower_components/visionmedia-debug/dist/debug',
         q: 'lib/q/q',
@@ -81,15 +80,15 @@ require.config({
         urlparse:'lib/purl/purl.min',
 
         // Angular and modules
-        angular: 'bower_components/angular/angular' + ( DEBUG ? '.min' : '' ),
-        'angular-route': 'lib/angular/angular-' + _angularVersion + '/angular-route' + ( DEBUG ? '.min' : '' ),
+        angular: 'bower_components/angular/angular' + ( DEBUG ? '' : '.min' ),
+        //'angular-route': 'lib/angular/angular-' + _angularVersion + '/angular-route' + ( DEBUG ? '' : '.min' ),
         'angular-route-styles': 'lib/angular/angular-route-styles/route-styles',
         'angular-ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls.min'
     },
 
     shim: {
 
-        'angular-route': ['angular'],
+        // 'angular-route': ['angular'],
         'angular-route-styles': ['angular'],
         'angular-ui-bootstrap': ['angular'],
 

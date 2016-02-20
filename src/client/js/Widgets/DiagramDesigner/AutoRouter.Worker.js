@@ -1,7 +1,7 @@
 /*globals require,importScripts*/
 // This is the code for using the autorouter as a web worker.
 
-importScripts('../../../lib/require/require.js');
+importScripts('../../../lib/require/require.min.js');
 
 var worker = this,
     window = {},  //jshint ignore: line
@@ -30,7 +30,7 @@ var startWorker = function() {
             js: '../..',
             underscore: '../../../bower_components/underscore/underscore-min',
             debug: '../../../bower_components/visionmedia-debug/dist/debug',
-            AutoRouterActionApplier: '../../../lib/autorouter/action-applier'
+            AutoRouterActionApplier: '../../../lib/autorouter/action-applier.min' // create a map file for debugging
         },
         shim: {
             debug: {

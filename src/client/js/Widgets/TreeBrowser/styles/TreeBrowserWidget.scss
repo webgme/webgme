@@ -12,7 +12,7 @@ $node-progress-font-color: #AAAAAA;
 
 /* original FancyTree Vista-theme css from FancyTree distribution */
 @import url("./../../../../css/fancytree/ui.fancytree.css");
-@import url("./../../../../css/contextmenu/jquery.contextMenu.css");
+@import url("./../../../../css/contextmenu/jquery.contextMenu.min.css");
 
 .tree-browser {
   /* FancyTree Vista-theme overrides */
@@ -249,4 +249,3 @@ $node-progress-font-color: #AAAAAA;
     background-image: url(../../../../img/create.png);
   }
 }
-
