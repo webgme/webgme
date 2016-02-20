@@ -52,9 +52,9 @@ require.config({
         //'coreclient': './src/common/core/users',
 
         superagent: './src/client/lib/superagent/superagent',
-        jszip: './src/client/lib/jszip/jszip',
-        debug: './src/client/lib/debug/debug',
-        underscore: './src/client/lib/underscore/underscore',
+        jszip: './src/client/bower_components/jszip/dist/jszip',
+        debug: './src/client/bower_components/visionmedia-debug/dist/debug',
+        underscore: './src/client/bower_components/underscore/underscore',
         Q: './src/client/lib/q/q', //FIXME: this should be removed
         q: './src/client/lib/q/q',
 

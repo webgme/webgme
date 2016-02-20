@@ -464,7 +464,7 @@ requireJS.config({
     paths: {
         js: 'client/js',
         ' /socket.io/socket.io.js': 'socketio-client',
-        underscore: 'client/lib/underscore/underscore-min'
+        underscore: 'client/bower_components/underscore/underscore-min'
     }
 });
 

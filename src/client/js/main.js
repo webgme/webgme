@@ -41,13 +41,13 @@ require.config({
         'jquery-spectrum': 'lib/jquery/jquery.spectrum',
 
         //Bootsrap stuff
-        bootstrap: 'lib/bootstrap/' + _bootstrapVersion + '/js/bootstrap' + ( DEBUG ? '.min' : '' ),
+        bootstrap: 'bower_components/bootstrap/dist/js/bootstrap' + ( DEBUG ? '.min' : '' ),
 
         //Other modules
         AutoRouterActionApplier: 'lib/autorouter/action-applier',
-        underscore: 'lib/underscore/underscore-min',
-        backbone: 'lib/backbone/backbone.min',
-        d3: 'lib/d3/d3.v3.min',
+        underscore: 'bower_components/underscore/underscore-min',
+        backbone: 'bower_components/backbone/backbone',
+        d3: 'bower_components/d3/d3.min',
         jscolor: 'lib/jscolor/jscolor',
 
         //RaphaelJS family
@@ -66,9 +66,9 @@ require.config({
         panel: '/panel',
 
         //node_modules
-        jszip: 'lib/jszip/jszip',
+        jszip: 'bower_components/jszip/jszip',
         superagent: 'lib/superagent/superagent',
-        debug: 'lib/debug/debug',
+        debug: 'bower_components/visionmedia-debug/dist/debug',
         q: 'lib/q/q',
 
 
@@ -76,15 +76,15 @@ require.config({
         'jquery-csszoom': 'lib/jquery/jquery.csszoom',
 
 
-        moment: 'lib/moment/moment.min',
+        moment: 'bower_components/moment/min/moment.min',
 
         urlparse:'lib/purl/purl.min',
 
         // Angular and modules
-        angular: 'lib/angular/angular-' + _angularVersion + '/angular' + ( DEBUG ? '.min' : '' ),
+        angular: 'bower_components/angular/angular' + ( DEBUG ? '.min' : '' ),
         'angular-route': 'lib/angular/angular-' + _angularVersion + '/angular-route' + ( DEBUG ? '.min' : '' ),
         'angular-route-styles': 'lib/angular/angular-route-styles/route-styles',
-        'angular-ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min'
+        'angular-ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls.min'
     },
 
     shim: {
@@ -101,8 +101,8 @@ require.config({
 
         bootstrap: [
             'jquery',
-            'css!lib/bootstrap/' + _bootstrapVersion + '/css/bootstrap.min.css',
-            'css!lib/bootstrap/' + _bootstrapVersion + '/css/bootstrap-theme.min.css'
+            'css!bower_components/bootstrap/dist/css/bootstrap.min.css',
+            'css!bower_components/bootstrap/dist/css/bootstrap-theme.min.css'
         ],
 
         backbone: ['underscore'],

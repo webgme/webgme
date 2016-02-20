@@ -15,6 +15,11 @@ describe('RedisAdapter', function () {
         adapterTests = require('./testgenerators'),
         logger = testFixture.logger.fork('RedisAdapter');
 
+    gmeConfig.storage.database.options = {
+        //port: 6666 // on windows the default redis port is occupied.
+        host: '192.168.99.100'
+    };
+
     describe('open/close Database', function () {
         adapterTests.genOpenCloseDatabase(RedisAdapter, logger, gmeConfig, Q, expect);
     });

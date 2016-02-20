@@ -28,23 +28,23 @@ var startWorker = function() {
             common: '../../../../common',
             assert: '../../../../common/util/assert',
             js: '../..',
-            underscore: '../../../lib/underscore/underscore-min',
-            debug: '../../../lib/debug/debug',
+            underscore: '../../../bower_components/underscore/underscore-min',
+            debug: '../../../bower_components/visionmedia-debug/dist/debug',
             AutoRouterActionApplier: '../../../lib/autorouter/action-applier'
-        }, 
+        },
         shim: {
             debug: {
                 exports: 'window.debug'
             }
         }
-    }, 
+    },
     [
-        'AutoRouterActionApplier', 
+        'AutoRouterActionApplier',
         'js/logger',
         'underscore'
     ],
     function(
-        ActionApplier, 
+        ActionApplier,
         Logger,
         _
     ) {
@@ -137,7 +137,7 @@ var startWorker = function() {
 // Set the WebGMEGlobal.gmeConfig.client config value for use in the loggers
 worker.onmessage = function(msg) {
     'use strict';
-    
+
     WebGMEGlobal.gmeConfig.client = msg.data[0];
     respondToAll = msg.data[1];
     startWorker();
