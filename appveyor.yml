@@ -8,9 +8,10 @@ environment:
   # - nodejs_version: "4.2"
   #   platform: x86
 
-cache:
-  - node_modules                    # local npm modules
-  - src\client\bower_components     # installed bower components
+# defined in https://ci.appveyor.com/project/lattmann/webgme/settings/environment
+# cache:
+#   - node_modules                    # local npm modules
+#   - src\client\bower_components     # installed bower components
 
 services:
   - mongodb
