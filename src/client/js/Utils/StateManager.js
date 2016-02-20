@@ -83,6 +83,14 @@ define([
 
             getActiveTab: function () {
                 return this.get(CONSTANTS.STATE_ACTIVE_TAB);
+            },
+
+            registerSuppressVisualizerFromNode: function (trueOrFalse) {
+                this.set(CONSTANTS.STATE_SUPPRESS_VISUALIZER_FROM_NODE, trueOrFalse);
+            },
+
+            getSuppressVisualizerFromNode: function () {
+                return this.get(CONSTANTS.STATE_SUPPRESS_VISUALIZER_FROM_NODE);
             }
 
         }),
@@ -92,6 +100,7 @@ define([
                 logger = Logger.create('gme:Utils:StateManager', WebGMEGlobal.gmeConfig.client.log);
                 _WebGMEState = new WebGMEStateModel();
                 _WebGMEState.registerActiveAspect(CONSTANTS.ASPECT_ALL);
+                _WebGMEState.registerSuppressVisualizerFromNode(false);
                 //_WebGMEState.registerActiveTab('0');
                 _WebGMEState.on('change', function (model, options) {
                     logger.debug('', model, options);
