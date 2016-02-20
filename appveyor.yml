@@ -8,6 +8,11 @@ environment:
   # - nodejs_version: "4.2"
   #   platform: x86
 
+cache:
+  - '%APPDATA%\npm-cache'           # npm cache
+  - node_modules                    # local npm modules
+  - src\client\bower_components     # installed bower components
+
 services:
   - mongodb
 
