@@ -25,8 +25,8 @@ install:
   - where npm
   - where node
   - ps: Install-Product node $env:nodejs_version $env:platform
-  - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install npm@2.14.7
-  - for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install node-pre-gyp@latest
+  #- for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install npm@2.14.7
+  #- for /f "delims=" %%a in ('where npm') do cd %%a\.. && npm install node-pre-gyp@latest
   - npm install
 
 build: off
