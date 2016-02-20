@@ -1,13 +1,32 @@
 # Change Log
 
+## [v1.5.1](https://github.com/webgme/webgme/tree/v1.5.1) (2016-02-19)
+[Full Changelog](https://github.com/webgme/webgme/compare/v1.5.0...v1.5.1)
+
+**Implemented enhancements:**
+
+- Log output from executor-works to console. [\#844](https://github.com/webgme/webgme/pull/844) ([pmeijer](https://github.com/pmeijer))
+- Add button for opening node on the canvas. [\#841](https://github.com/webgme/webgme/pull/841) ([pmeijer](https://github.com/pmeijer))
+- Update travis build matrix to include node v4.3 [\#839](https://github.com/webgme/webgme/pull/839) ([lattmann](https://github.com/lattmann))
+
+**Fixed bugs:**
+
+- Dragging a node from the tree-browser w/o selecting it creates another node. [\#838](https://github.com/webgme/webgme/issues/838)
+- Remove TreeBrowserWidget edit on dbl-click and shift-click [\#847](https://github.com/webgme/webgme/pull/847) ([pmeijer](https://github.com/pmeijer))
+- Switching panel triggers visualizer switch to the viz set on the node. [\#846](https://github.com/webgme/webgme/pull/846) ([pmeijer](https://github.com/pmeijer))
+- Visualizers redraw themselves at panel switch in split mode. [\#845](https://github.com/webgme/webgme/pull/845) ([pmeijer](https://github.com/pmeijer))
+- Closes \#838 drag from tree bug [\#840](https://github.com/webgme/webgme/pull/840) ([pmeijer](https://github.com/pmeijer))
+- Fixes type error exception in jsonPatcher. [\#837](https://github.com/webgme/webgme/pull/837) ([pmeijer](https://github.com/pmeijer))
+
 ## [v1.5.0](https://github.com/webgme/webgme/tree/v1.5.0) (2016-02-15)
 [Full Changelog](https://github.com/webgme/webgme/compare/v1.4.1...v1.5.0)
 
 **Implemented enhancements:**
 
+- Server side plugins with dependencies [\#779](https://github.com/webgme/webgme/issues/779)
 - Make a Widget for validPlugins, useAddOns, validDecorators etc. [\#828](https://github.com/webgme/webgme/issues/828)
 - Add default support for storing plugin config in users. [\#824](https://github.com/webgme/webgme/issues/824)
-- Server side plugins with dependencies [\#779](https://github.com/webgme/webgme/issues/779)
+- pre-release 1.5.0 [\#836](https://github.com/webgme/webgme/pull/836) ([pmeijer](https://github.com/pmeijer))
 - Filter everything for page print except the center panel. [\#833](https://github.com/webgme/webgme/pull/833) ([lattmann](https://github.com/lattmann))
 - Closes \#828 multi select widget [\#831](https://github.com/webgme/webgme/pull/831) ([pmeijer](https://github.com/pmeijer))
 - Generate source as part of postinstall and serve it. [\#830](https://github.com/webgme/webgme/pull/830) ([pmeijer](https://github.com/pmeijer))
@@ -22,13 +41,14 @@
 - Add support for custom user data. [\#803](https://github.com/webgme/webgme/pull/803) ([pmeijer](https://github.com/pmeijer))
 - Use FancyTree library for TreeBrowsers. [\#801](https://github.com/webgme/webgme/pull/801) ([pmeijer](https://github.com/pmeijer))
 - Optimized import project functionality. [\#800](https://github.com/webgme/webgme/pull/800) ([kecso](https://github.com/kecso))
+- Tune css to get a more compact plugin config dialog. [\#797](https://github.com/webgme/webgme/pull/797) ([lattmann](https://github.com/lattmann))
 - Patch Root Communication feature [\#789](https://github.com/webgme/webgme/pull/789) ([kecso](https://github.com/kecso))
 
 **Fixed bugs:**
 
+- Missing name attributes in export [\#812](https://github.com/webgme/webgme/issues/812)
 - Visualizer URL not respected and meta editor tabs neither. [\#823](https://github.com/webgme/webgme/issues/823)
 - Importing an instance model duplicates the meta-sheets. [\#820](https://github.com/webgme/webgme/issues/820)
-- Missing name attributes in export [\#812](https://github.com/webgme/webgme/issues/812)
 - Exception in CrosscutController. [\#806](https://github.com/webgme/webgme/issues/806)
 - Multiple Meta views in Split View changes the tabs unexpectedly. [\#802](https://github.com/webgme/webgme/issues/802)
 - Attribute types Integer and Float are not respected in Property Editor. [\#616](https://github.com/webgme/webgme/issues/616)
@@ -54,10 +74,6 @@
 
 ## [v1.4.1](https://github.com/webgme/webgme/tree/v1.4.1) (2016-01-20)
 [Full Changelog](https://github.com/webgme/webgme/compare/v1.4.0...v1.4.1)
-
-**Implemented enhancements:**
-
-- Tune css to get a more compact plugin config dialog. [\#797](https://github.com/webgme/webgme/pull/797) ([lattmann](https://github.com/lattmann))
 
 **Fixed bugs:**
 
