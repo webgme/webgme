@@ -18,6 +18,9 @@
 
     li.item-list-item {
 
+      &.draggable {
+      }
+
       background-color: #fff;
       transition: background-color .25s;
 

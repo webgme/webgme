@@ -14,11 +14,8 @@ angular.module(
 
             function NodeLabelController() {
 
-                var self;
-
-                self = this;
-
-                self.loading = false;
+                this.loading = false;
+                this._labelElement = null;
 
             }
 
@@ -141,6 +138,32 @@ angular.module(
                 return (self.node.expandedIconClass || self.treeCtrl.config.expandedIconClass);
             };
 
+            NodeLabelController.prototype._onDragStart = function(e) {
+
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text', this.node.id);
+
+                if (this.labelEl) {
+                    this.labelEl.classList.add('dragged');
+                }
+
+                if (angular.isFunction(this.treeCtrl.config.nodeDragStart)) {
+                    this.treeCtrl.config.nodeDragStart(e, this.node);
+                }
+
+            };
+
+            NodeLabelController.prototype._onDragEnd = function(e) {
+
+                if (this.labelEl) {
+                    this.labelEl.classList.remove('dragged');
+                }
+
+                if (angular.isFunction(this.treeCtrl.config.nodeDragEnd)) {
+                    this.treeCtrl.config.nodeDragEnd(e, this.node);
+                }
+
+            };
 
             return {
                 scope: {
@@ -155,13 +178,34 @@ angular.module(
                 templateUrl: '/isis-ui-components/templates/treeNavigator.node.label.html',
                 link: function (scope, element, attribures, controllers) {
 
-                    var treeCtrl,
-                        labelCtrl;
+                    var treeCtrl = controllers[0],
+                        labelCtrl = controllers[1],
+                        labelEl;
 
-                    treeCtrl = controllers[0];
-                    labelCtrl = controllers[1];
 
                     labelCtrl.treeCtrl = treeCtrl;
+
+                    labelEl = element[0].getElementsByClassName('label-and-extra-info')[0];
+                    labelCtrl._labelElement = labelEl;
+
+                    if (labelCtrl.node.draggable) {
+
+                        labelEl.addEventListener('dragstart', labelCtrl._onDragStart.bind(labelCtrl));
+                        labelEl.addEventListener('dragend', labelCtrl._onDragEnd.bind(labelCtrl));
+
+                    }
+
+                    scope.$on('$destroy', function() {
+
+                        if (labelCtrl.node.draggable) {
+        
+                            labelEl.removeEventListener('dragstart', labelCtrl._onDragStart.bind(labelCtrl));
+                            labelEl.removeEventListener('dragend', labelCtrl._onDragEnd.bind(labelCtrl));
+
+                        }
+
+                    });
+
                 }
             };
         }

@@ -683,8 +683,8 @@ function uiCodemirrorDirective($timeout, uiCodemirrorConfig) {
 uiCodemirrorDirective.$inject = ["$timeout", "uiCodemirrorConfig"];
 
 },{}],4:[function(require,module,exports){
-var css = "/* BASICS */\n\n.CodeMirror {\n  /* Set height, width, borders, and global font properties here */\n  font-family: monospace;\n  height: 300px;\n}\n.CodeMirror-scroll {\n  /* Set scrolling behaviour here */\n  overflow: auto;\n}\n\n/* PADDING */\n\n.CodeMirror-lines {\n  padding: 4px 0; /* Vertical padding around content */\n}\n.CodeMirror pre {\n  padding: 0 4px; /* Horizontal padding of content */\n}\n\n.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  background-color: white; /* The little square between H and V scrollbars */\n}\n\n/* GUTTER */\n\n.CodeMirror-gutters {\n  border-right: 1px solid #ddd;\n  background-color: #f7f7f7;\n  white-space: nowrap;\n}\n.CodeMirror-linenumbers {}\n.CodeMirror-linenumber {\n  padding: 0 3px 0 5px;\n  min-width: 20px;\n  text-align: right;\n  color: #999;\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n}\n\n.CodeMirror-guttermarker { color: black; }\n.CodeMirror-guttermarker-subtle { color: #999; }\n\n/* CURSOR */\n\n.CodeMirror div.CodeMirror-cursor {\n  border-left: 1px solid black;\n}\n/* Shown when moving in bi-directional text */\n.CodeMirror div.CodeMirror-secondarycursor {\n  border-left: 1px solid silver;\n}\n.CodeMirror.cm-fat-cursor div.CodeMirror-cursor {\n  width: auto;\n  border: 0;\n  background: #7e7;\n}\n.CodeMirror.cm-fat-cursor div.CodeMirror-cursors {\n  z-index: 1;\n}\n\n.cm-animate-fat-cursor {\n  width: auto;\n  border: 0;\n  -webkit-animation: blink 1.06s steps(1) infinite;\n  -moz-animation: blink 1.06s steps(1) infinite;\n  animation: blink 1.06s steps(1) infinite;\n}\n@-moz-keyframes blink {\n  0% { background: #7e7; }\n  50% { background: none; }\n  100% { background: #7e7; }\n}\n@-webkit-keyframes blink {\n  0% { background: #7e7; }\n  50% { background: none; }\n  100% { background: #7e7; }\n}\n@keyframes blink {\n  0% { background: #7e7; }\n  50% { background: none; }\n  100% { background: #7e7; }\n}\n\n/* Can style cursor different in overwrite (non-insert) mode */\ndiv.CodeMirror-overwrite div.CodeMirror-cursor {}\n\n.cm-tab { display: inline-block; text-decoration: inherit; }\n\n.CodeMirror-ruler {\n  border-left: 1px solid #ccc;\n  position: absolute;\n}\n\n/* DEFAULT THEME */\n\n.cm-s-default .cm-keyword {color: #708;}\n.cm-s-default .cm-atom {color: #219;}\n.cm-s-default .cm-number {color: #164;}\n.cm-s-default .cm-def {color: #00f;}\n.cm-s-default .cm-variable,\n.cm-s-default .cm-punctuation,\n.cm-s-default .cm-property,\n.cm-s-default .cm-operator {}\n.cm-s-default .cm-variable-2 {color: #05a;}\n.cm-s-default .cm-variable-3 {color: #085;}\n.cm-s-default .cm-comment {color: #a50;}\n.cm-s-default .cm-string {color: #a11;}\n.cm-s-default .cm-string-2 {color: #f50;}\n.cm-s-default .cm-meta {color: #555;}\n.cm-s-default .cm-qualifier {color: #555;}\n.cm-s-default .cm-builtin {color: #30a;}\n.cm-s-default .cm-bracket {color: #997;}\n.cm-s-default .cm-tag {color: #170;}\n.cm-s-default .cm-attribute {color: #00c;}\n.cm-s-default .cm-header {color: blue;}\n.cm-s-default .cm-quote {color: #090;}\n.cm-s-default .cm-hr {color: #999;}\n.cm-s-default .cm-link {color: #00c;}\n\n.cm-negative {color: #d44;}\n.cm-positive {color: #292;}\n.cm-header, .cm-strong {font-weight: bold;}\n.cm-em {font-style: italic;}\n.cm-link {text-decoration: underline;}\n.cm-strikethrough {text-decoration: line-through;}\n\n.cm-s-default .cm-error {color: #f00;}\n.cm-invalidchar {color: #f00;}\n\n/* Default styles for common addons */\n\ndiv.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}\ndiv.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}\n.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }\n.CodeMirror-activeline-background {background: #e8f2ff;}\n\n/* STOP */\n\n/* The rest of this file contains styles related to the mechanics of\n   the editor. You probably shouldn't touch them. */\n\n.CodeMirror {\n  line-height: 1;\n  position: relative;\n  overflow: hidden;\n  background: white;\n  color: black;\n}\n\n.CodeMirror-scroll {\n  /* 30px is the magic margin used to hide the element's real scrollbars */\n  /* See overflow: hidden in .CodeMirror */\n  margin-bottom: -30px; margin-right: -30px;\n  padding-bottom: 30px;\n  height: 100%;\n  outline: none; /* Prevent dragging from highlighting the element */\n  position: relative;\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n}\n.CodeMirror-sizer {\n  position: relative;\n  border-right: 30px solid transparent;\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n}\n\n/* The fake, visible scrollbars. Used to force redraw during scrolling\n   before actuall scrolling happens, thus preventing shaking and\n   flickering artifacts. */\n.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  position: absolute;\n  z-index: 6;\n  display: none;\n}\n.CodeMirror-vscrollbar {\n  right: 0; top: 0;\n  overflow-x: hidden;\n  overflow-y: scroll;\n}\n.CodeMirror-hscrollbar {\n  bottom: 0; left: 0;\n  overflow-y: hidden;\n  overflow-x: scroll;\n}\n.CodeMirror-scrollbar-filler {\n  right: 0; bottom: 0;\n}\n.CodeMirror-gutter-filler {\n  left: 0; bottom: 0;\n}\n\n.CodeMirror-gutters {\n  position: absolute; left: 0; top: 0;\n  padding-bottom: 30px;\n  z-index: 3;\n}\n.CodeMirror-gutter {\n  white-space: normal;\n  height: 100%;\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n  padding-bottom: 30px;\n  margin-bottom: -32px;\n  display: inline-block;\n  /* Hack to make IE7 behave */\n  *zoom:1;\n  *display:inline;\n}\n.CodeMirror-gutter-wrapper {\n  position: absolute;\n  z-index: 4;\n  height: 100%;\n}\n.CodeMirror-gutter-elt {\n  position: absolute;\n  cursor: default;\n  z-index: 4;\n}\n\n.CodeMirror-lines {\n  cursor: text;\n  min-height: 1px; /* prevents collapsing before first draw */\n}\n.CodeMirror pre {\n  /* Reset some styles that the rest of the page might have set */\n  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;\n  border-width: 0;\n  background: transparent;\n  font-family: inherit;\n  font-size: inherit;\n  margin: 0;\n  white-space: pre;\n  word-wrap: normal;\n  line-height: inherit;\n  color: inherit;\n  z-index: 2;\n  position: relative;\n  overflow: visible;\n}\n.CodeMirror-wrap pre {\n  word-wrap: break-word;\n  white-space: pre-wrap;\n  word-break: normal;\n}\n\n.CodeMirror-linebackground {\n  position: absolute;\n  left: 0; right: 0; top: 0; bottom: 0;\n  z-index: 0;\n}\n\n.CodeMirror-linewidget {\n  position: relative;\n  z-index: 2;\n  overflow: auto;\n}\n\n.CodeMirror-widget {}\n\n.CodeMirror-wrap .CodeMirror-scroll {\n  overflow-x: hidden;\n}\n\n.CodeMirror-measure {\n  position: absolute;\n  width: 100%;\n  height: 0;\n  overflow: hidden;\n  visibility: hidden;\n}\n.CodeMirror-measure pre { position: static; }\n\n.CodeMirror div.CodeMirror-cursor {\n  position: absolute;\n  border-right: none;\n  width: 0;\n}\n\ndiv.CodeMirror-cursors {\n  visibility: hidden;\n  position: relative;\n  z-index: 3;\n}\n.CodeMirror-focused div.CodeMirror-cursors {\n  visibility: visible;\n}\n\n.CodeMirror-selected { background: #d9d9d9; }\n.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }\n.CodeMirror-crosshair { cursor: crosshair; }\n\n.cm-searching {\n  background: #ffa;\n  background: rgba(255, 255, 0, .4);\n}\n\n/* IE7 hack to prevent it from returning funny offsetTops on the spans */\n.CodeMirror span { *vertical-align: text-bottom; }\n\n/* Used to force a border model for a node */\n.cm-force-border { padding-right: .1px; }\n\n@media print {\n  /* Hide the cursor when printing */\n  .CodeMirror div.CodeMirror-cursors {\n    visibility: hidden;\n  }\n}\n\n/* See issue #2901 */\n.cm-tab-wrap-hack:after { content: ''; }\n\n/* Help users use markselection to safely style text background */\nspan.CodeMirror-selectedtext { background: none; }\n"; (require("/Users/laszlojuracz/Projects/morph/isis-ui-components/node_modules/cssify"))(css); module.exports = css;
-},{"/Users/laszlojuracz/Projects/morph/isis-ui-components/node_modules/cssify":12}],5:[function(require,module,exports){
+var css = "/* BASICS */\r\n\r\n.CodeMirror {\r\n  /* Set height, width, borders, and global font properties here */\r\n  font-family: monospace;\r\n  height: 300px;\r\n}\r\n.CodeMirror-scroll {\r\n  /* Set scrolling behaviour here */\r\n  overflow: auto;\r\n}\r\n\r\n/* PADDING */\r\n\r\n.CodeMirror-lines {\r\n  padding: 4px 0; /* Vertical padding around content */\r\n}\r\n.CodeMirror pre {\r\n  padding: 0 4px; /* Horizontal padding of content */\r\n}\r\n\r\n.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\r\n  background-color: white; /* The little square between H and V scrollbars */\r\n}\r\n\r\n/* GUTTER */\r\n\r\n.CodeMirror-gutters {\r\n  border-right: 1px solid #ddd;\r\n  background-color: #f7f7f7;\r\n  white-space: nowrap;\r\n}\r\n.CodeMirror-linenumbers {}\r\n.CodeMirror-linenumber {\r\n  padding: 0 3px 0 5px;\r\n  min-width: 20px;\r\n  text-align: right;\r\n  color: #999;\r\n  -moz-box-sizing: content-box;\r\n  box-sizing: content-box;\r\n}\r\n\r\n.CodeMirror-guttermarker { color: black; }\r\n.CodeMirror-guttermarker-subtle { color: #999; }\r\n\r\n/* CURSOR */\r\n\r\n.CodeMirror div.CodeMirror-cursor {\r\n  border-left: 1px solid black;\r\n}\r\n/* Shown when moving in bi-directional text */\r\n.CodeMirror div.CodeMirror-secondarycursor {\r\n  border-left: 1px solid silver;\r\n}\r\n.CodeMirror.cm-fat-cursor div.CodeMirror-cursor {\r\n  width: auto;\r\n  border: 0;\r\n  background: #7e7;\r\n}\r\n.CodeMirror.cm-fat-cursor div.CodeMirror-cursors {\r\n  z-index: 1;\r\n}\r\n\r\n.cm-animate-fat-cursor {\r\n  width: auto;\r\n  border: 0;\r\n  -webkit-animation: blink 1.06s steps(1) infinite;\r\n  -moz-animation: blink 1.06s steps(1) infinite;\r\n  animation: blink 1.06s steps(1) infinite;\r\n}\r\n@-moz-keyframes blink {\r\n  0% { background: #7e7; }\r\n  50% { background: none; }\r\n  100% { background: #7e7; }\r\n}\r\n@-webkit-keyframes blink {\r\n  0% { background: #7e7; }\r\n  50% { background: none; }\r\n  100% { background: #7e7; }\r\n}\r\n@keyframes blink {\r\n  0% { background: #7e7; }\r\n  50% { background: none; }\r\n  100% { background: #7e7; }\r\n}\r\n\r\n/* Can style cursor different in overwrite (non-insert) mode */\r\ndiv.CodeMirror-overwrite div.CodeMirror-cursor {}\r\n\r\n.cm-tab { display: inline-block; text-decoration: inherit; }\r\n\r\n.CodeMirror-ruler {\r\n  border-left: 1px solid #ccc;\r\n  position: absolute;\r\n}\r\n\r\n/* DEFAULT THEME */\r\n\r\n.cm-s-default .cm-keyword {color: #708;}\r\n.cm-s-default .cm-atom {color: #219;}\r\n.cm-s-default .cm-number {color: #164;}\r\n.cm-s-default .cm-def {color: #00f;}\r\n.cm-s-default .cm-variable,\r\n.cm-s-default .cm-punctuation,\r\n.cm-s-default .cm-property,\r\n.cm-s-default .cm-operator {}\r\n.cm-s-default .cm-variable-2 {color: #05a;}\r\n.cm-s-default .cm-variable-3 {color: #085;}\r\n.cm-s-default .cm-comment {color: #a50;}\r\n.cm-s-default .cm-string {color: #a11;}\r\n.cm-s-default .cm-string-2 {color: #f50;}\r\n.cm-s-default .cm-meta {color: #555;}\r\n.cm-s-default .cm-qualifier {color: #555;}\r\n.cm-s-default .cm-builtin {color: #30a;}\r\n.cm-s-default .cm-bracket {color: #997;}\r\n.cm-s-default .cm-tag {color: #170;}\r\n.cm-s-default .cm-attribute {color: #00c;}\r\n.cm-s-default .cm-header {color: blue;}\r\n.cm-s-default .cm-quote {color: #090;}\r\n.cm-s-default .cm-hr {color: #999;}\r\n.cm-s-default .cm-link {color: #00c;}\r\n\r\n.cm-negative {color: #d44;}\r\n.cm-positive {color: #292;}\r\n.cm-header, .cm-strong {font-weight: bold;}\r\n.cm-em {font-style: italic;}\r\n.cm-link {text-decoration: underline;}\r\n.cm-strikethrough {text-decoration: line-through;}\r\n\r\n.cm-s-default .cm-error {color: #f00;}\r\n.cm-invalidchar {color: #f00;}\r\n\r\n/* Default styles for common addons */\r\n\r\ndiv.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}\r\ndiv.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}\r\n.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }\r\n.CodeMirror-activeline-background {background: #e8f2ff;}\r\n\r\n/* STOP */\r\n\r\n/* The rest of this file contains styles related to the mechanics of\r\n   the editor. You probably shouldn't touch them. */\r\n\r\n.CodeMirror {\r\n  line-height: 1;\r\n  position: relative;\r\n  overflow: hidden;\r\n  background: white;\r\n  color: black;\r\n}\r\n\r\n.CodeMirror-scroll {\r\n  /* 30px is the magic margin used to hide the element's real scrollbars */\r\n  /* See overflow: hidden in .CodeMirror */\r\n  margin-bottom: -30px; margin-right: -30px;\r\n  padding-bottom: 30px;\r\n  height: 100%;\r\n  outline: none; /* Prevent dragging from highlighting the element */\r\n  position: relative;\r\n  -moz-box-sizing: content-box;\r\n  box-sizing: content-box;\r\n}\r\n.CodeMirror-sizer {\r\n  position: relative;\r\n  border-right: 30px solid transparent;\r\n  -moz-box-sizing: content-box;\r\n  box-sizing: content-box;\r\n}\r\n\r\n/* The fake, visible scrollbars. Used to force redraw during scrolling\r\n   before actuall scrolling happens, thus preventing shaking and\r\n   flickering artifacts. */\r\n.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\r\n  position: absolute;\r\n  z-index: 6;\r\n  display: none;\r\n}\r\n.CodeMirror-vscrollbar {\r\n  right: 0; top: 0;\r\n  overflow-x: hidden;\r\n  overflow-y: scroll;\r\n}\r\n.CodeMirror-hscrollbar {\r\n  bottom: 0; left: 0;\r\n  overflow-y: hidden;\r\n  overflow-x: scroll;\r\n}\r\n.CodeMirror-scrollbar-filler {\r\n  right: 0; bottom: 0;\r\n}\r\n.CodeMirror-gutter-filler {\r\n  left: 0; bottom: 0;\r\n}\r\n\r\n.CodeMirror-gutters {\r\n  position: absolute; left: 0; top: 0;\r\n  padding-bottom: 30px;\r\n  z-index: 3;\r\n}\r\n.CodeMirror-gutter {\r\n  white-space: normal;\r\n  height: 100%;\r\n  -moz-box-sizing: content-box;\r\n  box-sizing: content-box;\r\n  padding-bottom: 30px;\r\n  margin-bottom: -32px;\r\n  display: inline-block;\r\n  /* Hack to make IE7 behave */\r\n  *zoom:1;\r\n  *display:inline;\r\n}\r\n.CodeMirror-gutter-wrapper {\r\n  position: absolute;\r\n  z-index: 4;\r\n  height: 100%;\r\n}\r\n.CodeMirror-gutter-elt {\r\n  position: absolute;\r\n  cursor: default;\r\n  z-index: 4;\r\n}\r\n\r\n.CodeMirror-lines {\r\n  cursor: text;\r\n  min-height: 1px; /* prevents collapsing before first draw */\r\n}\r\n.CodeMirror pre {\r\n  /* Reset some styles that the rest of the page might have set */\r\n  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;\r\n  border-width: 0;\r\n  background: transparent;\r\n  font-family: inherit;\r\n  font-size: inherit;\r\n  margin: 0;\r\n  white-space: pre;\r\n  word-wrap: normal;\r\n  line-height: inherit;\r\n  color: inherit;\r\n  z-index: 2;\r\n  position: relative;\r\n  overflow: visible;\r\n}\r\n.CodeMirror-wrap pre {\r\n  word-wrap: break-word;\r\n  white-space: pre-wrap;\r\n  word-break: normal;\r\n}\r\n\r\n.CodeMirror-linebackground {\r\n  position: absolute;\r\n  left: 0; right: 0; top: 0; bottom: 0;\r\n  z-index: 0;\r\n}\r\n\r\n.CodeMirror-linewidget {\r\n  position: relative;\r\n  z-index: 2;\r\n  overflow: auto;\r\n}\r\n\r\n.CodeMirror-widget {}\r\n\r\n.CodeMirror-wrap .CodeMirror-scroll {\r\n  overflow-x: hidden;\r\n}\r\n\r\n.CodeMirror-measure {\r\n  position: absolute;\r\n  width: 100%;\r\n  height: 0;\r\n  overflow: hidden;\r\n  visibility: hidden;\r\n}\r\n.CodeMirror-measure pre { position: static; }\r\n\r\n.CodeMirror div.CodeMirror-cursor {\r\n  position: absolute;\r\n  border-right: none;\r\n  width: 0;\r\n}\r\n\r\ndiv.CodeMirror-cursors {\r\n  visibility: hidden;\r\n  position: relative;\r\n  z-index: 3;\r\n}\r\n.CodeMirror-focused div.CodeMirror-cursors {\r\n  visibility: visible;\r\n}\r\n\r\n.CodeMirror-selected { background: #d9d9d9; }\r\n.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }\r\n.CodeMirror-crosshair { cursor: crosshair; }\r\n\r\n.cm-searching {\r\n  background: #ffa;\r\n  background: rgba(255, 255, 0, .4);\r\n}\r\n\r\n/* IE7 hack to prevent it from returning funny offsetTops on the spans */\r\n.CodeMirror span { *vertical-align: text-bottom; }\r\n\r\n/* Used to force a border model for a node */\r\n.cm-force-border { padding-right: .1px; }\r\n\r\n@media print {\r\n  /* Hide the cursor when printing */\r\n  .CodeMirror div.CodeMirror-cursors {\r\n    visibility: hidden;\r\n  }\r\n}\r\n\r\n/* See issue #2901 */\r\n.cm-tab-wrap-hack:after { content: ''; }\r\n\r\n/* Help users use markselection to safely style text background */\r\nspan.CodeMirror-selectedtext { background: none; }\r\n"; (require("C:\\Users\\Zsolt\\Documents\\GitHub\\isis-ui-components\\node_modules\\cssify"))(css); module.exports = css;
+},{"C:\\Users\\Zsolt\\Documents\\GitHub\\isis-ui-components\\node_modules\\cssify":12}],5:[function(require,module,exports){
 /*
  * angular-markdown-directive v0.3.1
  * (c) 2013-2014 Brian Ford http://briantford.com
@@ -851,8 +851,14 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
     for (var opt in optionHandlers) if (optionHandlers.hasOwnProperty(opt))
       optionHandlers[opt](this, options[opt], Init);
     maybeUpdateLineNumberWidth(this);
+    if (options.finishInit) options.finishInit(this);
     for (var i = 0; i < initHooks.length; ++i) initHooks[i](this);
     endOperation(this);
+    // Suppress optimizelegibility in Webkit, since it breaks text
+    // measuring on line wrapping boundaries.
+    if (webkit && options.lineWrapping &&
+        getComputedStyle(display.lineDiv).textRendering == "optimizelegibility")
+      display.lineDiv.style.textRendering = "auto";
   }
 
   // DISPLAY CONSTRUCTOR
@@ -1385,7 +1391,17 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
     this.oldDisplayWidth = displayWidth(cm);
     this.force = force;
     this.dims = getDimensions(cm);
+    this.events = [];
   }
+
+  DisplayUpdate.prototype.signal = function(emitter, type) {
+    if (hasHandler(emitter, type))
+      this.events.push(arguments);
+  };
+  DisplayUpdate.prototype.finish = function() {
+    for (var i = 0; i < this.events.length; i++)
+      signal.apply(null, this.events[i]);
+  };
 
   function maybeClipScrollbars(cm) {
     var display = cm.display;
@@ -1460,7 +1476,7 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
     // width and height.
     removeChildren(display.cursorDiv);
     removeChildren(display.selectionDiv);
-    display.heightForcer.style.top = display.gutters.style.height = 0;
+    display.gutters.style.height = 0;
 
     if (different) {
       display.lastWrapHeight = update.wrapperHeight;
@@ -1497,9 +1513,9 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
       updateScrollbars(cm, barMeasure);
     }
 
-    signalLater(cm, "update", cm);
+    update.signal(cm, "update", cm);
     if (cm.display.viewFrom != cm.display.reportedViewFrom || cm.display.viewTo != cm.display.reportedViewTo) {
-      signalLater(cm, "viewportChange", cm, cm.display.viewFrom, cm.display.viewTo);
+      update.signal(cm, "viewportChange", cm, cm.display.viewFrom, cm.display.viewTo);
       cm.display.reportedViewFrom = cm.display.viewFrom; cm.display.reportedViewTo = cm.display.viewTo;
     }
   }
@@ -1513,14 +1529,15 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
       updateSelection(cm);
       setDocumentHeight(cm, barMeasure);
       updateScrollbars(cm, barMeasure);
+      update.finish();
     }
   }
 
   function setDocumentHeight(cm, measure) {
     cm.display.sizer.style.minHeight = measure.docHeight + "px";
-    var plusGap = measure.docHeight + scrollGap(cm);
-    cm.display.heightForcer.style.top = plusGap + "px";
-    cm.display.gutters.style.height = Math.max(plusGap, measure.clientHeight) + "px";
+    var total = measure.docHeight + cm.display.barHeight;
+    cm.display.heightForcer.style.top = total + "px";
+    cm.display.gutters.style.height = Math.max(total + scrollGap(cm), measure.clientHeight) + "px";
   }
 
   // Read the actual heights of the rendered lines, and update their
@@ -2588,7 +2605,8 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
 
   // Converts a {top, bottom, left, right} box from line-local
   // coordinates into another coordinate system. Context may be one of
-  // "line", "div" (display.lineDiv), "local"/null (editor), or "page".
+  // "line", "div" (display.lineDiv), "local"/null (editor), "window",
+  // or "page".
   function intoCoordSystem(cm, lineObj, rect, context) {
     if (lineObj.widgets) for (var i = 0; i < lineObj.widgets.length; ++i) if (lineObj.widgets[i].above) {
       var size = widgetHeight(lineObj.widgets[i]);
@@ -2972,6 +2990,8 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
     // Fire change events, and delayed event handlers
     if (op.changeObjs)
       signal(cm, "changes", cm, op.changeObjs);
+    if (op.update)
+      op.update.finish();
   }
 
   // Run the given function in an operation
@@ -3346,8 +3366,10 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
   }
 
   function focusInput(cm) {
-    if (cm.options.readOnly != "nocursor" && (!mobile || activeElt() != cm.display.input))
-      cm.display.input.focus();
+    if (cm.options.readOnly != "nocursor" && (!mobile || activeElt() != cm.display.input)) {
+      try { cm.display.input.focus(); }
+      catch (e) {} // IE8 will throw if the textarea is display: none or not in DOM
+    }
   }
 
   function ensureFocus(cm) {
@@ -3500,7 +3522,9 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
   // Return true when the given mouse event happened in a widget
   function eventInWidget(display, e) {
     for (var n = e_target(e); n != display.wrapper; n = n.parentNode) {
-      if (!n || n.getAttribute("cm-ignore-events") == "true" || n.parentNode == display.sizer && n != display.mover) return true;
+      if (!n || (n.nodeType == 1 && n.getAttribute("cm-ignore-events") == "true") ||
+          (n.parentNode == display.sizer && n != display.mover))
+        return true;
     }
   }
 
@@ -4529,7 +4553,9 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
 
     var lendiff = change.text.length - (to.line - from.line) - 1;
     // Remember that these lines changed, for updating the display
-    if (from.line == to.line && change.text.length == 1 && !isWholeLineUpdate(cm.doc, change))
+    if (change.full)
+      regChange(cm);
+    else if (from.line == to.line && change.text.length == 1 && !isWholeLineUpdate(cm.doc, change))
       regLineChange(cm, from.line, "text");
     else
       regChange(cm, from.line, to.line + 1, lendiff);
@@ -5852,7 +5878,7 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
   // FROMTEXTAREA
 
   CodeMirror.fromTextArea = function(textarea, options) {
-    if (!options) options = {};
+    options = options ? copyObj(options) : {};
     options.value = textarea.value;
     if (!options.tabindex && textarea.tabindex)
       options.tabindex = textarea.tabindex;
@@ -5883,23 +5909,26 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
       }
     }
 
+    options.finishInit = function(cm) {
+      cm.save = save;
+      cm.getTextArea = function() { return textarea; };
+      cm.toTextArea = function() {
+        cm.toTextArea = isNaN; // Prevent this from being ran twice
+        save();
+        textarea.parentNode.removeChild(cm.getWrapperElement());
+        textarea.style.display = "";
+        if (textarea.form) {
+          off(textarea.form, "submit", save);
+          if (typeof textarea.form.submit == "function")
+            textarea.form.submit = realSubmit;
+        }
+      };
+    };
+
     textarea.style.display = "none";
     var cm = CodeMirror(function(node) {
       textarea.parentNode.insertBefore(node, textarea.nextSibling);
     }, options);
-    cm.save = save;
-    cm.getTextArea = function() { return textarea; };
-    cm.toTextArea = function() {
-      cm.toTextArea = isNaN; // Prevent this from being ran twice
-      save();
-      textarea.parentNode.removeChild(cm.getWrapperElement());
-      textarea.style.display = "";
-      if (textarea.form) {
-        off(textarea.form, "submit", save);
-        if (typeof textarea.form.submit == "function")
-          textarea.form.submit = realSubmit;
-      }
-    };
     return cm;
   };
 
@@ -6311,6 +6340,7 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
   // spans partially within the change. Returns an array of span
   // arrays with one element for each line in (after) the change.
   function stretchSpansOverChange(doc, change) {
+    if (change.full) return null;
     var oldFirst = isLine(doc, change.from.line) && getLine(doc, change.from.line).markedSpans;
     var oldLast = isLine(doc, change.to.line) && getLine(doc, change.to.line).markedSpans;
     if (!oldFirst && !oldLast) return null;
@@ -6620,7 +6650,9 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
     if (!contains(document.body, widget.node)) {
       var parentStyle = "position: relative;";
       if (widget.coverGutter)
-        parentStyle += "margin-left: -" + widget.cm.getGutterElement().offsetWidth + "px;";
+        parentStyle += "margin-left: -" + widget.cm.display.gutters.offsetWidth + "px;";
+      if (widget.noHScroll)
+        parentStyle += "width: " + widget.cm.display.wrapper.clientWidth + "px;";
       removeChildrenAndAdd(widget.cm.display.measure, elt("div", [widget.node], null, parentStyle));
     }
     return widget.height = widget.node.offsetHeight;
@@ -6907,6 +6939,7 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
   function defaultSpecialCharPlaceholder(ch) {
     var token = elt("span", "\u2022", "cm-invalidchar");
     token.title = "\\u" + ch.charCodeAt(0).toString(16);
+    token.setAttribute("aria-label", token.title);
     return token;
   }
 
@@ -6940,6 +6973,7 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
         if (m[0] == "\t") {
           var tabSize = builder.cm.options.tabSize, tabWidth = tabSize - builder.col % tabSize;
           var txt = content.appendChild(elt("span", spaceStr(tabWidth), "cm-tab"));
+          txt.setAttribute("role", "presentation");
           builder.col += tabWidth;
         } else {
           var txt = builder.cm.options.specialCharPlaceholder(m[0]);
@@ -7083,17 +7117,24 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
       updateLine(line, text, spans, estimateHeight);
       signalLater(line, "change", line, change);
     }
+    function linesFor(start, end) {
+      for (var i = start, result = []; i < end; ++i)
+        result.push(new Line(text[i], spansFor(i), estimateHeight));
+      return result;
+    }
 
     var from = change.from, to = change.to, text = change.text;
     var firstLine = getLine(doc, from.line), lastLine = getLine(doc, to.line);
     var lastText = lst(text), lastSpans = spansFor(text.length - 1), nlines = to.line - from.line;
 
     // Adjust the line structure
-    if (isWholeLineUpdate(doc, change)) {
+    if (change.full) {
+      doc.insert(0, linesFor(0, text.length));
+      doc.remove(text.length, doc.size - text.length);
+    } else if (isWholeLineUpdate(doc, change)) {
       // This is a whole-line replace. Treated specially to make
       // sure line objects move the way they are supposed to.
-      for (var i = 0, added = []; i < text.length - 1; ++i)
-        added.push(new Line(text[i], spansFor(i), estimateHeight));
+      var added = linesFor(0, text.length - 1);
       update(lastLine, lastLine.text, lastSpans);
       if (nlines) doc.remove(from.line, nlines);
       if (added.length) doc.insert(from.line, added);
@@ -7101,8 +7142,7 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
       if (text.length == 1) {
         update(firstLine, firstLine.text.slice(0, from.ch) + lastText + firstLine.text.slice(to.ch), lastSpans);
       } else {
-        for (var added = [], i = 1; i < text.length - 1; ++i)
-          added.push(new Line(text[i], spansFor(i), estimateHeight));
+        var added = linesFor(1, text.length - 1);
         added.push(new Line(lastText + firstLine.text.slice(to.ch), lastSpans, estimateHeight));
         update(firstLine, firstLine.text.slice(0, from.ch) + text[0], spansFor(0));
         doc.insert(from.line + 1, added);
@@ -7113,8 +7153,7 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
     } else {
       update(firstLine, firstLine.text.slice(0, from.ch) + text[0], spansFor(0));
       update(lastLine, lastText + lastLine.text.slice(to.ch), lastSpans);
-      for (var i = 1, added = []; i < text.length - 1; ++i)
-        added.push(new Line(text[i], spansFor(i), estimateHeight));
+      var added = linesFor(1, text.length - 1);
       if (nlines > 1) doc.remove(from.line + 1, nlines - 1);
       doc.insert(from.line + 1, added);
     }
@@ -7325,7 +7364,7 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
     setValue: docMethodOp(function(code) {
       var top = Pos(this.first, 0), last = this.first + this.size - 1;
       makeChange(this, {from: top, to: Pos(last, getLine(this, last).text.length),
-                        text: splitLines(code), origin: "setValue"}, true);
+                        text: splitLines(code), origin: "setValue", full: true}, true);
       setSelection(this, simpleSelection(top));
     }),
     replaceRange: function(code, from, to, origin) {
@@ -8205,13 +8244,11 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
       if (array[i] == elt) return i;
     return -1;
   }
-  if ([].indexOf) indexOf = function(array, elt) { return array.indexOf(elt); };
   function map(array, f) {
     var out = [];
     for (var i = 0; i < array.length; i++) out[i] = f(array[i], i);
     return out;
   }
-  if ([].map) map = function(array, f) { return array.map(f); };
 
   function createObj(base, props) {
     var inst;
@@ -8301,12 +8338,14 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
     return removeChildren(parent).appendChild(e);
   }
 
-  function contains(parent, child) {
+  var contains = CodeMirror.contains = function(parent, child) {
     if (parent.contains)
       return parent.contains(child);
-    while (child = child.parentNode)
+    while (child = child.parentNode) {
+      if (child.nodeType == 11) child = child.host;
       if (child == parent) return true;
-  }
+    }
+  };
 
   function activeElt() { return document.activeElement; }
   // Older versions of IE throws unspecified error when touching
@@ -8764,7 +8803,7 @@ n=document.createElement("pre"),M=/^(\s*)([\s\S]*?)(\s*)$/;h.module("ngSanitize"
 
   // THE END
 
-  CodeMirror.version = "4.10.0";
+  CodeMirror.version = "4.13.0";
 
   return CodeMirror;
 });
@@ -8788,13 +8827,15 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
 
   var indentUnit = config.indentUnit,
       tokenHooks = parserConfig.tokenHooks,
+      documentTypes = parserConfig.documentTypes || {},
       mediaTypes = parserConfig.mediaTypes || {},
       mediaFeatures = parserConfig.mediaFeatures || {},
       propertyKeywords = parserConfig.propertyKeywords || {},
       nonStandardPropertyKeywords = parserConfig.nonStandardPropertyKeywords || {},
+      fontProperties = parserConfig.fontProperties || {},
+      counterDescriptors = parserConfig.counterDescriptors || {},
       colorKeywords = parserConfig.colorKeywords || {},
       valueKeywords = parserConfig.valueKeywords || {},
-      fontProperties = parserConfig.fontProperties || {},
       allowNested = parserConfig.allowNested;
 
   var type, override;
@@ -8829,6 +8870,11 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
       if (/[\d.]/.test(stream.peek())) {
         stream.eatWhile(/[\w.%]/);
         return ret("number", "unit");
+      } else if (stream.match(/^-[\w\\\-]+/)) {
+        stream.eatWhile(/[\w\\\-]/);
+        if (stream.match(/^\s*:/, false))
+          return ret("variable-2", "variable-definition");
+        return ret("variable-2", "variable");
       } else if (stream.match(/^\w+-/)) {
         return ret("meta", "meta");
       }
@@ -8838,7 +8884,9 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
       return ret("qualifier", "qualifier");
     } else if (/[:;{}\[\]\(\)]/.test(ch)) {
       return ret(null, ch);
-    } else if (ch == "u" && stream.match("rl(")) {
+    } else if ((ch == "u" && stream.match(/rl(-prefix)?\(/)) ||
+               (ch == "d" && stream.match("omain(")) ||
+               (ch == "r" && stream.match("egexp("))) {
       stream.backUp(1);
       state.tokenize = tokenParenthesized;
       return ret("property", "word");
@@ -8920,10 +8968,11 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
       return pushContext(state, stream, "block");
     } else if (type == "}" && state.context.prev) {
       return popContext(state);
-    } else if (type == "@media") {
-      return pushContext(state, stream, "media");
-    } else if (type == "@font-face") {
-      return "font_face_before";
+    } else if (/@(media|supports|(-moz-)?document)/.test(type)) {
+      return pushContext(state, stream, "atBlock");
+    } else if (/@(font-face|counter-style)/.test(type)) {
+      state.stateArg = type;
+      return "restricted_atBlock_before";
     } else if (/^@(-(moz|ms|o|webkit)-)?keyframes$/.test(type)) {
       return "keyframes";
     } else if (type && type.charAt(0) == "@") {
@@ -9013,47 +9062,63 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
     return pass(type, stream, state);
   };
 
-  states.media = function(type, stream, state) {
-    if (type == "(") return pushContext(state, stream, "media_parens");
+  states.atBlock = function(type, stream, state) {
+    if (type == "(") return pushContext(state, stream, "atBlock_parens");
     if (type == "}") return popAndPass(type, stream, state);
     if (type == "{") return popContext(state) && pushContext(state, stream, allowNested ? "block" : "top");
 
     if (type == "word") {
       var word = stream.current().toLowerCase();
-      if (word == "only" || word == "not" || word == "and")
+      if (word == "only" || word == "not" || word == "and" || word == "or")
         override = "keyword";
+      else if (documentTypes.hasOwnProperty(word))
+        override = "tag";
       else if (mediaTypes.hasOwnProperty(word))
         override = "attribute";
       else if (mediaFeatures.hasOwnProperty(word))
         override = "property";
+      else if (propertyKeywords.hasOwnProperty(word))
+        override = "property";
+      else if (nonStandardPropertyKeywords.hasOwnProperty(word))
+        override = "string-2";
+      else if (valueKeywords.hasOwnProperty(word))
+        override = "atom";
       else
         override = "error";
     }
     return state.context.type;
   };
 
-  states.media_parens = function(type, stream, state) {
+  states.atBlock_parens = function(type, stream, state) {
     if (type == ")") return popContext(state);
     if (type == "{" || type == "}") return popAndPass(type, stream, state, 2);
-    return states.media(type, stream, state);
+    return states.atBlock(type, stream, state);
   };
 
-  states.font_face_before = function(type, stream, state) {
+  states.restricted_atBlock_before = function(type, stream, state) {
     if (type == "{")
-      return pushContext(state, stream, "font_face");
+      return pushContext(state, stream, "restricted_atBlock");
+    if (type == "word" && state.stateArg == "@counter-style") {
+      override = "variable";
+      return "restricted_atBlock_before";
+    }
     return pass(type, stream, state);
   };
 
-  states.font_face = function(type, stream, state) {
-    if (type == "}") return popContext(state);
+  states.restricted_atBlock = function(type, stream, state) {
+    if (type == "}") {
+      state.stateArg = null;
+      return popContext(state);
+    }
     if (type == "word") {
-      if (!fontProperties.hasOwnProperty(stream.current().toLowerCase()))
+      if ((state.stateArg == "@font-face" && !fontProperties.hasOwnProperty(stream.current().toLowerCase())) ||
+          (state.stateArg == "@counter-style" && !counterDescriptors.hasOwnProperty(stream.current().toLowerCase())))
         override = "error";
       else
         override = "property";
       return "maybeprop";
     }
-    return "font_face";
+    return "restricted_atBlock";
   };
 
   states.keyframes = function(type, stream, state) {
@@ -9081,6 +9146,7 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
     startState: function(base) {
       return {tokenize: null,
               state: "top",
+              stateArg: null,
               context: new Context("top", base || 0, null)};
     },
 
@@ -9101,9 +9167,9 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
       var indent = cx.indent;
       if (cx.type == "prop" && (ch == "}" || ch == ")")) cx = cx.prev;
       if (cx.prev &&
-          (ch == "}" && (cx.type == "block" || cx.type == "top" || cx.type == "interpolation" || cx.type == "font_face") ||
-           ch == ")" && (cx.type == "parens" || cx.type == "media_parens") ||
-           ch == "{" && (cx.type == "at" || cx.type == "media"))) {
+          (ch == "}" && (cx.type == "block" || cx.type == "top" || cx.type == "interpolation" || cx.type == "restricted_atBlock") ||
+           ch == ")" && (cx.type == "parens" || cx.type == "atBlock_parens") ||
+           ch == "{" && (cx.type == "at" || cx.type == "atBlock"))) {
         indent = cx.indent - indentUnit;
         cx = cx.prev;
       }
@@ -9124,6 +9190,10 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
     }
     return keys;
   }
+
+  var documentTypes_ = [
+    "domain", "regexp", "url", "url-prefix"
+  ], documentTypes = keySet(documentTypes_);
 
   var mediaTypes_ = [
     "all", "aural", "braille", "handheld", "print", "projection", "screen",
@@ -9241,6 +9311,16 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
     "searchfield-results-decoration", "zoom"
   ], nonStandardPropertyKeywords = keySet(nonStandardPropertyKeywords_);
 
+  var fontProperties_ = [
+    "font-family", "src", "unicode-range", "font-variant", "font-feature-settings",
+    "font-stretch", "font-weight", "font-style"
+  ], fontProperties = keySet(fontProperties_);
+
+  var counterDescriptors_ = [
+    "additive-symbols", "fallback", "negative", "pad", "prefix", "range",
+    "speak-as", "suffix", "symbols", "system"
+  ], counterDescriptors = keySet(counterDescriptors_);
+
   var colorKeywords_ = [
     "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige",
     "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown",
@@ -9271,46 +9351,49 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
   ], colorKeywords = keySet(colorKeywords_);
 
   var valueKeywords_ = [
-    "above", "absolute", "activeborder", "activecaption", "afar",
-    "after-white-space", "ahead", "alias", "all", "all-scroll", "alternate",
+    "above", "absolute", "activeborder", "additive", "activecaption", "afar",
+    "after-white-space", "ahead", "alias", "all", "all-scroll", "alphabetic", "alternate",
     "always", "amharic", "amharic-abegede", "antialiased", "appworkspace",
-    "arabic-indic", "armenian", "asterisks", "auto", "avoid", "avoid-column", "avoid-page",
+    "arabic-indic", "armenian", "asterisks", "attr", "auto", "avoid", "avoid-column", "avoid-page",
     "avoid-region", "background", "backwards", "baseline", "below", "bidi-override", "binary",
     "bengali", "blink", "block", "block-axis", "bold", "bolder", "border", "border-box",
-    "both", "bottom", "break", "break-all", "break-word", "button", "button-bevel",
-    "buttonface", "buttonhighlight", "buttonshadow", "buttontext", "cambodian",
+    "both", "bottom", "break", "break-all", "break-word", "bullets", "button", "button-bevel",
+    "buttonface", "buttonhighlight", "buttonshadow", "buttontext", "calc", "cambodian",
     "capitalize", "caps-lock-indicator", "caption", "captiontext", "caret",
-    "cell", "center", "checkbox", "circle", "cjk-earthly-branch",
+    "cell", "center", "checkbox", "circle", "cjk-decimal", "cjk-earthly-branch",
     "cjk-heavenly-stem", "cjk-ideographic", "clear", "clip", "close-quote",
     "col-resize", "collapse", "column", "compact", "condensed", "contain", "content",
-    "content-box", "context-menu", "continuous", "copy", "cover", "crop",
-    "cross", "crosshair", "currentcolor", "cursive", "dashed", "decimal",
+    "content-box", "context-menu", "continuous", "copy", "counter", "counters", "cover", "crop",
+    "cross", "crosshair", "currentcolor", "cursive", "cyclic", "dashed", "decimal",
     "decimal-leading-zero", "default", "default-button", "destination-atop",
     "destination-in", "destination-out", "destination-over", "devanagari",
-    "disc", "discard", "document", "dot-dash", "dot-dot-dash", "dotted",
-    "double", "down", "e-resize", "ease", "ease-in", "ease-in-out", "ease-out",
+    "disc", "discard", "disclosure-closed", "disclosure-open", "document",
+    "dot-dash", "dot-dot-dash",
+    "dotted", "double", "down", "e-resize", "ease", "ease-in", "ease-in-out", "ease-out",
     "element", "ellipse", "ellipsis", "embed", "end", "ethiopic", "ethiopic-abegede",
     "ethiopic-abegede-am-et", "ethiopic-abegede-gez", "ethiopic-abegede-ti-er",
     "ethiopic-abegede-ti-et", "ethiopic-halehame-aa-er",
     "ethiopic-halehame-aa-et", "ethiopic-halehame-am-et",
     "ethiopic-halehame-gez", "ethiopic-halehame-om-et",
     "ethiopic-halehame-sid-et", "ethiopic-halehame-so-et",
-    "ethiopic-halehame-ti-er", "ethiopic-halehame-ti-et",
-    "ethiopic-halehame-tig", "ew-resize", "expanded", "extra-condensed",
-    "extra-expanded", "fantasy", "fast", "fill", "fixed", "flat", "footnotes",
+    "ethiopic-halehame-ti-er", "ethiopic-halehame-ti-et", "ethiopic-halehame-tig",
+    "ethiopic-numeric", "ew-resize", "expanded", "extends", "extra-condensed",
+    "extra-expanded", "fantasy", "fast", "fill", "fixed", "flat", "flex", "footnotes",
     "forwards", "from", "geometricPrecision", "georgian", "graytext", "groove",
     "gujarati", "gurmukhi", "hand", "hangul", "hangul-consonant", "hebrew",
     "help", "hidden", "hide", "higher", "highlight", "highlighttext",
     "hiragana", "hiragana-iroha", "horizontal", "hsl", "hsla", "icon", "ignore",
     "inactiveborder", "inactivecaption", "inactivecaptiontext", "infinite",
     "infobackground", "infotext", "inherit", "initial", "inline", "inline-axis",
-    "inline-block", "inline-table", "inset", "inside", "intrinsic", "invert",
-    "italic", "justify", "kannada", "katakana", "katakana-iroha", "keep-all", "khmer",
+    "inline-block", "inline-flex", "inline-table", "inset", "inside", "intrinsic", "invert",
+    "italic", "japanese-formal", "japanese-informal", "justify", "kannada",
+    "katakana", "katakana-iroha", "keep-all", "khmer",
+    "korean-hangul-formal", "korean-hanja-formal", "korean-hanja-informal",
     "landscape", "lao", "large", "larger", "left", "level", "lighter",
-    "line-through", "linear", "lines", "list-item", "listbox", "listitem",
+    "line-through", "linear", "linear-gradient", "lines", "list-item", "listbox", "listitem",
     "local", "logical", "loud", "lower", "lower-alpha", "lower-armenian",
     "lower-greek", "lower-hexadecimal", "lower-latin", "lower-norwegian",
-    "lower-roman", "lowercase", "ltr", "malayalam", "match",
+    "lower-roman", "lowercase", "ltr", "malayalam", "match", "matrix", "matrix3d",
     "media-controls-background", "media-current-time-display",
     "media-fullscreen-button", "media-mute-button", "media-play-button",
     "media-return-to-realtime-button", "media-rewind-button",
@@ -9322,45 +9405,48 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
     "mix", "mongolian", "monospace", "move", "multiple", "myanmar", "n-resize",
     "narrower", "ne-resize", "nesw-resize", "no-close-quote", "no-drop",
     "no-open-quote", "no-repeat", "none", "normal", "not-allowed", "nowrap",
-    "ns-resize", "nw-resize", "nwse-resize", "oblique", "octal", "open-quote",
+    "ns-resize", "numbers", "numeric", "nw-resize", "nwse-resize", "oblique", "octal", "open-quote",
     "optimizeLegibility", "optimizeSpeed", "oriya", "oromo", "outset",
     "outside", "outside-shape", "overlay", "overline", "padding", "padding-box",
-    "painted", "page", "paused", "persian", "plus-darker", "plus-lighter", "pointer",
-    "polygon", "portrait", "pre", "pre-line", "pre-wrap", "preserve-3d", "progress", "push-button",
-    "radio", "read-only", "read-write", "read-write-plaintext-only", "rectangle", "region",
-    "relative", "repeat", "repeat-x", "repeat-y", "reset", "reverse", "rgb", "rgba",
-    "ridge", "right", "round", "row-resize", "rtl", "run-in", "running",
-    "s-resize", "sans-serif", "scroll", "scrollbar", "se-resize", "searchfield",
+    "painted", "page", "paused", "persian", "perspective", "plus-darker", "plus-lighter",
+    "pointer", "polygon", "portrait", "pre", "pre-line", "pre-wrap", "preserve-3d",
+    "progress", "push-button", "radial-gradient", "radio", "read-only",
+    "read-write", "read-write-plaintext-only", "rectangle", "region",
+    "relative", "repeat", "repeating-linear-gradient",
+    "repeating-radial-gradient", "repeat-x", "repeat-y", "reset", "reverse",
+    "rgb", "rgba", "ridge", "right", "rotate", "rotate3d", "rotateX", "rotateY",
+    "rotateZ", "round", "row-resize", "rtl", "run-in", "running",
+    "s-resize", "sans-serif", "scale", "scale3d", "scaleX", "scaleY", "scaleZ",
+    "scroll", "scrollbar", "se-resize", "searchfield",
     "searchfield-cancel-button", "searchfield-decoration",
     "searchfield-results-button", "searchfield-results-decoration",
     "semi-condensed", "semi-expanded", "separate", "serif", "show", "sidama",
-    "single", "skip-white-space", "slide", "slider-horizontal",
+    "simp-chinese-formal", "simp-chinese-informal", "single",
+    "skew", "skewX", "skewY", "skip-white-space", "slide", "slider-horizontal",
     "slider-vertical", "sliderthumb-horizontal", "sliderthumb-vertical", "slow",
     "small", "small-caps", "small-caption", "smaller", "solid", "somali",
-    "source-atop", "source-in", "source-out", "source-over", "space", "square",
-    "square-button", "start", "static", "status-bar", "stretch", "stroke",
-    "sub", "subpixel-antialiased", "super", "sw-resize", "table",
+    "source-atop", "source-in", "source-out", "source-over", "space", "spell-out", "square",
+    "square-button", "start", "static", "status-bar", "stretch", "stroke", "sub",
+    "subpixel-antialiased", "super", "sw-resize", "symbolic", "symbols", "table",
     "table-caption", "table-cell", "table-column", "table-column-group",
     "table-footer-group", "table-header-group", "table-row", "table-row-group",
+    "tamil",
     "telugu", "text", "text-bottom", "text-top", "textarea", "textfield", "thai",
     "thick", "thin", "threeddarkshadow", "threedface", "threedhighlight",
     "threedlightshadow", "threedshadow", "tibetan", "tigre", "tigrinya-er",
     "tigrinya-er-abegede", "tigrinya-et", "tigrinya-et-abegede", "to", "top",
+    "trad-chinese-formal", "trad-chinese-informal",
+    "translate", "translate3d", "translateX", "translateY", "translateZ",
     "transparent", "ultra-condensed", "ultra-expanded", "underline", "up",
     "upper-alpha", "upper-armenian", "upper-greek", "upper-hexadecimal",
     "upper-latin", "upper-norwegian", "upper-roman", "uppercase", "urdu", "url",
-    "vertical", "vertical-text", "visible", "visibleFill", "visiblePainted",
+    "var", "vertical", "vertical-text", "visible", "visibleFill", "visiblePainted",
     "visibleStroke", "visual", "w-resize", "wait", "wave", "wider",
-    "window", "windowframe", "windowtext", "x-large", "x-small", "xor",
+    "window", "windowframe", "windowtext", "words", "x-large", "x-small", "xor",
     "xx-large", "xx-small"
   ], valueKeywords = keySet(valueKeywords_);
 
-  var fontProperties_ = [
-    "font-family", "src", "unicode-range", "font-variant", "font-feature-settings",
-    "font-stretch", "font-weight", "font-style"
-  ], fontProperties = keySet(fontProperties_);
-
-  var allWords = mediaTypes_.concat(mediaFeatures_).concat(propertyKeywords_)
+  var allWords = documentTypes_.concat(mediaTypes_).concat(mediaFeatures_).concat(propertyKeywords_)
     .concat(nonStandardPropertyKeywords_).concat(colorKeywords_).concat(valueKeywords_);
   CodeMirror.registerHelper("hintWords", "css", allWords);
 
@@ -9387,13 +9473,15 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
   }
 
   CodeMirror.defineMIME("text/css", {
+    documentTypes: documentTypes,
     mediaTypes: mediaTypes,
     mediaFeatures: mediaFeatures,
     propertyKeywords: propertyKeywords,
     nonStandardPropertyKeywords: nonStandardPropertyKeywords,
+    fontProperties: fontProperties,
+    counterDescriptors: counterDescriptors,
     colorKeywords: colorKeywords,
     valueKeywords: valueKeywords,
-    fontProperties: fontProperties,
     tokenHooks: {
       "<": function(stream, state) {
         if (!stream.match("!--")) return false;
@@ -9732,7 +9820,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       } else if (state.lastType == "operator" || state.lastType == "keyword c" ||
                state.lastType == "sof" || /^[\[{}\(,;:]$/.test(state.lastType)) {
         readRegexp(stream);
-        stream.eatWhile(/[gimy]/); // 'y' is "sticky" option in Mozilla
+        stream.match(/^\b(([gimyu])(?![gimyu]*\2))+\b/);
         return ret("regexp", "string-2");
       } else {
         stream.eatWhile(isOperatorChar);
@@ -10214,6 +10302,12 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     if (type == "if") return cont(expression, comprehension);
   }
 
+  function isContinuedStatement(state, textAfter) {
+    return state.lastType == "operator" || state.lastType == "," ||
+      isOperatorChar.test(textAfter.charAt(0)) ||
+      /[,.]/.test(textAfter.charAt(0));
+  }
+
   // Interface
 
   return {
@@ -10265,7 +10359,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       else if (type == "form" && firstChar == "{") return lexical.indented;
       else if (type == "form") return lexical.indented + indentUnit;
       else if (type == "stat")
-        return lexical.indented + (state.lastType == "operator" || state.lastType == "," ? statementIndent || indentUnit : 0);
+        return lexical.indented + (isContinuedStatement(state, textAfter) ? statementIndent || indentUnit : 0);
       else if (lexical.info == "switch" && !closing && parserConfig.doubleIndentSwitch != false)
         return lexical.indented + (/^(?:case|default)\b/.test(textAfter) ? indentUnit : 2 * indentUnit);
       else if (lexical.align) return lexical.column + (closing ? 0 : 1);
@@ -10978,9 +11072,21 @@ var demoApp = angular.module('isis.ui.hierarchicalMenu.demo', [
     'isis.ui.hierarchicalMenu'
 ]);
 
-demoApp.controller('HierarchicalMenuDemoController', function ($scope) {
+demoApp.controller('HierarchicalMenuDemoController', function ($scope, $interval) {
 
-    var menu;
+    var menu,
+        menuItemDisabledAndEnabled;
+
+    menuItemDisabledAndEnabled = {
+        id: 'menuItemDisabledAndEnabled',
+        disabled: true,
+        label: 'Disabled by default',
+        iconClass: 'glyphicon glyphicon-remove',
+        action: function () {
+            console.log('menuItemDisabledAndEnabled clicked');
+        },
+        actionData: {}
+    };
 
     menu = [{
         id: 'top',
@@ -11009,7 +11115,8 @@ demoApp.controller('HierarchicalMenuDemoController', function ($scope) {
                 console.log('Import project disabled clicked');
             },
             actionData: {}
-        }]
+        },
+        menuItemDisabledAndEnabled]
     }, {
         id: 'projects',
         label: 'Recent projects',
@@ -11078,6 +11185,16 @@ demoApp.controller('HierarchicalMenuDemoController', function ($scope) {
 
     $scope.menu = menu;
 
+
+    $interval(function () {
+        // emulate that this menu item will be changed from the code through async functions.
+        menuItemDisabledAndEnabled.disabled = !menuItemDisabledAndEnabled.disabled;
+        if (menuItemDisabledAndEnabled.disabled) {
+            menuItemDisabledAndEnabled.iconClass = 'glyphicon glyphicon-remove';
+        } else {
+            menuItemDisabledAndEnabled.iconClass = 'glyphicon glyphicon-ok';
+        }
+    }, 2000);
 });
 },{}],16:[function(require,module,exports){
 /*globals angular*/
@@ -11315,7 +11432,15 @@ demoApp.controller('ItemListDemoController', function ($scope) {
 
     config = {
 
-        sortable: true,
+        //sortable: true,
+        onItemDragStart: function(e, item) {
+            console.log('Start dragging', item);
+        },
+
+        onItemDragEnd: function(e, item) {
+            console.log('Finish dragging', item);
+        },
+
         secondaryItemMenu: true,
         detailsCollapsible: true,
         showDetailsLabel: 'Show details',
@@ -11385,7 +11510,7 @@ var demoApp = angular.module('isis.ui.treeNavigator.demo', [
     'ang-drag-drop'
 ]);
 
-demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $timeout) {
+demoApp.controller('TreeNavigatorDemoController', function($scope, $log, $q, $timeout) {
 
     var config,
         treeNodes = {},
@@ -11396,7 +11521,7 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
         dummyTreeDataGenerator,
         sortChildren;
 
-    getNodeContextmenu = function (node) {
+    getNodeContextmenu = function(node) {
 
         var defaultNodeContextmenu = [{
             items: [{
@@ -11411,7 +11536,7 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
 
                 actionData: node,
 
-                action: function (data) {
+                action: function(data) {
                     $log.log('testing ', data);
                 }
 
@@ -11425,7 +11550,7 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
                 actionData: {
                     id: node.id
                 },
-                action: function (data) {
+                action: function(data) {
                     removeNode(data.id);
                 }
             }, {
@@ -11438,7 +11563,7 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
                     }, {
                         id: 'sub_preferences 2',
                         label: 'Sub preferences 2',
-                        action: function (data) {
+                        action: function(data) {
                             $log.log('testing2 ', data);
                         }
                     }]
@@ -11450,7 +11575,7 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
 
     };
 
-    dummyTreeDataGenerator = function (treeNode, name, maxCount, levels, idOffset) {
+    dummyTreeDataGenerator = function(treeNode, name, maxCount, levels, idOffset) {
         var i,
             id,
             count,
@@ -11474,7 +11599,7 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
 
     };
 
-    addNode = function (parentTreeNode, id, i) {
+    addNode = function(parentTreeNode, id, i) {
         var newTreeNode,
             children = [];
 
@@ -11531,9 +11656,9 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
         return newTreeNode;
     };
 
-    removeNode = function (id) {
+    removeNode = function(id) {
         var
-        parentNode,
+            parentNode,
             nodeToDelete = treeNodes[id];
 
         $log.debug('Removing a node ' + id);
@@ -11545,7 +11670,7 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
                 parentNode = treeNodes[nodeToDelete.parentId];
 
                 // remove nodeToDelete from parent node's children
-                parentNode.children = parentNode.children.filter(function (el) {
+                parentNode.children = parentNode.children.filter(function(el) {
                     return el.id !== id;
                 });
 
@@ -11561,10 +11686,10 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
 
     };
 
-    sortChildren = function (values) {
+    sortChildren = function(values) {
         var orderBy = ['label', 'id'];
 
-        values.sort(function (a, b) {
+        values.sort(function(a, b) {
             var i,
                 key,
                 result;
@@ -11595,14 +11720,14 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
                 items: [{
                     id: 'project',
                     label: 'Project Hierarchy',
-                    action: function () {
+                    action: function() {
                         $scope.config.state.activeScope = 'project';
                         $scope.config.selectedScope = $scope.config.scopeMenu[0].items[0];
                     }
                 }, {
                     id: 'composition',
                     label: 'Composition',
-                    action: function () {
+                    action: function() {
                         $scope.config.state.activeScope = 'composition';
                         $scope.config.selectedScope = $scope.config.scopeMenu[0].items[1];
                     }
@@ -11632,7 +11757,7 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
                         }, {
                             id: 'sub_preferences 2',
                             label: 'Sub preferences 2',
-                            action: function (data) {
+                            action: function(data) {
                                 $log.log(data);
                             }
                         }]
@@ -11645,22 +11770,30 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
 
         // Tree Event callbacks
 
-        nodeClick: function (e, node) {
+        nodeClick: function(e, node) {
             console.log('Node was clicked:', node);
         },
 
-        nodeDblclick: function (e, node) {
+        nodeDragStart: function(e, node) {
+            console.log('Node is beibg dragged:', node);
+        },
+
+        nodeDragEnd: function(e, node) {
+            console.log('Node is not dragged anymore:', node);
+        },
+
+        nodeDblclick: function(e, node) {
             console.log('Node was double-clicked:', node);
         },
 
-        nodeContextmenuRenderer: function (e, node) {
+        nodeContextmenuRenderer: function(e, node) {
             console.log('Contextmenu was triggered for node:', node);
 
             return getNodeContextmenu(node);
 
         },
 
-        nodeExpanderClick: function (e, node, isExpand) {
+        nodeExpanderClick: function(e, node, isExpand) {
             console.log('Expander was clicked for node:', node, isExpand);
         },
 
@@ -11668,16 +11801,16 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
             itemsPerPage: 10
         },
 
-        loadChildren: function (e, node, count, isBackpaging) {
+        loadChildren: function(e, node, count, isBackpaging) {
             var deferred = $q.defer();
 
             console.log('--loading children');
 
-            $timeout(function () {
+            $timeout(function() {
 
                     var dummyParent = {
-                        children: []
-                    },
+                            children: []
+                        },
                         newChildren,
                         offset;
 
@@ -11710,7 +11843,7 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
     $scope.config = config;
     //$scope.config.disableManualSelection = true;
     $scope.config.selectedScope = $scope.config.scopeMenu[0].items[0];
-    $scope.config.nodeClassGetter = function (node) {
+    $scope.config.nodeClassGetter = function(node) {
         var nodeCssClass = '';
 
         if (node.order % 2 === 0) {
@@ -11738,9 +11871,10 @@ demoApp.controller('TreeNavigatorDemoController', function ($scope, $log, $q, $t
     dummyTreeDataGenerator($scope.treeData, 'Node item ', 1, 1);
 
 });
+
 },{"ngDragDrop":2}],18:[function(require,module,exports){
 (function (global){
-;__browserify_shim_require__=require;(function browserifyShim(module, exports, require, define, browserify_shim__define__module__export__) {
+; var __browserify_shim_require__=require;(function browserifyShim(module, exports, require, define, browserify_shim__define__module__export__) {
 //
 // showdown.js -- A javascript port of Markdown.
 //

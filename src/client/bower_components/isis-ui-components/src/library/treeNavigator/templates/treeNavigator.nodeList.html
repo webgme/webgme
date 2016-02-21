@@ -5,7 +5,7 @@
     <li ng-if="ctrl.isPageable() && ctrl.showPageUp()"
         ng-attr-title="{{::ctrl.getLoadMoreText()}}"
         class="paging page-up" ng-click="ctrl.pageUp($event)">
-        <a href="#">{{::ctrl.getLoadMoreText()}}
+        <a href>{{::ctrl.getLoadMoreText()}}
             <i class="glyphicon glyphicon-chevron-up"></i>
             <span class="first-loaded-child-position">
                 {{ctrl.parentNode.firstLoadedChildPosition }}
@@ -20,7 +20,7 @@
     <li ng-if="ctrl.isPageable() && ctrl.showPageDown()"
         ng-attr-title="{{::ctrl.getLoadMoreText()}}"
         class="paging page-down" ng-click="ctrl.pageDown($event)">
-        <a href="#">{{::ctrl.getLoadMoreText()}}
+        <a href>{{::ctrl.getLoadMoreText()}}
             <i class="glyphicon glyphicon-chevron-down"></i>
             <span class="last-loaded-child-position">
                 {{ ctrl.parentNode.childrenCount - (ctrl.parentNode.lastLoadedChildPosition + 1)}}

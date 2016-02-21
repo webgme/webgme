@@ -617,6 +617,56 @@ angular.module(
                 replace: true,
                 require: '^itemList',
                 templateUrl: '/isis-ui-components/templates/itemHeader.html'
+                // link: function(scope, element) {
+
+                //     var onDragStart,
+                //         onDragEnd,
+                //         itemId = scope.item.id;
+
+                //     onDragStart = function(e) {
+
+                //         e.dataTransfer.effectAllowed = 'move';
+                //         e.dataTransfer.setData('text', itemId);
+
+                //         element.addClass('dragged');
+
+                //         if (typeof scope.config.onItemDragStart === 'function') {
+                //             scope.config.onItemDragStart(e, scope.item);
+                //         } 
+
+                //     };
+
+                //     onDragEnd = function(e) {
+
+                //         element.removeClass('dragged');                        
+
+                //         if (typeof scope.config.onItemDragEnd === 'function') {
+                //             scope.config.onItemDragEnd(e, scope.item);
+                //         }                         
+
+                //     };
+
+                //     if (scope.config.itemDraggable) {
+
+                //         console.log(element[0]);
+
+                //         element[0].addEventListener('dragstart', onDragStart);
+                //         element[0].addEventListener('dragend', onDragEnd);
+
+                //     }
+
+                //     scope.$on('$destroy', function() {
+
+                //         if (scope.config.itemDraggable) {
+
+                //             element[0].removeEventListener('dragstart', onDragStart);
+                //             element[0].removeEventListener('dragend', onDragEnd);
+
+                //         }
+
+                //     });
+
+                // }
             };
 
 
@@ -740,7 +790,58 @@ angular.module(
             return {
                 restrict: 'E',
                 replace: true,
-                templateUrl: '/isis-ui-components/templates/itemListItem.html'
+                templateUrl: '/isis-ui-components/templates/itemListItem.html',
+                link: function(scope, element) {
+
+                    var onDragStart,
+                        onDragEnd,
+                        itemId = scope.item.id;
+
+                    onDragStart = function(e) {
+
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text', itemId);
+
+                        element.addClass('dragged');
+
+                        if (typeof scope.config.onItemDragStart === 'function') {
+                            scope.config.onItemDragStart(e, scope.item);
+                        } 
+
+                    };
+
+                    onDragEnd = function(e) {
+
+                        element.removeClass('dragged');                        
+
+                        if (typeof scope.config.onItemDragEnd === 'function') {
+                            scope.config.onItemDragEnd(e, scope.item);
+                        }                         
+
+                    };
+
+                    if (typeof scope.config.onItemDragEnd === 'function' && typeof scope.config.onItemDragStart === 'function') {
+
+                        element[0].classList.add('draggable');
+                        element[0].setAttribute('draggable', 'true');
+
+                        element[0].addEventListener('dragstart', onDragStart);
+                        element[0].addEventListener('dragend', onDragEnd);
+
+                    }
+
+                    scope.$on('$destroy', function() {
+
+                        if (scope.config.itemDraggable) {
+
+                            element[0].removeEventListener('dragstart', onDragStart);
+                            element[0].removeEventListener('dragend', onDragEnd);
+
+                        }
+
+                    });
+
+                }
             };
         }
 );
@@ -1277,8 +1378,8 @@ angular.module(
 // Based on: http://stackoverflow.com/questions/20444409/handling-ng-click-and-ng-dblclick-on-the-same-element-with-angularjs
 
 .
-directive('isisSglclick', ['$parse',
-    function ($parse) {
+directive('isisSglclick', ['$parse', '$timeout',
+    function ($parse, $timeout) {
         return {
             restrict: 'A',
             link: function (scope, element, attr) {
@@ -1289,16 +1390,14 @@ directive('isisSglclick', ['$parse',
                 element.on('click', function (event) {
                     clicks++; //count clicks
                     if (clicks === 1) {
-                        timer = setTimeout(function () {
-                            scope.$apply(function () {
-                                fn(scope, {
-                                    $event: event
-                                });
+                        timer = $timeout(function () {
+                            fn(scope, {
+                                $event: event
                             });
                             clicks = 0; //after action performed, reset counter
                         }, delay);
                     } else {
-                        clearTimeout(timer); //prevent single-click action
+                        $timeout.cancel(timer); //prevent single-click action
                         clicks = 0; //after action performed, reset counter
                     }
                 });
@@ -1324,12 +1423,13 @@ directive('isisSglclick', ['$parse',
 require('./treeNavigator.node.label.js');
 
 angular.module(
-    'isis.ui.treeNavigator.node', [
-        'isis.ui.treeNavigator.node.label'
-    ]
-)
+        'isis.ui.treeNavigator.node', [
+            'isis.ui.treeNavigator.node.label'
+        ]
+    )
     .directive(
-        'treeNavigatorNode', function () {
+        'treeNavigatorNode',
+        function() {
 
             function NodeController() {
 
@@ -1338,16 +1438,16 @@ angular.module(
                 self = this;
 
 
-                self.isExpanded = function () {
+                self.isExpanded = function() {
                     return (self.treeCtrl.config.state.expandedNodes.indexOf(self.node.id) > -1);
                 };
 
-                self.isSelected = function () {
+                self.isSelected = function() {
                     return (self.treeCtrl.config.state.selectedNodes.indexOf(self.node.id) > -1);
                 };
 
 
-                this.getClass = function () {
+                this.getClass = function() {
                     var cssClassStr = '';
 
                     if (self.isExpanded()) {
@@ -1386,7 +1486,7 @@ angular.module(
                 restrict: 'E',
                 replace: true,
                 templateUrl: '/isis-ui-components/templates/treeNavigator.node.html',
-                link: function (scope, element, attributes, controllers) {
+                link: function(scope, element, attributes, controllers) {
 
                     var nodeCtrl,
                         nodeListCtrl,
@@ -1403,7 +1503,8 @@ angular.module(
                 }
             };
         }
-);
+    );
+
 },{"./treeNavigator.node.label.js":22}],22:[function(require,module,exports){
 /*globals angular*/
 
@@ -1421,11 +1522,8 @@ angular.module(
 
             function NodeLabelController() {
 
-                var self;
-
-                self = this;
-
-                self.loading = false;
+                this.loading = false;
+                this._labelElement = null;
 
             }
 
@@ -1548,6 +1646,32 @@ angular.module(
                 return (self.node.expandedIconClass || self.treeCtrl.config.expandedIconClass);
             };
 
+            NodeLabelController.prototype._onDragStart = function(e) {
+
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text', this.node.id);
+
+                if (this.labelEl) {
+                    this.labelEl.classList.add('dragged');
+                }
+
+                if (angular.isFunction(this.treeCtrl.config.nodeDragStart)) {
+                    this.treeCtrl.config.nodeDragStart(e, this.node);
+                }
+
+            };
+
+            NodeLabelController.prototype._onDragEnd = function(e) {
+
+                if (this.labelEl) {
+                    this.labelEl.classList.remove('dragged');
+                }
+
+                if (angular.isFunction(this.treeCtrl.config.nodeDragEnd)) {
+                    this.treeCtrl.config.nodeDragEnd(e, this.node);
+                }
+
+            };
 
             return {
                 scope: {
@@ -1562,13 +1686,34 @@ angular.module(
                 templateUrl: '/isis-ui-components/templates/treeNavigator.node.label.html',
                 link: function (scope, element, attribures, controllers) {
 
-                    var treeCtrl,
-                        labelCtrl;
+                    var treeCtrl = controllers[0],
+                        labelCtrl = controllers[1],
+                        labelEl;
 
-                    treeCtrl = controllers[0];
-                    labelCtrl = controllers[1];
 
                     labelCtrl.treeCtrl = treeCtrl;
+
+                    labelEl = element[0].getElementsByClassName('label-and-extra-info')[0];
+                    labelCtrl._labelElement = labelEl;
+
+                    if (labelCtrl.node.draggable) {
+
+                        labelEl.addEventListener('dragstart', labelCtrl._onDragStart.bind(labelCtrl));
+                        labelEl.addEventListener('dragend', labelCtrl._onDragEnd.bind(labelCtrl));
+
+                    }
+
+                    scope.$on('$destroy', function() {
+
+                        if (labelCtrl.node.draggable) {
+        
+                            labelEl.removeEventListener('dragstart', labelCtrl._onDragStart.bind(labelCtrl));
+                            labelEl.removeEventListener('dragend', labelCtrl._onDragEnd.bind(labelCtrl));
+
+                        }
+
+                    });
+
                 }
             };
         }

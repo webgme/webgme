@@ -5,12 +5,13 @@
 require('./treeNavigator.node.label.js');
 
 angular.module(
-    'isis.ui.treeNavigator.node', [
-        'isis.ui.treeNavigator.node.label'
-    ]
-)
+        'isis.ui.treeNavigator.node', [
+            'isis.ui.treeNavigator.node.label'
+        ]
+    )
     .directive(
-        'treeNavigatorNode', function () {
+        'treeNavigatorNode',
+        function() {
 
             function NodeController() {
 
@@ -19,16 +20,16 @@ angular.module(
                 self = this;
 
 
-                self.isExpanded = function () {
+                self.isExpanded = function() {
                     return (self.treeCtrl.config.state.expandedNodes.indexOf(self.node.id) > -1);
                 };
 
-                self.isSelected = function () {
+                self.isSelected = function() {
                     return (self.treeCtrl.config.state.selectedNodes.indexOf(self.node.id) > -1);
                 };
 
 
-                this.getClass = function () {
+                this.getClass = function() {
                     var cssClassStr = '';
 
                     if (self.isExpanded()) {
@@ -67,7 +68,7 @@ angular.module(
                 restrict: 'E',
                 replace: true,
                 templateUrl: '/isis-ui-components/templates/treeNavigator.node.html',
-                link: function (scope, element, attributes, controllers) {
+                link: function(scope, element, attributes, controllers) {
 
                     var nodeCtrl,
                         nodeListCtrl,
@@ -84,4 +85,4 @@ angular.module(
                 }
             };
         }
-);
+    );

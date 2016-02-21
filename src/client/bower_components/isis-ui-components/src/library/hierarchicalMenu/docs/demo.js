@@ -5,9 +5,21 @@ var demoApp = angular.module('isis.ui.hierarchicalMenu.demo', [
     'isis.ui.hierarchicalMenu'
 ]);
 
-demoApp.controller('HierarchicalMenuDemoController', function ($scope) {
+demoApp.controller('HierarchicalMenuDemoController', function ($scope, $interval) {
 
-    var menu;
+    var menu,
+        menuItemDisabledAndEnabled;
+
+    menuItemDisabledAndEnabled = {
+        id: 'menuItemDisabledAndEnabled',
+        disabled: true,
+        label: 'Disabled by default',
+        iconClass: 'glyphicon glyphicon-remove',
+        action: function () {
+            console.log('menuItemDisabledAndEnabled clicked');
+        },
+        actionData: {}
+    };
 
     menu = [{
         id: 'top',
@@ -36,7 +48,8 @@ demoApp.controller('HierarchicalMenuDemoController', function ($scope) {
                 console.log('Import project disabled clicked');
             },
             actionData: {}
-        }]
+        },
+        menuItemDisabledAndEnabled]
     }, {
         id: 'projects',
         label: 'Recent projects',
@@ -105,4 +118,14 @@ demoApp.controller('HierarchicalMenuDemoController', function ($scope) {
 
     $scope.menu = menu;
 
+
+    $interval(function () {
+        // emulate that this menu item will be changed from the code through async functions.
+        menuItemDisabledAndEnabled.disabled = !menuItemDisabledAndEnabled.disabled;
+        if (menuItemDisabledAndEnabled.disabled) {
+            menuItemDisabledAndEnabled.iconClass = 'glyphicon glyphicon-remove';
+        } else {
+            menuItemDisabledAndEnabled.iconClass = 'glyphicon glyphicon-ok';
+        }
+    }, 2000);
 });

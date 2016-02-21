@@ -12,14 +12,10 @@
             <i data-ng-if="ctrl.isExpanded() && ctrl.canCollapse()" data-ng-class="::ctrl.getExpandedIconClass()"></i>
         </a>
         <span class="label-and-extra-info"
-              ui-draggable="{{ctrl.node.draggable}}"
-              drag-channel="{{ctrl.node.dragChannel}}"
-              ui-on-drop="ctrl.nodeDrop($event, $data)"
-              drop-channel="{{::ctrl.node.dropChannel}}"
-              drag="::ctrl.node.id">
+              ng-attr-draggable="{{ctrl.node.draggable}}">
             <i data-ng-if="::(ctrl.node.childrenCount && ctrl.treeCtrl.config.folderIconClass || ctrl.node.iconClass || ctrl.treeCtrl.config.nodeIconClass)"
                data-ng-class="::(ctrl.node.childrenCount && ctrl.treeCtrl.config.folderIconClass || ctrl.node.iconClass || ctrl.treeCtrl.config.nodeIconClass)"></i>
-            <span class="drag-handle">
+            <span>
                 <span class="label-text"
                       data-ng-if="ctrl.node.label">{{ ctrl.node.label }}</span>
                 <span class="noname"
