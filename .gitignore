@@ -9,6 +9,7 @@ bin
 *.css.map
 
 node_modules
+src/client/bower_components
 
 *.log
 .idea

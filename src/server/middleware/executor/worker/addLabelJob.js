@@ -28,13 +28,13 @@ requirejs.config({
         codemirror: 'lib/codemirror/codemirror.amd',
         'jquery-csszoom': 'lib/jquery/jquery.csszoom',
 
-        jszip: 'lib/jszip/jszip',
+        jszip: 'bower_components/jszip/dist/jszip',
         executor: 'src/rest/executor',
         executor_old: 'src/rest/executor_old',
         blob: '../webgme/src/middleware/blob',
         superagent: 'lib/superagent/superagent',
         q: 'lib/q/q',
-        debug: 'lib/debug/debug'
+        debug: 'bower_components/visionmedia-debug/dist/debug'
     },
     nodeRequire: nodeRequire
 });
@@ -84,4 +84,3 @@ requirejs(['blob/BlobClient', 'minimatch'], function (BlobClient, minimatch) {
         putFile(files[i]);
     }
 });
-

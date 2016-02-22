@@ -1,5 +1,5 @@
 @import url("webgme_bootstrap_overrides.css");
-@import url("jquery/jquery-ui-1.10.4.css");
+@import url("jquery/jquery-ui-1.10.4.min.css");
 @import url("jquery/jquery.layout.css");
 @import url("jquery/jquery.layout.webgme.css");
 @import url("jquery/jquery.dataTables.bootstrapped.css");

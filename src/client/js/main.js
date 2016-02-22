@@ -10,7 +10,6 @@ var DEBUG = false,
     _jqueryVersion = '2.1.0',
     _jqueryUIVersion = '1.10.4',
     _bootstrapVersion = '3.1.1',
-    _angularVersion = '1.3.15',
     WebGMEGlobal = WebGMEGlobal || {};
 
 
@@ -21,7 +20,7 @@ require.config({
     //TODO paths should be fixed as the rules collide with each other
     map: {
         '*': {
-            css: 'lib/require/require-css/css',
+            css: 'lib/require/require-css/css' + ( DEBUG ? '' : '.min' ),
             text: 'lib/require/require-text/text',
             'globcss':'anything/../css'
         }
@@ -33,21 +32,21 @@ require.config({
         domReady: 'lib/require/require-domready/domReady',
 
         //jQuery and stuff
-        jquery: 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '.min' : '' ),
-        'jquery-ui': 'lib/jquery/jquery-ui-' + _jqueryUIVersion + ( DEBUG ? '.min' : '' ),
+        jquery: 'lib/jquery/jquery-' + _jqueryVersion + ( DEBUG ? '' : '.min' ),
+        'jquery-ui': 'lib/jquery/jquery-ui-' + _jqueryUIVersion + ( DEBUG ? '' : '.min' ),
         'jquery-ui-iPad': 'lib/jquery/jquery.ui.ipad',
-        'jquery-dataTables': 'lib/jquery/jquery.dataTables.min',
+        'jquery-dataTables': 'lib/jquery/jquery.dataTables' + ( DEBUG ? '' : '.min' ),
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
-        'jquery-spectrum': 'lib/jquery/jquery.spectrum',
+        'jquery-spectrum': 'lib/jquery/jquery.spectrum' + ( DEBUG ? '' : '.min' ),
 
         //Bootsrap stuff
-        bootstrap: 'lib/bootstrap/' + _bootstrapVersion + '/js/bootstrap' + ( DEBUG ? '.min' : '' ),
+        bootstrap: 'bower_components/bootstrap/dist/js/bootstrap' + ( DEBUG ? '' : '.min' ),
 
         //Other modules
-        AutoRouterActionApplier: 'lib/autorouter/action-applier',
-        underscore: 'lib/underscore/underscore-min',
-        backbone: 'lib/backbone/backbone.min',
-        d3: 'lib/d3/d3.v3.min',
+        AutoRouterActionApplier: 'lib/autorouter/action-applier' + ( DEBUG ? '' : '.min' ),
+        underscore: 'bower_components/underscore/underscore-min',
+        backbone: 'bower_components/backbone/backbone',
+        d3: 'bower_components/d3/d3' + ( DEBUG ? '' : '.min' ),
         jscolor: 'lib/jscolor/jscolor',
 
         //RaphaelJS family
@@ -66,9 +65,9 @@ require.config({
         panel: '/panel',
 
         //node_modules
-        jszip: 'lib/jszip/jszip',
+        jszip: 'bower_components/jszip/dist/jszip' + ( DEBUG ? '' : '.min' ),
         superagent: 'lib/superagent/superagent',
-        debug: 'lib/debug/debug',
+        debug: 'bower_components/visionmedia-debug/dist/debug',
         q: 'lib/q/q',
 
 
@@ -76,20 +75,20 @@ require.config({
         'jquery-csszoom': 'lib/jquery/jquery.csszoom',
 
 
-        moment: 'lib/moment/moment.min',
+        moment: 'bower_components/moment/min/moment.min',
 
         urlparse:'lib/purl/purl.min',
 
         // Angular and modules
-        angular: 'lib/angular/angular-' + _angularVersion + '/angular' + ( DEBUG ? '.min' : '' ),
-        'angular-route': 'lib/angular/angular-' + _angularVersion + '/angular-route' + ( DEBUG ? '.min' : '' ),
+        angular: 'bower_components/angular/angular' + ( DEBUG ? '' : '.min' ),
+        //'angular-route': 'lib/angular/angular-' + _angularVersion + '/angular-route' + ( DEBUG ? '' : '.min' ),
         'angular-route-styles': 'lib/angular/angular-route-styles/route-styles',
-        'angular-ui-bootstrap': 'lib/angular/ui-bootstrap/ui-bootstrap-tpls-0.11.0.min'
+        'angular-ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls.min'
     },
 
     shim: {
 
-        'angular-route': ['angular'],
+        // 'angular-route': ['angular'],
         'angular-route-styles': ['angular'],
         'angular-ui-bootstrap': ['angular'],
 
@@ -101,8 +100,8 @@ require.config({
 
         bootstrap: [
             'jquery',
-            'css!lib/bootstrap/' + _bootstrapVersion + '/css/bootstrap.min.css',
-            'css!lib/bootstrap/' + _bootstrapVersion + '/css/bootstrap-theme.min.css'
+            'css!bower_components/bootstrap/dist/css/bootstrap.min.css',
+            'css!bower_components/bootstrap/dist/css/bootstrap-theme.min.css'
         ],
 
         backbone: ['underscore'],

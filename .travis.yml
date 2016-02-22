@@ -15,6 +15,7 @@ addons:
 cache:
   directories:
     - node_modules
+    - src/client/bower_components
 
 # git:
 #   depth: 5
@@ -25,8 +26,7 @@ node_js:
 
 env:
   - TEST_BROWSER=true
-  - TEST_FOLDER="test/addon test/plugin" RECURSIVE=true
-  - TEST_FOLDER="test/bin test/config test/common test/issue test/seeds" RECURSIVE=true
+  - TEST_FOLDER="test/addon test/bin test/config test/common test/issue test/plugin test/seeds" RECURSIVE=true
   - TEST_FOLDER=test/server RECURSIVE=true
 
 before_script:
