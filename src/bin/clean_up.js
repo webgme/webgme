@@ -120,10 +120,12 @@ function cleanUp(options) {
         })
         .then(function (results) {
             var deletions = [],
+                remove = 0,
                 keep = 0;
             results.forEach(function (result) {
                 if (result.remove === true) {
-                    logger.info('Delete:', result.projectId);
+                    logger.info('To remove:', result.projectId);
+                    remove += 1;
                     if (params.del === true) {
                         deletions.push(storage.deleteProject({
                             projectId: result.projectId,
@@ -146,11 +148,10 @@ function cleanUp(options) {
                     }
                 } else {
                     keep += 1;
-
                 }
             });
 
-            logger.info('Will keep', keep, 'projects.');
+            logger.info('Remove', remove, 'out of', keep + remove);
 
             return Q.all(deletions);
         })
@@ -159,13 +160,15 @@ function cleanUp(options) {
             results.forEach(function (res) {
                 if (res.removed === true) {
                     cnt += 1;
-                    logger.info('Removed', res.projectId);
+                    logger.info('Removed:', res.projectId);
                 } else {
                     logger.error('Failed to remove ' + res.projectId, res.err.stack);
                 }
             });
 
-            logger.info('Removed', cnt, 'projects!');
+            if (params.del === true) {
+                logger.info('Removed', cnt, 'project(s).');
+            }
         })
         .catch(function (err_) {
             err = err_;
@@ -196,14 +199,18 @@ if (require.main === module) {
         .option('-c, --commits [number]', 'Maximum number of commits of a project to delete [1].', 1)
         .option('-b, --branches [number]', 'Maximum number of branches of a project to delete [1].', 1)
         .option('-r, --regex [string]', 'Project names must match the regexp [.*].', '.*')
-        .option('-u, --username [string]', 'the user that will remove the projects [guest account]')
+        .option('-u, --username [string]', 'The user account being used. [guest account]')
         .on('--help', function () {
+            console.log('Use this script to delete projects matching the given criteria. Since the script uses ' +
+            'the storage API including authorization, the given user must have delete access to the projects.');
+            console.log();
             console.log('  Examples:');
             console.log();
-            console.log('    $ node clean_up.js -l');
-            console.log('    $ node clean_up.js -u demo -c 5 -r ^demo_');
-            console.log('    $ node clean_up.js -r ^startsWith');
-            console.log('    $ node clean_up.js -t 3 -r contains');
+            console.log('    $ node clean_up.js');
+            console.log('    $ node clean_up.js --list');
+            console.log('    $ node clean_up.js --username demo --commits 5 --regex ^demo_ --del');
+            console.log('    $ node clean_up.js --regex ^startsWith');
+            console.log('    $ node clean_up.js --daysAgo 3 --regex contains --branches 2');
         })
         .parse(process.argv);
 
