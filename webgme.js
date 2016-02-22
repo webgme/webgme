@@ -140,6 +140,11 @@ module.exports = {
 
         return deferred.promise.nodeify(callback);
     },
+    getGmeConfig: function () {
+        var gmeConfig = require(path.join(process.cwd(), 'config'));
+        addToRequireJsPaths(gmeConfig);
+        return gmeConfig;
+    },
     core: requirejs('common/core/core'),
     serializer: requirejs('common/core/users/serialization'),
     canon: requirejs('common/util/canon'),
