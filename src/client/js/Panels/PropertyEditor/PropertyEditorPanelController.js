@@ -172,7 +172,6 @@ define(['js/logger',
             return propList;
         }
 
-
         //get all attributes
         //get all registry elements
         i = selectionLength;
@@ -425,7 +424,7 @@ define(['js/logger',
             len = attrNames.length;
 
         while (--len >= 0) {
-            result[attrNames[len]] = node.getAttribute(attrNames[len]) || "";
+            result[attrNames[len]] = node.getAttribute(attrNames[len]) || '';
         }
 
         return util.flattenObject(result);

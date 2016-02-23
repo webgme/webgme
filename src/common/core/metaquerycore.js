@@ -112,10 +112,10 @@ define([
                 // and we have to initialize the counters
                 keys = Object.keys(rules);
                 for (i = 0; i < keys.length; i += 1) {
-                    if (!metaNodes[keys[i]]) {
-                        delete rules[keys[i]];
-                    } else {
+                    if (metaNodes[keys[i]]) {
                         typeCounters[keys[i]] = 0;
+                    } else {
+                        delete rules[keys[i]];
                     }
                 }
 
@@ -136,7 +136,7 @@ define([
                             rules[keys[j]].max > -1 &&
                             rules[keys[j]].max <= typeCounters[keys[j]] &&
                             innerCore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
-                            validNodes.splice(i, 1);
+                            validNodes.splice(i, 1); //FIXME slow, use only push instead
                             break;
                         }
                     }
@@ -245,7 +245,7 @@ define([
                             rules[keys[j]].max > -1 &&
                             rules[keys[j]].max <= typeCounters[keys[j]] &&
                             innerCore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
-                            validNodes.splice(i, 1);
+                            validNodes.splice(i, 1); //FIXME slow, use only push instea
                             break;
                         }
                     }

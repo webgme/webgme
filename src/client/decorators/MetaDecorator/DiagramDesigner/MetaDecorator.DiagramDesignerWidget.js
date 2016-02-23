@@ -610,7 +610,8 @@ define([
                 len: LEN
             };
 
-            if (connType && (connType === MetaRelations.META_RELATIONS.INHERITANCE ||
+            if (connType &&
+                (connType === MetaRelations.META_RELATIONS.INHERITANCE ||
                 connType === MetaRelations.META_RELATIONS.MIXIN)) {
                 //if the connection is inheritance
                 //it can be NORTH only if source

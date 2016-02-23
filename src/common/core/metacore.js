@@ -244,6 +244,7 @@ define([
                 i,
                 validPointerNames = [],
                 metaPointerNode, max;
+
             for (i = 0; i < validNames.length; i++) {
                 metaPointerNode = getMetaPointerNode(node, validNames[i]);
                 max = self.getOwnAttribute(metaPointerNode, CONSTANTS.SET_ITEMS_MAX);

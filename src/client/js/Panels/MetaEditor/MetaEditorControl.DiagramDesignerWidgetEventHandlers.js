@@ -119,6 +119,8 @@ define(['js/logger',
                             }
                         );
                     }
+                } else {
+                    self.logger.error('cannot edit base of an unknown node [' + sourceId + ']');
                 }
                 return;
             } else if (self._connType === MetaRelations.META_RELATIONS.MIXIN) {
@@ -127,6 +129,8 @@ define(['js/logger',
                     mixinCheckResult = node.canSetAsMixin(targetId);
 
                     if (mixinCheckResult.isOk === false) {
+                        self.logger.warn('cannot set [' + targetId + '] as mixin for [' + sourceId + ']',
+                            mixinCheckResult);
                         dialog.alert('Invalid mixin target',
                             mixinCheckResult.reason,
                             function () {
@@ -134,6 +138,8 @@ define(['js/logger',
                             });
                         return;
                     }
+                } else {
+                    self.logger.error('cannot edit mixin of an unknown node [' + sourceId + ']');
                 }
             }
 
@@ -492,8 +498,6 @@ define(['js/logger',
                 self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, false);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
                 self._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
-            } else if (connDesc.type === MetaRelations.META_RELATIONS.MIXIN) {
-                self._deleteMixinRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.MIXIN) {
                 self._deleteMixinRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.SET) {

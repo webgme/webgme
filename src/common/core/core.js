@@ -1151,7 +1151,7 @@ define([
          * Returns the list of the META defined aspect names of the node that were specifically defined for the node.
          * @param {module:Core~Node} node - the node in question.
          *
-         * @return {string[]} The function returns the aspect names that were defined for the node.
+         * @return {string[]} The function returns the aspect names that are specifically defined for the node.
          *
          * @func
          */
@@ -1591,7 +1591,7 @@ define([
          *
          * @param {module:Core~Node} node - the node in question.
          *
-         * @return {Object<string, module:Core~Node>} The dictionary of the mixin nodes keyed  by their paths.
+         * @return {Object<string, module:Core~Node>} The dictionary of the mixin nodes keyed by their paths.
          *
          * @func
          */
@@ -1602,7 +1602,7 @@ define([
          *
          * @param {module:Core~Node} node - the node in question.
          *
-         * @return {Object<string, module:Core~Node>} The dictionary of the own mixin nodes keyed  by their paths.
+         * @return {Object<string, module:Core~Node>} The dictionary of the own mixin nodes keyed by their paths.
          *
          * @func
          */

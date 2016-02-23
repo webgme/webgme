@@ -11,18 +11,20 @@ define([], function () {
     function metaStorage() {
         var _core = null,
             _nodes = null,
-            _save = function () {
+            _saveFunc = function () {
             },
             _initialized = false;
+
+        function _save(node, message) {
+            var metaEvent = _core.getRegistry(node, '_meta_event_') || 0;
+            _core.setRegistry(node, '_meta_event_', metaEvent + 1);
+            _saveFunc(message);
+        }
 
         function initialize(core, nodes, save) {
             _core = core;
             _nodes = nodes;
-            _save = function (node, message) {
-                var metaEvent = _core.getRegistry(node, '_meta_event_') || 0;
-                _core.setRegistry(node, '_meta_event_', metaEvent + 1);
-                save(message);
-            };
+            _saveFunc = save;
             _initialized = true;
         }
 
@@ -228,7 +230,7 @@ define([], function () {
 
         function hasOwnMetaRules(path) {
             var node = _nodes[path],
-                ownMeta, i;
+                ownMeta, key;
 
             if (node) {
                 ownMeta = _core.getOwnJsonMeta(node);
@@ -239,16 +241,16 @@ define([], function () {
                 }
 
                 //pointers
-                for (i in ownMeta.pointers || {}) {
+                for (key in ownMeta.pointers || {}) {
                     return true;
                 }
 
                 //attributes
-                for (i in ownMeta.attributes || {}) {
+                for (key in ownMeta.attributes || {}) {
                     return true;
                 }
                 //aspects
-                for (i in ownMeta.aspects || {}) {
+                for (key in ownMeta.aspects || {}) {
                     return true;
                 }
 

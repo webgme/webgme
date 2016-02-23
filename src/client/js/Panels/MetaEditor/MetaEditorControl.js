@@ -428,6 +428,7 @@ define(['js/logger',
         var componentID,
             idx,
             len,
+            i,
             otherEnd,
             pointerName,
             aConns,
@@ -462,9 +463,8 @@ define(['js/logger',
             }
 
             //MIXINS
-            len = this._nodeMixins[gmeID].length;
-            for (len = 0; len < this._nodeMixins[gmeID].length; len += 1) {
-                this._removeConnection(gmeID, this._nodeMixins[gmeID][len], MetaRelations.META_RELATIONS.MIXIN);
+            for (i = 0; i < this._nodeMixins[gmeID].length; i += 1) {
+                this._removeConnection(gmeID, this._nodeMixins[gmeID][i], MetaRelations.META_RELATIONS.MIXIN);
             }
 
             //POINTER LISTS
@@ -1055,7 +1055,9 @@ define(['js/logger',
             newMixins = node.getMixinPaths(),
             i;
 
-        //if there was a valid old that's different than the current, delete the connection representing the old
+        self.logger.debug('processing mixins for [' + gmeID + ']');
+
+        // If there was a valid old that's different than the current, delete the connection representing the old.
         oldMixins = this._nodeMixins[gmeID] || [];
 
         for (i = 0; i < oldMixins.length; i += 1) {
@@ -1299,6 +1301,9 @@ define(['js/logger',
 
         if (newBaseNode && objectNode) {
             this._client.addMixin(objectId, newMixinId);
+        } else {
+            self.logger.error('cannot set [' + newMixinId + '] as mixin for [' + objectId +
+                '] because not all node are loaded');
         }
     };
 
@@ -1309,6 +1314,9 @@ define(['js/logger',
 
         if (newBaseNode && objectNode) {
             this._client.delMixin(objectId, mixinToRemoveId);
+        } else {
+            self.logger.error('cannot remove [' + newMixinId + '] mixin from [' + objectId +
+                '] because not all node are loaded');
         }
     };
     /****************************************************************************/
@@ -1321,19 +1329,19 @@ define(['js/logger',
     MetaEditorControl.prototype._initFilterPanel = function () {
         var filterIcon;
 
-        filterIcon = MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT);
+        filterIcon = MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.CONTAINMENT);
         this.diagramDesigner.addFilterItem('Containment', MetaRelations.META_RELATIONS.CONTAINMENT, filterIcon);
 
-        filterIcon = MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTER);
+        filterIcon = MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.POINTER);
         this.diagramDesigner.addFilterItem('Pointer', MetaRelations.META_RELATIONS.POINTER, filterIcon);
 
-        filterIcon = MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE);
+        filterIcon = MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.INHERITANCE);
         this.diagramDesigner.addFilterItem('Inheritance', MetaRelations.META_RELATIONS.INHERITANCE, filterIcon);
 
-        filterIcon = MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.MIXIN);
+        filterIcon = MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.MIXIN);
         this.diagramDesigner.addFilterItem('Mixin', MetaRelations.META_RELATIONS.MIXIN, filterIcon);
 
-        filterIcon = MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.SET);
+        filterIcon = MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.SET);
         this.diagramDesigner.addFilterItem('Set', MetaRelations.META_RELATIONS.SET, filterIcon);
     };
 
@@ -1652,35 +1660,35 @@ define(['js/logger',
             title: 'Containment',
             selected: true,
             data: {connType: MetaRelations.META_RELATIONS.CONTAINMENT},
-            icon: MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT)
+            icon: MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.CONTAINMENT)
         });
 
         this._radioButtonGroupMetaRelationType.addButton({
             title: 'Inheritance',
             selected: false,
             data: {connType: MetaRelations.META_RELATIONS.INHERITANCE},
-            icon: MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)
+            icon: MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.INHERITANCE)
         });
 
         this._radioButtonGroupMetaRelationType.addButton({
             title: 'Mixin',
             selected: false,
             data: {connType: MetaRelations.META_RELATIONS.MIXIN},
-            icon: MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.MIXIN)
+            icon: MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.MIXIN)
         });
 
         this._radioButtonGroupMetaRelationType.addButton({
             title: 'Pointer',
             selected: false,
             data: {connType: MetaRelations.META_RELATIONS.POINTER},
-            icon: MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTER)
+            icon: MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.POINTER)
         });
 
         this._radioButtonGroupMetaRelationType.addButton({
             title: 'Set',
             selected: false,
             data: {connType: MetaRelations.META_RELATIONS.SET},
-            icon: MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.SET)
+            icon: MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.SET)
         });
 
         /************** END OF - CREATE META RELATION CONNECTION TYPES *****************/

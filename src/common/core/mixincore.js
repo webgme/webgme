@@ -86,12 +86,20 @@ define([
             }
         }
 
-        function extendUniqueKeyedObject(base, extension) {
-            for (var i in extension) {
-                if (!base[i]) {
-                    base[i] = extension[i];
+        function getExtendedUniqueKeyedObject(base, extension) {
+            var extended = {},
+                key;
+            for (key in base) {
+                extended[key] = base[key];
+            }
+
+            for (key in extension) {
+                if (!base[key]) {
+                    extended[key] = extension[key];
                 }
             }
+
+            return extended;
         }
 
         function getValidNames(node, getter, alreadyVisited) {
@@ -343,20 +351,20 @@ define([
 
             //attributes
             names = self.getValidAttributeNames(node);
-            for (i = 0; i < names.length; i++) {
+            for (i = 0; i < names.length; i += 1) {
                 meta.attributes[names[i]] = self.getAttributeMeta(node, names[i]);
             }
 
             //pointers
             names = self.getValidPointerNames(node);
-            for (i = 0; i < names.length; i++) {
+            for (i = 0; i < names.length; i += 1) {
                 meta.pointers[names[i]] = self.getPointerMeta(node, names[i]);
                 convertRuleToItemizedArraySet(meta.pointers[names[i]]);
             }
 
             //sets
             names = self.getValidSetNames(node);
-            for (i = 0; i < names.length; i++) {
+            for (i = 0; i < names.length; i += 1) {
                 meta.pointers[names[i]] = self.getPointerMeta(node, names[i]);
                 convertRuleToItemizedArraySet(meta.pointers[names[i]]);
             }
@@ -364,13 +372,13 @@ define([
             //aspects
             names = self.getValidAspectNames(node);
 
-            for (i = 0; i < names.length; i++) {
+            for (i = 0; i < names.length; i += 1) {
                 meta.aspects[names[i]] = self.getAspectMeta(node, names[i]);
             }
 
             //constraints
             names = self.getConstraintNames(node);
-            for (i = 0; i < names.length; i++) {
+            for (i = 0; i < names.length; i += 1) {
                 meta.constraints[names[i]] = self.getConstraint(node, names[i]);
             }
 
@@ -399,7 +407,7 @@ define([
                 i;
 
             for (i = 0; i < ruleHolders.length; i += 1) {
-                extendUniqueKeyedObject(childrenMeta, innerCore.getChildrenMeta(ruleHolders[i]));
+                childrenMeta = getExtendedUniqueKeyedObject(childrenMeta, innerCore.getChildrenMeta(ruleHolders[i]));
             }
 
             if (Object.keys(childrenMeta).length === 0) {
@@ -419,7 +427,7 @@ define([
             }
 
             for (i = 0; i < ruleHolders.length; i += 1) {
-                extendUniqueKeyedObject(pointerMeta, innerCore.getPointerMeta(ruleHolders[i], name));
+                pointerMeta = getExtendedUniqueKeyedObject(pointerMeta, innerCore.getPointerMeta(ruleHolders[i], name));
             }
             return pointerMeta;
         };
@@ -484,9 +492,12 @@ define([
                 path,
                 i, j, k;
 
+            logger.debug('getMixinErrors(' + ownName + ')');
+
             //mixin is missing from meta
             for (i = 0; i < mixinPaths.length; i += 1) {
                 if (!allMetaNodes[mixinPaths[i]]) {
+                    logger.error('mixin node is missing from Meta [' + mixinPaths[i] + ']');
                     errors.push({
                         severity: 'error',
                         nodeName: ownName,
@@ -514,9 +525,11 @@ define([
                 for (j = 0; j < keys.length; j += 1) {
                     if (ownKeys.indexOf(keys[j]) === -1) {
                         if (definitions[keys[j]]) {
+                            logger.warn('colliding attribute (' + keys[j] + ') definition [' +
+                                definitions[keys[j]].name + ']vs[' + name + ']');
                             errors.push({
                                 severity: 'warning',
-                                type: CONSTANTS.MIXIN_ERROR_TYPE.ATTR_COLLISION,
+                                type: CONSTANTS.MIXIN_ERROR_TYPE.ATTRIBUTE_COLLISION,
                                 nodeName: ownName,
                                 ruleName: keys[j],
                                 collisionPaths: [definitions[keys[j]].path, path],
@@ -554,9 +567,11 @@ define([
                             } else {
                                 targetInfoTxt = '\'' + keys[j] + '\'';
                             }
+                            logger.warn('colliding child (' + keys[j] + ') definition [' +
+                                definitions[keys[j]].name + ']vs[' + name + ']');
                             errors.push({
                                 severity: 'warning',
-                                type: CONSTANTS.MIXIN_ERROR_TYPE.CONT_COLLISION,
+                                type: CONSTANTS.MIXIN_ERROR_TYPE.CONTAINMENT_COLLISION,
                                 nodeName: ownName,
                                 targetInfo: keys[j],
                                 targetNode: targetNode,
@@ -595,9 +610,11 @@ define([
                                 } else {
                                     targetInfoTxt = '\'' + keys[k] + '\'';
                                 }
+                                logger.warn('colliding pointer (' + names[i] + ') target (' + keys[k] +
+                                    ') definition [' + definitions[keys[k]].name + ']vs[' + name + ']');
                                 errors.push({
                                     severity: 'warning',
-                                    type: CONSTANTS.MIXIN_ERROR_TYPE.PTR_COLLISION,
+                                    type: CONSTANTS.MIXIN_ERROR_TYPE.POINTER_COLLISION,
                                     nodeName: ownName,
                                     ruleName: names[i],
                                     targetInfo: keys[k],
@@ -639,6 +656,8 @@ define([
                                 } else {
                                     targetInfoTxt = '\'' + keys[k] + '\'';
                                 }
+                                logger.warn('colliding set (' + names[i] + ') member (' + keys[k] +
+                                    ') definition [' + definitions[keys[k]].name + ']vs[' + name + ']');
                                 errors.push({
                                     severity: 'warning',
                                     type: CONSTANTS.MIXIN_ERROR_TYPE.SET_COLLISION,
@@ -675,9 +694,11 @@ define([
                 for (j = 0; j < keys.length; j += 1) {
                     if (ownKeys.indexOf(keys[j]) === -1) {
                         if (definitions[keys[j]]) {
+                            logger.warn('colliding aspect (' + keys[j] + ') definition [' +
+                                definitions[keys[j]].name + ']vs[' + name + ']');
                             errors.push({
                                 severity: 'warning',
-                                type: CONSTANTS.MIXIN_ERROR_TYPE.ASP_COLLISION,
+                                type: CONSTANTS.MIXIN_ERROR_TYPE.ASPECT_COLLISION,
                                 nodeName: ownName,
                                 ruleName: keys[j],
                                 collisionPaths: [definitions[keys[j]].path, path],
@@ -706,9 +727,11 @@ define([
                 for (j = 0; j < keys.length; j += 1) {
                     if (ownKeys.indexOf(keys[j]) === -1) {
                         if (definitions[keys[j]]) {
+                            logger.warn('colliding constraint (' + keys[j] + ') definition [' +
+                                definitions[keys[j]].name + ']vs[' + name + ']');
                             errors.push({
                                 severity: 'warning',
-                                type: CONSTANTS.MIXIN_ERROR_TYPE.CONST_COLLISION,
+                                type: CONSTANTS.MIXIN_ERROR_TYPE.CONSTRAINT_COLLISION,
                                 nodeName: ownName,
                                 ruleName: keys[j],
                                 collisionPaths: [definitions[keys[j]].path, path],
@@ -724,6 +747,7 @@ define([
                 }
             }
 
+            logger.debug('getMixinErrors(' + ownName + ') finished');
             return errors;
         };
 

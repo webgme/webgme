@@ -7,9 +7,10 @@ var testFixture = require('../_globals.js'),
     PROJECT_FILE = 'seeds/ActivePanels.json',
     jsonPatcher = testFixture.requirejs('common/util/jsonPatcher'),
     getPatchObject = testFixture.requirejs('common/storage/util').getPatchObject,
-    serializer = testFixture.requirejs('common/core/users/serialization');
-    //"C:\\Users\\Zsolt\\Downloads\\Nagx3.json"
-    
+    serializer = testFixture.requirejs('common/core/users/serialization'),
+    MetaUser = testFixture.requirejs('common/core/users/meta');
+//"C:\\Users\\Zsolt\\Downloads\\Nagx3.json"
+
 describe.skip('Core Performance test', function () {
     'use strict';
 
@@ -266,14 +267,47 @@ describe.skip('Core Performance test', function () {
                 .nodeify(done);
         });
 
-        it('should export quickly',function(done){
+        it('should export quickly', function (done) {
             this.timeout(60000);
             core.loadRoot(rootHash)
-                .then(function(root){
-                    return Q.nfcall(serializer.export,core,root);
+                .then(function (root) {
+                    return Q.nfcall(serializer.export, core, root);
                 })
-                .then(function(jsonProject){
+                .then(function (jsonProject) {
                     expect(jsonProject.nodes['8e16e5dd-8137-66c3-1d08-3f331a686282']).not.to.equal(undefined);
+                })
+                .nodeify(done);
+        });
+
+        it('should calculate jsonMeta information quickly', function (done) {
+            core.loadRoot(rootHash)
+                .then(function (root) {
+                    var allMetaNodes = core.getAllMetaNodes(root),
+                        i,
+                        meta,
+                        metaUser = new MetaUser();
+
+                    metaUser.initialize(core, allMetaNodes, function () {
+                    });
+
+                    console.time('getJsonMeta');
+                    for (i in allMetaNodes) {
+                        meta = core.getJsonMeta(allMetaNodes[i]);
+                    }
+                    console.timeEnd('getJsonMeta');
+
+                    console.time('getOwnJsonMeta');
+                    for (i in allMetaNodes) {
+                        meta = core.getOwnJsonMeta(allMetaNodes[i]);
+                    }
+                    console.timeEnd('getOwnJsonMeta');
+
+                    console.time('getMeta');
+                    for (i in allMetaNodes) {
+                        meta = metaUser.getMeta(i);
+                    }
+                    console.timeEnd('getMeta');
+
                 })
                 .nodeify(done);
         });

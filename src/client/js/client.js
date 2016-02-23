@@ -228,22 +228,22 @@ define([
 
         function checkMixinErrors(core, rootNode) {
             var metaNodes = core.getAllMetaNodes(rootNode),
-                i, j,
+                i, key,
                 notifications = {},
                 notificationKeys = [],
                 errors;
 
-            for (i in metaNodes) {
-                errors = core.getMixinErrors(metaNodes[i]);
+            for (key in metaNodes) {
+                errors = core.getMixinErrors(metaNodes[key]);
 
-                for (j = 0; j < errors.length; j += 1) {
-                    notifications[errors[j].message] = {
+                for (i = 0; i < errors.length; i += 1) {
+                    notifications[errors[i].message] = {
                         type: 'META',
-                        severity: errors[j].severity,
-                        message: errors[j].message,
-                        hint: errors[j].hint
+                        severity: errors[i].severity,
+                        message: errors[i].message,
+                        hint: errors[i].hint
                     };
-                    notificationKeys.push(errors[j].message);
+                    notificationKeys.push(errors[i].message);
                 }
             }
 

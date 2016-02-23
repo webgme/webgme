@@ -1337,16 +1337,16 @@ define(['js/logger',
     CrosscutController.prototype._initFilterPanel = function () {
         var filterIcon;
 
-        filterIcon = MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT);
+        filterIcon = MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.CONTAINMENT);
         this._widget.addFilterItem('Containment', MetaRelations.META_RELATIONS.CONTAINMENT, filterIcon);
 
-        filterIcon = MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTER);
+        filterIcon = MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.POINTER);
         this._widget.addFilterItem('Pointer', MetaRelations.META_RELATIONS.POINTER, filterIcon);
 
-        filterIcon = MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE);
+        filterIcon = MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.INHERITANCE);
         this._widget.addFilterItem('Inheritance', MetaRelations.META_RELATIONS.INHERITANCE, filterIcon);
 
-        filterIcon = MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.SET);
+        filterIcon = MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.SET);
         this._widget.addFilterItem('Set', MetaRelations.META_RELATIONS.SET, filterIcon);
     };
 
