@@ -8,11 +8,11 @@ WebGME require [NodeJS](https://nodejs.org/) and [MongoDB](https://www.mongodb.c
 
 Options to deploy and run WebGME:
 
-1. [webgme-setup-tool](https://github.com/webgme/webgme-setup-tool). This is the preferred way of using webgme as it allows you to:
- * Automatically generate boilerplate code for [extensions](#Extensions) (w/o manual configuration).
+1. [webgme-setup-tool](https://github.com/webgme/webgme-cli). This is the preferred way of using webgme as it allows you to:
+ * Automatically generate boilerplate code for [extensions](#Extensions) (w/o manual configurating paths etc.).
  * Reuse extensions from other users.
  * Publish and share your work with others.
- * As it uses webgme as dependency, updating to newer webgme releases only requires a `npm install`.
+ * As it uses webgme as dependency, updating to newer webgme releases only requires a `npm install webgme` that won't cause any conflicts.
 
 2. For webgme developers, clone this repo.
  * install packages with npm `npm install`
