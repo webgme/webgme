@@ -84,9 +84,9 @@ define(['js/Constants',
     function createButtonIcon(connType) {
         var el = $('<div/>'),
             path,
+            btnSize = 16, //TODO check if it is a possibility that it will be different for any calls
             paper = Raphael(el[0], btnSize, btnSize),
             pathParams = getLineVisualDescriptor(connType),
-            btnSize = 16, //TODO check if it is a possibility that it will be different for any calls
             temp;
 
         if (connType === metaRelations.CONTAINMENT) {
