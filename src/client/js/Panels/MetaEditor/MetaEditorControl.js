@@ -1055,7 +1055,7 @@ define(['js/logger',
             newMixins = node.getMixinPaths(),
             i;
 
-        self.logger.debug('processing mixins for [' + gmeID + ']');
+        this.logger.debug('processing mixins for [' + gmeID + ']');
 
         // If there was a valid old that's different than the current, delete the connection representing the old.
         oldMixins = this._nodeMixins[gmeID] || [];
@@ -1302,7 +1302,7 @@ define(['js/logger',
         if (newBaseNode && objectNode) {
             this._client.addMixin(objectId, newMixinId);
         } else {
-            self.logger.error('cannot set [' + newMixinId + '] as mixin for [' + objectId +
+            this.logger.error('cannot set [' + newMixinId + '] as mixin for [' + objectId +
                 '] because not all node are loaded');
         }
     };
@@ -1315,7 +1315,7 @@ define(['js/logger',
         if (newBaseNode && objectNode) {
             this._client.delMixin(objectId, mixinToRemoveId);
         } else {
-            self.logger.error('cannot remove [' + newMixinId + '] mixin from [' + objectId +
+            this.logger.error('cannot remove [' + newMixinId + '] mixin from [' + objectId +
                 '] because not all node are loaded');
         }
     };
