@@ -610,7 +610,9 @@ define([
                 len: LEN
             };
 
-            if (connType && connType === MetaRelations.META_RELATIONS.INHERITANCE) {
+            if (connType &&
+                (connType === MetaRelations.META_RELATIONS.INHERITANCE ||
+                connType === MetaRelations.META_RELATIONS.MIXIN)) {
                 //if the connection is inheritance
                 //it can be NORTH only if source
                 //it can be SOUTH only if destination
@@ -649,17 +651,11 @@ define([
     MetaDecoratorDiagramDesignerWidget.prototype._showMetaTextEditorDialog = function () {
         var client = this._control._client,
             dialog = new MetaTextEditorDialog(),
-            metaObj = client.getMeta(this._metaInfo[CONSTANTS.GME_ID]),
+            gmeId = this._metaInfo[CONSTANTS.GME_ID],
+            metaObj = client.getMeta(gmeId),
             self = this;
 
-        dialog.show(JSON.stringify(metaObj, undefined, 2), function (text) {
-            try {
-                var newMetaObj = JSON.parse(text);
-                client.setMeta(self._metaInfo[CONSTANTS.GME_ID], newMetaObj);
-            } catch (e) {
-                self.logger.error('Saving META failed... Either not JSON object or something else went wrong...');
-            }
-        });
+        dialog.show(client.getNode(gmeId), JSON.stringify(metaObj, undefined, 2));
     };
 
     return MetaDecoratorDiagramDesignerWidget;

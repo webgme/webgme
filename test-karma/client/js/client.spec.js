@@ -1533,7 +1533,7 @@ describe('GME client', function () {
         });
 
         it('should list the names of the defined constraints', function () {
-            expect(clientNode.getConstraintNames()).to.deep.equal(['constraint', 'meta']);
+            expect(clientNode.getConstraintNames()).to.have.members(['constraint', 'meta']);
         });
 
         it('should list the names of the constraints defined on this level of inheritance', function () {
@@ -3209,7 +3209,7 @@ describe('GME client', function () {
 
                     node = client.getNode('/1400778473');
                     expect(node).not.to.equal(null);
-                    expect(node.getConstraintNames()).to.deep.equal(['constraint', 'meta']);
+                    expect(node.getConstraintNames()).to.have.members(['constraint', 'meta']);
                     expect(node.getOwnConstraintNames()).to.empty;
 
                     client.setConstraint('/1400778473', 'myNewConstraint', {
@@ -3263,7 +3263,7 @@ describe('GME client', function () {
 
                     node = client.getNode('/701504349');
                     expect(node).not.to.equal(null);
-                    expect(node.getConstraintNames()).to.deep.equal(['constraint', 'meta']);
+                    expect(node.getConstraintNames()).to.have.members(['constraint', 'meta']);
                     expect(node.getOwnConstraintNames()).to.deep.equal(['constraint']);
 
                     client.delConstraint('/701504349', 'constraint');
@@ -4089,12 +4089,17 @@ describe('GME client', function () {
                     children: {
                         minItems: [],
                         maxItems: [],
-                        items: [],
-                        min: undefined,
-                        max: undefined
+                        items: []
                     },
                     pointers: {},
-                    aspects: {}
+                    aspects: {},
+                    "constraints": {
+                        "meta": {
+                            "script": "function(core, node, callback) {\n    \"use strict\";\n    var error = null,\n        returnValue = {hasViolation:false,message:\"\"},\n        i,\n        neededChekings = 4,\n        meta = core.getJsonMeta(node),\n        typeIndexOfChild = function(typePathsArray,childNode){\n            var index = -1;\n\n            while(childNode && index === -1){\n                index = typePathsArray.indexOf(core.getPath(childNode));\n                childNode = core.getBase(childNode);\n            }\n\n            return index;\n        },\n        checkChildrenRules = function(){\n            var childCount = [],\n                index;\n            core.loadChildren(node,function(err,children){\n                if(err){\n                    returnValue.message += \"error during loading of node\\'s children\\n\";\n                    error = error || err;\n                    return checkingDone();\n                }\n\n                //global count check\n                //min\n                if(meta.children.min && meta.children.min !== -1){\n                    if(children.length < meta.children.min){\n                        returnValue.hasViolation = true;\n                        returnValue.message += \"node hase fewer nodes than needed\\n\";\n                    }\n                }\n                //max\n                if(meta.children.max && meta.children.max !== -1){\n                    if(children.length > meta.children.max){\n                        returnValue.hasViolation = true;\n                        returnValue.message += \"node hase more nodes than allowed\\n\";\n                    }\n                }\n\n                //typedCounts\n                for(i=0;i<meta.children.items.length;i++){\n                    childCount.push(0);\n                }\n                for(i=0;i<children.length;i++){\n                    index = typeIndexOfChild(meta.children.items,children[i]);\n                    if(index === -1 ){\n                        returnValue.hasViolation = true;\n                        returnValue.message += \"child \" + core.getGuid(children[i]) +\" is from prohibited type\\n\";\n                    }\n                    else {\n                        childCount[index]++;\n                    }\n                }\n                for(i=0;i<meta.children.items.length;i++){\n                    //min\n                    if(meta.children.minItems[i] !== -1){\n                        if(meta.children.minItems[i] > childCount[i]){\n                            returnValue.hasViolation = true;\n                            returnValue.message += \"too few type \"+ meta.children.items[i] +\" children\\n\";\n                        }\n                    }\n                    //max\n                    if(meta.children.maxItems[i] !== -1){\n                        if(meta.children.maxItems[i] < childCount[i]){\n                            returnValue.hasViolation = true;\n                            returnValue.message += \"too many type \"+ meta.children.items[i] +\" children\\n\";\n                        }\n                    }\n                }\n                return checkingDone();\n            });\n        },\n        checkPointerRules = function(){\n            //TODO currently there is no quantity check\n            var validNames = core.getValidPointerNames(node),\n                names = core.getPointerNames(node),\n                checkPointer = function(name){\n                    core.loadPointer(node,name,function(err,target){\n                        if(err || !target){\n                            error = error || err;\n                            returnValue.message += \"error during pointer \"+ name +\" load\\n\";\n                            return checkDone();\n                        }\n\n                        if(!core.isValidTargetOf(target,node,name)){\n                            returnValue.hasViolation = true;\n                            returnValue.message += \"target of pointer \"+ name +\" is invalid\\n\";\n                        }\n                        return checkDone();\n                    });\n                },\n                checkDone = function(){\n                    if(--needs === 0){\n                        checkingDone();\n                    }\n                },\n                needs,i;\n            \n            needs = names.length;\n            if(needs > 0){\n                for(i=0;i<names.length;i++){\n                    if(validNames.indexOf(names[i]) === -1){\n                        returnValue.hasViolation = true;\n                        returnValue.message += \" invalid pointer \"+ names[i] +\" has been found\\n\";\n                        checkDone();\n                    } else {\n                        checkPointer(names[i]);\n                    }\n\n                }\n            } else {\n                checkDone();\n            }\n\n        },\n        checkSetRules = function(){\n            //TODO this part is missing yet\n            checkingDone();\n        },\n        checkAttributeRules = function(){\n            var names = core.getAttributeNames(node),\n                validNames = core.getValidAttributeNames(node);\n            for(i=0;i<names.length;i++){\n                if(validNames.indexOf(names[i]) !== -1){\n                    if(!core.isValidAttributeValueOf(node,names[i],core.getAttribute(node,names[i]))){\n                        returnValue.hasViolation = true;\n                        returnValue.message += \"attribute \"+names[i]+\" has invalid value\\n\";\n                    }\n                }\n                else {\n                    returnValue.hasViolation = true;\n                    returnValue.message += \"node has an undefined attribute: \"+names[i];\n                }\n            }\n            checkingDone();\n        },\n        checkingDone = function(){\n            if(--neededChekings === 0){\n                callback(error,returnValue);\n            }\n        };\n\n    checkChildrenRules();\n    checkPointerRules();\n    checkSetRules();\n    checkAttributeRules();\n}",
+                            "priority": 10,
+                            "info": "this constraint will check all the meta rules defined to an object"
+                        }
+                    }
                 });
                 done();
             });
@@ -4107,7 +4112,7 @@ describe('GME client', function () {
                 var metaRules = client.getMeta('/1865460677');
                 //FIXME: this fails on my machine /patrik
 
-                expect(metaRules).to.have.keys('attributes', 'aspects', 'pointers', 'children');
+                expect(metaRules).to.have.keys('attributes', 'aspects', 'pointers', 'children', 'constraints');
                 expect(metaRules.attributes).to.deep.equal({
                     name: {
                         type: 'string'
@@ -4115,20 +4120,14 @@ describe('GME client', function () {
                 });
                 expect(metaRules.pointers).to.deep.equal({});
                 expect(metaRules.aspects).to.deep.equal({
-                    onlyOne: {
-                        items: [
-                            {$ref: '/1730437907'}
-                        ]
-                    }
+                    onlyOne: ['/1730437907']
                 });
-                expect(metaRules.children).to.have.keys('items', 'minItems', 'maxItems', 'min', 'max');
+                expect(metaRules.children).to.include.keys('items', 'minItems', 'maxItems');
                 expect(metaRules.children.min).to.equal(undefined);
                 expect(metaRules.children.max).to.equal(undefined);
                 expect(metaRules.children.maxItems).to.deep.equal([-1, -1]);
                 expect(metaRules.children.minItems).to.deep.equal([-1, -1]);
-                expect(metaRules.children.items).to.have.length(2);
-                expect(metaRules.children.items).to.include({$ref: '/1730437907'});
-                expect(metaRules.children.items).to.include({$ref: '/1687616515'});
+                expect(metaRules.children.items).to.have.members(['/1730437907', '/1687616515']);
                 done();
             });
         });

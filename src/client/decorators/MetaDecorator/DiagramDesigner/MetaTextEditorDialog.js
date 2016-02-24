@@ -19,10 +19,10 @@ define([
 
     };
 
-    MetaTextEditorDialog.prototype.show = function (metaText, saveCallBack) {
+    MetaTextEditorDialog.prototype.show = function (gmeNode, metaText) {
         var self = this;
 
-        this._initDialog(metaText, saveCallBack);
+        this._initDialog(gmeNode, metaText);
 
         this._dialog.modal('show');
 
@@ -38,43 +38,22 @@ define([
         });
     };
 
-    MetaTextEditorDialog.prototype._initDialog = function (metaText, saveCallBack) {
-        var self = this,
-            closeSave;
-
-        closeSave = function () {
-            self._dialog.modal('hide');
-
-            if (saveCallBack) {
-                saveCallBack.call(self, self._codeMirror.getValue());
-            }
-        };
+    MetaTextEditorDialog.prototype._initDialog = function (gmeNode, metaText) {
+        var self = this;
 
         this._dialog = $(metaTextEditorDialogTemplate);
 
-        //get controls
-        this._el = this._dialog.find('.modal-body').first();
+        this._pMeta = this._dialog.find('#pMeta').first();
+        this._pHeader = this._dialog.find('#pHeader').first();
 
-        this._btnSave = this._dialog.find('.btn-save').first();
-
-        this._pMeta = this._el.find('#pMeta').first();
-        this._scriptEditor = this._pMeta.find('div.controls').first();
-
-
-        //click on SAVE button
-        this._btnSave.on('click', function (event) {
-            closeSave();
-
-            event.stopPropagation();
-            event.preventDefault();
-        });
-
-        this._codeMirror = codeMirror(this._scriptEditor[0], {
+        if (this._pHeader[0] && gmeNode) {
+            this._pHeader[0].innerHTML = 'META definition of [' + gmeNode.getAttribute('name') + ']';
+        }
+        this._codeMirror = codeMirror(this._pMeta[0], {
             value: metaText,
             mode: 'javascript'
         });
     };
-
 
     return MetaTextEditorDialog;
 });

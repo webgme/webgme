@@ -346,7 +346,6 @@ define([], function () {
                 state.core.setPointer(state.nodes[id].node, name, to);
             } else {
 
-
                 state.core.setPointer(state.nodes[id].node, name, state.nodes[to].node);
             }
 
@@ -361,7 +360,6 @@ define([], function () {
                 saveRoot(msg);
             }
         }
-
 
         //MGAlike - set functions
         function addMember(path, memberpath, setid, msg) {
@@ -464,6 +462,20 @@ define([], function () {
             }
         }
 
+        function addMixin(nodePath, mixinPath) {
+            if (state.core && state.nodes[nodePath] && typeof state.nodes[nodePath].node === 'object') {
+                state.core.addMixin(state.nodes[nodePath].node, mixinPath);
+                saveRoot('addMixin(' + nodePath + ',' + mixinPath + ')');
+            }
+        }
+
+        function delMixin(nodePath, mixinPath) {
+            if (state.core && state.nodes[nodePath] && typeof state.nodes[nodePath].node === 'object') {
+                state.core.delMixin(state.nodes[nodePath].node, mixinPath);
+                saveRoot('delMixin(' + nodePath + ',' + mixinPath + ')');
+            }
+        }
+
         return {
             setAttributes: setAttributes,
             delAttributes: delAttributes,
@@ -487,6 +499,8 @@ define([], function () {
 
             setBase: setBase,
             delBase: delBase,
+            addMixin: addMixin,
+            delMixin: delMixin
         };
     }
 

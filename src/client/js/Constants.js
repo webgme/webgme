@@ -44,6 +44,7 @@ define([
             PATTERNS: {
                 SOLID: '',
                 DASH: '-',
+                LONGDASH: '- ',
                 DOT: '.',
                 DASH_DOT: '-.',
                 DASH_DOT_DOT: '-..'

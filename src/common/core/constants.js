@@ -39,6 +39,17 @@ define([], function () {
         META_POINTER_PREFIX: '_p_',
         META_ASPECT_PREFIX: '_a_',
 
+        MIXINS_SET: '_mixins',
+        MIXIN_ERROR_TYPE: {
+            MISSING: 'missing',
+            ATTRIBUTE_COLLISION: 'attribute collision',
+            SET_COLLISION: 'set collision',
+            POINTER_COLLISION: 'pointer collision',
+            CONTAINMENT_COLLISION: 'containment collision',
+            ASPECT_COLLISION: 'aspect collision',
+            CONSTRAINT_COLLISION: 'constraint collision'
+        },
+
         MAX_AGE: 3,
         MAX_TICKS: 2000,
         MAX_MUTATE: 30000

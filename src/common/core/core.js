@@ -69,6 +69,38 @@
  * }'
  */
 
+/**
+ * @typedef {object} MixinViolation - An object that has information about a mixin violation in the given node.
+ * @prop {string} [severity] - The severity of the given error ('error','warning').
+ * @prop {string} [type] - 'missing', 'attribute collision', 'set collision',
+ * 'pointer collision', 'containment collision', 'aspect collision', 'constraint collision'
+ * @prop {string|undefined} [ruleName] - The name of the affected rule definition  (if available).
+ * @prop {string|undefined} [targetInfo] - The path of the target of the violation (if available).
+ * @prop {module:Core~Node|undefined} [targetNode] - The target node of the violation (if available).
+ * @prop {string[]} [collisionPaths] - The list of paths of colliding nodes (if any).
+ * @prop {module:Core~Node[]} [collisionNodes] - The colliding mixin nodes (if any).
+ * @prop {string} [message] - The description of the violation.
+ * @prop {string} [hint] - Hint on how to resolve the issue.
+ * @example
+ * '{
+ * 'severity': 'error',
+ * 'type': 'missing',
+ * 'targetInfo': '/E/b',
+ * 'message': '[MyObject]: mixin node \'E/b\' is missing from the Meta',
+ * 'hint': 'Remove mixin or add to the Meta'
+ * }'
+ * @example
+ * '{
+ * 'severity': 'warning',
+ * 'type': 'attribute collision',
+ * 'ruleName': 'value',
+ * 'collisionPaths': ['/E/a','/E/Z'],
+ * 'collisionNodes': [Object,Object],
+ * 'message':'[MyObject]: inherits attribute definition \'value'\ from [TypeA] and [TypeB]',
+ * 'hint': 'Remove one of the mixin relations'
+ * }'
+ */
+
 define([
     'common/core/corerel',
     'common/core/setcore',
@@ -81,7 +113,9 @@ define([
     'common/core/metacore',
     'common/core/coretreeloader',
     'common/core/corediff',
-    'common/core/metacachecore'
+    'common/core/metacachecore',
+    'common/core/mixincore',
+    'common/core/metaquerycore'
 ], function (CoreRel,
              Set,
              Guid,
@@ -93,7 +127,9 @@ define([
              MetaCore,
              TreeLoader,
              CoreDiff,
-             MetaCacheCore) {
+             MetaCacheCore,
+             MixinCore,
+             MetaQueryCore) {
     'use strict';
 
     /**
@@ -113,8 +149,11 @@ define([
         coreLayers.push(Guid);
         coreLayers.push(Constraint);
         coreLayers.push(MetaCore);
-        coreLayers.push(CoreDiff);
         coreLayers.push(MetaCacheCore);
+        coreLayers.push(MixinCore);
+        coreLayers.push(MetaQueryCore);
+        coreLayers.push(CoreDiff);
+
         coreLayers.push(TreeLoader);
 
         if (options.usertype !== 'tasync') {
@@ -832,7 +871,6 @@ define([
          */
         this.setMemberAttribute = core.setMemberAttribute;
 
-
         /**
          * Removes an attribute which represented a property of the given set membership.
          * @param {module:Core~Node} node - the owner of the set.
@@ -1077,6 +1115,16 @@ define([
         this.getValidAttributeNames = core.getValidAttributeNames;
 
         /**
+         * Returns the list of the META defined attribute names of the node that were specifically defined for the node.
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string[]} The function returns the attribute names that are defined specifically for the node.
+         *
+         * @func
+         */
+        this.getOwnValidAttributeNames = core.getOwnValidAttributeNames;
+
+        /**
          * Checks if the given value is of the necessary type, according to the META rules.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the attribute.
@@ -1098,6 +1146,16 @@ define([
          * @func
          */
         this.getValidAspectNames = core.getValidAspectNames;
+
+        /**
+         * Returns the list of the META defined aspect names of the node that were specifically defined for the node.
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string[]} The function returns the aspect names that are specifically defined for the node.
+         *
+         * @func
+         */
+        this.getOwnValidAspectNames = core.getOwnValidAspectNames;
 
         /**
          * Returns the list of valid children types of the given aspect.
@@ -1183,6 +1241,17 @@ define([
          * @func
          */
         this.getValidChildrenPaths = core.getValidChildrenPaths;
+
+        /**
+         * Return a JSON representation of the META rules regarding the valid children of the given node.
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {module:Core~RelationRule} The funciton returns a detailed JSON structure that represents the META
+         * rules regarding the possible children of the node.
+         *
+         * @func
+         */
+        this.getChildrenMeta = core.getChildrenMeta;
 
         /**
          * Sets the given child as a valid children type for the node.
@@ -1286,7 +1355,6 @@ define([
          * @func
          */
         this.setAspectMetaTarget = core.setAspectMetaTarget;
-
 
         /**
          * Removes a valid type from the given aspect of the node.
@@ -1480,6 +1548,117 @@ define([
          * @func
          */
         this.isFullyOverriddenMember = core.isFullyOverriddenMember;
+
+        /**
+         * Checks if the mixins allocated with the node can be used.
+         * Every mixin node should be on the Meta.
+         * Every rule (attribute/pointer/set/aspect/containment/constraint) should be defined only in one mixin.
+         *
+         * @param {module:Core~Node} node - the node to test.
+         *
+         * @return {module:Core~MixinViolation[]} Returns the array of violations. If the array is empty,
+         * there is no violation.
+         *
+         * @func
+         */
+        this.getMixinErrors = core.getMixinErrors;
+
+        /**
+         * Gathers the paths of the mixin nodes associated with the node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string[]} The paths of the mixins in an array.
+         *
+         * @func
+         */
+        this.getMixinPaths = core.getMixinPaths;
+
+        /**
+         * Gathers the paths of the mixin nodes associated with the node
+         * that were defined specifically for the given node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string[]} The paths of the own mixins in an array.
+         *
+         * @func
+         */
+        this.getOwnMixinPaths = core.getOwnMixinPaths;
+
+        /**
+         * Gathers the mixin nodes associated with the node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {Object<string, module:Core~Node>} The dictionary of the mixin nodes keyed by their paths.
+         *
+         * @func
+         */
+        this.getMixinNodes = core.getMixinNodes;
+
+        /**
+         * Gathers the mixin nodes associated with the node that were defined specifically for the given node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {Object<string, module:Core~Node>} The dictionary of the own mixin nodes keyed by their paths.
+         *
+         * @func
+         */
+        this.getOwnMixinNodes = core.getOwnMixinNodes;
+
+        /**
+         * Removes a mixin from the mixin set of the node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} mixinPath - the path of the mixin node.
+         *
+         * @func
+         */
+        this.delMixin = core.delMixin;
+
+        /**
+         * Adds a mixin to the mixin set of the node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} mixinPath - the path of the mixin node.
+         *
+         * @func
+         */
+        this.addMixin = core.addMixin;
+
+        /**
+         * Removes all mixins for a given node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @func
+         */
+        this.clearMixins = core.clearMixins;
+
+        /**
+         * Searches for the closest META node of the node in question and the direct mixins of that node.
+         * @param {module:Core~Node} node - the node in question
+         *
+         * @return {Object<string, module:Core~Node>} Returns the closest Meta node that is a base of the given node
+         * plus it returns all the mixin nodes associated with the base in a path-node dictionary.
+         *
+         * @func
+         */
+        this.getBaseTypes = core.getBaseTypes;
+
+        /**
+         * Checks if the given path can be added as a mixin to the given node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} mixinPath - the path of the mixin node.
+         *
+         * @return {Object} - Returns if the mixin could be added, or the reason why it is not.
+         *
+         * @func
+         */
+        this.canSetAsMixin = core.canSetAsMixin;
     }
 
     return Core;
