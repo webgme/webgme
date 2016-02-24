@@ -38,11 +38,17 @@ define([
 
         function getOrderedMixinList(node) {
             var paths = self.getMixinPaths(node),
-                metaNodes = self.getAllMetaNodes(node),
+                metaNodes,
                 helper = {},
                 orderedList = [],
                 guid,
                 i;
+
+            if (paths.length === 0) {
+                return orderedList;
+            }
+
+            metaNodes = self.getAllMetaNodes(node);
 
             for (i = 0; i < paths.length; i += 1) {
                 if (metaNodes[paths[i]]) {
@@ -104,12 +110,12 @@ define([
 
         function getValidNames(node, getter, alreadyVisited) {
             var base = self.getBase(node),
-                guid = self.getGuid(node),
+                path = self.getPath(node),
                 names,
                 mixins = getOrderedMixinList(node),
                 i;
 
-            if (alreadyVisited.indexOf(guid) !== -1) {
+            if (alreadyVisited[path]) {
                 return [];
             }
 
@@ -120,7 +126,7 @@ define([
             }
 
             extendUniqueArray(names, getter(node));
-            alreadyVisited.push(guid);
+            alreadyVisited[path] = true;
 
             for (i = 0; i < mixins.length; i += 1) {
                 extendUniqueArray(names, getValidNames(mixins[i], getter, alreadyVisited));
@@ -136,12 +142,12 @@ define([
                 ruleHolder = null,
                 i;
 
-            if (alreadyVisited.indexOf(path) !== -1) {
+            if (alreadyVisited[path]) {
                 return null;
             }
 
             //when it comes to rule holder, always the given node's own rule-set is the first
-            alreadyVisited.push(path);
+            alreadyVisited[path] = true;
             if (getter(node).indexOf(name) !== -1) {
                 return node;
             }
@@ -171,12 +177,12 @@ define([
                 ruleHolders = [],
                 i;
 
-            if (alreadyVisited.indexOf(path) !== -1) {
+            if (alreadyVisited[path]) {
                 return [];
             }
 
             //when it comes to rule holder, always the given node's own rule-set is the first
-            alreadyVisited.push(path);
+            alreadyVisited[path] = true;
             if (getter(node).indexOf(name) !== -1) {
                 ruleHolders.push(node);
             }
@@ -193,6 +199,16 @@ define([
             return ruleHolders;
         }
 
+        function getFirstMatchingMeta(node, name, matchFuction, getFunction) {
+            var metaRuleHolder = getFirstMatchingRuleHolder(node, name, matchFuction, {});
+
+            if (metaRuleHolder) {
+                return getFunction(metaRuleHolder, name);
+            }
+
+            return undefined;
+        }
+
         function allValidRelationsNameGetter(node) {
             return innerCore.getOwnValidPointerNames(node).concat(innerCore.getOwnValidSetNames(node));
         }
@@ -205,11 +221,11 @@ define([
             var base, mixins, i,
                 path = self.getPath(node);
 
-            if (alreadyVisited.indexOf(path) !== -1) {
+            if (alreadyVisited[path]) {
                 return false;
             }
 
-            alreadyVisited.push(path);
+            alreadyVisited[path] = true;
 
             if (innerCore.isTypeOf(node, typeNode)) {
                 return true;
@@ -260,14 +276,14 @@ define([
                 return false;
             }
 
-            return isTypeOf(node, typeNode, []);
+            return isTypeOf(node, typeNode, {});
         };
 
         this.isValidChildOf = function (node, parentNode) {
             if (!realNode(node)) {
                 return true;
             }
-            var ruleHolders = getAllMatchingRuleHolders(parentNode, 'containment', containmentGetter, []),
+            var ruleHolders = getAllMatchingRuleHolders(parentNode, 'containment', containmentGetter, {}),
                 i;
 
             for (i = 0; i < ruleHolders.length; i += 1) {
@@ -284,7 +300,7 @@ define([
                 return true;
             }
 
-            var ruleHolders = getAllMatchingRuleHolders(source, name, allValidRelationsNameGetter, []),
+            var ruleHolders = getAllMatchingRuleHolders(source, name, allValidRelationsNameGetter, {}),
                 i;
 
             for (i = 0; i < ruleHolders.length; i += 1) {
@@ -301,7 +317,7 @@ define([
                 return true;
             }
 
-            var ruleHolder = getFirstMatchingRuleHolder(node, name, innerCore.getOwnValidAttributeNames, []);
+            var ruleHolder = getFirstMatchingRuleHolder(node, name, innerCore.getOwnValidAttributeNames, {});
 
             if (ruleHolder) {
                 return innerCore.isValidAttributeValueOf(ruleHolder, name, value);
@@ -311,11 +327,11 @@ define([
         };
 
         this.getValidPointerNames = function (node) {
-            return getValidNames(node, innerCore.getOwnValidPointerNames, []);
+            return getValidNames(node, innerCore.getOwnValidPointerNames, {});
         };
 
         this.getValidSetNames = function (node) {
-            return getValidNames(node, innerCore.getOwnValidSetNames, []);
+            return getValidNames(node, innerCore.getOwnValidSetNames, {});
         };
 
         this.getValidAttributeNames = function (node) {
@@ -323,15 +339,15 @@ define([
                 return [];
             }
 
-            return getValidNames(node, innerCore.getOwnValidAttributeNames, []);
+            return getValidNames(node, innerCore.getOwnValidAttributeNames, {});
         };
 
         this.getValidAspectNames = function (node) {
-            return getValidNames(node, innerCore.getOwnValidAspectNames, []);
+            return getValidNames(node, innerCore.getOwnValidAspectNames, {});
         };
 
         this.getConstraintNames = function (node) {
-            return getValidNames(node, innerCore.getConstraintNames, []);
+            return getValidNames(node, innerCore.getConstraintNames, {});
         };
 
         this.getJsonMeta = function (node) {
@@ -398,11 +414,11 @@ define([
         };
 
         this.getValidChildrenPaths = function (node) {
-            return getValidNames(node, innerCore.getValidChildrenPaths, []);
+            return getValidNames(node, innerCore.getValidChildrenPaths, {});
         };
 
         this.getChildrenMeta = function (node) {
-            var ruleHolders = getAllMatchingRuleHolders(node, 'containment', containmentGetter, []),
+            var ruleHolders = getAllMatchingRuleHolders(node, 'containment', containmentGetter, {}),
                 childrenMeta = {},
                 i;
 
@@ -418,7 +434,7 @@ define([
         };
 
         this.getPointerMeta = function (node, name) {
-            var ruleHolders = getAllMatchingRuleHolders(node, name, allValidRelationsNameGetter, []),
+            var ruleHolders = getAllMatchingRuleHolders(node, name, allValidRelationsNameGetter, {}),
                 i,
                 pointerMeta = {};
 
@@ -437,27 +453,15 @@ define([
                 return innerCore.getValidTargetPaths(getNode, name);
             };
 
-            return getValidNames(node, getTargetPaths, []);
+            return getValidNames(node, getTargetPaths, {});
         };
 
         this.getAttributeMeta = function (node, name) {
-            var ruleHolder = getFirstMatchingRuleHolder(node, name, innerCore.getOwnValidAttributeNames, []);
-
-            if (ruleHolder) {
-                return innerCore.getAttributeMeta(ruleHolder, name);
-            }
-
-            return undefined;
+            return getFirstMatchingMeta(node, name, innerCore.getOwnValidAttributeNames, innerCore.getAttributeMeta);
         };
 
         this.getAspectMeta = function (node, name) {
-            var metaRuleHolder = getFirstMatchingRuleHolder(node, name, innerCore.getOwnValidAspectNames, []);
-
-            if (metaRuleHolder) {
-                return innerCore.getAspectMeta(metaRuleHolder, name);
-            }
-
-            return undefined;
+            return getFirstMatchingMeta(node, name, innerCore.getOwnValidAspectNames, innerCore.getAspectMeta);
         };
 
         this.getSetNames = function (node) {
@@ -473,7 +477,7 @@ define([
 
         //</editor-fold>
 
-        //<editor-fold=Added Functions>
+        //<editor-fold=Added Methods>
 
         this.getMixinErrors = function (node) {
             var errors = [],

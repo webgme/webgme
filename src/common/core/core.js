@@ -1638,7 +1638,7 @@ define([
         this.clearMixins = core.clearMixins;
 
         /**
-         * Searches for the closest META node of the node in question.
+         * Searches for the closest META node of the node in question and the direct mixins of that node.
          * @param {module:Core~Node} node - the node in question
          *
          * @return {Object<string, module:Core~Node>} Returns the closest Meta node that is a base of the given node
@@ -1649,7 +1649,7 @@ define([
         this.getBaseTypes = core.getBaseTypes;
 
         /**
-         * Checks if a node could be added as a mixin to the given node.
+         * Checks if the given path can be added as a mixin to the given node.
          *
          * @param {module:Core~Node} node - the node in question.
          * @param {string} mixinPath - the path of the mixin node.
