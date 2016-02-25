@@ -112,10 +112,11 @@ var path = require('path'),
             port: 8888,
             maxWorkers: 10,
             sessionStore: {
-                type: 'Memory', // Memory, Redis, Mongo, options will be passed to the specified storage
+                type: 'Redis', // Memory, Redis, Mongo, options will be passed to the specified storage
                 // see specific session store documentations for options connect-mongo and connect-redis
                 options: {
                     //url: 'mongodb://127.0.0.1:27017/multi'
+                    url: 'redis:127.0.0.1:6379'
                 },
                 cookieSecret: 'meWebGMEez',
                 cookieKey: 'webgmeSid',
@@ -164,6 +165,12 @@ var path = require('path'),
             },
             serverOptions: {
                 //transports: ['websocket', 'polling']
+            },
+            adapter: {
+                type: 'Redis', // Memory, Redis
+                options: {
+                    uri: '127.0.0.1:6379'
+                },
             }
         },
 

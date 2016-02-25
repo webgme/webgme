@@ -7,6 +7,7 @@
 'use strict';
 
 var io = require('socket.io'),
+    redis = require('socket.io-redis'),
     Q = require('q'),
     COOKIE = require('cookie-parser'),
     URL = requireJS('common/util/url'),
@@ -193,6 +194,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         logger.debug('start');
 
         webSocket = io.listen(server || gmeConfig.server.port, gmeConfig.socketIO.serverOptions);
+
+        if (gmeConfig.socketIO.adapter.type.toLowerCase() === 'redis') {
+            webSocket.adapter(redis(gmeConfig.socketIO.adapter.options.uri));
+        }
 
         logger.debug('listening');
 
