@@ -74,8 +74,9 @@ define(['js/Constants',
                 });
             }
         }
-    };
 
+        this._updateColors();
+    };
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.showSourceConnectors = function (/*params*/) {
