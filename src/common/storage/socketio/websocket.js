@@ -82,6 +82,12 @@ define([
                 self.socket.on('disconnect', function () {
                     logger.debug('Socket got disconnected!');
                     networkHandler(null, CONSTANTS.DISCONNECTED);
+
+                    // When the server is shut-down the skipReconnect is set to false
+                    // create a new socket connect.
+                    if (self.socket.io.skipReconnect === true) {
+                        self.connect(networkHandler);
+                    }
                 });
 
                 self.socket.on(CONSTANTS.PROJECT_DELETED, function (data) {
