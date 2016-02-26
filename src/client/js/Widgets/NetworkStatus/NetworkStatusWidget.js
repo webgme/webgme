@@ -25,6 +25,7 @@ define([
 
         this._client = client;
         this._el = containerEl;
+        this._urlAtDisconnect = '';
 
         this._initializeUI();
 
@@ -52,7 +53,7 @@ define([
             if (value === ITEM_VALUE_CONNECT) {
 
             } else if (value === ITEM_VALUE_REFRESH) {
-                document.location.href = window.location.href;
+                document.location.href = self._urlAtDisconnect;
             }
         };
 
@@ -73,6 +74,7 @@ define([
                 this._modeReconnected();
                 break;
             case CONSTANTS.CLIENT.STORAGE.DISCONNECTED:
+                this._urlAtDisconnect = window.location.href;
                 this._modeDisconnected();
                 break;
             case CONSTANTS.CLIENT.STORAGE.INCOMPATIBLE_CONNECTION:
