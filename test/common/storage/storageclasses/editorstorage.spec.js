@@ -97,6 +97,24 @@ describe('storage storageclasses editorstorage', function () {
                 .then(function (result) {
                     commitHash2 = result.hash;
                 })
+                .then(function () {
+                    return Q.allDone([
+                        importResult.project.createBranch('b1', importResult.commitHash),
+                        importResult.project.createBranch('b2', importResult.commitHash),
+                        importResult.project.createBranch('b3', importResult.commitHash),
+                        importResult.project.createBranch('b4', importResult.commitHash),
+                        importResult.project.createBranch('b5', importResult.commitHash)
+                        ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        importResult.project.setBranchHash('b1', commitHash1, importResult.commitHash),
+                        importResult.project.setBranchHash('b2', commitHash1, importResult.commitHash),
+                        importResult.project.setBranchHash('b3', commitHash1, importResult.commitHash),
+                        importResult.project.setBranchHash('b4', commitHash1, importResult.commitHash),
+                        importResult.project.setBranchHash('b5', commitHash1, importResult.commitHash)
+                        ]);
+                })
                 .nodeify(done);
         });
     });
@@ -172,7 +190,91 @@ describe('storage storageclasses editorstorage', function () {
                 branches = result[1];
                 access = result[2];
 
-                return Q.nfcall(storage.closeBranch, projectName2Id(projectName));
+                return Q.nfcall(storage.closeBranch, projectName2Id(projectName), 'not_open');
+            })
+            .nodeify(done);
+    });
+
+    it('should closeBranch if project is not open', function (done) {
+        Q.nfcall(storage.closeBranch, projectName2Id(projectName), 'master')
+            .nodeify(done);
+    });
+
+    it('should open and close project', function (done) {
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function () {
+                return Q.nfcall(storage.closeProject, projectName2Id(projectName));
+            })
+            .then(function () {
+                return Q.nfcall(storage.closeProject, projectName2Id(projectName));
+            })
+            .nodeify(done);
+    });
+
+    it('should return error if opening same project twice', function (done) {
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function () {
+                return Q.nfcall(storage.openProject, projectName2Id(projectName));
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('project is already open');
+            })
+            .nodeify(done);
+    });
+
+    it('should return error if opening branch with no project open', function (done) {
+        var projectId = projectName2Id(projectName);
+        Q.nfcall(storage.openBranch, projectId, 'master', null, null)
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('project ' + projectId + ' is not opened');
+            })
+            .nodeify(done);
+    });
+
+    it('should return error if opening branch twice', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                function hashUpdateHandler(data, commitQueue, updateQueue, callback) {
+                    callback(null, true);
+                }
+
+                function branchStatusHandler(/*branchStatus, commitQueue, updateQueue*/) {
+
+                }
+
+                return Q.nfcall(storage.openBranch, projectName2Id(projectName), 'master',
+                    hashUpdateHandler, branchStatusHandler);
+            })
+            .then(function () {
+                function hashUpdateHandler(data, commitQueue, updateQueue, callback) {
+                    callback(null, true);
+                }
+
+                function branchStatusHandler(/*branchStatus, commitQueue, updateQueue*/) {
+
+                }
+                return Q.nfcall(storage.openBranch, projectName2Id(projectName), 'master',
+                    hashUpdateHandler, branchStatusHandler);
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Branch is already open');
             })
             .nodeify(done);
     });
@@ -204,6 +306,60 @@ describe('storage storageclasses editorstorage', function () {
             })
             .then(function (hash) {
                 expect(hash).to.equal(importResult.commitHash);
+            })
+            .nodeify(done);
+    });
+
+    it('should return error if forking branch of non open project', function (done) {
+        Q.ninvoke(storage, 'forkBranch', projectName2Id(projectName), 'master', 'forkName', null)
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('project ' + projectName2Id(projectName) + ' is not opened.');
+            })
+            .nodeify(done);
+    });
+
+    it('should return error if forking branch this is not open', function (done) {
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function () {
+                return Q.ninvoke(storage, 'forkBranch', projectName2Id(projectName), 'master', 'forkName_fail', null);
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('branch is not open');
+            })
+            .nodeify(done);
+    });
+
+    it('should return error if forking branch with unknown commit-hash', function (done) {
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function () {
+
+                function hashUpdateHandler(data, commitQueue, updateQueue, callback) {
+                    callback(null, true);
+                }
+
+                function branchStatusHandler(/*branchStatus, commitQueue, updateQueue*/) {
+
+                }
+
+                return Q.nfcall(storage.openBranch, projectName2Id(projectName), 'master',
+                    hashUpdateHandler, branchStatusHandler);
+            })
+            .then(function () {
+                return Q.ninvoke(storage, 'forkBranch', projectName2Id(projectName), 'master', 'forkName_fail2', '#un');
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Could not find specified commitHash');
             })
             .nodeify(done);
     });
@@ -259,6 +415,132 @@ describe('storage storageclasses editorstorage', function () {
             })
             .then(function (result) {
                 expect(typeof result.hash).to.equal('string');
+            })
+            .nodeify(done);
+    });
+
+    it('should setBranchHash w/o open branch', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                return Q.ninvoke(storage, 'setBranchHash', projectName2Id(projectName), 'b1', commitHash2, commitHash1);
+            })
+            .then(function (result) {
+                expect(result.status).to.equal(STORAGE_CONSTANTS.SYNCED);
+            })
+            .nodeify(done);
+    });
+
+    it('should setBranchHash with open branch', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                function hashUpdateHandler(data, commitQueue, updateQueue, callback) {
+                    callback(null, true);
+                }
+
+                function branchStatusHandler(/*branchStatus, commitQueue, updateQueue*/) {
+
+                }
+
+                return Q.nfcall(storage.openBranch, projectName2Id(projectName), 'b2',
+                    hashUpdateHandler, branchStatusHandler);
+            })
+            .then(function () {
+                return Q.ninvoke(storage, 'setBranchHash', projectName2Id(projectName), 'b2', commitHash2, commitHash1);
+            })
+            .then(function (result) {
+                expect(result.status).to.equal(STORAGE_CONSTANTS.SYNCED);
+            })
+            .nodeify(done);
+    });
+
+    it('should makeCommit with no open project', function (done) {
+        Q.ninvoke(storage, 'makeCommit', projectName2Id(projectName), 'b5', [commitHash1], importResult.rootHash,
+            {}, 'commit to non-open project')
+            .then(function (result) {
+                expect(result.status).to.equal(STORAGE_CONSTANTS.SYNCED);
+            })
+            .nodeify(done);
+    });
+
+    it('should makeCommit with open branch and get canceled', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                function hashUpdateHandler(data, commitQueue, updateQueue, callback) {
+                    callback(null, true);
+                }
+
+                function branchStatusHandler(/*branchStatus, commitQueue, updateQueue*/) {
+
+                }
+
+                return Q.nfcall(storage.openBranch, projectName2Id(projectName), 'b3',
+                    hashUpdateHandler, branchStatusHandler);
+            })
+            .then(function () {
+                return importResult.project.setBranchHash('b3', commitHash2, commitHash1);
+            })
+            .then(function () {
+                return Q.ninvoke(storage, 'makeCommit', projectName2Id(projectName), 'b3', [commitHash1],
+                    importResult.rootHash, {}, 'forked commit');
+            })
+            .then(function (result) {
+                expect(result.status).to.equal(STORAGE_CONSTANTS.FORKED);
+            })
+            .nodeify(done);
+    });
+
+    it('should makeCommit with open branch and get canceled if not passing same commitHash as own branch', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                function hashUpdateHandler(data, commitQueue, updateQueue, callback) {
+                    callback(null, true);
+                }
+
+                function branchStatusHandler(/*branchStatus, commitQueue, updateQueue*/) {
+
+                }
+
+                return Q.nfcall(storage.openBranch, projectName2Id(projectName), 'b4',
+                    hashUpdateHandler, branchStatusHandler);
+            })
+            .then(function () {
+                return Q.ninvoke(storage, 'makeCommit', projectName2Id(projectName), 'b4', [commitHash2],
+                    importResult.rootHash, {}, 'forked commit');
+            })
+            .then(function (result) {
+                expect(result.status).to.equal(STORAGE_CONSTANTS.CANCELED);
             })
             .nodeify(done);
     });
