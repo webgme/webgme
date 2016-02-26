@@ -204,6 +204,8 @@ function validateConfig(configOrFileName) {
     assertObject('config.socketIO', config.socketIO);
     assertObject('config.socketIO.clientOptions', config.socketIO.clientOptions);
     assertObject('config.socketIO.serverOptions', config.socketIO.serverOptions);
+    assertObject('config.socketIO.adapter', config.socketIO.adapter);
+    assertEnum('config.socketIO.adapter.type', config.socketIO.adapter.type.toLowerCase(), 'memory', 'redis');
 
     // storage
     expectedKeys.push('storage');
@@ -215,7 +217,7 @@ function validateConfig(configOrFileName) {
     assertNumber('config.storage.loadBucketTimer', config.storage.loadBucketTimer);
     assertEnum('config.storage.keyType', config.storage.keyType, 'rand160Bits', 'ZSSHA', 'plainSHA1');
     assertObject('config.storage.database', config.storage.database);
-    assertEnum('config.storage.database.type', config.storage.database.type, 'mongo', 'redis', 'memory');
+    assertEnum('config.storage.database.type', config.storage.database.type.toLowerCase(), 'mongo', 'redis', 'memory');
     assertObject('config.storage.database.options', config.storage.database.options);
 
     //visualization

@@ -596,11 +596,11 @@ function StandAloneServer(gmeConfig) {
     logger.debug('initializing static server');
     __app = new Express();
 
-    if (gmeConfig.storage.database.type === 'mongo') {
+    if (gmeConfig.storage.database.type.toLowerCase() === 'mongo') {
         __database = new MongoAdapter(logger, gmeConfig);
-    } else if (gmeConfig.storage.database.type === 'redis') {
+    } else if (gmeConfig.storage.database.type.toLowerCase() === 'redis') {
         __database = new RedisAdapter(logger, gmeConfig);
-    } else if (gmeConfig.storage.database.type === 'memory') {
+    } else if (gmeConfig.storage.database.type.toLowerCase() === 'memory') {
         __database = new MemoryAdapter(logger, gmeConfig);
     } else {
         logger.error(new Error('Unknown storage.database.type in config (config validator not used?)',
