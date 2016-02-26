@@ -21,6 +21,7 @@ define([
 
         self.socket = null;
         self.userId = null;
+        self.serverVersion = null;
 
         logger.debug('ctor');
         EventDispatcher.call(this);
@@ -66,18 +67,28 @@ define([
                             logger.debug('receiveBuffer not empty after reconnect');
                         }
                         self.socket.sendBuffer = sendBufferSave;
-                        networkHandler(null, CONSTANTS.RECONNECTED);
+                        self.socket.emit('getConnectionInfo', function (err, info) {
+                            if (err) {
+                                networkHandler(new Error('Could not get info on reconnect'));
+                            } else {
+                                if (self.serverVersion === info.serverVersion) {
+                                    networkHandler(null, CONSTANTS.RECONNECTED);
+                                } else {
+                                    networkHandler(null, CONSTANTS.INCOMPATIBLE_CONNECTION);
+                                }
+                            }
+                        });
                     } else {
                         logger.debug('Socket got connected for the first time.');
                         beenConnected = true;
-                        self.socket.emit('getUserId', function (err, userId) {
+                        self.socket.emit('getConnectionInfo', function (err, info) {
                             if (err) {
-                                self.userId = gmeConfig.authentication.guestAccount;
-                                logger.error('Error getting user id setting to default', err, self.userId);
+                                networkHandler(new Error('Could not get info on connect'));
                             } else {
-                                self.userId = userId;
+                                self.userId = info.userId || gmeConfig.authentication.guestAccount;
+                                self.serverVersion = info.serverVersion;
+                                networkHandler(null, CONSTANTS.CONNECTED);
                             }
-                            networkHandler(null, CONSTANTS.CONNECTED);
                         });
                     }
                 });

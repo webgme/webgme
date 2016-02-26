@@ -86,8 +86,28 @@ function copySvgDirsAndRegenerateSVGList(gmeConfig, logger, callback) {
     return deferred.promise.nodeify(callback);
 }
 
+
+function getPackageJson(callback) {
+    var fname = path.join(__dirname, '..', 'package.json');
+
+    return Q.nfcall(fs.readFile, fname, 'utf8')
+        .then(function (content) {
+            return JSON.parse(content);
+        })
+        .nodeify(callback);
+}
+
+function getPackageJsonSync() {
+    var fname = path.join(__dirname, '..', 'package.json'),
+        content = fs.readFileSync(fname, 'utf8');
+
+    return JSON.parse(content);
+}
+
 module.exports = {
     isGoodExtraAsset: isGoodExtraAsset,
     getComponentNames: getComponentNames,
-    copySvgDirsAndRegenerateSVGList: copySvgDirsAndRegenerateSVGList
+    copySvgDirsAndRegenerateSVGList: copySvgDirsAndRegenerateSVGList,
+    getPackageJson: getPackageJson,
+    getPackageJsonSync: getPackageJsonSync,
 };

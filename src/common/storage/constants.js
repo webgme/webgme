@@ -81,6 +81,8 @@ define([], function () {
         CONNECTED: 'CONNECTED',
         DISCONNECTED: 'DISCONNECTED',
         RECONNECTED: 'RECONNECTED',
+        INCOMPATIBLE_CONNECTION: 'INCOMPATIBLE_CONNECTION',
+        CONNECTION_ERROR: 'CONNECTION_ERROR',
 
         // Branch commit status - this is the status returned after setting the hash of a branch
         SYNCED: 'SYNCED', // The commitData was inserted in the database and the branchHash updated.

@@ -48,7 +48,7 @@ define([
             webSocket.connect(function (err, connectionState) {
                 if (err) {
                     logger.error(err);
-                    networkHandler(CONSTANTS.ERROR);
+                    networkHandler(CONSTANTS.CONNECTION_ERROR);
                 } else if (connectionState === CONSTANTS.CONNECTED) {
                     self.connected = true;
                     self.userId = webSocket.userId;
@@ -64,15 +64,17 @@ define([
                         })
                         .catch(function (err) {
                             logger.error('failing during reconnect', err);
-                            networkHandler(CONSTANTS.ERROR);
+                            networkHandler(CONSTANTS.CONNECTION_ERROR);
                         });
 
                 } else if (connectionState === CONSTANTS.DISCONNECTED) {
                     self.connected = false;
                     networkHandler(connectionState);
+                } else if (connectionState === CONSTANTS.INCOMPATIBLE_CONNECTION) {
+                    networkHandler(connectionState);
                 } else {
                     logger.error('unexpected connection state');
-                    networkHandler(CONSTANTS.ERROR);
+                    networkHandler(CONSTANTS.CONNECTION_ERROR);
                 }
             });
         };
