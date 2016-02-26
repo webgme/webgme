@@ -344,15 +344,10 @@ define([
                 });
             }
 
-            if (isConnected()) {
-                if (state.project) {
-                    closeProject(state.project.projectId, closeStorage);
-                } else {
-                    closeStorage(null);
-                }
+            if (state.project) {
+                closeProject(state.project.projectId, closeStorage);
             } else {
-                logger.warn('Trying to disconnect when already disconnected.');
-                callback(null);
+                closeStorage(null);
             }
         };
 
