@@ -79,7 +79,7 @@ define([
                 this._modeIncompatible();
                 break;
             case CONSTANTS.CLIENT.STORAGE.CONNECTION_ERROR:
-                this._modeIncompatible();
+                this._modeError();
                 break;
         }
     };

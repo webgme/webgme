@@ -317,9 +317,16 @@ define([
 
                         self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
                     });
-                } else { //CONSTANTS.ERROR
-                    self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.ERROR);
-                    callback(new Error('Connection failed!' + connectionState));
+                } else {
+                    logger.error(new Error('Connection failed error ' + connectionState));
+                    self.disconnectFromDatabase(function (err) {
+                        if (err) {
+                            logger.error(err);
+                        }
+
+                        self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.CONNECTION_ERROR);
+                        callback(new Error('Connection failed! ' + connectionState));
+                    });
                 }
             });
         };
@@ -328,7 +335,8 @@ define([
 
             function closeStorage(err) {
                 storage.close(function (err2) {
-                    if (state.connection !== CONSTANTS.STORAGE.INCOMPATIBLE_CONNECTION) {
+                    if (state.connection !== CONSTANTS.STORAGE.INCOMPATIBLE_CONNECTION &&
+                        state.connection !== CONSTANTS.STORAGE.CONNECTION_ERROR) {
                         state.connection = CONSTANTS.STORAGE.DISCONNECTED;
                     }
 
