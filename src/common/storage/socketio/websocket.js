@@ -16,6 +16,7 @@ define([
     function WebSocket(ioClient, mainLogger, gmeConfig) {
         var self = this,
             logger = mainLogger.fork('WebSocket'),
+            forcedDisconnect,
             beenConnected = false;
 
         self.socket = null;
@@ -36,6 +37,8 @@ define([
 
         this.connect = function (networkHandler) {
             logger.debug('Connecting via ioClient.');
+            forcedDisconnect = false;
+
             ioClient.connect(function (err, socket_) {
                 if (err) {
                     networkHandler(err);
@@ -51,7 +54,7 @@ define([
 
                         // #368
                         for (i = 0; i < self.socket.sendBuffer.length; i += 1) {
-                            // Clear all makeCommits. If pushed - they would be broadcasted back to the socket.
+                            // Clear all makeCommits. If pushed - they would be emitted back to the socket.
                             if (self.socket.sendBuffer[i].data[0] === 'makeCommit') {
                                 logger.debug('Removed makeCommit from sendBuffer...');
                             } else {
@@ -85,7 +88,7 @@ define([
 
                     // When the server is shut-down the skipReconnect is set to false
                     // create a new socket connect.
-                    if (self.socket.io.skipReconnect === true) {
+                    if (self.socket.io.skipReconnect === true && forcedDisconnect === false) {
                         self.connect(networkHandler);
                     }
                 });
@@ -145,6 +148,7 @@ define([
         };
 
         this.disconnect = function () {
+            forcedDisconnect = true;
             self.socket.disconnect();
             beenConnected = false; //This is a forced disconnect from the storage and all listeners are removed
         };
