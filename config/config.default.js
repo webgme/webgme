@@ -116,6 +116,7 @@ var path = require('path'),
                 // see specific session store documentations for options connect-mongo and connect-redis
                 options: {
                     //url: 'mongodb://127.0.0.1:27017/multi'
+                    //url: 'redis:127.0.0.1:6379'
                 },
                 cookieSecret: 'meWebGMEez',
                 cookieKey: 'webgmeSid',
@@ -164,6 +165,12 @@ var path = require('path'),
             },
             serverOptions: {
                 //transports: ['websocket', 'polling']
+            },
+            adapter: {
+                type: 'Memory', // Memory, Redis
+                options: {
+                    //uri: '127.0.0.1:6379'
+                },
             }
         },
 

@@ -7,10 +7,15 @@
 'use strict';
 
 var io = require('socket.io'),
+    redis = require('socket.io-redis'),
     Q = require('q'),
+    UTIL = require('../../utils'),
     COOKIE = require('cookie-parser'),
     URL = requireJS('common/util/url'),
-    CONSTANTS = requireJS('common/storage/constants');
+    CONSTANTS = requireJS('common/storage/constants'),
+    PACKAGE_JSON;
+
+PACKAGE_JSON = UTIL.getPackageJsonSync();
 
 function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     var logger = mainLogger.fork('WebSocket'),
@@ -194,6 +199,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
         webSocket = io.listen(server || gmeConfig.server.port, gmeConfig.socketIO.serverOptions);
 
+        if (gmeConfig.socketIO.adapter.type.toLowerCase() === 'redis') {
+            webSocket.adapter(redis(gmeConfig.socketIO.adapter.options.uri));
+        }
+
         logger.debug('listening');
 
         webSocket.use(function (socket, next) {
@@ -248,14 +257,15 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 logger.debug('disconnect socket is in rooms: ', socket.id, Object.keys(socket.rooms));
             });
 
-            socket.on('getUserId', function (callback) {
+            socket.on('getConnectionInfo', function (callback) {
+                var info = {
+                    userId: null,
+                    serverVersion: PACKAGE_JSON.version
+                };
                 getUserIdFromSocket(socket)
                     .then(function (userId) {
-                        if (typeof userId === 'string') {
-                            callback(null, userId);
-                        } else {
-                            throw new Error('Could not get userId');
-                        }
+                        info.userId = userId;
+                        callback(null, info);
                     }).catch(function (err) {
                         callback(err.message);
                     });

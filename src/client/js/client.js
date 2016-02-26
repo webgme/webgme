@@ -42,7 +42,7 @@ define([
             logger = Logger.create('gme:client', gmeConfig.client.log),
             storage = Storage.getStorage(logger, gmeConfig, true),
             state = {
-                connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED
+                connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED/INCOMPATIBLE_CONNECTION/CONNECTION_ERROR
                 project: null,
                 projectAccess: null,
                 core: null,
@@ -304,11 +304,29 @@ define([
                     reLaunchUsers();
                     callback(null);
                 } else if (connectionState === CONSTANTS.STORAGE.DISCONNECTED) {
-                    self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                    if (state.connection !== CONSTANTS.STORAGE.INCOMPATIBLE_CONNECTION) {
+                        self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                    }
                 } else if (connectionState === CONSTANTS.STORAGE.RECONNECTED) {
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
-                } else { //CONSTANTS.ERROR
-                    callback(Error('Connection failed!' + connectionState));
+                } else if (connectionState === CONSTANTS.STORAGE.INCOMPATIBLE_CONNECTION) {
+                    self.disconnectFromDatabase(function (err) {
+                        if (err) {
+                            logger.error(err);
+                        }
+
+                        self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                    });
+                } else {
+                    logger.error(new Error('Connection failed error ' + connectionState));
+                    self.disconnectFromDatabase(function (err) {
+                        if (err) {
+                            logger.error(err);
+                        }
+
+                        self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.CONNECTION_ERROR);
+                        callback(new Error('Connection failed! ' + connectionState));
+                    });
                 }
             });
         };
@@ -317,20 +335,19 @@ define([
 
             function closeStorage(err) {
                 storage.close(function (err2) {
-                    state.connection = CONSTANTS.STORAGE.DISCONNECTED;
+                    if (state.connection !== CONSTANTS.STORAGE.INCOMPATIBLE_CONNECTION &&
+                        state.connection !== CONSTANTS.STORAGE.CONNECTION_ERROR) {
+                        state.connection = CONSTANTS.STORAGE.DISCONNECTED;
+                    }
+
                     callback(err || err2);
                 });
             }
 
-            if (isConnected()) {
-                if (state.project) {
-                    closeProject(state.project.projectId, closeStorage);
-                } else {
-                    closeStorage(null);
-                }
+            if (state.project) {
+                closeProject(state.project.projectId, closeStorage);
             } else {
-                logger.warn('Trying to disconnect when already disconnected.');
-                callback(null);
+                closeStorage(null);
             }
         };
 

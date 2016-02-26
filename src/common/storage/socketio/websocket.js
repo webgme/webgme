@@ -16,10 +16,12 @@ define([
     function WebSocket(ioClient, mainLogger, gmeConfig) {
         var self = this,
             logger = mainLogger.fork('WebSocket'),
+            forcedDisconnect,
             beenConnected = false;
 
         self.socket = null;
         self.userId = null;
+        self.serverVersion = null;
 
         logger.debug('ctor');
         EventDispatcher.call(this);
@@ -36,6 +38,8 @@ define([
 
         this.connect = function (networkHandler) {
             logger.debug('Connecting via ioClient.');
+            forcedDisconnect = false;
+
             ioClient.connect(function (err, socket_) {
                 if (err) {
                     networkHandler(err);
@@ -51,7 +55,7 @@ define([
 
                         // #368
                         for (i = 0; i < self.socket.sendBuffer.length; i += 1) {
-                            // Clear all makeCommits. If pushed - they would be broadcasted back to the socket.
+                            // Clear all makeCommits. If pushed - they would be emitted back to the socket.
                             if (self.socket.sendBuffer[i].data[0] === 'makeCommit') {
                                 logger.debug('Removed makeCommit from sendBuffer...');
                             } else {
@@ -63,18 +67,28 @@ define([
                             logger.debug('receiveBuffer not empty after reconnect');
                         }
                         self.socket.sendBuffer = sendBufferSave;
-                        networkHandler(null, CONSTANTS.RECONNECTED);
+                        self.socket.emit('getConnectionInfo', function (err, info) {
+                            if (err) {
+                                networkHandler(new Error('Could not get info on reconnect'));
+                            } else {
+                                if (self.serverVersion === info.serverVersion) {
+                                    networkHandler(null, CONSTANTS.RECONNECTED);
+                                } else {
+                                    networkHandler(null, CONSTANTS.INCOMPATIBLE_CONNECTION);
+                                }
+                            }
+                        });
                     } else {
                         logger.debug('Socket got connected for the first time.');
                         beenConnected = true;
-                        self.socket.emit('getUserId', function (err, userId) {
+                        self.socket.emit('getConnectionInfo', function (err, info) {
                             if (err) {
-                                self.userId = gmeConfig.authentication.guestAccount;
-                                logger.error('Error getting user id setting to default', err, self.userId);
+                                networkHandler(new Error('Could not get info on connect'));
                             } else {
-                                self.userId = userId;
+                                self.userId = info.userId || gmeConfig.authentication.guestAccount;
+                                self.serverVersion = info.serverVersion;
+                                networkHandler(null, CONSTANTS.CONNECTED);
                             }
-                            networkHandler(null, CONSTANTS.CONNECTED);
                         });
                     }
                 });
@@ -82,6 +96,12 @@ define([
                 self.socket.on('disconnect', function () {
                     logger.debug('Socket got disconnected!');
                     networkHandler(null, CONSTANTS.DISCONNECTED);
+
+                    // When the server is shut-down the skipReconnect is set to false
+                    // create a new socket connect.
+                    if (self.socket.io.skipReconnect === true && forcedDisconnect === false) {
+                        self.connect(networkHandler);
+                    }
                 });
 
                 self.socket.on(CONSTANTS.PROJECT_DELETED, function (data) {
@@ -139,6 +159,7 @@ define([
         };
 
         this.disconnect = function () {
+            forcedDisconnect = true;
             self.socket.disconnect();
             beenConnected = false; //This is a forced disconnect from the storage and all listeners are removed
         };

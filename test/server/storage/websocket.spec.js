@@ -180,30 +180,31 @@ describe('WebSocket', function () {
             agent = superagent.agent();
         });
 
-        it('should getUserId', function (done) {
+        it('should getConnectionInfo', function (done) {
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'getUserId');
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo');
                 })
                 .then(function (result) {
-                    expect(result).to.equal(guestAccount);
+                    expect(result.userId).to.equal(guestAccount);
+                    expect(typeof result.serverVersion).to.equal('string');
                 })
                 .nodeify(done);
         });
 
-        it('should fail to getUserId with invalid session id', function (done) {
+        it('should fail to getConnectionInfo with invalid session id', function (done) {
             openSocketIo('invalid_session_id')
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'getUserId');
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo');
                 })
                 .then(function () {
-                    throw new Error('should have failed to getUserId');
+                    throw new Error('should have failed to getConnectionInfo');
                 })
                 .catch(function (err) {
                     if (typeof err === 'string' && err.indexOf('User was not found') > -1) {
                         return;
                     }
-                    throw new Error('should have failed to getUserId: ' + err);
+                    throw new Error('should have failed to getConnectionInfo: ' + err);
                 })
                 .nodeify(done);
         });
@@ -335,13 +336,14 @@ describe('WebSocket', function () {
             agent = superagent.agent();
         });
 
-        it('should getUserId', function (done) {
+        it('should getConnectionInfo', function (done) {
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'getUserId');
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo');
                 })
                 .then(function (result) {
-                    expect(result).to.equal(guestAccount);
+                    expect(result.userId).to.equal(guestAccount);
+                    expect(typeof result.serverVersion).to.equal('string');
                     done();
                 })
                 .catch(function (err) {
@@ -349,19 +351,19 @@ describe('WebSocket', function () {
                 });
         });
 
-        it('should fail to getUserId with invalid session id', function (done) {
+        it('should fail to getConnectionInfo with invalid session id', function (done) {
             openSocketIo('invalid_session_id')
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'getUserId');
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo');
                 })
                 .then(function () {
-                    throw new Error('should have failed to getUserId');
+                    throw new Error('should have failed to getConnectionInfo');
                 })
                 .catch(function (err) {
                     if (typeof err === 'string' && err.indexOf('User was not found') > -1) {
                         return;
                     }
-                    throw new Error('should have failed to getUserId: ' + err);
+                    throw new Error('should have failed to getConnectionInfo: ' + err);
                 })
                 .nodeify(done);
         });

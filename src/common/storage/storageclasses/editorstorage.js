@@ -22,8 +22,9 @@ define([
     'common/storage/project/branch',
     'common/util/assert',
     'common/util/key',
-    'common/storage/util'
-], function (StorageObjectLoaders, CONSTANTS, Project, Branch, ASSERT, GENKEY, UTIL) {
+    'common/storage/util',
+    'q'
+], function (StorageObjectLoaders, CONSTANTS, Project, Branch, ASSERT, GENKEY, UTIL, Q) {
     'use strict';
 
     /**
@@ -47,22 +48,33 @@ define([
             webSocket.connect(function (err, connectionState) {
                 if (err) {
                     logger.error(err);
-                    networkHandler(CONSTANTS.ERROR);
+                    networkHandler(CONSTANTS.CONNECTION_ERROR);
                 } else if (connectionState === CONSTANTS.CONNECTED) {
                     self.connected = true;
                     self.userId = webSocket.userId;
                     networkHandler(connectionState);
                 } else if (connectionState === CONSTANTS.RECONNECTED) {
-                    self._rejoinWatcherRooms();
-                    self._rejoinBranchRooms();
                     self.connected = true;
-                    networkHandler(connectionState);
+                    self._rejoinWatcherRooms()
+                        .then(function () {
+                            return self._rejoinBranchRooms();
+                        })
+                        .then(function () {
+                            networkHandler(connectionState);
+                        })
+                        .catch(function (err) {
+                            logger.error('failing during reconnect', err);
+                            networkHandler(CONSTANTS.CONNECTION_ERROR);
+                        });
+
                 } else if (connectionState === CONSTANTS.DISCONNECTED) {
                     self.connected = false;
                     networkHandler(connectionState);
+                } else if (connectionState === CONSTANTS.INCOMPATIBLE_CONNECTION) {
+                    networkHandler(connectionState);
                 } else {
                     logger.error('unexpected connection state');
-                    networkHandler(CONSTANTS.ERROR);
+                    networkHandler(CONSTANTS.CONNECTION_ERROR);
                 }
             });
         };
@@ -617,35 +629,30 @@ define([
             return commitObj;
         };
 
-        this._rejoinBranchRooms = function () {
+        this._rejoinBranchRooms = function (callback) {
             var projectId,
                 project,
-                branchName;
-            logger.debug('_rejoinBranchRooms');
-            function afterRejoinFn(projectId, branchName) {
-                return function (err) {
-                    var project = projects[projectId];
-                    if (err) {
-                        logger.error('_rejoinBranchRooms, could not rejoin branch room', projectId, branchName);
-                        logger.error(err);
-                        return;
-                    }
-                    logger.debug('_rejoinBranchRooms, rejoined branch room', projectId, branchName);
+                branchName,
+                branchRooms = [],
+                promises = [];
 
-                    if (!project) {
-                        logger.error('_rejoinBranchRooms, project has been closed after disconnect',
-                            projectId, branchName);
-                        return;
-                    }
+            logger.debug('_rejoinBranchRooms');
+
+            function afterRejoin(projectId, branchName) {
+                var project = projects[projectId],
+                    deferred = Q.defer();
+
+                logger.debug('_rejoinBranchRooms, rejoined branch room', projectId, branchName);
+
+                if (project) {
                     project.getBranchHash(branchName)
                         .then(function (branchHash) {
                             var branch = project.branches[branchName],
                                 queuedCommitHash;
                             logger.debug('_rejoinBranchRooms received branchHash', projectId, branchName, branchHash);
+
                             if (!branch) {
-                                logger.error('_rejoinBranchRooms, branch had been closed disconnect',
-                                    projectId, branchName);
-                                return;
+                                throw new Error('_rejoinBranchRooms branch was closed ' + projectId + ':' + branchName);
                             }
 
                             if (branch.getCommitQueue().length > 0) {
@@ -659,11 +666,12 @@ define([
 
                                         logger.debug('_rejoinBranchRooms getCommonAncestorCommit',
                                             projectId, branchName, commonCommitHash);
+
                                         if (branch.isOpen === false) {
-                                            logger.error('_rejoinBranchRooms, branch had been closed after disconnect',
-                                                projectId, branchName);
-                                            return;
+                                            throw new Error('_rejoinBranchRooms branch was closed ' +
+                                                projectId + ':' + branchName);
                                         }
+
                                         function dispatchSynced() {
                                             result = {status: CONSTANTS.SYNCED, hash: branchHash};
 
@@ -699,27 +707,37 @@ define([
                                             // The branch has moved forward and the commit was forked.
                                             dispatchForked();
                                         }
+
+                                        deferred.resolve();
                                     })
                                     .catch(function (err) {
-                                        if (err.message.indexOf('Commit object does not exist [' +
-                                                queuedCommitHash) > -1) {
-                                            // Commit never made it to the server - push it.
-                                            logger.debug('First queued commit never made it to the server. push...');
-                                            self._pushNextQueuedCommit(projectId, branchName);
-                                        } else {
-                                            logger.error(err);
-                                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
+                                        try {
+                                            if (err.message.indexOf('Commit object does not exist [' +
+                                                    queuedCommitHash) > -1) {
+                                                // Commit never made it to the server - push it.
+                                                logger.debug('First queued commit never made it to the server - push!');
+                                                self._pushNextQueuedCommit(projectId, branchName);
+                                                deferred.resolve();
+                                            } else {
+                                                deferred.reject(err);
+                                            }
+                                        } catch (err) {
+                                            deferred.reject(err);
                                         }
-                                    })
-                                    .done();
+                                    });
                             } else {
                                 logger.debug('_rejoinBranchRooms, no commits were queued during disconnect.');
+                                deferred.resolve();
                             }
                         })
                         .catch(function (err) {
-                            logger.error(err);
+                            deferred.reject(err);
                         });
-                };
+                } else {
+                    deferred.reject(new Error('_rejoinBranchRooms project was closed ' + projectId + ':' + branchName));
+                }
+
+                return deferred.promise;
             }
 
             for (projectId in projects) {
@@ -729,15 +747,30 @@ define([
                     for (branchName in project.branches) {
                         if (project.branches.hasOwnProperty(branchName)) {
                             logger.debug('_rejoinBranchRooms joining branch', projectId, branchName);
-                            webSocket.watchBranch({
+
+                            branchRooms.push({
+                                projectId: projectId,
+                                branchName: branchName
+                            });
+
+                            promises.push(Q.ninvoke(webSocket, 'watchBranch', {
                                 projectId: projectId,
                                 branchName: branchName,
                                 join: true
-                            }, afterRejoinFn(projectId, branchName));
+                            }));
                         }
                     }
                 }
             }
+
+            return Q.all(promises)
+                .then(function () {
+                    return Q.all(branchRooms.map(function (data) {
+                        // Deal with commit queue for each room after rejoining.
+                        return afterRejoin(data.projectId, data.branchName);
+                    }));
+                })
+                .nodeify(callback);
         };
     }
 

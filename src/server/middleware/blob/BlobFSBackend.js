@@ -20,6 +20,7 @@ var fs = require('fs'),
 var BlobFSBackend = function (gmeConfig, logger) {
     BlobBackendBase.call(this, logger);
     this.blobDir = gmeConfig.blob.fsDir;
+    this.tempBucket = this.tempBucket + '-' + gmeConfig.server.port;
 };
 
 // Inherits from BlobManagerBase
