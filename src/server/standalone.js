@@ -828,7 +828,7 @@ function StandAloneServer(gmeConfig) {
     __app.use('/rest/blob', BlobServer.createExpressBlob(middlewareOpts));
 
     //client contents - js/html/css
-    __app.get(/^\/.*\.(css|ico|ttf|woff|js|cur)$/, Express.static(__clientBaseDir));
+    __app.get(/^\/.*\.(css|ico|ttf|woff|woff2|js|cur)$/, Express.static(__clientBaseDir));
 
 
     __app.get('/package.json', ensureAuthenticated, Express.static(Path.join(__baseDir, '..')));
