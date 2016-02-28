@@ -140,9 +140,10 @@ define([
                 projectId: projectId
             };
             if (projects[projectId]) {
-                logger.error('project is already open', projectId);
-                callback(new Error('project is already open'));
+                callback(new Error('project is already open ' + projectId));
+                return;
             }
+
             webSocket.openProject(data, function (err, branches, access) {
                 if (err) {
                     callback(err);
@@ -273,15 +274,15 @@ define([
             logger.debug('closeBranch', projectId, branchName);
 
             if (!project) {
-                callback(new Error('Cannot close branch, ' + branchName + ', project ' + projectId +
-                    ' is not opened.'));
+                logger.warn('closeBranch: project is not open', projectId, branchName);
+                callback(null);
                 return;
             }
 
             branch = project.branches[branchName];
 
             if (!branch) {
-                logger.warn('Project does not have given branch.', projectId, branchName);
+                logger.warn('closeBranch: project does not have given branch.', projectId, branchName);
                 callback(null);
                 return;
             }
@@ -324,7 +325,7 @@ define([
             forkData = branch.getCommitsForNewFork(commitHash, forkName); // commitHash = null defaults to latest commit
             self.logger.debug('forkBranch - forkData', forkData);
             if (forkData === false) {
-                callback(new Error('Could not find specified commitHash'));
+                callback(new Error('Could not find specified commitHash: ' + commitHash));
                 return;
             }
 
@@ -663,6 +664,8 @@ define([
                                 project.getCommonAncestorCommit(branchHash, queuedCommitHash)
                                     .then(function (commonCommitHash) {
                                         var result;
+                                        // The commit made it to the server but the acknowledgement was
+                                        // interrupted by the disconnect.
 
                                         logger.debug('_rejoinBranchRooms getCommonAncestorCommit',
                                             projectId, branchName, commonCommitHash);
@@ -695,16 +698,25 @@ define([
                                             branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
                                         }
 
-                                        // The commit was inserted.
+                                        // c - the commit made by this storage
+                                        // H - the head of the branch
                                         if (commonCommitHash === queuedCommitHash) {
                                             // The commit is (or was) in sync with the branch.
+                                            //  Hc  or  H
+                                            //  |       c
+                                            //  |       |
+                                            // In case two the next commit made will be forked.
                                             dispatchSynced();
                                         } else if (commonCommitHash === branchHash) {
                                             // The branch has moved back since the commit was made.
                                             // Treat it like the commit was forked.
+                                            //  c
+                                            //  H
                                             dispatchForked();
                                         } else {
-                                            // The branch has moved forward and the commit was forked.
+                                            // The branch has moved forward in a different direction.
+                                            //  c   H
+                                            //   \ /
                                             dispatchForked();
                                         }
 
