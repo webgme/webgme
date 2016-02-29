@@ -2,7 +2,7 @@
 [![Version](https://badge.fury.io/js/webgme.svg)](https://www.npmjs.com/package/webgme)
 [![Downloads](http://img.shields.io/npm/dm/webgme.svg?style=flat)](http://img.shields.io/npm/dm/webgme.svg?style=flat)
 
-# Getting started
+#Getting started
 
 WebGME require [NodeJS](https://nodejs.org/) and [MongoDB](https://www.mongodb.com/) installed on the host system (the server).
 
@@ -22,7 +22,7 @@ Options to deploy and run WebGME:
 After the webgme server is up and there are no error messages in the console. Open a valid webgme address in the browser. The default is `http://127.0.0.1:8888/`, you should see all valid addresses in the console where you started webgme.
 To view the available documentation visit `<host>/api`.
 
-# Command line interface
+#Command line interface
 
 All runnable javascript programs are stored in the `src/bin` directory, you should start them with node from the root directory of the repository, e.g. `node src/bin/start_server.js` starts the web server.
 Each script supports the `--help` or `-h` command line parameter, which will list all possible parameters.
@@ -35,7 +35,7 @@ Each script supports the `--help` or `-h` command line parameter, which will lis
 * `export.js`: exports a (snapshot of a) branch into a json file.
 * `import.js`: imports a (snapshot of a) branch into a webgme project.
 
-# Extension Components
+#Extension Components
 * [Plugins](./src/plugin/README.md) - Model interpretation for e.g. code generation.
 * [AddOns](./src/addon/README.md) - Continuous model interpretation for e.g. constraint evaluation.
 * [Executor](./src/server/middleware/executor/Readme.md) - Code execution framework.
@@ -45,12 +45,13 @@ Each script supports the `--help` or `-h` command line parameter, which will lis
 * [Decorators](./src/plugin/coreplugins/DecoratorGenerator/DecoratorGenerator.js) - Add custom decoration to the nodes in the model editor.
 * [Constraints](./src/plugin/coreplugins/ConstraintEvaluator/ConstraintEvaluator.js) - Add custom constraints based on meta-types.
 
-# Change log
+See [gme-config](./config/README.md) for avaiable configuration parameters.
+
+#Change log
 See [CHANGELOG.md](./CHANGELOG.md)
 
-# Contributing
+#Contributing
 See [CONTRIBUTING.md](./CONTRIBUTING.md)
 
-# License
-
+#License
 See the [LICENSE](LICENSE) file.
