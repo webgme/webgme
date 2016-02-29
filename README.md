@@ -4,7 +4,7 @@
 
 #Getting started
 
-WebGME require [NodeJS](https://nodejs.org/) and [MongoDB](https://www.mongodb.com/) installed on the host system (the server).
+WebGME require [NodeJS](https://nodejs.org/) (0.12 <= version < 5) and [MongoDB](https://www.mongodb.com/) (version >= 2.6) installed on the host system (the server).
 
 Options to deploy and run WebGME:
 
@@ -16,7 +16,7 @@ Options to deploy and run WebGME:
 
 2. For webgme developers, clone this repo.
  * install packages with npm `npm install`
- * launch mongod (>=2.6) locally
+ * launch mongod locally
  * start the server `npm start`
 
 After the webgme server is up and there are no error messages in the console. Open a valid webgme address in the browser. The default is `http://127.0.0.1:8888/`, you should see all valid addresses in the console where you started webgme.
@@ -48,10 +48,10 @@ Each script supports the `--help` or `-h` command line parameter, which will lis
 See [gme-config](./config/README.md) for avaiable configuration parameters.
 
 #Change log
-See [CHANGELOG.md](./CHANGELOG.md)
+See [CHANGELOG](./CHANGELOG.md)
 
 #Contributing
-See [CONTRIBUTING.md](./CONTRIBUTING.md)
+See [CONTRIBUTING](./CONTRIBUTING.md)
 
 #License
 See the [LICENSE](LICENSE) file.
