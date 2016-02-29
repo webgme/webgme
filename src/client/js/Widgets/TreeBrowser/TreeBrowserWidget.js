@@ -735,6 +735,13 @@ define(['js/logger',
                         self.onNodeDoubleClicked.call(self, node.key);
                     },
                     icon: false
+                },
+                selectNode: { // The "select (aka double-click)" menu item
+                    name: 'Select node',
+                    callback: function (/*key, options*/) {
+                        self.onMakeNodeSelected.call(self, node.key);
+                    },
+                    icon: false
                 }
             };
 

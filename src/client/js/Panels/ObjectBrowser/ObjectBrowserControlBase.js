@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, WebGMEGlobal*/
 /*jshint browser: true*/
 
 /**
@@ -11,6 +11,8 @@ define(['js/RegistryKeys'], function (REGISTRY_KEYS) {
     function ObjectBrowserControlBase(client, treeBrowser) {
         this._client = client;
         this._treeBrowser = treeBrowser;
+
+        this._treeBrowser.onMakeNodeSelected = this._makeNodeSelected;
     }
 
     ObjectBrowserControlBase.prototype.getIcon = function (nodeOrId, expanded) {
@@ -34,6 +36,10 @@ define(['js/RegistryKeys'], function (REGISTRY_KEYS) {
         }
 
         return iconName ?  '/assets/DecoratorSVG/' + iconName : null;
+    };
+
+    ObjectBrowserControlBase.prototype._makeNodeSelected = function (nodeId) {
+        WebGMEGlobal.State.registerActiveSelection([nodeId]);
     };
 
 
