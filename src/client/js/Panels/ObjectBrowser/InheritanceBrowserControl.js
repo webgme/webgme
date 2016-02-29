@@ -9,11 +9,13 @@
 define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
-    'js/Constants'
+    'js/Constants',
+    './ObjectBrowserControlBase',
 ], function (Logger,
              GMEConcepts,
              nodePropertyNames,
-             CONSTANTS) {
+             CONSTANTS,
+             ObjectBrowserControlBase) {
     'use strict';
 
     var NODE_PROGRESS_CLASS = 'node-progress',
@@ -26,8 +28,9 @@ define(['js/logger',
     var InheritanceBrowserControl = function (client, treeBrowser) {
         var self = this;
 
-        self._client = client;
-        self._treeBrowser = treeBrowser;
+        ObjectBrowserControlBase.call(self, client, treeBrowser);
+
+
         self._treeBrowser._enableNodeRename = false;
         self._logger = Logger.create('gme:Panels:ObjectBrowser:InheritanceBrowserControl',
             WebGMEGlobal.gmeConfig.client.log);
@@ -36,6 +39,10 @@ define(['js/logger',
             self._initialize();
         }, 250);
     };
+
+    // Prototypical inheritance
+    InheritanceBrowserControl.prototype = Object.create(ObjectBrowserControlBase.prototype);
+    InheritanceBrowserControl.prototype.constructor = InheritanceBrowserControl;
 
     InheritanceBrowserControl.prototype.destroy = function () {
     };
@@ -151,6 +158,7 @@ define(['js/logger',
                         name: childNode.getAttribute('name'),
                         hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
                         class: this._getNodeClass(childNode),
+                        icon: this.getIcon(childNode),
                         // Data used locally here.
                         STATE: STATE_LOADED,
                         INHERITANCE: childNode.getCollectionPaths(CONSTANTS.POINTER_BASE),
@@ -206,6 +214,8 @@ define(['js/logger',
                     state: childrenDescriptors[i].STATE
                 };
             }
+
+            this._treeBrowser.updateNode(parentNode, {icon: this.getIcon(parent, true)});
         }
 
         //need to expand the territory
@@ -242,6 +252,7 @@ define(['js/logger',
         //call the cleanup recursively and mark this node (being closed)
         // as non removable (from local hashmap neither from territory)
         deleteNodeAndChildrenFromLocalHash(nodeId, false);
+        this._treeBrowser.updateNode(this._nodes[nodeId].treeNode, {icon: this.getIcon(nodeId)});
 
         //if there is anything to remove from the territory, do it
         if (removeFromTerritory.length > 0) {
@@ -350,7 +361,8 @@ define(['js/logger',
                         nodeDescriptor = {
                             name: updatedObject.getAttribute('name'),
                             hasChildren: (updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                            class: objType
+                            class: objType,
+                            icon: self.getIcon(updatedObject),
                         };
 
                         //update the node's representation in the tree
@@ -371,17 +383,18 @@ define(['js/logger',
                         nodeDescriptor = {
                             name: updatedObject.getAttribute('name'),
                             hasChildren: (updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                            class: objType
+                            class: objType,
+                            icon: self.getIcon(updatedObject)
                         };
 
-                        //update the node's representation in the tree
-                        this._treeBrowser.updateNode(this._nodes[objectId].treeNode, nodeDescriptor);
+
 
                         oldInheritance = this._nodes[objectId].inheritance;
                         currentInheritance = updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE);
 
                         //the concrete child deletion is important only if the node is open in the tree
                         if (this._treeBrowser.isExpanded(this._nodes[objectId].treeNode)) {
+                            nodeDescriptor.icon = self.getIcon(updatedObject, true);
                             //figure out what are the deleted children's IDs
                             inheritanceDeleted = _.difference(oldInheritance, currentInheritance);
 
@@ -444,7 +457,8 @@ define(['js/logger',
                                         id: currentChildId,
                                         name: childNode.getAttribute('name'),
                                         hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                                        class: this._getNodeClass(childNode)
+                                        class: this._getNodeClass(childNode),
+                                        icon: this.getIcon(childNode)
                                     });
 
                                     //store the node's info in the local hashmap
@@ -474,6 +488,9 @@ define(['js/logger',
                         }
 
                         this._nodes[objectId].inheritance = updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE);
+
+                        //update the node's representation in the tree
+                        this._treeBrowser.updateNode(this._nodes[objectId].treeNode, nodeDescriptor);
 
                         //finally update the object's state showing loaded
                         this._nodes[objectId].state = STATE_LOADED;

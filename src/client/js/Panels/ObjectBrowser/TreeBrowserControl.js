@@ -11,13 +11,15 @@ define(['js/logger',
     'js/Utils/ImportManager',
     'js/Constants',
     'js/RegistryKeys',
+    './ObjectBrowserControlBase',
     'css!./styles/TreeBrowserControl.css'
 ], function (Logger,
              nodePropertyNames,
              ExportManager,
              ImportManager,
              CONSTANTS,
-             REGISTRY_KEYS) {
+             REGISTRY_KEYS,
+             ObjectBrowserControlBase) {
     'use strict';
 
 
@@ -51,7 +53,7 @@ define(['js/logger',
         logger = Logger.create('gme:Panels:ObjectBrowser:TreeBrowserControl', WebGMEGlobal.gmeConfig.client.log);
         this._logger = logger;
 
-        this._client = client;
+        ObjectBrowserControlBase.call(this, client, treeBrowser);
 
         this._treeRootId = TREE_ROOT;
 
@@ -728,6 +730,10 @@ define(['js/logger',
         setTimeout(initialize, 250);
     }
 
+    // Prototypical inheritance
+    TreeBrowserControl.prototype = Object.create(ObjectBrowserControlBase.prototype);
+    TreeBrowserControl.prototype.constructor = TreeBrowserControl;
+
     TreeBrowserControl.getDefaultConfig = function () {
         return {
             treeRoot: '',
@@ -751,29 +757,6 @@ define(['js/logger',
 
     TreeBrowserControl.getComponentId = function () {
         return 'GenericUITreeBrowserControl';
-    };
-
-    TreeBrowserControl.prototype.getIcon = function (nodeOrId, expanded) {
-        var node,
-            iconName;
-
-        if (typeof nodeOrId === 'string') {
-            node = this._client.getNode(nodeOrId);
-        } else {
-            node = nodeOrId;
-        }
-
-        if (node) {
-            if (expanded) {
-                iconName = node.getRegistry(REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) ||
-                    node.getRegistry(REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON);
-            } else {
-                iconName = node.getRegistry(REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON) ||
-                    node.getRegistry(REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
-            }
-        }
-
-        return iconName ?  '/assets/DecoratorSVG/' + iconName : null;
     };
 
     TreeBrowserControl.prototype._getValidChildrenTypes = function (nodeId) {
