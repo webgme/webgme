@@ -1,7 +1,6 @@
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
-@import url("./../../../../../css/bootstrap-multiselect/bootstrap-multiselect.css");
 .multiselect-widget div.btn-group {
   width: 100%; }
   .multiselect-widget div.btn-group button.multiselect {

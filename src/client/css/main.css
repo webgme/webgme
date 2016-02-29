@@ -1,11 +1,25 @@
+@import url("../bower_components/bootstrap/dist/css/bootstrap.min.css");
+@import url("../bower_components/bootstrap/dist/css/bootstrap-theme.min.css");
+@import url("../bower_components/codemirror/lib/codemirror.css");
+@import url("codemirror/codemirror.bootstrap.css");
+
 @import url("webgme_bootstrap_overrides.css");
-@import url("jquery/jquery-ui-1.10.4.min.css");
+@import url("../bower_components/jquery-ui/themes/base/jquery-ui.min.css");
 @import url("jquery/jquery.layout.css");
 @import url("jquery/jquery.layout.webgme.css");
 @import url("jquery/jquery.dataTables.bootstrapped.css");
-@import url("jquery/jquery.gritter.css");
+@import url("../bower_components/jquery.gritter/css/jquery.gritter.css");
 @import url("jquery/jquery.csszoom.css");
-@import url("jquery/jquery.spectrum.css");
+@import url("../bower_components/spectrum/spectrum.css");
+@import url("../bower_components/bootstrap-multiselect/dist/css/bootstrap-multiselect.css");
+@import url("../bower_components/jquery.fancytree/dist/skin-vista/ui.fancytree.css");
+@import url("contextmenu/jquery.contextMenu.min.css");
+
+@import url("print.css");
+@import url("themes/dawn.css");
+@import url("../fonts/font-awesome/css/font-awesome.min.css");
+@import url("../fonts/webgme-icons/style.css");
+@import url("../bower_components/isis-ui-components/dist/isis-ui-components.css");
 
 /* OWN STYLES */
 html,body {

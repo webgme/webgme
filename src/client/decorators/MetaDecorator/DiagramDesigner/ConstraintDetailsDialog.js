@@ -8,10 +8,11 @@
 define([
     'js/util',
     'text!./templates/ConstraintDetailsDialog.html',
-    'codemirror',
     'common/regexp',
+    'codemirror/lib/codemirror',
+    'codemirror/mode/javascript/javascript',
     'css!./styles/ConstraintDetailsDialog.css'
-], function (util, constraintDetailsDialogTemplate, codeMirror, REGEXP) {
+], function (util, constraintDetailsDialogTemplate, REGEXP, codeMirror) {
 
     'use strict';
     var ConstraintDetailsDialog;

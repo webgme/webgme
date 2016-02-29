@@ -7,7 +7,8 @@
 
 define([
     'js/Dialogs/Import/ImportDialog',
-    'js/Loader/LoaderCircles'
+    'js/Loader/LoaderCircles',
+    'jquery'
 ], function (ImportDialog, LoaderCircles) {
 
     'use strict';

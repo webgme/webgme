@@ -140,7 +140,7 @@ module.exports = function (config) {
             {pattern: 'src/client/lib/jquery/*.js', included: false},
             {pattern: 'src/client/lib/require/**/*.js', included: false},
             {pattern: 'src/client/lib/superagent/*.js', included: false},
-            {pattern: 'src/client/lib/q/*.js', included: false},
+            {pattern: 'src/client/bower_components/q/*.js', included: false},
             {pattern: 'src/plugin/*.js', included: false},
             {pattern: 'src/plugin/coreplugins/MinimalWorkingExample/**/*.js', included: false},
             {pattern: 'src/plugin/coreplugins/PluginGenerator/**/*.js', included: false},

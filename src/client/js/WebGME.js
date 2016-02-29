@@ -5,15 +5,10 @@
  * @author nabana / https://github.com/nabana
  */
 
-WebGMEGlobal.version = 'x';
-WebGMEGlobal.SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPoints;
-
 
 // let require load all the toplevel needed script and call us on domReady
 define([
         'js/logger',
-        'text!/gmeConfig.json',
-        'text!/package.json',
         'js/client',
         'js/Constants',
         'js/client/constants',
@@ -36,8 +31,6 @@ define([
         'superagent',
         'q'
     ], function (Logger,
-                 gmeConfigJson,
-                 packagejson,
                  Client,
                  CONSTANTS,
                  CLIENT_CONSTANTS,
@@ -62,24 +55,13 @@ define([
 
         'use strict';
 
-        var npmJSON = JSON.parse(packagejson),
-            gmeConfig = JSON.parse(gmeConfigJson),
-            npmJSONFromSplit,
-            defaultPageTitle = 'WebGME';
-
-        WebGMEGlobal.version = npmJSON.version;
-        WebGMEGlobal.NpmVersion = npmJSON.dist ? npmJSON.version : '';
-        WebGMEGlobal.GitHubVersion = '';
-        if (npmJSON._from) {
-            npmJSONFromSplit = npmJSON._from.split('/');
-            WebGMEGlobal.GitHubVersion = npmJSONFromSplit[npmJSONFromSplit.length - 1];
-        }
-
+        var defaultPageTitle = 'WebGME';
 
         function webGMEStart(afterPanelsLoaded) {
             var layoutManager,
                 client,
                 loadPanels,
+                gmeConfig = WebGMEGlobal.gmeConfig,
                 logger = Logger.create('gme:WebGME', WebGMEGlobal.gmeConfig.client.log),
                 initialThingsToDo = WebGMEUrlManager.parseInitialThingsToDoFromUrl(),
                 projectOpenDialog;

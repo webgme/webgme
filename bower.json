@@ -36,6 +36,15 @@
     "visionmedia-debug": "2.2.0",
     "moment": "2.11.2",
     "jszip": "Stuk/jszip#2.5.0",
-    "angular-bootstrap": "0.11.0"
+    "angular-bootstrap": "0.11.0",
+    "jquery.fancytree": "fancytree#2.15.0",
+    "jquery": "2.2.1",
+    "jquery-ui": "1.11.4",
+    "bootstrap-multiselect": "0.9.13",
+    "spectrum": "1.8.0",
+    "require-css": "0.1.8",
+    "q": "1.4.1",
+    "codemirror": "5.12.0",
+    "jquery.gritter": "1.7.4"
   }
 }

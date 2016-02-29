@@ -1,6 +1,9 @@
+/*jshint node:true*/
 /**
  * @author kecso / https://github.com/kecso
  */
+
+'use strict';
 
 var requirejs = require('requirejs'),
     FS = require('fs'),
@@ -17,7 +20,7 @@ var requirejs = require('requirejs'),
             superagent: './client/lib/superagent/superagent',
             debug: './client/bower_components/visionmedia-debug/dist/debug',
             underscore: './client/bower_components/underscore/underscore',
-            q: './client/lib/q/q',
+            q: './client/bower_components/q/q',
             js: './client/js/',
             lib: './client/lib/',
             'js/Dialogs/PluginConfig/PluginConfigDialog': '../utils/build/empty/empty',
@@ -30,7 +33,7 @@ var requirejs = require('requirejs'),
             startFile: './utils/build/webgme.classes/start.frag',
             endFile: './utils/build/webgme.classes/end.frag'
         },
-        include:[path]
+        include: [path]
     };
 
 function doBuild(callback) {

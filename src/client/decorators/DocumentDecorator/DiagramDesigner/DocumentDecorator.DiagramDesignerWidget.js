@@ -7,7 +7,7 @@
  */
 
 define([
-    '../Libs/EpicEditor/js/epiceditor.min.js',
+    '../Libs/EpicEditor/js/epiceditor.min',
     'js/RegistryKeys',
     'js/Constants',
     'js/NodePropertyNames',

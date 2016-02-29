@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define([], function () {
+define(['jquery'], function () {
 
     'use strict';
 

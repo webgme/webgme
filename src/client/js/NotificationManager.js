@@ -7,7 +7,7 @@
  */
 
 define([
-    'lib/jquery/jquery.gritter.min',
+    'jquery-gritter',
     'js/util'
 ], function (/*myjgrowl, mygritter, util*/) {
 
