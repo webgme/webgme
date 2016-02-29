@@ -8,6 +8,7 @@
 //TODO does it really work with the fixed paths????
 define([
     'js/Constants',
+    'js/RegistryKeys',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./Diagram.html',
@@ -18,6 +19,7 @@ define([
     './Transition',
     './UMLStateMachine.META'
 ], function (CONSTANTS,
+             REGISTRY_KEYS,
              nodePropertyNames,
              DiagramDesignerWidgetConstants,
              DiagramTemplate,
@@ -135,6 +137,7 @@ define([
     UMLStateMachineDecoratorCore.prototype._update = function () {
         this._updateName();
         this._updateMetaTypeSpecificParts();
+        this._updateColors();
     };
 
     /* TO BE OVERRIDDEN IN META TYPE SPECIFIC CODE */
@@ -171,6 +174,68 @@ define([
                 this._metaTypeTemplate = METATYPETEMPLATE_UMLSTATEDIAGRAM.clone();
             }
         }
+    };
+
+
+    UMLStateMachineDecoratorCore.prototype._updateColors = function () {
+        var el;
+        this._getNodeColorsFromRegistry();
+
+        if (this.fillColor && this._metaTypeTemplate) {
+            if (UMLStateMachineMETA.TYPE_INFO.isInitial(this._gmeID)) {
+                el = this._metaTypeTemplate.find('.icon');
+                if (el) {
+                    el.css({
+                        'background-color': this.fillColor,
+                        'border-color': this.fillColor
+                    });
+                }
+            } else if (UMLStateMachineMETA.TYPE_INFO.isEnd(this._gmeID)) {
+                el = this._metaTypeTemplate.find('.icon');
+                if (el) {
+                    el.css({'border-color': this.fillColor});
+                    el = el.find('.inner');
+                    if (el) {
+                        el.css({
+                            'background-color': this.fillColor,
+                            'border-color': this.fillColor
+                        });
+                    }
+                }
+            } else if (UMLStateMachineMETA.TYPE_INFO.isState(this._gmeID)) {
+                this._metaTypeTemplate.css({'background-color': this.fillColor});
+            } else if (UMLStateMachineMETA.TYPE_INFO.isTransition(this._gmeID)) {
+                // Do nothing
+            } else if (UMLStateMachineMETA.TYPE_INFO.isUMLStateDiagram(this._gmeID)) {
+                this._metaTypeTemplate.css({'background-color': this.fillColor});
+            }
+        }
+
+        if (this.borderColor && this._metaTypeTemplate) {
+            if (UMLStateMachineMETA.TYPE_INFO.isInitial(this._gmeID)) {
+                // Do nothing
+            } else if (UMLStateMachineMETA.TYPE_INFO.isEnd(this._gmeID)) {
+                el = this._metaTypeTemplate.find('.icon');
+                if (el) {
+                    el.css({'background-color': this.borderColor});
+                }
+            } else {
+                this._metaTypeTemplate.css({'border-color': this.borderColor});
+            }
+        }
+
+        if (this.textColor) {
+            this.$el.css({color: this.textColor});
+        } else {
+            this.$el.css({color: ''});
+        }
+    };
+
+    UMLStateMachineDecoratorCore.prototype._getNodeColorsFromRegistry = function () {
+        var objID = this._metaInfo[CONSTANTS.GME_ID];
+        this.fillColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.COLOR, true);
+        this.borderColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.BORDER_COLOR, true);
+        this.textColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.TEXT_COLOR, true);
     };
 
 
