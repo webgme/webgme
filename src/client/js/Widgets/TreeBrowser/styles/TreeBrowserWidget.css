@@ -20,7 +20,7 @@
       border: 1px solid transparent; }
   .tree-browser .fancytree-has-children span.fancytree-icon {
     background-position: 0px -16px; }
-  .tree-browser span.fancytree-icon {
+  .tree-browser .fancytree-icon {
     margin-top: 1px;
     cursor: pointer; }
   .tree-browser .fancytree-loading span.fancytree-expander {

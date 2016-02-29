@@ -11,13 +11,15 @@ define(['js/logger',
     'js/Utils/ImportManager',
     'js/Constants',
     'js/RegistryKeys',
+    './ObjectBrowserControlBase',
     'css!./styles/TreeBrowserControl.css'
 ], function (Logger,
              nodePropertyNames,
              ExportManager,
              ImportManager,
              CONSTANTS,
-             REGISTRY_KEYS) {
+             REGISTRY_KEYS,
+             ObjectBrowserControlBase) {
     'use strict';
 
 
@@ -51,7 +53,7 @@ define(['js/logger',
         logger = Logger.create('gme:Panels:ObjectBrowser:TreeBrowserControl', WebGMEGlobal.gmeConfig.client.log);
         this._logger = logger;
 
-        this._client = client;
+        ObjectBrowserControlBase.call(this, client, treeBrowser);
 
         this._treeRootId = TREE_ROOT;
 
@@ -105,6 +107,9 @@ define(['js/logger',
                             initialized = true;
 
                             logger.debug('expanding tree-root', self._treeRootId);
+                            //treeBrowser.updateNode(nodes[self._treeRootId].treeNode, {
+                            //    icon: self.getIcon(self._treeRootId, true)
+                            //});
                             nodes[self._treeRootId].treeNode.setExpanded(true);
                         } else {
                             logger.error('Specified tree-root ' + self._treeRootId + ' did not exist in model - falling' +
@@ -196,6 +201,7 @@ define(['js/logger',
                             name: childNode.getAttribute('name'),
                             hasChildren: (childNode.getChildrenIds()).length > 0,
                             class: getNodeClass(childNode),
+                            icon: self.getIcon(childNode),
                             isConnection: childNode.isConnection(),
                             isAbstract: childNode.isAbstract(),
                             metaType: getMetaTypeName(childNode),
@@ -225,6 +231,8 @@ define(['js/logger',
                         state: childrenDescriptors[i].STATE
                     };
                 }
+
+                treeBrowser.updateNode(parentNode, {icon: self.getIcon(parent, true)});
 
                 treeBrowser.applyFilters();
             }
@@ -269,6 +277,7 @@ define(['js/logger',
             //call the cleanup recursively and mark this node (being closed) as non removable
             // (from local hashmap neither from territory)
             deleteNodeAndChildrenFromLocalHash(nodeId, false);
+            treeBrowser.updateNode(nodes[nodeId].treeNode, {icon: self.getIcon(nodeId)});
 
             //if there is anything to remove from the territory, do it
             if (removeFromTerritory.length > 0) {
@@ -486,6 +495,7 @@ define(['js/logger',
                                 name: updatedObject.getAttribute('name'),
                                 hasChildren: currentChildren.length > 0,
                                 class: objType,
+                                icon: self.getIcon(updatedObject),
                                 isConnection: updatedObject.isConnection(),
                                 isAbstract: updatedObject.isAbstract(),
                                 metaType: getMetaTypeName(updatedObject)
@@ -510,18 +520,17 @@ define(['js/logger',
                                 name: updatedObject.getAttribute('name'),
                                 hasChildren: currentChildren.length > 0,
                                 class: objType,
+                                icon: self.getIcon(updatedObject),
                                 isConnection: updatedObject.isConnection(),
                                 isAbstract: updatedObject.isAbstract(),
                                 metaType: getMetaTypeName(updatedObject)
                             };
 
-                            //update the node's representation in the tree
-                            treeBrowser.updateNode(nodes[objectId].treeNode, nodeDescriptor);
-
                             oldChildren = nodes[objectId].children;
 
                             //the concrete child deletion is important only if the node is open in the tree
                             if (treeBrowser.isExpanded(nodes[objectId].treeNode)) {
+                                nodeDescriptor.icon = self.getIcon(updatedObject, true);
                                 //figure out what are the deleted children's IDs
                                 childrenDeleted = _.difference(oldChildren, currentChildren);
 
@@ -588,6 +597,7 @@ define(['js/logger',
                                             name: childNode.getAttribute('name'),
                                             hasChildren: (childNode.getChildrenIds()).length > 0,
                                             class: getNodeClass(childNode),
+                                            icon: self.getIcon(childNode),
                                             isConnection: childNode.isConnection(),
                                             isAbstract: childNode.isAbstract(),
                                             metaType: getMetaTypeName(childNode)
@@ -621,6 +631,10 @@ define(['js/logger',
 
                             //update the object's children list in the local hashmap
                             nodes[objectId].children = currentChildren;
+
+
+                            //update the node's representation in the tree
+                            treeBrowser.updateNode(nodes[objectId].treeNode, nodeDescriptor);
 
                             //finally update the object's state showing loaded
                             nodes[objectId].state = stateLoaded;
@@ -715,6 +729,10 @@ define(['js/logger',
 
         setTimeout(initialize, 250);
     }
+
+    // Prototypical inheritance
+    TreeBrowserControl.prototype = Object.create(ObjectBrowserControlBase.prototype);
+    TreeBrowserControl.prototype.constructor = TreeBrowserControl;
 
     TreeBrowserControl.getDefaultConfig = function () {
         return {

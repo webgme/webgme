@@ -38,6 +38,9 @@ define(['js/logger',
         PREFERENCES_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,
             REGISTRY_KEYS.DISPLAY_FORMAT,
             REGISTRY_KEYS.SVG_ICON,
+            REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON,
+            REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON,
+            REGISTRY_KEYS.SVG_ICON,
             REGISTRY_KEYS.PORT_SVG_ICON],
         NON_INVALID_PTRS = [CONSTANTS.POINTER_BASE];
 
@@ -364,9 +367,22 @@ define(['js/logger',
                             //dstList[extKey].valueType = "option";
                             //FIXME: only the decorators for DiagramDesigner are listed so far
                             dst[extKey].valueItems = decoratorNames;
-                        } else if (key === REGISTRY_KEYS.SVG_ICON || key === REGISTRY_KEYS.PORT_SVG_ICON) {
+                        } else if (key === REGISTRY_KEYS.SVG_ICON || key === REGISTRY_KEYS.PORT_SVG_ICON ||
+                            key === REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON ||
+                            key === REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) {
+
                             dst[extKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
                             dst[extKey].dialog = DecoratorSVGExplorerDialog;
+                            dst[extKey].value = dst[extKey].value === undefined ?
+                                '' : dst[extKey].value;
+                        }
+                    } else {
+                        if (key === REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON ||
+                            key === REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) {
+                            dst[extKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
+                            dst[extKey].dialog = DecoratorSVGExplorerDialog;
+                            dst[extKey].value = dst[extKey].value === undefined ?
+                                '' : dst[extKey].value;
                         }
                     }
                 } else if (prefix === CONSTANTS.PROPERTY_GROUP_META + '.') {

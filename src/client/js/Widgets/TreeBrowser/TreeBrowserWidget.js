@@ -406,7 +406,7 @@ define(['js/logger',
         }
 
         //set new text value (if any)
-        if (node.title !== objDescriptor.name) {
+        if (objDescriptor.hasOwnProperty('name') && node.title !== objDescriptor.name) {
 
 
             nodeName = objDescriptor.name;
@@ -474,7 +474,7 @@ define(['js/logger',
 
         //if there were any change related to this node
         if (nodeDataChanged === true) {
-            node.render();
+            node.render(true);
 
             //log
             this._logger.debug('Node updated: ' + node.key);
@@ -733,6 +733,13 @@ define(['js/logger',
                     name: 'Open in visualizer',
                     callback: function (/*key, options*/) {
                         self.onNodeDoubleClicked.call(self, node.key);
+                    },
+                    icon: false
+                },
+                selectNode: { // The "select (aka double-click)" menu item
+                    name: 'Select node',
+                    callback: function (/*key, options*/) {
+                        self.onMakeNodeSelected.call(self, node.key);
                     },
                     icon: false
                 }
@@ -1094,16 +1101,18 @@ define(['js/logger',
     TreeBrowserWidget.prototype.sortChildren = function (node, rec) {
         var compareFn = function (nodeA, nodeB) {
             // Move connections to bottom
-            if (nodeA.data.isConnection === nodeB.data.isConnection) {
-                if (nodeA.title.toLowerCase() >= nodeB.title.toLowerCase()) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            } else if (nodeA.data.isConnection > nodeB.data.isConnection) {
+            if (nodeA.data.isConnection === true && !nodeB.data.isConnection) {
                 return 1;
-            } else {
+            } else if (nodeB.data.isConnection === true && !nodeA.data.isConnection) {
                 return -1;
+            } else {
+                if (nodeA.title.toLowerCase() > nodeB.title.toLowerCase()) {
+                    return 1;
+                } else if (nodeA.title.toLowerCase() < nodeB.title.toLowerCase()) {
+                    return -1;
+                } else {
+                    return 0;
+                }
             }
         };
 

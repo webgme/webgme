@@ -8,11 +8,13 @@
 define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
-    'js/Constants'
+    'js/Constants',
+    './ObjectBrowserControlBase',
 ], function (Logger,
              GMEConcepts,
              nodePropertyNames,
-             CONSTANTS) {
+             CONSTANTS,
+             ObjectBrowserControlBase) {
     'use strict';
 
     var NODE_PROGRESS_CLASS = 'node-progress',
@@ -25,8 +27,8 @@ define(['js/logger',
     var CrosscutBrowserControl = function (client, treeBrowser) {
         var self = this;
 
-        this._client = client;
-        this._treeBrowser = treeBrowser;
+        ObjectBrowserControlBase.call(this, client, treeBrowser);
+
         this._logger = Logger.create('gme:Panels:ObjectBrowser:CrosscutBrowserControl',
             WebGMEGlobal.gmeConfig.client.log);
 
@@ -34,6 +36,10 @@ define(['js/logger',
             self._initialize();
         }, 250);
     };
+
+    // Prototypical inheritance
+    CrosscutBrowserControl.prototype = Object.create(ObjectBrowserControlBase.prototype);
+    CrosscutBrowserControl.prototype.constructor = CrosscutBrowserControl;
 
     CrosscutBrowserControl.prototype.destroy = function () {
     };
@@ -187,11 +193,13 @@ define(['js/logger',
             class: GME_MODEL_CLASS
         };
 
-        //update the node's representation in the tree
-        this._treeBrowser.updateNode(this._treeNodes[nodeId], nodeDescriptor);
-
         if (this._treeNodes[nodeId].isExpanded()) {
+            nodeDescriptor.icon = this.getIcon(nodeId, true);
+            this._treeBrowser.updateNode(this._treeNodes[nodeId], nodeDescriptor);
             this._updateExpandedTreeNode(nodeId);
+        } else {
+            nodeDescriptor.icon = this.getIcon(nodeId);
+            this._treeBrowser.updateNode(this._treeNodes[nodeId], nodeDescriptor);
         }
     };
 
@@ -298,7 +306,7 @@ define(['js/logger',
             _.each(GMEConcepts.getCrosscuts(nodeId), function (crosscut) {
                 self._createXCutTreeNode(nodeId, crosscut, true);
             });
-
+            this._treeBrowser.updateNode(this._treeNodes[nodeId], {icon: this.getIcon(nodeObj, true)});
             //this._treeBrowser.enableUpdate(true);
         }
 
@@ -381,6 +389,7 @@ define(['js/logger',
         deleteNodeAndChildrenFromLocalHash(nodeId, false);
         this._nodes[nodeId].crosscuts = [];
         this._nodes[nodeId].children = [];
+        this._treeBrowser.updateNode(this._treeNodes[nodeId], {icon: this.getIcon(nodeId)});
 
         //if there is anything to remove from the territory, do it
         if (removeFromTerritory.length > 0) {

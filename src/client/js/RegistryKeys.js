@@ -38,6 +38,8 @@ define([], function () {
         DISPLAY_FORMAT: 'DisplayFormat',
         SVG_ICON: 'SVGIcon',
         PORT_SVG_ICON: 'PortSVGIcon',
+        TREE_ITEM_COLLAPSED_ICON: 'TreeItemCollapsedIcon',
+        TREE_ITEM_EXPANDED_ICON: 'TreeItemExpandedIcon',
 
         /*
          * META_SHEETS_METADATA (title, order, setID, etc)
