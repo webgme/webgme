@@ -841,12 +841,11 @@ define(['js/logger',
                             this.logger.debug('Removing ' + e.eid + ' from delayed connections...');
                             this._delayedConnections.splice(j, 1);
 
-                            //TODO: connection as box
-                            //remove the box that represents this connections
-                            this._widget.deleteComponent(this._delayedConnectionsAsItems[
-                                this._delayedConnections[j].ID]);
+                            //TODO: find a better solution for removing connection, if
+                            // visualized as a box
+                            this._widget.deleteComponent(this._delayedConnectionsAsItems[e.eid]);
 
-                            delete this._delayedConnectionsAsItems[this._delayedConnections[j].ID];
+                            delete this._delayedConnectionsAsItems[e.eid];
                         }
                     }
                 } else if (e.etype === CONSTANTS.TERRITORY_EVENT_UPDATE &&
