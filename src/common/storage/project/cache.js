@@ -232,12 +232,14 @@ define([
             ASSERT(typeof key === 'string');
 
             if (cacheInsert(key, obj) === false) {
-                logger.warn('object inserted was already in cache');
+                // The storage on the server will return error if it's not the same..
+                logger.debug('object inserted was already in cache');
             } else {
                 var item = backup[key];
 
                 if (typeof item !== 'undefined') {
-                    logger.warn('object inserted was already in back-up');
+                    // The storage on the server will return error if it's not the same..
+                    logger.debug('object inserted was already in back-up');
                 } else {
                     item = missing[key];
                     if (typeof item !== 'undefined') {

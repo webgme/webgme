@@ -25,7 +25,7 @@ describe('BlobServer', function () {
                 done(err);
                 return;
             }
-            blobBackend = new BlobFSBackend(gmeConfig);
+            blobBackend = new BlobFSBackend(gmeConfig, logger);
             done();
         });
     });

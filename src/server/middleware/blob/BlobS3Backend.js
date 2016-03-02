@@ -16,8 +16,8 @@ var fs = require('fs'),
     StringStreamReader = require('../../util/StringStreamReader'),
     BlobBackendBase = require('./BlobBackendBase');
 
-var BlobS3Backend = function () {
-    BlobBackendBase.call(this);
+var BlobS3Backend = function (gmeConfig, logger) {
+    BlobBackendBase.call(this, logger);
     this.awsConfig = {
         accessKeyId: '123', // TODO get this from an environment variable
         secretAccessKey: 'abc', // TODO get this from an environment variable

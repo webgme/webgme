@@ -29,7 +29,7 @@ function createExpressBlob(options) {
 
     ensureAuthenticated = options.ensureAuthenticated;
     logger = options.logger.fork('middleware:BlobServer');
-    blobBackend = new BlobFSBackend(options.gmeConfig);
+    blobBackend = new BlobFSBackend(options.gmeConfig, logger);
 
     /* debugging:
     __app.use(function (req, res, next) {

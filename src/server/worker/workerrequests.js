@@ -178,14 +178,14 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     err = err instanceof Error ? err : new Error(err);
                     logger.error('exportLibrary [' + projectId + '] failed with error', err);
                 } else {
-                    logger.info('exportLibrary [' + projectId + '] completed fileUrl:', result.file.url);
+                    logger.debug('exportLibrary [' + projectId + '] completed fileUrl:', result.file.url);
                 }
                 storage.close(function (closeErr) {
                     callback(err || closeErr, result);
                 });
             };
 
-        logger.info('exportLibrary', projectId);
+        logger.debug('exportLibrary', projectId);
 
         if (typeof projectId !== 'string' ||
             typeof libraryRootPath !== 'string' || !(typeof parameters.hash === 'string' ||
@@ -276,7 +276,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         result.error = err.message;
                     }
                 } else {
-                    logger.info('plugin [' + pluginName + '] completed');
+                    logger.debug('plugin [' + pluginName + '] completed');
                 }
                 storage.close(function (closeErr) {
                     callback(err || closeErr, result.serialize());
@@ -296,7 +296,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         }
 
 
-        logger.info('executePlugin', pluginName, socketId);
+        logger.debug('executePlugin', pluginName, socketId);
 
         logger.debug('executePlugin context', {metadata: context});
 
@@ -540,14 +540,14 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     err = err instanceof Error ? err : new Error(err);
                     logger.error('seeding [' + parameters.seedName + '] failed with error', err);
                 } else {
-                    logger.info('seeding [' + parameters.seedName + '] to [' + result.projectId + '] completed');
+                    logger.debug('seeding [' + parameters.seedName + '] to [' + result.projectId + '] completed');
                 }
                 storage.close(function (closeErr) {
                     callback(err || closeErr, result);
                 });
             };
 
-        logger.info('seedProject');
+        logger.debug('seedProject');
 
         if (typeof projectName !== 'string' || parameters === null || typeof parameters !== 'object' ||
             typeof parameters.seedName !== 'string' || typeof parameters.type !== 'string') {
@@ -593,14 +593,14 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     err = err instanceof Error ? err : new Error(err);
                     logger.error('autoMerge [' + projectId + '] failed with error', err);
                 } else {
-                    logger.info('autoMerge [' + projectId + '] completed');
+                    logger.debug('autoMerge [' + projectId + '] completed');
                 }
                 storage.close(function (closeErr) {
                     callback(err || closeErr, result);
                 });
             };
 
-        logger.info('autoMerge ' + projectId + ' ' + mine + ' -> ' + theirs);
+        logger.debug('autoMerge ' + projectId + ' ' + mine + ' -> ' + theirs);
 
         getConnectedStorage(webGMESessionId)
             .then(function (storage_) {
@@ -639,14 +639,14 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     err = err instanceof Error ? err : new Error(err);
                     logger.error('resolve [' + partial.projectId + '] failed with error', err);
                 } else {
-                    logger.info('resolve [' + partial.projectId + '] completed');
+                    logger.debug('resolve [' + partial.projectId + '] completed');
                 }
                 storage.close(function (closeErr) {
                     callback(err || closeErr, result);
                 });
             };
 
-        logger.info('resolve ' + partial.projectId + ' ' + partial.baseCommitHash + ' -> ' + partial.branchName);
+        logger.debug('resolve ' + partial.projectId + ' ' + partial.baseCommitHash + ' -> ' + partial.branchName);
 
         getConnectedStorage(webGMESessionId)
             .then(function (storage_) {
@@ -688,14 +688,14 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     err = err instanceof Error ? err : new Error(err);
                     logger.error('checkConstraints [' + projectId + '] failed with error', err);
                 } else {
-                    logger.info('checkConstraints [' + projectId + '] completed');
+                    logger.debug('checkConstraints [' + projectId + '] completed');
                 }
                 storage.close(function (closeErr) {
                     callback(err || closeErr, result);
                 });
             };
 
-        logger.info('checkConstraints ' + projectId);
+        logger.debug('checkConstraints ' + projectId);
 
         if (typeof projectId !== 'string' || typeof parameters.commitHash !== 'string' ||
             typeof parameters.nodePaths !== 'object' || parameters.nodePaths instanceof Array !== true) {

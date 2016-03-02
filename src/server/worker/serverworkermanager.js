@@ -74,9 +74,12 @@ function ServerWorkerManager(_parameters) {
             childProcess.on('message', messageHandling);
             childProcess.on('exit', function (code, signal) {
                 logger.debug('worker has exited: ' + childProcess.pid);
-                if (code !== 0) {
+                // When killing child-process the code is undefined and the signal SIGINT.
+                if (code !== 0 && signal !== 'SIGINT') {
                     logger.warn('worker ' + childProcess.pid + ' has exited abnormally with code ' + code +
                         ', signal', signal);
+                } else {
+                    logger.debug('worker ' + childProcess.pid + ' was terminated.');
                 }
 
                 if (workerType === CONSTANTS.workerTypes.connected) {

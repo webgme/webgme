@@ -200,6 +200,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         webSocket = io.listen(server || gmeConfig.server.port, gmeConfig.socketIO.serverOptions);
 
         if (gmeConfig.socketIO.adapter.type.toLowerCase() === 'redis') {
+            logger.info('redis adapter:', JSON.stringify(gmeConfig.socketIO.adapter.options));
             webSocket.adapter(redis(gmeConfig.socketIO.adapter.options.uri));
         }
 

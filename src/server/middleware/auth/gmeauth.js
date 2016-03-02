@@ -156,7 +156,8 @@ function GMEAuth(session, gmeConfig) {
                 return getUser(guestAcc);
             })
             .then(function (guestAccount) {
-                logger.info('Guest account: ', {metadata: guestAccount});
+                logger.info('Guest account "' + guestAccount._id + '" canCreate:', guestAccount.canCreate === true);
+                logger.debug('Guest account full-data: ', {metadata: guestAccount});
                 return Q.resolve(guestAccount);
             })
             .nodeify(callback);
@@ -169,6 +170,7 @@ function GMEAuth(session, gmeConfig) {
      */
     function connect(callback) {
         var self = this;
+        logger.info('connecting', gmeConfig.mongo.uri, JSON.stringify(gmeConfig.mongo.options));
         return Q.ninvoke(Mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
             .then(function (db_) {
                 db = db_;
