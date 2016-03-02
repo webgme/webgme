@@ -843,10 +843,9 @@ define(['js/logger',
 
                             //TODO: connection as box
                             //remove the box that represents this connections
-                            this._widget.deleteComponent(this._delayedConnectionsAsItems[
-                                this._delayedConnections[j].ID]);
+                            this._widget.deleteComponent(this._delayedConnectionsAsItems[e.eid]);
 
-                            delete this._delayedConnectionsAsItems[this._delayedConnections[j].ID];
+                            delete this._delayedConnectionsAsItems[e.eid];
                         }
                     }
                 } else if (e.etype === CONSTANTS.TERRITORY_EVENT_UPDATE &&
