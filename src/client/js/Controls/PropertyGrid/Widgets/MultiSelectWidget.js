@@ -72,7 +72,7 @@ define([
 
         this.el.append(this._select);
         this._select.multiselect({
-            onDropdownHidden: function () {
+            onDropdownHide: function () {
                 self._onBlur();
             },
             onChange: function () {
@@ -81,6 +81,15 @@ define([
             buttonClass: 'btn btn-link',
             disableIfEmpty: true,
             disabledText: 'None available ...'
+        });
+
+        // This is not the perfect solution, but the drop-down menu onDropdownHide is not triggered
+        // before a new object is selected and on the destroy event - the fireFinishChange handler is cleared in
+        // the PropertyEditor (so it doesn't persist to the wrong node).
+        // Only cases where there is a change will the dropdown menu persist and be refreshed on mouse leave.
+        this._dropDownMenu = this.el.find('.multiselect-container.dropdown-menu');
+        this._dropDownMenu.on('mouseleave', function () {
+            self._onBlur();
         });
     }
 
@@ -113,6 +122,7 @@ define([
     };
 
     MultiSelectWidget.prototype.destroy = function () {
+        this._dropDownMenu.off('mouseleave');
         WidgetBase.prototype.destroy.call(this);
     };
 
