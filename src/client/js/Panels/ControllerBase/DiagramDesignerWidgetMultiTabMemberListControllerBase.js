@@ -841,8 +841,8 @@ define(['js/logger',
                             this.logger.debug('Removing ' + e.eid + ' from delayed connections...');
                             this._delayedConnections.splice(j, 1);
 
-                            //TODO: connection as box
-                            //remove the box that represents this connections
+                            //TODO: find a better solution for removing connection, if
+                            // visualized as a box
                             this._widget.deleteComponent(this._delayedConnectionsAsItems[e.eid]);
 
                             delete this._delayedConnectionsAsItems[e.eid];
