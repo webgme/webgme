@@ -26,6 +26,7 @@ define([
 
     var ProjectsDialog,
         DATA_PROJECT = 'DATA_PROJECT',
+        READ_ONLY_FILTER = 'READ_ONLY_FILTER',
         TABLE_ROW_BASE = $('<tr class="project-row"></tr>');
 
     ProjectsDialog = function (client, createNew, createType) {
@@ -80,6 +81,7 @@ define([
 
     ProjectsDialog.prototype._initDialog = function () {
         var self = this,
+            extraTabs,
             selectedId;
 
         function openProject(projectId) {
@@ -200,6 +202,17 @@ define([
             });
         }
 
+        if (WebGMEGlobal.gmeConfig.authentication.enable === true &&
+            this._ownerId === WebGMEGlobal.gmeConfig.authentication.guestAccount) {
+            extraTabs = [{
+                title: 'DEMO',
+                active: true,
+                data: READ_ONLY_FILTER
+            }];
+
+            self._filter = READ_ONLY_FILTER;
+        }
+
         this._loader = new LoaderCircles({containerElement: this._btnRefresh});
         this._loader.setSize(14);
 
@@ -208,7 +221,8 @@ define([
                 self._filter = filter;
                 self._updateFilter();
             },
-            noMatchText: 'Nothing matched your filter, please click another letter.'
+            noMatchText: 'Nothing matched your filter, please click another letter.',
+            extraTabs: extraTabs
         });
 
         //hook up event handlers - SELECT project in the list
@@ -604,11 +618,20 @@ define([
             cnt = 0;
 
         filter = filter || self._filter;
+
         self._tableBody.children('tr').each(function () {
             var tableRow = $(this),
-                firstChar = tableRow.data(DATA_PROJECT).name.toUpperCase()[0];
+                firstChar;
 
-            if (filter) {
+            if (filter && filter === READ_ONLY_FILTER) {
+                if (tableRow.hasClass('read-only')) {
+                    tableRow.removeClass('filtered-out');
+                    cnt += 1;
+                } else {
+                    tableRow.addClass('filtered-out');
+                }
+            } else if (filter) {
+                firstChar = tableRow.data(DATA_PROJECT).name.toUpperCase()[0];
                 if (firstChar >= filter[0] && firstChar <= filter[1]) {
                     tableRow.removeClass('filtered-out');
                     cnt += 1;
