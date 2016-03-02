@@ -133,6 +133,16 @@ process.on('message', function (parameters) {
                 result: result
             });
         });
+    } else if (parameters.command === CONSTANTS.workerCommands.reassignGuids) {
+        wr.reassignGuids(parameters.webGMESessionId, parameters.projectId, parameters.commitHash,
+            function (err, result) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.result,
+                    error: err ? err.message : null,
+                    result: result
+                });
+            });
     } else {
         safeSend({
             pid: process.pid,

@@ -1,0 +1,37 @@
+<div class="export-errors-dialog modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <i class="glyphicon glyphicon-trash header-icon"></i><span>Export issues</span>
+            </div>
+            <div class="modal-body">
+                <div id="messageContent"></div>
+                <div>
+                    <i><b>Hints:</b></i>
+                    <ul>
+                        <li>
+                            <i>
+                                If you face a missing node error, you can try to redo the export. If the error
+                                seems to be persistent let the server operator know about it.
+                            </i>
+                        </li>
+                        <li>
+                            <i>
+                                If you have GUID collision alerts, you can try to reassign the GUIDs. A new
+                                branch will be created so you can later merge it back to your branch if you
+                                make sure the changes acceptable. If you had any library imported, you will
+                                no longer be able to detect them based on their GUIDs.
+                            </i>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger btn-ok">Save anyway</button>
+                <button class="btn btn-warning">Reassign GUIDs</button>
+                <button class="btn btn-default btn-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -40,6 +40,8 @@ define([
 
         this.__fileUploadInput = INPUT_FILE_UPLOAD.clone();
 
+        this.__files = [];
+
         this._attachFileDropHandlers();
 
         this.updateDisplay();
@@ -170,6 +172,7 @@ define([
 
         // process all File objects
         if (files && files.length > 0) {
+            this.__files = files;
             this._detachFileDropHandlers(true);
 
             afName = self.propertyName;
@@ -226,6 +229,36 @@ define([
         } while (bytes >= thresh);
 
         return bytes.toFixed(1) + ' ' + units[u];
+    };
+
+    AssetWidget.prototype.getTargetAsJson = function (callback) {
+        var self = this,
+            file,
+            parsedContent = null,
+            reader;
+
+        if (this.__files && this.__files.length > 0) {
+            file = this.__files[0];
+            reader = new FileReader();
+
+            reader.onload = function (e) {
+                if (e.target && e.target.result) {
+                    try {
+                        parsedContent = JSON.parse(e.target.result);
+                    } catch (exp) {
+                        self._logger.error('failed to read asset on the client side', exp);
+                        parsedContent = null;
+                    }
+                }
+
+                callback(parsedContent);
+            };
+
+            reader.readAsText(file);
+
+        } else {
+            callback(null);
+        }
     };
 
     AssetWidget.prototype.destroy = function () {

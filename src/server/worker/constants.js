@@ -33,6 +33,7 @@ module.exports = {
         autoMerge: 'autoMerge',
         resolve: 'resolve',
         checkConstraints: 'checkConstraints',
+        reassignGuids: 'reassignGuids',
 
         // AddOn related
         connectedWorkerStart: 'connectedWorkerStart',

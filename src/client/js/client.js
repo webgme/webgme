@@ -19,7 +19,8 @@ define([
     'js/client/gmeNodeSetter',
     'common/core/users/serialization',
     'blob/BlobClient',
-    'js/client/stateloghelpers'
+    'js/client/stateloghelpers',
+    'common/core/constants'
 ], function (Logger,
              Storage,
              EventDispatcher,
@@ -34,7 +35,8 @@ define([
              getNodeSetters,
              Serialization,
              BlobClient,
-             stateLogHelpers) {
+             stateLogHelpers,
+             CORE_CONSTANTS) {
     'use strict';
 
     function Client(gmeConfig) {
@@ -1788,11 +1790,11 @@ define([
             logger.debug('getExportProjectBranchUrl, command', command);
             if (command.projectId && command.branchName) {
                 storage.simpleRequest(command, function (err, result) {
-                    if (err) {
+                    if (err && !result) {
                         logger.error('getExportProjectBranchUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null, blobClient.getDownloadURL(result.file.hash));
+                        callback(err, blobClient.getDownloadURL(result.file.hash));
                     }
                 });
             } else {
@@ -2013,6 +2015,68 @@ define([
                     callback(null, result);
                 }
             });
+        };
+
+        //reassignGuids - reassigning GUIDs that collide in the given state of the project
+        this.reassignGuids = function (projectId, commitHash, callback) {
+            var command = {};
+            command.command = 'reassignGuids';
+            command.projectId = projectId;
+            command.commitHash = commitHash;
+            logger.debug('reassignGuids, command', command);
+            if (command.projectId && command.commitHash) {
+                storage.simpleRequest(command, function (err, result) {
+                    if (err && !result) {
+                        logger.error('reassignGuids failed with error', err);
+                        callback(err);
+                    } else {
+                        callback(err, result);
+                    }
+                });
+            } else {
+                callback(new Error('invalid parameters!'));
+            }
+        };
+
+        //checking if the import is in the proper format as its intended usage
+        //TODO extra checkings can be done here - now everything is planned to be synchronous
+        this.checkImport = function (jsonImport, importType) {
+            if (!jsonImport) {
+                return 'Import should always be a valid JSON object!';
+            }
+
+            switch (importType) {
+                case CORE_CONSTANTS.EXPORT_TYPE_FULL_PROJECT:
+                    if (jsonImport._metadata && jsonImport._metdata.type) {
+                        if (jsonImport._metadata.type !== CORE_CONSTANTS.EXPORT_TYPE_FULL_PROJECT) {
+                            return 'Import is of type \'library\' and not of \'full project\'!';
+                        }
+                    } else if (jsonImport.root && typeof jsonImport.root.path === 'string') {
+                        if (jsonImport.root.path !== ROOT_PATH) {
+                            return 'Import is of type \'library\' and not of \'full project\'!';
+                        }
+                    } else {
+                        return 'Import data is probably incomplete and should not be used!';
+                    }
+                    break;
+                case CORE_CONSTANTS.EXPORT_TYPE_LIBRARY:
+                    if (jsonImport._metadata && jsonImport._metdata.type) {
+                        if (jsonImport._metadata.type !== CORE_CONSTANTS.EXPORT_TYPE_LIBRARY) {
+                            return 'Import is of type \'full project\' and not of \'library\'!';
+                        }
+                    } else if (jsonImport.root && typeof jsonImport.root.path === 'string') {
+                        if (jsonImport.root.path === ROOT_PATH) {
+                            return 'Import is of type \'full project\' and not of \'library\'!';
+                        }
+                    } else {
+                        return 'Import data is probably incomplete and should not be used!';
+                    }
+                    break;
+                default:
+                    return 'Invalid type, cannot checked!';
+            }
+
+            return null;
         };
 
         this.gmeConfig = gmeConfig;
