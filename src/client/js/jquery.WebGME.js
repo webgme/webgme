@@ -222,6 +222,7 @@ define(['jquery'], function () {
                 opts = {},
                 ulBase = $('<ul class="nav nav-tabs"></ul>'),
                 liBase = $('<li class=""><a href="#" data-toggle="tab"></a></li>'),
+                hasActive = false,
                 ul,
                 li,
                 i,
@@ -231,8 +232,24 @@ define(['jquery'], function () {
             $.extend(opts, defaultParams, params);
 
             ul = ulBase.clone();
+            if (opts.extraTabs) {
+                opts.extraTabs.forEach(function (tabInfo) {
+                    li = liBase.clone();
+                    if (tabInfo.active === true) {
+                        li.addClass('active');
+                        hasActive = true;
+                    }
+
+                    li.find('a').text(tabInfo.title);
+                    li.data('filter', tabInfo.data);
+                    ul.append(li);
+                });
+            }
+
             li = liBase.clone();
-            li.addClass('active');
+            if (hasActive === false) {
+                li.addClass('active');
+            }
             li.find('a').text('ALL');
             ul.append(li);
 
