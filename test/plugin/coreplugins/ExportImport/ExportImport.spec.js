@@ -58,7 +58,7 @@ describe('Plugin ExportImport', function () {
                 ]);
             })
             .then(function () {
-                var blobBackend = new BlobFSBackend(gmeConfig),
+                var blobBackend = new BlobFSBackend(gmeConfig, logger),
                     filePath1 = testFixture.SEED_DIR + 'EmptyProject.json',
                     filePath2 = testFixture.SEED_DIR + 'ActivePanels.json',
                     filePath3 = './test/plugin/coreplugins/ExportImport/assets/ActivePanelModel_lib.json';

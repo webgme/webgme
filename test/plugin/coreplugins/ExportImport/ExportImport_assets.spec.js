@@ -62,7 +62,7 @@ describe('Plugin ExportImport - assets', function () {
                 ]);
             })
             .then(function () {
-                var blobBackend = new BlobFSBackend(gmeConfig),
+                var blobBackend = new BlobFSBackend(gmeConfig, logger),
                     filePath1 = './test/plugin/coreplugins/ExportImport/assets/a.txt',
                     filePath2 = './test/plugin/coreplugins/ExportImport/assets/b.txt',
                     filePath3 = './test/plugin/coreplugins/ExportImport/assets/aa.txt';

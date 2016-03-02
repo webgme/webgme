@@ -45,8 +45,7 @@ function initialize(parameters) {
         gmeConfig = parameters.gmeConfig;
         WEBGME.addToRequireJsPaths(gmeConfig);
         logger = Logger.create('gme:server:worker:simpleworker:pid_' + process.pid, gmeConfig.server.log, true);
-        logger.debug('initializing');
-        logger.info('initialized worker');
+        logger.debug('initialized worker');
         wr = new WorkerRequests(logger, gmeConfig);
         safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialized});
     } else {

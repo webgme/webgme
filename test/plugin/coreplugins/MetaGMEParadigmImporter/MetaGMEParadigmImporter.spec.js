@@ -54,7 +54,7 @@ describe('Plugin MetaGMEParadigmImporter', function () {
                 ]);
             })
             .then(function () {
-                var blobBackend = new BlobFSBackend(gmeConfig),
+                var blobBackend = new BlobFSBackend(gmeConfig, logger),
                     filePath1 = './test/plugin/coreplugins/MetaGMEParadigmImporter/SF.xmp',
                     filePath2 = './test/plugin/coreplugins/MetaGMEParadigmImporter/SF_fail.xmp',
                     blobClient = new BlobRunPluginClient(blobBackend, logger.fork('Blob'));

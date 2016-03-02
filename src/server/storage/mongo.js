@@ -321,7 +321,7 @@ function Mongo(mainLogger, gmeConfig) {
 
         if (connectionCnt === 1) {
             if (self.client === null) {
-                logger.debug('Connecting to mongo...');
+                logger.info('connecting', gmeConfig.mongo.uri, JSON.stringify(gmeConfig.mongo.options));
                 connectDeferred = Q.defer();
                 // connect to mongo
                 mongodb.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {

@@ -23,7 +23,7 @@ var BlobBackendBase = function (logger) {
     this.metadataBucket = 'wg-metadata';
     this.tempBucket = 'wg-temp';
     this.shaMethod = BlobConfig.hashMethod;
-    this.logger = logger;
+    this.logger = logger.fork('BlobBackend');
 };
 
 // -----------------------------------------------------------------------------------------------------------------

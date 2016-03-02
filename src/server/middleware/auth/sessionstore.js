@@ -21,8 +21,10 @@ function sessionStore(parentLogger, gmeConfig) {
     if (gmeConfig.server.sessionStore.type.toLowerCase() === 'memory') {
         store = new MemoryStore(gmeConfig.server.sessionStore.options);
     } else if (gmeConfig.server.sessionStore.type.toLowerCase() === 'mongo') {
+        logger.info('mongo: ', JSON.stringify(gmeConfig.server.sessionStore.options));
         store = new MongoStore(gmeConfig.server.sessionStore.options);
     } else if (gmeConfig.server.sessionStore.type.toLowerCase() === 'redis') {
+        logger.info('redis: ', JSON.stringify(gmeConfig.server.sessionStore.options));
         store = new RedisStore(gmeConfig.server.sessionStore.options);
     } else {
         logger.error('unknown session store type: ' +
