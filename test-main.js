@@ -55,8 +55,8 @@ require.config({
         jszip: './src/client/bower_components/jszip/dist/jszip',
         debug: './src/client/bower_components/visionmedia-debug/dist/debug',
         underscore: './src/client/bower_components/underscore/underscore',
-        Q: './src/client/lib/q/q', //FIXME: this should be removed
-        q: './src/client/lib/q/q',
+        //Q: './src/client/lib/q/q', //FIXME: this should be removed
+        q: './src/client/bower_components/q/q',
 
         karmatest: './test-karma',
         aRtestCases: './test-karma/client/js/AutoRouter/testCases'

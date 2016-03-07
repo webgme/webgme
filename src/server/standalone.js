@@ -821,6 +821,7 @@ function StandAloneServer(gmeConfig) {
     //static contents
     //javascripts - core and transportation related files //TODO: remove config, middleware and bin
     __app.get(/^\/(common|config|bin|middleware)\/.*\.js$/, Express.static(__baseDir, {index: false}));
+    __app.get(/^\/(dist)\/.*\.(js|css|map)$/, Express.static(Path.join(__baseDir, '..'), {index: false}));
 
     //TODO remove this part as this is only temporary!!!
     __app.get('/docs/*', Express.static(Path.join(__baseDir, '..'), {index: false}));

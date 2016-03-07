@@ -5,7 +5,7 @@
  */
 
 define(['js/util',
-    '../Libs/EpicEditor/js/epiceditor.min.js',
+    '../Libs/EpicEditor/js/epiceditor.min',
     'text!./DocumentEditorDialog.html',
     'css!../Libs/EpicEditor/themes/base/epiceditor.css'
 ], function (Util,

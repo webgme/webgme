@@ -12,8 +12,8 @@ define(['js/logger',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',
-    'lib/jquery/jquery.fancytree-all.min',
-    'lib/jquery/jquery.contextMenu.min',
+    'jquery-fancytree',
+    'jquery-contextMenu',
     'css!./styles/TreeBrowserWidget.css'
 ], function (Logger, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
     'use strict';

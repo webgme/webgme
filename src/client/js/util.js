@@ -6,7 +6,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['urlparse'], function (URLPARSE) {
+define(['urlparse', 'jquery'], function (URLPARSE) {
 
     'use strict';
 

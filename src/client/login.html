@@ -4,11 +4,7 @@
     <title>WebGME - Sign in</title>
 
     <!-- CSS libraries -->
-    <link type="text/css" rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
-    <link type="text/css" rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
-    <link type="text/css" rel="stylesheet" href="css/main.css"/>
-    <link type="text/css" rel="stylesheet" href="css/themes/dawn.css">
-    <link type="text/css" rel="stylesheet" href="fonts/webgme-icons/style.css">
+    <link type="text/css" rel="stylesheet" href="/dist/webgme.dist.main.css"/>
 
     <!-- favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
@@ -132,7 +128,7 @@
     }
     form.setAttribute('action', location.origin + '/login' + redirectQuery);
 </script>
-<script src="lib/jquery/jquery-2.1.0.js" type="application/javascript"></script>
+<script src="bower_components/jquery/dist/jquery.min.js" type="application/javascript"></script>
 <script type="application/javascript">
     if (window.location.hash === '#failed') {
         var passwordInputEl = $('#password_input');

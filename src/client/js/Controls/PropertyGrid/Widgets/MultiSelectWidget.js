@@ -12,7 +12,7 @@
 
 define([
     'js/Controls/PropertyGrid/Widgets/WidgetBase',
-    'lib/bootstrap/bootstrap-multiselect/bootstrap-multiselect',
+    'bootstrap-multiselect',
     'css!./styles/MultiSelectWidget.css'
 ], function (WidgetBase) {
 

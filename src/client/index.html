@@ -2,16 +2,19 @@
 <html>
 <head>
     <title>WebGME</title>
-
     <!-- Load main.js with RequireJS and launch the app from there -->
     <script data-main="js/main" src="lib/require/require.min.js"></script>
-
     <!-- favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
 
     <!-- DO NOT enable base tag, it will break the raphael js svg, to test it open the meta-editor
          when the base tag is present. -->
     <!--<base href="/">-->
+
+    <!--<script>-->
+        <!--document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] +-->
+                <!--':35729/livereload.js?snipver=1"></' + 'script>')-->
+    <!--</script>-->
 
     <style>
         .default-container {

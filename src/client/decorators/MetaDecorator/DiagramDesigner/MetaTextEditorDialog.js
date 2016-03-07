@@ -7,7 +7,8 @@
 define([
     'js/util',
     'text!./templates/MetaTextEditorDialog.html',
-    'codemirror',
+    'codemirror/lib/codemirror',
+    'codemirror/mode/javascript/javascript',
     'css!./styles/MetaTextEditorDialog.css'
 ], function (util, metaTextEditorDialogTemplate, codeMirror) {
 

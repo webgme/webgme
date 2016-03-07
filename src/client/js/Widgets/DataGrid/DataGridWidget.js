@@ -11,6 +11,7 @@ define([
     'js/Constants',
     'js/Widgets/DataGrid/DataGridWidget.Droppable',
     'text!./templates/DataTableTemplate.html',
+    'jquery-dataTables-bootstrapped',
     'css!./styles/DataGridWidget.css'
 ], function (Logger, util, CONSTANTS, DataGridWidgetDroppable, dataTableTemplate) {
     'use strict';

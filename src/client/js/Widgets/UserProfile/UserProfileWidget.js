@@ -5,7 +5,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/logger', 'css!./styles/UserProfileWidget.css'], function (Logger) {
+define(['js/logger'], function (Logger) {
     'use strict';
 
     var UserProfileWidget,
