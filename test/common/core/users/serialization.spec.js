@@ -324,7 +324,6 @@ describe('serialization', function () {
         core.setAttribute(inst, 'name', 'Instance');
         core.setAttribute(iPrime, 'name', 'IPrime');
 
-        console.log('children', childrenPaths);
         expect(childrenPaths).to.have.length(2);
 
         for (i = 0; i < childrenPaths.length; i += 1) {
@@ -344,7 +343,6 @@ describe('serialization', function () {
                 return Q.nfcall(Serialization.export, core, root);
             })
             .then(function (exportJson) {
-                console.log(exportJson);
                 expect(Object.keys(exportJson.nodes)).to.have.members(guids);
                 expect(exportJson.bases).to.eql({});
             })
