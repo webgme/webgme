@@ -169,7 +169,7 @@ define([
 
         this._dialog = $(projectsDialogTemplate);
 
-        this._userId = this._client.getUserId();
+        this._userId = WebGMEGlobal.userInfo._id;
         //get controls
         this._modalContent = this._dialog.find('.modal-content').first();
         this._el = this._dialog.find('.modal-body').first();

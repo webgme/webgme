@@ -20,7 +20,7 @@ define([
     'common/core/users/serialization',
     'blob/BlobClient',
     'js/client/stateloghelpers',
-    'common/core/constants'
+    'superagent'
 ], function (Logger,
              Storage,
              EventDispatcher,
@@ -36,7 +36,7 @@ define([
              Serialization,
              BlobClient,
              stateLogHelpers,
-             CORE_CONSTANTS) {
+             superagent) {
     'use strict';
 
     function Client(gmeConfig) {
@@ -45,6 +45,7 @@ define([
             storage = Storage.getStorage(logger, gmeConfig, true),
             state = {
                 connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED/INCOMPATIBLE_CONNECTION/CONNECTION_ERROR
+                renewingToken: false,
                 project: null,
                 projectAccess: null,
                 core: null,
@@ -102,6 +103,25 @@ define([
             } else {
                 logger[level]('state at ' + msg,
                     stateLogHelpers.getStateLogString(self, state, gmeConfig.debug, indent));
+            }
+        }
+
+        function renewTokenCookie(callback) {
+            callback = callback || function (err, res) {
+                    state.renewingToken = false;
+                    if (err) {
+                        logger.error('Failed to renew token cookie', err);
+                    } else {
+                        logger.debug('Token cookie renewed');
+                    }
+                };
+
+            if (state.renewingToken === false) {
+                state.renewingToken = true;
+                (new superagent.Request('GET', 'api/user/token'))
+                    .end(callback);
+            } else {
+                logger.debug('Awaiting token renewal..');
             }
         }
 
@@ -318,6 +338,17 @@ define([
                         }
 
                         self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                    });
+                } else if (connectionState === CONSTANTS.STORAGE.JWT_ABOUT_TO_EXPIRE) {
+                    logger.warn('Token about is about to expire');
+                    renewTokenCookie();
+                } else if (connectionState === CONSTANTS.STORAGE.JWT_EXPIRED) {
+                    self.disconnectFromDatabase(function (err) {
+                        if (err) {
+                            logger.error(err);
+                        }
+
+                        self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.JWT_EXPIRED);
                     });
                 } else {
                     logger.error(new Error('Connection failed error ' + connectionState));
@@ -1309,6 +1340,7 @@ define([
             }
         }
 
+        // FIXME: Move this to common/util
         function orderStringArrayByElementLength(strArray) {
             var ordered = [],
                 i, j, index;
@@ -1629,12 +1661,8 @@ define([
         }
 
         this.getUserId = function () {
-            var cookies = URL.parseCookie(document.cookie);
-            if (cookies.webgme) {
-                return cookies.webgme;
-            } else {
-                return 'n/a';
-            }
+            throw new Error('Deprecated! Username is not stored in a cookie anymore. If available, use ' +
+                'WebGMEGlobal.userInfo, if not the user info is available at GET /api/user');
         };
 
         //create from file

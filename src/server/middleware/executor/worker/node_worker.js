@@ -48,7 +48,7 @@ if (typeof define !== 'undefined') {
                 server: url.parse(webGMEUrl).hostname,
                 serverPort: webGMEPort,
                 httpsecure: url.parse(webGMEUrl).protocol === 'https:',
-                sessionId: undefined,
+                webgmeToken: undefined,
                 availableProcessesContainer: availableProcessesContainer,
                 workingDirectory: tempPath,
                 executorNonce: parameters.executorNonce,

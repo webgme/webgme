@@ -1,5 +1,5 @@
 /*globals requireJS*/
-/*jshint node:true*/
+/*jshint node:true, camelcase:false*/
 
 /**
  * @module Server:StandAlone
@@ -9,21 +9,16 @@
 'use strict';
 
 var Path = require('path'),
-    FS = require('fs'),
     OS = require('os'),
     Q = require('q'),
     Express = require('express'),
-    session = require('express-session'),
     compression = require('compression'),
     cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
     methodOverride = require('method-override'),
     multipart = require('connect-multiparty'),
-    Passport = require('passport'),
-    PassGoogle = require('passport-google'),
     Http = require('http'),
     URL = require('url'),
-    contentDisposition = require('content-disposition'),
 
     MongoAdapter = require('./storage/mongo'),
     RedisAdapter = require('./storage/datastores/redisadapter'),
@@ -36,10 +31,8 @@ var Path = require('path'),
     ExecutorServer = require('./middleware/executor/ExecutorServer'),
     api = require('./api'),
 
-//Storage = require('./storage/serverstorage'),
     getClientConfig = require('../../config/getclientconfig'),
     GMEAUTH = require('./middleware/auth/gmeauth'),
-    SSTORE = require('./middleware/auth/sessionstore'),
     Logger = require('./logger'),
 
     ServerWorkerManager = require('./worker/serverworkermanager'),
@@ -308,11 +301,6 @@ function StandAloneServer(gmeConfig) {
 
 
     //internal functions
-    function getRedirectUrlParameter(req) {
-        //return '?redirect=' + URL.addSpecialChars(req.url);
-        return '?redirect=' + encodeURIComponent(req.originalUrl);
-    }
-
     function redirectUrl(req, res) {
         if (req.query.redirect) {
             //res.redirect(URL.removeSpecialChars(req.query.redirect));
@@ -322,31 +310,25 @@ function StandAloneServer(gmeConfig) {
         }
     }
 
-
-    // TODO: add this back, when google authentication works again
-    //function checkGoogleAuthentication(req, res, next) {
-    //    if (__googleAuthenticationSet === true) {
-    //        return next();
-    //    } else {
-    //        var protocolPrefix = gmeConfig.server.https.enable === true ? 'https://' : 'http://';
-    //        Passport.use(new PassGoogle.Strategy({
-    //                returnURL: protocolPrefix + req.headers.host + '/login/google/return',
-    //                realm: protocolPrefix + req.headers.host
-    //            },
-    //            function (identifier, profile, done) {
-    //                return done(null, {id: profile.emails[0].value});
-    //            }
-    //        ));
-    //        __googleAuthenticationSet = true;
-    //        return next();
-    //    }
-    //}
+    function getUserId(req) {
+        return req.userData.userId;
+    }
 
     function ensureAuthenticated(req, res, next) {
         var authorization = req.get('Authorization'),
             username,
             password,
+            token,
             split;
+
+        if (gmeConfig.authentication.enable === false) {
+            // If authentication is turned off we treat everybody as a guest user.
+            req.userData = {
+                userId: gmeConfig.authentication.guestAccount
+            };
+            next();
+            return;
+        }
 
         if (authorization && authorization.indexOf('Basic ') === 0) {
             logger.debug('Basic authentication request');
@@ -355,146 +337,127 @@ function StandAloneServer(gmeConfig) {
             username = split[0];
             password = split[1];
             if (username && password) {
-                // no empty username no empty password
-                __gmeAuth.authenticateUserById(username, password, 'gme', '/', req, res, next);
-                return;
+                __gmeAuth.authenticateUser(username, password)
+                    .then(function () {
+                        req.userData = {
+                            userId: username
+                        };
+                        next();
+                    })
+                    .catch(function (err) {
+                        logger.debug('Basic auth failed', {metadata: err});
+                        res.status(401);
+                        next(new Error('Basic authentication failed'));
+                    });
             } else {
                 res.status(401);
-                return next(new Error('Basic authentication failed'));
+                next(new Error('Basic authentication failed'));
             }
-        }
+        } else if (authorization && authorization.indexOf('Bearer ') === 0) {
+            logger.debug('Token Bearer authentication request');
+            token = authorization.substr('Bearer '.length);
+            __gmeAuth.verifyJWToken(token)
+                .then(function (result) {
+                    if (result.renew === true) {
+                        __gmeAuth.regenerateJWToken(token)
+                            .then(function (newToken) {
+                                req.userData = {
+                                    token: newToken,
+                                    newToken: true,
+                                    userId: result.content.userId
+                                };
 
-        if (true === gmeConfig.authentication.enable) {
-            if (req.isAuthenticated() || (req.session && true === req.session.authenticated)) {
-                return next();
-            } else {
-                //client oriented new session
-                if (req.headers.webgmeclientsession) {
-                    // FIXME: used by blob/plugin/executor ???
-                    __sessionStore.get(req.headers.webgmeclientsession, function (err, clientSession) {
-                        if (!err) {
-                            if (clientSession.authenticated) {
-                                req.session.authenticated = true;
-                                req.session.udmId = clientSession.udmId;
-                                res.cookie('webgme', req.session.udmId);
-                                return next();
-                            } else {
-                                res.sendStatus(401); //TODO find proper error code
-                            }
+                                // TODO: Is this the correct way of doing it?
+                                res.header('access_token', newToken);
+                                next();
+                            })
+                            .catch(next);
+                    } else {
+                        req.userData = {
+                            token: token,
+                            userId: result.content.userId
+                        };
+                        next();
+                    }
+                })
+                .catch(function (err) {
+                    if (err.name === 'TokenExpiredError') {
+                        if (res.getHeader('X-WebGME-Media-Type')) {
+                            res.status(401);
+                            next(err);
                         } else {
-                            res.sendStatus(401); //TODO find proper error code
+                            res.redirect('/login');
                         }
-                    });
-                } else if (gmeConfig.authentication.allowGuests) {
-                    req.session.authenticated = true;
-                    req.session.udmId = gmeConfig.authentication.guestAccount;
-                    res.cookie('webgme', req.session.udmId);
-                    return next();
-                } else if (res.getHeader('X-WebGME-Media-Type')) {
-                    // do not redirect with direct api access
-                    res.status(401);
-                    return next(new Error());
-                } else {
-                    res.redirect('/login' + getRedirectUrlParameter(req));
-                }
+                    } else {
+                        logger.debug('Cookie verification failed', {metadata: err});
+                        res.status(401);
+                        next(err);
+                    }
+                });
+        } else if (req.cookies.access_token) {
+            logger.debug('access_token provided in cookie');
+            token = req.cookies.access_token;
+            __gmeAuth.verifyJWToken(token)
+                .then(function (result) {
+                    if (result.renew === true) {
+                        __gmeAuth.regenerateJWToken(token)
+                            .then(function (newToken) {
+                                req.userData = {
+                                    token: newToken,
+                                    newToken: true,
+                                    userId: result.content.userId
+                                };
+                                logger.debug('generated new token for user', result.content.userId);
+                                res.cookie('access_token', newToken);
+                                // Status code for new token??
+                                next();
+                            })
+                            .catch(next);
+                    } else {
+                        req.userData = {
+                            token: token,
+                            userId: result.content.userId
+                        };
+                        next();
+                    }
+                })
+                .catch(function (err) {
+                    if (err.name === 'TokenExpiredError') {
+                        res.clearCookie('access_token');
+                        if (res.getHeader('X-WebGME-Media-Type')) {
+                            res.status(401);
+                            next(err);
+                        } else {
+                            res.redirect('/login');
+                        }
+                    } else {
+                        logger.debug('Cookie verification failed', err);
+                        res.status(401);
+                        next(err);
+                    }
+                });
+        } else if (gmeConfig.authentication.allowGuests) {
+            logger.debug('access_token not provided in cookie - will generate a guest token.');
+            __gmeAuth.generateJWToken(gmeConfig.authentication.guestAccount, null)
+                .then(function (guestToken) {
+                    req.userData = {
+                        token: guestToken,
+                        newToken: true,
+                        userId: gmeConfig.authentication.guestAccount
+                    };
 
-            }
+                    res.cookie('access_token', guestToken);
+                    next();
+                })
+                .catch(next);
+        } else if (res.getHeader('X-WebGME-Media-Type')) {
+            // do not redirect with direct api access
+            res.status(401);
+            return next(new Error());
         } else {
-            // if authentication is turned off we treat everybody as a guest user
-            req.session.authenticated = true;
-            req.session.udmId = gmeConfig.authentication.guestAccount;
-            res.cookie('webgme', req.session.udmId);
-            return next();
+            res.redirect('/login' + webgmeUtils.getRedirectUrlParameter(req));
         }
     }
-
-    function getGoodExtraAssetRouteFor(component, basePaths) {
-        // Check for good extra asset
-        return function (req, res) {
-            res.sendFile(Path.join(__baseDir, req.path), function (err) {
-                if (err && err.code !== 'ECONNRESET') {
-                    //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format
-                    // so we try to look for those in our config
-                    //first we check if we have the plugin registered in our config
-                    var urlArray = req.url.split('/'),
-                        pluginName = urlArray[2] || null,
-                        basePath,
-                        baseAndPathExist,
-                        relPath;
-
-                    relPath = getRelPathFromUrlArray(urlArray);
-                    basePath = getBasePathByName(pluginName, basePaths);
-                    baseAndPathExist = typeof basePath === 'string' && typeof relPath === 'string';
-                    if (baseAndPathExist &&
-                        webgmeUtils.isGoodExtraAsset(pluginName, Path.join(basePath, pluginName))) {
-                        expressFileSending(res, Path.resolve(Path.join(basePath, relPath)));
-                    } else {
-                        res.sendStatus(404);
-                    }
-                }
-            });
-        };
-    }
-
-    function getRelPathFromUrlArray(urlArray) {
-        urlArray.shift();
-        urlArray.shift();
-        urlArray.shift();
-        var relPath = urlArray.join('/');
-        if (!Path.extname(relPath)) {  // js file by default
-            relPath += '.js';
-        }
-        return relPath;
-    }
-
-    /**
-     * Unlike `getGoodExtraAssetRouteFor`, `getRouteFor` does not assume that the
-     * resource hosts a main file which has the same structure as the parent directory.
-     * That is, there are examples of panels (such as SplitPanel) in which the
-     * main file does not adhere to the format "NAME/NAME+'Panel'"
-     */
-    function getRouteFor(component, basePaths) {
-        //first we try to give back the common plugin/modules
-        return function (req, res) {
-            res.sendFile(Path.join(__baseDir, req.path), function (err) {
-                if (err && err.code !== 'ECONNRESET') {
-                    //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format
-                    // so we try to look for those in our config
-                    //first we check if we have the plugin registered in our config
-                    var urlArray = req.url.split('/'),
-                        pluginName = urlArray[2] || null,
-                        basePath,
-                        relPath;
-
-                    urlArray.shift();
-                    urlArray.shift();
-                    relPath = urlArray.join('/');
-                    if (!Path.extname(relPath)) {  // js file by default
-                        relPath += '.js';
-                    }
-                    basePath = getBasePathByName(pluginName, basePaths);
-
-                    if (typeof basePath === 'string' && typeof relPath === 'string') {
-                        expressFileSending(res, Path.resolve(Path.join(basePath, relPath)));
-                    } else {
-                        res.sendStatus(404);
-                    }
-                }
-            });
-        };
-    }
-
-    function getBasePathByName(pluginName, basePaths) {
-        for (var i = 0; i < basePaths.length; i++) {
-            var additional = FS.readdirSync(basePaths[i]);
-            for (var j = 0; j < additional.length; j++) {
-                if (additional[j] === pluginName) {
-                    return basePaths[i];
-                }
-            }
-        }
-    }
-
 
     function setupExternalRestModules() {
         var restComponent,
@@ -519,22 +482,6 @@ function StandAloneServer(gmeConfig) {
         }
     }
 
-    function expressFileSending(httpResult, path) {
-        httpResult.sendFile(path, function (err) {
-            //TODO we should check for all kind of error that should be handled differently
-            if (err) {
-                if (err.code === 'EISDIR') {
-                    // NOTE: on Linux status is 404 on Windows status is not set
-                    err.status = err.status || 404;
-                }
-                logger.warn('expressFileSending failed for: ' + path + ': ' + (err.stack ? err.stack : err));
-                if (httpResult.headersSent === false) {
-                    httpResult.sendStatus(err.status || 500);
-                }
-            }
-        });
-    }
-
     //here starts the main part
     //variables
     var logger = null,
@@ -544,11 +491,7 @@ function StandAloneServer(gmeConfig) {
         __gmeAuth = null,
         apiReady,
         __app = null,
-        __sessionStore,
         __workerManager,
-        __users = {},
-    //__googleAuthenticationSet = false,
-    //__canCheckToken = true,
         __httpServer = null,
         __logoutUrl = gmeConfig.authentication.logOutUrl || '/',
         __baseDir = requireJS.s.contexts._.config.baseUrl,// TODO: this is ugly
@@ -566,12 +509,12 @@ function StandAloneServer(gmeConfig) {
     logger.debug('starting standalone server initialization');
     //initializing https extra infos
 
-    logger.debug('initializing session storage');
-    __sessionStore = new SSTORE(logger, gmeConfig);
+    //logger.debug('initializing session storage');
+    //__sessionStore = new SSTORE(logger, gmeConfig);
 
     logger.debug('initializing server worker manager');
     __workerManager = new ServerWorkerManager({
-        sessionToUser: __sessionStore.getSessionUser,
+        //sessionToUser: __sessionStore.getSessionUser,
         globConf: gmeConfig,
         logger: logger
     });
@@ -579,19 +522,7 @@ function StandAloneServer(gmeConfig) {
     logger.debug('initializing authentication modules');
     //TODO: do we need to create this even though authentication is disabled?
     // FIXME: we need to connect with gmeAUTH again! start/stop/start/stop
-    __gmeAuth = new GMEAUTH(__sessionStore, gmeConfig);
-
-    logger.debug('initializing passport module for user management');
-    //TODO in the long run this also should move to some database
-    Passport.serializeUser(
-        function (user, done) {
-            __users[user.id] = user;
-            done(null, user.id);
-        });
-    Passport.deserializeUser(
-        function (id, done) {
-            done(null, __users[id]);
-        });
+    __gmeAuth = new GMEAUTH(null, gmeConfig);
 
     logger.debug('initializing static server');
     __app = new Express();
@@ -614,6 +545,7 @@ function StandAloneServer(gmeConfig) {
         gmeConfig: gmeConfig,
         logger: logger,
         ensureAuthenticated: ensureAuthenticated,
+        getUserId: getUserId,
         gmeAuth: __gmeAuth,
         safeStorage: __storage,
         workerManager: __workerManager
@@ -642,45 +574,6 @@ function StandAloneServer(gmeConfig) {
     }));
     __app.use(methodOverride());
     __app.use(multipart({defer: true})); // required to upload files. (body parser should not be used!)
-    __app.use(session({
-        store: __sessionStore,
-        secret: gmeConfig.server.sessionStore.cookieSecret,
-        key: gmeConfig.server.sessionStore.cookieKey,
-        saveUninitialized: true,
-        resave: true
-    }));
-    __app.use(Passport.initialize());
-    __app.use(Passport.session());
-
-    // FIXME: do we need this code to make sure that we serve requests only if the session is available?
-    // Examples: can we lose the connection to mongo or redis, if they are used for storing the sessions?
-    //__app.use(function (req, res, next) {
-    //    var tries = 3;
-    //
-    //    if (req.session !== undefined) {
-    //        return next();
-    //    }
-    //
-    //    function lookupSession(error) {
-    //        if (error) {
-    //            return next(error);
-    //        }
-    //
-    //        tries -= 1;
-    //
-    //        if (req.session !== undefined) {
-    //            return next();
-    //        }
-    //
-    //        if (tries < 0) {
-    //            return next(new Error('oh no session is not available'));
-    //        }
-    //
-    //        __sessionStore(req, res, lookupSession);
-    //    }
-    //
-    //    lookupSession();
-    //});
 
     if (gmeConfig.executor.enable) {
         __executorServer = new ExecutorServer(middlewareOpts);
@@ -692,14 +585,10 @@ function StandAloneServer(gmeConfig) {
     setupExternalRestModules();
 
     // Basic authentication
-
     logger.debug('creating login routing rules for the static server');
     __app.get('/', ensureAuthenticated, Express.static(__clientBaseDir));
     __app.get('/logout', function (req, res) {
-        res.clearCookie('webgme');
-        req.logout();
-        req.session.authenticated = false;
-        delete req.session.udmId;
+        res.clearCookie('access_token');
         res.redirect(__logoutUrl);
     });
 
@@ -720,10 +609,29 @@ function StandAloneServer(gmeConfig) {
         }
         req.__gmeAuthFailUrl__ += '#failed';
         next();
-    }, __gmeAuth.authenticate, function (req, res) {
-        res.cookie('webgme', req.session.udmId);
-        redirectUrl(req, res);
-    });
+    },
+        function (req, res, next) {
+            var userId = req.body.username,
+                password = req.body.password;
+            if (gmeConfig.authentication.enable) {
+                __gmeAuth.generateJWToken(userId, password)
+                    .then(function (token) {
+                        res.cookie('access_token', token);
+                        redirectUrl(req, res);
+                    })
+                    .catch(function (err) {
+                        if (res.getHeader('X-WebGME-Media-Type')) {
+                            // do not redirect for api requests
+                            res.status(401);
+                            return next(new Error(err));
+                        } else {
+                            res.redirect(req.__gmeAuthFailUrl__);
+                        }
+                    });
+            } else {
+                redirectUrl(req, res);
+            }
+        });
 
     // TODO: review/revisit this part when google authentication is used.
     //__app.get('/login/google', checkGoogleAuthentication, Passport.authenticate('google'));
@@ -774,15 +682,17 @@ function StandAloneServer(gmeConfig) {
 
     // Plugin paths
     logger.debug('creating plugin specific routing rules');
-    __app.get(/^\/plugin\/.*/, getGoodExtraAssetRouteFor('plugin', gmeConfig.plugin.basePaths));
+    __app.get(/^\/plugin\/.*/, webgmeUtils.getGoodExtraAssetRouteFor('plugin',
+        gmeConfig.plugin.basePaths, logger, __baseDir));
 
     // Layout paths
     logger.debug('creating layout specific routing rules');
-    __app.get(/^\/layout\/.*/, getGoodExtraAssetRouteFor('layout', gmeConfig.visualization.layout.basePaths));
+    __app.get(/^\/layout\/.*/, webgmeUtils.getGoodExtraAssetRouteFor('layout',
+        gmeConfig.visualization.layout.basePaths, logger, __baseDir));
 
     // Panel paths
     logger.debug('creating path specific routing rules');
-    __app.get(/^\/panel\/.*/, getRouteFor('panel', gmeConfig.visualization.panelPaths));
+    __app.get(/^\/panel\/.*/, webgmeUtils.getRouteFor('panel', gmeConfig.visualization.panelPaths, __baseDir));
 
     logger.debug('creating external library specific routing rules');
     gmeConfig.server.extlibExcludes.forEach(function (regExStr) {
@@ -814,7 +724,7 @@ function StandAloneServer(gmeConfig) {
             absPath = absPath + '/';
         }
 
-        expressFileSending(res, absPath);
+        webgmeUtils.expressFileSending(res, absPath, logger);
     });
 
     logger.debug('creating basic static content related routing rules');

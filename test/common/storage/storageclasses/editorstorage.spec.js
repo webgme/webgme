@@ -28,7 +28,7 @@ describe('storage storageclasses editorstorage', function () {
         gmeAuth,
         safeStorage,
         storage,
-        webGMESessionId,
+        webgmeToken,
 
         projectName = 'StorageProject',
         importResult,
@@ -139,9 +139,9 @@ describe('storage storageclasses editorstorage', function () {
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
                 socket = result.socket;
-                webGMESessionId = result.webGMESessionId;
+                webgmeToken = result.webgmeToken;
                 storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    result.webGMESessionId,
+                    result.webgmeToken,
                     logger,
                     gmeConfig);
                 storage.open(function (networkState) {
@@ -756,7 +756,7 @@ describe('storage storageclasses editorstorage', function () {
                 openingBranch = false;
 
                 storageOther = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    webGMESessionId,
+                    webgmeToken,
                     logger,
                     gmeConfigOther);
                 storageOther.open(function (networkState) {
@@ -866,7 +866,7 @@ describe('storage storageclasses editorstorage', function () {
                 openingBranch = false;
 
                 storageOther = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    webGMESessionId,
+                    webgmeToken,
                     logger,
                     gmeConfig);
                 storageOther.open(function (networkState) {

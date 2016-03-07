@@ -12,8 +12,8 @@ define([
 ], function (EditorStorage, NodeIoClient, WebSocket) {
     'use strict';
 
-    function createStorage(host, sessionId, logger, gmeConfig) {
-        var ioClient = new NodeIoClient(host, sessionId, logger, gmeConfig),
+    function createStorage(host, token, logger, gmeConfig) {
+        var ioClient = new NodeIoClient(host, token, logger, gmeConfig),
             webSocket = new WebSocket(ioClient, logger, gmeConfig),
             storage = new EditorStorage(webSocket, logger, gmeConfig);
 

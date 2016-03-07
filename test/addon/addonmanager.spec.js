@@ -33,7 +33,7 @@ describe('AddOnManager', function () {
 
                     setTimeout(function () {
                         self.deferredCnt += 1;
-                        manager.monitorBranch('dummySession', branchName)
+                        manager.monitorBranch(null, branchName)
                             .then(function () {
                                 self.deferredCnt -= 1;
                                 //console.log('monitorBranch');
@@ -54,7 +54,7 @@ describe('AddOnManager', function () {
 
                     setTimeout(function () {
                         self.deferredCnt += 1;
-                        manager.unMonitorBranch('dummySession', branchName)
+                        manager.unMonitorBranch(null, branchName)
                             .then(function () {
                                 self.deferredCnt -= 1;
                                 //console.log('unMonitorBranch');

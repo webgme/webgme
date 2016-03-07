@@ -23,7 +23,7 @@ define([
      */
     function ProjectRightsDialog(client, mainLogger) {
         this._client = client;
-        this._userId = client.getUserId();
+        this._userId = WebGMEGlobal.userInfo._id;
         //this._users = [];
         //this._orgs = [];
         this._adminOrgs = WebGMEGlobal.userInfo.adminOrgs;

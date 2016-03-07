@@ -45,6 +45,13 @@
             width: 100%;
         }
 
+        .form-signin input[type="checkbox"] {
+            margin: 0 0 0 -15px;
+        }
+        .form-signin label.checkbox {
+            margin-left: 15px;
+        }
+
         .form-error {
             border: 1px solid #dd4b39;
         }
@@ -91,22 +98,21 @@
             <div class="col-md-12" id="failed_holder"></div>
         </div>
         <div class="row">
-            <div class="col-md-6">
-                <label class="checkbox">
+            <div class="col-md-12">
+                <label class="checkbox pull-left">
                     <input type="checkbox" value="remember-me"> Remember me
                 </label>
+                <div class="button-container pull-right">
+                    <button class="btn btn-large btn-primary" type="submit">Sign in</button>
+                    <a class="btn btn-large btn-warning" href="..">Guest</a>
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6">
-                <button class="btn btn-large btn-primary pull-left" type="submit">Sign in</button>
-            </div>
-            <div class="col-md-6">
-                <a class="btn btn-danger pull-right gPlusButton disabled" type="button"
-                   onclick="window.location.href='/login/google'">
-                    <i class="gPlusIcon"></i> Use my Google account
-                </a>
-            </div>
+            <!--<div class="col-md-6">-->
+                <!--<a class="btn btn-danger pull-right gPlusButton disabled" type="button"-->
+                   <!--onclick="window.location.href='/login/google'">-->
+                    <!--<i class="gPlusIcon"></i> Use my Google account-->
+                <!--</a>-->
+            <!--</div>-->
         </div>
     </form>
 </div>

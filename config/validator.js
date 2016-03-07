@@ -113,6 +113,10 @@ function validateConfig(configOrFileName) {
     assertString('config.authentication.guestAccount', config.authentication.guestAccount);
     assertString('config.authentication.logOutUrl', config.authentication.logOutUrl);
     assertNumber('config.authentication.salts', config.authentication.salts);
+    assertObject('config.authentication.jwt', config.authentication.jwt);
+    assertNumber('config.authentication.jwt.expiresIn', config.authentication.jwt.expiresIn);
+    assertString('config.authentication.jwt.privateKey', config.authentication.jwt.privateKey);
+    assertString('config.authentication.jwt.publicKey', config.authentication.jwt.publicKey);
 
     // bin scripts
     expectedKeys.push('bin');
@@ -189,12 +193,9 @@ function validateConfig(configOrFileName) {
     assertObject('config.server', config.server);
     assertNumber('config.server.port', config.server.port);
     assertNumber('config.server.maxWorkers', config.server.maxWorkers);
-    // server session store
-    assertObject('config.server.sessionStore', config.server.sessionStore);
-    assertString('config.server.sessionStore.type', config.server.sessionStore.type);
-    assertObject('config.server.sessionStore.options', config.server.sessionStore.options);
-    assertString('config.server.sessionStore.cookieSecret', config.server.sessionStore.cookieSecret);
-    assertString('config.server.sessionStore.cookieKey', config.server.sessionStore.cookieKey);
+    warnDeprecated('config.server.sessionStore', config.server.sessionStore,
+        'JWTokens are used for authentication, see config.authentication.jwt');
+
     // server log
     assertObject('config.server.log', config.server.log);
     assertArray('config.server.log.transports', config.server.log.transports);

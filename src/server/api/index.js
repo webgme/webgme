@@ -1,5 +1,5 @@
 /*globals requireJS*/
-/*jshint node:true*/
+/*jshint node:true, camelcase:false*/
 
 /**
  * @module Server:API
@@ -34,6 +34,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         safeStorage = middlewareOpts.safeStorage,
         ensureAuthenticated = middlewareOpts.ensureAuthenticated,
         gmeConfig = middlewareOpts.gmeConfig,
+        getUserId = middlewareOpts.getUserId,
         webgme = require('../../../webgme'),
         merge = webgme.requirejs('common/core/users/merge'),
         StorageUtil = webgme.requirejs('common/storage/util'),
@@ -75,8 +76,18 @@ function createAPI(app, mountPath, middlewareOpts) {
         return req.protocol + '://' + req.headers.host + req.baseUrl + name;
     }
 
-    function getUserId(req) {
-        return req.session.udmId;
+    function getNewJWToken(userId, callback) {
+        var deferred = Q.defer();
+
+        if (gmeConfig.authentication.enable === true) {
+            gmeAuth.generateJWTokenForAuthenticatedUser(userId)
+                .then(deferred.resolve)
+                .catch(deferred.reject);
+        } else {
+            deferred.resolve();
+        }
+
+        return deferred.promise.nodeify(callback);
     }
 
     // ensure authenticated can be used only after this rule
@@ -279,7 +290,35 @@ function createAPI(app, mountPath, middlewareOpts) {
             .catch(next);
     });
 
-    router.get('/componentSettings', function (req, res, next) {
+    router.get('/user/token', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req);
+
+        if (gmeConfig.authentication.enable === false) {
+            res.status(404);
+            res.json({
+                message: 'Authentication is turned off',
+            });
+            return;
+        }
+
+        if (req.userData.token && req.userData.newToken === true) {
+            res.status(200);
+            res.json({
+                access_token: req.userData.token
+            });
+        } else {
+            getNewJWToken(userId)
+                .then(function (token) {
+                    res.status(200);
+                    res.json({access_token: token});
+                })
+                .catch(function (err) {
+                    next(err);
+                });
+        }
+    });
+
+    router.get('/componentSettings', ensureAuthenticated, function (req, res, next) {
         var componentsPath = path.join(process.cwd(), 'config', 'components.json');
         logger.debug('Reading in default componentSettings at:', componentsPath);
         // TODO: Consider using a file watcher and cache the file between updates..
@@ -299,7 +338,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/componentSettings/:componentId', function (req, res, next) {
+    router.get('/componentSettings/:componentId', ensureAuthenticated, function (req, res, next) {
         var componentsPath = path.join(process.cwd(), 'config', 'components.json');
         logger.debug('Reading in default componentSettings at:', componentsPath);
         // TODO: Consider using a file watcher and cache the file between updates..
@@ -958,7 +997,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.patch('/projects/:ownerId/:projectName', ensureAuthenticated, function (req, res, next) {
+    router.patch('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
             projectId =  StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
 
@@ -1002,15 +1041,17 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.put('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
             command = req.body;
+
         command.command = 'seedProject';
         command.userId = userId;
-        command.webGMESessionId = req.session.id;
         command.ownerId = req.params.ownerId;
         command.projectName = req.params.projectName;
 
-        req.session.save(); //TODO why do we have to save manually
-
-        Q.nfcall(middlewareOpts.workerManager.request, command)
+        getNewJWToken(userId)
+            .then(function (token) {
+                command.webgmeToken = token;
+                return Q.nfcall(middlewareOpts.workerManager.request, command);
+            })
             .then(function () {
                 res.sendStatus(204);
             })
@@ -1502,8 +1543,9 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
     });
 
-    router.post('/plugins/:pluginId/execute', ensureAuthenticated, function (req, res) {
+    router.post('/plugins/:pluginId/execute', function (req, res, next) {
         var resultId = GUID(),
+            userId = getUserId(req),
             pluginContext = {
                 managerConfig: {
                     project: req.body.projectId,
@@ -1516,37 +1558,40 @@ function createAPI(app, mountPath, middlewareOpts) {
             },
             workerParameters = {
                 command: middlewareOpts.workerManager.CONSTANTS.workerCommands.executePlugin,
-                webGMESessionId: req.session.id,
                 name: req.params.pluginId,
                 context: pluginContext
             };
 
-        req.session.save();
+        getNewJWToken(userId)
+            .then(function (token) {
+                workerParameters.webgmeToken = token;
 
-        middlewareOpts.workerManager.request(workerParameters, function (err, result) {
-            if (err) {
-                runningPlugins[resultId].status = PLUGIN_CONSTANTS.ERROR;
-                runningPlugins[resultId].err = err;
-            } else {
-                runningPlugins[resultId].status = PLUGIN_CONSTANTS.FINISHED;
-            }
+                middlewareOpts.workerManager.request(workerParameters, function (err, result) {
+                    if (err) {
+                        runningPlugins[resultId].status = PLUGIN_CONSTANTS.ERROR;
+                        runningPlugins[resultId].err = err;
+                    } else {
+                        runningPlugins[resultId].status = PLUGIN_CONSTANTS.FINISHED;
+                    }
 
-            runningPlugins[resultId].result = result;
-            runningPlugins[resultId].timeoutId = setTimeout(function () {
-                logger.warn('Plugin result timed out: ' + gmeConfig.plugin.serverResultTimeout + '[ms]',
-                    resultId);
-                delete runningPlugins[resultId];
-            }, gmeConfig.plugin.serverResultTimeout);
-        });
+                    runningPlugins[resultId].result = result;
+                    runningPlugins[resultId].timeoutId = setTimeout(function () {
+                        logger.warn('Plugin result timed out: ' + gmeConfig.plugin.serverResultTimeout + '[ms]',
+                            resultId);
+                        delete runningPlugins[resultId];
+                    }, gmeConfig.plugin.serverResultTimeout);
+                });
 
-        runningPlugins[resultId] = {
-            status: PLUGIN_CONSTANTS.RUNNING,
-            //timeoutId: will be added after plugin finished
-            //result: null,
-            //error: null
-        };
+                runningPlugins[resultId] = {
+                    status: PLUGIN_CONSTANTS.RUNNING,
+                    //timeoutId: will be added after plugin finished
+                    //result: null,
+                    //error: null
+                };
 
-        res.send({resultId: resultId});
+                res.send({resultId: resultId});
+            })
+            .catch(next);
     });
 
     router.get('/plugins/:pluginId/results/:resultId', ensureAuthenticated, function (req, res) {

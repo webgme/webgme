@@ -65,18 +65,18 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
     }
 
     /**
-     * Opens up the storage based on the webGMESessionId and opens and sets the project.
+     * Opens up the storage based on the webgmeToken and opens and sets the project.
      *
-     * @param {string} webGMESessionId
+     * @param {string} webgmeToken
      * @param {function} [callback]
      * @returns {Promise}
      */
-    this.initialize = function (webGMESessionId, callback) {
+    this.initialize = function (webgmeToken, callback) {
         if (self.initRequested === false) {
             initDeferred = Q.defer();
             self.initRequested = true;
 
-            self.storage = Storage.createStorage(host, webGMESessionId, logger, gmeConfig);
+            self.storage = Storage.createStorage(host, webgmeToken, logger, gmeConfig);
             self.storage.open(function (networkStatus) {
                 if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
                     self.storage.openProject(projectId, function (err, project, branches, rights) {
@@ -110,7 +110,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
         return initDeferred.promise.nodeify(callback);
     };
 
-    this.monitorBranch = function (webGMESessionId, branchName, callback) {
+    this.monitorBranch = function (webgmeToken, branchName, callback) {
         var monitor = self.branchMonitors[branchName],
             deferred = Q.defer();
 
@@ -118,7 +118,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
             monitor = {
                 connectionCnt: initCnt,
                 stopTimeout: null,
-                instance: new BranchMonitor(webGMESessionId, self.storage, self.project, branchName, logger, gmeConfig)
+                instance: new BranchMonitor(webgmeToken, self.storage, self.project, branchName, logger, gmeConfig)
             };
 
             self.branchMonitors[branchName] = monitor;
@@ -210,7 +210,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     };
 
-    this.unMonitorBranch = function (webGMESessionId, branchName, callback) {
+    this.unMonitorBranch = function (webgmeToken, branchName, callback) {
         var deferred = Q.defer(),
             monitor = self.branchMonitors[branchName];
 
@@ -257,9 +257,9 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     };
 
-    this.queryAddOn = function (webGMESessionId, branchName, addOnId, queryParams, callback) {
+    this.queryAddOn = function (webgmeToken, branchName, addOnId, queryParams, callback) {
         var deferred = Q.defer();
-
+        deferred.reject(new Error('Not Implemented!'));
         return deferred.promise.nodeify(callback);
     };
 

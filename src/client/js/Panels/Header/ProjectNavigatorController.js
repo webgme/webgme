@@ -111,7 +111,7 @@ define([
                 var pd = new ProjectsDialog(self.gmeClient, true, data.newType);
                 pd.show();
             };
-            self.userId = self.gmeClient.getUserId();
+            self.userId = WebGMEGlobal.userInfo._id;
         } else {
             newProject = function (/*data*/) {
                 self.dummyProjectsGenerator('New Project ' + Math.floor(Math.random() * 10000), 4);

@@ -8,12 +8,12 @@
 var PluginNodeManagerBase = require('./nodemanagerbase'),
     BlobClientClass = requireJS('common/blob/BlobClient');
 
-function PluginNodeManager(webGMESessionId, project, mainLogger, gmeConfig) {
+function PluginNodeManager(webgmeToken, project, mainLogger, gmeConfig) {
     var blobClient = new BlobClientClass({
             serverPort: gmeConfig.server.port,
             httpsecure: false,
             server: '127.0.0.1',
-            webgmeclientsession: webGMESessionId,
+            webgmeToken: webgmeToken,
             logger: mainLogger.fork('BlobClient')
         });
 

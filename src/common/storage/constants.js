@@ -99,6 +99,9 @@ define([], function () {
         },
 
         // Events
+        JWT_ABOUT_TO_EXPIRE: 'JWT_ABOUT_TO_EXPIRE',
+        JWT_EXPIRED: 'JWT_EXPIRED',
+
         PROJECT_DELETED: 'PROJECT_DELETED',
         PROJECT_CREATED: 'PROJECT_CREATED',
 

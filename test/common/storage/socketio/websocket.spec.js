@@ -125,7 +125,7 @@ describe('storage socketio websocket', function () {
             .then(function (result) {
                 socket = result.socket;
                 storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    result.webGMESessionId,
+                    result.webgmeToken,
                     logger,
                     gmeConfig);
                 storage.open(function (networkState) {
@@ -549,7 +549,7 @@ describe('storage socketio websocket', function () {
         openSocketIo(server, agent2, guestAccount, guestAccount)
             .then(function (result) {
                 storage2 = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    result.webGMESessionId,
+                    result.webgmeToken,
                     logger,
                     gmeConfig);
                 storage2.open(function (networkState) {
@@ -623,7 +623,7 @@ describe('storage socketio websocket', function () {
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
                 storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    result.webGMESessionId,
+                    result.webgmeToken,
                     logger,
                     gmeConfig);
                 storage.open(function (networkState) {
@@ -644,7 +644,7 @@ describe('storage socketio websocket', function () {
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
                 storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    result.webGMESessionId,
+                    result.webgmeToken,
                     logger,
                     gmeConfig);
                 storage.open(function (networkState) {
@@ -674,7 +674,7 @@ describe('storage socketio websocket', function () {
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
                 storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    result.webGMESessionId,
+                    result.webgmeToken,
                     logger,
                     gmeConfigMod);
                 storage.open(function (networkState) {

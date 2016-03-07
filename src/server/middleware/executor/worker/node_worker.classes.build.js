@@ -3478,7 +3478,7 @@ define('blob/BlobClient',[
             this.server = parameters.server || this.server;
             this.serverPort = parameters.serverPort || this.serverPort;
             this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
-            this.webgmeclientsession = parameters.webgmeclientsession;
+            this.webgmeToken = parameters.webgmeToken;
             this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || {/* use defaults */};
         } else {
             this.keepaliveAgentOptions = {/* use defaults */};
@@ -3604,8 +3604,8 @@ define('blob/BlobClient',[
             req.agent(this.keepaliveAgent);
         }
 
-        if (this.webgmeclientsession) {
-            req.set('webgmeclientsession', this.webgmeclientsession);
+        if (this.webgmeToken) {
+            req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
         if (typeof data !== 'string' && !(data instanceof String)) {
             req.set('Content-Length', contentLength);
@@ -3645,8 +3645,8 @@ define('blob/BlobClient',[
         }
 
         req = superagent.post(this.getCreateURL(metadataDescriptor.name, true));
-        if (this.webgmeclientsession) {
-            req.set('webgmeclientsession', this.webgmeclientsession);
+        if (this.webgmeToken) {
+            req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
 
         if (typeof window === 'undefined') {
@@ -3752,8 +3752,8 @@ define('blob/BlobClient',[
         //superagent.parse['application/json'] = superagent.parse['application/zip'];
 
         var req = superagent.get(this.getViewURL(hash, subpath));
-        if (this.webgmeclientsession) {
-            req.set('webgmeclientsession', this.webgmeclientsession);
+        if (this.webgmeToken) {
+            req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
 
         if (typeof window === 'undefined') {
@@ -3894,8 +3894,8 @@ define('blob/BlobClient',[
 
         this.logger.debug('getMetadata', hash);
 
-        if (this.webgmeclientsession) {
-            req.set('webgmeclientsession', this.webgmeclientsession);
+        if (this.webgmeToken) {
+            req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
 
         if (typeof window === 'undefined') {
@@ -4057,7 +4057,6 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
         if (this.isNodeJS) {
             this.logger.debug('Running under node');
             this.server = '127.0.0.1';
-            this._clientSession = null; // parameters.sessionId;;
         }
 
         this.server = parameters.server || this.server;
@@ -5412,7 +5411,7 @@ if (typeof define !== 'undefined') {
                 server: url.parse(webGMEUrl).hostname,
                 serverPort: webGMEPort,
                 httpsecure: url.parse(webGMEUrl).protocol === 'https:',
-                sessionId: undefined,
+                webgmeToken: undefined,
                 availableProcessesContainer: availableProcessesContainer,
                 workingDirectory: tempPath,
                 executorNonce: parameters.executorNonce,

@@ -1,5 +1,5 @@
 /*globals define*/
-/*jshint node:true*/
+/*jshint node:true, camelcase:false*/
 /**
  * //TODO: Consider moving this to src/server/..
  * Socket io client used on the server. Typical use-case is from the users.
@@ -9,7 +9,7 @@
 define(['socket.io-client'], function (io) {
     'use strict';
 
-    function IoClient(host, webGMESessionId, mainLogger, gmeConfig) {
+    function IoClient(host, webgmeToken, mainLogger, gmeConfig) {
         var logger = mainLogger.fork('socketio-nodeclient');
 
         this.connect = function (callback) {
@@ -17,10 +17,21 @@ define(['socket.io-client'], function (io) {
                 protocol = 'http',
                 hostUrl = protocol + '://' + host + ':' + gmeConfig.server.port;
 
-            socketIoOptions.query = {webGMESessionId: webGMESessionId};
             logger.debug('Connecting to "' + hostUrl + '" with options', {metadata: socketIoOptions});
 
+            if (webgmeToken) {
+                socketIoOptions.extraHeaders = {
+                    Cookie: 'access_token=' + webgmeToken
+                };
+
+                logger.debug('webgmeToken was defined adding it as an extra header in the cookie..');
+            }
+
             callback(null, io.connect(hostUrl, socketIoOptions));
+        };
+
+        this.getToken = function () {
+            return webgmeToken;
         };
     }
 

@@ -72,6 +72,10 @@ define([
                     networkHandler(connectionState);
                 } else if (connectionState === CONSTANTS.INCOMPATIBLE_CONNECTION) {
                     networkHandler(connectionState);
+                } else if (connectionState === CONSTANTS.JWT_ABOUT_TO_EXPIRE) {
+                    networkHandler(connectionState);
+                } else if (connectionState === CONSTANTS.JWT_EXPIRED) {
+                    networkHandler(connectionState);
                 } else {
                     logger.error('unexpected connection state');
                     networkHandler(CONSTANTS.CONNECTION_ERROR);

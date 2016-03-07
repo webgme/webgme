@@ -101,7 +101,7 @@ describe('common storage project', function () {
             .then(function (result) {
                 socket = result.socket;
                 storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    result.webGMESessionId,
+                    result.webgmeToken,
                     logger,
                     gmeConfig);
                 storage.open(function (networkState) {

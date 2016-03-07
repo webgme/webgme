@@ -35,10 +35,10 @@ var Core = requireJS('common/core/coreQ'),
 function WorkerRequests(mainLogger, gmeConfig) {
     var logger = mainLogger.fork('WorkerFunctions');
 
-    function getConnectedStorage(webGMESessionId, callback) {
+    function getConnectedStorage(webgmeToken, callback) {
         var deferred = Q.defer(),
             host = '127.0.0.1', //TODO: this should come from gmeConfig
-            storage = Storage.createStorage(host, webGMESessionId, logger, gmeConfig);
+            storage = Storage.createStorage(host, webgmeToken, logger, gmeConfig);
 
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
@@ -147,7 +147,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     }
 
     // Export functionality
-    function _serializeToBlob(webGMESessionId, project, rootHash, libraryRootPath, fileName, callback) {
+    function _serializeToBlob(webgmeToken, project, rootHash, libraryRootPath, fileName, callback) {
         var core = new Core(project, {
                 globConf: gmeConfig,
                 logger: logger.fork('core')
@@ -156,7 +156,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 serverPort: gmeConfig.server.port,
                 httpsecure: false,
                 server: '127.0.0.1',
-                webgmeclientsession: webGMESessionId,
+                webgmeToken: webgmeToken,
                 logger: logger.fork('BlobClient')
             }),
             artie;
@@ -217,7 +217,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param {string} webGMESessionId
+     * @param {string} webgmeToken
      * @param {string} projectId
      * @param {string} libraryRootPath
      * @param {object} parameters - Specify one from where to export. If more than one given the precedence order is:
@@ -227,7 +227,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} [parameters.branchName] - Branch to export from.
      * @param {function} callback
      */
-    function exportLibrary(webGMESessionId, projectId, libraryRootPath, parameters, callback) {
+    function exportLibrary(webgmeToken, projectId, libraryRootPath, parameters, callback) {
         var storage,
             finish = function (err, result) {
                 if (err) {
@@ -252,7 +252,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             return;
         }
 
-        getConnectedStorage(webGMESessionId)
+        getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
 
@@ -268,7 +268,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     if (parameters.hash) {
                         fileName += parameters.hash.substring(1, 7) + fileEnd;
                         logger.debug('RootHash was given fileName:', fileName);
-                        _serializeToBlob(webGMESessionId, project, parameters.hash, libraryRootPath, fileName, finish);
+                        _serializeToBlob(webgmeToken, project, parameters.hash, libraryRootPath, fileName, finish);
                         return;
                     }
 
@@ -294,7 +294,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                             return;
                         }
 
-                        _serializeToBlob(webGMESessionId, project, commitObject.root, libraryRootPath, fileName,
+                        _serializeToBlob(webgmeToken, project, commitObject.root, libraryRootPath, fileName,
                             finish);
                     });
                 });
@@ -305,7 +305,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     /**
      * Executes a plugin.
      *
-     * @param {string} webGMESessionId
+     * @param {string} webgmeToken
      * @param {string} [socketId] - Id of socket that send the request (used for notifications).
      * @param {string} pluginName
      * @param {object} context.managerConfig - where the plugin should execute.
@@ -317,10 +317,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
      * @param {function} callback
      */
-    function executePlugin(webGMESessionId, socketId, pluginName, context, callback) {
+    function executePlugin(webgmeToken, socketId, pluginName, context, callback) {
         var storage,
             errResult,
-            pluginManager = new PluginNodeManager(webGMESessionId, null, logger, gmeConfig),
+            pluginManager = new PluginNodeManager(webgmeToken, null, logger, gmeConfig),
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
@@ -355,7 +355,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
         logger.debug('executePlugin context', {metadata: context});
 
-        getConnectedStorage(webGMESessionId)
+        getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
                 storage.openProject(context.managerConfig.project, function (err, project, branches) {
@@ -457,7 +457,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             .nodeify(callback);
     }
 
-    function _getSeedFromFile(name, webGMESessionId) {
+    function _getSeedFromFile(name, webgmeToken) {
         return _findSeedFilename(name)
             .then(function (filename) {
                 var blobClient;
@@ -472,7 +472,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         serverPort: gmeConfig.server.port,
                         httpsecure: false,
                         server: '127.0.0.1',
-                        webgmeclientsession: webGMESessionId,
+                        webgmeToken: webgmeToken,
                         logger: logger.fork('BlobClient')
                     });
 
@@ -505,12 +505,12 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function _getSeedFromBlob(hash, webGMESessionId) {
+    function _getSeedFromBlob(hash, webgmeToken) {
         var blobClient = new BlobClientClass({
             serverPort: gmeConfig.server.port,
             httpsecure: false,
             server: '127.0.0.1',
-            webgmeclientsession: webGMESessionId,
+            webgmeToken: webgmeToken,
             logger: logger.fork('BlobClient')
         });
 
@@ -578,16 +578,16 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param {string} webGMESessionId
+     * @param {string} webgmeToken
      * @param {string} projectName - Name of new project.
-     * @param {string} [ownerId] - Owner of new project, if not given falls back to user associated with the session.
+     * @param {string} [ownerId] - Owner of new project, if not given falls back to user associated with the token.
      * @param {object} parameters
      * @param {string} parameters.seedName - Name of seed, file or projectId.
      * @param {string} parameters.type - 'db' or 'file'
      * @param {string} [parameters.seedBranch='master'] - If db - optional name of branch.
      * @param [function} callback
      */
-    function seedProject(webGMESessionId, projectName, ownerId, parameters, callback) {
+    function seedProject(webgmeToken, projectName, ownerId, parameters, callback) {
         var storage,
             finish = function (err, result) {
                 if (err) {
@@ -609,19 +609,19 @@ function WorkerRequests(mainLogger, gmeConfig) {
             return;
         }
 
-        getConnectedStorage(webGMESessionId)
+        getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
                 logger.debug('seedProject - storage is connected');
 
                 if (parameters.type === 'file') {
                     logger.debug('seedProject - seeding from file:', parameters.seedName);
-                    return _getSeedFromFile(parameters.seedName, webGMESessionId);
+                    return _getSeedFromFile(parameters.seedName, webgmeToken);
                 } else if (parameters.type === 'db') {
                     logger.debug('seedProject - seeding from existing project:', parameters.seedName);
                     return _getSeedFromProject(storage, parameters.seedName, parameters.seedBranch);
                 } else if (parameters.type === 'blob') {
-                    return _getSeedFromBlob(parameters.seedName, webGMESessionId);
+                    return _getSeedFromBlob(parameters.seedName, webgmeToken);
                 } else {
                     throw new Error('Unknown seeding type [' + parameters.type + ']');
                 }
@@ -634,13 +634,13 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param {string} webGMESessionId
+     * @param {string} webgmeToken
      * @param {string} projectId
      * @param {string} mine - CommitHash or branchName merge into 'theirs'.
      * @param {string} theirs - CommitHash or branchName that 'mine' will be merged into.
      * @param {function} callback
      */
-    function autoMerge(webGMESessionId, projectId, mine, theirs, callback) {
+    function autoMerge(webgmeToken, projectId, mine, theirs, callback) {
         var storage,
             finish = function (err, result) {
                 if (err) {
@@ -656,7 +656,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
         logger.debug('autoMerge ' + projectId + ' ' + mine + ' -> ' + theirs);
 
-        getConnectedStorage(webGMESessionId)
+        getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
 
@@ -682,11 +682,11 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param {string} webGMESessionId
+     * @param {string} webgmeToken
      * @param {object} partial
      * @param {function} callback
      */
-    function resolve(webGMESessionId, partial, callback) {
+    function resolve(webgmeToken, partial, callback) {
         var storage,
             finish = function (err, result) {
                 if (err) {
@@ -702,7 +702,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
         logger.debug('resolve ' + partial.projectId + ' ' + partial.baseCommitHash + ' -> ' + partial.branchName);
 
-        getConnectedStorage(webGMESessionId)
+        getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
                 storage.openProject(partial.projectId, function (err, project /*, branches*/) {
@@ -725,7 +725,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param {string} webGMESessionId
+     * @param {string} webgmeToken
      * @param {string} projectId
      * @param {object} parameters
      * @param {string} parameters.commitHash - State of project to check.
@@ -734,7 +734,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} [parameters.checkType='META'] - 'META', 'CUSTOM' or 'BOTH'.
      * @param {function} callback
      */
-    function checkConstraints(webGMESessionId, projectId, parameters, callback) {
+    function checkConstraints(webgmeToken, projectId, parameters, callback) {
         var storage,
             checkType,
             finish = function (err, result) {
@@ -767,7 +767,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             checkType = constraint.TYPES.META;
         }
 
-        getConnectedStorage(webGMESessionId)
+        getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
                 return _getCoreAndRootNode(storage, projectId, parameters.commitHash);
@@ -792,12 +792,12 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param {string} webGMESessionId
+     * @param {string} webgmeToken
      * @param {string} projectId
      * @param {object} commitHash - Starting state of the project
      * @param {function} callback
      */
-    function reassignGuids(webGMESessionId, projectId, commitHash, callback) {
+    function reassignGuids(webgmeToken, projectId, commitHash, callback) {
         var storage,
             checkType,
             context,
@@ -816,7 +816,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
         logger.info('reassignGuids ' + projectId);
 
-        getConnectedStorage(webGMESessionId)
+        getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
                 return _getCoreAndRootNode(storage, projectId, commitHash);

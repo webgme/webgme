@@ -17,7 +17,8 @@ define([
 
     var NetworkStatusWidget,
         ITEM_VALUE_CONNECT = 'connect',
-        ITEM_VALUE_REFRESH = 'refresh';
+        ITEM_VALUE_REFRESH = 'refresh',
+        ITEM_VALUE_LOGOUT = 'logout';
 
     NetworkStatusWidget = function (containerEl, client) {
         this._logger = Logger.create('gme:Widgets:NetworkStatus:NetworkStatusWidget',
@@ -54,6 +55,8 @@ define([
 
             } else if (value === ITEM_VALUE_REFRESH) {
                 document.location.href = self._urlAtDisconnect;
+            } else if (value === ITEM_VALUE_LOGOUT) {
+                document.location.href = '/logout';
             }
         };
 
@@ -79,6 +82,9 @@ define([
                 break;
             case CONSTANTS.CLIENT.STORAGE.INCOMPATIBLE_CONNECTION:
                 this._modeIncompatible();
+                break;
+            case CONSTANTS.CLIENT.STORAGE.JWT_EXPIRED:
+                this._modeTokenExpired();
                 break;
             case CONSTANTS.CLIENT.STORAGE.CONNECTION_ERROR:
                 this._modeError();
@@ -136,6 +142,21 @@ define([
         this._disconnected = true;
         this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
         this._popoverBox.show('New connection is not compatible with client - refresh required.',
+            this._popoverBox.alertLevels.ERROR, false);
+    };
+
+    NetworkStatusWidget.prototype._modeTokenExpired = function () {
+        this._ddNetworkStatus.clear();
+        this._ddNetworkStatus.setTitle('AUTH_TOKEN_EXPIRED');
+        this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.RED);
+        this._ddNetworkStatus.addItem({
+            text: 'Logout...',
+            value: ITEM_VALUE_LOGOUT
+        });
+
+        this._disconnected = true;
+        this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
+        this._popoverBox.show('Token has expired - a new login is required.',
             this._popoverBox.alertLevels.ERROR, false);
     };
 

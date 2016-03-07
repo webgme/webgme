@@ -27,7 +27,7 @@ describe('storage storageclasses watchers', function () {
         gmeAuth,
         safeStorage,
         storage,
-        webGMESessionId,
+        webgmeToken,
 
         projectName = 'SimpleAPIProject',
         projectNameCreate = 'SimpleAPICreateProject',
@@ -123,9 +123,9 @@ describe('storage storageclasses watchers', function () {
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
                 socket = result.socket;
-                webGMESessionId = result.webGMESessionId;
+                webgmeToken = result.webgmeToken;
                 storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    result.webGMESessionId,
+                    result.webgmeToken,
                     logger,
                     gmeConfig);
                 storage.open(function (networkState) {

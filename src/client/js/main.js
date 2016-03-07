@@ -21,6 +21,7 @@ require.config({
     map: {
         '*': {
             css: 'bower_components/require-css/css' + ( DEBUG ? '' : '.min' ),
+            //text: 'lib/require/require-text/text',
         }
     },
 

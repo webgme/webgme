@@ -8,14 +8,11 @@
 var express = require('express'),
     router = express.Router();
 
-function getUserId(req) {
-    return req.session.udmId;
-}
-
 function initialize(middlewareOpts) {
     var logger = middlewareOpts.logger.fork('ExampleRestRouter'),
         //gmeConfig = middlewareOpts.gmeConfig,
-        ensureAuthenticated = middlewareOpts.ensureAuthenticated;
+        ensureAuthenticated = middlewareOpts.ensureAuthenticated,
+        getUserId = middlewareOpts.getUserId;
 
     logger.debug('initializing ...');
 

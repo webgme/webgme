@@ -13,15 +13,10 @@ var testFixture = require('../../../_globals.js');
 describe('REST API', function () {
     'use strict';
 
-    var gmeConfig = testFixture.getGmeConfig(),
-        logger = testFixture.logger.fork('index.spec'),
-        WebGME = testFixture.WebGME,
+    var WebGME = testFixture.WebGME,
         expect = testFixture.expect,
-        Q = testFixture.Q,
 
-        superagent = testFixture.superagent,
-        projectName2Id = testFixture.projectName2Id;
-
+        superagent = testFixture.superagent;
 
     describe('ADD_ON SPECIFIC API', function () {
         var server,
