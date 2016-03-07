@@ -297,4 +297,57 @@ describe('serialization', function () {
             .nodeify(done);
 
     });
+
+    it('should export a project without bases always', function (done) {
+        var core = contextFrom.core,
+            guids = [
+                '74e7d9a4-9a01-47cc-8268-5d49a9015ff6',
+                '25410f79-479c-43ad-b6cd-9e3c20aa59dd',
+                '678808e8-a861-4e63-ba95-de8717a23d45',
+                'd4fcc8bf-68d0-4759-807d-057d77a72ede',
+                'f18eb50c-764c-4b11-bf1f-ee81e4c3f477',
+                '810e8ca3-cfd9-4daf-a41c-b2aece6f98ad'
+            ],
+            root = core.createNode({guid: guids[0]}),
+            template = core.createNode({parent: root, guid: guids[1]}),
+            c1 = core.createNode({parent: template, guid: guids[2]}),
+            c2 = core.createNode({parent: template, guid: guids[3]}),
+            inst = core.createNode({parent: root, base: template, guid: guids[4]}),
+            iPrime = core.createNode({parent: root, base: inst, guid: guids[5]}),
+            childrenPaths = core.getChildrenPaths(iPrime),
+            i,
+            promises = [];
+
+        core.setAttribute(template, 'name', 'Template');
+        core.setAttribute(c1, 'name', 'ChildOne');
+        core.setAttribute(c2, 'name', 'ChildTwo');
+        core.setAttribute(inst, 'name', 'Instance');
+        core.setAttribute(iPrime, 'name', 'IPrime');
+
+        console.log('children', childrenPaths);
+        expect(childrenPaths).to.have.length(2);
+
+        for (i = 0; i < childrenPaths.length; i += 1) {
+            promises.push(Q.nfcall(core.loadByPath, root, childrenPaths[i]));
+        }
+
+        Q.allDone(promises)
+            .then(function (children) {
+
+                expect(children).to.have.length(2);
+
+                for (i = 0; i < children.length; i += 1) {
+                    guids.push(core.getGuid(children[i]));
+                    core.setAttribute(children[i], 'childrenId', i);
+                }
+
+                return Q.nfcall(Serialization.export, core, root);
+            })
+            .then(function (exportJson) {
+                console.log(exportJson);
+                expect(Object.keys(exportJson.nodes)).to.have.members(guids);
+                expect(exportJson.bases).to.eql({});
+            })
+            .nodeify(done);
+    });
 });
