@@ -213,7 +213,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 bases = {};
 
             for (i = 0; i < keys.length; i += 1) {
-                if (pathToGuid[keys[i]] === undefined) {
+                if (pathToGuid[keys[i]] === undefined && keys[i].indexOf(exportProject.root.path) !== 0) {
                     bases[ancestorPathToGuid[keys[i]]] = keys[i];
                 }
             }
