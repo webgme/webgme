@@ -94,10 +94,10 @@ define([
         checkSelected = function () {
             var checked = typesContainer.find('input[type=checkbox]:checked');
 
-            if (checked.length === 0) {
-                self._btnSave.disable(true);
-            } else if (isValidAspectName(self._inputName.val())) {
+            if (checked.length > 0 && isValidAspectName(self._inputName.val())) {
                 self._btnSave.disable(false);
+            } else {
+                self._btnSave.disable(true);
             }
         };
 

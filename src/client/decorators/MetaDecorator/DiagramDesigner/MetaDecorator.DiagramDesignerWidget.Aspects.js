@@ -33,7 +33,8 @@ define([
         this._skinParts.$aspectsContainer.on('dblclick', 'li', function (e) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                 var aspectName = $(this).find('.n').text().replace(':', ''),
-                    aspectNames = client.getMetaAspectNames(objId).slice(0),
+                    node = client.getNode(objId),
+                    aspectNames = node.getSetNames(),
                     dialog = new AspectDetailsDialog(),
                     aspectDesc = client.getMetaAspect(objId, aspectName);
 
@@ -41,7 +42,9 @@ define([
                 aspectDesc.validChildrenTypes = self._getAspectDescriptorValidChildrenTypes();
 
                 //pass all the other attribute names to the dialog
-                aspectNames.splice(aspectNames.indexOf(aspectName), 1);
+                if (aspectNames.indexOf(aspectName) !== -1) {
+                    aspectNames.splice(aspectNames.indexOf(aspectName), 1);
+                }
 
                 dialog.show(aspectDesc, aspectNames, function (aspectDesc) {
                         self.saveAspectDescriptor(aspectName, aspectDesc);
@@ -66,11 +69,11 @@ define([
         });
     };
 
-
     MetaDecoratorDiagramDesignerWidgetAspects.prototype._onNewAspectClick = function () {
         var client = this._control._client,
             objId = this._metaInfo[CONSTANTS.GME_ID],
-            existingNames = [CONSTANTS.ASPECT_ALL].concat(client.getMetaAspectNames(objId));
+            node = client.getNode(objId),
+            existingNames = [CONSTANTS.ASPECT_ALL].concat(node.getSetNames());
 
         this._onNewClick(existingNames, this._skinParts.$aspectsContainer, this._skinParts.$addAspectContainer,
             this._skinParts.$aspectsTitle, this._onNewAspectCreate);
@@ -154,13 +157,16 @@ define([
             self = this,
             client = this._control._client,
             objId = this._metaInfo[CONSTANTS.GME_ID],
-            aspectNames = client.getMetaAspectNames(objId).slice(0),
+            node = client.getNode(objId),
+            aspectNames = node.getSetNames(), //all existing aspect is a set as well
             dialog = new AspectDetailsDialog();
 
         this.logger.debug('_onNewAspectCreate: ' + cName);
 
         //pass all the other attribute names to the dialog
-        aspectNames.splice(aspectNames.indexOf(cName), 1);
+        if (aspectNames.indexOf(cName) !== -1) {
+            aspectNames.splice(aspectNames.indexOf(cName), 1);
+        }
 
         desc = {
             'name': cName,
@@ -220,7 +226,6 @@ define([
 
         return validChildrenTypes;
     };
-
 
     MetaDecoratorDiagramDesignerWidgetAspects.prototype.saveAspectDescriptor = function (cName, cDesc) {
         var client = this._control._client,

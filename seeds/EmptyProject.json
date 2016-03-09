@@ -17,7 +17,6 @@
         "name": "ROOT"
       },
       "base": null,
-      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
@@ -88,17 +87,11 @@
         "name": "FCO"
       },
       "base": null,
-      "constraints": {},
       "meta": {
         "attributes": {
           "name": {
             "type": "string"
           }
-        },
-        "children": {
-          "minItems": [],
-          "maxItems": [],
-          "items": []
         }
       },
       "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",

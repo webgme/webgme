@@ -180,7 +180,10 @@ define([
         };
 
         isValidAttributeName = function (name) {
-            return !(name === '' || attributeNames.indexOf(name) !== -1 || REGEXP.DOCUMENT_KEY.test(name) === false);
+            return !(name === '' ||
+            name === 'name' ||
+            attributeNames.indexOf(name) !== -1 ||
+            REGEXP.DOCUMENT_KEY.test(name) === false);
         };
 
         this._dialog = $(attributeDetailsDialogTemplate);

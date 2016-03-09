@@ -296,7 +296,7 @@ define([], function () {
             if (node) {
                 ownMeta = _core.getOwnJsonMeta(node);
                 ownMeta.pointers = ownMeta.pointers || {};
-                ownMeta.pointers[name] = ownMeta.pointers [name] || {};
+                ownMeta.pointers[name] = ownMeta.pointers[name] || {};
 
                 return ownMeta.pointers[name].items || [];
             }
@@ -459,12 +459,46 @@ define([], function () {
             return null;
         }
 
-        function getValidTargetItems(path, name) {
-            var pointerMeta = getPointerMeta(path, name);
-            if (pointerMeta) {
-                return pointerMeta.items;
+        function _getValidTargetItems(path, name, ownOnly) {
+            var node = _nodes[path],
+                meta,
+                paths,
+                items = [],
+                i;
+
+            if (node) {
+                meta = _core.getPointerMeta(node, name);
+                paths = ownOnly ? _core.getOwnJsonMeta(node) : _core.getJsonMeta(node);
+                if (paths && paths.pointers && paths.pointers[name]) {
+                    paths = paths.pointers[name].items || [];
+                } else {
+                    paths = [];
+                }
+                if (meta && paths.length > 0) {
+                    delete meta.min;
+                    delete meta.max;
+                    for (i in meta) {
+                        if (paths.indexOf(i) !== -1) {
+                            items.push({
+                                id: i,
+                                min: meta[i].min === -1 ? undefined : meta[i].min,
+                                max: meta[i].max === -1 ? undefined : meta[i].max
+                            });
+                        }
+                    }
+                    return items;
+                }
             }
+
             return null;
+        }
+
+        function getValidTargetItems(path, name) {
+            return _getValidTargetItems(path, name, false);
+        }
+
+        function getOwnValidTargetItems(path, name) {
+            return _getValidTargetItems(path, name, true);
         }
 
         function updateValidTargetItem(path, name, targetObj) {
@@ -576,8 +610,8 @@ define([], function () {
 
             if (node) {
                 _core.delAspectMeta(node, name);
-                for (i = 0; i < aspect.length; i += 1) {
-                    target = _nodes[aspect[i]];
+                for (i = 0; i < aspect.items.length; i += 1) {
+                    target = _nodes[aspect.items[i]];
                     if (target) {
                         _core.setAspectMetaTarget(node, name, target);
                     }
@@ -638,6 +672,7 @@ define([], function () {
             getPointerMeta: getPointerMeta,
             setPointerMeta: setPointerMeta,
             getValidTargetItems: getValidTargetItems,
+            getOwnValidTargetItems: getOwnValidTargetItems,
             getValidTargetTypes: getValidTargetTypes,
             getOwnValidTargetTypes: getOwnValidTargetTypes,
             filterValidTarget: filterValidTarget,

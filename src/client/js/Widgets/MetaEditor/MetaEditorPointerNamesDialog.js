@@ -27,6 +27,12 @@ define([
                                                             isSet, callback) {
         var self = this;
 
+        if (isSet) {
+            //we have to avoid using 'scr' and 'dst' as set names
+            notAllowedPointerNames.push('src');
+            notAllowedPointerNames.push('dst');
+        }
+
         this._initDialog(existingPointerNames, notAllowedPointerNames, isSet, callback);
 
         this._dialog.modal('show');
@@ -91,7 +97,7 @@ define([
 
             for (i = 0; i < len; i += 1) {
                 this._btnGroup.append($('<button class="btn btn-default">' +
-                util.toSafeString(existingPointerNames[i]) + '</button>'));
+                    util.toSafeString(existingPointerNames[i]) + '</button>'));
             }
 
         } else {
@@ -111,7 +117,7 @@ define([
             for (i = 0; i < len; i += 1) {
                 if (existingPointerNames.indexOf(POPULAR_POINTER_NAMES[i]) === -1) {
                     this._btnGroupPopular.append($('<button class="btn btn-default">' +
-                    POPULAR_POINTER_NAMES[i] + '</button>'));
+                        POPULAR_POINTER_NAMES[i] + '</button>'));
                     popularsAdded = true;
                 }
             }
@@ -182,7 +188,6 @@ define([
             }
         });
     };
-
 
     return MetaEditorPointerNamesDialog;
 });

@@ -161,8 +161,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 parent: core.getParent(node) ? core.getGuid(core.getParent(node)) : null,
                 pointers: getPointers(node),
                 registry: getRegistry(node),
-                sets: getSets(node),
-                constraints: getConstraints(node)
+                sets: getSets(node)/*,
+                 constraints: getConstraints(node) this is now part of the meta */
             };
         }
 
@@ -268,7 +268,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                             minItems: [],
                             maxItems: []
                         },
-                        itemGuids = (input.items || []).sort(),
+                        itemGuids = JSON.parse(JSON.stringify(input.items || [])).sort(),
                         i;
 
                     if (input.max !== undefined) {
@@ -601,8 +601,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 parent: core.getParent(node) ? core.getGuid(core.getParent(node)) : null,
                 pointers: getPointersOfNode(node),
                 registry: getRegistryOfNode(node),
-                sets: getSetsOfNode(node),
-                constraints: getConstraintsOfNode(node)
+                sets: getSetsOfNode(node)/*,
+                 constraints: getConstraintsOfNode(node) the constraints now part of the meta definition */
             };
         }
 

@@ -18,7 +18,6 @@ define(['js/Utils/GMEConcepts',
              ManualAspectConstants,
              DiagramDesignerWidgetMultiTabMemberListControllerBase) {
 
-
     'use strict';
 
     var SetEditorController;
@@ -60,8 +59,7 @@ define(['js/Utils/GMEConcepts',
 
         return result;
     };
-
-
+    
     /**********************************************************/
     /*         HANDLE OBJECT DRAG & DROP ACCEPTANCE           */
     /**********************************************************/

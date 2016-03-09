@@ -62,6 +62,19 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         function getRegConstName(name) {
             return CONSTANTS.CONSTRAINT_REGISTRY_PREFIX + name;
         }
+
+        function getContraintNames(node, onlyOwn) {
+            ASSERT(self.isValidNode(node));
+            var constraintsNode = self.getChild(node, CONSTANTS.CONSTRAINTS_RELID),
+                relIds = onlyOwn ? self.getOwnChildrenRelids(constraintsNode) : self.getChildrenRelids(constraintsNode),
+                names = [];
+
+            for (var i = 0; i < relIds.length; i += 1) {
+                names.push(self.getAttribute(self.getChild(constraintsNode, relIds[i]), 'name'));
+            }
+            return names;
+        }
+
         //</editor-fold>
 
         //<editor-fold=Added Methods>
@@ -115,36 +128,12 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         };
 
         this.getConstraintNames = function (node) {
-            ASSERT(innerCore.isValidNode(node));
-            var constraintsNode = innerCore.getChild(node, CONSTANTS.CONSTRAINTS_RELID);
-            var relIds = innerCore.getChildrenRelids(constraintsNode);
-            var names = [];
-            for (var i = 0; i < relIds.length; i++) {
-                names.push(innerCore.getAttribute(innerCore.getChild(constraintsNode, relIds[i]), 'name'));
-            }
-            return names;
+            return getContraintNames(node, false);
         };
 
         //TODO this means we always have to have this layer above type/inheritance layer
         this.getOwnConstraintNames = function (node) {
-            ASSERT(innerCore.isValidNode(node));
-            var names = self.getConstraintNames(node),
-                base = self.getBase(node),
-                baseNames = [],
-                i, index;
-
-            if (base) {
-                baseNames = self.getConstraintNames(base);
-            }
-
-            for (i = 0; i < baseNames.length; i++) {
-                index = names.indexOf(baseNames[i]);
-                if (index !== -1) {
-                    names.splice(index, 1);
-                }
-            }
-
-            return names;
+            return getContraintNames(node, true);
         };
         //</editor-fold>
     }
