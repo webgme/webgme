@@ -18,7 +18,8 @@ define([
     'js/Dialogs/ProjectRights/ProjectRightsDialog',
     'common/storage/util',
     'js/Utils/SaveToDisk',
-    'q'
+    'q',
+    'js/Utils/ComponentSettings',
 ], function (Logger,
              CONSTANTS,
              ng,
@@ -31,7 +32,8 @@ define([
              ProjectRightsDialog,
              StorageUtil,
              saveToDisk,
-             Q) {
+             Q,
+             ComponentSettings) {
     'use strict';
 
 
@@ -51,19 +53,29 @@ define([
         self.$timeout = $timeout;
         self.$http = $http;
 
+        self.config = ProjectNavigatorController.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(self.config, ProjectNavigatorController.getComponentId());
+        self.logger.debug('Resolved component-settings', self.config);
+
         // internal data representation for fast access to objects
         self.projects = {};
-        self.root = {
-            id: 'root',
-            label: 'GME',
-            itemClass: 'gme-root',
-            menu: []
-        };
 
         // navigation items in the navigator list
-        self.navIdRoot = 0;
-        self.navIdProject = 1;
-        self.navIdBranch = 2;
+        if (self.config.disableProjectActions === true) {
+            self.navIdProject = 0;
+            self.navIdBranch = 1;
+        } else {
+            self.navIdRoot = 0;
+            self.navIdProject = 1;
+            self.navIdBranch = 2;
+        }
+
+        self.root = {
+            id: 'root',
+            label: self.config.rootDisplayName,
+            itemClass: self.config.rootMenuClass,
+            menu: []
+        };
 
         self.requestedSelection = null;
 
@@ -113,41 +125,43 @@ define([
 
         // initialize root menu
         // projects id is mandatory
-        self.root.menu = [
-            {
-                id: 'top',
-                items: [
-                    {
-                        id: 'manageProject',
-                        label: 'Manage projects ...',
-                        iconClass: 'glyphicon glyphicon-folder-open',
-                        action: manageProjects,
-                        actionData: {}
-                    },
-                    {
-                        id: 'newProject',
-                        label: 'New project ...',
-                        iconClass: 'glyphicon glyphicon-plus',
-                        action: newProject,
-                        actionData: {newType: 'seed'}
-                    },
-                    {
-                        id: 'importProject',
-                        label: 'Import project ...',
-                        iconClass: 'glyphicon glyphicon-import',
-                        action: newProject,
-                        actionData: {newType: 'import'}
-                    }
-                ]
-            },
-            {
-                id: 'projects',
-                label: 'Recent projects',
-                totalItems: 20,
-                items: [],
-                showAllItems: manageProjects
-            }
-        ];
+        if (self.config.disableProjectActions === false) {
+            self.root.menu = [
+                {
+                    id: 'top',
+                    items: [
+                        {
+                            id: 'manageProject',
+                            label: 'Manage projects ...',
+                            iconClass: 'glyphicon glyphicon-folder-open',
+                            action: manageProjects,
+                            actionData: {}
+                        },
+                        {
+                            id: 'newProject',
+                            label: 'New project ...',
+                            iconClass: 'glyphicon glyphicon-plus',
+                            action: newProject,
+                            actionData: {newType: 'seed'}
+                        },
+                        {
+                            id: 'importProject',
+                            label: 'Import project ...',
+                            iconClass: 'glyphicon glyphicon-import',
+                            action: newProject,
+                            actionData: {newType: 'import'}
+                        }
+                    ]
+                },
+                {
+                    id: 'projects',
+                    label: 'Recent projects',
+                    totalItems: 20,
+                    items: [],
+                    showAllItems: manageProjects
+                }
+            ];
+        }
 
         if (self.gmeClient) {
             self.initWithClient();
@@ -157,9 +171,7 @@ define([
 
         // only root is selected by default
         self.$scope.navigator = {
-            items: [
-                self.root
-            ],
+            items: self.config.disableProjectActions ? [] : [self.root],
             separator: true
         };
     };
@@ -518,6 +530,7 @@ define([
             iconClass: rights.write ? '' : 'glyphicon glyphicon-lock',
             iconPullRight: !rights.write,
             disabled: !rights.read,
+            itemClass: self.config.projectMenuClass,
             modifiedAt: info.modifiedAt,
             isSelected: false,
             branches: {},
@@ -530,26 +543,6 @@ define([
                     id: 'top',
                     items: [
                         {
-                            id: 'deleteProject',
-                            label: 'Delete project',
-                            iconClass: 'glyphicon glyphicon-remove',
-                            disabled: !rights.delete,
-                            action: deleteProject,
-                            actionData: {
-                                projectId: projectId
-                            }
-                        },
-                        {
-                            id: 'transferProject',
-                            label: 'Transfer project',
-                            iconClass: 'glyphicon glyphicon-transfer',
-                            disabled: !rights.delete,
-                            action: transferProject,
-                            actionData: {
-                                projectId: projectId
-                            }
-                        },
-                        {
                             id: 'showHistory',
                             label: 'Project history ...',
                             iconClass: 'glyphicon glyphicon-time',
@@ -559,7 +552,6 @@ define([
                                 projectId: projectId
                             }
                         }
-
                     ]
                 },
                 {
@@ -599,6 +591,29 @@ define([
                 }
             }
         };
+
+        if (self.disableProjectActions === false) {
+            self.projects[projectId].menu[0].items.unshift({
+                    id: 'transferProject',
+                    label: 'Transfer project',
+                    iconClass: 'glyphicon glyphicon-transfer',
+                    disabled: !rights.delete,
+                    action: transferProject,
+                    actionData: {
+                        projectId: projectId
+                    }
+                });
+            self.projects[projectId].menu[0].items.unshift({
+                    id: 'deleteProject',
+                    label: 'Delete project',
+                    iconClass: 'glyphicon glyphicon-remove',
+                    disabled: !rights.delete,
+                    action: deleteProject,
+                    actionData: {
+                        projectId: projectId
+                    }
+                });
+        }
 
         if (self.gmeClient) {
             self.gmeClient.watchProject(projectId, self.projects[projectId]._watcher, callback);
@@ -823,6 +838,7 @@ define([
                 commitObject: branchInfo.commitObject || {time: Date.now()}
             },
             isSelected: false,
+            itemClass: self.config.branchMenuClass,
             action: selectBranch,
             actionData: {
                 projectId: projectId,
@@ -1237,6 +1253,20 @@ define([
 
     ProjectNavigatorController.prototype.refreshPage = function () {
         document.location.href = window.location.href.split('?')[0];
+    };
+
+    ProjectNavigatorController.getComponentId = function () {
+        return 'GenericUIProjectNavigatorController';
+    };
+
+    ProjectNavigatorController.getDefaultConfig = function () {
+        return {
+            disableProjectActions: false,
+            rootMenuClass: 'gme-root',
+            rootDisplayName: 'GME',
+            projectMenuClass: '',
+            branchMenuClass: ''
+        };
     };
 
     return ProjectNavigatorController;
