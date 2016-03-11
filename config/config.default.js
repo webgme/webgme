@@ -48,12 +48,6 @@ var path = require('path'),
             log: {
                 level: 'debug'
             },
-            // Used in client/WebGME.js to load initial project (if url is specified that has higher priority)
-            defaultContext: {
-                project: null,   // This is the projectId, e.g. 'guest+TestProject'
-                branch: null, // Defaults to master
-                node: null    // Defaults to the root-node.
-            },
             defaultConnectionRouter: 'basic3' //'basic', 'basic2', 'basic3'
         },
 

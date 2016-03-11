@@ -592,7 +592,7 @@ define([
             }
         };
 
-        if (self.disableProjectActions === false) {
+        if (self.config.disableProjectActions === false) {
             self.projects[projectId].menu[0].items.unshift({
                     id: 'transferProject',
                     label: 'Transfer project',
@@ -1036,7 +1036,7 @@ define([
                             callback(err);
                             return;
                         }
-                        WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                        //WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
 
                         if (branchId && branchId !== self.gmeClient.getActiveBranchName()) {
                             self.gmeClient.selectBranch(branchId, null, function (err) {

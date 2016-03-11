@@ -6,10 +6,14 @@
 
 var configFileName;
 
-function warnDeprecated(name, value) {
+function warnDeprecated(name, value, hint) {
     'use strict';
     if (typeof value !== 'undefined') {
-        console.warn('Deprecated configuration key', name);
+        if (hint) {
+            console.warn('Deprecated configuration key', name);
+        } else {
+            console.warn('Deprecated configuration key', name + '.', hint);
+        }
     }
 }
 
@@ -128,10 +132,8 @@ function validateConfig(configOrFileName) {
     assertString('config.client.appDir', config.client.appDir);
     assertObject('config.client.log', config.client.log);
     assertString('config.client.log.level', config.client.log.level);
-    assertObject('config.client.defaultContext', config.client.defaultContext);
-    assertString('config.client.defaultContext.project', config.client.defaultContext.project, true);
-    assertString('config.client.defaultContext.branch', config.client.defaultContext.branch, true);
-    assertString('config.client.defaultContext.node', config.client.defaultContext.node, true);
+    warnDeprecated('config.client.defaultContext', config.client.defaultContext,
+        'Use component settings for "GenericUIWebGMEStart"');
     assertEnum('config.client.defaultConnectionRouter', config.client.defaultConnectionRouter,
         'basic', 'basic2', 'basic3');
 

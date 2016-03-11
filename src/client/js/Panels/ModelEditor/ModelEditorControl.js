@@ -114,6 +114,7 @@ define(['js/logger',
         //since PROJECT_ROOT_ID is an empty string, it is considered false..
         if (nodeId || nodeId === CONSTANTS.PROJECT_ROOT_ID) {
             desc = this._getObjectDescriptor(nodeId);
+            nodeName = (desc && desc.name || ' ');
             if (desc) {
                 this.currentNodeInfo.parentId = desc.parentId;
             }
@@ -125,7 +126,7 @@ define(['js/logger',
                 var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
                 if (aspectNames.indexOf(this._selectedAspect) === -1) {
                     this.logger.warn('The currently selected aspect "' + this._selectedAspect +
-                                     '" does not exist in the object "' + desc.name + ' (' + nodeId +
+                                     '" does not exist in the object "' + nodeName + ' (' + nodeId +
                                      ')", falling back to "All"');
                     this._selectedAspect = CONSTANTS.ASPECT_ALL;
                     WebGMEGlobal.State.registerActiveAspect(CONSTANTS.ASPECT_ALL);
@@ -143,8 +144,6 @@ define(['js/logger',
             }
 
             this._firstLoad = true;
-
-            nodeName = (desc && desc.name || ' ');
 
             this.designerCanvas.setTitle(nodeName);
             this.designerCanvas.setBackgroundText(nodeName, {

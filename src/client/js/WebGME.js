@@ -1,12 +1,10 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal, $*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
 
-
-// let require load all the toplevel needed script and call us on domReady
 define([
         'js/logger',
         'js/client',
@@ -27,9 +25,11 @@ define([
         'js/Utils/PreferencesHelper',
         'js/Dialogs/Projects/ProjectsDialog',
         'js/Utils/InterpreterManager',
+        'js/Utils/ComponentSettings',
         'common/storage/util',
         'superagent',
-        'q'
+        'q',
+        'jquery'
     ], function (Logger,
                  Client,
                  CONSTANTS,
@@ -49,13 +49,32 @@ define([
                  PreferencesHelper,
                  ProjectsDialog,
                  InterpreterManager,
+                 ComponentSettings,
                  StorageUtil,
                  superagent,
                  Q) {
 
         'use strict';
 
-        var defaultPageTitle = 'WebGME';
+        var componentId = 'GenericUIWebGMEStart',
+            defaultConfig = {
+                pageTitle: 'GME',
+                disableProjectsDialog: false,
+                initialContext: {
+                    project: null,
+                    branch: null,
+                    node: null
+                },
+                nodeAtOpen: '',
+                byProjectName: {
+                    nodeAtOpen: {
+                    }
+                },
+                byProjectId: {
+                    nodeAtOpen: {
+                    }
+                }
+            };
 
         function webGMEStart(afterPanelsLoaded) {
             var layoutManager,
@@ -64,15 +83,19 @@ define([
                 gmeConfig = WebGMEGlobal.gmeConfig,
                 logger = Logger.create('gme:WebGME', WebGMEGlobal.gmeConfig.client.log),
                 initialThingsToDo = WebGMEUrlManager.parseInitialThingsToDoFromUrl(),
-                projectOpenDialog;
+                projectOpenDialog,
+                initialProject = true,
+                config = defaultConfig;
+
+            ComponentSettings.resolveWithWebGMEGlobal(config, componentId);
 
             // URL query has higher priority than the config.
             if ((initialThingsToDo.projectToLoad || initialThingsToDo.createNewProject) === false) {
-                initialThingsToDo.projectToLoad = gmeConfig.client.defaultContext.project;
+                initialThingsToDo.projectToLoad = config.initialContext.project;
                 initialThingsToDo.branchToLoad = initialThingsToDo.branchToLoad ||
-                    gmeConfig.client.defaultContext.branch;
+                    config.initialContext.branch;
                 initialThingsToDo.objectToLoad = initialThingsToDo.objectToLoad ||
-                    gmeConfig.client.defaultContext.node || initialThingsToDo.objectToLoad; // i.e. the root-node.
+                    config.initialContext.node || initialThingsToDo.objectToLoad; // i.e. the root-node.
                 // TODO: add commit to load
             }
 
@@ -98,7 +121,8 @@ define([
                     }
                 );
 
-                document.title = defaultPageTitle;
+                document.title = config.pageTitle;
+
                 logger.info('init-phase true');
                 WebGMEHistory.initialize();
 
@@ -118,15 +142,38 @@ define([
                     layoutManager.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
                     WebGMEGlobal.State.registerActiveBranchName(branchName);
                 });
-                client.addEventListener(CLIENT_CONSTANTS.PROJECT_OPENED, function (__project, projectName) {
-                    document.title = StorageUtil.getProjectFullNameFromProjectId(projectName);
+                client.addEventListener(CLIENT_CONSTANTS.PROJECT_OPENED, function (__project, projectId) {
+                    var projectName,
+                        nodePath;
+
+                    document.title = config.pageTitle + ' - ' +
+                        StorageUtil.getProjectFullNameFromProjectId(projectId);
                     layoutManager.setPanelReadOnly(client.isProjectReadOnly());
-                    WebGMEGlobal.State.registerActiveProjectName(projectName);
+                    WebGMEGlobal.State.registerActiveProjectName(projectId);
+
+                    if (initialProject === false) {
+                        projectName = client.getActiveProjectName();
+
+                        if (config.byProjectId.nodeAtOpen.hasOwnProperty(projectId)) {
+                            nodePath = config.byProjectId.nodeAtOpen[projectId];
+                        } else if (config.byProjectName.nodeAtOpen.hasOwnProperty(projectName)) {
+                            nodePath = config.byProjectName.nodeAtOpen[projectName];
+                        } else {
+                            nodePath = config.nodeAtOpen;
+                        }
+
+                        if (nodePath) {
+                            setActiveNode(nodePath);
+                        } else {
+                            WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                        }
+                    }
                 });
 
                 //on project close clear the current state
                 client.addEventListener(CLIENT_CONSTANTS.PROJECT_CLOSED, function (/* __project, projectName */) {
-                    document.title = defaultPageTitle;
+                    document.title = config.pageTitle;
+                    initialProject = false;
                     WebGMEGlobal.State.clear();
                 });
 
@@ -216,6 +263,7 @@ define([
             }
 
             function openProjectLoadDialog(connect) {
+                initialProject = false;
                 //if initial project openings failed we show the project opening dialog
                 logger.info('init-phase false');
                 logger.info('about to open projectOpenDialog, connect:', connect);
@@ -225,14 +273,18 @@ define([
                             logger.error('Failed to connect to database', err);
                             return;
                         }
-                        //client.getAvailableProjectsAsync(function (/*err, projectArray*/) {
-                        projectOpenDialog = new ProjectsDialog(client);
-                        projectOpenDialog.show();
-                        //});
+                        if (config.disableProjectsDialog === false) {
+                            projectOpenDialog = new ProjectsDialog(client);
+                            projectOpenDialog.show();
+                        } else {
+                            showNoProjectModal();
+                        }
                     });
-                } else {
+                } else if (config.disableProjectsDialog === false) {
                     projectOpenDialog = new ProjectsDialog(client);
                     projectOpenDialog.show();
+                } else {
+                    showNoProjectModal();
                 }
             }
 
@@ -382,6 +434,40 @@ define([
                         logger.error('error during startup', err);
                         openProjectLoadDialog(false);
                     });
+            }
+
+            function showNoProjectModal() {
+                $('<div class="modal fade" tabindex="-1" role="dialog">' +
+                    '<div class="modal-dialog" style="margin-top: 200px;">' +
+                    '<div class="modal-content" style="background: none; border: none;">' +
+                    '<h1 style="text-align: center;">No project opened ...</h1>' +
+                    '</div></div></div>').modal('show');
+            }
+
+            function setActiveNode(nodePath) {
+                var userPattern = {},
+                    tempUI;
+                userPattern[nodePath] = {children: 0};
+                function eventHandler(events) {
+                    var i,
+                        activeNode;
+
+                    for (i = 0; i < events.length; i += 1) {
+                        //look for the active node
+                        if (events[i].eid === nodePath) {
+                            activeNode = client.getNode(nodePath);
+                            if (activeNode) {
+                                WebGMEGlobal.State.registerActiveObject(nodePath);
+                                break;
+                            }
+                        }
+                    }
+
+                    client.removeUI(tempUI);
+                }
+
+                tempUI = client.addUI(null, eventHandler);
+                client.updateTerritory(tempUI, userPattern);
             }
         }
 
