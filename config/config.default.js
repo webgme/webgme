@@ -194,6 +194,7 @@ var path = require('path'),
         },
 
         visualization: {
+            extraCss: [],
             decoratorPaths: [path.join(__dirname, '../src/client/decorators')],
             decoratorsToPreload: null, // array of names (ids)
             svgDirs: [],

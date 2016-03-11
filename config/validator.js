@@ -223,6 +223,7 @@ function validateConfig(configOrFileName) {
     //visualization
     expectedKeys.push('visualization');
     assertObject('config.visualization', config.visualization);
+    assertArray('config.visualization.extraCss', config.visualization.extraCss);
     assertArray('config.visualization.decoratorPaths', config.visualization.decoratorPaths);
     assertArray('config.visualization.svgDirs', config.visualization.svgDirs);
     assertArray('config.visualization.panelPaths', config.visualization.panelPaths);
