@@ -7,10 +7,12 @@
 
 define(['lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     'js/logger',
+    'js/Utils/ComponentSettings',
     'text!./templates/DefaultLayout.html',
     'text!./DefaultLayoutConfig.json'
 ], function (_jQueryLayout,
              Logger,
+             ComponentSettings,
              defaultLayoutTemplate,
              DefaultLayoutConfigJSON) {
 
@@ -23,14 +25,26 @@ define(['lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         SPACING_CLOSED_DESKTOP = 6,
         SPACING_OPEN = WebGMEGlobal.SUPPORTS_TOUCH ? SPACING_OPEN_TOUCH : SPACING_OPEN_DESKTOP,
         SPACING_CLOSED = WebGMEGlobal.SUPPORTS_TOUCH ? SPACING_CLOSED_TOUCH : SPACING_CLOSED_DESKTOP,
-        CONFIG = JSON.parse(DefaultLayoutConfigJSON),
         SIDE_PANEL_WIDTH = 202;
 
     DefaultLayout = function (params) {
         this._logger = (params && params.logger) || Logger.create('gme:Layouts:DefaultLayout',
             WebGMEGlobal.gmeConfig.client.log);
-        this.panels = (params && params.panels) || CONFIG.panels;
+
+        this._config = DefaultLayout.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this._config, DefaultLayout.getComponentId());
+        this._logger.debug('Resolved component-settings', this._config);
+
+        this.panels = (params && params.panels) || this._config.panels;
         this._template = (params && params.template) || defaultLayoutTemplate;
+    };
+
+    DefaultLayout.getComponentId = function () {
+        return 'GenericUIDefaultLayout';
+    };
+
+    DefaultLayout.getDefaultConfig = function () {
+        return JSON.parse(DefaultLayoutConfigJSON);
     };
 
     DefaultLayout.prototype.init = function () {
