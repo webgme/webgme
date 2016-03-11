@@ -1134,12 +1134,15 @@ define(['js/logger',
             aspects,
             tabID,
             i,
-            selectedTabID;
+            selectedTabID,
+            activePanel = WebGMEGlobal.PanelManager.getActivePanel();
 
         this._aspects = {};
         this.designerCanvas.clearTabs();
 
-        if (WebGMEGlobal.PanelManager._activePanel.control === this) {
+        // If the active panel isn't set (and the ModelEditor exists), assume
+        // the ModelEditor is the active panel
+        if (!activePanel || activePanel.control === this) {
             this._selectedAspect = WebGMEGlobal.State.getActiveAspect();
         }
 
