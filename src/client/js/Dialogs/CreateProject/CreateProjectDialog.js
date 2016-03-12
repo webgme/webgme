@@ -6,12 +6,13 @@
 
 define(['js/Loader/LoaderCircles',
     'common/storage/util',
+    'common/core/constants',
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
     'blob/BlobClient',
     'text!./templates/CreateProjectDialog.html',
 
     'css!./styles/CreateProjectDialog.css'
-], function (LoaderCircles, StorageUtil, AssetWidget, BlobClient, createProjectDialog) {
+], function (LoaderCircles, StorageUtil, CORE_CONSTANTS, AssetWidget, BlobClient, createProjectDialog) {
 
     'use strict';
 
@@ -195,22 +196,21 @@ define(['js/Loader/LoaderCircles',
         this.assetWidget.onFinishChange(function (data) {
             self._btnCreateBlob.disable(true);
 
-            if (data.newValue) {
-                self.blobClient.getMetadata(data.newValue, function (err, metadata) {
-                    if (err) {
-                        self._logger.error(err);
-                        return;
-                    }
+            // TODO: Support exported zip file too.
+            self.assetWidget.getTargetAsJson(function (targetJson) {
+                if (targetJson) {
+                    var checkResult = self._client.checkImport(targetJson, CORE_CONSTANTS.EXPORT_TYPE_PROJECT);
 
-                    // TODO: Support exported zip file too.
-                    if (metadata.mime === 'application/json') {
-                        self._btnCreateBlob.disable(false);
+                    if (checkResult) {
+                        alert(checkResult);
                     } else {
-                        //TODO: Better feedback here.
-                        alert('Uploaded file must be a json file (from Export branch)');
+                        self._btnCreateBlob.disable(false);
                     }
-                });
-            }
+                } else {
+                    //TODO: Better feedback here.
+                    alert('Uploaded file must be a json file (from Export branch)');
+                }
+            });
         });
 
         this._btnDuplicate.on('click', function (event) {

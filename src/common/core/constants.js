@@ -50,6 +50,9 @@ define([], function () {
             CONSTRAINT_COLLISION: 'constraint collision'
         },
 
+        EXPORT_TYPE_PROJECT: 'project',
+        EXPORT_TYPE_LIBRARY: 'library',
+
         MAX_AGE: 3,
         MAX_TICKS: 2000,
         MAX_MUTATE: 30000

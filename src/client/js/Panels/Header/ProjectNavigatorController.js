@@ -16,6 +16,7 @@ define([
     'js/Dialogs/Branches/BranchesDialog',
     'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
     'js/Dialogs/ProjectRights/ProjectRightsDialog',
+    'js/Dialogs/ExportErrors/ExportErrorsDialog',
     'common/storage/util',
     'js/Utils/SaveToDisk',
     'q',
@@ -30,16 +31,15 @@ define([
              BranchesDialog,
              ConfirmDeleteDialog,
              ProjectRightsDialog,
+             ExportErrorsDialog,
              StorageUtil,
              saveToDisk,
              Q,
              ComponentSettings) {
     'use strict';
 
-
     angular.module('gme.ui.ProjectNavigator', []).run(function () {
     });
-
 
     var ProjectNavigatorController;
 
@@ -361,7 +361,7 @@ define([
                 return;
             }
 
-            function getBranchPromise (projectId, branchId, branchHash) {
+            function getBranchPromise(projectId, branchId, branchHash) {
                 var deferred = Q.defer();
 
                 self.gmeClient.getCommits(projectId, branchHash, 1, function (err, commits) {
@@ -669,13 +669,27 @@ define([
 
         if (self.gmeClient) {
             exportBranch = function (data) {
+                var dialog = new ExportErrorsDialog();
                 self.gmeClient.getExportProjectBranchUrl(data.projectId,
                     data.branchId, data.projectId + '_' + data.branchId, function (err, url) {
-                        if (!err && url) {
-                            saveToDisk.saveUrlToDisk(url);
+                        if (url) {
+                            if (err) {
+                                dialog.show(self.gmeClient, self.logger,
+                                    data.projectId, data.commitHash, err.message, function () {
+                                        saveToDisk.saveUrlToDisk(url);
+                                    }
+                                );
+                            } else {
+                                saveToDisk.saveUrlToDisk(url);
+                            }
                         } else {
-                            self.logger.error('Failed to get project export url for', data);
+                            self.logger.error('Failed to retrieve export url for', data);
                         }
+                        //if (!err && url) {
+                        //    saveToDisk.saveUrlToDisk(url);
+                        //} else {
+                        //    self.logger.error('Failed to get project export url for', data);
+                        //}
                     }
                 );
             };
@@ -757,7 +771,8 @@ define([
                     deleteItem = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId) +
                         '  -  ' + data.branchId;
 
-                deleteBranchModal.show({deleteItem: deleteItem}, function () {});
+                deleteBranchModal.show({deleteItem: deleteItem}, function () {
+                });
             };
 
             createCommitMessage = function (data) {
@@ -768,7 +783,6 @@ define([
         selectBranch = function (data) {
             self.selectBranch(data);
         };
-
 
         deleteBranchItem = {
             id: 'deleteBranch',
@@ -881,7 +895,8 @@ define([
                             action: exportBranch,
                             actionData: {
                                 projectId: projectId,
-                                branchId: branchId
+                                branchId: branchId,
+                                commitHash: branchInfo.branchHash
                             }
                         }
                     ]

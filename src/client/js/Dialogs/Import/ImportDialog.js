@@ -6,9 +6,11 @@
  */
 
 define(['js/Loader/LoaderCircles',
+    'common/core/constants',
     'text!./templates/ImportDialog.html',
     'css!./styles/ImportDialog.css'
 ], function (LoaderCircles,
+             CORE_CONSTANTS,
              importDialogTemplate) {
 
     'use strict';
@@ -67,7 +69,6 @@ define(['js/Loader/LoaderCircles',
 
             self._fileInput.click();
         });
-
 
         // file select
         this._fileInput.on('change', function (event) {
@@ -147,11 +148,13 @@ define(['js/Loader/LoaderCircles',
                     self._uploadedFileName.text(file.name);
                     self._uploadedFileName.removeClass('empty');
 
-                    if (parsedJSONFileContent === undefined) {
-                        self._displayMessage('INVALID FILE FORMAT...', true);
+                    var checkResult = WebGMEGlobal.Client.checkImport(parsedJSONFileContent,
+                        CORE_CONSTANTS.EXPORT_TYPE_LIBRARY);
+                    if (checkResult) {
+                        self._displayMessage(checkResult, true);
                     } else {
                         self._displayMessage('File has been parsed successfully, click \'Import...\'' +
-                                             ' to start importing.', false);
+                            ' to start importing.', false);
                         btnImport.disable(false);
                         btnImport.on('click', function (event) {
                             event.preventDefault();

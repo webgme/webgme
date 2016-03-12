@@ -5,7 +5,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) {
+define(['common/util/assert', 'common/core/constants', 'blob/BlobConfig'], function (ASSERT, CONSTANTS, BlobConfig) {
     'use strict';
 
     function exportLibraryWithAssets(core, libraryRoot, callback) {
@@ -16,8 +16,32 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
         exportLibraryNodeByNode(core, libraryRoot, {withAssets: false}, callback);
     }
 
+    function getMetaDataOfExport(core, libraryRoot, options) {
+        var result = {},
+            root = core.getRoot(libraryRoot);
+
+        if (root === libraryRoot) {
+            result.type = CONSTANTS.EXPORT_TYPE_PROJECT;
+        } else {
+            result.type = CONSTANTS.EXPORT_TYPE_LIBRARY;
+        }
+
+        //FIXME check why does it changes with each import
+        // result.rootHash = core.getHash(root);
+        result.rootGuid = core.getGuid(root);
+
+        if (options && options.withAssets) {
+            result.hasAssets = true;
+        } else {
+            result.hasAssets = false;
+        }
+
+        return result;
+    }
+
     function exportLibraryNodeByNode(core, libraryRoot, options, callback) {
         var exportProject = {
+                _metadata: getMetaDataOfExport(core, libraryRoot, options),
                 root: {
                     path: core.getPath(libraryRoot),
                     guid: core.getGuid(libraryRoot)
@@ -34,6 +58,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
             maxParalelTasks = 100,
             ongoingTaskCounter = 0,
             timerId,
+            errorTxt = '',
             root = core.getRoot(libraryRoot);
 
         function getAttributes(node) {
@@ -146,6 +171,11 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
 
         function expNode(node, containment) {
             var guid = core.getGuid(node);
+
+            if (exportProject.relids[guid] || exportProject.nodes[guid]) {
+                errorTxt += '[' + core.getPath(node) + '] has a colliding guid {' + guid + '} and will be skipped!\n';
+                return;
+            }
 
             containment[guid] = {};
             addChildrenTasks(node, containment[guid]);
@@ -423,7 +453,7 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                 exportProject = {projectJson: exportProject, assets: assetInfos};
             }
 
-            callback(null, exportProject);
+            callback(errorTxt, exportProject);
         }
 
         //here starts the export function
@@ -444,6 +474,8 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
                     core.loadByPath(root, task.path, function (err, node) {
                         if (!err && node) {
                             expNode(node, task.containment);
+                        } else {
+                            errorTxt += '[' + task.path + '] cannot be loaded and will be missing from the export! \n';
                         }
                         ongoingTaskCounter -= 1;
                     });
@@ -1406,9 +1438,54 @@ define(['common/util/assert', 'blob/BlobConfig'], function (ASSERT, BlobConfig) 
         });
     }
 
+    //TODO extra checkings can be done here - now everything is planned to be synchronous
+    function checkImport(jsonImport, importType) {
+        if (!jsonImport) {
+            return 'Import should always be a valid JSON object!';
+        }
+
+        switch (importType) {
+            case CONSTANTS.EXPORT_TYPE_PROJECT:
+                if (jsonImport._metadata && jsonImport._metdata.type) {
+                    if (jsonImport._metadata.type !== CONSTANTS.EXPORT_TYPE_PROJECT) {
+                        return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_LIBRARY + '\' and not of \'' +
+                            CONSTANTS.EXPORT_TYPE_PROJECT + '\'!';
+                    }
+                } else if (jsonImport.root && typeof jsonImport.root.path === 'string') {
+                    if (jsonImport.root.path !== ROOT_PATH) {
+                        return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_LIBRARY + '\' and not of \'' +
+                            CONSTANTS.EXPORT_TYPE_PROJECT + '\'!';
+                    }
+                } else {
+                    return 'Import data is probably incomplete and should not be used!';
+                }
+                break;
+            case CONSTANTS.EXPORT_TYPE_LIBRARY:
+                if (jsonImport._metadata && jsonImport._metdata.type) {
+                    if (jsonImport._metadata.type !== CONSTANTS.EXPORT_TYPE_LIBRARY) {
+                        return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_PROJECT + '\' and not of \'' +
+                            CONSTANTS.EXPORT_TYPE_LIBRARY + '\'!';
+                    }
+                } else if (jsonImport.root && typeof jsonImport.root.path === 'string') {
+                    if (jsonImport.root.path === ROOT_PATH) {
+                        return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_PROJECT + '\' and not of \'' +
+                            CONSTANTS.EXPORT_TYPE_LIBRARY + '\'!';
+                    }
+                } else {
+                    return 'Import data is probably incomplete and should not be used!';
+                }
+                break;
+            default:
+                return 'Invalid type, cannot checked!';
+        }
+
+        return null;
+    }
+
     return {
         export: exportLibrary,
         import: importLibrary,
-        exportLibraryWithAssets: exportLibraryWithAssets
+        exportLibraryWithAssets: exportLibraryWithAssets,
+        checkImport: checkImport
     };
 });

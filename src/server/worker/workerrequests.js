@@ -9,10 +9,12 @@ var Core = requireJS('common/core/coreQ'),
     Storage = requireJS('common/storage/nodestorage'),
     Serialization = requireJS('common/core/users/serialization'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
+    CORE_CONSTANTS = requireJS('common/core/constants'),
     merger = requireJS('common/core/users/merge'),
     BlobClientClass = requireJS('common/blob/BlobClient'),
     constraint = requireJS('common/core/users/constraintchecker'),
     UINT = requireJS('common/util/uint'),
+    GUID = requireJS('common/util/guid'),
 
 // JsZip can't for some reason extract the exported files..
     AdmZip = require('adm-zip'),
@@ -95,6 +97,55 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
+    function _checkNodeForGuidCollision(core, node, guidsSoFar) {
+        var guid = core.getGuid(node),
+            newGuid;
+
+        if (guidsSoFar[guid]) {
+            newGuid = GUID().replace(/-/g, ''); //TODO should we need global utility for this??
+            logger.info('new guid [' + newGuid + '] has been generated for node [' + core.getPath(node) + ']');
+            core.setAttribute(node, CORE_CONSTANTS.OWN_GUID, newGuid);
+            guidsSoFar[core.getGuid(node)] = true;
+        } else {
+            guidsSoFar[guid] = true;
+        }
+    }
+
+    function _checkGuidsNodeByNode(core, root) {
+        var taskQueue = [''],
+            working = false,
+            timerId,
+            deferred = Q.defer(),
+            guids = {};
+
+        timerId = setInterval(function () {
+            var task;
+            if (!working) {
+                task = taskQueue.shift();
+
+                if (typeof task !== 'string') {
+                    //we are done
+                    clearInterval(timerId);
+                    deferred.resolve();
+                    return;
+                }
+
+                working = true;
+                core.loadByPath(root, task, function (err, node) {
+                    if (!err && node) {
+                        _checkNodeForGuidCollision(core, node, guids);
+                        taskQueue = taskQueue.concat(core.getOwnChildrenPaths(node));
+                    } else {
+                        logger.error('[' + task + '] cannot be loaded and will be skipped during check');
+                    }
+                    working = false;
+                });
+            }
+        }, 1);
+
+        return deferred.promise;
+    }
+
     // Export functionality
     function _serializeToBlob(webGMESessionId, project, rootHash, libraryRootPath, fileName, callback) {
         var core = new Core(project, {
@@ -121,9 +172,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     callback(new Error(err));
                     return;
                 }
-                Serialization.export(core, libraryRoot, function (err, projectJson) {
-                    if (err) {
-                        callback(new Error(err));
+                Serialization.export(core, libraryRoot, function (error, projectJson) {
+                    if (!projectJson) {
+                        callback(new Error(error || 'no output have been generated as a result of export!'));
                         return;
                     }
 
@@ -151,7 +202,12 @@ function WorkerRequests(mainLogger, gmeConfig) {
                                 }
                             };
 
-                            callback(null, result);
+                            // We keep the original errors of export.
+                            if (error) {
+                                callback(new Error(error), result);
+                            } else {
+                                callback(null, result);
+                            }
                         });
                     });
                 });
@@ -294,7 +350,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
             callback(new Error('invalid parameters'), errResult);
             return;
         }
-
 
         logger.debug('executePlugin', pluginName, socketId);
 
@@ -477,7 +532,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 }
             });
     }
-
 
     function _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, seedName, callback) {
         logger.debug('_createProject');
@@ -736,6 +790,57 @@ function WorkerRequests(mainLogger, gmeConfig) {
             .nodeify(finish);
     }
 
+    /**
+     *
+     * @param {string} webGMESessionId
+     * @param {string} projectId
+     * @param {object} commitHash - Starting state of the project
+     * @param {function} callback
+     */
+    function reassignGuids(webGMESessionId, projectId, commitHash, callback) {
+        var storage,
+            checkType,
+            context,
+            result,
+            finish = function (err) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('reassignGuids [' + projectId + '] failed with error', err);
+                } else {
+                    logger.info('reassignGuids [' + projectId + '] completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        logger.info('reassignGuids ' + projectId);
+
+        getConnectedStorage(webGMESessionId)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, projectId, commitHash);
+            })
+            .then(function (res) {
+                context = res;
+                return _checkGuidsNodeByNode(res.core, res.rootNode);
+            })
+            .then(function () {
+                var persisted = context.core.persist(context.rootNode);
+
+                return context.project.makeCommit(null, [commitHash], persisted.rootHash, persisted.objects,
+                    'Guid reallocation');
+            })
+            .then(function (commitResult) {
+                var branchName = 'guid_' + (new Date()).getTime();
+
+                result = branchName;
+                logger.debug('put guid reassign result into branch[' + branchName + ']');
+                return context.project.createBranch(branchName, commitResult.hash);
+            })
+            .nodeify(finish);
+    }
+
     return {
         exportLibrary: exportLibrary,
         executePlugin: executePlugin,
@@ -744,7 +849,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
         resolve: resolve,
         checkConstraints: checkConstraints,
         // This is exposed for unit tests..
-        _addZippedExportToBlob: _addZippedExportToBlob
+        _addZippedExportToBlob: _addZippedExportToBlob,
+        reassignGuids: reassignGuids
     };
 }
 

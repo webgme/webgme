@@ -19,7 +19,8 @@ define([
     'js/client/gmeNodeSetter',
     'common/core/users/serialization',
     'blob/BlobClient',
-    'js/client/stateloghelpers'
+    'js/client/stateloghelpers',
+    'common/core/constants'
 ], function (Logger,
              Storage,
              EventDispatcher,
@@ -34,7 +35,8 @@ define([
              getNodeSetters,
              Serialization,
              BlobClient,
-             stateLogHelpers) {
+             stateLogHelpers,
+             CORE_CONSTANTS) {
     'use strict';
 
     function Client(gmeConfig) {
@@ -1788,11 +1790,11 @@ define([
             logger.debug('getExportProjectBranchUrl, command', command);
             if (command.projectId && command.branchName) {
                 storage.simpleRequest(command, function (err, result) {
-                    if (err) {
+                    if (err && !result) {
                         logger.error('getExportProjectBranchUrl failed with error', err);
                         callback(err);
                     } else {
-                        callback(null, blobClient.getDownloadURL(result.file.hash));
+                        callback(err, blobClient.getDownloadURL(result.file.hash));
                     }
                 });
             } else {
@@ -2014,6 +2016,30 @@ define([
                 }
             });
         };
+
+        //reassignGuids - reassigning GUIDs that collide in the given state of the project
+        this.reassignGuids = function (projectId, commitHash, callback) {
+            var command = {};
+            command.command = 'reassignGuids';
+            command.projectId = projectId;
+            command.commitHash = commitHash;
+            logger.debug('reassignGuids, command', command);
+            if (command.projectId && command.commitHash) {
+                storage.simpleRequest(command, function (err, result) {
+                    if (err && !result) {
+                        logger.error('reassignGuids failed with error', err);
+                        callback(err);
+                    } else {
+                        callback(err, result);
+                    }
+                });
+            } else {
+                callback(new Error('invalid parameters!'));
+            }
+        };
+
+        //checking if the import is in the proper format as its intended usage
+        this.checkImport = Serialization.checkImport;
 
         this.gmeConfig = gmeConfig;
     }
