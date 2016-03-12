@@ -21,7 +21,7 @@ define(['common/util/assert', 'common/core/constants', 'blob/BlobConfig'], funct
             root = core.getRoot(libraryRoot);
 
         if (root === libraryRoot) {
-            result.type = CONSTANTS.EXPORT_TYPE_FULL_PROJECT;
+            result.type = CONSTANTS.EXPORT_TYPE_PROJECT;
         } else {
             result.type = CONSTANTS.EXPORT_TYPE_LIBRARY;
         }
@@ -1438,9 +1438,54 @@ define(['common/util/assert', 'common/core/constants', 'blob/BlobConfig'], funct
         });
     }
 
+    //TODO extra checkings can be done here - now everything is planned to be synchronous
+    function checkImport(jsonImport, importType) {
+        if (!jsonImport) {
+            return 'Import should always be a valid JSON object!';
+        }
+
+        switch (importType) {
+            case CONSTANTS.EXPORT_TYPE_PROJECT:
+                if (jsonImport._metadata && jsonImport._metdata.type) {
+                    if (jsonImport._metadata.type !== CONSTANTS.EXPORT_TYPE_PROJECT) {
+                        return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_LIBRARY + '\' and not of \'' +
+                            CONSTANTS.EXPORT_TYPE_PROJECT + '\'!';
+                    }
+                } else if (jsonImport.root && typeof jsonImport.root.path === 'string') {
+                    if (jsonImport.root.path !== ROOT_PATH) {
+                        return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_LIBRARY + '\' and not of \'' +
+                            CONSTANTS.EXPORT_TYPE_PROJECT + '\'!';
+                    }
+                } else {
+                    return 'Import data is probably incomplete and should not be used!';
+                }
+                break;
+            case CONSTANTS.EXPORT_TYPE_LIBRARY:
+                if (jsonImport._metadata && jsonImport._metdata.type) {
+                    if (jsonImport._metadata.type !== CONSTANTS.EXPORT_TYPE_LIBRARY) {
+                        return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_PROJECT + '\' and not of \'' +
+                            CONSTANTS.EXPORT_TYPE_LIBRARY + '\'!';
+                    }
+                } else if (jsonImport.root && typeof jsonImport.root.path === 'string') {
+                    if (jsonImport.root.path === ROOT_PATH) {
+                        return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_PROJECT + '\' and not of \'' +
+                            CONSTANTS.EXPORT_TYPE_LIBRARY + '\'!';
+                    }
+                } else {
+                    return 'Import data is probably incomplete and should not be used!';
+                }
+                break;
+            default:
+                return 'Invalid type, cannot checked!';
+        }
+
+        return null;
+    }
+
     return {
         export: exportLibrary,
         import: importLibrary,
-        exportLibraryWithAssets: exportLibraryWithAssets
+        exportLibraryWithAssets: exportLibraryWithAssets,
+        checkImport: checkImport
     };
 });

@@ -2039,45 +2039,7 @@ define([
         };
 
         //checking if the import is in the proper format as its intended usage
-        //TODO extra checkings can be done here - now everything is planned to be synchronous
-        this.checkImport = function (jsonImport, importType) {
-            if (!jsonImport) {
-                return 'Import should always be a valid JSON object!';
-            }
-
-            switch (importType) {
-                case CORE_CONSTANTS.EXPORT_TYPE_FULL_PROJECT:
-                    if (jsonImport._metadata && jsonImport._metdata.type) {
-                        if (jsonImport._metadata.type !== CORE_CONSTANTS.EXPORT_TYPE_FULL_PROJECT) {
-                            return 'Import is of type \'library\' and not of \'full project\'!';
-                        }
-                    } else if (jsonImport.root && typeof jsonImport.root.path === 'string') {
-                        if (jsonImport.root.path !== ROOT_PATH) {
-                            return 'Import is of type \'library\' and not of \'full project\'!';
-                        }
-                    } else {
-                        return 'Import data is probably incomplete and should not be used!';
-                    }
-                    break;
-                case CORE_CONSTANTS.EXPORT_TYPE_LIBRARY:
-                    if (jsonImport._metadata && jsonImport._metdata.type) {
-                        if (jsonImport._metadata.type !== CORE_CONSTANTS.EXPORT_TYPE_LIBRARY) {
-                            return 'Import is of type \'full project\' and not of \'library\'!';
-                        }
-                    } else if (jsonImport.root && typeof jsonImport.root.path === 'string') {
-                        if (jsonImport.root.path === ROOT_PATH) {
-                            return 'Import is of type \'full project\' and not of \'library\'!';
-                        }
-                    } else {
-                        return 'Import data is probably incomplete and should not be used!';
-                    }
-                    break;
-                default:
-                    return 'Invalid type, cannot checked!';
-            }
-
-            return null;
-        };
+        this.checkImport = Serialization.checkImport;
 
         this.gmeConfig = gmeConfig;
     }

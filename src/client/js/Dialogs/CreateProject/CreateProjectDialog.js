@@ -199,7 +199,7 @@ define(['js/Loader/LoaderCircles',
             // TODO: Support exported zip file too.
             self.assetWidget.getTargetAsJson(function (targetJson) {
                 if (targetJson) {
-                    var checkResult = self._client.checkImport(targetJson, CORE_CONSTANTS.EXPORT_TYPE_FULL_PROJECT);
+                    var checkResult = self._client.checkImport(targetJson, CORE_CONSTANTS.EXPORT_TYPE_PROJECT);
 
                     if (checkResult) {
                         alert(checkResult);
