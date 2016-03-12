@@ -610,8 +610,8 @@ define([], function () {
 
             if (node) {
                 _core.delAspectMeta(node, name);
-                for (i = 0; i < aspect.items.length; i += 1) {
-                    target = _nodes[aspect.items[i]];
+                for (i = 0; i < aspect.length; i += 1) {
+                    target = _nodes[aspect[i]];
                     if (target) {
                         _core.setAspectMetaTarget(node, name, target);
                     }
