@@ -460,12 +460,110 @@ define([
             return meta;
         };
 
-        this.getOwnJsonMeta = function (node) {
-            var base = self.getBase(node),
-                baseMeta = base ? self.getJsonMeta(base) : {},
-                meta = self.getJsonMeta(node);
+        //this.getOwnJsonMeta = function (node) {
+        //    var base = self.getBase(node),
+        //        baseMeta = base ? self.getJsonMeta(base) : {},
+        //        meta = self.getJsonMeta(node);
+        //
+        //    return getMetaObjectDiff(meta, baseMeta);
+        //};
 
-            return getMetaObjectDiff(meta, baseMeta);
+        this.getOwnJsonMeta = function (node) {
+            var meta = {children: {}, attributes: {}, pointers: {}, aspects: {}, constraints: {}},
+                tempNode,
+                metaNode = getMetaNode(node),
+                childrenNode = self.getChild(metaNode, CONSTANTS.META_CHILDREN),
+                aspectsNode = self.getChild(metaNode, CONSTANTS.META_ASPECTS),
+                names,
+                pointer,
+                i, j;
+
+            //fill children part
+
+            meta.children.minItems = [];
+            meta.children.maxItems = [];
+            meta.children.items = self.getOwnMemberPaths(childrenNode, CONSTANTS.SET_ITEMS);
+            if (meta.children.items.length > 0) {
+                for (i = 0; i < meta.children.items.length; i++) {
+                    meta.children.minItems.push(
+                        self.getMemberAttribute(childrenNode, CONSTANTS.SET_ITEMS, meta.children.items[i],
+                            CONSTANTS.SET_ITEMS_MIN) || -1);
+
+                    meta.children.maxItems.push(
+                        self.getMemberAttribute(childrenNode, CONSTANTS.SET_ITEMS, meta.children.items[i],
+                            CONSTANTS.SET_ITEMS_MAX) || -1);
+                }
+                names = self.getOwnAttributeNames(childrenNode);
+                if (names.indexOf('min') !== -1) {
+                    meta.children.min = self.getAttribute(childrenNode, CONSTANTS.SET_ITEMS_MIN);
+                }
+                if (names.indexOf('max') !== -1) {
+                    meta.children.max = self.getAttribute(childrenNode, CONSTANTS.SET_ITEMS_MAX);
+                }
+            } else {
+                delete meta.children;
+            }
+            //attributes
+            names = self.getOwnAttributeNames(metaNode) || [];
+            if (names.length > 0) {
+                for (i = 0; i < names.length; i++) {
+                    meta.attributes[names[i]] = self.getOwnAttribute(metaNode, names[i]);
+                }
+            } else {
+                delete meta.attributes;
+            }
+
+            //pointers
+            names = self.getOwnPointerNames(metaNode);
+            if (names.length > 0) {
+                for (i = 0; i < names.length; i++) {
+                    tempNode = self.getChild(metaNode, CONSTANTS.META_POINTER_PREFIX + names[i]);
+                    pointer = {};
+
+                    pointer.items = self.getOwnMemberPaths(tempNode, CONSTANTS.SET_ITEMS);
+                    pointer.min = self.getAttribute(tempNode, CONSTANTS.SET_ITEMS_MIN);
+                    pointer.max = self.getAttribute(tempNode, CONSTANTS.SET_ITEMS_MAX);
+                    pointer.minItems = [];
+                    pointer.maxItems = [];
+
+                    for (j = 0; j < pointer.items.length; j++) {
+                        pointer.minItems.push(self.getMemberAttribute(tempNode, CONSTANTS.SET_ITEMS, pointer.items[j],
+                                CONSTANTS.SET_ITEMS_MIN) || -1);
+                        pointer.maxItems.push(self.getMemberAttribute(tempNode, CONSTANTS.SET_ITEMS, pointer.items[j],
+                                CONSTANTS.SET_ITEMS_MAX) || -1);
+
+                    }
+
+                    meta.pointers[names[i]] = pointer;
+                }
+            } else {
+                delete meta.pointers;
+            }
+
+            //aspects
+            names = self.getOwnPointerNames(aspectsNode) || [];
+
+            if (names.length > 0) {
+                for (i = 0; i < names.length; i++) {
+                    tempNode = self.getChild(aspectsNode, CONSTANTS.META_ASPECT_PREFIX + names[i]);
+                    meta.aspects[names[i]] = self.getOwnMemberPaths(tempNode, CONSTANTS.SET_ITEMS) || [];
+                }
+            } else {
+                delete meta.aspects;
+            }
+
+            //constraints
+            names = self.getOwnConstraintNames(node);
+
+            if (names.length > 0) {
+                for (i = 0; i < names.length; i++) {
+                    meta.constraints[names[i]] = self.getConstraint(node, names[i]);
+                }
+            } else {
+                delete meta.constraints;
+            }
+
+            return meta;
         };
 
         this.clearMetaRules = function (node) {

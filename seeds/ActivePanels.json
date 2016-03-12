@@ -61,8 +61,7 @@
           "y": 270
         }
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "18eb3c1d-c951-b757-c8c4-0ea8736c2470": {
       "attributes": {
@@ -82,8 +81,7 @@
         },
         "validVisualizers": "ModelEditor Crosscut GraphViz"
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "45657d4d-f82d-13ce-1acb-0aadebb5c8b5": {
       "attributes": {},
@@ -122,8 +120,7 @@
             }
           }
         ]
-      },
-      "constraints": {}
+      }
     },
     "56213d7f-3e44-6a23-3e2b-95adaf702b4d": {
       "attributes": {},
@@ -139,8 +136,7 @@
           "y": 173
         }
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "5f73946c-68aa-9de1-7979-736d884171af": {
       "attributes": {
@@ -171,8 +167,7 @@
         },
         "validVisualizers": "ModelEditor Crosscut GraphViz"
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "6d844797-2b03-60fc-a01d-d5249984495b": {
       "attributes": {},
@@ -188,8 +183,7 @@
           "y": 209
         }
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "86236510-f1c7-694f-1c76-9bad3a2aa4e0": {
       "attributes": {
@@ -359,8 +353,7 @@
             }
           }
         ]
-      },
-      "constraints": {}
+      }
     },
     "ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42": {
       "attributes": {
@@ -378,8 +371,7 @@
           "y": 261
         }
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "bbaf81cd-07b8-c4c6-b333-280cae75ff4a": {
       "attributes": {},
@@ -395,8 +387,7 @@
           "y": 328
         }
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "be36b1a1-8d82-8aba-9eda-03d655a8bf3e": {
       "attributes": {
@@ -428,8 +419,7 @@
         },
         "validVisualizers": "GraphViz ModelEditor"
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "be71f6dc-6eec-7552-f3c0-5cc64423f290": {
       "attributes": {
@@ -447,8 +437,7 @@
           "y": 391
         }
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "cbfe379c-c527-700e-3041-a0c22ca2a5d6": {
       "attributes": {},
@@ -464,8 +453,7 @@
           "y": 98
         }
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {
       "attributes": {
@@ -478,10 +466,12 @@
             "type": "string"
           }
         },
-        "children": {
-          "minItems": [],
-          "maxItems": [],
-          "items": []
+        "constraints": {
+          "meta": {
+            "script": "function(core, node, callback) {\r\n    \"use strict\";\r\n    var error = null,\r\n        returnValue = {hasViolation:false,message:\"\"},\r\n        i,\r\n        neededChekings = 4,\r\n        meta = core.getJsonMeta(node),\r\n        typeIndexOfChild = function(typePathsArray,childNode){\r\n            var index = -1;\r\n\r\n            while(childNode && index === -1){\r\n                index = typePathsArray.indexOf(core.getPath(childNode));\r\n                childNode = core.getBase(childNode);\r\n            }\r\n\r\n            return index;\r\n        },\r\n        checkChildrenRules = function(){\r\n            var childCount = [],\r\n                index;\r\n            core.loadChildren(node,function(err,children){\r\n                if(err){\r\n                    returnValue.message += \"error during loading of node\\'s children\\n\";\r\n                    error = error || err;\r\n                    return checkingDone();\r\n                }\r\n\r\n                //global count check\r\n                //min\r\n                if(meta.children.min && meta.children.min !== -1){\r\n                    if(children.length < meta.children.min){\r\n                        returnValue.hasViolation = true;\r\n                        returnValue.message += \"node hase fewer nodes than needed\\n\";\r\n                    }\r\n                }\r\n                //max\r\n                if(meta.children.max && meta.children.max !== -1){\r\n                    if(children.length > meta.children.max){\r\n                        returnValue.hasViolation = true;\r\n                        returnValue.message += \"node hase more nodes than allowed\\n\";\r\n                    }\r\n                }\r\n\r\n                //typedCounts\r\n                for(i=0;i<meta.children.items.length;i++){\r\n                    childCount.push(0);\r\n                }\r\n                for(i=0;i<children.length;i++){\r\n                    index = typeIndexOfChild(meta.children.items,children[i]);\r\n                    if(index === -1 ){\r\n                        returnValue.hasViolation = true;\r\n                        returnValue.message += \"child \" + core.getGuid(children[i]) +\" is from prohibited type\\n\";\r\n                    }\r\n                    else {\r\n                        childCount[index]++;\r\n                    }\r\n                }\r\n                for(i=0;i<meta.children.items.length;i++){\r\n                    //min\r\n                    if(meta.children.minItems[i] !== -1){\r\n                        if(meta.children.minItems[i] > childCount[i]){\r\n                            returnValue.hasViolation = true;\r\n                            returnValue.message += \"too few type \"+ meta.children.items[i] +\" children\\n\";\r\n                        }\r\n                    }\r\n                    //max\r\n                    if(meta.children.maxItems[i] !== -1){\r\n                        if(meta.children.maxItems[i] < childCount[i]){\r\n                            returnValue.hasViolation = true;\r\n                            returnValue.message += \"too many type \"+ meta.children.items[i] +\" children\\n\";\r\n                        }\r\n                    }\r\n                }\r\n                return checkingDone();\r\n            });\r\n        },\r\n        checkPointerRules = function(){\r\n            //TODO currently there is no quantity check\r\n            var validNames = core.getValidPointerNames(node),\r\n                names = core.getPointerNames(node),\r\n                checkPointer = function(name){\r\n                    core.loadPointer(node,name,function(err,target){\r\n                        if(err || !target){\r\n                            error = error || err;\r\n                            returnValue.message += \"error during pointer \"+ name +\" load\\n\";\r\n                            return checkDone();\r\n                        }\r\n\r\n                        if(!core.isValidTargetOf(target,node,name)){\r\n                            returnValue.hasViolation = true;\r\n                            returnValue.message += \"target of pointer \"+ name +\" is invalid\\n\";\r\n                        }\r\n                        return checkDone();\r\n                    });\r\n                },\r\n                checkDone = function(){\r\n                    if(--needs === 0){\r\n                        checkingDone();\r\n                    }\r\n                },\r\n                needs,i;\r\n            \r\n            needs = names.length;\r\n            if(needs > 0){\r\n                for(i=0;i<names.length;i++){\r\n                    if(validNames.indexOf(names[i]) === -1){\r\n                        returnValue.hasViolation = true;\r\n                        returnValue.message += \" invalid pointer \"+ names[i] +\" has been found\\n\";\r\n                        checkDone();\r\n                    } else {\r\n                        checkPointer(names[i]);\r\n                    }\r\n\r\n                }\r\n            } else {\r\n                checkDone();\r\n            }\r\n\r\n        },\r\n        checkSetRules = function(){\r\n            //TODO this part is missing yet\r\n            checkingDone();\r\n        },\r\n        checkAttributeRules = function(){\r\n            var names = core.getAttributeNames(node),\r\n                validNames = core.getValidAttributeNames(node);\r\n            for(i=0;i<names.length;i++){\r\n                if(validNames.indexOf(names[i]) !== -1){\r\n                    if(!core.isValidAttributeValueOf(node,names[i],core.getAttribute(node,names[i]))){\r\n                        returnValue.hasViolation = true;\r\n                        returnValue.message += \"attribute \"+names[i]+\" has invalid value\\n\";\r\n                    }\r\n                }\r\n                else {\r\n                    returnValue.hasViolation = true;\r\n                    returnValue.message += \"node has an undefined attribute: \"+names[i];\r\n                }\r\n            }\r\n            checkingDone();\r\n        },\r\n        checkingDone = function(){\r\n            if(--neededChekings === 0){\r\n                callback(error,returnValue);\r\n            }\r\n        };\r\n\r\n    checkChildrenRules();\r\n    checkPointerRules();\r\n    checkSetRules();\r\n    checkAttributeRules();\r\n}",
+            "priority": 10,
+            "info": "this constraint will check all the meta rules defined to an object"
+          }
         }
       },
       "parent": "86236510-f1c7-694f-1c76-9bad3a2aa4e0",
@@ -501,14 +491,7 @@
         },
         "validVisualizers": "ModelEditor SetEditor Crosscut GraphViz"
       },
-      "sets": {},
-      "constraints": {
-        "meta": {
-          "script": "function(core, node, callback) {\r\n    \"use strict\";\r\n    var error = null,\r\n        returnValue = {hasViolation:false,message:\"\"},\r\n        i,\r\n        neededChekings = 4,\r\n        meta = core.getJsonMeta(node),\r\n        typeIndexOfChild = function(typePathsArray,childNode){\r\n            var index = -1;\r\n\r\n            while(childNode && index === -1){\r\n                index = typePathsArray.indexOf(core.getPath(childNode));\r\n                childNode = core.getBase(childNode);\r\n            }\r\n\r\n            return index;\r\n        },\r\n        checkChildrenRules = function(){\r\n            var childCount = [],\r\n                index;\r\n            core.loadChildren(node,function(err,children){\r\n                if(err){\r\n                    returnValue.message += \"error during loading of node\\'s children\\n\";\r\n                    error = error || err;\r\n                    return checkingDone();\r\n                }\r\n\r\n                //global count check\r\n                //min\r\n                if(meta.children.min && meta.children.min !== -1){\r\n                    if(children.length < meta.children.min){\r\n                        returnValue.hasViolation = true;\r\n                        returnValue.message += \"node hase fewer nodes than needed\\n\";\r\n                    }\r\n                }\r\n                //max\r\n                if(meta.children.max && meta.children.max !== -1){\r\n                    if(children.length > meta.children.max){\r\n                        returnValue.hasViolation = true;\r\n                        returnValue.message += \"node hase more nodes than allowed\\n\";\r\n                    }\r\n                }\r\n\r\n                //typedCounts\r\n                for(i=0;i<meta.children.items.length;i++){\r\n                    childCount.push(0);\r\n                }\r\n                for(i=0;i<children.length;i++){\r\n                    index = typeIndexOfChild(meta.children.items,children[i]);\r\n                    if(index === -1 ){\r\n                        returnValue.hasViolation = true;\r\n                        returnValue.message += \"child \" + core.getGuid(children[i]) +\" is from prohibited type\\n\";\r\n                    }\r\n                    else {\r\n                        childCount[index]++;\r\n                    }\r\n                }\r\n                for(i=0;i<meta.children.items.length;i++){\r\n                    //min\r\n                    if(meta.children.minItems[i] !== -1){\r\n                        if(meta.children.minItems[i] > childCount[i]){\r\n                            returnValue.hasViolation = true;\r\n                            returnValue.message += \"too few type \"+ meta.children.items[i] +\" children\\n\";\r\n                        }\r\n                    }\r\n                    //max\r\n                    if(meta.children.maxItems[i] !== -1){\r\n                        if(meta.children.maxItems[i] < childCount[i]){\r\n                            returnValue.hasViolation = true;\r\n                            returnValue.message += \"too many type \"+ meta.children.items[i] +\" children\\n\";\r\n                        }\r\n                    }\r\n                }\r\n                return checkingDone();\r\n            });\r\n        },\r\n        checkPointerRules = function(){\r\n            //TODO currently there is no quantity check\r\n            var validNames = core.getValidPointerNames(node),\r\n                names = core.getPointerNames(node),\r\n                checkPointer = function(name){\r\n                    core.loadPointer(node,name,function(err,target){\r\n                        if(err || !target){\r\n                            error = error || err;\r\n                            returnValue.message += \"error during pointer \"+ name +\" load\\n\";\r\n                            return checkDone();\r\n                        }\r\n\r\n                        if(!core.isValidTargetOf(target,node,name)){\r\n                            returnValue.hasViolation = true;\r\n                            returnValue.message += \"target of pointer \"+ name +\" is invalid\\n\";\r\n                        }\r\n                        return checkDone();\r\n                    });\r\n                },\r\n                checkDone = function(){\r\n                    if(--needs === 0){\r\n                        checkingDone();\r\n                    }\r\n                },\r\n                needs,i;\r\n            \r\n            needs = names.length;\r\n            if(needs > 0){\r\n                for(i=0;i<names.length;i++){\r\n                    if(validNames.indexOf(names[i]) === -1){\r\n                        returnValue.hasViolation = true;\r\n                        returnValue.message += \" invalid pointer \"+ names[i] +\" has been found\\n\";\r\n                        checkDone();\r\n                    } else {\r\n                        checkPointer(names[i]);\r\n                    }\r\n\r\n                }\r\n            } else {\r\n                checkDone();\r\n            }\r\n\r\n        },\r\n        checkSetRules = function(){\r\n            //TODO this part is missing yet\r\n            checkingDone();\r\n        },\r\n        checkAttributeRules = function(){\r\n            var names = core.getAttributeNames(node),\r\n                validNames = core.getValidAttributeNames(node);\r\n            for(i=0;i<names.length;i++){\r\n                if(validNames.indexOf(names[i]) !== -1){\r\n                    if(!core.isValidAttributeValueOf(node,names[i],core.getAttribute(node,names[i]))){\r\n                        returnValue.hasViolation = true;\r\n                        returnValue.message += \"attribute \"+names[i]+\" has invalid value\\n\";\r\n                    }\r\n                }\r\n                else {\r\n                    returnValue.hasViolation = true;\r\n                    returnValue.message += \"node has an undefined attribute: \"+names[i];\r\n                }\r\n            }\r\n            checkingDone();\r\n        },\r\n        checkingDone = function(){\r\n            if(--neededChekings === 0){\r\n                callback(error,returnValue);\r\n            }\r\n        };\r\n\r\n    checkChildrenRules();\r\n    checkPointerRules();\r\n    checkSetRules();\r\n    checkAttributeRules();\r\n}",
-          "priority": 10,
-          "info": "this constraint will check all the meta rules defined to an object"
-        }
-      }
+      "sets": {}
     },
     "d8f6c058-f180-f9ea-a0fc-5909e42811ae": {
       "attributes": {},
@@ -524,8 +507,7 @@
           "y": 270
         }
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "d926b4e8-676d-709b-e10e-a6fe730e71f5": {
       "attributes": {
@@ -556,8 +538,7 @@
         },
         "validVisualizers": "METAAspect ModelEditor"
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "dea8d757-8ea3-1748-d82e-7e2b33f3e720": {
       "attributes": {},
@@ -573,8 +554,7 @@
           "y": 172
         }
       },
-      "sets": {},
-      "constraints": {}
+      "sets": {}
     },
     "f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb": {
       "attributes": {
@@ -610,8 +590,7 @@
       },
       "sets": {
         "setPtr": []
-      },
-      "constraints": {}
+      }
     }
   },
   "metaSheets": {}

@@ -153,7 +153,7 @@ define([
                 }
 
                 //pass all the other attribute names to the dialog
-                attrNames = client.getValidAttributeNames(self._metaInfo[CONSTANTS.GME_ID]);
+                attrNames = client.getOwnValidAttributeNames(self._metaInfo[CONSTANTS.GME_ID]);
                 attrNames.splice(attrNames.indexOf(attrName), 1);
 
                 dialog.show(desc, attrNames, function (attrDesc) {
@@ -349,7 +349,7 @@ define([
     MetaDecoratorDiagramDesignerWidget.prototype._onNewAttributeClick = function () {
         var client = this._control._client,
             objId = this._metaInfo[CONSTANTS.GME_ID];
-        this._onNewClick(client.getValidAttributeNames(objId), this._skinParts.$attributesContainer,
+        this._onNewClick(client.getOwnValidAttributeNames(objId), this._skinParts.$attributesContainer,
             this._skinParts.$addAttributeContainer, this._skinParts.$attributesTitle, this._onNewAttributeCreate);
     };
 
@@ -473,6 +473,7 @@ define([
 
         if (attrName === '' ||
             typeof attrName !== 'string' ||
+            attrName === 'name' ||
             collection.indexOf(attrName) !== -1 ||
             REGEXP.DOCUMENT_KEY.test(attrName) === false) {
             result = false;

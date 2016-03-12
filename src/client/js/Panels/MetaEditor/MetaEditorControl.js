@@ -909,7 +909,7 @@ define(['js/logger',
     /*******************************************************************************/
     MetaEditorControl.prototype._processNodeMetaPointers = function (gmeID, isSet) {
         var node = this._client.getNode(gmeID),
-            pointerNames = isSet === true ? node.getSetNames() : node.getPointerNames(),
+            pointerNames = isSet === true ? node.getValidSetNames() : node.getValidPointerNames(),
             pointerMetaDescriptor,
             pointerOwnMetaTypes,
             len,
@@ -1159,16 +1159,17 @@ define(['js/logger',
             self = this;
 
         if (sourceNode && targetNode) {
+            notAllowedPointerNames = _.union(sourceNode.getSetNames(), sourceNode.getPointerNames());
             if (isSet === true) {
                 //this is a pointer list
-                existingPointerNames = sourceNode.getSetNames() || [];
-                notAllowedPointerNames = sourceNode.getPointerNames() || [];
+                existingPointerNames = _.difference(sourceNode.getSetNames() || [],
+                    this._client.getMetaAspectNames(sourceID));
             } else {
                 //this is a single pointer
                 //get the list of existing pointers and show them in a dialog so the user can choose
                 existingPointerNames = sourceNode.getPointerNames() || [];
-                notAllowedPointerNames = sourceNode.getSetNames() || [];
             }
+            notAllowedPointerNames = _.difference(notAllowedPointerNames, existingPointerNames);
 
             //handle RESERVED pointer names
             existingPointerNames = _.difference(existingPointerNames, MetaEditorConstants.RESERVED_POINTER_NAMES);
@@ -1180,7 +1181,7 @@ define(['js/logger',
                 isSet,
                 function (userSelectedPointerName) {
                     self._client.startTransaction();
-                    pointerMetaDescriptor = self._client.getValidTargetItems(sourceID, userSelectedPointerName);
+                    pointerMetaDescriptor = self._client.getOwnValidTargetItems(sourceID, userSelectedPointerName);
                     if (!pointerMetaDescriptor) {
                         if (isSet !== true) {
                             //single pointer
