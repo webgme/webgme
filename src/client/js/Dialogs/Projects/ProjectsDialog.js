@@ -90,7 +90,7 @@ define([
                     if (err) {
                         self._logger.error(err);
                     } else {
-                        WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                        //WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
                     }
                     self._dialog.modal('hide');
                 });
@@ -675,7 +675,7 @@ define([
                     self._logger.error('Cannot select project', err);
                 } else {
                     self._logger.debug('Selected project');
-                    WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                    //WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
                 }
                 loader.stop();
             });

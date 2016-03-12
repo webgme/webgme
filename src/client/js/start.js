@@ -210,8 +210,26 @@ require(
             return deferred.promise.nodeify(callback);
         }
 
+        function loadExtraCssFiles(callback) {
+            var deferred = Q.defer();
+
+            if (gmeConfig.visualization.extraCss.length > 0) {
+                require(gmeConfig.visualization.extraCss.map(function (cssFile) {
+                        return 'css!' + cssFile;
+                    }),
+                    deferred.resolve,
+                    deferred.reject
+                );
+            } else {
+                deferred.resolve();
+            }
+
+            return deferred.promise.nodeify(callback);
+        }
+
         Q.all([
                 domDeferred.promise,
+                loadExtraCssFiles(),
                 populateAvailableExtensionPoints(),
                 populateUserInfo(),
                 getDefaultComponentSettings()
