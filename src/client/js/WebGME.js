@@ -58,7 +58,7 @@ define([
 
         var componentId = 'GenericUIWebGMEStart',
             defaultConfig = {
-                pageTitle: 'GME',
+                pageTitle: 'WebGME',
                 disableProjectsDialog: false,
                 initialContext: {
                     project: null,
@@ -146,8 +146,7 @@ define([
                     var projectName,
                         nodePath;
 
-                    document.title = config.pageTitle + ' - ' +
-                        StorageUtil.getProjectFullNameFromProjectId(projectId);
+                    document.title = StorageUtil.getProjectFullNameFromProjectId(projectId);
                     layoutManager.setPanelReadOnly(client.isProjectReadOnly());
                     WebGMEGlobal.State.registerActiveProjectName(projectId);
 

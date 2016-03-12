@@ -7,7 +7,7 @@
     "branchMenuClass": ""
   },
   "GenericUIWebGMEStart": {
-    "pageTitle": "GME",
+    "pageTitle": "WebGME",
     "disableProjectsDialog": false,
     "initialContext": {
       "project": null,

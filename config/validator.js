@@ -10,9 +10,9 @@ function warnDeprecated(name, value, hint) {
     'use strict';
     if (typeof value !== 'undefined') {
         if (hint) {
-            console.warn('Deprecated configuration key', name);
-        } else {
             console.warn('Deprecated configuration key', name + '.', hint);
+        } else {
+            console.warn('Deprecated configuration key', name);
         }
     }
 }
