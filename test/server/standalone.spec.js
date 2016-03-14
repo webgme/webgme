@@ -436,50 +436,18 @@ describe('standalone server', function () {
     describe('http server with authentication turned on', function () {
 
         var safeStorage,
-
+            webgmeToken,
             gmeAuth,
-            gmeConfig = testFixture.getGmeConfig(),
             logIn = function (callback) {
-                agent.post(serverBaseUrl + '/login?redirect=%2F')
-                    .type('form')
-                    .send({username: 'user'})
-                    .send({password: 'plaintext'})
-                    .end(function (err, res) {
-                        if (err) {
-                            return callback(err);
-                        }
-                        should.equal(res.status, 200);
-                        callback(err, res);
-                    });
+                testFixture.logIn(server, agent, 'user', 'plaintext').nodeify(callback);
             },
-            openSocketIo = function () {
-                var io = require('socket.io-client');
-                return Q.nfcall(logIn)
-                    .then(function (res) {
-                        var socket,
-                            socketReq = {url: serverBaseUrl},
-                            defer = Q.defer();
-
-                        agent.attachCookies(socketReq);
-
-                        socket = io.connect(serverBaseUrl,
-                            {
-                                query: 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(
-                                    decodeURIComponent(socketReq.cookies))[1],
-                                multiplex: false
-                            });
-
-                        socket.on('error', function (err) {
-                            logger.error(err);
-                            defer.reject(err || 'could not connect');
-                            socket.disconnect();
-                        });
-                        socket.on('connect', function () {
-                            defer.resolve(socket);
-                        });
-
-                        return defer.promise;
-                    });
+            openSocketIo = function (callback) {
+                return testFixture.openSocketIo(server, agent, 'user', 'plaintext')
+                    .then(function (result) {
+                        webgmeToken = result.webgmeToken;
+                        return result.socket;
+                    })
+                    .nodeify(callback);
             };
 
         beforeEach(function () {
@@ -616,7 +584,7 @@ describe('standalone server', function () {
                 projectId = testFixture.projectName2Id(projectName);
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'openProject', {projectId: projectId})
+                    return Q.ninvoke(socket, 'emit', 'openProject', {projectId: projectId, webgmeToken: webgmeToken})
                         .finally(function () {
                             socket.disconnect();
                         });
@@ -631,7 +599,7 @@ describe('standalone server', function () {
             var projectId = testFixture.projectName2Id('unauthorized_project');
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'openProject', {projectId: projectId})
+                    return Q.ninvoke(socket, 'emit', 'openProject', {projectId: projectId, webgmeToken: webgmeToken})
                         .finally(function () {
                             socket.disconnect();
                         });
@@ -661,6 +629,7 @@ describe('standalone server', function () {
                 };
             openSocketIo()
                 .then(function (socket) {
+                    command.webgmeToken = webgmeToken;
                     return Q.ninvoke(socket, 'emit', 'simpleRequest', command)
                         .finally(function () {
                             socket.disconnect();
@@ -700,6 +669,7 @@ describe('standalone server', function () {
                 };
             openSocketIo()
                 .then(function (socket) {
+                    command.webgmeToken = webgmeToken;
                     return Q.ninvoke(socket, 'emit', 'simpleRequest', command)
                         .finally(function () {
                             socket.disconnect();
@@ -733,7 +703,10 @@ describe('standalone server', function () {
 
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'createProject', {projectName: projectName})
+                    return Q.ninvoke(socket, 'emit', 'createProject', {
+                        projectName: projectName,
+                        webgmeToken: webgmeToken
+                    })
                         .finally(function () {
                             socket.disconnect();
                         });

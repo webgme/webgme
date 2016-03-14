@@ -12,7 +12,7 @@ var Q = require('q'),
 /**
  * Monitors given branch and starts, stops and updates registered addOns.
  *
- * @param {string} webGMESessionId
+ * @param {string} webgmeToken
  * @param {EditorStorage} storage
  * @param {Project} project
  * @param {string} branchName
@@ -21,7 +21,7 @@ var Q = require('q'),
  * @constructor
  * @ignore
  */
-function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger, gmeConfig) {
+function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gmeConfig) {
     var self = this,
         logger = mainLogger.fork('BranchMonitor:' + branchName),
         core = new Core(project, {globConf: gmeConfig, logger: logger.fork('core')}),
@@ -71,7 +71,7 @@ function BranchMonitor(webGMESessionId, storage, project, branchName, mainLogger
             serverPort: gmeConfig.server.port,
             httpsecure: false, // N.B.: addons are running on the server only
             server: '127.0.0.1',
-            webgmeclientsession: webGMESessionId,
+            webgmeToken: webgmeToken,
             logger: logger.fork('BlobClient')
         });
 

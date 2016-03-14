@@ -41,58 +41,18 @@ describe('WebSocket', function () {
         server,
         serverBaseUrl,
         agent,
+        webgmeToken,//TODO: this is not a nice approach, but don't want change all openSocketIo
 
-        logIn = function (callback) {
-            agent.post(serverBaseUrl + '/login?redirect=%2F')
-                .type('form')
-                .send({username: guestAccount})
-                .send({password: guestAccount})
-                .end(function (err, res) {
-                    if (err) {
-                        return callback(err);
-                    }
-                    expect(res.status).to.equal(200);
-                    callback(err, res);
-                });
-        },
-        openSocketIo = function (sessionId) {
-            var io = require('socket.io-client');
-            return Q.nfcall(logIn)
-                .then(function (/*res*/) {
-                    var socket,
-                        socketReq = {url: serverBaseUrl},
-                        defer = Q.defer(),
-                        query;
-
-                    agent.attachCookies(socketReq);
-
-                    if (sessionId) {
-                        query = 'webGMESessionId=' + sessionId;
-                    } else {
-                        query = 'webGMESessionId=' + /webgmeSid=s:([^;]+)\./.exec(
-                                decodeURIComponent(socketReq.cookies))[1];
-                    }
-
-                    socket = io.connect(serverBaseUrl,
-                        {
-                            query: query,
-                            multiplex: false
-                        });
-
-                    socket.on('error', function (err) {
-                        logger.error(err);
-                        defer.reject(err || 'could not connect');
-                        socket.disconnect();
-                    });
-                    socket.on('connect', function () {
-                        defer.resolve(socket);
-                    });
-
-                    return defer.promise;
-                });
+        openSocketIo = function (token, callback) {
+            return testFixture.openSocketIo(server, agent, guestAccount, guestAccount, token)
+                .then(function (result) {
+                    webgmeToken = result.webgmeToken;
+                    return result.socket;
+                })
+                .nodeify(callback);
         };
 
-    describe('with valid sessionId as a guest user, auth turned on', function () {
+    describe('with valid token as a guest user, auth turned on', function () {
         before(function (done) {
             var gmeConfigWithAuth = testFixture.getGmeConfig();
             gmeConfigWithAuth.authentication.enable = true;
@@ -121,32 +81,6 @@ describe('WebSocket', function () {
                                 })
                         ]);
                     })
-                    //.then(function () {
-                    //    var promises = [],
-                    //        i;
-                    //
-                    //    for (i = 0; i < projects.length; i += 1) {
-                    //        promises.push(safeStorage.deleteProject({projectId: projects[i]}));
-                    //    }
-                    //
-                    //    return Q.all(promises);
-                    //})
-                    //.then(function () {
-                    //    return Q.all([
-                    //        testFixture.importProject(safeStorage, {
-                    //            projectSeed: 'seeds/EmptyProject.json',
-                    //            projectName: projectName,
-                    //            gmeConfig: gmeConfigWithAuth,
-                    //            logger: logger
-                    //        }),
-                    //        testFixture.importProject(safeStorage, {
-                    //            projectSeed: 'seeds/EmptyProject.json',
-                    //            projectName: projectNameUnauthorized,
-                    //            gmeConfig: gmeConfigWithAuth,
-                    //            logger: logger
-                    //        })
-                    //    ]);
-                    //})
                     .then(function () {
                         return Q.allDone([
                             gmeAuth.authorizeByUserId(guestAccount, projectNameUnauthorized, 'create',
@@ -183,7 +117,7 @@ describe('WebSocket', function () {
         it('should getConnectionInfo', function (done) {
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo');
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
                 })
                 .then(function (result) {
                     expect(result.userId).to.equal(guestAccount);
@@ -192,16 +126,16 @@ describe('WebSocket', function () {
                 .nodeify(done);
         });
 
-        it('should fail to getConnectionInfo with invalid session id', function (done) {
-            openSocketIo('invalid_session_id')
+        it('should fail to getConnectionInfo with malformed token', function (done) {
+            openSocketIo('malformed_token')
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo');
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
                 })
                 .then(function () {
                     throw new Error('should have failed to getConnectionInfo');
                 })
                 .catch(function (err) {
-                    if (typeof err === 'string' && err.indexOf('User was not found') > -1) {
+                    if (typeof err === 'string' && err.indexOf('jwt malformed') > -1) {
                         return;
                     }
                     throw new Error('should have failed to getConnectionInfo: ' + err);
@@ -210,7 +144,7 @@ describe('WebSocket', function () {
         });
     });
 
-    describe('with valid sessionId as a guest user', function () {
+    describe('with valid token as a guest user', function () {
         before(function (done) {
             server = WebGME.standaloneServer(gmeConfig);
             serverBaseUrl = server.getUrl();
@@ -235,16 +169,6 @@ describe('WebSocket', function () {
                                 })
                         ]);
                     })
-                    //.then(function () {
-                    //    var promises = [],
-                    //        i;
-                    //
-                    //    for (i = 0; i < projects.length; i += 1) {
-                    //        promises.push(safeStorage.deleteProject({projectId: projects[i]}));
-                    //    }
-                    //
-                    //    return Q.all(promises);
-                    //})
                     .then(function () {
                         return Q.allDone([
                             testFixture.importProject(safeStorage, {
@@ -300,36 +224,18 @@ describe('WebSocket', function () {
         });
 
         after(function (done) {
+            server.stop(function (err) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
 
-            gmeAuth.authorizeByUserId(guestAccount, projectName2Id(projectNameUnauthorized), 'create',
-                {
-                    read: true,
-                    write: true,
-                    delete: true
-                })
-                .then(function () {
-                    var promises = [],
-                        i;
-                    for (i = 0; i < projects.length; i += 1) {
-                        promises.push(safeStorage.deleteProject({projectId: projectName2Id(projects[i])}));
-                    }
-
-                    return Q.allSettled(promises);
-                })
-                .finally(function () {
-                    server.stop(function (err) {
-                        if (err) {
-                            done(new Error(err));
-                            return;
-                        }
-
-                        Q.allDone([
-                            gmeAuth.unload(),
-                            safeStorage.closeDatabase()
-                        ])
-                            .nodeify(done);
-                    });
-                });
+                Q.allDone([
+                    gmeAuth.unload(),
+                    safeStorage.closeDatabase()
+                ])
+                    .nodeify(done);
+            });
         });
 
         beforeEach(function () {
@@ -339,7 +245,7 @@ describe('WebSocket', function () {
         it('should getConnectionInfo', function (done) {
             openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo');
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
                 })
                 .then(function (result) {
                     expect(result.userId).to.equal(guestAccount);
@@ -351,8 +257,9 @@ describe('WebSocket', function () {
                 });
         });
 
-        it('should fail to getConnectionInfo with invalid session id', function (done) {
-            openSocketIo('invalid_session_id')
+        // With auth turned of the tokens are never validated..
+        it.skip('should fail to getConnectionInfo with malformed token', function (done) {
+            openSocketIo('malformed_token')
                 .then(function (socket) {
                     return Q.ninvoke(socket, 'emit', 'getConnectionInfo');
                 })
@@ -954,10 +861,10 @@ describe('WebSocket', function () {
         });
     });
 
-    describe('with invalid session and user', function () {
+    describe('with invalid token and user', function () {
         var addFailSimpleCallTestCase = function (functionName) {
-                it('should fail to execute \'' + functionName + '\' with invalid session id', function (done) {
-                    openSocketIo('invalidSession')
+                it('should fail to execute \'' + functionName + '\' with invalid token', function (done) {
+                    openSocketIo('invalid_token')
                         .then(function (socket) {
 
                             return Q.ninvoke(socket, 'emit', functionName, {});
@@ -966,7 +873,7 @@ describe('WebSocket', function () {
                             done(new Error('missing error handling'));
                         })
                         .catch(function (err) {
-                            expect(err).to.include('invalidSession');
+                            expect(err).to.include('jwt malformed');
                             done();
                         })
                         .done();
@@ -991,12 +898,14 @@ describe('WebSocket', function () {
             i;
 
         before(function (done) {
-
-            server = WebGME.standaloneServer(gmeConfig);
+            var gmeConfigWithAuth = testFixture.getGmeConfig();
+            gmeConfigWithAuth.authentication.enable = true;
+            gmeConfigWithAuth.authentication.allowGuests = true;
+            server = WebGME.standaloneServer(gmeConfigWithAuth);
             serverBaseUrl = server.getUrl();
             Q.ninvoke(server, 'start')
                 .then(function () {
-                    return testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName);
+                    return testFixture.clearDBAndGetGMEAuth(gmeConfigWithAuth, projectName);
 
                 })
                 .then(function (gmeAuth_) {
@@ -1026,7 +935,7 @@ describe('WebSocket', function () {
         }
 
         it('should fail to call simpleQuery', function (done) {
-            openSocketIo('invalidSession')
+            openSocketIo('invalid_token')
                 .then(function (socket) {
 
                     return Q.ninvoke(socket, 'emit', 'simpleQuery', 'someWorkerId', {});
@@ -1035,7 +944,7 @@ describe('WebSocket', function () {
                     done(new Error('missing error handling'));
                 })
                 .catch(function (err) {
-                    expect(err).to.include('invalidSession');
+                    expect(err).to.include('jwt malformed');
                     done();
                 })
                 .done();

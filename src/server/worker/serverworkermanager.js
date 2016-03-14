@@ -339,7 +339,7 @@ function ServerWorkerManager(_parameters) {
     /**
      *
      * @param {object} parameters
-     * @param {string} parameters.webGMESessionId
+     * @param {string} parameters.webgmeToken
      * @param {string} parameters.projectId
      * @param {string} parameters.branchName
      * @param {boolean} parameters.join

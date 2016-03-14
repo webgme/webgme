@@ -74,7 +74,8 @@ process.on('message', function (parameters) {
     logger.debug('Incoming message:', {metadata: parameters});
 
     if (parameters.command === CONSTANTS.workerCommands.executePlugin) {
-        wr.executePlugin(parameters.webGMESessionId, parameters.socketId, parameters.name, parameters.context, function (err, result) {
+        wr.executePlugin(parameters.webgmeToken, parameters.socketId, parameters.name, parameters.context,
+            function (err, result) {
                 safeSend({
                     pid: process.pid,
                     type: CONSTANTS.msgTypes.result,
@@ -84,7 +85,7 @@ process.on('message', function (parameters) {
             }
         );
     } else if (parameters.command === CONSTANTS.workerCommands.exportLibrary) {
-        wr.exportLibrary(parameters.webGMESessionId, parameters.projectId, parameters.path, parameters,
+        wr.exportLibrary(parameters.webgmeToken, parameters.projectId, parameters.path, parameters,
             function (err, result) {
                 safeSend({
                     pid: process.pid,
@@ -96,7 +97,7 @@ process.on('message', function (parameters) {
         );
     } else if (parameters.command === CONSTANTS.workerCommands.seedProject) {
         parameters.type = parameters.type || 'db';
-        wr.seedProject(parameters.webGMESessionId, parameters.projectName, parameters.ownerId, parameters,
+        wr.seedProject(parameters.webgmeToken, parameters.projectName, parameters.ownerId, parameters,
             function (err, result) {
                 safeSend({
                     pid: process.pid,
@@ -106,7 +107,7 @@ process.on('message', function (parameters) {
                 });
             });
     } else if (parameters.command === CONSTANTS.workerCommands.autoMerge) {
-        wr.autoMerge(parameters.webGMESessionId, parameters.projectId, parameters.mine, parameters.theirs,
+        wr.autoMerge(parameters.webgmeToken, parameters.projectId, parameters.mine, parameters.theirs,
             function (err, result) {
                 safeSend({
                     pid: process.pid,
@@ -116,7 +117,7 @@ process.on('message', function (parameters) {
                 });
             });
     } else if (parameters.command === CONSTANTS.workerCommands.resolve) {
-        wr.resolve(parameters.webGMESessionId, parameters.partial, function (err, result) {
+        wr.resolve(parameters.webgmeToken, parameters.partial, function (err, result) {
             safeSend({
                 pid: process.pid,
                 type: CONSTANTS.msgTypes.result,
@@ -125,7 +126,7 @@ process.on('message', function (parameters) {
             });
         });
     } else if (parameters.command === CONSTANTS.workerCommands.checkConstraints) {
-        wr.checkConstraints(parameters.webGMESessionId, parameters.projectId, parameters, function (err, result) {
+        wr.checkConstraints(parameters.webgmeToken, parameters.projectId, parameters, function (err, result) {
             safeSend({
                 pid: process.pid,
                 type: CONSTANTS.msgTypes.result,
@@ -134,7 +135,7 @@ process.on('message', function (parameters) {
             });
         });
     } else if (parameters.command === CONSTANTS.workerCommands.reassignGuids) {
-        wr.reassignGuids(parameters.webGMESessionId, parameters.projectId, parameters.commitHash,
+        wr.reassignGuids(parameters.webgmeToken, parameters.projectId, parameters.commitHash,
             function (err, result) {
                 safeSend({
                     pid: process.pid,

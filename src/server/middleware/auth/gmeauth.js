@@ -8,10 +8,10 @@
 
 var Mongodb = require('mongodb'),
     Q = require('q'),
+    fs = require('fs'),
     //bcrypt = require('bcrypt'), include bcrypt and uncomment this line for faster encryption/decryption.
     bcrypt = require('bcryptjs'),
-
-    GUID = requireJS('common/util/guid'),
+    jwt = require('jsonwebtoken'),
 
     storageUtil = requireJS('common/storage/util'),
     UTIL = requireJS('common/util/util'),
@@ -27,7 +27,7 @@ var Mongodb = require('mongodb'),
  *
  * @param session
  * @param gmeConfig
- * @returns {{authenticate: authenticate, authenticateUserById: authenticateUserById, authorize: authorizeBySession, deleteProject: deleteProject, getUserIdBySession: getUserIdBySession, getProjectAuthorizationBySession: getProjectAuthorizationBySession, getProjectAuthorizationByUserId: getProjectAuthorizationByUserId, tokenAuthorization: tokenAuthorization, generateToken: generateTokenBySession, generateTokenForUserId: generateTokenByUserId, getToken: getToken, checkToken: checkToken, tokenAuth: tokenAuth, getUserAuthInfo: getUserAuthInfo, getAllUserAuthInfo: getAllUserAuthInfo, getAllUserAuthInfoBySession: getAllUserAuthInfoBySession, authorizeByUserId: authorizeByUserId, getAuthorizationInfoByUserId: getAuthorizationInfoByUserId, unload: unload, connect: connect, _getProjectNames: _getProjectNames, addUser: addUser, updateUser: updateUser, deleteUser: deleteUser, getUser: getUser, listUsers: listUsers, addOrganization: addOrganization, getOrganization: getOrganization, listOrganizations: listOrganizations, removeOrganizationByOrgId: removeOrganizationByOrgId, addUserToOrganization: addUserToOrganization, removeUserFromOrganization: removeUserFromOrganization, authorizeOrganization: authorizeOrganization, getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId, addProject: addProject, getProject: getProject, transferProject: transferProject}}
+ * @returns {{deleteProject: deleteProject, getProjectAuthorizationByUserId: getProjectAuthorizationByUserId, getProjectAuthorizationListByUserId: getProjectAuthorizationListByUserId, getUserAuthInfo: getUserAuthInfo, getAllUserAuthInfo: getAllUserAuthInfo, authorizeByUserId: authorizeByUserId, getAuthorizationInfoByUserId: getAuthorizationInfoByUserId, unload: unload, connect: connect, _getProjectNames: _getProjectNames, addUser: addUser, updateUser: updateUser, updateUserDataField: updateUserDataField, updateUserSettings: updateUserSettings, updateUserComponentSettings: updateUserComponentSettings, deleteUser: deleteUser, getUser: getUser, listUsers: listUsers, addOrganization: addOrganization, getOrganization: getOrganization, listOrganizations: listOrganizations, getUserOrOrg: getUserOrOrg, authorizeByUserOrOrgId: authorizeByUserOrOrgId, removeOrganizationByOrgId: removeOrganizationByOrgId, addUserToOrganization: addUserToOrganization, removeUserFromOrganization: removeUserFromOrganization, authorizeOrganization: authorizeOrganization, getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId, setAdminForUserInOrganization: setAdminForUserInOrganization, getAdminsInOrganization: getAdminsInOrganization, addProject: addProject, getProject: getProject, transferProject: transferProject, updateProjectInfo: updateProjectInfo, generateJWToken: generateJWToken, verifyJWToken: verifyJWToken, CONSTANTS: {USER: string, ORGANIZATION: string}}}
  * @constructor
  */
 function GMEAuth(session, gmeConfig) {
@@ -35,25 +35,25 @@ function GMEAuth(session, gmeConfig) {
     // TODO: make sure that gmeConfig passes all config
     var logger = Logger.create('gme:server:auth:gmeauth', gmeConfig.server.log),
         _collectionName = '_users',
-    //_organizationCollectionName = '_organizations',
         _projectCollectionName = '_projects',
-        _session = session,
-        _userField = 'username',
-        _passwordField = 'password',
-        _tokenExpiration = 0,
         db,
         collectionDeferred = Q.defer(),
         collection = collectionDeferred.promise,
-    //organizationCollectionDeferred = Q.defer(),
-    //organizationCollection = organizationCollectionDeferred.promise,
         projectCollectionDeferred = Q.defer(),
-        projectCollection = projectCollectionDeferred.promise;
-    //FIXME should be taken into use or remove it
-    //blacklistUserAndOrgName = [
-    //    'api',
-    //    'blob',
-    //    'executor'
-    //];
+        projectCollection = projectCollectionDeferred.promise,
+
+        // JWT Keys
+        PRIVATE_KEY,
+        PUBLIC_KEY,
+        jwtOptions = {
+            algorithm: 'RS256',
+            expiresIn: gmeConfig.authentication.jwt.expiresIn
+        };
+
+    if (gmeConfig.authentication.enable === true) {
+        PRIVATE_KEY = fs.readFileSync(gmeConfig.authentication.jwt.privateKey, 'utf8');
+        PUBLIC_KEY = fs.readFileSync(gmeConfig.authentication.jwt.publicKey, 'utf8');
+    }
 
     /**
      * 'users' collection has these fields:
@@ -209,88 +209,100 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-    /**
-     *
-     * @param userId
-     * @param password
-     * @param type
-     * @param returnUrlFailedLogin
-     * @param req
-     * @param res
-     * @param next
-     */
-    function authenticateUserById(userId, password, type, returnUrlFailedLogin, req, res, next) {
-        var query = {};
-        returnUrlFailedLogin = returnUrlFailedLogin || '/';
-        if (userId.indexOf('@') > 0) {
-            query.email = userId;
-        } else {
-            query._id = userId;
-        }
-        collection.findOne(query)
+    function authenticateUser(userId, password, callback) {
+        return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject(new Error('no such user [' + userId + ']'));
+                    throw new Error('no such user [' + userId + ']');
                 }
-                if (type === 'gmail') {
-                    req.session.udmId = userData._id;
-                    req.session.authenticated = true;
-                    next();
+
+                if (userId === gmeConfig.authentication.guestAccount && gmeConfig.authentication.allowGuests === true) {
+                    return Q(true);
                 } else {
-                    if (password) {
-                        return Q.ninvoke(bcrypt, 'compare', password, userData.passwordHash)
-                            .then(function (hashRes) {
-                                if (hashRes) {
-                                    req.session.udmId = userData._id;
-                                    req.session.authenticated = true;
-                                    next();
-                                } else {
-                                    return Q.reject(new Error('incorrect password'));
-                                }
-                            });
-                    }
-                    return Q.reject(new Error('no password given'));
+                    return Q.ninvoke(bcrypt, 'compare', password, userData.passwordHash);
                 }
             })
-            .catch(function (err) {
-                if (res.getHeader('X-WebGME-Media-Type')) {
-                    // do not redirect for api requests
-                    res.status(401);
-                    return next(new Error(err));
+            .then(function (hashRes) {
+                if (hashRes) {
+                    return;
                 } else {
-                    res.redirect(returnUrlFailedLogin);
+                    throw new Error('incorrect password');
                 }
-            });
+            })
+            .nodeify(callback);
     }
 
-    /**
-     *
-     * @param req
-     * @param res
-     * @param next
-     */
-    function authenticate(req, res, next) {
-        var userId = req.body[_userField],
-            password = req.body[_passwordField],
-            gmail = false,
-            returnUrl = req.__gmeAuthFailUrl__ || '/',
-            type;
-        delete req.__gmeAuthFailUrl__;
-        //gmail based authentication - no authentication just user search
-        // TODO: this does not work yet.
-        if (userId === null || userId === undefined) {
-            userId = req.query['openid.ext1.value.email'];
-            password = null;
-            gmail = true;
-            if (userId === null || userId === undefined) {
-                res.redirect(returnUrl);
-                return;
-            }
-        }
+    function generateJWToken(userId, password, callback) {
+        var deferred = Q.defer();
+        logger.debug('Generating token for user:', userId, '..');
 
-        type = gmail ? 'gmail' : 'gme';
+        authenticateUser(userId, password)
+            .then(function () {
+                jwt.sign({userId: userId}, PRIVATE_KEY, jwtOptions, function (token) {
+                    logger.debug('Generated token!');
+                    deferred.resolve(token);
+                });
+            })
+            .catch(deferred.reject);
 
-        authenticateUserById(userId, password, type, returnUrl, req, res, next);
+        return deferred.promise.nodeify(callback);
+    }
+
+    function generateJWTokenForAuthenticatedUser(userId, callback) {
+        var deferred = Q.defer();
+        logger.debug('Generating token for user:', userId, '..');
+
+        collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
+            .then(function (userData) {
+                if (!userData) {
+                    throw new Error('no such user [' + userId + ']');
+                }
+
+                jwt.sign({userId: userId}, PRIVATE_KEY, jwtOptions, function (token) {
+                    logger.debug('Generated token!');
+                    deferred.resolve(token);
+                });
+            })
+            .catch(deferred.reject);
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function regenerateJWToken(token, callback) {
+        var deferred = Q.defer();
+        logger.debug('Regenerate token..');
+        verifyJWToken(token)
+            .then(function (result) {
+                jwt.sign({userId: result.content.userId}, PRIVATE_KEY, jwtOptions, function (newToken) {
+                    logger.debug('Regenerated new token!');
+                    deferred.resolve(newToken);
+                });
+            })
+            .catch(deferred.reject);
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function verifyJWToken(token, callback) {
+        logger.debug('Verifying token..');
+        return Q.ninvoke(jwt, 'verify', token, PUBLIC_KEY, {algorithms: ['RS256']})
+            .then(function (content) {
+                var result = {
+                    content: content,
+                    renew: false,
+                };
+
+                logger.debug('Verified token!');
+                // Check if token is about to expire...
+                if (gmeConfig.authentication.jwt.renewBeforeExpires > 0 &&
+                    content.exp - (Date.now() / 1000) < gmeConfig.authentication.jwt.renewBeforeExpires) {
+                    logger.debug('Token is about to expire');
+                    result.renew = true;
+                }
+
+                return result;
+            })
+            .nodeify(callback);
     }
 
     /**
@@ -306,6 +318,7 @@ function GMEAuth(session, gmeConfig) {
         return authorizeByUserOrOrgId(userId, projectId, type, rights)
             .nodeify(callback);
     }
+
     /**
      *
      * @param userOrOrgId {string}
@@ -340,17 +353,6 @@ function GMEAuth(session, gmeConfig) {
             return Q.reject(new Error('unknown type ' + type))
                 .nodeify(callback);
         }
-    }
-
-    function authorizeBySession(sessionId, projectName, type, callback) {
-        return Q.ninvoke(_session, 'getSessionUser', sessionId)
-            .then(function (userId) {
-                if (!userId) {
-                    throw new Error('invalid session');
-                }
-                return authorizeByUserId(userId, projectName, type, {read: true, write: true, delete: true});
-            })
-            .nodeify(callback);
     }
 
     /**
@@ -444,93 +446,6 @@ function GMEAuth(session, gmeConfig) {
                     }
                 });
                 return res;
-            })
-            .nodeify(callback);
-    }
-
-    /**
-     *
-     * @param sessionId {string}
-     * @param projectName {string}
-     * @param callback
-     * @returns {*}
-     */
-    function getProjectAuthorizationBySession(sessionId, projectName, callback) {
-        return Q.ninvoke(_session, 'getSessionUser', sessionId)
-            .then(function (userId) {
-                return getProjectAuthorizationByUserId(userId, projectName);
-            })
-            .nodeify(callback);
-    }
-
-    function getUserIdBySession(sessionId, callback) {
-        return Q.ninvoke(_session, 'getSessionUser', sessionId)
-            .nodeify(callback);
-    }
-
-    function tokenAuthorization(tokenId, projectName, callback) { //TODO currently we expect only reads via token usage
-        var query = {tokenId: tokenId};
-        query['projects.' + projectName + '.read'] = true;
-        return collection.findOne(query)
-            .then(function (userData) {
-                return Q(userData ? userData.projects[projectName].read : false);
-            })
-            .nodeify(callback);
-    }
-
-    function generateTokenByUserId(userId, callback) {
-        var token = GUID() + 'token';
-        return collection.update({_id: userId}, {$set: {tokenId: token, tokenCreated: (new Date()).getDate()}})
-            .spread(function () {
-                return token;
-            })
-            .nodeify(callback);
-    }
-
-    function generateTokenBySession(sessionId, callback) {
-        return Q.ninvoke(_session, 'getSessionUser', sessionId)
-            .then(function (userId) {
-                return generateTokenByUserId(userId, callback);
-            })
-            .nodeify(callback);
-    }
-
-    function getToken(sessionId, callback) {
-        return Q.ninvoke(_session, 'getSessionUser', sessionId)
-            .then(function (userId) {
-                if (!userId) {
-                    return Q(null);
-                }
-                return collection.findOne({_id: userId})
-                    .then(function (userData) {
-                        if (_tokenExpiration === 0 ||
-                            (new Date()).getDate() - _tokenExpiration < userData.tokenCreated) {
-                            return userData.tokenId;
-                        }
-                        return generateTokenBySession(sessionId);
-                    });
-            })
-            .nodeify(callback);
-    }
-
-    function checkToken(token, callback) {
-        return collection.findOne({tokenId: token})
-            .then(function (userData) {
-                if (!userData) {
-                    return false;
-                }
-                return true;
-            })
-            .nodeify(callback);
-    }
-
-    function tokenAuth(token, callback) {
-        return collection.findOne({tokenId: token})
-            .then(function (userData) {
-                if (!userData) {
-                    return [false, null];
-                }
-                return [true, userData._id];
             })
             .nodeify(callback);
     }
@@ -752,23 +667,6 @@ function GMEAuth(session, gmeConfig) {
                     // TODO: Consider removing settings and data here.
                 }
                 return userDataArray;
-            })
-            .nodeify(callback);
-    }
-
-    /**
-     *
-     * @param sessionId {string}
-     * @param callback
-     * @returns {*}
-     */
-    function getAllUserAuthInfoBySession(sessionId, callback) {
-        return Q.ninvoke(_session, 'getSessionUser', sessionId)
-            .then(function (userId) {
-                if (!userId) {
-                    throw new Error('invalid session');
-                }
-                return getAllUserAuthInfo(userId);
             })
             .nodeify(callback);
     }
@@ -1199,24 +1097,12 @@ function GMEAuth(session, gmeConfig) {
 
 
     return {
-        authenticate: authenticate,
-        authenticateUserById: authenticateUserById,
-        authorize: authorizeBySession,
         deleteProject: deleteProject,
-        getUserIdBySession: getUserIdBySession,
-        getProjectAuthorizationBySession: getProjectAuthorizationBySession,
         getProjectAuthorizationByUserId: getProjectAuthorizationByUserId,
         getProjectAuthorizationListByUserId: getProjectAuthorizationListByUserId,
 
-        tokenAuthorization: tokenAuthorization,
-        generateToken: generateTokenBySession,
-        generateTokenForUserId: generateTokenByUserId,
-        getToken: getToken,
-        checkToken: checkToken,
-        tokenAuth: tokenAuth,
         getUserAuthInfo: getUserAuthInfo,
         getAllUserAuthInfo: getAllUserAuthInfo,
-        getAllUserAuthInfoBySession: getAllUserAuthInfoBySession,
         authorizeByUserId: authorizeByUserId,
         getAuthorizationInfoByUserId: getAuthorizationInfoByUserId,
 
@@ -1254,6 +1140,14 @@ function GMEAuth(session, gmeConfig) {
         getProject: getProject,
         transferProject: transferProject,
         updateProjectInfo: updateProjectInfo,
+
+        authenticateUser: authenticateUser,
+        generateJWToken: generateJWToken,
+        generateJWTokenForAuthenticatedUser: generateJWTokenForAuthenticatedUser,
+        regenerateJWToken: regenerateJWToken,
+        verifyJWToken: verifyJWToken,
+
+
 
         CONSTANTS: CONSTANTS
     };

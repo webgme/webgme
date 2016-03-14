@@ -86,7 +86,6 @@ function copySvgDirsAndRegenerateSVGList(gmeConfig, logger, callback) {
     return deferred.promise.nodeify(callback);
 }
 
-
 function getPackageJson(callback) {
     var fname = path.join(__dirname, '..', 'package.json');
 
@@ -104,10 +103,124 @@ function getPackageJsonSync() {
     return JSON.parse(content);
 }
 
+function expressFileSending(httpResult, path, logger) {
+    httpResult.sendFile(path, function (err) {
+        //TODO we should check for all kind of error that should be handled differently
+        if (err) {
+            if (err.code === 'EISDIR') {
+                // NOTE: on Linux status is 404 on Windows status is not set
+                err.status = err.status || 404;
+            }
+            logger.warn('expressFileSending failed for: ' + path + ': ' + (err.stack ? err.stack : err));
+            if (httpResult.headersSent === false) {
+                httpResult.sendStatus(err.status || 500);
+            }
+        }
+    });
+}
+
+function getRelPathFromUrlArray(urlArray) {
+    urlArray.shift();
+    urlArray.shift();
+    urlArray.shift();
+    var relPath = urlArray.join('/');
+    if (!path.extname(relPath)) {  // js file by default
+        relPath += '.js';
+    }
+    return relPath;
+}
+
+function getBasePathByName(pluginName, basePaths) {
+    for (var i = 0; i < basePaths.length; i++) {
+        var additional = fs.readdirSync(basePaths[i]);
+        for (var j = 0; j < additional.length; j++) {
+            if (additional[j] === pluginName) {
+                return basePaths[i];
+            }
+        }
+    }
+}
+
+function getGoodExtraAssetRouteFor(component, basePaths, logger, __baseDir) {
+    // Check for good extra asset
+    return function (req, res) {
+        res.sendFile(path.join(__baseDir, req.path), function (err) {
+            if (err && err.code !== 'ECONNRESET') {
+                //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format
+                // so we try to look for those in our config
+                //first we check if we have the plugin registered in our config
+                var urlArray = req.url.split('/'),
+                    pluginName = urlArray[2] || null,
+                    basePath,
+                    baseAndPathExist,
+                    relPath;
+
+                relPath = getRelPathFromUrlArray(urlArray);
+                basePath = getBasePathByName(pluginName, basePaths);
+                baseAndPathExist = typeof basePath === 'string' && typeof relPath === 'string';
+                if (baseAndPathExist &&
+                    isGoodExtraAsset(pluginName, path.join(basePath, pluginName), logger)) {
+                    expressFileSending(res, path.resolve(path.join(basePath, relPath)), logger);
+                } else {
+                    res.sendStatus(404);
+                }
+            }
+        });
+    };
+}
+
+/**
+ * Unlike `getGoodExtraAssetRouteFor`, `getRouteFor` does not assume that the
+ * resource hosts a main file which has the same structure as the parent directory.
+ * That is, there are examples of panels (such as SplitPanel) in which the
+ * main file does not adhere to the format "NAME/NAME+'Panel'"
+ */
+function getRouteFor(component, basePaths, __baseDir) {
+    //first we try to give back the common plugin/modules
+    return function (req, res) {
+        res.sendFile(path.join(__baseDir, req.path), function (err) {
+            if (err && err.code !== 'ECONNRESET') {
+                //this means that it is probably plugin/pluginName or plugin/pluginName/relativePath format
+                // so we try to look for those in our config
+                //first we check if we have the plugin registered in our config
+                var urlArray = req.url.split('/'),
+                    pluginName = urlArray[2] || null,
+                    basePath,
+                    relPath;
+
+                urlArray.shift();
+                urlArray.shift();
+                relPath = urlArray.join('/');
+                if (!path.extname(relPath)) {  // js file by default
+                    relPath += '.js';
+                }
+                basePath = getBasePathByName(pluginName, basePaths);
+
+                if (typeof basePath === 'string' && typeof relPath === 'string') {
+                    expressFileSending(res, path.resolve(path.join(basePath, relPath)));
+                } else {
+                    res.sendStatus(404);
+                }
+            }
+        });
+    };
+}
+
+function getRedirectUrlParameter(req) {
+    //return '?redirect=' + URL.addSpecialChars(req.url);
+    return '?redirect=' + encodeURIComponent(req.originalUrl);
+}
+
 module.exports = {
     isGoodExtraAsset: isGoodExtraAsset,
     getComponentNames: getComponentNames,
     copySvgDirsAndRegenerateSVGList: copySvgDirsAndRegenerateSVGList,
     getPackageJson: getPackageJson,
     getPackageJsonSync: getPackageJsonSync,
+    expressFileSending: expressFileSending,
+    getGoodExtraAssetRouteFor: getGoodExtraAssetRouteFor,
+    getRelPathFromUrlArray: getRelPathFromUrlArray,
+    getRouteFor: getRouteFor,
+    getBasePathByName: getBasePathByName,
+    getRedirectUrlParameter: getRedirectUrlParameter
 };

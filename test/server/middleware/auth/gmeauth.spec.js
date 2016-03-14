@@ -136,100 +136,6 @@ describe('GME authentication', function () {
             .nodeify(done);
     });
 
-    it('throws for invalid session getAllUserAuthInfoBySession', function (done) {
-        auth.getAllUserAuthInfoBySession('sessionId')
-            .then(function () {
-                throw new Error('Should have failed');
-            })
-            .catch(function (err) {
-                if (err instanceof TypeError && err.message.indexOf('getSessionUser') > -1) {
-                    return;
-                }
-                throw err;
-            })
-            .nodeify(done);
-    });
-
-    it('does not authorize by invalid session authorizeBySession', function (done) {
-        auth.authorize('sessionId')
-            .then(function () {
-                throw new Error('Should have failed');
-            })
-            .catch(function (err) {
-                if (err instanceof TypeError && err.message.indexOf('getSessionUser') > -1) {
-                    return;
-                }
-                throw err;
-            })
-            .nodeify(done);
-    });
-
-
-    it('checks invalid and returns false', function (done) {
-        auth.checkToken('token')
-            .then(function (valid) {
-                if (valid) {
-                    done(new Error('should be invalid token'));
-                    return;
-                }
-                done();
-            });
-    });
-
-    it('should return with false using invalid token tokenAuth', function (done) {
-        auth.tokenAuth('token')
-            .then(function (valid) {
-                if (valid[0]) {
-                    done(new Error('should be invalid token'));
-                    return;
-                }
-                done();
-            });
-    });
-
-
-    it('does not get token for invalid session', function (done) {
-        auth.getToken('sessionId')
-            .then(function () {
-                throw new Error('Should have failed');
-            })
-            .catch(function (err) {
-                if (err instanceof TypeError && err.message.indexOf('getSessionUser') > -1) {
-                    return;
-                }
-                throw err;
-            })
-            .nodeify(done);
-    });
-
-    it('does not generate token for invalid session', function (done) {
-        auth.generateToken('sessionId')
-            .then(function () {
-                throw new Error('Should have failed');
-            })
-            .catch(function (err) {
-                if (err instanceof TypeError && err.message.indexOf('getSessionUser') > -1) {
-                    return;
-                }
-                throw err;
-            })
-            .nodeify(done);
-    });
-
-    it('does not get project auth by invalid session', function (done) {
-        auth.getProjectAuthorizationBySession('sessionId')
-            .then(function () {
-                throw new Error('Should have failed');
-            })
-            .catch(function (err) {
-                if (err instanceof TypeError && err.message.indexOf('getSessionUser') > -1) {
-                    return;
-                }
-                throw err;
-            })
-            .nodeify(done);
-    });
-
     it('removes user by id', function (done) {
         auth.addUser('user_to_remove', 'user_to_remove@example.com', 'plaintext', true, {overwrite: true}).
             then(function () {
@@ -914,24 +820,8 @@ describe('GME authentication', function () {
             });
     });
 
-
     it('gets project names', function (done) {
         auth._getProjectNames(done);
-    });
-
-    it('should auth with a new token', function (done) {
-        auth.generateTokenForUserId('user')
-            .then(function (tokenId) {
-                return Q.allSettled([auth.tokenAuthorization(tokenId, 'project'),
-                    auth.tokenAuthorization(tokenId, 'unauthorized_project'),
-                    auth.tokenAuthorization(tokenId, 'doesnt_exist_project')]);
-            }).then(function (authorized) {
-                authorized.should.deep.equal([
-                    {state: 'fulfilled', value: true},
-                    {state: 'fulfilled', value: false},
-                    {state: 'fulfilled', value: false}
-                ]);
-            }).nodeify(done);
     });
 
     it('should have permissions', function (done) {

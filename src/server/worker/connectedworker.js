@@ -56,7 +56,7 @@ function initialize(parameters) {
 }
 
 //AddOn Functions
-function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) {
+function connectedWorkerStart(webgmeToken, projectId, branchName, callback) {
     var addOnManager;
 
     function finish(err) {
@@ -94,9 +94,9 @@ function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) 
         logger.debug('AddOns already being handled for project [' + projectId + ']');
     }
 
-    addOnManager.initialize(webGMESessionId)
+    addOnManager.initialize(webgmeToken)
         .then(function () {
-            return addOnManager.monitorBranch(webGMESessionId, branchName);
+            return addOnManager.monitorBranch(webgmeToken, branchName);
         })
         .then(function () {
             finish();
@@ -126,7 +126,7 @@ function connectedWorkerStart(webGMESessionId, projectId, branchName, callback) 
 //    }
 //}
 
-function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
+function connectedWorkerStop(webgmeToken, projectId, branchName, callback) {
     var addOnManager;
 
     function finish(err, result) {
@@ -157,7 +157,7 @@ function connectedWorkerStop(webGMESessionId, projectId, branchName, callback) {
         return;
     }
 
-    addOnManager.unMonitorBranch(webGMESessionId, branchName)
+    addOnManager.unMonitorBranch(webgmeToken, branchName)
         .then(function (connectionCount) {
             finish(null, {connectionCount: connectionCount});
         })
@@ -185,7 +185,7 @@ process.on('message', function (parameters) {
     logger.debug('Incoming message:', {metadata: parameters});
 
     if (parameters.command === CONSTANTS.workerCommands.connectedWorkerStart) {
-        connectedWorkerStart(parameters.webGMESessionId, parameters.projectId, parameters.branchName,
+        connectedWorkerStart(parameters.webgmeToken, parameters.projectId, parameters.branchName,
             function (err) {
                 if (err) {
                     safeSend({
@@ -214,7 +214,7 @@ process.on('message', function (parameters) {
     //        });
     //    });
     } else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerStop) {
-        connectedWorkerStop(parameters.webGMESessionId, parameters.projectId, parameters.branchName,
+        connectedWorkerStop(parameters.webgmeToken, parameters.projectId, parameters.branchName,
             function (err, result) {
                 if (err) {
                     safeSend({

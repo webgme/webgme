@@ -95,7 +95,7 @@ function Mongo(mainLogger, gmeConfig) {
                                 deferred.reject(err2);
                             } else {
                                 if (CANON.stringify(object) === CANON.stringify(data)) {
-                                    logger.info('tried to insert existing hash - the two objects were equal',
+                                    logger.debug('tried to insert existing hash - the two objects were equal',
                                         object._id);
                                     deferred.resolve();
                                 } else {

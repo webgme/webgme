@@ -49,7 +49,7 @@ define([
             this.server = parameters.server || this.server;
             this.serverPort = parameters.serverPort || this.serverPort;
             this.httpsecure = (parameters.httpsecure !== undefined) ? parameters.httpsecure : this.httpsecure;
-            this.webgmeclientsession = parameters.webgmeclientsession;
+            this.webgmeToken = parameters.webgmeToken;
             this.keepaliveAgentOptions = parameters.keepaliveAgentOptions || {/* use defaults */};
         } else {
             this.keepaliveAgentOptions = {/* use defaults */};
@@ -175,8 +175,8 @@ define([
             req.agent(this.keepaliveAgent);
         }
 
-        if (this.webgmeclientsession) {
-            req.set('webgmeclientsession', this.webgmeclientsession);
+        if (this.webgmeToken) {
+            req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
         if (typeof data !== 'string' && !(data instanceof String)) {
             req.set('Content-Length', contentLength);
@@ -216,8 +216,8 @@ define([
         }
 
         req = superagent.post(this.getCreateURL(metadataDescriptor.name, true));
-        if (this.webgmeclientsession) {
-            req.set('webgmeclientsession', this.webgmeclientsession);
+        if (this.webgmeToken) {
+            req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
 
         if (typeof window === 'undefined') {
@@ -323,8 +323,8 @@ define([
         //superagent.parse['application/json'] = superagent.parse['application/zip'];
 
         var req = superagent.get(this.getViewURL(hash, subpath));
-        if (this.webgmeclientsession) {
-            req.set('webgmeclientsession', this.webgmeclientsession);
+        if (this.webgmeToken) {
+            req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
 
         if (typeof window === 'undefined') {
@@ -465,8 +465,8 @@ define([
 
         this.logger.debug('getMetadata', hash);
 
-        if (this.webgmeclientsession) {
-            req.set('webgmeclientsession', this.webgmeclientsession);
+        if (this.webgmeToken) {
+            req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
 
         if (typeof window === 'undefined') {

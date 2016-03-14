@@ -1,10 +1,10 @@
-/*globals define, require*/
-/*jshint browser:true*/
+/*globals define, require, document*/
+/*jshint browser:true, camelcase:false*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define([], function () {
+define(['common/util/url'], function (URL) {
     'use strict';
 
     function IoClient (mainLogger, gmeConfig) {
@@ -30,6 +30,13 @@ define([], function () {
                 socket = io.connect(hostAddress, gmeConfig.socketIO.clientOptions);
                 callback(null, socket);
             });
+        };
+
+        this.getToken = function () {
+            var cookies = URL.parseCookie(document.cookie);
+            if (cookies.access_token) {
+                return cookies.access_token;
+            }
         };
     }
 

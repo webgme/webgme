@@ -69,7 +69,6 @@ var WebGME = require('../webgme'),
     generateKey = requireJS('common/util/key'),
 
     GMEAuth = require('../src/server/middleware/auth/gmeauth'),
-    SessionStore = require('../src/server/middleware/auth/sessionstore'),
 
     ExecutorClient = requireJS('common/executor/ExecutorClient'),
     BlobClient = requireJS('blob/BlobClient'),
@@ -419,24 +418,36 @@ function logIn(server, agent, userName, password) {
     return deferred.promise;
 }
 
-function openSocketIo(server, agent, userName, password) {
+function openSocketIo(server, agent, userName, password, token) {
     var io = require('socket.io-client'),
         serverBaseUrl = server.getUrl(),
         deferred = Q.defer(),
         socket,
         socketReq = {url: serverBaseUrl},
-        webGMESessionId;
+        webgmeToken;
 
     logIn(server, agent, userName, password)
         .then(function (/*res*/) {
-            agent.attachCookies(socketReq);
-            webGMESessionId = /webgmeSid=s:([^;]+)\./.exec(decodeURIComponent(socketReq.cookies))[1];
-
-            socket = io.connect(serverBaseUrl,
-                {
-                    query: 'webGMESessionId=' + webGMESessionId,
+            var split,
+                options = {
                     multiplex: false
-                });
+                };
+
+            agent.attachCookies(socketReq);
+            split = /access_token=([^;]+)/.exec(socketReq.cookies);
+
+            if (token) {
+                options.extraHeaders = {
+                    Cookie: 'access_token=' + token
+                };
+            } else if (split && split.length === 2) {
+                webgmeToken = split[1];
+                options.extraHeaders = {
+                    Cookie: 'access_token=' + webgmeToken
+                };
+            }
+
+            socket = io.connect(serverBaseUrl, options);
 
             socket.on('error', function (err) {
                 logger.error(err);
@@ -445,7 +456,7 @@ function openSocketIo(server, agent, userName, password) {
             });
 
             socket.on('connect', function () {
-                deferred.resolve({socket: socket, webGMESessionId: webGMESessionId});
+                deferred.resolve({socket: socket, webgmeToken: webgmeToken});
             });
         })
         .catch(function (err) {
@@ -487,7 +498,6 @@ module.exports = {
     generateKey: generateKey,
 
     GMEAuth: GMEAuth,
-    SessionStore: SessionStore,
 
     ExecutorClient: ExecutorClient,
     BlobClient: BlobClient,

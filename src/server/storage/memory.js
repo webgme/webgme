@@ -114,7 +114,7 @@ function Memory(mainLogger, gmeConfig) {
                 objectStr = storage.getItem(database + SEPARATOR + projectId + SEPARATOR + object._id);
                 if (objectStr) {
                     if (CANON.stringify(object) === CANON.stringify(JSON.parse(objectStr))) {
-                        logger.info('tried to insert existing hash - the two objects were equal',
+                        logger.debug('tried to insert existing hash - the two objects were equal',
                             object._id);
                         deferred.resolve();
                     } else {

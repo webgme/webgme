@@ -118,7 +118,7 @@ define([
         this._btnRefresh = this._dialog.find('.btn-refresh');
 
         //this._dialog.find('.username').text(this._client.getUserId());
-        this._ownerId = this._client.getUserId(); //TODO: Get this from drop-down
+        this._ownerId =  WebGMEGlobal.userInfo._id; //TODO: Get this from drop-down
 
         this._loader = new LoaderCircles({containerElement: this._btnRefresh});
         this._loader.setSize(14);

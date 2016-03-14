@@ -142,6 +142,7 @@ define(['common/util/assert', 'common/core/constants', 'blob/BlobConfig'], funct
             return setsInfo;
         }
 
+        // TODO: remove if not used..
         function getConstraints(node) {
             var names = core.getOwnConstraintNames(node).sort(),
                 i,
@@ -556,6 +557,7 @@ define(['common/util/assert', 'common/core/constants', 'blob/BlobConfig'], funct
                 return result;
             }
 
+            // TODO: remove if not used..
             function getConstraintsOfNode() {
                 var names = core.getOwnConstraintNames(node).sort(),
                     i,
@@ -1067,12 +1069,12 @@ define(['common/util/assert', 'common/core/constants', 'blob/BlobConfig'], funct
             }
 
             return node;
-        };
+        }
 
         function isCombinedId(id) {
             var idArray = id.split('@');
             return idArray.length === 2 && nodes[idArray[0]] && idArray[1][0] === '/';
-        };
+        }
 
         function updateNodeRelations(guid) {
             // Although it is possible that we set the base pointer at this point
@@ -1446,13 +1448,13 @@ define(['common/util/assert', 'common/core/constants', 'blob/BlobConfig'], funct
 
         switch (importType) {
             case CONSTANTS.EXPORT_TYPE_PROJECT:
-                if (jsonImport._metadata && jsonImport._metdata.type) {
+                if (jsonImport._metadata && jsonImport._metadata.type) {
                     if (jsonImport._metadata.type !== CONSTANTS.EXPORT_TYPE_PROJECT) {
                         return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_LIBRARY + '\' and not of \'' +
                             CONSTANTS.EXPORT_TYPE_PROJECT + '\'!';
                     }
                 } else if (jsonImport.root && typeof jsonImport.root.path === 'string') {
-                    if (jsonImport.root.path !== ROOT_PATH) {
+                    if (jsonImport.root.path !== '') {
                         return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_LIBRARY + '\' and not of \'' +
                             CONSTANTS.EXPORT_TYPE_PROJECT + '\'!';
                     }
@@ -1461,13 +1463,13 @@ define(['common/util/assert', 'common/core/constants', 'blob/BlobConfig'], funct
                 }
                 break;
             case CONSTANTS.EXPORT_TYPE_LIBRARY:
-                if (jsonImport._metadata && jsonImport._metdata.type) {
+                if (jsonImport._metadata && jsonImport._metadata.type) {
                     if (jsonImport._metadata.type !== CONSTANTS.EXPORT_TYPE_LIBRARY) {
                         return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_PROJECT + '\' and not of \'' +
                             CONSTANTS.EXPORT_TYPE_LIBRARY + '\'!';
                     }
                 } else if (jsonImport.root && typeof jsonImport.root.path === 'string') {
-                    if (jsonImport.root.path === ROOT_PATH) {
+                    if (jsonImport.root.path === '') {
                         return 'Import is of type \'' + CONSTANTS.EXPORT_TYPE_PROJECT + '\' and not of \'' +
                             CONSTANTS.EXPORT_TYPE_LIBRARY + '\'!';
                     }

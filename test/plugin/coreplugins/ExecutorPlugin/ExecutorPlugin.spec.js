@@ -86,7 +86,7 @@ describe('Executor Plugin', function () {
                     clientsParam = {};
 
                 clientsParam.serverPort = gmeConfig.server.port;
-                clientsParam.sessionId = 'testingNodeWorker';
+                clientsParam.webGMESessionId = 'testingNodeWorker';
                 clientsParam.server = '127.0.0.1';
                 clientsParam.httpsecure = false;
                 clientsParam.executorNonce = gmeConfig.executor.nonce;

@@ -164,7 +164,7 @@ define([
                         if (nodePath) {
                             setActiveNode(nodePath);
                         } else {
-                            WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                            setActiveNode(CONSTANTS.PROJECT_ROOT_ID);
                         }
                     }
                 });
@@ -375,8 +375,7 @@ define([
                     .then(function (projectArray) {
                         var projectDeferred = Q.defer(),
                             projectExisted = false,
-                            userId = client.getUserId() === 'n/a' ?
-                                gmeConfig.authentication.guestAccount : client.getUserId(),
+                            userId = WebGMEGlobal.userInfo._id,
                             newProjectId = userId + client.CONSTANTS.STORAGE.PROJECT_ID_SEP +
                                 initialThingsToDo.projectToLoad,
                             i;

@@ -8,9 +8,10 @@ function getClientConfig(gmeConfig) {
     'use strict';
     var clientConfig = JSON.parse(JSON.stringify(gmeConfig));
 
-    delete clientConfig.server.sessionStore.cookieSecret;
     delete clientConfig.server.log;
     delete clientConfig.server.extlibExcludes;
+    delete clientConfig.authentication.jwt;
+    delete clientConfig.authentication.salts;
     delete clientConfig.executor.nonce;
     delete clientConfig.mongo;
     delete clientConfig.blob;
