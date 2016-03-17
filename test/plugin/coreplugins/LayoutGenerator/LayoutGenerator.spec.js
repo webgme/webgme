@@ -8,7 +8,7 @@ var testFixture = require('../../../_globals');
 describe('LayoutGenerator', function () {
     'use strict';
 
-    var logger = testFixture.logger.fork('PluginGeneratorTest'),
+    var logger = testFixture.logger.fork('LayoutGeneratorTest'),
         requirejs = testFixture.requirejs,
         expect = testFixture.expect,
         path = testFixture.path,
