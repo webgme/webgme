@@ -2,11 +2,13 @@
 define([
     'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     'js/logger',
+    'js/Utils/ComponentSettings',
     'text!./templates/<%= layoutID %>.html',
     'text!./<%= layoutID %>Config.json'
 ], function(
     _jQueryLayout,
     Logger,
+    ComponentSettings,
     defaultLayoutTemplate,
     LayoutConfigJSON
 ) {
@@ -24,11 +26,23 @@ define([
     var <%= layoutID %> = function(params) {
         this._logger = (params && params.logger) || Logger.create('gme:Layouts:<%= layoutID %>',
             WebGMEGlobal.gmeConfig.client.log);
-        this.panels = CONFIG.panels;
+        this.config = <%= layoutID %>.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this.config, <%= layoutID %>.getComponentId());
+        this._logger.debug('Resolved component-settings', this.config);
+
+        this.panels = this.config.panels;
         this._template = (params && params.template) || defaultLayoutTemplate;
 
         this._body = null;
         this._panelToContainer = {};
+    };
+
+    <%= layoutID %>.getComponentId = function () {
+        return '<%= layoutID %>';
+    };
+
+    <%= layoutID %>.getDefaultConfig = function () {
+        return CONFIG;
     };
 
     /**
