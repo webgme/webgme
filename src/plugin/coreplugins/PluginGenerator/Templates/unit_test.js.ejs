@@ -9,7 +9,7 @@ var testFixture = require('../../../_globals');
 describe('<%= pluginID %>', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
-        logger = testFixture.logger.fork('NewPlugin'),
+        logger = testFixture.logger.fork('<%= pluginID %>'),
         PluginCliManager = testFixture.WebGME.PluginCliManager,
         projectName = 'testProject',
         pluginName = '<%= pluginID %>',
