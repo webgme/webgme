@@ -5,6 +5,7 @@
 #Getting started
 
 WebGME require [NodeJS](https://nodejs.org/) (0.12 <= version < 5) and [MongoDB](https://www.mongodb.com/) (version >= 2.6) installed on the host system (the server).
+In addition the npm installation requires [Git](https://git-scm.com) to be installed and available in PATH.
 
 Options to deploy and run WebGME:
 
@@ -45,7 +46,7 @@ Each script supports the `--help` or `-h` command line parameter, which will lis
 * [Decorators](./src/plugin/coreplugins/DecoratorGenerator/DecoratorGenerator.js) - Add custom decoration to the nodes in the model editor.
 * [Constraints](./src/plugin/coreplugins/ConstraintEvaluator/ConstraintEvaluator.js) - Add custom constraints based on meta-types.
 
-See [gme-config](./config/README.md) for avaiable configuration parameters.
+See [gme-config](./config/README.md) for available configuration parameters.
 
 #Change log
 See [CHANGELOG](./CHANGELOG.md)

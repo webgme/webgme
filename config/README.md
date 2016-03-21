@@ -30,7 +30,8 @@ ubuntu
 `NODE_ENV=mine npm start`
 
 ### components.json
-To configure the default behaviour of individual components (e.g. plugins) that also support user settings, see [Component Settings](https://github.com/webgme/webgme/wiki/Component-Settings).
+To configure the default behaviour of individual components (e.g. plugins, ui-widgets) that also support user settings - add the keys to the settings that you would like to overwrite inside of `components.json`.
+`componentsGenericUIDefaults.json` contains all the default settings for the generic UI. For more info about how the settings are resolved see [Component Settings](https://github.com/webgme/webgme/wiki/Component-Settings).
 
 
 ### Configuration groups
@@ -56,6 +57,14 @@ To configure the default behaviour of individual components (e.g. plugins) that 
  - Where clients are redirected after logout.
 - `config.authentication.salts = 10`
  - Strength of the salting of the users' passwords [bcrypt](https://github.com/dcodeIO/bcrypt.js).
+- `config.authentication.jwt.expiresIn = 3600 * 24 * 7`
+ - Lifetime of tokens in seconds.
+- `config.authentication.jwt.renewBeforeExpires = 3600`
+ - Interval in seconds, if there is less time until expiration the token will be automatically renewed. (Set this to less or equal to 0 to disabled automatic renewal.)
+- `config.authentication.jwt.privateKey = './src/server/middleware/auth/EXAMPLE_PRIVATE_KEY'`
+ - Private RSA256 key used when generating tokens (N.B. if authentication is turned on - the defaults must be changed and the keys must reside outside of the app's root-directory or alt. a rule should be added to `config.server.extlibExcludes`).
+- `config.authentication.jwt.publicKey = './src/server/middleware/auth/EXAMPLE_PRIVATE_KEY'`
+ - Public RSA256 key used when evaluating tokens.
 
 ##### bin
 
@@ -77,12 +86,6 @@ To configure the default behaviour of individual components (e.g. plugins) that 
  - Directory from where to serve the static files for the webapp. This should only be modified if you are using a custom UI.
 - `config.client.log.level = 'debug'`
  - When [debug](https://github.com/visionmedia/debug) is activated in the browser (type `localStorage.debug = gme*` in the console and refresh the page) messages below this level will not be printed.
-- `config.client.defaultContext.project = null`
- - ID of project to open when visiting the webapp (e.g. `guest+TestProject`). If the URL query is specified (`?project=SomeProject`) - the URL has higher priority.
-- `config.client.defaultContext.branch = null`
- - Name of the default branch to open, (URL equivalent `?branch=master`).
-- `config.client.defaultContext.node = null`
- - Path to the default node to open, URL equivalent (`?node=/1` or for the root-node `?node=root`).
 - `config.client.defaultConnectionRouter = 'basic3'`
  - Default connection router to use when opening up a new model, available options (ordered by level of complexity and sophistication) are: 'basic', 'basic2' and 'basic3'.
 
@@ -155,14 +158,6 @@ To configure the default behaviour of individual components (e.g. plugins) that 
  - Port the server is hosted from.
 - `config.server.maxWorkers = 10`
  - Maximum number of child process spawned for workers.
-- `config.server.sessionStore.type = 'Memory'`
- - Determines which type of storage will be used for the sessions, available options are `'Memory'`, `'Redis'` and `'Mongo'`.
-- `config.server.sessionStore.options = {}`
- - Storage dependent options passed to the session store.
-- `config.server.sessionStore.cookieSecret = 'meWebGMEez'`
- - Value used when encoding/decoding the session cookie.
-- `config.server.sessionStore.cookieKey = 'webgmeSid'`
- - Name of session cookie.
 - `config.server.log = see config`
  - Transports and options for the server (winston) logger.
 - `config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']`
@@ -201,6 +196,8 @@ To configure the default behaviour of individual components (e.g. plugins) that 
  - Array of paths to decorators that should be available.
 - `config.visualization.decoratorToPreload = null`
  - Array of decorators (by id) that should be downloaded from the server before the editor starts - when set to null all available decorators will be downloaded.
+- `config.visualization.svgDirs = []`
+ - Array of paths (in the requirejs sense) to css files that should be loaded at start up. (To use this option a path would typically have to be added at `config.requirejsPaths`.)
 - `config.visualization.svgDirs = []`
  - Array of paths to directories containing SVG-files that will be copied and made available as SVGs for decorators (`ConstraintIcons` is currently reserved).
 - `config.visualization.visualizerDescriptors = ['../src/client/js/Visualizers.json']`
