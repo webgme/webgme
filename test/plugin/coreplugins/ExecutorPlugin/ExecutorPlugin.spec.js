@@ -158,10 +158,14 @@ describe('Executor Plugin', function () {
         });
 
         after(function (done) {
-            nodeWorkerProcess.kill('SIGINT');
-            server.stop(function (err) {
-                done(err);
+            nodeWorkerProcess.on('close', function (/*code*/) {
+                setTimeout(function () {
+                    server.stop(function (err) {
+                        done(err);
+                    });
+                }, 200);
             });
+            nodeWorkerProcess.kill('SIGINT');
         });
 
         // COPY PASTED CODE ENDS FROM test/server/middleware/executor/worker/node_worker.spec.js
