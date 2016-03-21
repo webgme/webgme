@@ -11,6 +11,7 @@
 var Path = require('path'),
     OS = require('os'),
     Q = require('q'),
+    fs = require('fs'),
     Express = require('express'),
     compression = require('compression'),
     cookieParser = require('cookie-parser'),
@@ -584,9 +585,33 @@ function StandAloneServer(gmeConfig) {
 
     setupExternalRestModules();
 
-    // Basic authentication
+    __app.get(['', '/', '/index.html'], ensureAuthenticated, function (req, res) {
+        var indexHtmlPath = Path.join(__clientBaseDir, 'index.html'),
+            protocol = gmeConfig.server.behindSecureProxy ? 'https' : 'http',
+            host = protocol + '://' + req.get('host'),
+            url = host + req.originalUrl,
+            imageUrl = host + '/img/gme-logo.png',
+            projectId = req.query.project;
+
+        logger.debug('resolved url', url);
+
+        fs.readFile(indexHtmlPath, 'utf8', function (err, data) {
+            if (err) {
+                logger.error(err);
+                res.send(404);
+            } else {
+                res.contentType('text/html');
+                res.send(
+                    data.replace(/__URL__/g, url)
+                        .replace(/__IMAGE_URL__/g, imageUrl)
+                        .replace(/__TITLE__/g, projectId ? projectId.replace('+', '/') : 'WebGME')
+                );
+            }
+        });
+    });
+
     logger.debug('creating login routing rules for the static server');
-    __app.get('/', ensureAuthenticated, Express.static(__clientBaseDir));
+    //__app.get('/', ensureAuthenticated, Express.static(__clientBaseDir));
     __app.get('/logout', function (req, res) {
         res.clearCookie('access_token');
         res.redirect(__logoutUrl);
@@ -595,21 +620,21 @@ function StandAloneServer(gmeConfig) {
     __app.get('/login', Express.static(__clientBaseDir, {extensions: ['html'], index: false}));
 
     __app.post('/login', function (req, res, next) {
-        var queryParams = [],
-            url = URL.parse(req.url, true);
-        if (req.body && req.body.username) {
-            queryParams.push('username=' + encodeURIComponent(req.body.username));
-        }
-        if (url && url.query && url.query.redirect) {
-            queryParams.push('redirect=' + encodeURIComponent(req.query.redirect));
-        }
-        req.__gmeAuthFailUrl__ = '/login';
-        if (queryParams.length) {
-            req.__gmeAuthFailUrl__ += '?' + queryParams.join('&');
-        }
-        req.__gmeAuthFailUrl__ += '#failed';
-        next();
-    },
+            var queryParams = [],
+                url = URL.parse(req.url, true);
+            if (req.body && req.body.username) {
+                queryParams.push('username=' + encodeURIComponent(req.body.username));
+            }
+            if (url && url.query && url.query.redirect) {
+                queryParams.push('redirect=' + encodeURIComponent(req.query.redirect));
+            }
+            req.__gmeAuthFailUrl__ = '/login';
+            if (queryParams.length) {
+                req.__gmeAuthFailUrl__ += '?' + queryParams.join('&');
+            }
+            req.__gmeAuthFailUrl__ += '#failed';
+            next();
+        },
         function (req, res, next) {
             var userId = req.body.username,
                 password = req.body.password;

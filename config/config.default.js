@@ -144,7 +144,8 @@ var path = require('path'),
                     }
                 }]
             },
-            extlibExcludes: ['config\/config\..*\.js$']
+            extlibExcludes: ['config\/config\..*\.js$'],
+            behindSecureProxy: false
         },
 
         socketIO: {
