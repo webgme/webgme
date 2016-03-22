@@ -79,7 +79,6 @@ define([
         function webGMEStart(afterPanelsLoaded) {
             var layoutManager,
                 client,
-                loadPanels,
                 gmeConfig = WebGMEGlobal.gmeConfig,
                 logger = Logger.create('gme:WebGME', WebGMEGlobal.gmeConfig.client.log),
                 initialThingsToDo = WebGMEUrlManager.parseInitialThingsToDoFromUrl(),
@@ -98,7 +97,6 @@ define([
                     config.initialContext.node || initialThingsToDo.objectToLoad; // i.e. the root-node.
                 // TODO: add commit to load
             }
-
 
             layoutManager = new LayoutManager();
             layoutManager.loadLayout(initialThingsToDo.layoutToLoad, function () {
@@ -203,7 +201,7 @@ define([
                 });
             });
 
-            loadPanels = function (panels) {
+            function loadPanels(panels) {
                 var p = panels.splice(0, 1)[0];
 
                 layoutManager.loadPanel(p, function () {
@@ -229,7 +227,7 @@ define([
                         });
                     }
                 });
-            };
+            }
 
             function loadProject() {
                 Q.nfcall(client.selectProject, initialThingsToDo.projectToLoad, undefined)
