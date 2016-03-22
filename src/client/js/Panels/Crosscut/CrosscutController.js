@@ -40,6 +40,7 @@ define(['js/logger',
         this._filteredOutConnectionDescriptors = {};
         this._activeCrosscutId = null;
         this._initActiveTab = false;
+        this._tabsHasBeenRequested = false;
 
         this._initFilterPanel();
         this.logger.debug('CrosscutController ctor finished');
@@ -225,6 +226,15 @@ define(['js/logger',
             memberListContainerID = this._memberListContainerID,
             crosscutsRegistry = GMEConcepts.getCrosscuts(memberListContainerID),
             len = crosscutsRegistry.length;
+
+        if (len === 0 && this._tabsHasBeenRequested === false) {
+            this._onTabAddClicked();
+            memberListContainerID = this._memberListContainerID;
+            crosscutsRegistry = GMEConcepts.getCrosscuts(memberListContainerID);
+            len = crosscutsRegistry.length;
+        }
+
+        this._tabsHasBeenRequested = true;
 
         while (len--) {
             result.push({

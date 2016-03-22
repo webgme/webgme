@@ -1,4 +1,4 @@
-/*globals define, _*/
+/*globals define, _, $*/
 /*jshint browser: true*/
 
 /**
@@ -10,6 +10,8 @@ define([
     'js/DragDrop/DragHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
     'js/Controls/iCheckBox',
+    'jquery',
+    'underscore'
 ], function (DragHelper, DiagramDesignerWidget, ICheckBox) {
 
     'use strict';
@@ -78,7 +80,7 @@ define([
     CrosscutWidget.prototype._initializeFilterPanel = function () {
         /**** create FILTER PANEL ****/
         this.$filterPanel = $('<div/>', {
-            'class': 'filterPanel'
+            class: 'filterPanel'
         });
 
         this.$filterPanel.html('<div class="header">FILTER</div><ul class="body"></ul>');
