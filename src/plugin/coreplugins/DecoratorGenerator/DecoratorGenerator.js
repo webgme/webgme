@@ -10,10 +10,10 @@
 define([
     'plugin/PluginConfig',
     'plugin/PluginBase',
-    'plugin/DecoratorGenerator/DecoratorGenerator/Templates/Templates',
+    'plugin/DecoratorGenerator/DecoratorGenerator/TemplatesInherit/Templates',
     'plugin/DecoratorGenerator/DecoratorGenerator/TemplatesMinimal/Templates',
     'common/util/ejs'
-], function (PluginConfig, PluginBase, TEMPLATES, TEMPLATES_MINIMAL, ejs) {
+], function (PluginConfig, PluginBase, TEMPLATES_INHERIT, TEMPLATES_MINIMAL, ejs) {
     'use strict';
 
     /**
@@ -29,6 +29,7 @@ define([
         this.jsRegExpStr = '^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void' +
             '|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|' +
             'static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|' +
+            'Circle|Model|Document|Meta|SVG|Default|' +
             'arguments|interface|protected|implements|instanceof)$)[a-zA-Z_$][0-9a-zA-Z_$]*';
     };
 
@@ -78,19 +79,19 @@ define([
                 displayName: 'Name of decorator',
                 regex: self.jsRegExpStr,
                 regexMessage: 'No spaces and special characters allowed. This value is used as the name of the ' +
-                'generated plugin class.',
+                'generated decorator class.',
                 description: 'Unique name for the decorator ("Decorator" will be appended).',
                 value: 'SomeName',
                 valueType: 'string',
                 readOnly: false
             },
             {
-                name: 'meta',
-                displayName: 'Generate a DSML Decorator',
-                description: 'Generates domain specific decorator.',
+                name: 'inherit',
+                displayName: 'Inherit from ModelEditor',
+                description: 'Generates a decorator that inherits from the ModelEditor.',
                 value: false,
                 valueType: 'boolean',
-                readOnly: true
+                readOnly: false
             }
         ];
     };
@@ -113,9 +114,8 @@ define([
             success,
             artifact;
 
-        if (config.meta) {
-            //success = self.renderMetaTemplates(filesToAdd, config);
-            success = false;
+        if (config.inherit) {
+            success = self.renderInheritTemplates(filesToAdd, config);
         } else {
             success = self.renderMinimalTemplates(filesToAdd, config);
         }
@@ -160,70 +160,25 @@ define([
         return true;
     };
 
-    //DecoratorGenerator.prototype.renderMetaTemplates = function (filesToAdd, config) {
-    //    var self = this,
-    //        templateName,
-    //        baseDir = 'src/decorators/' + config.decoratorName + 'Decorator/',
-    //        filePath,
-    //        metaNodes = this.getMetaNodesInfo();
-    //
-    //    if (!metaNodes) {
-    //        return false;
-    //    }
-    //
-    //    for (templateName in TEMPLATES) {
-    //        if (TEMPLATES.hasOwnProperty(templateName)) {
-    //            filePath = templateName.substring(0, templateName.length - 4);
-    //            filePath = baseDir + filePath.replace('Template', config.decoratorName);
-    //            if (self.endsWith(filePath, 'META.js')) {
-    //                filesToAdd[filePath] = ejs.render(TEMPLATES[templateName], {
-    //                    decorator: {
-    //                        name: config.decoratorName
-    //                    },
-    //                    config: config,
-    //                    metaNodes: metaNodes
-    //                });
-    //            } else {
-    //                filesToAdd[filePath] = ejs.render(TEMPLATES[templateName], {
-    //                    decorator: {
-    //                        name: config.decoratorName
-    //                    },
-    //                    config: config
-    //                });
-    //            }
-    //        }
-    //    }
-    //};
+    DecoratorGenerator.prototype.renderInheritTemplates = function (filesToAdd, config) {
+        var baseDir = config.decoratorName + 'Decorator/',
+            path,
+            dataModel = {
+                id: config.decoratorName
+            },
+            templateName;
 
-    //DecoratorGenerator.prototype.getMetaNodesInfo = function () {
-    //    var metaNodes = [],
-    //        regExp = new RegExp(this.jsRegExpStr),
-    //        metaNodeName;
-    //
-    //    for (metaNodeName in this.META) {
-    //        if (this.META.hasOwnProperty(metaNodeName)) {
-    //            if (regExp.test(metaNodeName)) {
-    //                metaNodes.push({
-    //                    name: metaNodeName,
-    //                    path: this.core.getPath(this.META[metaNodeName])
-    //                });
-    //            } else {
-    //                this.createMessage(this.META[metaNodeName], 'Cannot generate META helper class. Name of meta-' +
-    //                    'node is invalid JavaScript "' + metaNodeName + '".');
-    //                return;
-    //            }
-    //        }
-    //    }
-    //
-    //    return metaNodes.sort(function (a, b) {
-    //        return a.name.localeCompare(b.name);
-    //    });
-    //};
-    //
-    //DecoratorGenerator.prototype.endsWith = function (str, ending) {
-    //    var lastIndex = str.lastIndexOf(ending);
-    //    return (lastIndex !== -1) && (lastIndex + ending.length === str.length);
-    //};
+        for (templateName in TEMPLATES_INHERIT) {
+            if (TEMPLATES_INHERIT.hasOwnProperty(templateName)) {
+                path = templateName.substring(0, templateName.length - '.ejs'.length);
+                path = baseDir + path.replace('__ID__', config.decoratorName);
+                filesToAdd[path] = ejs.render(TEMPLATES_INHERIT[templateName], dataModel);
+            }
+        }
+
+        return true;
+    };
+
 
     return DecoratorGenerator;
 });

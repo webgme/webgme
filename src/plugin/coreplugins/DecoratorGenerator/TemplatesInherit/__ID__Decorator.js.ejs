@@ -1,0 +1,39 @@
+/*globals define, _*/
+/*jshint browser: true, camelcase: false*/
+/**
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+define([
+    'js/Decorators/DecoratorBase',
+    './DiagramDesigner/<%=id%>Decorator.DiagramDesignerWidget',
+    './PartBrowser/<%=id%>Decorator.PartBrowserWidget'
+], function (DecoratorBase, <%=id%>DecoratorDiagramDesignerWidget, <%=id%>DecoratorPartBrowserWidget) {
+
+    'use strict';
+
+    var <%=id%>Decorator,
+        DECORATOR_ID = '<%=id%>Decorator';
+
+    <%=id%>Decorator = function (params) {
+        var opts = _.extend({loggerName: this.DECORATORID}, params);
+
+        DecoratorBase.apply(this, [opts]);
+
+        this.logger.debug('<%=id%>Decorator ctor');
+    };
+
+    _.extend(<%=id%>Decorator.prototype, DecoratorBase.prototype);
+    <%=id%>Decorator.prototype.DECORATORID = DECORATOR_ID;
+
+    /*********************** OVERRIDE DecoratorBase MEMBERS **************************/
+
+    <%=id%>Decorator.prototype.initializeSupportedWidgetMap = function () {
+        this.supportedWidgetMap = {
+            DiagramDesigner: <%=id%>DecoratorDiagramDesignerWidget,
+            PartBrowser: <%=id%>DecoratorPartBrowserWidget
+        };
+    };
+
+    return <%=id%>Decorator;
+});
