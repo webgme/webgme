@@ -37,12 +37,17 @@ define(['js/PanelBase/PanelBaseWithHeader',
     _.extend(PartBrowserPanel.prototype, __parent__.prototype);
 
     PartBrowserPanel.prototype._initialize = function () {
+        var self = this;
         //set Widget title
         this.setTitle('Part Browser');
 
         this._partBrowserWidget = new PartBrowserWidget(this.$el);
 
         this._panelControl = new PartBrowserPanelControl(this._client, this._partBrowserWidget);
+
+        this._panelControl.setReadOnly = function (isReadOnly) {
+            self.setReadOnly(isReadOnly);
+        };
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */

@@ -140,6 +140,18 @@ define([
 
                 return {};
             };
+            
+            this.getFCO = function(node){
+                var root = self.getRoot(node),
+                    key;
+                
+                for(key in root.metaNodes){
+                    return self.getBaseRoot(root.metaNodes[key]);
+                }
+                
+                return null; //if there is no object on META, there is no FCO!!! 
+            };
+            
             //</editor-fold>
         };
 

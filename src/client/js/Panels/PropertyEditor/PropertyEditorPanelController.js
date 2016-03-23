@@ -127,6 +127,7 @@ define(['js/logger',
     PropertyEditorController.prototype._refreshPropertyList = function () {
         var propList = this._getCommonPropertiesForSelection(this._idList);
         this._logger.debug('propList', this._idList, propList);
+        this._initializeReadOnlyForSelection(this._idList);
         this._propertyGrid.setPropertyList(propList);
     };
 
@@ -216,6 +217,17 @@ define(['js/logger',
                     isCommon: true,
                     readOnly: true
                 };
+
+                if (cNode.isLibraryElement()) {
+                    propList[' GUIDl'] = {
+                        name: 'GUID[library]',
+                        value: cNode.getLibraryGuid(),
+                        valueType: typeof selectedObjIDs[0],
+                        isCommon: true,
+                        readOnly: true
+                    };
+                };
+
                 metaTypeId = cNode.getMetaTypeId();
                 if (metaTypeId) {
                     propList[' Meta Type'] = {
@@ -878,5 +890,26 @@ define(['js/logger',
         this._client.completeTransaction();
     };
 
+    PropertyEditorController.prototype._initializeReadOnlyForSelection = function (objectIds) {
+        var i,
+            node,
+            isReadOnly = false;
+
+        if (this._client.isProjectReadOnly()) {
+            isReadOnly = true;
+        } else {
+            for (i = 0; i < objectIds.length; i += 1) {
+                node = this._client.getNode(objectIds[i]);
+                if (node && (node.isLibraryRoot() || node.isLibraryElement())) {
+                    isReadOnly = true;
+                    break;
+                }
+            }
+        }
+
+        this._propertyGrid.setReadOnly(isReadOnly);
+        this.setReadOnly(isReadOnly);
+    };
+    
     return PropertyEditorController;
 });

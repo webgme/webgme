@@ -67,12 +67,10 @@ define([
                 },
                 nodeAtOpen: '',
                 byProjectName: {
-                    nodeAtOpen: {
-                    }
+                    nodeAtOpen: {}
                 },
                 byProjectId: {
-                    nodeAtOpen: {
-                    }
+                    nodeAtOpen: {}
                 }
             };
 
@@ -138,7 +136,13 @@ define([
                 //hook up branch changed to set read-only mode on panels
                 client.addEventListener(CLIENT_CONSTANTS.BRANCH_CHANGED, function (__project, branchName) {
                     layoutManager.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
-                    WebGMEGlobal.State.registerActiveBranchName(branchName);
+                    if (branchName) {
+                        WebGMEGlobal.State.registerActiveBranchName(branchName);
+                    } else if (client.getActiveCommitHash()) {
+                        WebGMEGlobal.State.registerActiveCommit(client.getActiveCommitHash());
+                    } else {
+                        WebGMEGlobal.State.registerActiveBranchName(null);
+                    }
                 });
                 client.addEventListener(CLIENT_CONSTANTS.PROJECT_OPENED, function (__project, projectId) {
                     var projectName,
@@ -250,7 +254,7 @@ define([
                     })
                     .then(function () {
                         selectObject(initialThingsToDo.objectToLoad, initialThingsToDo.activeSelectionToLoad,
-                        initialThingsToDo.visualizerToLoad, initialThingsToDo.tabToSelect);
+                            initialThingsToDo.visualizerToLoad, initialThingsToDo.tabToSelect);
                     })
                     .catch(function (err) {
                         logger.error('error during startup', err);
@@ -397,10 +401,10 @@ define([
                         }
 
                         Q.nfcall(client.seedProject, {
-                            type: 'file',
-                            projectName: initialThingsToDo.projectToLoad,
-                            seedName: WebGMEGlobal.gmeConfig.seedProjects.defaultProject
-                        })
+                                type: 'file',
+                                projectName: initialThingsToDo.projectToLoad,
+                                seedName: WebGMEGlobal.gmeConfig.seedProjects.defaultProject
+                            })
                             .then(function () {
                                 return Q.nfcall(client.selectProject, newProjectId, undefined);
                             })

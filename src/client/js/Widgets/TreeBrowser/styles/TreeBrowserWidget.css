@@ -69,6 +69,11 @@
     background-position: -16px 0 !important;
     width: 16px;
     height: 16px; }
+  .tree-browser i.gme-library {
+    background: url("../../../../img/gmeicons.png") 0 0;
+    background-position: -0px 0 !important;
+    width: 16px;
+    height: 16px; }
   .tree-browser .fa {
     line-height: 18px; }
   .tree-browser ul.fancytree-container {

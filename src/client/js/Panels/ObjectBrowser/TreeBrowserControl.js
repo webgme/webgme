@@ -12,6 +12,8 @@ define(['js/logger',
     'js/Constants',
     'js/RegistryKeys',
     './ObjectBrowserControlBase',
+    'js/Dialogs/LibraryManager/LibraryManager',
+    'js/Utils/SaveToDisk',
     'css!./styles/TreeBrowserControl.css'
 ], function (Logger,
              nodePropertyNames,
@@ -19,9 +21,10 @@ define(['js/logger',
              ImportManager,
              CONSTANTS,
              REGISTRY_KEYS,
-             ObjectBrowserControlBase) {
+             ObjectBrowserControlBase,
+             LibraryManager,
+             saveToDisk) {
     'use strict';
-
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         GME_MODEL_CLASS = 'gme-model',
@@ -29,6 +32,7 @@ define(['js/logger',
         GME_CONNECTION_CLASS = 'gme-connection',
         GME_ROOT_ICON = 'gme-root',
         GME_ASPECT_ICON = 'gme-aspect',
+        GME_LIBRARY_ICON = 'gme-library',
         CROSSCUT_VISUALIZER = 'Crosscut',
         SET_VISUALIZER = 'SetEditor',
         TREE_ROOT = CONSTANTS.PROJECT_ROOT_ID;
@@ -47,7 +51,8 @@ define(['js/logger',
             initialized = false,
             self = this,
             getNodeClass,
-            getMetaTypeName;
+            getMetaTypeName,
+            getLibraryInfo;
 
         //get logger instance for this component
         logger = Logger.create('gme:Panels:ObjectBrowser:TreeBrowserControl', WebGMEGlobal.gmeConfig.client.log);
@@ -56,6 +61,8 @@ define(['js/logger',
         ObjectBrowserControlBase.call(this, client, treeBrowser);
 
         this._treeRootId = TREE_ROOT;
+
+        this._libraryManager = new LibraryManager(this._client);
 
         function setTreeRoot() {
             var projectId = client.getActiveProjectId(),
@@ -90,6 +97,38 @@ define(['js/logger',
             selfPatterns = {};
             selfPatterns[self._treeRootId] = {children: 2};
             client.updateTerritory(selfId, selfPatterns);
+        }
+
+        function addCreateItemsToContextMenu(menuItems, items, menuItemsCallback) {
+            var keys = Object.keys(items),
+                i;
+
+            keys.sort();
+
+            for (i = 0; i < keys.length; i += 1) {
+                if (keys[i] !== 'own.id' && keys[i] !== 'own.title') {
+                    if (typeof items[keys[i]]['own.id'] === 'string' && typeof items[keys[i]]['own.title'] === 'string') {
+                        //it can also be instantiated
+                        menuItems[items[keys[i]]['own.id']] = {
+                            name: items[keys[i]]['own.title'],
+                            callback: menuItemsCallback
+                        };
+                        //it can be the last level
+                        if (Object.keys(items[keys[i]]).length > 2) {
+                            menuItems[items[keys[i]]['own.id']].items = {};
+                            addCreateItemsToContextMenu(menuItems[items[keys[i]]['own.id']].items, items[keys[i]],
+                                menuItemsCallback);
+                        }
+                    } else {
+                        //just a grouping label
+                        menuItems[keys[i]] = {
+                            name: keys[i],
+                            items: {}
+                        };
+                        addCreateItemsToContextMenu(menuItems[keys[i]].items, items[keys[i]], menuItemsCallback);
+                    }
+                }
+            }
         }
 
         initialize = function () {
@@ -138,6 +177,8 @@ define(['js/logger',
             if (objID === CONSTANTS.PROJECT_ROOT_ID) {
                 //if root object
                 c = GME_ROOT_ICON;
+            } else if (nodeObj.isLibraryRoot()) {
+                c = GME_LIBRARY_ICON;
             } else if (nodeObj.getCrosscutsInfo().length > 0) {
                 c = GME_ASPECT_ICON;
             } else if (nodeObj.getValidSetNames().length > 0) {
@@ -156,10 +197,27 @@ define(['js/logger',
             var id = nodeObj.getMetaTypeId();
 
             if (id && client.getNode(id)) {
-                return client.getNode(id).getAttribute('name');
+                return client.getNode(id).getFullyQualifiedName();
             } else {
                 return '';
             }
+
+        };
+        getLibraryInfo = function (nodeObj) {
+            var info;
+
+            if (!nodeObj.isLibraryRoot()) {
+                return null;
+            }
+
+            info = client.getLibraryInfo(nodeObj.getFullyQualifiedName());
+
+            if (info) {
+                return 'origin: ' + info.projectId + ' : ' +
+                    (info.branchName ? info.branchName + '@' + info.commitHash : info.commitHash);
+            }
+
+            return null;
 
         };
 
@@ -198,13 +256,15 @@ define(['js/logger',
                         //the node was present on the client side, render ist full data
                         childrenDescriptors.push({
                             id: currentChildId,
-                            name: childNode.getAttribute('name'),
+                            name: childNode.getFullyQualifiedName(),
                             hasChildren: (childNode.getChildrenIds()).length > 0,
                             class: getNodeClass(childNode),
                             icon: self.getIcon(childNode),
                             isConnection: childNode.isConnection(),
                             isAbstract: childNode.isAbstract(),
+                            isLibrary: childNode.isLibraryRoot() || childNode.isLibraryElement(),
                             metaType: getMetaTypeName(childNode),
+                            libraryInfo: getLibraryInfo(childNode),
                             // Data used locally here.
                             STATE: stateLoaded,
                             CHILDREN: childNode.getChildrenIds()
@@ -330,66 +390,144 @@ define(['js/logger',
 
         treeBrowser.onExtendMenuItems = function (nodeId, menuItems) {
 
-            //'create...' menu
-            var validChildren = self._getValidChildrenTypes(nodeId),
-                cChild,
+            var validChildren = self._getValidChildrenTypesFlattened(nodeId),
+                keys, i,
                 nodeObj = self._client.getNode(nodeId),
+                readOnly = self._client.isProjectReadOnly() || self._client.isCommitReadOnly(),
                 menuItemsCallback = function (key/*, options*/) {
                     self._createChild(nodeId, key);
                 };
-            if (validChildren && validChildren.length > 0) {
-                menuItems.separatorCreate = '-';
+
+            if (!readOnly && validChildren && validChildren['has.children'] === true &&
+                nodeObj && !nodeObj.isLibraryRoot() && !nodeObj.isLibraryElement()) {
                 menuItems.create = { // The "create" menu item
-                    name: 'Create child...',
+                    name: 'Create child',
                     icon: 'add',
                     items: {}
                 };
 
+                delete validChildren['has.children'];
+                //FIXME check why the context menu do not work with more than 3 level of sub-menus
+                // when fixed we can use the next line, and the validChildren should be generated by the
+                // original _getValidChildrenTypes funciton
+                //addCreateItemsToContextMenu(menuItems.create.items, validChildren, menuItemsCallback);
+
+                keys = Object.keys(validChildren);
+                keys.sort();
                 //iterate through each possible item and att it to the list
-                for (var i = 0; i < validChildren.length; i += 1) {
-                    cChild = validChildren[i];
-                    menuItems.create.items[cChild.id] = {
-                        name: cChild.title,
+                for (i = 0; i < keys.length; i += 1) {
+                    menuItems.create.items[validChildren[keys[i]]] = {
+                        name: keys[i],
                         callback: menuItemsCallback
                     };
                 }
             }
 
-            menuItems.exportLibrary = { // Export...
-                name: 'Export as library...',
-                callback: function (/*key, options*/) {
-                    ExportManager.expLib(nodeId);
-                },
-                icon: false
-            };
+            //now we are removing invalid items
+            if (readOnly || (nodeObj && (nodeObj.isLibraryRoot() || nodeObj.isLibraryElement()))) {
+                delete menuItems.delete;
+            }
 
-            menuItems.updateLibrary = { // Import...
-                name: 'Update library from file...',
-                callback: function (/*key, options*/) {
-                    ImportManager.importLibrary(nodeId);
-                },
-                icon: false
-            };
+            if (readOnly || (nodeObj && nodeObj.isLibraryElement())) {
+                delete menuItems.rename;
+            }
 
-            menuItems.insertLibrary = { // Merge...
-                name: 'Import library here...',
-                callback: function (/*key, options*/) {
-                    ImportManager.addLibrary(nodeId);
-                },
-                icon: false
-            };
+            //check if there is any operation left in the menu and set separators accordingly
+            if (menuItems.delete || menuItems.rename || menuItems.create) {
+                menuItems.separatorOperationsEnd = '-';
+            } else {
+                delete menuItems.separatorOperationsStart;
+            }
 
-            //menuItems["exportContext"] = { //Export context for plugin
-            //    "name": "Export context...",
-            //    "callback": function(/*key, options*/){
-            //        ExportManager.exIntConf([nodeId]);
-            //    },
-            //    "icon": false
-            //};
+            if (nodeId === CONSTANTS.PROJECT_ROOT_ID) {
+                if (!readOnly) {
+                    menuItems.addLibrary = {
+                        name: 'Add Library ...',
+                        callback: function (/*key, options*/) {
+                            self._libraryManager.add();
+                        },
+                        icon: false
+                    };
+                }
+
+                menuItems.saveProject = {
+                    name: 'Export project',
+                    icon: false,
+                    items: {
+                        assetless: {
+                            name: 'with assets',
+                            callback: function (/*key, options*/) {
+                                self._client.saveProject(self._client.getActiveProjectId(),
+                                    self._client.getActiveBranchName(),
+                                    self._client.getActiveCommitHash(), true, function (err, url) {
+                                        if (err) {
+                                            logger.error('unable to save project', err);
+                                        } else {
+                                            saveToDisk.saveUrlToDisk(url);
+                                        }
+                                    }
+                                );
+                            },
+                            icon: false
+                        },
+                        assetfull: {
+                            name: 'without assets',
+                            callback: function (/*key, options*/) {
+                                self._client.saveProject(self._client.getActiveProjectId(),
+                                    self._client.getActiveBranchName(),
+                                    self._client.getActiveCommitHash(), false, function (err, url) {
+                                        if (err) {
+                                            logger.error('unable to save project', err);
+                                        } else {
+                                            saveToDisk.saveUrlToDisk(url);
+                                        }
+                                    }
+                                );
+                            },
+                            icon: false
+                        }
+                    }
+                };
+            }
+
+            if (nodeObj && nodeObj.isLibraryRoot() && !nodeObj.isLibraryElement()) {
+                if (!readOnly) {
+                    menuItems.refreshLibrary = {
+                        name: 'Update Library ...',
+                        callback: function (/*key, options*/) {
+                            self._libraryManager.update(nodeId);
+                        },
+                        icon: false
+                    };
+
+                    menuItems.removeLibrary = {
+                        name: 'Remove Library ...',
+                        callback: function (/*key, options*/) {
+                            self._libraryManager.remove(nodeId);
+                        },
+                        icon: false
+                    };
+
+                    //the rename should not be inplace
+                    menuItems.rename.callback = function (/*key, options*/) {
+                        self._libraryManager.rename(nodeId);
+                    };
+                    menuItems.rename.name = 'Rename ...';
+
+                }
+
+                menuItems.followLibrary = {
+                    name: 'Follow library ...',
+                    callback: function (/*key, options*/) {
+                        self._client.followLibrary(nodeId);
+                    },
+                    icon: false
+                }
+            }
 
             if (nodeObj && nodeObj.getCrosscutsInfo().length > 0) {
-                menuItems.openInCrossCut = { //Open in crosscuts
-                    name: 'Open in \'Crosscuts\'',
+                menuItems.open.items.crosscut = { //Open in crosscuts
+                    name: '\'Crosscuts\'',
                     callback: function (/*key, options*/) {
                         var settings = {};
                         settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
@@ -407,8 +545,8 @@ define(['js/logger',
             }
 
             if (nodeObj && nodeObj.getValidSetNames().length > 0) {
-                menuItems.openInSetEditor = { //Open in crosscuts
-                    name: 'Open in \'Set membership\'',
+                menuItems.open.items.set = { //Open in crosscuts
+                    name: '\'Set membership\'',
                     callback: function (/*key, options*/) {
                         var settings = {};
                         settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
@@ -427,6 +565,31 @@ define(['js/logger',
         };
 
         treeBrowser.getDragEffects = function (/*el*/) {
+            var nodeIds = treeBrowser.getSelectedIDs(),
+                node,
+                hasLibraryRoot = false,
+                hasLibraryElement = false,
+                i;
+
+            for (i = 0; i < nodeIds.length; i += 1) {
+                node = client.getNode(nodeIds[i]);
+                if (node) {
+                    if (node.isLibraryRoot()) {
+                        hasLibraryRoot = true;
+                    }
+                    if (node.isLibraryElement()) {
+                        hasLibraryElement = true;
+                    }
+                }
+            }
+
+            if (hasLibraryRoot) {
+                return [];
+            } else if (hasLibraryElement) {
+                return [treeBrowser.DRAG_EFFECTS.DRAG_COPY,
+                    treeBrowser.DRAG_EFFECTS.DRAG_CREATE_POINTER,
+                    treeBrowser.DRAG_EFFECTS.DRAG_CREATE_INSTANCE];
+            }
             return [treeBrowser.DRAG_EFFECTS.DRAG_COPY,
                 treeBrowser.DRAG_EFFECTS.DRAG_MOVE,
                 treeBrowser.DRAG_EFFECTS.DRAG_CREATE_POINTER,
@@ -492,12 +655,14 @@ define(['js/logger',
 
                             //create the node's descriptor for the tree-browser widget
                             nodeDescriptor = {
-                                name: updatedObject.getAttribute('name'),
+                                name: updatedObject.getFullyQualifiedName(),
                                 hasChildren: currentChildren.length > 0,
                                 class: objType,
                                 icon: self.getIcon(updatedObject),
                                 isConnection: updatedObject.isConnection(),
                                 isAbstract: updatedObject.isAbstract(),
+                                isLibrary: updatedObject.isLibraryRoot() || updatedObject.isLibraryElement(),
+                                libraryInfo: getLibraryInfo(updatedObject),
                                 metaType: getMetaTypeName(updatedObject)
                             };
 
@@ -517,12 +682,14 @@ define(['js/logger',
 
                             //create the node's descriptor for the treebrowser widget
                             nodeDescriptor = {
-                                name: updatedObject.getAttribute('name'),
+                                name: updatedObject.getFullyQualifiedName(),
                                 hasChildren: currentChildren.length > 0,
                                 class: objType,
                                 icon: self.getIcon(updatedObject),
                                 isConnection: updatedObject.isConnection(),
                                 isAbstract: updatedObject.isAbstract(),
+                                isLibrary: updatedObject.isLibraryRoot() || updatedObject.isLibraryElement(),
+                                libraryInfo: getLibraryInfo(updatedObject),
                                 metaType: getMetaTypeName(updatedObject)
                             };
 
@@ -594,12 +761,14 @@ define(['js/logger',
                                         //the node was present on the client side, render ist full data
                                         childTreeNode = treeBrowser.createNode(nodes[objectId].treeNode, {
                                             id: currentChildId,
-                                            name: childNode.getAttribute('name'),
+                                            name: childNode.getFullyQualifiedName(),
                                             hasChildren: (childNode.getChildrenIds()).length > 0,
                                             class: getNodeClass(childNode),
                                             icon: self.getIcon(childNode),
                                             isConnection: childNode.isConnection(),
                                             isAbstract: childNode.isAbstract(),
+                                            isLibrary: childNode.isLibraryRoot() || childNode.isLibraryElement(),
+                                            libraryInfo: getLibraryInfo(childNode),
                                             metaType: getMetaTypeName(childNode)
                                         });
 
@@ -631,7 +800,6 @@ define(['js/logger',
 
                             //update the object's children list in the local hashmap
                             nodes[objectId].children = currentChildren;
-
 
                             //update the node's representation in the tree
                             treeBrowser.updateNode(nodes[objectId].treeNode, nodeDescriptor);
@@ -741,16 +909,15 @@ define(['js/logger',
                 toggled: {
                     hideConnections: false,
                     hideAbstracts: false,
-                    hideLeaves: false
+                    hideLeaves: false,
+                    hideLibraries: false
                 }
             },
             byProjectName: {
-                treeRoot: {
-                }
+                treeRoot: {}
             },
             byProjectId: {
-                treeRoot: {
-                }
+                treeRoot: {}
             }
         };
     };
@@ -760,10 +927,14 @@ define(['js/logger',
     };
 
     TreeBrowserControl.prototype._getValidChildrenTypes = function (nodeId) {
-        var types = [],
+        var types = {},
             node = this._client.getNode(nodeId),
             validChildrenInfo = {},
             keys,
+            id,
+            reference,
+            nameArray,
+            title,
             validNode,
             i;
 
@@ -773,12 +944,47 @@ define(['js/logger',
 
         keys = Object.keys(validChildrenInfo || {});
 
-        for (i = 0; i < keys.length; i += 1) {
-            if (validChildrenInfo[keys[i]] === true) {
-                validNode = this._client.getNode(keys[i]);
-                if (validNode) {
-                    types.push({id: validNode.getId(), title: validNode.getAttribute('name')});
+        for (id in validChildrenInfo) {
+            types['has.children'] = true;
+            validNode = this._client.getNode(id);
+            if (validNode) {
+                nameArray = validNode.getFullyQualifiedName().split('.');
+                title = nameArray.pop();
+                reference = types;
+                for (i = 0; i < nameArray.length; i += 1) {
+                    reference[nameArray[i]] = reference[nameArray[i]] || {};
+                    reference = reference[nameArray[i]];
                 }
+                reference[title] = reference[title] || {};
+                reference[title]['own.id'] = id;
+                reference[title]['own.title'] = title;
+            }
+        }
+
+        return types;
+    };
+    TreeBrowserControl.prototype._getValidChildrenTypesFlattened = function (nodeId) {
+        var types = {},
+            node = this._client.getNode(nodeId),
+            validChildrenInfo = {},
+            keys,
+            id,
+            title,
+            validNode,
+            i;
+
+        if (node) {
+            validChildrenInfo = node.getValidChildrenTypesDetailed();
+        }
+
+        keys = Object.keys(validChildrenInfo || {});
+
+        for (id in validChildrenInfo) {
+            types['has.children'] = true;
+            validNode = this._client.getNode(id);
+            if (validNode) {
+                title = validNode.getFullyQualifiedName();
+                types[title] = id;
             }
         }
 

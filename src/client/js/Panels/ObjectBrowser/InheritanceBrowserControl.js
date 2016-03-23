@@ -155,7 +155,7 @@ define(['js/logger',
                     //the node was present on the client side, render ist full data
                     childrenDescriptors.push({
                         id: currentChildId,
-                        name: childNode.getAttribute('name'),
+                        name: childNode.getFullyQualifiedName(),
                         hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
                         class: this._getNodeClass(childNode),
                         icon: this.getIcon(childNode),
@@ -359,7 +359,7 @@ define(['js/logger',
 
                         //create the node's descriptor for the tree-browser widget
                         nodeDescriptor = {
-                            name: updatedObject.getAttribute('name'),
+                            name: updatedObject.getFullyQualifiedName(),
                             hasChildren: (updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
                             class: objType,
                             icon: self.getIcon(updatedObject),
@@ -381,7 +381,7 @@ define(['js/logger',
 
                         //create the node's descriptor for the treebrowser widget
                         nodeDescriptor = {
-                            name: updatedObject.getAttribute('name'),
+                            name: updatedObject.getFullyQualifiedName(),
                             hasChildren: (updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
                             class: objType,
                             icon: self.getIcon(updatedObject)
@@ -455,7 +455,7 @@ define(['js/logger',
                                     //the node was present on the client side, render ist full data
                                     childTreeNode = this._treeBrowser.createNode(this._nodes[objectId].treeNode, {
                                         id: currentChildId,
-                                        name: childNode.getAttribute('name'),
+                                        name: childNode.getFullyQualifiedName(),
                                         hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
                                         class: this._getNodeClass(childNode),
                                         icon: this.getIcon(childNode)

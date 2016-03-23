@@ -17,6 +17,7 @@ define([
     'common/util/url',
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter',
+    'js/client/libraries',
     'common/core/users/serialization',
     'blob/BlobClient',
     'js/client/stateloghelpers',
@@ -33,6 +34,7 @@ define([
              URL,
              getNode,
              getNodeSetters,
+             getLibraryFunctions,
              Serialization,
              BlobClient,
              stateLogHelpers,
@@ -87,6 +89,7 @@ define([
             blobClient,
             monkeyPatchKey,
             nodeSetterFunctions,
+            coreLibraryFunctions,
         //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
         //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
@@ -237,7 +240,8 @@ define([
                 keys = Object.keys(nodes || {}),
                 name;
             for (i = 0; i < keys.length; i += 1) {
-                name = core.getAttribute(nodes[keys[i]], 'name');
+                //name = core.getAttribute(nodes[keys[i]], 'name');
+                name = core.getFullyQualifiedName(nodes[keys[i]]);
                 if (names.indexOf(name) === -1) {
                     names.push(name);
                 } else {
@@ -280,11 +284,28 @@ define([
             }
         }
 
-        nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode);
+        function printCoreError(error) {
+            logger.error('Faulty core usage raised an error', error);
+            self.dispatchEvent(CONSTANTS.NOTIFICATION, {
+                type: 'CORE',
+                severity: 'error',
+                message: error.message
+            });
+        }
+
+        nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode, printCoreError);
 
         for (monkeyPatchKey in nodeSetterFunctions) {
             if (nodeSetterFunctions.hasOwnProperty(monkeyPatchKey)) {
                 self[monkeyPatchKey] = nodeSetterFunctions[monkeyPatchKey];
+            }
+        }
+
+        coreLibraryFunctions = getLibraryFunctions(logger, state, storage, saveRoot);
+
+        for (monkeyPatchKey in coreLibraryFunctions) {
+            if (coreLibraryFunctions.hasOwnProperty(monkeyPatchKey)) {
+                self[monkeyPatchKey] = coreLibraryFunctions[monkeyPatchKey];
             }
         }
 
@@ -424,7 +445,7 @@ define([
                     logger: logger.fork('core')
                 });
                 state.projectAccess = access;
-                self.meta.initialize(state.core, state.metaNodes, saveRoot);
+                self.meta.initialize(state.core, state.metaNodes, saveRoot, printCoreError);
                 logState('info', 'projectOpened');
                 logger.debug('projectOpened, branches: ', branches);
                 self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
@@ -1883,6 +1904,26 @@ define([
             });
         };
 
+        this.createProjectFromPackage = function (projectName, branchName, blobHash, ownerId, url, callback) {
+            var parameters = {
+                command: 'importProjectFromFile',
+                projectName: projectName,
+                blobHash: blobHash,
+                branchName: branchName,
+                ownerId: ownerId,
+                url: url
+            };
+
+            logger.debug('creating project from package', parameters);
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
+            });
+        };
+
         //meta rules checking
         /**
          *
@@ -2214,6 +2255,30 @@ define([
 
         //checking if the import is in the proper format as its intended usage
         this.checkImport = Serialization.checkImport;
+
+        //package save
+        this.saveProject = function (projectId, branchName, commitHash, withAssets, callback) {
+            var command = {};
+            command.command = 'exportProjectToFile';
+            command.projectId = projectId;
+            command.branchName = branchName;
+            command.commitHash = commitHash;
+            command.withAssets = withAssets
+            //command.fileName = fileName || projectId + '__' + (branchName || commitHash);
+            logger.debug('saveProject, command', command);
+            if (command.projectId && (command.branchName || commitHash)) {
+                storage.simpleRequest(command, function (err, result) {
+                    if (err && !result) {
+                        logger.error('saveProject failed with error', err);
+                        callback(err);
+                    } else {
+                        callback(err, result);
+                    }
+                });
+            } else {
+                callback(new Error('invalid parameters!'));
+            }
+        }
 
         this.gmeConfig = gmeConfig;
 

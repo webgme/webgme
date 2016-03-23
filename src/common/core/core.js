@@ -115,7 +115,8 @@ define([
     'common/core/corediff',
     'common/core/metacachecore',
     'common/core/mixincore',
-    'common/core/metaquerycore'
+    'common/core/metaquerycore',
+    'common/core/librarycore'
 ], function (CoreRel,
              Set,
              Guid,
@@ -129,7 +130,8 @@ define([
              CoreDiff,
              MetaCacheCore,
              MixinCore,
-             MetaQueryCore) {
+             MetaQueryCore,
+             LibraryCore) {
     'use strict';
 
     /**
@@ -155,6 +157,8 @@ define([
         coreLayers.push(CoreDiff);
 
         coreLayers.push(TreeLoader);
+
+        coreLayers.push(LibraryCore);
 
         if (options.usertype !== 'tasync') {
             coreLayers.push(UnWrap);
@@ -1279,9 +1283,9 @@ define([
          * Sets the global containment limits for the node.
          *
          * @param {integer} [min] - the allowed minimum number of children (if not given or
-         * -1 is set, then there will be no minimum rule according this child type)
-         * @param {integer} [min] - the allowed minimum number of children (if not given or
-         * -1 is set, then there will be no minimum rule according this child type)
+         * -1 is set, then there will be no minimum rule according children)
+         * @param {integer} [max] - the allowed maximum number of children (if not given or
+         * -1 is set, then there will be no maximum rule according children)
          *
          * @func
          */
@@ -1293,9 +1297,9 @@ define([
          * @param {string} name - the name of the pointer/set.
          * @param {module:Core~Node} target - the valid target/member node.
          * @param {integer} [min] - the allowed minimum number of target/member from this given node type (if not
-         * given or -1 is set, then there will be no minimum rule according this child type)
+         * given or -1 is set, then there will be no minimum rule according this target type)
          * @param {integer} [max] - the allowed maximum number of target/member from this given node type (if not
-         * given or -1 is set, then there will be no minimum rule according this child type)
+         * given or -1 is set, then there will be no minimum rule according this target type)
          *
          * @func
          */
@@ -1317,9 +1321,9 @@ define([
          * case of 'pure' pointer definitions.
          *
          * @param {integer} [min] - the allowed minimum number of children (if not given or
-         * -1 is set, then there will be no minimum rule according this child type)
-         * @param {integer} [min] - the allowed minimum number of children (if not given or
-         * -1 is set, then there will be no minimum rule according this child type)
+         * -1 is set, then there will be no minimum rule according targets)
+         * @param {integer} [max] - the allowed maximum number of children (if not given or
+         * -1 is set, then there will be no maximum rule according targets)
          *
          * @func
          */
@@ -1659,6 +1663,173 @@ define([
          * @func
          */
         this.canSetAsMixin = core.canSetAsMixin;
+
+        //library function TODO checking everything and adding all new functions
+
+        /**
+         * It adds a project as library to your project by copying it over. The library will be a node
+         * with the given name directly under your project's ROOT. It becomes a read-only portion of your project.
+         * You will only be able to manipulate it with library functions, but cannot edit the individual nodes inside.
+         * However you will be able to instantiate or copy the nodes into other places of your project. Every node
+         * that was part of the META in the originating project becomes part of your project's meta.
+         * @param {module:Core~Node} node - any regular node in your project.
+         * @param {string} name - the name of the library you wish to use as a namespace in your project.
+         * @param {string} libraryRootHash - the hash of your library's root
+         * (must exist in the project's collection at the time of call).
+         * @param {Object} libraryInfo - information about your project.
+         * @param {string} libraryInfo.projectId - the projectId of your library.
+         * @param {string} libraryInfo.branchName - the branch that your library follows in the origin project.
+         * @param {string} libraryInfo.commitHash - the version of your library.
+         * @param {function()} callback
+         *
+         * @func
+         */
+        this.addLibrary = core.addLibrary;
+
+        /**
+         * It updates a library in your project based on the input information. It will 'reaplace' the old
+         * version, keeping as much information as possible regarding the instances.
+         * @param {module:Core~Node} node - any regular node in your project.
+         * @param {string} name - the name of the library you want to update.
+         * @param {string} libraryRootHash - the hash of your library's new root
+         * (must exist in the project's collection at the time of call).
+         * @param {object} libraryInfo - information about your project.
+         * @param {string} libraryInfo.projectId - the projectId of your library.
+         * @param {string} libraryInfo.branchName - the branch that your library follows in the origin project.
+         * @param {string} libraryInfo.commitHash - the version of your library.
+         * @param {function()} callback
+         *
+         * @func
+         */
+        this.updateLibrary = core.updateLibrary;
+
+        /**
+         * Gives back the list of libraries in your project.
+         *
+         * @param {module:Core~Node} node - any node in your project.
+         *
+         * @return {string[]} - Returns the fully qualified names of all the libraries in your project
+         * (even embedded ones).
+         *
+         * @func
+         */
+        this.getLibraryNames = core.getLibraryNames;
+
+        /**
+         * Return the root of the inheritance chain of your Meta nodes.
+         *
+         * @param {module:Core~Node} node - any node in your project.
+         *
+         * @return {module:Core~Node} - Returns the acting FCO of your project.
+         *
+         * @func
+         */
+        this.getFCO = core.getFCO;
+
+        /**
+         * Returns if the node in question is a library root or not.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {bool} - Returns true if your node is a library root (even if it is embedded in other library),
+         * false otherwise.
+         *
+         * @func
+         */
+        this.isLibraryRoot = core.isLibraryRoot;
+
+        /**
+         * Returns if the node in question is a library element or not.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {bool} - Returns true if your node is a library element, false otherwise.
+         *
+         * @func
+         */
+        this.isLibraryElement = core.isLibraryElement;
+
+        /**
+         * Returns the fully qualified name of any node, which is the list of its namespaces separated
+         * by comma and followed by the name of the node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string} - Returns the fully qualified name of the node (like: 'library.myName').
+         *
+         * @func
+         */
+        this.getFullyQualifiedName = core.getFullyQualifiedName;
+
+        /**
+         * Removes a library from your project. It will also remove any remaining instances of the specific library.
+         *
+         * @param {module:Core~Node} node - any node in your project.
+         * @param {string} name - the name of your library.
+         *
+         * @func
+         */
+        this.removeLibrary = core.removeLibrary;
+
+        /**
+         * Returns the origin GUID of any library node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {GUID | null} - Returns the origin GUID of the node or null if the node is not a library element.
+         *
+         * @func
+         */
+        this.getLibraryGuid = core.getLibraryGuid;
+
+        /**
+         * Rename a library in your project.
+         *
+         * @param {module:Core~Node} node - any node in your project.
+         * @param {string} oldName - the current name of the library.
+         * @param {string} newName - the new name of the project.
+         *
+         * @func
+         */
+        this.renameLibrary = core.renameLibrary;
+
+        /**
+         * Returns the info associated with the library.
+         *
+         * @param {module:Core~Node} node - any node in the project.
+         * @param {string} name - the name of the library.
+         *
+         * @return {object} - Returns the information object, stored alongside the library (that basically
+         * carries metaData about the library).
+         *
+         * @func
+         */
+        this.getLibraryInfo = core.getLibraryInfo;
+
+        /**
+         * Returns the core node of the given library.
+         *
+         * @param {module:Core~Node} node - any node in the project.
+         * @param {string} name - the name of the library.
+         *
+         * @return {module:Core~Node | null} - Returns the library root node or null, if invalid library was queried.
+         *
+         * @func
+         */
+        this.getLibraryRoot = core.getLibraryRoot;
+
+        /**
+         * Returns all the Meta nodes found in the library.
+         *
+         * @param {module:Core~Node} node - any node of your project.
+         * @param {string} name - name of your library.
+         *
+         * @return {module:Core~Node[]} - Returns an array of core nodes that are part of your meta from
+         * the given library.
+         *
+         * @func
+         */
+        this.getLibraryNodes = core.getLibraryNodes;
     }
 
     return Core;

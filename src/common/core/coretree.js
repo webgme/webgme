@@ -300,27 +300,27 @@ define([
         }
 
         function isValidNodeThrow(node) {
-          __test('object', typeof node === 'object' && node !== null);
-          __test('object 2', node.hasOwnProperty('parent') && node.hasOwnProperty('relid'));
-          __test('parent', typeof node.parent === 'object');
-          __test('relid', typeof node.relid === 'string' || node.relid === null);
-          __test('parent 2', (node.parent === null) === (node.relid === null));
-          __test('age', node.age >= 0 && node.age <= CONSTANTS.MAX_AGE);
-          __test('children', node.children === null || node.children instanceof Array);
-          __test('children 2', (node.age === CONSTANTS.MAX_AGE) === (node.children === null));
-          __test('data', typeof node.data === 'object' || typeof node.data === 'string' ||
-              typeof node.data === 'number');
+            __test('object', typeof node === 'object' && node !== null);
+            __test('object 2', node.hasOwnProperty('parent') && node.hasOwnProperty('relid'));
+            __test('parent', typeof node.parent === 'object');
+            __test('relid', typeof node.relid === 'string' || node.relid === null);
+            __test('parent 2', (node.parent === null) === (node.relid === null));
+            __test('age', node.age >= 0 && node.age <= CONSTANTS.MAX_AGE);
+            __test('children', node.children === null || node.children instanceof Array);
+            __test('children 2', (node.age === CONSTANTS.MAX_AGE) === (node.children === null));
+            __test('data', typeof node.data === 'object' || typeof node.data === 'string' ||
+                typeof node.data === 'number');
 
-          if (node.parent !== null) {
-              __test('age 2', node.age >= node.parent.age);
-              __test('mutable', !__isMutableData(node.data) || __isMutableData(node.parent.data));
-          }
+            if (node.parent !== null) {
+                __test('age 2', node.age >= node.parent.age);
+                __test('mutable', !__isMutableData(node.data) || __isMutableData(node.parent.data));
+            }
 
-          if (!checkValidTreeRunning) {
-              checkValidTreeRunning = true;
-              __checkValidTree(self.getRoot(node));
-              checkValidTreeRunning = false;
-          }
+            if (!checkValidTreeRunning) {
+                checkValidTreeRunning = true;
+                __checkValidTree(self.getRoot(node));
+                checkValidTreeRunning = false;
+            }
         }
 
         // ------- static methods
@@ -567,8 +567,6 @@ define([
             node = self.normalize(node);
             return __isMutableData(node.data);
         };
-
-
 
         this.isEmpty = function (node) {
             node = self.normalize(node);
@@ -921,6 +919,18 @@ define([
         //        };
         //    }
         //});
+
+        this.removeChildFromCache = function (node, relid) {
+            var i;
+            for (i = 0; i < node.children.length; i += 1) {
+                if (node.children[i].relid === relid) {
+                    node.children.splice(i, 1);
+                    return node;
+                }
+            }
+
+            return node;
+        }
     }
 
     return CoreTree;

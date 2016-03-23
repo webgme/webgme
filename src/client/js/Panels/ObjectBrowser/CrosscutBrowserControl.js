@@ -188,7 +188,7 @@ define(['js/logger',
 
         //create the node's descriptor for the tree-browser widget
         nodeDescriptor = {
-            name: nodeObj.getAttribute(nodePropertyNames.Attributes.name),
+            name: nodeObj.getFullyQualifiedName(),
             hasChildren: this._isExpandable(nodeId),
             class: GME_MODEL_CLASS
         };

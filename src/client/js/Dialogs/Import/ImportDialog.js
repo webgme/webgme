@@ -150,6 +150,7 @@ define(['js/Loader/LoaderCircles',
 
                     var checkResult = WebGMEGlobal.Client.checkImport(parsedJSONFileContent,
                         CORE_CONSTANTS.EXPORT_TYPE_LIBRARY);
+                    checkResult = null;
                     if (checkResult) {
                         self._displayMessage(checkResult, true);
                     } else {

@@ -131,7 +131,6 @@ define(['js/logger',
             }
         });
 
-
         this._splitPanel = new SplitPanel();
         this._layoutManager.addPanel('visualizerSplitPanel', this._splitPanel, 'center');
     };
@@ -161,7 +160,6 @@ define(['js/logger',
             //we should change the selected tab to 0 in case of visualizer change to get the 'default' behaviour
             //WebGMEGlobal.State.registerActiveTab(0);
             //WebGMEGlobal.State.set(CONSTANTS.STATE_ACTIVE_ASPECT, 'All');
-
 
             //destroy current visualizer
             if (this._activePanel[panel]) {
@@ -206,6 +204,7 @@ define(['js/logger',
                 validVisuals = node.getRegistry(REGISTRY_KEYS.VALID_VISUALIZERS);
                 if (validVisuals) {
                     this._validVisualizers = validVisuals.split(' ');
+
                     return;
                 }
             } else {
@@ -225,16 +224,26 @@ define(['js/logger',
     VisualizerPanel.prototype._updateListedVisualizersAndSelect = function () {
         var self = this,
             ul = this._getActivePanelElem(),
-            activeVisualizer;
+            activeVisualizer,
+            currentNode = self._client.getNode(self._currentNodeID),
+            libraryRoot = false;
 
+        if (currentNode) {
+            libraryRoot = currentNode.isLibraryRoot();
+        }
         // For the active panel hide/show listed visualizers
         ul.children('li').each(function (index, _li) {
             var li = $(_li);
             if (self._validVisualizers === null) {
                 // By default fall back on showing all loaded visualizers.
-                li.show();
+                if (libraryRoot && li.attr('data-id') === 'SetEditor') {
+                    li.hide();
+                } else {
+                    li.show();
+                }
             } else {
-                if (self._validVisualizers.indexOf(li.attr('data-id')) > -1) {
+                if (self._validVisualizers.indexOf(li.attr('data-id')) > -1 &&
+                    (!libraryRoot || (libraryRoot && li.attr('data-id') !== 'SetEditor'))) {
                     li.show();
                 } else {
                     li.hide();
@@ -285,11 +294,9 @@ define(['js/logger',
         loaderDiv.remove();
     };
 
-
     /**********************************************************************/
     /***************     P U B L I C     A P I             ****************/
     /**********************************************************************/
-
 
     VisualizerPanel.prototype.add = function (menuDesc, callback) {
         var li = $('<li class="center pointer"><a class="btn-env" id=""></a></li>'),
@@ -407,7 +414,6 @@ define(['js/logger',
 
             this._activePanel[panel] = null;
             this._activeVisualizer[panel] = null;
-
 
             if (this._panel2VisContainer) {
                 this._panel2VisContainer.remove();
