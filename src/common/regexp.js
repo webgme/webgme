@@ -15,6 +15,7 @@ define([], function () {
         DOCUMENT_KEY = new RegExp('^[^(\$|\_)\.][^\.]*$'),//based on the MongoDB requirements (no '.' and no leading $)
         PROJECT_NAME = new RegExp('^[0-9a-zA-Z_]+$'),
 
+        INVALID_CSS_CHARS = new RegExp('[!"#$%&\'()\*\+,\./:;<=>\?@\[\\\]^`{\|}~ ]+', 'g'),
         GUID = new RegExp('[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}', 'i');
 
     return {
@@ -26,6 +27,7 @@ define([], function () {
         PROJECT: PROJECT,
         DOCUMENT_KEY: DOCUMENT_KEY,
         GUID: GUID,
+        INVALID_CSS_CHARS: INVALID_CSS_CHARS,
         PROJECT_NAME: PROJECT_NAME
     };
 });

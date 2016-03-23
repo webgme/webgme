@@ -28,10 +28,10 @@ define(['js/RegistryKeys'], function (REGISTRY_KEYS) {
         if (node) {
             if (expanded) {
                 iconName = node.getRegistry(REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) ||
-                    node.getRegistry(REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON);
+                    node.getRegistry(REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
             } else {
                 iconName = node.getRegistry(REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON) ||
-                    node.getRegistry(REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
+                    node.getRegistry(REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON);
             }
         }
 
