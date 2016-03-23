@@ -7,13 +7,11 @@
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
     'js/Widgets/ModelEditor/ModelEditorWidget',
-    './ModelEditorControl',
-    'js/Utils/ComponentSettings'
+    './ModelEditorControl'
 ], function (PanelBaseWithHeader,
              IActivePanel,
              ModelEditorWidget,
-             ModelEditorControl,
-             ComponentSettings) {
+             ModelEditorControl) {
 
     'use strict';
 
@@ -41,10 +39,9 @@ define(['js/PanelBase/PanelBaseWithHeader',
     _.extend(ModelEditorPanel.prototype, IActivePanel.prototype);
 
     ModelEditorPanel.prototype._initialize = function () {
-        var self = this,
-            controllerSettings;
+        var self = this;
 
-        this.widget = new ModelEditorWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new ModelEditorWidget(this.$el, {toolBar: this.toolBar});
 
         this.widget.setTitle = function (title) {
             self.setTitle(title);
@@ -55,13 +52,10 @@ define(['js/PanelBase/PanelBaseWithHeader',
             WebGMEGlobal.KeyboardManager.setListener(self.widget);
         };
 
-        controllerSettings = ModelEditorControl.getDefaultConfig();
-        ComponentSettings.resolveWithWebGMEGlobal(controllerSettings, ModelEditorControl.getComponentId());
-
         this.control = new ModelEditorControl({
             client: this._client,
             widget: this.widget
-        }, controllerSettings);
+        });
 
         this.onActivate();
     };

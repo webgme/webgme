@@ -232,7 +232,9 @@ define(['js/logger',
 
         //setting the active object to the container
         if (typeof this._memberListContainerID === 'string') {
+            WebGMEGlobal.State.registerSuppressVisualizerFromNode(true);
             WebGMEGlobal.State.registerActiveObject(this._memberListContainerID);
+            WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
         }
     };
 

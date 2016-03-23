@@ -12,7 +12,8 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase',
     'js/Panels/MetaEditor/MetaRelations',
-    'js/NodePropertyNames'
+    'js/NodePropertyNames',
+    'js/Utils/ComponentSettings'
 ], function (Logger,
              REGISTRY_KEYS,
              CONSTANTS,
@@ -21,7 +22,8 @@ define(['js/logger',
              GMEConcepts,
              DiagramDesignerWidgetMultiTabMemberListControllerBase,
              MetaRelations,
-             nodePropertyNames) {
+             nodePropertyNames,
+             ComponentSettings) {
 
     'use strict';
 
@@ -34,12 +36,17 @@ define(['js/logger',
         options = options || {};
         options.loggerName = 'gme:Panels:CrossCut:CrosscutController';
 
+        this._config = CrosscutController.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this._config, CrosscutController.getComponentId());
+
         DiagramDesignerWidgetMultiTabMemberListControllerBase.call(this, options);
 
         this._filteredOutConnTypes = [];
         this._filteredOutConnectionDescriptors = {};
         this._activeCrosscutId = null;
         this._initActiveTab = false;
+        this._tabsHasBeenRequested = false;
+        this._autoCreateCrosscut = this._config.autoCreateCrosscut === true;
 
         this._initFilterPanel();
         this.logger.debug('CrosscutController ctor finished');
@@ -225,6 +232,15 @@ define(['js/logger',
             memberListContainerID = this._memberListContainerID,
             crosscutsRegistry = GMEConcepts.getCrosscuts(memberListContainerID),
             len = crosscutsRegistry.length;
+
+        if (this._autoCreateCrosscut === true && len === 0 && this._tabsHasBeenRequested === false) {
+            this._onTabAddClicked();
+            memberListContainerID = this._memberListContainerID;
+            crosscutsRegistry = GMEConcepts.getCrosscuts(memberListContainerID);
+            len = crosscutsRegistry.length;
+        }
+
+        this._tabsHasBeenRequested = true;
 
         while (len--) {
             result.push({
@@ -1087,20 +1103,13 @@ define(['js/logger',
     CrosscutController.prototype._onCreateNewConnection = function (params) {
         var sourceId,
             targetId,
+            self = this,
             parentId = this._memberListContainerID,
             client = this._client,
-            CONTEXT_POS_OFFSET = 10,
             menuItems = {},
-            i,
             sourceObj,
             targetObj,
-            connObj,
-            ptrAction = 'PTR',
-            setAction = 'SET',
-            connectionAction = 'CONN',
-            createPointer,
-            addToSet,
-            createConnection,
+
             logger = this.logger,
             aspect = this._selectedMemberListID,
             dstPosition = this._widget.items[params.dst].getBoundingBox(),
@@ -1109,21 +1118,20 @@ define(['js/logger',
             validPointerTypes,
             validSetTypes,
             validConnectionTypes,
-            sourceObjName,
-            targetObjName,
-            connObjName;
 
-        createPointer = function (srcId, dstId, ptrName) {
+            existingConns;
+
+        function createPointer(srcId, dstId, ptrName) {
             logger.debug('createPointer srcId: ' + srcId + ', dstId: ' + dstId + ', ptrName: ' + ptrName);
             client.makePointer(srcId, ptrName, dstId);
-        };
+        }
 
-        addToSet = function (containerId, objId, setName) {
+        function addToSet(containerId, objId, setName) {
             logger.debug('addToSet containerId: ' + containerId + ', objId: ' + objId + ', ptrName: ' + setName);
             client.addMember(containerId, objId, setName);
-        };
+        }
 
-        createConnection = function (srcId, dstId, connType) {
+        function createConnection(srcId, dstId, connType) {
             var newConnID,
                 dx,
                 dy;
@@ -1147,7 +1155,129 @@ define(['js/logger',
             client.setMemberRegistry(parentId, newConnID, aspect, REGISTRY_KEYS.POSITION, {x: dx, y: dy});
 
             client.completeTransaction();
-        };
+        }
+
+        function followConnection(connPath) {
+            var patterns = {},
+                territoryId;
+
+            patterns[connPath] = {children: 0};
+
+            territoryId = client.addUI(null, function (events) {
+                var targetNodeObj,
+                    i;
+
+                for (i = 0; i < events.length; i += 1) {
+                    if (events[i].eid === connPath && events[i].etype === 'load') {
+                        targetNodeObj = client.getNode(connPath);
+                        if (targetNodeObj) {
+                            WebGMEGlobal.State.registerActiveObject(connPath);
+                        }
+                        break;
+                    }
+                }
+
+                client.removeUI(territoryId);
+            });
+
+            client.updateTerritory(territoryId, patterns);
+        }
+
+        function displayContextMenu() {
+            //show available pointers/sets/connection types to the user to select one
+            var sourceObjName = sourceObj.getAttribute(nodePropertyNames.Attributes.name),
+                targetObjName = targetObj.getAttribute(nodePropertyNames.Attributes.name),
+                CONTEXT_POS_OFFSET = 10,
+                ptrAction = 'PTR',
+                setAction = 'SET',
+                connectionAction = 'CONN',
+                followConnAction = 'FOLLOW_CONN',
+                connObj,
+                i,
+                connObjName;
+
+            //'Create pointer'
+            for (i = 0; i < validPointerTypes.length; i += 1) {
+                menuItems[ptrAction + validPointerTypes[i]] = {
+                    name: 'Create pointer \'' + validPointerTypes[i] + '\' from \'' + sourceObjName + '\' to \'' +
+                    targetObjName + '\'',
+                    icon: 'glyphicon glyphicon-share',
+                    action: ptrAction,
+                    type: validPointerTypes[i]
+                };
+            }
+
+            //'Add to set'
+            for (i = 0; i < validSetTypes.length; i += 1) {
+                menuItems[setAction + validSetTypes[i]] = {
+                    name: 'Add \'' + targetObjName + '\' to set \'' + validSetTypes[i] + '\' of \'' +
+                    sourceObjName + '\'',
+                    icon: false,
+                    action: setAction,
+                    type: validSetTypes[i]
+                };
+            }
+
+            //'Create connection' in crosscut container
+            connObjName = '';
+            for (i = 0; i < validConnectionTypes.length; i += 1) {
+                connObj = client.getNode(validConnectionTypes[i]);
+
+                if (connObj) {
+                    connObjName = connObj.getAttribute(nodePropertyNames.Attributes.name);
+                } else {
+                    connObjName = validConnectionTypes[i];
+                }
+
+                menuItems[connectionAction + validConnectionTypes[i]] = {
+                    name: 'Create connection \'' + connObjName + '\' from \'' + sourceObjName + '\' to \'' +
+                    targetObjName + '\'',
+                    icon: 'glyphicon glyphicon-resize-horizontal',
+                    action: connectionAction,
+                    type: validConnectionTypes[i]
+                };
+            }
+
+            if (validConnectionTypes.length > 0) {
+                for (i = 0; i < existingConns.length; i += 1) {
+                    menuItems[followConnAction + existingConns[i]] = {
+                        name: 'Open existing connection [' + existingConns[i] + '] from \'' + sourceObjName +
+                        '\' to \'' + targetObjName + '\'',
+                        icon: 'glyphicon glyphicon-share',
+                        action: followConnAction,
+                        type: existingConns[i]
+                    };
+                }
+            }
+
+            //show context menu
+            self._widget.createMenu(menuItems, function (key) {
+                    var menuItem = menuItems[key],
+                        type = menuItem.type,
+                        action = menuItem.action;
+
+                    switch (action) {
+                        case ptrAction:
+                            createPointer(sourceId, targetId, type);
+                            break;
+                        case setAction:
+                            addToSet(sourceId, targetId, type);
+                            break;
+                        case connectionAction:
+                            createConnection(sourceId, targetId, type);
+                            break;
+                        case followConnAction:
+                            followConnection(type);
+                            break;
+                        default:
+                            break;
+                    }
+                },
+
+                self._widget.posToPageXY(dstPosition.x - CONTEXT_POS_OFFSET,
+                    dstPosition.y - CONTEXT_POS_OFFSET)
+            );
+        }
 
         if (params.srcSubCompId === undefined) {
             sourceId = this._ComponentID2GMEID[params.src];
@@ -1180,6 +1310,14 @@ define(['js/logger',
 
         //if there is any option at all
         if (validPointerTypes.length + validSetTypes.length + validConnectionTypes.length > 0) {
+            sourceObj = client.getNode(sourceId);
+            targetObj = client.getNode(targetId);
+
+            if (validConnectionTypes.length > 0) {
+                existingConns = _.intersection(sourceObj.getCollectionPaths('src'),
+                    targetObj.getCollectionPaths('dst'));
+            }
+
             //if only 1 option, figure out automatically
             if (validPointerTypes.length + validSetTypes.length + validConnectionTypes.length === 1) {
                 //thre is only one possible choice, go with that
@@ -1190,84 +1328,17 @@ define(['js/logger',
                     //add target to the set of source
                     addToSet(sourceId, targetId, validSetTypes[0]);
                 } else if (validConnectionTypes.length === 1) {
-                    //create connection between source and target in this parent
-                    createConnection(sourceId, targetId, validConnectionTypes[0]);
+                    if (existingConns.length === 0) {
+                        //create connection between source and target in this parent
+                        createConnection(sourceId, targetId, validConnectionTypes[0]);
+                    } else {
+                        // Display the existing connections
+                        displayContextMenu();
+                    }
                 }
             } else {
                 //more options, show context menu
-                //show available pointers/sets/connection types to the user to select one
-                sourceObj = client.getNode(sourceId);
-                targetObj = client.getNode(targetId);
-
-                sourceObjName = sourceObj.getAttribute(nodePropertyNames.Attributes.name);
-                targetObjName = targetObj.getAttribute(nodePropertyNames.Attributes.name);
-
-                //'Create pointer'
-                for (i = 0; i < validPointerTypes.length; i += 1) {
-                    menuItems[ptrAction + validPointerTypes[i]] = {
-                        name: 'Create pointer \'' + validPointerTypes[i] + '\' from \'' + sourceObjName + '\' to \'' +
-                        targetObjName + '\'',
-                        icon: 'glyphicon glyphicon-share',
-                        action: ptrAction,
-                        type: validPointerTypes[i]
-                    };
-                }
-
-                //'Add to set'
-                for (i = 0; i < validSetTypes.length; i += 1) {
-                    menuItems[setAction + validSetTypes[i]] = {
-                        name: 'Add \'' + targetObjName + '\' to set \'' + validSetTypes[i] + '\' of \'' +
-                        sourceObjName + '\'',
-                        icon: false,
-                        action: setAction,
-                        type: validSetTypes[i]
-                    };
-                }
-
-                //'Create connection' in crosscut container
-                connObjName = '';
-                for (i = 0; i < validConnectionTypes.length; i += 1) {
-                    connObj = client.getNode(validConnectionTypes[i]);
-
-                    if (connObj) {
-                        connObjName = connObj.getAttribute(nodePropertyNames.Attributes.name);
-                    } else {
-                        connObjName = validConnectionTypes[i];
-                    }
-
-                    menuItems[connectionAction + validConnectionTypes[i]] = {
-                        name: 'Create connection \'' + connObjName + '\' from \'' + sourceObjName + '\' to \'' +
-                        targetObjName + '\'',
-                        icon: 'glyphicon glyphicon-resize-horizontal',
-                        action: connectionAction,
-                        type: validConnectionTypes[i]
-                    };
-                }
-
-                //show context menu
-                this._widget.createMenu(menuItems, function (key) {
-                        var menuItem = menuItems[key],
-                            type = menuItem.type,
-                            action = menuItem.action;
-
-                        switch (action) {
-                            case ptrAction:
-                                createPointer(sourceId, targetId, type);
-                                break;
-                            case setAction:
-                                addToSet(sourceId, targetId, type);
-                                break;
-                            case connectionAction:
-                                createConnection(sourceId, targetId, type);
-                                break;
-                            default:
-                                break;
-                        }
-                    },
-
-                    this._widget.posToPageXY(dstPosition.x - CONTEXT_POS_OFFSET,
-                        dstPosition.y - CONTEXT_POS_OFFSET)
-                );
+                displayContextMenu();
             }
         }
     };
@@ -1480,6 +1551,15 @@ define(['js/logger',
         this._initActiveTab = false;
     };
 
+    CrosscutController.getDefaultConfig = function () {
+        return {
+            autoCreateCrosscut: false
+        };
+    };
+
+    CrosscutController.getComponentId = function () {
+        return 'GenericUICrosscutController';
+    };
 
     return CrosscutController;
 });
