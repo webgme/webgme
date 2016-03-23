@@ -18,7 +18,8 @@ define([
     var NetworkStatusWidget,
         ITEM_VALUE_CONNECT = 'connect',
         ITEM_VALUE_REFRESH = 'refresh',
-        ITEM_VALUE_LOGOUT = 'logout';
+        ITEM_VALUE_LOGOUT = 'logout',
+        ITEM_VALUE_DOWNLOAD_ERROR = 'downloadError';
 
     NetworkStatusWidget = function (containerEl, client) {
         this._logger = Logger.create('gme:Widgets:NetworkStatus:NetworkStatusWidget',
@@ -57,6 +58,8 @@ define([
                 document.location.href = self._urlAtDisconnect;
             } else if (value === ITEM_VALUE_LOGOUT) {
                 document.location.href = '/logout';
+            } else if (value === ITEM_VALUE_DOWNLOAD_ERROR) {
+                self._client.downloadError();
             }
         };
 
@@ -88,6 +91,9 @@ define([
                 break;
             case CONSTANTS.CLIENT.STORAGE.CONNECTION_ERROR:
                 this._modeError();
+                break;
+            case CONSTANTS.CLIENT.UNCAUGHT_EXCEPTION:
+                this._modeUncaughtException();
                 break;
         }
     };
@@ -142,7 +148,7 @@ define([
         this._disconnected = true;
         this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
         this._popoverBox.show('New connection is not compatible with client - refresh required.',
-            this._popoverBox.alertLevels.ERROR, false);
+            this._popoverBox.alertLevels.ERROR, true);
     };
 
     NetworkStatusWidget.prototype._modeTokenExpired = function () {
@@ -157,7 +163,7 @@ define([
         this._disconnected = true;
         this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
         this._popoverBox.show('Token has expired - a new login is required.',
-            this._popoverBox.alertLevels.ERROR, false);
+            this._popoverBox.alertLevels.ERROR, true);
     };
 
     NetworkStatusWidget.prototype._modeError = function () {
@@ -172,7 +178,25 @@ define([
         this._disconnected = true;
         this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
         this._popoverBox.show('Unexpected connection error - refresh required.',
-            this._popoverBox.alertLevels.ERROR, false);
+            this._popoverBox.alertLevels.ERROR, true);
+    };
+
+    NetworkStatusWidget.prototype._modeUncaughtException = function () {
+        this._ddNetworkStatus.clear();
+        this._ddNetworkStatus.setTitle('UNCAUGHT_EXCEPTION');
+        this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.RED);
+        this._ddNetworkStatus.addItem({
+            text: 'Refresh...',
+            value: ITEM_VALUE_REFRESH
+        });
+        this._ddNetworkStatus.addItem({
+            text: 'Download error data',
+            value: ITEM_VALUE_DOWNLOAD_ERROR
+        });
+
+        this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
+        this._popoverBox.show('Uncaught exception - click here for actions',
+            this._popoverBox.alertLevels.ERROR, true);
     };
 
     return NetworkStatusWidget;

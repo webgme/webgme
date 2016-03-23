@@ -46,6 +46,7 @@ define([
             state = {
                 connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED/INCOMPATIBLE_CONNECTION/CONNECTION_ERROR
                 renewingToken: false,
+                exception: null,
                 project: null,
                 projectAccess: null,
                 core: null,
@@ -2070,6 +2071,18 @@ define([
         this.checkImport = Serialization.checkImport;
 
         this.gmeConfig = gmeConfig;
+
+        window.addEventListener('error', function (evt) {
+            state.exception = {};
+            if (evt.error) {
+                state.exception.message = evt.error.message;
+                state.exception.stack = evt.error.stack;
+            } else {
+                state.exception = 'No error on event - check browser';
+            }
+
+            self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.UNCAUGHT_EXCEPTION);
+        });
     }
 
     // Inherit from the EventDispatcher

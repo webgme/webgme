@@ -253,7 +253,7 @@ define([
                     }
                 }
             } else {
-                self.logger.error('Unexpected network status', networkStatus);
+                self.logger.error('Error network status, no actions done', networkStatus);
             }
 
         });
