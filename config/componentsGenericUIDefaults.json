@@ -47,6 +47,9 @@
       "topNode": {}
     }
   },
+  "GenericUICrosscutController": {
+    "autoCreateCrosscut": false
+  },
   "GenericUIPanelHeader": {
     "disableUserProfile": false
   },

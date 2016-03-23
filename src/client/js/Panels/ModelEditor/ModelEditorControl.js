@@ -13,7 +13,8 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/Utils/GMEVisualConcepts',
     'js/Utils/PreferencesHelper',
-    'js/Controls/AlignMenu'
+    'js/Controls/AlignMenu',
+    'js/Utils/ComponentSettings'
 ], function (Logger,
              CONSTANTS,
              nodePropertyNames,
@@ -23,7 +24,8 @@ define(['js/logger',
              GMEConcepts,
              GMEVisualConcepts,
              PreferencesHelper,
-             AlignMenu) {
+             AlignMenu,
+             ComponentSettings) {
 
     'use strict';
 
@@ -41,7 +43,9 @@ define(['js/logger',
             WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
-        this._config = config;
+        this._config = ModelEditorControl.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this._config, ModelEditorControl.getComponentId());
+
         this._firstLoad = false;
         this._topNode = CONSTANTS.PROJECT_ROOT_ID;
 

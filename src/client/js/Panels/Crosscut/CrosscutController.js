@@ -12,7 +12,8 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/Panels/ControllerBase/DiagramDesignerWidgetMultiTabMemberListControllerBase',
     'js/Panels/MetaEditor/MetaRelations',
-    'js/NodePropertyNames'
+    'js/NodePropertyNames',
+    'js/Utils/ComponentSettings'
 ], function (Logger,
              REGISTRY_KEYS,
              CONSTANTS,
@@ -21,7 +22,8 @@ define(['js/logger',
              GMEConcepts,
              DiagramDesignerWidgetMultiTabMemberListControllerBase,
              MetaRelations,
-             nodePropertyNames) {
+             nodePropertyNames,
+             ComponentSettings) {
 
     'use strict';
 
@@ -34,6 +36,9 @@ define(['js/logger',
         options = options || {};
         options.loggerName = 'gme:Panels:CrossCut:CrosscutController';
 
+        this._config = CrosscutController.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this._config, CrosscutController.getComponentId());
+
         DiagramDesignerWidgetMultiTabMemberListControllerBase.call(this, options);
 
         this._filteredOutConnTypes = [];
@@ -41,6 +46,7 @@ define(['js/logger',
         this._activeCrosscutId = null;
         this._initActiveTab = false;
         this._tabsHasBeenRequested = false;
+        this._autoCreateCrosscut = this._config.autoCreateCrosscut === true;
 
         this._initFilterPanel();
         this.logger.debug('CrosscutController ctor finished');
@@ -227,7 +233,7 @@ define(['js/logger',
             crosscutsRegistry = GMEConcepts.getCrosscuts(memberListContainerID),
             len = crosscutsRegistry.length;
 
-        if (len === 0 && this._tabsHasBeenRequested === false) {
+        if (this._autoCreateCrosscut === true && len === 0 && this._tabsHasBeenRequested === false) {
             this._onTabAddClicked();
             memberListContainerID = this._memberListContainerID;
             crosscutsRegistry = GMEConcepts.getCrosscuts(memberListContainerID);
@@ -1545,6 +1551,15 @@ define(['js/logger',
         this._initActiveTab = false;
     };
 
+    CrosscutController.getDefaultConfig = function () {
+        return {
+            autoCreateCrosscut: false
+        };
+    };
+
+    CrosscutController.getComponentId = function () {
+        return 'GenericUICrosscutController';
+    };
 
     return CrosscutController;
 });
