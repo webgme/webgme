@@ -304,13 +304,13 @@ function createAPI(app, mountPath, middlewareOpts) {
         if (req.userData.token && req.userData.newToken === true) {
             res.status(200);
             res.json({
-                access_token: req.userData.token
+                webgmeToken: req.userData.token
             });
         } else {
             getNewJWToken(userId)
                 .then(function (token) {
                     res.status(200);
-                    res.json({access_token: token});
+                    res.json({webgmeToken: token});
                 })
                 .catch(function (err) {
                     next(err);

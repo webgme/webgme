@@ -10,8 +10,13 @@ function getClientConfig(gmeConfig) {
 
     delete clientConfig.server.log;
     delete clientConfig.server.extlibExcludes;
-    delete clientConfig.authentication.jwt;
+
+    delete clientConfig.authentication.jwt.expiresIn;
+    delete clientConfig.authentication.jwt.renewBeforeExpires;
+    delete clientConfig.authentication.jwt.privateKey;
+    delete clientConfig.authentication.jwt.publicKey;
     delete clientConfig.authentication.salts;
+
     delete clientConfig.executor.nonce;
     delete clientConfig.mongo;
     delete clientConfig.blob;

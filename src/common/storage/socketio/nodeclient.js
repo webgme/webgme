@@ -21,7 +21,7 @@ define(['socket.io-client'], function (io) {
 
             if (webgmeToken) {
                 socketIoOptions.extraHeaders = {
-                    Cookie: 'access_token=' + webgmeToken
+                    Cookie: gmeConfig.authentication.jwt.cookieId + '=' + webgmeToken
                 };
 
                 logger.debug('webgmeToken was defined adding it as an extra header in the cookie..');
