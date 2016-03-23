@@ -193,4 +193,36 @@ describe('meta cache core', function () {
         expect(core.isConnection(nonConnection)).to.equal(false);
     });
 
+    it('should detect if some META element have been deleted during load', function (done) {
+        //core.delMember(rootNode, 'MetaAspectSet', metaPaths.pop());
+        var root = core.createNode({}),
+            itemBase = core.createNode({parent: root}),
+            item = core.createNode({parent: root, base: itemBase}),
+            itemBasePath = core.getPath(itemBase),
+            hash = core.getHash(root);
+
+        core.addMember(root, 'MetaAspectSet', itemBase);
+        core.addMember(root, 'MetaAspectSet', item);
+
+        expect(Object.keys(core.getAllMetaNodes(root))).to.have.length(2);
+        core.persist(root);
+        hash = core.getHash(root);
+
+        core.loadRoot(hash)
+            .then(function (root) {
+                var itemBase;
+                expect(Object.keys(core.getAllMetaNodes(root))).to.have.length(2);
+
+                itemBase = core.getAllMetaNodes(root)[itemBasePath];
+                core.deleteNode(itemBase,true);
+                core.persist(root);
+                hash = core.getHash(root);
+
+                return core.loadRoot(hash);
+            })
+            .then(function (root) {
+                expect(Object.keys(core.getAllMetaNodes(root))).to.have.length(0);
+            })
+            .nodeify(done);
+    });
 });
