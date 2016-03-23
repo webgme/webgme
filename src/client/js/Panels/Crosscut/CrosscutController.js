@@ -1235,7 +1235,7 @@ define(['js/logger',
             if (validConnectionTypes.length > 0) {
                 for (i = 0; i < existingConns.length; i += 1) {
                     menuItems[followConnAction + existingConns[i]] = {
-                        name: 'GoTo existing connection [' + existingConns[i] + '] from \'' + sourceObjName +
+                        name: 'Open existing connection [' + existingConns[i] + '] from \'' + sourceObjName +
                         '\' to \'' + targetObjName + '\'',
                         icon: 'glyphicon glyphicon-share',
                         action: followConnAction,
