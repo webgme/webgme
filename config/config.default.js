@@ -21,6 +21,7 @@ var path = require('path'),
             jwt: {
                 expiresIn: 3600 * 24 * 7,
                 renewBeforeExpires: 3600,
+                cookieId: 'access_token',
                 // These are just examples and should be overwritten
                 privateKey: path.join(__dirname, '../src/server/middleware/auth/EXAMPLE_PRIVATE_KEY'),
                 publicKey: path.join(__dirname, '../src/server/middleware/auth/EXAMPLE_PUBLIC_KEY')

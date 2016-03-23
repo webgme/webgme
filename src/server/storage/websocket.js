@@ -28,7 +28,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
         if (handshakeData && handshakeData.headers.cookie) {
             // We try to dig it from the cookie.
-            token = URL.parseCookie(handshakeData.headers.cookie).access_token;
+            token = URL.parseCookie(handshakeData.headers.cookie)[gmeConfig.authentication.jwt.cookieId];
         }
 
         return token;
@@ -811,7 +811,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         data.userId = userId;
                         data.socketId = socket.id;
 
-                        if (data.webgmeToken) {
+                        if (gmeConfig.authentication.enable === true) {
                             return gmeAuth.regenerateJWToken(data.webgmeToken);
                         }
                     })
@@ -839,7 +839,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         data.userId = userId;
                         data.socketId = socket.id;
 
-                        if (data.webgmeToken) {
+                        if (gmeConfig.authentication.enable === true) {
                             return gmeAuth.regenerateJWToken(data.webgmeToken);
                         }
                     })

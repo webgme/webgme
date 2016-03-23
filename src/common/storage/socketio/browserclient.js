@@ -34,8 +34,8 @@ define(['common/util/url'], function (URL) {
 
         this.getToken = function () {
             var cookies = URL.parseCookie(document.cookie);
-            if (cookies.access_token) {
-                return cookies.access_token;
+            if (cookies[gmeConfig.authentication.jwt.cookieId]) {
+                return cookies[gmeConfig.authentication.jwt.cookieId];
             }
         };
     }

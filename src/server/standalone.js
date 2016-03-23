@@ -369,7 +369,7 @@ function StandAloneServer(gmeConfig) {
                                 };
 
                                 // TODO: Is this the correct way of doing it?
-                                res.header('access_token', newToken);
+                                res.header(gmeConfig.authentication.jwt.cookieId, newToken);
                                 next();
                             })
                             .catch(next);
@@ -395,9 +395,9 @@ function StandAloneServer(gmeConfig) {
                         next(err);
                     }
                 });
-        } else if (req.cookies.access_token) {
-            logger.debug('access_token provided in cookie');
-            token = req.cookies.access_token;
+        } else if (req.cookies[gmeConfig.authentication.jwt.cookieId]) {
+            logger.debug('jwtoken provided in cookie');
+            token = req.cookies[gmeConfig.authentication.jwt.cookieId];
             __gmeAuth.verifyJWToken(token)
                 .then(function (result) {
                     if (result.renew === true) {
@@ -409,7 +409,7 @@ function StandAloneServer(gmeConfig) {
                                     userId: result.content.userId
                                 };
                                 logger.debug('generated new token for user', result.content.userId);
-                                res.cookie('access_token', newToken);
+                                res.cookie(gmeConfig.authentication.jwt.cookieId, newToken);
                                 // Status code for new token??
                                 next();
                             })
@@ -424,7 +424,7 @@ function StandAloneServer(gmeConfig) {
                 })
                 .catch(function (err) {
                     if (err.name === 'TokenExpiredError') {
-                        res.clearCookie('access_token');
+                        res.clearCookie(gmeConfig.authentication.jwt.cookieId);
                         if (res.getHeader('X-WebGME-Media-Type')) {
                             res.status(401);
                             next(err);
@@ -438,7 +438,7 @@ function StandAloneServer(gmeConfig) {
                     }
                 });
         } else if (gmeConfig.authentication.allowGuests) {
-            logger.debug('access_token not provided in cookie - will generate a guest token.');
+            logger.debug('jwtoken not provided in cookie - will generate a guest token.');
             __gmeAuth.generateJWToken(gmeConfig.authentication.guestAccount, null)
                 .then(function (guestToken) {
                     req.userData = {
@@ -447,7 +447,7 @@ function StandAloneServer(gmeConfig) {
                         userId: gmeConfig.authentication.guestAccount
                     };
 
-                    res.cookie('access_token', guestToken);
+                    res.cookie(gmeConfig.authentication.jwt.cookieId, guestToken);
                     next();
                 })
                 .catch(next);
@@ -613,7 +613,7 @@ function StandAloneServer(gmeConfig) {
     logger.debug('creating login routing rules for the static server');
     //__app.get('/', ensureAuthenticated, Express.static(__clientBaseDir));
     __app.get('/logout', function (req, res) {
-        res.clearCookie('access_token');
+        res.clearCookie(gmeConfig.authentication.jwt.cookieId);
         res.redirect(__logoutUrl);
     });
 
@@ -641,7 +641,7 @@ function StandAloneServer(gmeConfig) {
             if (gmeConfig.authentication.enable) {
                 __gmeAuth.generateJWToken(userId, password)
                     .then(function (token) {
-                        res.cookie('access_token', token);
+                        res.cookie(gmeConfig.authentication.jwt.cookieId, token);
                         redirectUrl(req, res);
                     })
                     .catch(function (err) {

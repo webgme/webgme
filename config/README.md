@@ -57,6 +57,8 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Where clients are redirected after logout.
 - `config.authentication.salts = 10`
  - Strength of the salting of the users' passwords [bcrypt](https://github.com/dcodeIO/bcrypt.js).
+- `config.authentication.jwt.cookieId = 'access_token'`
+ - Id of token used when placed inside of a cookie.
 - `config.authentication.jwt.expiresIn = 3600 * 24 * 7`
  - Lifetime of tokens in seconds.
 - `config.authentication.jwt.renewBeforeExpires = 3600`

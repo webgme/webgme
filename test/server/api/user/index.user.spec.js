@@ -623,7 +623,7 @@ describe('REST API', function () {
                     .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
-                        expect(res.body.access_token.split('.').length).equal(3, 'Returned token not correct format');
+                        expect(res.body.webgmeToken.split('.').length).equal(3, 'Returned token not correct format');
                         done();
                     });
             });
@@ -962,9 +962,10 @@ describe('REST API', function () {
                 agent.get(server.getUrl() + '/api/v1/user/token')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
-                        expect(res.body.access_token.split('.').length).equal(3, 'Returned token not correct format');
+                        expect(res.body.webgmeToken.split('.').length)
+                            .equal(3, 'Returned token not correct format');
                         agent.get(server.getUrl() + '/api/v1/user')
-                            .set('Authorization', 'Bearer ' + res.body.access_token)
+                            .set('Authorization', 'Bearer ' + res.body.webgmeToken)
                             .end(function (err, res) {
                                 expect(res.status).equal(200, err);
                                 expect(res.body._id).equal('guest', err);
@@ -978,9 +979,9 @@ describe('REST API', function () {
                     .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
-                        expect(res.body.access_token.split('.').length).equal(3, 'Returned token not correct format');
+                        expect(res.body.webgmeToken.split('.').length).equal(3, 'Returned token not correct format');
                         agent.get(server.getUrl() + '/api/v1/user')
-                            .set('Authorization', 'Bearer ' + res.body.access_token)
+                            .set('Authorization', 'Bearer ' + res.body.webgmeToken)
                             .end(function (err, res) {
                                 expect(res.status).equal(200, err);
                                 expect(res.body._id).equal('admin', err);
@@ -1730,17 +1731,17 @@ describe('REST API', function () {
                 agent.get(server.getUrl() + '/api/v1/user/token')
                     .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
-                        var orginaltoken = res.body.access_token;
+                        var orginalToken = res.body.webgmeToken;
                         expect(res.status).equal(200, err);
-                        expect(orginaltoken.split('.').length).equal(3, 'Returned token not correct format');
+                        expect(orginalToken.split('.').length).equal(3, 'Returned token not correct format');
                         setTimeout(function () {
                             agent.get(server.getUrl() + '/api/v1/user')
-                                .set('Authorization', 'Bearer ' + orginaltoken)
+                                .set('Authorization', 'Bearer ' + orginalToken)
                                 .end(function (err, res) {
                                     expect(res.status).equal(200, err);
                                     expect(res.body._id).equal('admin', err);
                                     expect(res.header.access_token.split('.').length).equal(3, 'no token in header');
-                                    expect(res.header.access_token).to.not.equal(orginaltoken, 'no token update');
+                                    expect(res.header.access_token).to.not.equal(orginalToken, 'no token update');
                                     done();
                                 });
                         }, 1000);
@@ -1752,7 +1753,7 @@ describe('REST API', function () {
                 agent.get(server.getUrl() + '/api/v1/user/token')
                     .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
-                        var orginaltoken = res.body.access_token;
+                        var orginaltoken = res.body.webgmeToken;
                         expect(res.status).equal(200, err);
                         expect(orginaltoken.split('.').length).equal(3, 'Returned token not correct format');
                         setTimeout(function () {
