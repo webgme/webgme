@@ -198,7 +198,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Array of paths to decorators that should be available.
 - `config.visualization.decoratorToPreload = null`
  - Array of decorators (by id) that should be downloaded from the server before the editor starts - when set to null all available decorators will be downloaded.
-- `config.visualization.svgDirs = []`
+- `config.visualization.extraCss = []`
  - Array of paths (in the requirejs sense) to css files that should be loaded at start up. (To use this option a path would typically have to be added at `config.requirejsPaths`.)
 - `config.visualization.svgDirs = []`
  - Array of paths to directories containing SVG-files that will be copied and made available as SVGs for decorators (`ConstraintIcons` is currently reserved).
