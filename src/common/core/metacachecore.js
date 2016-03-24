@@ -6,10 +6,10 @@
  */
 
 define([
-    'common/util/assert',
-    'common/core/tasync',
-    'common/core/constants'
-], function (ASSERT, TASYNC, CONSTANTS) {
+        'common/util/assert',
+        'common/core/tasync',
+        'common/core/constants'
+    ], function (ASSERT, TASYNC, CONSTANTS) {
         'use strict';
 
         var MetaCacheCore = function (innerCore, options) {
@@ -41,6 +41,7 @@ define([
                     return TASYNC.lift(metaNodes);
                 }, self.loadPaths(self.getHash(root), JSON.parse(JSON.stringify(paths))));
             }
+
             //</editor-fold>
 
             //<editor-fold=Modified Methods>
@@ -50,7 +51,10 @@ define([
                         var i = 0;
                         root.metaNodes = {};
                         for (i = 0; i < elements.length; i += 1) {
-                            root.metaNodes[innerCore.getPath(elements[i])] = elements[i];
+                            // It can happen that some elements just been removed during load because of missing base.
+                            if (elements[i]) {
+                                root.metaNodes[innerCore.getPath(elements[i])] = elements[i];
+                            }
                         }
                         return root;
                     }, loadMetaSet(root));
