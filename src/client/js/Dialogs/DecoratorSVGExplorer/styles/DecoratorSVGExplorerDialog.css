@@ -3,7 +3,21 @@
  * 
  * Author: Robert Kereskenyi
  */
-.decorator-svg-dialog div.img {
+.decorator-svg-dialog .modal-header .header-icon {
+  font-size: 30px;
+  margin-right: 1ex;
+  margin-left: 0.4ex;
+  display: inline-block;
+  color: #2e6da4; }
+.decorator-svg-dialog .modal-header span {
+  font-size: 30px; }
+.decorator-svg-dialog .pre-body {
+  padding: 15px 15px 0 15px; }
+  .decorator-svg-dialog .pre-body .tabContainer ul.nav.nav-tabs {
+    margin-bottom: 0; }
+    .decorator-svg-dialog .pre-body .tabContainer ul.nav.nav-tabs li {
+      text-align: center; }
+.decorator-svg-dialog .image-container {
   margin: 3px;
   padding: 5px;
   border: 1px solid #EFEFEF;
@@ -13,13 +27,17 @@
   text-align: center;
   position: relative;
   cursor: pointer; }
-  .decorator-svg-dialog div.img img {
+  .decorator-svg-dialog .image-container.not-in-tab-group {
+    display: none; }
+  .decorator-svg-dialog .image-container.not-in-filter {
+    display: none; }
+  .decorator-svg-dialog .image-container img {
     display: inline;
     margin: 0;
     padding: 3px;
     max-width: 100%;
-    max-height: 68px; }
-  .decorator-svg-dialog div.img div.desc {
+    max-height: 48px; }
+  .decorator-svg-dialog .image-container div.desc {
     text-align: center;
     font-weight: normal;
     line-height: 20px;
@@ -31,10 +49,10 @@
     bottom: 0;
     overflow: hidden;
     text-overflow: ellipsis; }
-  .decorator-svg-dialog div.img:hover {
+  .decorator-svg-dialog .image-container:hover {
     border-color: #ababab;
     background-color: #efefef; }
-  .decorator-svg-dialog div.img.selected {
+  .decorator-svg-dialog .image-container.selected {
     border-color: #52a8ec;
     background-color: #dbeafc;
     -webkit-box-shadow: 0 0 15px 0 #1276d4 !important;

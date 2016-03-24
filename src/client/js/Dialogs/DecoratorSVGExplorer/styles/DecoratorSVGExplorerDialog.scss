@@ -12,7 +12,33 @@ $desc-line-height: 20px;
 $desc-margin: 3px;
 
 .decorator-svg-dialog {
-  div.img {
+  .modal-header {
+    .header-icon {
+      font-size: 30px;
+      margin-right: 1ex;
+      margin-left: 0.4ex;
+      display: inline-block;
+      color: #2e6da4;
+    }
+    span {
+      font-size: 30px;
+    }
+  }
+  .pre-body {
+    padding: 15px 15px 0 15px;
+
+    .tabContainer {
+      ul.nav.nav-tabs {
+        margin-bottom: 0;
+
+        li {
+          text-align: center;
+        }
+      }
+    }
+  }
+
+  .image-container {
     margin: $item-margin;
     padding: 5px;
     border: 1px solid #EFEFEF;
@@ -23,12 +49,20 @@ $desc-margin: 3px;
     position: relative;
     cursor: pointer;
 
+    &.not-in-tab-group {
+      display: none;
+    }
+
+    &.not-in-filter {
+      display: none;
+    }
+
     img {
       display: inline;
       margin: 0;
       padding: $img-margin;
       max-width: 100%;
-      max-height: $item-height - 2 * $img-margin - 2 * $desc-margin - $desc-line-height;
+      max-height: $item-height - 2 * $img-margin - 2 * $desc-margin - 2 * $desc-line-height;
     }
 
     div.desc {

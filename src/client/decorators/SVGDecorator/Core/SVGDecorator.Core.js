@@ -12,14 +12,16 @@ define([
     'js/Utils/DisplayFormat',
     'js/Decorators/DecoratorWithPorts.Base',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'text!./default.svg'
+    'text!./default.svg',
+    'common/regexp'
 ], function (CONSTANTS,
              nodePropertyNames,
              REGISTRY_KEYS,
              displayFormat,
              DecoratorBase,
              DiagramDesignerWidgetConstants,
-             DefaultSvgTemplate) {
+             DefaultSvgTemplate,
+             REGEXP) {
 
     'use strict';
 
@@ -233,6 +235,9 @@ define([
         var svgIcon;
         //set new content
         this.$svgContent.empty();
+        this.$svgContent.removeClass();
+        this.$svgContent.addClass('svg-content');
+        this.$svgContent.addClass(svg.replace(REGEXP.INVALID_CSS_CHARS, '__'));
 
         //remove existing connectors (if any)
         this.$el.find('> .' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).remove();
