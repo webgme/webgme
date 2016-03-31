@@ -57,7 +57,7 @@ main = function (argv) {
         .command('useradd <username> <email> <password>')
         .description('adds a new user')
         .option('-c, --canCreate', 'user can create a new project', false)
-        .option('-s, --siteAdmin', 'user can create a new project', false)
+        .option('-s, --siteAdmin', 'make user site admin', false)
         .action(function (username, email, password, options) {
             setupGMEAuth(options.parent.db, function (/*err*/) {
                 // TODO: we may need to use a module like 'prompt' to get user password

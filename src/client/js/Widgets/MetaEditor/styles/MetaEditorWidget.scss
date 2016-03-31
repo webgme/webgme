@@ -9,6 +9,13 @@ $filterPanel-border: 1px solid rgba(0, 0, 0, 0.2);
 $filterPanel-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 $filterPanel-header-min-width: 100px;
 
+
+.meta-editor-widget.w-tabs {
+    .diagram-designer-zoom-container {
+      top: 35px;
+    }
+}
+
 div.filterPanel {
   position: absolute;
   top: $filterPanel-top;

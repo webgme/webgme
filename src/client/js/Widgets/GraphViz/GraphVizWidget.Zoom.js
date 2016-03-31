@@ -5,7 +5,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['jquery-csszoom'], function () {
+define(['js/Widgets/ZoomWidget/ZoomWidget'], function (ZoomWidget) {
 
     'use strict';
 
@@ -15,12 +15,17 @@ define(['jquery-csszoom'], function () {
 
     };
 
-    GraphVizWidgetZoom.prototype._initZoom = function () {
-        //zoom
-        this._zoomSlider = $('<div/>', {class: 'graph-viz-zoom'});
-        this._el.parent().append(this._zoomSlider);
+    GraphVizWidgetZoom.prototype._initZoom = function (opts) {
+        opts = opts || {};
+        var zoomWidget = new ZoomWidget({
+            zoomValues: opts.zoomValues,
+            class: 'graph-viz-zoom-container',
+            sliderClass: 'graph-viz-zoom-slider',
+            zoomTarget: this._el.find('svg')
+        });
 
-        this._zoomSlider.csszoom({zoomTarget: this._el.find('svg')});
+        this._zoomSlider = zoomWidget.$zoomSlider;
+        this._el.parent().append(zoomWidget.$zoomContainer);
 
         //add zoom level UI and handlers
         this._addZoomMouseHandler(this._el);

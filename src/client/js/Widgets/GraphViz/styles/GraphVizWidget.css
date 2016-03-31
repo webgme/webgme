@@ -6,17 +6,17 @@
   .graph-viz .node {
     cursor: pointer; }
   .graph-viz .node circle {
-    fill: white;
+    fill: #FFF;
     stroke: steelblue;
     stroke-width: 1.5px; }
   .graph-viz .node text {
     font: 10px sans-serif; }
   .graph-viz .link {
     fill: none;
-    stroke: #cccccc;
+    stroke: #CCC;
     stroke-width: 1.5px; }
 
-div.css-zoom.graph-viz-zoom {
+.graph-viz-zoom-container {
   position: absolute;
-  top: 30px;
+  top: 40px;
   left: 10px; }
