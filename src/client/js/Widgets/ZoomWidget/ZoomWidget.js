@@ -66,8 +66,8 @@ define(['jquery-csszoom', 'css!./styles/ZoomWidget.css'], function () {
         zoomContainer.find('.btn-zoom')
             .popover({
                 delay: {
-                    show: 750,
-                    hide: 1200
+                    show: 500,
+                    hide: 2000
                 },
                 animation: false,
                 trigger: 'hover',
@@ -75,9 +75,26 @@ define(['jquery-csszoom', 'css!./styles/ZoomWidget.css'], function () {
                 content: '<a class="slider-toggle" href=#>slider</a>',
                 html: true
             })
-            .on('shown.bs.popover', function () {
+            .on('show.bs.popover', function () {
                 var btnEl = $(this);
-                var text = zoomSlider.hasClass('hidden') ? 'Show slider' : 'Hide slider';
+                if (btnEl.hasClass('btn-zoom-in')) {
+                    zoomOutBtn.popover('hide');
+                } else {
+                    zoomInBtn.popover('hide');
+                }
+            })
+            .on('shown.bs.popover', function () {
+                var btnEl = $(this),
+                    offset = (btnEl.width() / 2) + 1,
+                    text = zoomSlider.hasClass('hidden') ? 'Show slider' : 'Hide slider',
+                    popover = zoomContainer.find('[id=' + btnEl.attr('aria-describedby') + ']');
+
+                if (btnEl.hasClass('btn-zoom-in')) {
+                    popover.css('top', (parseFloat(popover.css('top')) + offset) + 'px');
+                } else {
+                    popover.css('top', (parseFloat(popover.css('top')) - offset) + 'px');
+                }
+
                 zoomContainer.find('a.slider-toggle').text(text);
                 zoomContainer.find('a.slider-toggle').on('click', function () {
                     btnEl.popover('hide');
