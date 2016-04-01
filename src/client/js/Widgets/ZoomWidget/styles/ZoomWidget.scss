@@ -8,6 +8,7 @@
     cursor: pointer;
     color: #3160ab;
     text-decoration: none;
+    outline: none;
     &.btn-zoom-in {
       border-bottom-right-radius: 0;
       border-bottom-left-radius: 0;
@@ -51,6 +52,15 @@
     }
     .css-zoom-label {
       display: none;
+    }
+  }
+  .popover {
+    min-width: 88px;
+    .popover-content {
+      font-size: 10px;
+    }
+    .popover-title {
+      font-size: 12px;
     }
   }
 }

@@ -19,7 +19,6 @@ define(['jquery-csszoom', 'css!./styles/ZoomWidget.css'], function () {
      * @param {function} [options.onZoom]
      * @param {number[]} [options.zoomValues=[0.1, 0.2, .., 4.0]]
      * @param {string[]} [options.showSliderAtStart]
-     * @param {string[]} [options.popOverDelay=1000]
      * @constructor
      */
     function ZoomWidget(options) {
@@ -66,13 +65,20 @@ define(['jquery-csszoom', 'css!./styles/ZoomWidget.css'], function () {
 
         zoomContainer.find('.btn-zoom')
             .popover({
-                delay: options.popOverDelay || 1000,
+                delay: {
+                    show: 750,
+                    hide: 1200
+                },
+                animation: false,
                 trigger: 'hover',
-                content: '<a class="slider-toggle" href=#>Slider</a>',
+                title: 'Zoom',
+                content: '<a class="slider-toggle" href=#>slider</a>',
                 html: true
             })
             .on('shown.bs.popover', function () {
                 var btnEl = $(this);
+                var text = zoomSlider.hasClass('hidden') ? 'Show slider' : 'Hide slider';
+                zoomContainer.find('a.slider-toggle').text(text);
                 zoomContainer.find('a.slider-toggle').on('click', function () {
                     btnEl.popover('hide');
                     if (zoomSlider.hasClass('hidden')) {

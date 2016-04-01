@@ -6,7 +6,8 @@
   text-align: center;
   cursor: pointer;
   color: #3160ab;
-  text-decoration: none; }
+  text-decoration: none;
+  outline: none; }
   .zoom-widget-container .btn-zoom.btn-zoom-in {
     border-bottom-right-radius: 0;
     border-bottom-left-radius: 0; }
@@ -43,3 +44,9 @@
     cursor: pointer; }
   .zoom-widget-container .css-zoom .css-zoom-label {
     display: none; }
+.zoom-widget-container .popover {
+  min-width: 88px; }
+  .zoom-widget-container .popover .popover-content {
+    font-size: 10px; }
+  .zoom-widget-container .popover .popover-title {
+    font-size: 12px; }
