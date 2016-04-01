@@ -66,7 +66,7 @@ define(['jquery-csszoom', 'css!./styles/ZoomWidget.css'], function () {
 
         zoomContainer.find('.btn-zoom')
             .popover({
-                delay: 1000,
+                delay: options.popOverDelay || 1000,
                 trigger: 'hover',
                 content: '<a class="slider-toggle" href=#>Slider</a>',
                 html: true
