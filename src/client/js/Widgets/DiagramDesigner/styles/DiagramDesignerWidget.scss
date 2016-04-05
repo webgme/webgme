@@ -295,14 +295,14 @@ $tabs-container-height: 26px;
   }
 }
 
-div.css-zoom.diagram-designer-zoom {
+.diagram-designer-zoom-container {
   position: absolute;
   top: 30px;
   left: 10px;
 }
 
 .w-tabs {
-  div.css-zoom.diagram-designer-zoom {
+  .diagram-designer-zoom-container {
     top: 70px;
   }
 }

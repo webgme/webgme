@@ -59,6 +59,7 @@ define([
     MetaEditorWidget.prototype._afterManagersInitialized = function () {
         //turn off item rotation
         this.enableRotate(false);
+
     };
 
     MetaEditorWidget.prototype._initializeFilterPanel = function () {
@@ -73,6 +74,7 @@ define([
         this.$filterUl = this.$filterPanel.find('ul.body');
 
         this.$el.parent().append(this.$filterPanel);
+        this.$el.parent().addClass('meta-editor-widget');
 
         this._filterCheckboxes = {};
     };

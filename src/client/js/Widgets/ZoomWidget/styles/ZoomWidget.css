@@ -1,0 +1,52 @@
+.zoom-widget-container .btn-zoom {
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin-left: -5px;
+  text-align: center;
+  cursor: pointer;
+  color: #3160ab;
+  text-decoration: none;
+  outline: none; }
+  .zoom-widget-container .btn-zoom.btn-zoom-in {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0; }
+  .zoom-widget-container .btn-zoom.btn-zoom-out {
+    border-top-right-radius: 0;
+    border-top-left-radius: 0; }
+  .zoom-widget-container .btn-zoom i {
+    font-size: 9px;
+    display: block; }
+.zoom-widget-container .zoom-widget-label {
+  display: block;
+  margin-left: -5px;
+  margin-top: 2px;
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-size: 10px;
+  color: black;
+  font-weight: normal; }
+.zoom-widget-container .css-zoom {
+  width: 3px;
+  position: relative;
+  display: block;
+  border-radius: 0; }
+  .zoom-widget-container .css-zoom.hidden {
+    display: none; }
+  .zoom-widget-container .css-zoom .ui-slider-handle {
+    display: block;
+    width: 18px;
+    height: 7px;
+    line-height: 7px;
+    left: -8px;
+    outline: none;
+    margin-top: -1px;
+    margin-bottom: -6px;
+    cursor: pointer; }
+  .zoom-widget-container .css-zoom .css-zoom-label {
+    display: none; }
+.zoom-widget-container .popover {
+  min-width: 88px; }
+  .zoom-widget-container .popover .popover-content {
+    font-size: 10px; }
+  .zoom-widget-container .popover .popover-title {
+    font-size: 12px; }

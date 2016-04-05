@@ -8,9 +8,10 @@
 define([
     'js/logger',
     'js/Widgets/GraphViz/GraphVizWidget.Zoom',
+    'js/Utils/ComponentSettings',
     'd3',
     'css!./styles/GraphVizWidget.css'
-], function (Logger, GraphVizWidgetZoom) {
+], function (Logger, GraphVizWidgetZoom, ComponentSettings) {
     'use strict';
 
     var GraphVizWidget,
@@ -27,14 +28,17 @@ define([
         TREE_LEVEL_DISTANCE = 180;
 
     GraphVizWidget = function (container /*, params*/) {
+        var config = GraphVizWidget.getDefaultConfig();
         this._logger = Logger.create('gme:Widgets:GraphViz:GraphVizWidget', WebGMEGlobal.gmeConfig.client.log);
 
+        ComponentSettings.resolveWithWebGMEGlobal(config, GraphVizWidget.getComponentId());
+        //merge dfault values with the given parameters
         this._el = container;
 
         this._initialize();
 
         //init zoom related UI and handlers
-        this._initZoom();
+        this._initZoom(config);
 
         this._logger.debug('GraphVizWidget ctor finished');
     };
@@ -396,6 +400,16 @@ define([
     };
 
     _.extend(GraphVizWidget.prototype, GraphVizWidgetZoom.prototype);
+
+    GraphVizWidget.getDefaultConfig = function () {
+        return {
+            zoomValues: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 3.5, 4.0]
+        };
+    };
+
+    GraphVizWidget.getComponentId = function () {
+        return 'GenericUIGraphVizWidget';
+    };
 
     return GraphVizWidget;
 });

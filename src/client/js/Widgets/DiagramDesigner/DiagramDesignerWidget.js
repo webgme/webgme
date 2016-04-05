@@ -35,6 +35,7 @@ define([
     './DiagramDesignerWidget.Toolbar',
     './DiagramDesignerWidget.Mouse',
     './DiagramDesignerWidget.Tabs',
+    'js/Utils/ComponentSettings',
     'css!./styles/DiagramDesignerWidget.css'
 ], function (Logger,
              CONSTANTS,
@@ -62,7 +63,8 @@ define([
              DiagramDesignerWidgetClipboard,
              DiagramDesignerWidgetToolbar,
              DiagramDesignerWidgetMouse,
-             DiagramDesignerWidgetTabs) {
+             DiagramDesignerWidgetTabs,
+             ComponentSettings) {
 
     'use strict';
 
@@ -80,19 +82,23 @@ define([
         loggerName: 'gme:Widgets:DiagramDesigner:DiagramDesignerWidget',
         gridSize: 10,
         droppable: true,
-        zoomValues: [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10],
         zoomUIControls: true,
         defaultConnectionRouteManagerType: WebGMEGlobal.gmeConfig.client.defaultConnectionRouter
     };
 
     DiagramDesignerWidget = function (container, par) {
         var self = this,
+            config = DiagramDesignerWidget.getDefaultConfig(),
             params = {};
 
         this.CONSTANTS = DiagramDesignerWidgetConstants;
 
+        ComponentSettings.resolveWithWebGMEGlobal(config, DiagramDesignerWidget.getComponentId());
         //merge dfault values with the given parameters
         _.extend(params, defaultParams, par);
+
+        params.zoomValues = params.zoomValues || config.zoomValues;
+
         this.gmeConfig = WebGMEGlobal.gmeConfig;
         //create logger instance with specified name
         this.logger = Logger.create(params.loggerName, this.gmeConfig.client.log);
@@ -1527,6 +1533,15 @@ define([
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetMouse.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetTabs.prototype);
 
+    DiagramDesignerWidget.getDefaultConfig = function () {
+        return {
+           zoomValues: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 3.5, 4.0]
+        };
+    };
+
+    DiagramDesignerWidget.getComponentId = function () {
+        return 'GenericUIDiagramDesignerWidget';
+    };
 
     return DiagramDesignerWidget;
 });
