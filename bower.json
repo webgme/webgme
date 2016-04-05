@@ -45,6 +45,7 @@
     "require-css": "0.1.8",
     "q": "1.4.1",
     "codemirror": "5.12.0",
-    "jquery.gritter": "1.7.4"
+    "jquery.gritter": "1.7.4",
+    "remarkable-bootstrap-notify": "3.1.3"
   }
 }

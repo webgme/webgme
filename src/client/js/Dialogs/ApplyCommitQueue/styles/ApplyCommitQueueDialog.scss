@@ -1,0 +1,75 @@
+/*
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+.apply-commit-queue-dialog {
+  .modal-header {
+    .header-icon {
+      font-size: 20px;
+      margin-right: 1ex;
+      display: inline-block;
+      color: black;
+    }
+    span {
+      font-size: 24px;
+    }
+  }
+  .modal-body {
+    .form-horizontal {
+      .toggle-info-btn {
+        font-size: 65%;
+        vertical-align: top;
+        cursor: pointer;
+        color: #333;
+        &:hover {
+          color: #2a6496;
+        }
+      }
+      .type-description {
+        display: inline-block;
+        width: 95%;
+        margin-bottom: 2ex;
+        margin-left: 0.5ex;
+        opacity: 0.90;
+        &.hidden {
+          display: none;
+        }
+      }
+      .selection {
+        .selector {
+          display: inline-block;
+          width: 100%;
+          padding: 0;
+          &.widget {
+            border: none;
+          }
+        }
+        .asset-widget {
+          width: 100%;
+          height: 100%;
+          padding-top: 0.3ex;
+          a.btn-dialog-open {
+            font-size: 120%;
+            padding-top: 0.6ex;
+          }
+        }
+      }
+      .file-status {
+        display: inline-block;
+        margin-bottom: 0;
+        margin-top: 8px;
+        width: 100%;
+        &.hidden {
+          display: none;
+        }
+      }
+
+    }
+  }
+  .modal-footer {
+    .branch-name {
+      display: inline-block;
+      width: 40%;
+    }
+  }
+}

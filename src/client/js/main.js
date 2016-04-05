@@ -45,6 +45,7 @@ require.config({
         //Bootstrap stuff
         bootstrap: 'bower_components/bootstrap/dist/js/bootstrap' + ( DEBUG ? '' : '.min' ),
         'bootstrap-multiselect': 'bower_components/bootstrap-multiselect/dist/js/bootstrap-multiselect',
+        'bootstrap-notify': 'bower_components/remarkable-bootstrap-notify/dist/bootstrap-notify' + ( DEBUG ? '' : '.min' ),
 
         //Other modules
         AutoRouterActionApplier: 'lib/autorouter/action-applier' + ( DEBUG ? '' : '.min' ),
@@ -100,6 +101,7 @@ require.config({
 
         bootstrap: ['jquery'],
         'bootstrap-multiselect': ['jquery', 'bootstrap'],
+        'bootstrap-notify': ['jquery', 'bootstrap'],
 
         backbone: ['underscore'],
         'js/util': ['jquery'],
