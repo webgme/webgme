@@ -49,12 +49,13 @@ var requirejs = require('requirejs'),
             'jquery-spectrum': 'client/bower_components/spectrum/spectrum',
             'jquery-csszoom': 'empty:',
             'jquery-fancytree': 'empty:',
-            'jquery-layout': 'client/bower_components/jquery.layout/jquery.layout-latest.min',
+            'jquery-layout': 'lib/jquery/jquery.layout.min',
             'jquery-contextMenu': 'client/lib/jquery/jquery.contextMenu.min',
             'jquery-gritter': 'client/bower_components/jquery.gritter/js/jquery.gritter.min',
 
             bootstrap: 'client/bower_components/bootstrap/dist/js/bootstrap.min',
             'bootstrap-multiselect': 'client/bower_components/bootstrap-multiselect/dist/js/bootstrap-multiselect',
+            'bootstrap-notify': 'bower_components/remarkable-bootstrap-notify/dist/bootstrap-notify.min',
 
             raphaeljs: 'empty:',
 
