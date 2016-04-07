@@ -79,6 +79,7 @@ define([
                 loading: {
                     rootHash: null,
                     commitHash: null,
+                    changedNodes: null,
                     next: null
                 }
 
@@ -206,7 +207,9 @@ define([
                 if (state.nodes[path]) {
                     //TODO we try to avoid this
                 } else {
-                    state.nodes[path] = {node: node, hash: ''/*,incomplete:true,basic:basic*/};
+                    state.nodes[path] = {
+                        node: node
+                    };
                     //TODO this only needed when real eventing will be reintroduced
                     //_inheritanceHash[path] = getInheritanceChain(node);
                 }
@@ -618,7 +621,7 @@ define([
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
                         self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
-                        loading(commitObj.root, commitHash, function (err, aborted) {
+                        loading(commitObj.root, commitHash, null, function (err, aborted) {
                             if (err) {
                                 logger.error('loading returned error', commitObj.root, err);
                                 logState('error', 'selectCommit loading');
@@ -685,7 +688,7 @@ define([
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                 logger.debug('loading commitHash, local?', commitHash, data.local);
-                loading(commitData.commitObject.root, commitHash, function (err, aborted) {
+                loading(commitData.commitObject.root, commitHash, commitData.changedNodes, function (err, aborted) {
                     if (err) {
                         logger.error('hashUpdateHandler invoked loading and it returned error',
                             commitData.commitObject.root, err);
@@ -1138,17 +1141,86 @@ define([
 
         function getModifiedNodes(newerNodes) {
             var modifiedNodes = [],
+                updatedMetaPaths = [],
+                metaNodes,
+                metaPath,
+                updatePath,
+                nodePath,
+                loadUnloadPath,
+                pathPieces,
                 i;
 
-            for (i in state.nodes) {
-                if (state.nodes.hasOwnProperty(i)) {
-                    if (newerNodes[i]) {
-                        if (newerNodes[i].hash !== state.nodes[i].hash && state.nodes[i].hash !== '') {
-                            modifiedNodes.push(i);
+            // For the client these rules apply for finding the affected nodes.
+            // 1. Updates should be triggered to any node that core.isTypeOf (i.e. mixins accounted for).
+            // 2. Root node should always be triggered.
+            // 3. loads/unloads should trigger updates for the parent chain.
+
+            if (state.loading.changedNodes) {
+                // 1. Account for mixins - i.e resolve isTypeOf.
+                // Gather all meta-nodes that had an update.
+                metaNodes = state.core.getAllMetaNodes(newerNodes[ROOT_PATH].node);
+                for (updatePath in state.loading.changedNodes.update) {
+                    if (metaNodes.hasOwnProperty(updatePath)) {
+                        updatedMetaPaths.push(updatePath);
+                    }
+                }
+
+                if (updatedMetaPaths.length > 0) {
+                    // There are meta-nodes with updates.
+                    for (metaPath in metaNodes) {
+                        // For all meta nodes..
+                        if (metaNodes.hasOwnProperty(metaPath)) {
+                            for (i = 0; i < updatedMetaPaths.length; i += 1) {
+                                // check if it is a typeOf (includes mixins) any of the updated meta-nodes
+                                if (state.core.isTypeOf(metaNodes[metaPath],
+                                        metaNodes[updatedMetaPaths[i]]) === true) {
+                                    // if so add its path to the update nodes.
+                                    state.loading.changedNodes.update[metaPath] = true;
+                                }
+                            }
                         }
                     }
                 }
+                //console.log('Update after meta considered', Object.keys(state.loading.changedNodes.update));
+
+                // 2. Add Root node
+                state.loading.changedNodes.update[ROOT_PATH] = true;
+
+                // 3. Account for loads and unloads.
+                for (loadUnloadPath in state.loading.changedNodes.load) {
+                    if (state.loading.changedNodes.load.hasOwnProperty(loadUnloadPath)) {
+                        pathPieces = loadUnloadPath.split(CONSTANTS.CORE.PATH_SEP);
+                        while (pathPieces.length > 2) {
+                            pathPieces.pop();
+                            state.loading.changedNodes
+                                .update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
+                        }
+                    }
+                }
+
+                for (loadUnloadPath in state.loading.changedNodes.unload) {
+                    if (state.loading.changedNodes.unload.hasOwnProperty(loadUnloadPath)) {
+                        pathPieces = loadUnloadPath.split(CONSTANTS.CORE.PATH_SEP);
+                        while (pathPieces.length > 2) {
+                            pathPieces.pop();
+                            state.loading.changedNodes
+                                .update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
+                        }
+                    }
+                }
+
+                //console.log('Update after loads and unloads considered',
+                //    Object.keys(state.loading.changedNodes.update));
             }
+
+            for (nodePath in state.nodes) {
+                if (state.nodes.hasOwnProperty(nodePath) && newerNodes.hasOwnProperty(nodePath) &&
+                    wasNodeUpdated(state.loading.changedNodes, newerNodes[nodePath].node)) {
+
+                    modifiedNodes.push(nodePath);
+                }
+            }
+            //console.log('NewerNodes, modifiedNodes', Object.keys(newerNodes).length, modifiedNodes.length);
             return modifiedNodes;
         }
 
@@ -1271,7 +1343,9 @@ define([
                 };
 
             if (!nodesSoFar[path]) {
-                nodesSoFar[path] = {node: node, incomplete: true, basic: true, hash: getStringHash(node)};
+                nodesSoFar[path] = {
+                    node: node
+                };
             }
             if (level > 0) {
                 if (missing > 0) {
@@ -1326,10 +1400,7 @@ define([
                         path = core.getPath(node);
                         if (!nodesSoFar[path]) {
                             nodesSoFar[path] = {
-                                node: node,
-                                incomplete: false,
-                                basic: true,
-                                hash: getStringHash(node)
+                                node: node
                             };
                         }
                         base = node;
@@ -1339,30 +1410,6 @@ define([
                     }
                 });
             }
-        }
-
-        // FIXME: Move this to common/util
-        function orderStringArrayByElementLength(strArray) {
-            var ordered = [],
-                i, j, index;
-
-            for (i = 0; i < strArray.length; i++) {
-                index = -1;
-                j = 0;
-                while (index === -1 && j < ordered.length) {
-                    if (ordered[j].length > strArray[i].length) {
-                        index = j;
-                    }
-                    j++;
-                }
-
-                if (index === -1) {
-                    ordered.push(strArray[i]);
-                } else {
-                    ordered.splice(index, 0, strArray[i]);
-                }
-            }
-            return ordered;
         }
 
         this.startTransaction = function (msg) {
@@ -1534,12 +1581,16 @@ define([
             var modifiedPaths,
                 i;
 
+            //console.time('switchStates');
+
             logger.debug('switching project state [C#' +
                 state.commitHash + ']->[C#' + state.loading.commitHash + '] : [R#' +
                 state.rootHash + ']->[R#' + state.loading.rootHash + ']');
             refreshMetaNodes(state.nodes, state.loadNodes);
 
+            //console.time('getModifiedNodes');
             modifiedPaths = getModifiedNodes(state.loadNodes);
+            //console.timeEnd('getModifiedNodes');
             state.nodes = state.loadNodes;
             state.loadNodes = {};
 
@@ -1563,9 +1614,11 @@ define([
             } else {
                 state.loading.next(null);
             }
+
+            //console.timeEnd('switchStates');
         }
 
-        function loading(newRootHash, newCommitHash, callback) {
+        function loading(newRootHash, newCommitHash, changedNodes, callback) {
             var i, j,
                 userIds,
                 patternPaths,
@@ -1582,6 +1635,7 @@ define([
             state.loading.rootHash = newRootHash;
             state.loading.commitHash = newCommitHash;
             state.loading.next = callback;
+            state.loading.changedNodes = changedNodes;
 
             state.core.loadRoot(state.loading.rootHash, function (err, root) {
                 if (err) {
@@ -1591,14 +1645,11 @@ define([
 
                 state.inLoading = true;
                 state.loadNodes[state.core.getPath(root)] = {
-                    node: root,
-                    incomplete: true,
-                    basic: true,
-                    hash: getStringHash(root)
+                    node: root
                 };
 
                 //we first only set the counter of patterns but we also generate a completely separate pattern queue
-                //as we cannot be sure if all the users will remain at the point of giving the actual load command!!!
+                //as we cannot be sure if all the users will remain at the point of giving the actual load command!
                 userIds = Object.keys(state.users);
                 for (i = 0; i < userIds.length; i += 1) {
                     state.ongoingLoadPatternsCounter += Object.keys(state.users[userIds[i]].PATTERNS || {}).length;
@@ -1637,6 +1688,29 @@ define([
                         patternsToLoad[i].id, patternsToLoad[i].pattern, state.loadNodes, loadingPatternFinished);
                 }
             });
+        }
+
+        function wasNodeUpdated(changedNodes, node) {
+            // Is changedNodes available at all, if not emitt for all nodes.
+            if (!changedNodes) {
+                return true;
+            }
+
+            // Did the node have a collection update?
+            if (changedNodes.partialUpdate[state.core.getPath(node)] === true) {
+                return true;
+            }
+
+            // Did any of the base classes have a non-collection update?
+            while (node) {
+                if (changedNodes.update[state.core.getPath(node)] === true) {
+                    return true;
+                }
+
+                node = state.core.getBase(node);
+            }
+
+            return false;
         }
 
         function cleanUsersTerritories() {

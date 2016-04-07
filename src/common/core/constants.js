@@ -15,6 +15,7 @@ define([], function () {
         SET_MODIFIED_REGISTRY: '_sets_',
         MEMBER_RELATION: 'member',
         BASE_POINTER: 'base',
+        PATH_SEP: '/',
 
         NULLPTR_NAME: '_null_pointer',
         NULLPTR_RELID: '_nullptr',

@@ -52,6 +52,10 @@ define(['common/storage/constants', 'common/util/jsonPatcher'], function (CONSTA
 
             return patchObject;
         },
+        coreObjectHasOldAndNewData: function (coreObj) {
+            return !!(coreObj.oldHash && coreObj.newHash && coreObj.oldData && coreObj.newData);
+        },
+        getChangedNodes: jsonPatcher.getChangedNodes,
         applyPatch: jsonPatcher.apply
     };
 });
