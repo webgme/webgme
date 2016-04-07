@@ -17,10 +17,11 @@ define([
     'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
     'js/Dialogs/ProjectRights/ProjectRightsDialog',
     'js/Dialogs/ExportErrors/ExportErrorsDialog',
+    'js/Dialogs/ApplyCommitQueue/ApplyCommitQueueDialog',
     'common/storage/util',
     'js/Utils/SaveToDisk',
     'q',
-    'js/Utils/ComponentSettings',
+    'js/Utils/ComponentSettings'
 ], function (Logger,
              CONSTANTS,
              ng,
@@ -32,6 +33,7 @@ define([
              ConfirmDeleteDialog,
              ProjectRightsDialog,
              ExportErrorsDialog,
+             ApplyCommitQueueDialog,
              StorageUtil,
              saveToDisk,
              Q,
@@ -529,6 +531,7 @@ define([
             label: projectDisplayedName,
             iconClass: rights.write ? '' : 'glyphicon glyphicon-lock',
             iconPullRight: !rights.write,
+            projectIsReadOnly: !rights.write,
             disabled: !rights.read,
             itemClass: self.config.projectMenuClass,
             modifiedAt: info.modifiedAt,
@@ -654,6 +657,7 @@ define([
 
             deleteBranchItem,
             mergeBranchItem,
+            applyCommitQueueItem,
             undoLastCommitItem,
             redoLastUndoItem;
 
@@ -720,26 +724,32 @@ define([
             };
 
             mergeBranch = function (data) {
-                self.gmeClient.autoMerge(data.projectId,
-                    data.branchId, self.$scope.navigator.items[self.navIdBranch].id,
-                    function (err, result) {
-                        var mergeDialog = new MergeDialog(self.gmeClient);
-                        if (err) {
-                            self.logger.error('merge of branch failed', err);
-                            mergeDialog.show(err);
-                            return;
-                        }
+                if (data.projectId !== self.gmeClient.getActiveProjectId()) {
+                    // TODO: Should we use some notification here?
+                    // TODO: e.g. notification-footer or maybe the $.notify..
+                    self.logger.error(new Error('Cannot merge branch from a different project..'));
+                } else {
+                    self.gmeClient.autoMerge(data.projectId,
+                        data.branchId, self.$scope.navigator.items[self.navIdBranch].id,
+                        function (err, result) {
+                            var mergeDialog = new MergeDialog(self.gmeClient);
+                            if (err) {
+                                self.logger.error('merge of branch failed', err);
+                                mergeDialog.show(err);
+                                return;
+                            }
 
-                        if (result && result.conflict && result.conflict.items.length > 0) {
-                            //TODO create some user-friendly way to show this type of result
-                            self.logger.error('merge ended in conflicts', result);
-                            mergeDialog.show('merge ended in conflicts', result);
-                        } else {
-                            self.logger.debug('successful merge');
-                            mergeDialog.show(null, result);
+                            if (result && result.conflict && result.conflict.items.length > 0) {
+                                //TODO create some user-friendly way to show this type of result
+                                self.logger.error('merge ended in conflicts', result);
+                                mergeDialog.show('merge ended in conflicts', result);
+                            } else {
+                                self.logger.debug('successful merge');
+                                mergeDialog.show(null, result);
+                            }
                         }
-                    }
-                );
+                    );
+                }
             };
 
             createCommitMessage = function (data) {
@@ -788,7 +798,7 @@ define([
             id: 'deleteBranch',
             label: 'Delete branch',
             iconClass: 'glyphicon glyphicon-remove',
-            disabled: false,
+            disabled: self.projects[projectId].projectIsReadOnly,
             action: deleteBranch,
             actionData: {
                 projectId: projectId,
@@ -801,11 +811,41 @@ define([
             id: 'mergeBranch',
             label: 'Merge into current branch',
             iconClass: 'fa fa-share-alt fa-rotate-90',
-            disabled: false,
+            disabled: self.projects[projectId].projectIsReadOnly,
             action: mergeBranch,
             actionData: {
                 projectId: projectId,
                 branchId: branchId
+            }
+        };
+
+        applyCommitQueueItem = {
+            id: 'applyCommitQueue',
+            label: 'Apply commit queue ...',
+            iconClass: 'glyphicon glyphicon-fast-forward',
+            disabled: true,
+            action: function (data) {
+                self.gmeClient.getBranches(data.projectId, function (err, branches) {
+                    if (err) {
+                        self.logger.error(new Error('Failed getting branches before applying commitQueue'));
+                        return;
+                    }
+
+                    var dialog = new ApplyCommitQueueDialog(self.gmeClient, WebGMEGlobal.gmeConfig, branches);
+                    dialog.show(data, function (commitQueue, opts) {
+                        self.gmeClient.applyCommitQueue(commitQueue, opts, function (err, result) {
+                            if (err) {
+                                self.logger.error(err);
+                            }
+
+                            self.logger.debug('applyCommitQueue results', result);
+                        });
+                    });
+                });
+            },
+            actionData: {
+                projectId: projectId,
+                branchName: branchId
             }
         };
 
@@ -888,6 +928,7 @@ define([
                         },
                         deleteBranchItem,
                         mergeBranchItem,
+                        applyCommitQueueItem,
                         {
                             id: 'exportBranch',
                             label: 'Export branch',
@@ -909,6 +950,7 @@ define([
         self.projects[projectId].branches[branchId].mergeBranchItem = mergeBranchItem;
         self.projects[projectId].branches[branchId].undoLastCommitItem = undoLastCommitItem;
         self.projects[projectId].branches[branchId].redoLastUndoItem = redoLastUndoItem;
+        self.projects[projectId].branches[branchId].applyCommitQueueItem = applyCommitQueueItem;
 
         for (i = 0; i < self.projects[projectId].menu.length; i += 1) {
 
@@ -1009,6 +1051,15 @@ define([
             currentBranch.isSelected = false;
             currentBranch.deleteBranchItem.disabled = false;
             currentBranch.mergeBranchItem.disabled = false;
+
+            currentBranch.undoLastCommitItem.disabled = true;
+            currentBranch.redoLastUndoItem.disabled = true;
+            currentBranch.applyCommitQueueItem.disabled = true;
+
+            if (currentProject && currentProject.projectIsReadOnly) {
+                currentBranch.deleteBranchItem.disabled = true;
+                currentBranch.mergeBranchItem.disabled = true;
+            }
         }
 
         if (projectId || projectId === '') {
@@ -1090,6 +1141,11 @@ define([
 
                 self.projects[projectId].branches[branchId].deleteBranchItem.disabled = true;
                 self.projects[projectId].branches[branchId].mergeBranchItem.disabled = true;
+
+                if (self.projects[projectId].projectIsReadOnly === false) {
+                    self.projects[projectId].branches[branchId].applyCommitQueueItem.disabled = false;
+                }
+
 
                 if (self.gmeClient) {
                     if (branchId !== self.gmeClient.getActiveBranchName()) {

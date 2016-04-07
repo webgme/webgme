@@ -290,7 +290,7 @@ define([
 
         // Main API functions (with helpers) for connecting, selecting project and branches etc.
         this.connectToDatabase = function (callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 logger.warn('connectToDatabase - already connected');
                 callback(null);
                 return;
@@ -404,7 +404,7 @@ define([
                 callback = branchName;
                 branchName = undefined;
             }
-            if (isConnected() === false) {
+            if (self.isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
             }
             var prevProjectId,
@@ -509,6 +509,7 @@ define([
         };
 
         function closeProject(projectId, callback) {
+
             state.project = null;
             //TODO what if for some reason we are in transaction?
             storage.closeProject(projectId, function (err) {
@@ -546,7 +547,7 @@ define([
         this.selectBranch = function (branchName, branchStatusHandler, callback) {
             var prevBranchName = state.branchName;
             logger.debug('selectBranch', branchName);
-            if (isConnected() === false) {
+            if (self.isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
                 return;
             }
@@ -598,7 +599,7 @@ define([
 
         this.selectCommit = function (commitHash, callback) {
             logger.debug('selectCommit', commitHash);
-            if (isConnected() === false) {
+            if (self.isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
                 return;
             }
@@ -735,8 +736,18 @@ define([
         };
 
         // State getters.
+        this.isConnected = function () {
+            return state.connection === CONSTANTS.STORAGE.CONNECTED ||
+                state.connection === CONSTANTS.STORAGE.RECONNECTED;
+        };
+
         this.getNetworkStatus = function () {
             return state.connection;
+        };
+
+        this.getConnectedStorageVersion = function () {
+            // This is the version of the server the storage is currently connected to.
+            return storage.serverVersion;
         };
 
         this.getBranchStatus = function () {
@@ -774,6 +785,25 @@ define([
 
         this.getProjectObject = function () {
             return state.project;
+        };
+
+        this.getCommitQueue = function () {
+            if (state.project && state.branchName && state.project.branches.hasOwnProperty(state.branchName)) {
+                return state.project.branches[state.branchName].getCommitQueue();
+            }
+
+            return [];
+        };
+
+        this.downloadCommitQueue = function () {
+            var commitQueue = this.getCommitQueue();
+
+            if (commitQueue.length > 0) {
+                stateLogHelpers.downloadCommitQueue(self, commitQueue);
+                return true;
+            }
+
+            return false;
         };
 
         this.getProjectAccess = function () {
@@ -890,12 +920,58 @@ define([
             );
         };
 
+        /**
+         * Persists all commits in commitQueue and optionally tries to fast-forward the current branch.
+         * If not fast-forwarding or it fails to do that - a new branch will be created.
+         *
+         * @param {commitQueue} commitQueue -
+         * @param {object} [options] - optional parameters
+         * @param {object} [options.fastForward] - If truthy will attempt to setBranchHash from current branch to last in queue.
+         * @param {object} [options.newBranchName=%currentBranch_time-now%] - Name of new branch if needed.
+         */
+        this.applyCommitQueue = function (commitQueue, options, callback) {
+            var branchName = self.getActiveBranchName(),
+                projectId = commitQueue[0].projectId,
+                firstCommitsParents = commitQueue[0].commitObject.parents,
+                lastCommitHash = commitQueue[commitQueue.length - 1].commitObject._id;
+
+            options = options || {};
+            options.newBranchName = options.newBranchName || self.getActiveBranchName() + '_' + Date.now();
+
+            function createNewBranch() {
+                storage.createBranch(projectId, options.newBranchName, lastCommitHash, callback);
+            }
+
+            storage.persistCommits(commitQueue, function (err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                if (options.fastForward && firstCommitsParents.indexOf(self.getActiveCommitHash()) > -1) {
+                    storage.setBranchHash(projectId, branchName, lastCommitHash, self.getActiveCommitHash(),
+                        function (err, result) {
+                            if (err) {
+                                callback(err);
+                            } else if (result.status !== CONSTANTS.STORAGE.SYNCED) {
+                                createNewBranch();
+                            } else {
+                                callback();
+                            }
+                        }
+                    );
+                } else {
+                    createNewBranch();
+                }
+            });
+        };
+
         // REST-like functions and forwarded to storage TODO: add these to separate base class
 
         //  Getters
         this.getProjects = function (options, callback) {
             var asObject;
-            if (isConnected()) {
+            if (self.isConnected()) {
                 if (options.asObject) {
                     asObject = true;
                     delete options.asObject;
@@ -927,7 +1003,7 @@ define([
         };
 
         this.getBranches = function (projectId, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.getBranches(projectId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -935,7 +1011,7 @@ define([
         };
 
         this.getTags = function (projectId, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.getTags(projectId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -943,7 +1019,7 @@ define([
         };
 
         this.getCommits = function (projectId, before, number, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.getCommits(projectId, before, number, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -951,7 +1027,7 @@ define([
         };
 
         this.getHistory = function (projectId, start, number, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.getHistory(projectId, start, number, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -959,7 +1035,7 @@ define([
         };
 
         this.getLatestCommitData = function (projectId, branchName, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.getLatestCommitData(projectId, branchName, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -968,7 +1044,7 @@ define([
 
         //  Setters
         this.createProject = function (projectName, parameters, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.createProject(projectName, parameters, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -976,7 +1052,7 @@ define([
         };
 
         this.deleteProject = function (projectId, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.deleteProject(projectId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -984,7 +1060,7 @@ define([
         };
 
         this.transferProject = function (projectId, newOwnerId, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.transferProject(projectId, newOwnerId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -992,7 +1068,7 @@ define([
         };
 
         this.duplicateProject = function (projectId, projectName, newOwnerId, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.duplicateProject(projectId, projectName, newOwnerId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -1000,7 +1076,7 @@ define([
         };
 
         this.createBranch = function (projectId, branchName, newHash, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.createBranch(projectId, branchName, newHash, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -1008,7 +1084,7 @@ define([
         };
 
         this.deleteBranch = function (projectId, branchName, oldHash, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.deleteBranch(projectId, branchName, oldHash, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -1016,7 +1092,7 @@ define([
         };
 
         this.createTag = function (projectId, tagName, commitHash, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.createTag(projectId, tagName, commitHash, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -1024,7 +1100,7 @@ define([
         };
 
         this.deleteTag = function (projectId, tagName, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.deleteTag(projectId, tagName, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -1097,11 +1173,6 @@ define([
         };
 
         // Internal functions
-        function isConnected() {
-            return state.connection === CONSTANTS.STORAGE.CONNECTED ||
-                state.connection === CONSTANTS.STORAGE.RECONNECTED;
-        }
-
         var ROOT_PATH = ''; //FIXME: This should come from constants..
 
         function COPY(object) {

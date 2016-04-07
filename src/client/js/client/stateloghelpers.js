@@ -142,8 +142,26 @@ define([
         saveToDisk.saveUrlToDisk(fileUrl, 'webgme-client-dump.json');
     }
 
+    function downloadCommitQueue(client, commitQueue) {
+        var blob,
+            fileUrl,
+            backupData = {
+                webgmeVersion: client.getConnectedStorageVersion(),
+                projectId: client.getActiveProjectId(),
+                branchName: client.getActiveBranchName(),
+                branchStatus: client.getBranchStatus(),
+                commitQueue: commitQueue
+            };
+
+        blob = new Blob([JSON.stringify(backupData, null, 2)], {type: 'application/json'});
+        fileUrl = window.URL.createObjectURL(blob);
+
+        saveToDisk.saveUrlToDisk(fileUrl, 'commit-queue-dump.json');
+    }
+
     return {
         downloadStateDump: downloadStateDump,
-        getStateLogString: getStateLogString
+        getStateLogString: getStateLogString,
+        downloadCommitQueue: downloadCommitQueue
     };
 });

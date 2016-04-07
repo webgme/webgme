@@ -3,6 +3,7 @@
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define([
@@ -20,13 +21,15 @@ define([
         ITEM_VALUE_FOLLOW = 'follow',
         ITEM_VALUE_MERGE = 'merge',
         ITEM_VALUE_SELECT_BRANCH = 'select',
-        ITEM_VALUE_DOWNLOAD_ERROR = 'downloadError';
+        ITEM_VALUE_DOWNLOAD_ERROR = 'downloadError',
+        ITEM_VALUE_DOWNLOAD_COMMIT_QUEUE = 'downloadCommitQueue';
 
     BranchStatusWidget = function (containerEl, client) {
         this._logger = Logger.create('gme:Widgets:BranchStatusWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
         this._el = containerEl;
+        this._eventData = null;
 
         this._initializeUI();
 
@@ -140,6 +143,8 @@ define([
                 });
             } else if (value === ITEM_VALUE_DOWNLOAD_ERROR) {
                 self._client.downloadError();
+            } else if (value === ITEM_VALUE_DOWNLOAD_COMMIT_QUEUE) {
+                self._client.downloadCommitQueue();
             }
         };
 
@@ -149,10 +154,23 @@ define([
         );
 
         this._refreshBranchStatus({status: this._client.getBranchStatus()});
+
+        window.addEventListener('beforeunload', function (event) {
+            var commitQueue = self._client.getCommitQueue(),
+                message;
+
+            if (commitQueue.length > 0) {
+                message = 'There are ' + commitQueue.length + ' commit(s) in your commitQueue. You will loose this ' +
+                    'data unless you take an action in the branch status (footer) widget.';
+                event.returnValue = message;        // Gecko, Trident, Chrome 34+
+                return message;                     // Gecko, WebKit, Chrome <34
+            }
+        });
     };
 
     BranchStatusWidget.prototype._refreshBranchStatus = function (eventData) {
         var status = eventData.status;
+        this._eventData = eventData;
 
         switch (status) {
             case CONSTANTS.CLIENT.BRANCH_STATUS.SYNC:
@@ -190,18 +208,26 @@ define([
     BranchStatusWidget.prototype._branchAheadNotSync = function (eventData) {
         this._ddBranchStatus.clear();
         this._outOfSync = true;
+        if (this._client.isConnected()) {
+            this._ddBranchStatus.addItem({
+                text: 'Create a branch with local changes.',
+                value: ITEM_VALUE_FORK
+            });
+            this._ddBranchStatus.addItem({
+                text: 'Drop local changes and follow branch.',
+                value: ITEM_VALUE_FOLLOW
+            });
+            this._ddBranchStatus.addItem({
+                text: 'Attempt to merge in local changes.',
+                value: ITEM_VALUE_MERGE
+            });
+        }
+
         this._ddBranchStatus.addItem({
-            text: 'Create a branch with local changes.',
-            value: ITEM_VALUE_FORK
+            text: 'Download local changes.',
+            value: ITEM_VALUE_DOWNLOAD_COMMIT_QUEUE
         });
-        this._ddBranchStatus.addItem({
-            text: 'Drop local changes and follow branch.',
-            value: ITEM_VALUE_FOLLOW
-        });
-        this._ddBranchStatus.addItem({
-            text: 'Attempt to merge in local changes.',
-            value: ITEM_VALUE_MERGE
-        });
+
         this._ddBranchStatus.setTitle('AHEAD[' + eventData.commitQueue.length + ']');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
         this._popoverBox = this._popoverBox || new PopoverBox(this._ddBranchStatus.getEl());
@@ -211,6 +237,10 @@ define([
 
     BranchStatusWidget.prototype._branchAhead = function (eventData) {
         this._ddBranchStatus.clear();
+        this._ddBranchStatus.addItem({
+            text: 'Download local changes.',
+            value: ITEM_VALUE_DOWNLOAD_COMMIT_QUEUE
+        });
         this._ddBranchStatus.setTitle('AHEAD[' + eventData.commitQueue.length + ']');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.LIGHT_BLUE);
     };
