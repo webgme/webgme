@@ -838,7 +838,7 @@ define([
                                 self.logger.error(err);
                             }
 
-                            console.log(result);
+                            self.logger.debug('applyCommitQueue results', result);
                         });
                     });
                 });

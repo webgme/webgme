@@ -11,8 +11,7 @@ define([
     'js/Controls/DropDownMenu',
     'js/Controls/PopoverBox',
     'js/Dialogs/Merge/MergeDialog',
-    'js/Constants',
-    'bootstrap-notify'
+    'js/Constants'
 ], function (Logger, DropDownMenu, PopoverBox, MergeDialog, CONSTANTS) {
 
     'use strict';
