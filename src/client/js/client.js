@@ -657,26 +657,9 @@ define([
 
         function getBranchStatusHandler() {
             return function (branchStatus, commitQueue, updateQueue) {
-                var backupData;
-
                 logger.debug('branchStatus changed', branchStatus, commitQueue, updateQueue);
                 logState('debug', 'branchStatus');
                 state.branchStatus = branchStatus;
-
-                if (typeof Storage !== 'undefined' && branchStatus &&
-                    ((storage.connected === false && branchStatus === CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) ||
-                    branchStatus === CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC)) {
-
-                    backupData = {
-                        projectId: state.project && state.project.projectId,
-                        branchName: state.branchName,
-                        commitQueue: commitQueue,
-                        type: null
-                    };
-
-                    window.localStorage.setItem('GMEStorage', JSON.stringify(backupData, null, 2));
-                }
-
                 self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {
                         status: branchStatus,
                         commitQueue: commitQueue,
@@ -973,7 +956,7 @@ define([
                             } else if (result.status !== CONSTANTS.STORAGE.SYNCED) {
                                 createNewBranch();
                             } else {
-                                callback(null);
+                                callback();
                             }
                         }
                     );
