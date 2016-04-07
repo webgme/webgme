@@ -5,11 +5,11 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
-    'js/logger',
-    'js/Utils/ComponentSettings',
-    'text!./templates/DefaultLayout.html',
-    'text!./DefaultLayoutConfig.json'
+define(['jquery-layout',
+        'js/logger',
+        'js/Utils/ComponentSettings',
+        'text!./templates/DefaultLayout.html',
+        'text!./DefaultLayoutConfig.json'
 ], function (_jQueryLayout,
              Logger,
              ComponentSettings,

@@ -1,10 +1,10 @@
 /*globals require*/
 /*jshint browser:true, camelcase:false*/
 /**
- * N.B. This and mainDEBUG.js should only differ w.r.t. using minified versions or not and
+ * Debug version of main.js - it does not use the webgme.dist nor minified versions.
+ * N.B. This and main.js should only differ w.r.t. using minified versions or not and
  * if text mapped and what files are required at start.
- * @author rkereskenyi / https://github.com/rkereskenyi
- * @author nabana / https://github.com/nabana
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 
@@ -22,37 +22,37 @@ require.config({
     //TODO paths should be fixed as the rules collide with each other
     map: {
         '*': {
-            css: 'bower_components/require-css/css.min'
-            //text: 'lib/require/require-text/text',
+            css: 'bower_components/require-css/css',
+            text: 'lib/require/require-text/text',
         }
     },
 
 
     paths: {
         //jQuery and stuff
-        jquery: 'bower_components/jquery/dist/jquery.min',
-        'jquery-ui': 'bower_components/jquery-ui/jquery-ui.min',
+        jquery: 'bower_components/jquery/dist/jquery',
+        'jquery-ui': 'bower_components/jquery-ui/jquery-ui',
         'jquery-ui-iPad': 'lib/jquery/jquery.ui.ipad',
-        'jquery-dataTables': 'lib/jquery/jquery.dataTables.min',
+        'jquery-dataTables': 'lib/jquery/jquery.dataTables',
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
         'jquery-spectrum': 'bower_components/spectrum/spectrum',
-        'jquery-gritter': 'bower_components/jquery.gritter/js/jquery.gritter.min',
-        'jquery-fancytree': 'bower_components/jquery.fancytree/dist/jquery.fancytree-all.min',
-        'jquery-layout': 'lib/jquery/jquery.layout.min',
+        'jquery-gritter': 'bower_components/jquery.gritter/js/jquery.gritter',
+        'jquery-fancytree': 'bower_components/jquery.fancytree/dist/jquery.fancytree-all',
+        'jquery-layout': 'lib/jquery/jquery.layout',
 
-        'jquery-contextMenu': 'lib/jquery/jquery.contextMenu.min',
+        'jquery-contextMenu': 'lib/jquery/jquery.contextMenu',
         'jquery-csszoom': 'lib/jquery/jquery.csszoom',
 
         //Bootstrap stuff
-        bootstrap: 'bower_components/bootstrap/dist/js/bootstrap.min',
+        bootstrap: 'bower_components/bootstrap/dist/js/bootstrap',
         'bootstrap-multiselect': 'bower_components/bootstrap-multiselect/dist/js/bootstrap-multiselect',
-        'bootstrap-notify': 'bower_components/remarkable-bootstrap-notify/dist/bootstrap-notify.min',
+        'bootstrap-notify': 'bower_components/remarkable-bootstrap-notify/dist/bootstrap-notify',
 
         //Other modules
-        AutoRouterActionApplier: 'lib/autorouter/action-applier.min',
-        underscore: 'bower_components/underscore/underscore-min',
+        AutoRouterActionApplier: 'lib/autorouter/action-applier',
+        underscore: 'bower_components/underscore/underscore',
         backbone: 'bower_components/backbone/backbone',
-        d3: 'bower_components/d3/d3.min',
+        d3: 'bower_components/d3/d3',
 
         //RaphaelJS family
         eve: 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
@@ -70,20 +70,20 @@ require.config({
         panel: '/panel',
 
         //node_modules
-        jszip: 'bower_components/jszip/dist/jszip' + ( DEBUG ? '' : '.min' ),
+        jszip: 'bower_components/jszip/dist/jszip',
         superagent: 'lib/superagent/superagent',
         debug: 'bower_components/visionmedia-debug/dist/debug',
         q: 'bower_components/q/q',
 
         //codemirror: 'bower_components/codemirror/',
 
-        moment: 'bower_components/moment/min/moment.min',
+        moment: 'bower_components/moment/moment',
 
         urlparse: 'lib/purl/purl.min',
 
         // Angular and modules
-        angular: 'bower_components/angular/angular' + ( DEBUG ? '' : '.min' ),
-        'angular-ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls.min',
+        angular: 'bower_components/angular/angular',
+        'angular-ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls',
         'isis-ui-components': 'bower_components/isis-ui-components/dist/isis-ui-components',
         'isis-ui-components-templates': 'bower_components/isis-ui-components/dist/isis-ui-components-templates',
     },
@@ -120,12 +120,12 @@ require.config({
 });
 
 require([
-    'css!/dist/webgme.dist.main.css',
+    'css!/css/main.css',
 ], function () {
     'use strict';
 
     require([
-        '/dist/webgme.dist.build.js'
+        '/js/start.js'
     ], function () {
 
     });
