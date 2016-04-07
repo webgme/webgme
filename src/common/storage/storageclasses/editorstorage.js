@@ -383,7 +383,7 @@ define([
             //handling patch object creation
             //console.time('patch-computation');
             for (i = 0; i < keys.length; i += 1) {
-                if (UTIL.isPatchObjectFromCore(coreObjects[keys[i]])) {
+                if (UTIL.coreObjectHasOldAndNewData(coreObjects[keys[i]])) {
                     // Patch type object.
                     persistQueueElement[keys[i]] = coreObjects[keys[i]].newData;
                     if (keys[i] === rootHash) {
@@ -391,9 +391,9 @@ define([
                     }
                     commitData.coreObjects[keys[i]] = UTIL.getPatchObject(coreObjects[keys[i]].oldData,
                         coreObjects[keys[i]].newData);
-                    if (keys[i] === rootHash) {
+                    //if (keys[i] === rootHash) {
                         //console.timeEnd('root-patch-computation');
-                    }
+                    //}
                 } else if (coreObjects[keys[i]].newData) {
                     // A new object with no previous data (send the entire data).
                     commitData.coreObjects[keys[i]] = coreObjects[keys[i]].newData;

@@ -207,7 +207,9 @@ define([
                 if (state.nodes[path]) {
                     //TODO we try to avoid this
                 } else {
-                    state.nodes[path] = {node: node, hash: ''/*,incomplete:true,basic:basic*/};
+                    state.nodes[path] = {
+                        node: node
+                    };
                     //TODO this only needed when real eventing will be reintroduced
                     //_inheritanceHash[path] = getInheritanceChain(node);
                 }
@@ -1143,6 +1145,7 @@ define([
                 metaNodes,
                 metaPath,
                 updatePath,
+                nodePath,
                 loadUnloadPath,
                 pathPieces,
                 i;
@@ -1186,20 +1189,22 @@ define([
                 // 3. Account for loads and unloads.
                 for (loadUnloadPath in state.loading.changedNodes.load) {
                     if (state.loading.changedNodes.load.hasOwnProperty(loadUnloadPath)) {
-                        pathPieces = loadUnloadPath.split('/');
+                        pathPieces = loadUnloadPath.split(CONSTANTS.CORE.PATH_SEP);
                         while (pathPieces.length > 2) {
                             pathPieces.pop();
-                            state.loading.changedNodes.update[pathPieces.join('/')] = true;
+                            state.loading.changedNodes
+                                .update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
                         }
                     }
                 }
 
                 for (loadUnloadPath in state.loading.changedNodes.unload) {
                     if (state.loading.changedNodes.unload.hasOwnProperty(loadUnloadPath)) {
-                        pathPieces = loadUnloadPath.split('/');
+                        pathPieces = loadUnloadPath.split(CONSTANTS.CORE.PATH_SEP);
                         while (pathPieces.length > 2) {
                             pathPieces.pop();
-                            state.loading.changedNodes.update[pathPieces.join('/')] = true;
+                            state.loading.changedNodes
+                                .update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
                         }
                     }
                 }
@@ -1208,13 +1213,11 @@ define([
                 //    Object.keys(state.loading.changedNodes.update));
             }
 
-            for (i in state.nodes) {
-                if (state.nodes.hasOwnProperty(i)) {
-                    if (newerNodes[i] && newerNodes[i].hash !== state.nodes[i].hash && state.nodes[i].hash !== '') {
-                        if (wasNodeUpdated(state.loading.changedNodes, newerNodes[i].node)) {
-                            modifiedNodes.push(i);
-                        }
-                    }
+            for (nodePath in state.nodes) {
+                if (state.nodes.hasOwnProperty(nodePath) && newerNodes.hasOwnProperty(nodePath) &&
+                    wasNodeUpdated(state.loading.changedNodes, newerNodes[nodePath].node)) {
+
+                    modifiedNodes.push(nodePath);
                 }
             }
             //console.log('NewerNodes, modifiedNodes', Object.keys(newerNodes).length, modifiedNodes.length);
@@ -1340,7 +1343,9 @@ define([
                 };
 
             if (!nodesSoFar[path]) {
-                nodesSoFar[path] = {node: node, incomplete: true, basic: true, hash: getStringHash(node)};
+                nodesSoFar[path] = {
+                    node: node
+                };
             }
             if (level > 0) {
                 if (missing > 0) {
@@ -1395,10 +1400,7 @@ define([
                         path = core.getPath(node);
                         if (!nodesSoFar[path]) {
                             nodesSoFar[path] = {
-                                node: node,
-                                incomplete: false,
-                                basic: true,
-                                hash: getStringHash(node)
+                                node: node
                             };
                         }
                         base = node;
@@ -1643,10 +1645,7 @@ define([
 
                 state.inLoading = true;
                 state.loadNodes[state.core.getPath(root)] = {
-                    node: root,
-                    incomplete: true,
-                    basic: true,
-                    hash: getStringHash(root)
+                    node: root
                 };
 
                 //we first only set the counter of patterns but we also generate a completely separate pattern queue

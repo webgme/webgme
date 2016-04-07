@@ -2727,7 +2727,7 @@ describe('GME client', function () {
                     events.forEach(function (e) {
                         console.log(e);
                     });
-                    expect(events).to.have.length(6);
+                    expect(events).to.have.length(7);
 
                     //find out the new node paths
                     for (i = 1; i < events.length; i++) {

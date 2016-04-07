@@ -204,6 +204,10 @@ define([
         return d >= 0 && str.lastIndexOf(pattern) === d;
     }
 
+    function _startsWith(str, pattern) {
+        return str.indexOf(pattern) === 0;
+    }
+
     function _isOvr(path) {
         return path.indexOf('/ovr/') === 0;
     }
@@ -252,14 +256,14 @@ define([
 
         updatesPath = Object.keys(res.update);
         for (i = 0; i < updatesPath; i += 1) {
-            if (updatesPath[i].indexOf(gmePath) === 0) {
+            if (_startsWith(updatesPath[i], gmePath)) {
                 delete res.update[gmePath];
             }
         }
 
         updatesPath = Object.keys(res.partialUpdate);
         for (i = 0; i < updatesPath; i += 1) {
-            if (updatesPath[i].indexOf(gmePath) === 0) {
+            if (_startsWith(updatesPath[i], gmePath)) {
                 delete res.partialUpdate[gmePath];
             }
         }

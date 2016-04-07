@@ -1238,7 +1238,6 @@ describe('SafeStorage', function () {
                         persisted = importResult.core.persist(rootNode);
                         expect(Object.keys(persisted.objects).length).to.equal(2);
                         newRootHash = persisted.rootHash;
-                        console.log(persisted);
                         return project.makeCommit(
                             'newNodesNotEmitted',
                             [importResult.commitHash],

@@ -52,7 +52,7 @@ define(['common/storage/constants', 'common/util/jsonPatcher'], function (CONSTA
 
             return patchObject;
         },
-        isPatchObjectFromCore: function (coreObj) {
+        coreObjectHasOldAndNewData: function (coreObj) {
             return !!(coreObj.oldHash && coreObj.newHash && coreObj.oldData && coreObj.newData);
         },
         getChangedNodes: jsonPatcher.getChangedNodes,

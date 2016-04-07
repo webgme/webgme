@@ -88,7 +88,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             i;
 
         for (i = 0; i < keys.length; i += 1) {
-            if (UTIL.isPatchObjectFromCore(coreObjects[keys[i]])) {
+            if (UTIL.coreObjectHasOldAndNewData(coreObjects[keys[i]])) {
                 // Patch type object.
                 data.coreObjects[keys[i]] = UTIL.getPatchObject(coreObjects[keys[i]].oldData,
                     coreObjects[keys[i]].newData);
