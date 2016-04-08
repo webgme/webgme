@@ -65,7 +65,11 @@ define([
 
     /**
      *
-     * @param {string} name - name of plugin to be executed.
+     * @param {string|object} params - id or data of plugin to be executed.
+     * @param {string} [params.id] - id of plugin.
+     * @param {string} [params.icon] - icon path or css-class.
+     * @param {boolean} [params.disableServerSideExecution]
+     * @param {boolean} [params.disableBrowserSideExecution]
      * @param {object} silentPluginCfg - if falsy dialog window will be shown.
      * @param {object.string} silentPluginCfg.activeNode - Path to activeNode.
      * @param {object.Array.<string>} silentPluginCfg.activeSelection - Paths to nodes in activeSelection.
@@ -73,16 +77,23 @@ define([
      * @param {object.object} silentPluginCfg.pluginConfig - Plugin specific options.
      * @param callback
      */
-    InterpreterManager.prototype.run = function (name, silentPluginCfg, callback) {
+    InterpreterManager.prototype.run = function (params, silentPluginCfg, callback) {
         var self = this,
             projectId = self._client.getProjectObject().projectId,
             startTime = (new Date()).toISOString();
-        getPlugin(name, function (err, plugin) {
+
+        if (typeof params === 'string') {
+            params = {
+                id: params
+            };
+        }
+
+        getPlugin(params.id, function (err, plugin) {
             self.logger.debug('Getting getPlugin in run.');
             if (!err && plugin) {
                 var plugins = {},
                     runWithConfiguration;
-                plugins[name] = plugin;
+                plugins[params.id] = plugin;
                 var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, self.logger, plugins,
                     self.gmeConfig);
                 pluginManager.notificationHandlers = [function (data, callback) {
@@ -92,9 +103,10 @@ define([
                 pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
                     //#1: display config to user
                     var serverAllowedGlobal = self.gmeConfig.plugin.allowServerExecution === true,
-                        serverAllowedPlugin = !plugin.disableServerExecution,
+                        serverAllowedPlugin = !(plugin.disableServerExecution || params.disableServerSideExecution),
                         browserAllowedGlobal = self.gmeConfig.plugin.allowBrowserExecution === true,
-                        browserAllowedPlugin = !plugin.disableBrowserExecution,
+                        browserAllowedPlugin = !(plugin.disableBrowserSideExecution ||
+                            params.disableBrowserSideExecution),
                         runOptions = {
                             name: 'runOnServer',
                             displayName: 'Execute on Server',
@@ -109,12 +121,12 @@ define([
                     hackedConfig[self.GLOBAL_OPTIONS] = [runOptions];
 
                     if (serverAllowedGlobal === false && browserAllowedGlobal === false) {
-                        callback(getPluginErrorResult(name, 'Plugin execution is disabled!', startTime, projectId));
+                        callback(getPluginErrorResult(params.id, 'Plugin execution is disabled!', startTime, projectId));
                         return;
                     }
 
                     if (serverAllowedPlugin === false && browserAllowedPlugin === false) {
-                        callback(getPluginErrorResult(name, 'This plugin cannot run on the server nor in the browser!?',
+                        callback(getPluginErrorResult(params.id, 'This plugin cannot run on the server nor in the browser!?',
                             startTime, projectId));
                         return;
                     }
@@ -138,7 +150,7 @@ define([
                                 runOptions.readOnly = true;
                                 runOptions.description = 'Server execution is disabled.';
                             } else {
-                                callback(getPluginErrorResult(name,
+                                callback(getPluginErrorResult(params.id,
                                     'This plugin can only run on the server which is disabled!', startTime, projectId));
                                 return;
                             }
@@ -149,7 +161,7 @@ define([
                             runOptions.value = true;
                             runOptions.description = 'Browser execution is disabled.';
                         } else {
-                            callback(getPluginErrorResult(name,
+                            callback(getPluginErrorResult(params.id,
                                 'This plugin can only run on the server which is disabled!', startTime, projectId));
                             return;
                         }
@@ -203,7 +215,7 @@ define([
                                 errMessage = 'Not allowed to invoke plugin while local branch is AHEAD or ' +
                                     'PULLING changes from server.';
                                 self.logger.error(errMessage);
-                                callback(getPluginErrorResult(name, errMessage, startTime, projectId));
+                                callback(getPluginErrorResult(params.id, errMessage, startTime, projectId));
                                 return;
                             }
 
@@ -223,16 +235,16 @@ define([
                             if (globalconfig.runOnServer === true || silentPluginCfg.runOnServer === true) {
                                 var context = {
                                     managerConfig: config,
-                                    pluginConfig: updatedConfig[name]
+                                    pluginConfig: updatedConfig[params.id]
                                 };
-                                self._client.runServerPlugin(name, context, function (err, result) {
+                                self._client.runServerPlugin(params.id, context, function (err, result) {
                                     if (err) {
                                         self.logger.error(err);
                                         if (result) {
                                             callback(new PluginResult(result));
                                         } else {
                                             errMessage = 'Plugin execution resulted in error, err: ' + err;
-                                            callback(getPluginErrorResult(name, errMessage, startTime, projectId));
+                                            callback(getPluginErrorResult(params.id, errMessage, startTime, projectId));
                                         }
                                     } else {
                                         var resultObject = new PluginResult(result);
@@ -242,7 +254,7 @@ define([
                             } else {
                                 config.blobClient = new BlobClient({logger: self.logger.fork('BlobClient')});
 
-                                pluginManager.executePlugin(name, config, function (err, result) {
+                                pluginManager.executePlugin(params.id, config, function (err, result) {
                                     if (err) {
                                         self.logger.error(err);
                                     }
@@ -269,11 +281,11 @@ define([
                         }
                         runWithConfiguration(updatedConfig);
                     } else {
-                        d = new PluginConfigDialog();
+                        d = new PluginConfigDialog(params);
                         silentPluginCfg = {};
                         d.show(hackedConfig, plugin, function (userConfig, save) {
                             if (save === true) {
-                                self.saveSettingsInUser(name, plugin, userConfig);
+                                self.saveSettingsInUser(params.id, plugin, userConfig);
                             }
 
                             runWithConfiguration(userConfig);
@@ -283,7 +295,7 @@ define([
             } else {
                 self.logger.error(err);
                 self.logger.error('Unable to load plugin');
-                callback(getPluginErrorResult(name, 'Unable to load plugin, err:' + err, startTime, projectId));
+                callback(getPluginErrorResult(params.id, 'Unable to load plugin, err:' + err, startTime, projectId));
             }
         });
     };

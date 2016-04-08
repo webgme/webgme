@@ -5,75 +5,48 @@
  * Plugin mainly used for testing.
  * @author lattmann / https://github.com/lattmann
  * @module CorePlugins:MinimalWorkingExample
-*/
+ */
 
-define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, PluginBase) {
+define([
+    'plugin/PluginConfig',
+    'plugin/PluginBase',
+    'text!./metadata.json'
+], function (PluginConfig, PluginBase, pluginMetadata) {
     'use strict';
 
+    pluginMetadata = JSON.parse(pluginMetadata);
+
     /**
-    * Initializes a new instance of MinimalWorkingExample.
-    * @class
-    * @augments {PluginBase}
-    * @classdesc This class represents the plugin MinimalWorkingExample.
-    * @constructor
-    */
-    var MinimalWorkingExample = function () {
+     * Initializes a new instance of MinimalWorkingExample.
+     * @class
+     * @augments {PluginBase}
+     * @classdesc This class represents the plugin MinimalWorkingExample.
+     * @constructor
+     */
+    function MinimalWorkingExample() {
         // Call base class' constructor.
         PluginBase.call(this);
+        this.pluginMetadata = pluginMetadata;
+
         // we do not know the meta types, will be populated during run time
         this.metaTypes = {};
-    };
+    }
 
-    // Prototypal inheritance from PluginBase.
+    MinimalWorkingExample.metadata = pluginMetadata;
+
+    // Prototypical inheritance from PluginBase.
     MinimalWorkingExample.prototype = Object.create(PluginBase.prototype);
     MinimalWorkingExample.prototype.constructor = MinimalWorkingExample;
 
     /**
-    * Gets the name of the MinimalWorkingExample.
-    * @returns {string} The name of the plugin.
-    * @public
-    */
-    MinimalWorkingExample.prototype.getName = function () {
-        return 'Minimal Working Example';
-    };
-
-    /**
-     * Gets the configuration structure for the MetaGMEParadigmImporter.
-     * The ConfigurationStructure defines the configuration for the plugin
-     * and will be used to populate the GUI when invoking the plugin from webGME.
-     * @returns {object} The version of the plugin.
-     * @public
+     * Main function for the plugin to execute. This will perform the execution.
+     * Notes:
+     * - Always log with the provided logger.[error,warn,info,debug].
+     * - Do NOT put any user interaction logic UI, etc. inside this method.
+     * - callback always has to be called even if error happened.
+     *
+     * @param {function(Error, plugin.PluginResult)} callback - the result callback
      */
-    MinimalWorkingExample.prototype.getConfigStructure = function () {
-        return [
-            {
-                name: 'shouldFail',
-                displayName: 'Should fail',
-                description: 'Example if the plugin execution fails',
-                value: false,
-                valueType: 'boolean',
-                readOnly: false
-            },
-            {
-                name: 'save',
-                displayName: 'Should save the model',
-                description: 'Will update the model if true',
-                value: true,
-                valueType: 'boolean',
-                readOnly: false
-            }
-        ];
-    };
-
-    /**
-    * Main function for the plugin to execute. This will perform the execution.
-    * Notes:
-    * - Always log with the provided logger.[error,warning,info,debug].
-    * - Do NOT put any user interaction logic UI, etc. inside this method.
-    * - callback always has to be called even if error happened.
-    *
-    * @param {function(string, plugin.PluginResult)} callback - the result callback
-    */
     MinimalWorkingExample.prototype.main = function (callback) {
         // Use self to access core, project, result, logger etc from PluginBase.
         // These are all instantiated at this point.
@@ -114,7 +87,7 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
 
                 if (currentConfiguration.shouldFail) {
                     //self.result.setError('Failed on purpose.');
-                    callback('Failed on purpose.', self.result);
+                    callbackn(new Error('Failed on purpose.'), self.result);
                 } else {
                     self.result.setSuccess(true);
                     callback(null, self.result);
@@ -123,7 +96,7 @@ define(['plugin/PluginConfig', 'plugin/PluginBase'], function (PluginConfig, Plu
         } else {
             if (currentConfiguration.shouldFail) {
                 self.result.setError('Failed on purpose.');
-                callback('Failed on purpose.', self.result);
+                callback(new Error('Failed on purpose.'), self.result);
             } else {
                 self.result.setSuccess(true);
                 callback(null, self.result);

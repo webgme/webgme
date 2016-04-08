@@ -8,16 +8,18 @@
  */
 
 define([
-    'plugin/PluginConfig',
     'plugin/PluginBase',
+    'text!./metadata.json',
     'common/util/ejs',
     'plugin/LayoutGenerator/LayoutGenerator/Templates/Templates'
 ], function (
-    PluginConfig,
     PluginBase,
+    pluginMetadata,
     ejs,
     TEMPLATES) {
     'use strict';
+
+    pluginMetadata = JSON.parse(pluginMetadata);
 
     /**
      * Initializes a new instance of LayoutGenerator.
@@ -26,54 +28,17 @@ define([
      * @classdesc This class represents the plugin LayoutGenerator.
      * @constructor
      */
-    var LayoutGenerator = function () {
+    function LayoutGenerator() {
         // Call base class' constructor.
         PluginBase.call(this);
-    };
+        this.pluginMetadata = pluginMetadata;
+    }
 
-    // Prototypal inheritance from PluginBase.
+    LayoutGenerator.metadata = pluginMetadata;
+
+    // Prototypical inheritance from PluginBase.
     LayoutGenerator.prototype = Object.create(PluginBase.prototype);
     LayoutGenerator.prototype.constructor = LayoutGenerator;
-
-    /**
-     * Gets the name of the LayoutGenerator.
-     * @returns {string} The name of the plugin.
-     * @public
-     */
-    LayoutGenerator.prototype.getName = function () {
-        return 'Layout Generator';
-    };
-
-    /**
-     * Gets the semantic version (semver.org) of the LayoutGenerator.
-     * @returns {string} The version of the plugin.
-     * @public
-     */
-    LayoutGenerator.prototype.getVersion = function () {
-        return '0.1.0';
-    };
-
-    /**
-     * Gets the configuration structure for the LayoutGenerator.
-     * The ConfigurationStructure defines the configuration for the plugin
-     * and will be used to populate the GUI when invoking the plugin from webGME.
-     * @returns {object} The version of the plugin.
-     * @public
-     */
-    LayoutGenerator.prototype.getConfigStructure = function () {
-        return [
-            {
-                name: 'layoutID',
-                displayName: 'Layout ID',
-                regex: '^[a-zA-Z]+$',
-                regexMessage: 'Name can only contain English characters (use camelcase)!',
-                value: 'MyCustomLayout',
-                valueType: 'string',
-                readOnly: false
-            }
-        ];
-    };
-
 
     /**
      * Main function for the plugin to execute. This will perform the execution.

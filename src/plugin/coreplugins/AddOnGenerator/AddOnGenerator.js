@@ -9,74 +9,30 @@
 
 define([
     'plugin/PluginBase',
+    'text!./metadata.json',
     'common/util/ejs',
     'plugin/AddOnGenerator/AddOnGenerator/Templates/Templates'
-], function (PluginBase, ejs, TEMPLATES) {
+], function (PluginBase, pluginMetadata, ejs, TEMPLATES) {
     'use strict';
 
-    var AddOnGenerator = function () {
+    pluginMetadata = JSON.parse(pluginMetadata);
+
+    function AddOnGenerator() {
         // Call base class's constructor
         PluginBase.call(this);
+        this.pluginMetadata = pluginMetadata;
+
         this.currentConfig = null;
         this.addOnDir = '';
         this.testDir = '';
         this.filesToAdd = {};
-    };
+    }
 
+    AddOnGenerator.metadata = pluginMetadata;
+
+    // Prototypical inheritance from PluginBase.
     AddOnGenerator.prototype = Object.create(PluginBase.prototype);
-
     AddOnGenerator.prototype.constructor = AddOnGenerator;
-
-    AddOnGenerator.prototype.getName = function () {
-        return 'AddOn Generator';
-    };
-
-    AddOnGenerator.prototype.getVersion = function () {
-        return '1.0.0';
-    };
-
-    AddOnGenerator.prototype.getConfigStructure = function () {
-        return [
-            {
-                name: 'addOnId',
-                displayName: 'Unique add-on identifier',
-                regex: '^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void' +
-                '|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|' +
-                'static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|' +
-                'arguments|interface|protected|implements|instanceof)$)[a-zA-Z_$][0-9a-zA-Z_$]+',
-                regexMessage: 'No spaces and special characters allowed. This value is used as the name of the ' +
-                'generated add-on class.',
-                description: 'Unique ID for the add-On.',
-                value: 'NewAddOn',
-                valueType: 'string',
-                readOnly: false
-            },
-            {
-                name: 'addOnName',
-                displayName: 'Name',
-                description: 'Short readable add-on name; spaces are allowed',
-                value: 'New AddOn',
-                valueType: 'string',
-                readOnly: false
-            },
-            {
-                name: 'description',
-                displayName: 'Description',
-                description: 'Optional description of the addOn.',
-                value: '',
-                valueType: 'string',
-                readOnly: false
-            },
-            {
-                name: 'queryParamsStructure',
-                displayName: 'Include Query Parameters Structure.',
-                description: 'Query Parameters structure will populate the GUI with controls.',
-                value: false,
-                valueType: 'boolean',
-                readOnly: true
-            }
-        ];
-    };
 
     AddOnGenerator.prototype.main = function (callback) {
         var self = this,

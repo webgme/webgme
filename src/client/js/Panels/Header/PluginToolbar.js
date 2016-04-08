@@ -34,10 +34,10 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
         };
 
         fillMenuItems = function () {
-            var pluginNames = WebGMEGlobal.gmeConfig.plugin.displayAll ? WebGMEGlobal.allPlugins :
+            var pluginIds = WebGMEGlobal.gmeConfig.plugin.displayAll ? WebGMEGlobal.allPlugins :
                     client.filterPlugins(WebGMEGlobal.allPlugins, WebGMEGlobal.State.getActiveObject()),
-                i, executeClickFunction = function (data) {
-                    executePlugin(data.name);
+                executeClickFunction = function (data) {
+                    executePlugin(data);
                 };
 
             //clear dropdown
@@ -52,24 +52,53 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
                         showResults();
                     }
                 });
-                if (pluginNames.length > 0) {
+                if (pluginIds.length > 0) {
                     self.$btnExecutePlugin.addDivider();
                 }
             }
 
             //add plugin names
-            for (i = 0; i < pluginNames.length; i++) {
-                self.$btnExecutePlugin.addButton({
-                    title: 'Run ' + pluginNames[i],
-                    text: 'Run ' + pluginNames[i],
-                    data: {name: pluginNames[i]},
-                    clickFn: executeClickFunction
+            pluginIds.forEach(function (pluginId) {
+                var params = {
+                        title: pluginId,
+                        text: pluginId,
+                        data: {
+                            id: pluginId,
+                            icon: 'glyphicon glyphicon-cog'
+                        },
+                        clickFn: executeClickFunction,
+                        icon: $('<i class="plugin-icon glyphicon glyphicon-cog"/>')
+                    },
+                    metadata = WebGMEGlobal.allPluginsMetadata[pluginId],
+                    iconPath;
+
+                // TODO: In next version use metadata for all
+                if (metadata) {
+                    params.data = metadata;
+                    if (metadata.icon.indexOf('.') > -1) {
+                        // Image files have an extension with a dot ..
+                        iconPath = ['/plugin', metadata.id, metadata.id, metadata.icon].join('/');
+                        params.icon = $('<img class="plugin-icon" src="' + iconPath + '"/>');
+                    } else {
+                        // css classes do not.
+                        params.icon = $('<i class="plugin-icon ' + metadata.icon + '"/>');
+                    }
+
+                    params.text = metadata.name;
+                    params.title = metadata.id + ' v' + metadata.version + ' - ' + metadata.description;
+                }
+
+                params.icon.css({
+                    width: '14px',
+                    'margin-right': '4px'
                 });
-            }
+
+                self.$btnExecutePlugin.addButton(params);
+            });
         };
 
-        executePlugin = function (name) {
-            WebGMEGlobal.InterpreterManager.run(name, null, function (result) {
+        executePlugin = function (data) {
+            WebGMEGlobal.InterpreterManager.run(data, null, function (result) {
                 result.__unread = true;
                 self._results.splice(0, 0, result);
                 self.$btnExecutePlugin.el.find('.btn').disable(false);

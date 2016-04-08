@@ -5,7 +5,8 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
+define([
+    'js/Controls/PropertyGrid/PropertyGridWidgetManager',
     'text!./templates/PluginConfigDialog.html',
     'css!./styles/PluginConfigDialog.css'
 ], function (PropertyGridWidgetManager,
@@ -22,9 +23,10 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     //jscs:enable maximumLineLength
         DESCRIPTION_BASE = $('<div class="desc muted col-sm-8"></div>');
 
-    PluginConfigDialog = function () {
+    PluginConfigDialog = function (config) {
         this._propertyGridWidgetManager = new PropertyGridWidgetManager();
         this._propertyGridWidgetManager.registerWidgetForType('boolean', 'iCheckBox');
+        this._pluginMetadata = config;
     };
 
     PluginConfigDialog.prototype.show = function (pluginConfigs, pluginClass, fnCallback) {
@@ -74,8 +76,21 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         this._divContainer = this._dialog.find('.modal-body');
 
         this._saveConfigurationCb = this._dialog.find('.save-configuration');
+        this._modalHeader = this._dialog.find('.modal-header');
 
-        this._title = this._dialog.find('.modal-title');
+        if (typeof this._pluginMetadata.icon === 'string') {
+            if (this._pluginMetadata.icon.indexOf('.') > -1) {
+                this._modalHeader.prepend($('<img class="plugin-icon pull-left" src="' +
+                    ['/plugin', this._pluginMetadata.id, this._pluginMetadata.id, this._pluginMetadata.icon].join('/') +
+                    '"/>'));
+            } else {
+                this._modalHeader.prepend($('<i class="plugin-icon pull-left ' + this._pluginMetadata.icon + '"/>'));
+            }
+        } else {
+            this._modalHeader.prepend($('<i class="plugin-icon pull-left glyphicon glyphicon-cog"/>'));
+        }
+
+        this._title = this._modalHeader.find('.modal-title');
         this._title.text((new this._currentPluginClass()).getName());
         this._widgets = {};
 
