@@ -57,6 +57,10 @@ define(['js/PanelBase/PanelBaseWithHeader',
             widget: this.widget
         });
 
+        this.control.setReadOnly = function (isReadOnly) {
+            self.setReadOnly(isReadOnly);
+        };
+
         this.onActivate();
     };
 

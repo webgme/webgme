@@ -87,6 +87,11 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         if (typeof innercore.applyTreeDiff === 'function') {
             core.applyTreeDiff = TASYNC.unwrap(innercore.applyTreeDiff);
         }
+        
+        //library functions
+        
+        core.addLibrary = TASYNC.unwrap(innercore.addLibrary);
+        core.updateLibrary = TASYNC.unwrap(innercore.updateLibrary);
 
         return core;
     };

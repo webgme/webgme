@@ -34,7 +34,11 @@ module.exports = {
         resolve: 'resolve',
         checkConstraints: 'checkConstraints',
         reassignGuids: 'reassignGuids',
-
+        importProjectFromFile: 'importProjectFromFile',
+        exportProjectToFile: 'exportProjectToFile',
+        addLibrary: 'addLibrary',
+        updateLibrary: 'updateLibrary',
+        
         // AddOn related
         connectedWorkerStart: 'connectedWorkerStart',
         connectedWorkerQuery: 'connectedWorkerQuery',

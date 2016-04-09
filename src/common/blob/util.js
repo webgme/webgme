@@ -74,18 +74,19 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
      */
     function addAssetsFromExportedProject(logger, blobClient, mainMetadata, callback) {
         var projectFileHash = null,
-            softLinkNames = Object.keys(mainMetadata.content);
+            softLinkNames = Object.keys(mainMetadata.content),
+            deferred = Q.defer();
 
-        return Q.allSettled(softLinkNames.map(function (softLinkName) {
-            var softLinkPieces = softLinkName.split('.'),
-                type = softLinkPieces.pop();
+        Q.allSettled(softLinkNames.map(function (softLinkName) {
+                var softLinkPieces = softLinkName.split('.'),
+                    type = softLinkPieces.pop();
 
-            if (type === 'json') {
-                projectFileHash = mainMetadata.content[softLinkName].content;
-            } else if (type === 'metadata') {
-                return _addMetadataAsMetadata(logger, blobClient, mainMetadata, softLinkPieces.pop());
-            }
-        }))
+                if (type === 'json') {
+                    projectFileHash = mainMetadata.content[softLinkName].content;
+                } else if (type === 'metadata') {
+                    return _addMetadataAsMetadata(logger, blobClient, mainMetadata, softLinkPieces.pop());
+                }
+            }))
             .then(function (result) {
                 var i,
                     error;
@@ -98,12 +99,119 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
                 if (error) {
                     throw new Error(error);
                 }
-                return projectFileHash;
+                return deferred.resolve(projectFileHash);
+            })
+            .catch(deferred.reject);
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function _gatherFilesFromMetadataHashRec(logger, blobClient, metadata, assetHash, artifact) {
+        var deferred = Q.defer(),
+            filenameMetadata = assetHash + '.metadata',
+            softLinkNames,
+            filenameContent;
+
+        logger.debug('_gatherFilesFromMetadataHashRec, metadata:', metadata);
+
+        if (metadata.contentType === BlobMetadata.CONTENT_TYPES.OBJECT) {
+            filenameContent = assetHash + '.content';
+
+            Q.ninvoke(artifact, 'addMetadataHash', filenameContent, assetHash, metadata.size)
+                .then(function () {
+                    return Q.ninvoke(artifact, 'addFile', filenameMetadata, JSON.stringify(metadata));
+                })
+                .then(function () {
+                    deferred.resolve();
+                })
+                .catch(function (err) {
+                    if (err.message.indexOf('Another content with the same name was already added.') > -1) {
+                        deferred.resolve();
+                    } else {
+                        deferred.reject(err);
+                    }
+                });
+
+        } else if (metadata.contentType === BlobMetadata.CONTENT_TYPES.COMPLEX) {
+            // Add .metadata and .content for all linked soft-links (recursively).
+            softLinkNames = Object.keys(metadata.content);
+            Q.all(softLinkNames.map(function (softLinkName) {
+                    var softLinkMetadataHash = metadata.content[softLinkName].content;
+                    logger.debug('Complex object, softLinkMetadataHash:', softLinkMetadataHash);
+                    return Q.ninvoke(blobClient, 'getMetadata', softLinkMetadataHash)
+                        .then(function (softLinkMetadata) {
+                            return _gatherFilesFromMetadataHashRec(logger, blobClient,
+                                softLinkMetadata, softLinkMetadataHash, artifact);
+                        });
+                }))
+                .then(function () {
+                    // Finally add the .metadata for the complex object.
+                    return Q.ninvoke(artifact, 'addFile', filenameMetadata, JSON.stringify(metadata));
+                })
+                .then(function () {
+                    deferred.resolve();
+                })
+                .catch(deferred.reject);
+        } else {
+            deferred.reject(new Error('Unsupported content type: '+metadata.contentType));
+        }
+
+        return deferred.promise;
+    }
+
+    /**
+     *
+     * @param {GmeLogger} logger
+     * @param {BlobClient} blobClient
+     * @param {object} jsonExport
+     * @param {boolean} addAssets
+     * @param callback
+     * @returns {*}
+     */
+    function buildProjectPackage(logger, blobClient, jsonExport, addAssets, callback) {
+        var artie = blobClient.createArtifact(jsonExport.projectId +
+                '_' + (jsonExport.branchName || jsonExport.commitHash)),
+            assets = jsonExport.hashes.assets || [];
+
+        artie.descriptor.name = jsonExport.projectId +
+            '_' + (jsonExport.branchName || jsonExport.commitHash) + '.webgmeX';
+
+        if (!addAssets) {
+            assets = [];
+        }
+
+        Q.allSettled(assets.map(function (assetHash) {
+                return Q.ninvoke(blobClient, 'getMetadata', assetHash)
+                    .then(function (metadata) {
+                        return _gatherFilesFromMetadataHashRec(logger, blobClient, metadata, assetHash, artie);
+                    });
+            }))
+            .then(function (result) {
+                var error,
+                    i;
+
+                for (i = 0; i < result.length; i += 1) {
+                    if (result[i].state === 'rejected') {
+                        error = result[i].reason;
+                        logger.debug('Gathering returned with error', assets[i], error);
+                        if (error.message.indexOf('Another content with the same name was already added.') === -1) {
+                            //some real error
+                            throw new Error('gathering assets [' + assets[i] + '] failed:' + error.message);
+                        }
+                    }
+                }
+            })
+            .then(function () {
+                return artie.addFile('project.json', JSON.stringify(jsonExport, null, 4));
+            })
+            .then(function () {
+                return artie.save();
             })
             .nodeify(callback);
     }
 
     return {
-        addAssetsFromExportedProject: addAssetsFromExportedProject
+        addAssetsFromExportedProject: addAssetsFromExportedProject,
+        buildProjectPackage: buildProjectPackage
     };
 });

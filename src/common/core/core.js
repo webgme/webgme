@@ -115,7 +115,8 @@ define([
     'common/core/corediff',
     'common/core/metacachecore',
     'common/core/mixincore',
-    'common/core/metaquerycore'
+    'common/core/metaquerycore',
+    'common/core/librarycore'
 ], function (CoreRel,
              Set,
              Guid,
@@ -129,7 +130,8 @@ define([
              CoreDiff,
              MetaCacheCore,
              MixinCore,
-             MetaQueryCore) {
+             MetaQueryCore,
+             LibraryCore) {
     'use strict';
 
     /**
@@ -155,6 +157,8 @@ define([
         coreLayers.push(CoreDiff);
 
         coreLayers.push(TreeLoader);
+
+        coreLayers.push(LibraryCore);
 
         if (options.usertype !== 'tasync') {
             coreLayers.push(UnWrap);
@@ -444,7 +448,8 @@ define([
          * @param {module:Core~GUID} [parameters.guid] - the GUID of the node to be created
          *
          *
-         * @return {module:Core~Node} The function returns the created node or null if no node was created.
+         * @return {module:Core~Node | Error} The function returns the created node or null if no node was created
+         * or an error if the creation with the given parameters are not allowed.
          *
          * @func
          */
@@ -454,6 +459,7 @@ define([
          * Removes a node from the containment hierarchy.
          * @param {module:Core~Node} node - the node to be removed.
          *
+         * @return {undefined|Error} If the operation is not allowed it returns an error.
          * @func
          */
         this.deleteNode = core.deleteNode;
@@ -463,7 +469,8 @@ define([
          * @param {module:Core~Node} node - the node to be copied.
          * @param {module:Core~Node} parent - the parent node of the copy.
          *
-         * @return {module:Core~Node} The function returns the copied node.
+         * @return {module:Core~Node | Error} The function returns the copied node or an error if the copy
+         * is not allowed.
          *
          * @func
          */
@@ -474,7 +481,8 @@ define([
          * @param {module:Core~Node[]} nodes - the nodes to be copied.
          * @param {module:Core~Node} parent - the parent node of the copy.
          *
-         * @return {module:Core~Node[]} The function returns an array of the copied nodes.
+         * @return {module:Core~Node[] | Error} The function returns an array of the copied nodes or an error
+         * if any of the nodes are not allowed to be copied to the given parent.
          *
          * @func
          */
@@ -485,7 +493,8 @@ define([
          * @param {module:Core~Node} node - the node to be moved.
          * @param {module:Core~Node} parent - the parent node of the copy.
          *
-         * @return {module:Core~Node} The function returns the node after the move.
+         * @return {module:Core~Node | Error} The function returns the node after the move or an error
+         * if the move is not allowed.
          *
          * @func
          */
@@ -522,6 +531,9 @@ define([
          * @param {object | primitive | null} value - the new of the attribute. Can be any primitive type or object.
          * Undefined is not allowed.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.setAttribute = core.setAttribute;
@@ -530,6 +542,9 @@ define([
          * Removes the given attributes from the given node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the attribute.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -567,6 +582,8 @@ define([
          * @param {object | primitive | null} value - the new of the registry entry. Can be any primitive
          * type or object. Undefined is not allowed.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          * @func
          */
         this.setRegistry = core.setRegistry;
@@ -575,6 +592,9 @@ define([
          * Removes the given registry entry from the given node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the registry entry.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -608,6 +628,9 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the pointer in question.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.deletePointer = core.deletePointer;
@@ -617,6 +640,9 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the pointer in question.
          * @param {module:Core~Node} target - the new target of the pointer.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -752,6 +778,9 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {module:Core~Node | null} base - the new base.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.setBase = core.setBase;
@@ -808,6 +837,9 @@ define([
          * @param {string} name - the name of the set.
          * @param {string} path - the absolute path of the member to be removed.
          *
+         * @return {undefined | Error} If the set is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.delMember = core.delMember;
@@ -817,6 +849,9 @@ define([
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} name - the name of the set.
          * @param {module:Core~Node} member - the new member of the set.
+         *
+         * @return {undefined | Error} If the set is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -867,6 +902,10 @@ define([
          * @param {string} memberPath - the absolute path of the member node.
          * @param {string} attrName - the name of the attribute.
          * @param {object|primitive|null} value - the new value of the attribute.
+         *
+         * @return {undefined | Error} If the set is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.setMemberAttribute = core.setMemberAttribute;
@@ -877,6 +916,9 @@ define([
          * @param {string} setName - the name of the set.
          * @param {string} memberPath - the absolute path of the member node.
          * @param {string} attrName - the name of the attribute.
+         *
+         * @return {undefined | Error} If the set is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -930,6 +972,10 @@ define([
          * @param {string} memberPath - the absolute path of the member node.
          * @param {string} regName - the name of the registry entry.
          * @param {object|primitive|null} value - the new value of the attribute.
+         *
+         * @return {undefined | Error} If the set is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.setMemberRegistry = core.setMemberRegistry;
@@ -941,6 +987,9 @@ define([
          * @param {string} memberPath - the absolute path of the member node.
          * @param {string} regName - the name of the registry entry.
          *
+         * @return {undefined | Error} If the set is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.delMemberRegistry = core.delMemberRegistry;
@@ -950,6 +999,9 @@ define([
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} name - the name of the set.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.createSet = core.createSet;
@@ -958,6 +1010,9 @@ define([
          * Removes a set from the node.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} name - the name of the set.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -993,6 +1048,9 @@ define([
          * @param {module:Core~GUID} guid - the new globally unique identifier.
          * @param {function()} callback
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.setGuid = core.setGuid;
@@ -1013,6 +1071,10 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the constraint.
          * @param {module:Core~Constraint} constraint  - the constraint to be set.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.setConstraint = core.setConstraint;
@@ -1021,6 +1083,9 @@ define([
          * Removes a constraint from the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the constraint.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -1196,6 +1261,9 @@ define([
          * inherited rules).
          * @param {module:Core~Node} node - the node in question.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.clearMetaRules = core.clearMetaRules;
@@ -1208,6 +1276,9 @@ define([
          * @param {'string'|'integer'|'float'|'bool'} rule.type - the type of the attribute
          * @param {string[]} rule.enum - if the attribute is an enumeration, this array contains the possible values
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.setAttributeMeta = core.setAttributeMeta;
@@ -1216,6 +1287,9 @@ define([
          * Removes an attribute definition from the META rules of the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the attribute.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -1262,6 +1336,9 @@ define([
          * @param {integer} [max] - the allowed maximum number of children from this given node type (if not given or
          * -1 is set, then there will be no minimum rule according this child type)
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.setChildMeta = core.setChildMeta;
@@ -1271,6 +1348,9 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} childPath - the absolute path of the child which rule is to be removed from the node.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.delChildMeta = core.delChildMeta;
@@ -1279,9 +1359,12 @@ define([
          * Sets the global containment limits for the node.
          *
          * @param {integer} [min] - the allowed minimum number of children (if not given or
-         * -1 is set, then there will be no minimum rule according this child type)
-         * @param {integer} [min] - the allowed minimum number of children (if not given or
-         * -1 is set, then there will be no minimum rule according this child type)
+         * -1 is set, then there will be no minimum rule according children)
+         * @param {integer} [max] - the allowed maximum number of children (if not given or
+         * -1 is set, then there will be no maximum rule according children)
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -1293,9 +1376,12 @@ define([
          * @param {string} name - the name of the pointer/set.
          * @param {module:Core~Node} target - the valid target/member node.
          * @param {integer} [min] - the allowed minimum number of target/member from this given node type (if not
-         * given or -1 is set, then there will be no minimum rule according this child type)
+         * given or -1 is set, then there will be no minimum rule according this target type)
          * @param {integer} [max] - the allowed maximum number of target/member from this given node type (if not
-         * given or -1 is set, then there will be no minimum rule according this child type)
+         * given or -1 is set, then there will be no minimum rule according this target type)
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -1307,6 +1393,9 @@ define([
          * @param {string} name - the name of the pointer/set
          * @param {string} targetPath - the absolute path of the possible target type.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.delPointerMetaTarget = core.delPointerMetaTarget;
@@ -1317,9 +1406,12 @@ define([
          * case of 'pure' pointer definitions.
          *
          * @param {integer} [min] - the allowed minimum number of children (if not given or
-         * -1 is set, then there will be no minimum rule according this child type)
-         * @param {integer} [min] - the allowed minimum number of children (if not given or
-         * -1 is set, then there will be no minimum rule according this child type)
+         * -1 is set, then there will be no minimum rule according targets)
+         * @param {integer} [max] - the allowed maximum number of children (if not given or
+         * -1 is set, then there will be no maximum rule according targets)
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -1329,6 +1421,9 @@ define([
          * Removes the complete META rule regarding the given pointer/set of the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the pointer/set.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -1352,6 +1447,9 @@ define([
          * @param {string} name - the name of the aspect.
          * @param {module:Core~Node} target - the valid type for the aspect.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.setAspectMetaTarget = core.setAspectMetaTarget;
@@ -1362,6 +1460,9 @@ define([
          * @param {string} name - the name of the aspect.
          * @param {string} targetPath - the absolute path of the valid type of the aspect.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.delAspectMetaTarget = core.delAspectMetaTarget;
@@ -1370,6 +1471,9 @@ define([
          * Removes the given aspect rule of the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the aspect.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -1614,6 +1718,9 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} mixinPath - the path of the mixin node.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.delMixin = core.delMixin;
@@ -1624,6 +1731,9 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} mixinPath - the path of the mixin node.
          *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
          * @func
          */
         this.addMixin = core.addMixin;
@@ -1632,6 +1742,9 @@ define([
          * Removes all mixins for a given node.
          *
          * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
          *
          * @func
          */
@@ -1659,6 +1772,179 @@ define([
          * @func
          */
         this.canSetAsMixin = core.canSetAsMixin;
+
+        //library function TODO checking everything and adding all new functions
+
+        /**
+         * It adds a project as library to your project by copying it over. The library will be a node
+         * with the given name directly under your project's ROOT. It becomes a read-only portion of your project.
+         * You will only be able to manipulate it with library functions, but cannot edit the individual nodes inside.
+         * However you will be able to instantiate or copy the nodes into other places of your project. Every node
+         * that was part of the META in the originating project becomes part of your project's meta.
+         * @param {module:Core~Node} node - any regular node in your project.
+         * @param {string} name - the name of the library you wish to use as a namespace in your project.
+         * @param {string} libraryRootHash - the hash of your library's root
+         * (must exist in the project's collection at the time of call).
+         * @param {Object} libraryInfo - information about your project.
+         * @param {string} libraryInfo.projectId - the projectId of your library.
+         * @param {string} libraryInfo.branchName - the branch that your library follows in the origin project.
+         * @param {string} libraryInfo.commitHash - the version of your library.
+         * @param {function()} callback
+         *
+         * @func
+         */
+        this.addLibrary = core.addLibrary;
+
+        /**
+         * It updates a library in your project based on the input information. It will 'reaplace' the old
+         * version, keeping as much information as possible regarding the instances.
+         * @param {module:Core~Node} node - any regular node in your project.
+         * @param {string} name - the name of the library you want to update.
+         * @param {string} libraryRootHash - the hash of your library's new root
+         * (must exist in the project's collection at the time of call).
+         * @param {object} libraryInfo - information about your project.
+         * @param {string} libraryInfo.projectId - the projectId of your library.
+         * @param {string} libraryInfo.branchName - the branch that your library follows in the origin project.
+         * @param {string} libraryInfo.commitHash - the version of your library.
+         * @param {function()} callback
+         *
+         * @func
+         */
+        this.updateLibrary = core.updateLibrary;
+
+        /**
+         * Gives back the list of libraries in your project.
+         *
+         * @param {module:Core~Node} node - any node in your project.
+         *
+         * @return {string[]} - Returns the fully qualified names of all the libraries in your project
+         * (even embedded ones).
+         *
+         * @func
+         */
+        this.getLibraryNames = core.getLibraryNames;
+
+        /**
+         * Return the root of the inheritance chain of your Meta nodes.
+         *
+         * @param {module:Core~Node} node - any node in your project.
+         *
+         * @return {module:Core~Node} - Returns the acting FCO of your project.
+         *
+         * @func
+         */
+        this.getFCO = core.getFCO;
+
+        /**
+         * Returns true if the node in question is a library root..
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {bool} - Returns true if your node is a library root (even if it is embedded in other library),
+         * false otherwise.
+         *
+         * @func
+         */
+        this.isLibraryRoot = core.isLibraryRoot;
+
+        /**
+         * Returns true if the node in question is a library element..
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {bool} - Returns true if your node is a library element, false otherwise.
+         *
+         * @func
+         */
+        this.isLibraryElement = core.isLibraryElement;
+
+        /**
+         * Returns the fully qualified name of the node, which is the list of its namespaces separated
+         * by dot and followed by the name of the node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string} - Returns the fully qualified name of the node,
+         * i.e. its namespaces and name join together by dots.
+         *
+         * @example NS1.NS2.name
+         *
+         * @func
+         */
+        this.getFullyQualifiedName = core.getFullyQualifiedName;
+
+        /**
+         * Removes a library from your project. It will also remove any remaining instances of the specific library.
+         *
+         * @param {module:Core~Node} node - any node in your project.
+         * @param {string} name - the name of your library.
+         *
+         * @func
+         */
+        this.removeLibrary = core.removeLibrary;
+
+        /**
+         * Returns the origin GUID of any library node.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         * @param {undefined | string} name - name of the library where we want to deduct the GUID from. If not given,
+         * than the GUID is computed from the direct library root of the node
+         *
+         * @return {module:Core~GUID | Error} - Returns the origin GUID of the node or
+         * error if the query cannot be fulfilled.
+         *
+         * @func
+         */
+        this.getLibraryGuid = core.getLibraryGuid;
+
+        /**
+         * Rename a library in your project.
+         *
+         * @param {module:Core~Node} node - any node in your project.
+         * @param {string} oldName - the current name of the library.
+         * @param {string} newName - the new name of the project.
+         *
+         * @func
+         */
+        this.renameLibrary = core.renameLibrary;
+
+        /**
+         * Returns the info associated with the library.
+         *
+         * @param {module:Core~Node} node - any node in the project.
+         * @param {string} name - the name of the library.
+         *
+         * @return {object} - Returns the information object, stored alongside the library (that basically
+         * carries metaData about the library).
+         *
+         * @func
+         */
+        this.getLibraryInfo = core.getLibraryInfo;
+
+        /**
+         * Returns the root node of the given library.
+         *
+         * @param {module:Core~Node} node - any node in the project.
+         * @param {string} name - the name of the library.
+         *
+         * @return {module:Core~Node | null} - Returns the library root node or null, if the library is unknown.
+         *
+         * @func
+         */
+        this.getLibraryRoot = core.getLibraryRoot;
+
+        /**
+         * Returns all the Meta nodes within the given library.
+         *
+         * @param {module:Core~Node} node - any node of your project.
+         * @param {string} name - name of your library.
+         *
+         * @return {module:Core~Node[]} - Returns an array of core nodes that are part of your meta from
+         * the given library.
+         *
+         * @func
+         */
+        this.getLibraryMetaNodes = core.getLibraryMetaNodes;
     }
 
     return Core;

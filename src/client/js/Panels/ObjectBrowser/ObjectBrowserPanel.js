@@ -23,7 +23,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
              ComponentSettings) {
     'use strict';
 
-
     var ObjectBrowserPanel,
         __parent__ = PanelBaseWithHeader,
         OBJECT_BROWSER_CLASS = 'object-browser';
@@ -62,14 +61,14 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.$el.addClass(OBJECT_BROWSER_CLASS);
 
         this.$el.html('<ul class="nav nav-tabs">' +
-        '<li class="composition active"><a class="composition-anchor" href="#composition" data-toggle="tab">Composition</a></li>' +
-        '<li class="inheritance"><a href="#inheritance" data-toggle="tab">Inheritance</a></li>' +
-        '<li class="crosscut"><a href="#crosscut" data-toggle="tab">Crosscut</a></li>' +
-        '</ul>' + '<div class="tab-content">' +
-        '<div class="tab-pane active" id="composition">composition</div>' +
-        '<div class="tab-pane" id="inheritance">inheritance</div>' +
-        '<div class="tab-pane" id="crosscut">crosscut</div>' +
-        '</div>');
+            '<li class="composition active"><a class="composition-anchor" href="#composition" data-toggle="tab">Composition</a></li>' +
+            '<li class="inheritance"><a href="#inheritance" data-toggle="tab">Inheritance</a></li>' +
+            '<li class="crosscut"><a href="#crosscut" data-toggle="tab">Crosscut</a></li>' +
+            '</ul>' + '<div class="tab-content">' +
+            '<div class="tab-pane active" id="composition">composition</div>' +
+            '<div class="tab-pane" id="inheritance">inheritance</div>' +
+            '<div class="tab-pane" id="crosscut">crosscut</div>' +
+            '</div>');
 
         compositionEl = this.$el.find('a.composition-anchor');
 
@@ -83,6 +82,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             hideConnections: compositionSettings.filters.toggled.hideConnections,
             hideAbstracts: compositionSettings.filters.toggled.hideAbstracts,
             hideLeaves: compositionSettings.filters.toggled.hideLeaves,
+            hideLibraries: compositionSettings.filters.toggled.hideLibraries,
             titleFilter: {
                 text: '',
                 type: 'caseInsensitive' //caseSensitive, regex

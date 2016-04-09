@@ -141,7 +141,6 @@ define([
                 },
                 deleteProjectModal;
 
-
             if (self._projectList[projectId].rights.delete === true) {
                 if (self._dontAskOnDelete === true) {
                     doDelete();
@@ -316,7 +315,7 @@ define([
                     }
                 }
 
-                return reverse ? result * (- 1) : result;
+                return reverse ? result * (-1) : result;
             });
 
             sortedRows.detach().appendTo(self._tableBody);
@@ -406,7 +405,6 @@ define([
                 projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
                     self._dialog.find('.username').text(), newProjectName);
 
-
             if (enterPressed && isValidProjectName(newProjectName, projectId)) {
                 doCreateProject(self._client);
                 event.stopPropagation();
@@ -427,7 +425,6 @@ define([
                 rights: true,
                 info: true
             };
-
 
         this._loader.start();
         this._btnRefresh.disable(true);
@@ -595,7 +592,7 @@ define([
                 if (projectData.rights.delete === true) {
                     iconsEl.append(
                         $('<i class="glyphicon glyphicon-trash delete-project extra-info info-hidden"/>')
-                        .data('projectId', this._projectIds[i]));
+                            .data('projectId', this._projectIds[i]));
                 } else {
                     iconsEl.append('<i class="glyphicon glyphicon-lock locked extra-info info-hidden"/>');
                 }
@@ -651,13 +648,11 @@ define([
         }
     };
 
-    ProjectsDialog.prototype._createProject = function (
-        projectName,
-        type,
-        seedName,
-        branchName,
-        commitHash
-    ) {
+    ProjectsDialog.prototype._createProject = function (projectName,
+                                                        type,
+                                                        seedName,
+                                                        branchName,
+                                                        commitHash) {
         var self = this,
             parameters = {
                 type: type,
@@ -695,6 +690,19 @@ define([
                     selectNewProject(projectId);
                 }
             });
+        } else if (type === 'package') {
+            //TODO check the possibility of using url
+            self._logger.debug('Importing package: ');
+            self._client.createProjectFromPackage(projectName, 'master', seedName,
+                self._ownerId, '', function (err, projectId) {
+                    if (err) {
+                        self._logger.error('Failed to import project package', err);
+                        loader.stop();
+                    } else {
+                        self._logger.debug('Project package imported');
+                        selectNewProject(projectId);
+                    }
+                });
         } else {
             self._logger.debug('Creating new project from seed: ', parameters);
             self._client.seedProject(parameters, function (err, result) {

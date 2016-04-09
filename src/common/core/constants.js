@@ -54,6 +54,8 @@ define([], function () {
         EXPORT_TYPE_PROJECT: 'project',
         EXPORT_TYPE_LIBRARY: 'library',
 
+        NAMESPACE_SEPARATOR: '.',
+
         MAX_AGE: 3,
         MAX_TICKS: 2000,
         MAX_MUTATE: 30000

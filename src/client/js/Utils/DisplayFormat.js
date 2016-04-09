@@ -43,7 +43,11 @@ define(['js/Constants',
             for (key in attrKeyValues) {
                 if (attrKeyValues.hasOwnProperty(key)) {
                     re = new RegExp(key.replace('$', '\\$'), 'g');
-                    attrKeyValues[key] = obj.getAttribute(key.replace(ATTRIBUTE_MARKER, ''));
+                    if (key.replace(ATTRIBUTE_MARKER, '') === 'name') {
+                        attrKeyValues[key] = obj.getFullyQualifiedName();
+                    } else {
+                        attrKeyValues[key] = obj.getAttribute(key.replace(ATTRIBUTE_MARKER, ''));
+                    }
 
                     if (attrKeyValues[key] !== undefined && attrKeyValues[key] !== null) {
                         result = result.replace(re, attrKeyValues[key]);

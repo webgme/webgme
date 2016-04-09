@@ -186,7 +186,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
             if (ptrToObj) {
                 ptrToName = displayFormat.resolve(ptrToObj);
                 if (ptrToName === '' || this.USE_ACTUAL_POINTER_NAME === true) {
-                    ptrToName = ptrToObj.getAttribute('name');
+                    ptrToName = ptrToObj.getFullyQualifiedName();
                 }
 
                 ptrTo = 'Follow Pointer: [' + ptrTo + ']';

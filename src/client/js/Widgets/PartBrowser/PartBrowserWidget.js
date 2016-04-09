@@ -194,7 +194,7 @@ define([
                 partDecoratorInstance.DECORATORID !== partDesc.decoratorClass.prototype.DECORATORID) {
 
                 this._logger.debug('decorator update: "' + partDecoratorInstance.DECORATORID + '" --> "' +
-                partDesc.decoratorClass.prototype.DECORATORID + '"...');
+                    partDesc.decoratorClass.prototype.DECORATORID + '"...');
 
                 var oldControl = partDecoratorInstance.getControl();
                 var oldMetaInfo = partDecoratorInstance.getMetaInfo();
@@ -236,7 +236,7 @@ define([
         } else {
             //not present in the list yet
             if (partContainerDiv.length === 0) {
-               return this.addPart(partId, partDesc);
+                return this.addPart(partId, partDesc);
             }
         }
 
@@ -254,7 +254,6 @@ define([
         }
     };
 
-
     PartBrowserWidget.prototype.notifyPart = function (partId, componentList) {
         var partDecoratorInstance = this._parts[partId] ? this._parts[partId].decoratorInstance : undefined;
 
@@ -263,15 +262,18 @@ define([
         }
     };
 
-
     PartBrowserWidget.prototype.setEnabled = function (partId, enabled) {
         var partContainerDiv = this._partDraggableEl[partId] ? this._partDraggableEl[partId] : undefined;
 
         if (partContainerDiv) {
             dragSource.enableDraggable(partContainerDiv, enabled);
+            if (enabled) {
+                partContainerDiv.fadeTo(1, 1);
+            } else {
+                partContainerDiv.fadeTo(1, 0.3);
+            }
         }
     };
-
 
     return PartBrowserWidget;
 });

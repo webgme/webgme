@@ -13,6 +13,9 @@ define([], function () {
             _nodes = null,
             _saveFunc = function () {
             },
+            _errorFunc = function () {
+
+            },
             _initialized = false;
 
         function _save(node, message) {
@@ -21,10 +24,11 @@ define([], function () {
             _saveFunc(message);
         }
 
-        function initialize(core, nodes, save) {
+        function initialize(core, nodes, save, printCoreError) {
             _core = core;
             _nodes = nodes;
             _saveFunc = save;
+            _errorFunc = printCoreError;
             _initialized = true;
         }
 
@@ -72,7 +76,7 @@ define([], function () {
             var i,
                 j,
                 aspectNode,
-
+                error,
                 targetPath;
             if (!isValidMeta) {
                 return;
@@ -83,11 +87,19 @@ define([], function () {
 
                 //children
                 if (meta.children && meta.children.items && meta.children.items.length > 0) {
-                    _core.setChildrenMetaLimits(node, meta.children.min, meta.children.max);
+                    error = _core.setChildrenMetaLimits(node, meta.children.min, meta.children.max);
+                    if (error instanceof Error) {
+                        _errorFunc(error);
+                        return;
+                    }
                     for (i = 0; i < meta.children.items.length; i += 1) {
                         if (typeof meta.children.items[i] === 'string' && _nodes[meta.children.items[i]]) {
-                            _core.setChildMeta(node,
+                            error = _core.setChildMeta(node,
                                 _nodes[meta.children.items[i]], meta.children.minItems[i], meta.children.maxItems[i]);
+                            if (error instanceof Error) {
+                                _errorFunc(error);
+                                return;
+                            }
                         }
                     }
                 }
@@ -95,7 +107,11 @@ define([], function () {
                 //attributes
                 if (meta.attributes) {
                     for (i in meta.attributes) {
-                        _core.setAttributeMeta(node, i, meta.attributes[i]);
+                        error = _core.setAttributeMeta(node, i, meta.attributes[i]);
+                        if (error instanceof Error) {
+                            _errorFunc(error);
+                            return;
+                        }
                     }
                 }
 
@@ -103,12 +119,20 @@ define([], function () {
                 if (meta.pointers) {
                     for (i in meta.pointers) {
                         if (meta.pointers[i].items && meta.pointers[i].items.length > 0) {
-                            _core.setPointerMetaLimits(node, i, meta.pointers[i].min, meta.pointers[i].max);
+                            error = _core.setPointerMetaLimits(node, i, meta.pointers[i].min, meta.pointers[i].max);
+                            if (error instanceof Error) {
+                                _errorFunc(error);
+                                return;
+                            }
                             for (j = 0; j < meta.pointers[i].items.length; j += 1) {
                                 if (typeof meta.pointers[i].items[j] === 'string' &&
                                     _nodes[meta.pointers[i].items[j]]) {
-                                    _core.setPointerMetaTarget(node, i, _nodes[meta.pointers[i].items[j]],
+                                    error = _core.setPointerMetaTarget(node, i, _nodes[meta.pointers[i].items[j]],
                                         meta.pointers[i].minItems[j], meta.pointers[i].maxItems[j]);
+                                    if (error instanceof Error) {
+                                        _errorFunc(error);
+                                        return;
+                                    }
                                 }
                             }
                         }
@@ -121,7 +145,11 @@ define([], function () {
                         if (meta.aspects[i].length > 0) {
                             for (j = 0; j < meta.aspects[i].length; j += 1) {
                                 if (typeof meta.aspects[i][j] === 'string' && _nodes[meta.aspects[i][j]]) {
-                                    _core.setAspectMetaTarget(node, i, _nodes[meta.aspects[i][j]]);
+                                    error = _core.setAspectMetaTarget(node, i, _nodes[meta.aspects[i][j]]);
+                                    if (error instanceof Error) {
+                                        _errorFunc(error);
+                                        return;
+                                    }
                                 }
                             }
                         }
@@ -132,7 +160,11 @@ define([], function () {
                 if (meta.constraints) {
                     for (i in meta.constraints) {
                         if (typeof meta.constraints[i] === 'object') {
-                            _core.setConstraint(node, i, meta.constraints[i]);
+                            error = _core.setConstraint(node, i, meta.constraints[i]);
+                            if (error instanceof Error) {
+                                _errorFunc(error);
+                                return;
+                            }
                         }
                     }
                 }
@@ -390,22 +422,32 @@ define([], function () {
         function updateValidChildrenItem(path, newTypeObj) {
             var node = _nodes[path],
                 i,
+                error,
                 child;
 
             if (newTypeObj && newTypeObj.id && node) {
                 child = _nodes[newTypeObj.id];
                 if (child) {
-                    _core.setChildMeta(node, child, newTypeObj.min, newTypeObj.max);
+                    error = _core.setChildMeta(node, child, newTypeObj.min, newTypeObj.max);
+                    if (error instanceof Error) {
+                        _errorFunc(error);
+                        return;
+                    }
                     _save(node, 'Meta.updateValidChildrenItem(' + path + ', ' + newTypeObj.id + ')');
                 }
             }
         }
 
         function removeValidChildrenItem(path, typeId) {
-            var node = _nodes[path];
+            var node = _nodes[path],
+                error;
 
             if (node) {
-                _core.delChildMeta(node, typeId);
+                error = _core.delChildMeta(node, typeId);
+                if (error instanceof Error) {
+                    _errorFunc(error);
+                    return;
+                }
                 _save(node, 'Meta.removeValidChildrenItem(' + path + ', ' + typeId + ')');
             }
         }
@@ -415,19 +457,29 @@ define([], function () {
         }
 
         function setAttributeSchema(path, name, schema) {
-            var node = _nodes[path];
+            var node = _nodes[path],
+                error;
 
             if (node) {
-                _core.setAttributeMeta(node, name, schema);
+                error = _core.setAttributeMeta(node, name, schema);
+                if (error instanceof Error) {
+                    _errorFunc(error);
+                    return;
+                }
                 _save(node, 'Meta.setAttributeSchema(' + path + ', ' + name + ')');
             }
         }
 
         function removeAttributeSchema(path, name) {
-            var node = _nodes[path];
+            var node = _nodes[path],
+                error;
 
             if (node) {
-                _core.delAttributeMeta(node, name);
+                error = _core.delAttributeMeta(node, name);
+                if (error instanceof Error) {
+                    _errorFunc(error);
+                    return;
+                }
                 _save(node, 'Meta.removeAttributeSchema(' + path + ', ' + name + ')');
             }
         }
@@ -436,6 +488,7 @@ define([], function () {
             var node = _nodes[path],
                 meta, i,
                 pointerMeta;
+
             if (node) {
                 meta = _core.getPointerMeta(node, name);
 
@@ -503,31 +556,46 @@ define([], function () {
 
         function updateValidTargetItem(path, name, targetObj) {
             var node = _nodes[path],
-                target;
+                target,
+                error;
 
             if (targetObj && targetObj.id && node) {
                 target = _nodes[targetObj.id];
                 if (target) {
-                    _core.setPointerMetaTarget(node, name, target, targetObj.min, targetObj.max);
+                    error = _core.setPointerMetaTarget(node, name, target, targetObj.min, targetObj.max);
+                    if (error instanceof Error) {
+                        _errorFunc(error);
+                        return;
+                    }
                     _save(node, 'Meta.updateValidTargetItem(' + path + ', ' + name + ', ' + targetObj.id + ')');
                 }
             }
         }
 
         function removeValidTargetItem(path, name, targetId) {
-            var node = _nodes[path];
+            var node = _nodes[path],
+                error;
 
             if (node) {
-                _core.delPointerMetaTarget(node, name, targetId);
+                error = _core.delPointerMetaTarget(node, name, targetId);
+                if (error instanceof Error) {
+                    _errorFunc(error);
+                    return;
+                }
                 _save(node, 'Meta.removeValidTargetItem(' + path + ', ' + name + ', ' + targetId + ')');
             }
         }
 
         function deleteMetaPointer(path, name) {
-            var node = _nodes[path];
+            var node = _nodes[path],
+                error;
 
             if (node) {
-                _core.delPointerMeta(node, name);
+                error = _core.delPointerMeta(node, name);
+                if (error instanceof Error) {
+                    _errorFunc(error);
+                    return;
+                }
                 _save(node, 'Meta.deleteMetaPointer(' + path + ', ' + name + ')');
             }
         }
@@ -535,16 +603,25 @@ define([], function () {
         function setPointerMeta(path, name, meta) {
             var node = _nodes[path],
                 target,
+                error,
                 i;
 
             if (meta && meta.items && node) {
                 for (i = 0; i < meta.items.length; i += 1) {
                     target = _nodes[meta.items[i].id];
                     if (target) {
-                        _core.setPointerMetaTarget(node, name, target, meta.items[i].min, meta.items[i].max);
+                        error = _core.setPointerMetaTarget(node, name, target, meta.items[i].min, meta.items[i].max);
+                        if (error instanceof Error) {
+                            _errorFunc(error);
+                            return;
+                        }
                     }
                 }
-                _core.setPointerMetaLimits(node, name, meta.min, meta.max);
+                error = _core.setPointerMetaLimits(node, name, meta.min, meta.max);
+                if (error instanceof Error) {
+                    _errorFunc(error);
+                    return;
+                }
                 _save(node, 'Meta.setPointerMeta(' + path + ', ' + name + ')');
             }
         }
@@ -552,16 +629,25 @@ define([], function () {
         function setChildrenMeta(path, meta) {
             var node = _nodes[path],
                 target,
+                error,
                 i;
 
             if (meta && meta.items && node) {
                 for (i = 0; i < meta.items.length; i += 1) {
                     target = _node[meta.items[i].id];
                     if (target) {
-                        _core.setChildMeta(node, target, meta.items[i].min, meta.items[i].max);
+                        error = _core.setChildMeta(node, target, meta.items[i].min, meta.items[i].max);
+                        if (error instanceof Error) {
+                            _errorFunc(error);
+                            return;
+                        }
                     }
                 }
-                _core.setChildrenMetaLimits(node, meta.min, meta.max);
+                error = _core.setChildrenMetaLimits(node, meta.min, meta.max);
+                if (error instanceof Error) {
+                    _errorFunc(error);
+                    return;
+                }
                 _save(node, 'Meta.setChildrenMeta(' + path + ')');
             }
         }
@@ -606,14 +692,23 @@ define([], function () {
         function setMetaAspect(path, name, aspect) {
             var i,
                 target,
-                node = _nodes[path];
+                node = _nodes[path],
+                error;
 
             if (node) {
-                _core.delAspectMeta(node, name);
+                error = _core.delAspectMeta(node, name);
+                if (error instanceof Error) {
+                    _errorFunc(error);
+                    return;
+                }
                 for (i = 0; i < aspect.length; i += 1) {
                     target = _nodes[aspect[i]];
                     if (target) {
-                        _core.setAspectMetaTarget(node, name, target);
+                        error = _core.setAspectMetaTarget(node, name, target);
+                        if (error instanceof Error) {
+                            _errorFunc(error);
+                            return;
+                        }
                     }
                 }
                 _save(node, 'Meta.setMetaAspect(' + path + ', ' + name + ')');
@@ -622,6 +717,7 @@ define([], function () {
 
         function getAspectTerritoryPattern(path, name) {
             var aspect = getMetaAspect(path, name);
+
             if (aspect !== null) {
                 aspect.children = 1; //TODO now it is fixed, maybe we can change that in the future
                 return aspect;
@@ -630,9 +726,15 @@ define([], function () {
         }
 
         function deleteMetaAspect(path, name) {
-            var node = _nodes[path];
+            var node = _nodes[path],
+                error;
+
             if (node) {
-                _core.delAspectMeta(node, name);
+                error = _core.delAspectMeta(node, name);
+                if (error instanceof Error) {
+                    _errorFunc(error);
+                    return;
+                }
                 _save(node, 'Meta.deleteMetaAspect(' + path + ', ' + name + ')');
             }
         }

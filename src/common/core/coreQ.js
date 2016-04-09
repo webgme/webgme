@@ -191,6 +191,28 @@ define(['common/core/core', 'q'], function (Core, Q) {
 
             return deferred.promise.nodeify(callback);
         };
+
+        var addLibraryOrg = this.addLibrary;
+        this.addLibrary = function (node, name, libraryRootHash, libraryInfo, callback) {
+            var deferred = Q.defer();
+            addLibraryOrg(node, name, libraryRootHash, libraryInfo, deferred.resolve);
+
+            return deferred.promise.nodeify(callback);
+        };
+
+        var updateLibraryOrg = this.updateLibrary;
+        this.updateLibrary = function (node, name, updatedLibraryRootHash, libraryInfo, updateInstructions, callback) {
+            var deferred = Q.defer();
+            updateLibraryOrg(node, name, updatedLibraryRootHash, libraryInfo, updateInstructions, function (err, result) {
+                if (err) {
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(result);
+                }
+            });
+
+            return deferred.promise.nodeify(callback);
+        }
     }
 
     CoreQ.prototype = Object.create(Core.prototype);
