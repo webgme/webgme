@@ -26,10 +26,6 @@ define([
                 this[key] = innerCore[key];
             }
 
-            // We need to remove guid related functions so they will not appear on the public API.
-            delete this.getDataGuid;
-            delete this.getDeductedGuid;
-
             logger.debug('initialized LibraryCore');
 
             //<editor-fold=Helper Functions>
@@ -56,25 +52,22 @@ define([
 
             function getLibraryName(node) {
                 ASSERT(self.isValidNode(node));
-                var parent,
-                    name = '';
+                var name = '';
 
-                parent = self.getParent(node);
+                node = self.getParent(node);
 
-                while (parent) {
-                    if (self.isLibraryRoot(parent) && self.getParent(parent) !== null) {
-                        name = self.getAttribute(parent, 'name') + CONSTANTS.NAMESPACE_SEPARATOR + name;
+                while (node) {
+                    if (self.isLibraryRoot(node) && self.getParent(node) !== null) {
+                        name = self.getAttribute(node, 'name') + CONSTANTS.NAMESPACE_SEPARATOR + name;
                     }
-                    parent = self.getParent(parent);
+                    node = self.getParent(node);
                 }
 
                 return name;
             }
 
             function getRootOfLibrary(node, name) {
-                var root = self.getRoot(node);
-
-                return root.libraryRoots[name];
+                return self.getRoot(node).libraryRoots[name];
             }
 
             function getLibraryRoot(node) {
@@ -205,11 +198,11 @@ define([
 
                 if (parameters && parameters.parent &&
                     (self.isLibraryRoot(parameters.parent) || self.isLibraryElement(parameters.parent))) {
-                    return new Error('cannot create new node inside a library');
+                    return new Error('Not allowed to create new node inside library.');
                 }
 
                 if (parameters && parameters.base && self.isLibraryRoot(parameters.base)) {
-                    return new Error('cannot instantiate a library root');
+                    return new Error('Not allowed to instantiate library root.');
                 }
 
                 node = innerCore.createNode(parameters);
@@ -222,7 +215,7 @@ define([
 
             this.deleteNode = function (node, technical) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot remove library node by simply deleting them');
+                    return new Error('Not allowed to remove library node by simply deleting them.');
                 }
 
                 return innerCore.deleteNode(node, technical);
@@ -230,11 +223,11 @@ define([
 
             this.copyNode = function (node, parent) {
                 if (self.isLibraryRoot(parent) || self.isLibraryElement(parent)) {
-                    return new Error('cannot add nodes inside a library');
+                    return new Error('Not allowed to add nodes inside a library.');
                 }
 
                 if (self.isLibraryRoot(node)) {
-                    return new Error('cannot copy library root');
+                    return new Error('Not allowed to copy library root.');
                 }
 
                 return innerCore.copyNode(node, parent);
@@ -243,12 +236,12 @@ define([
             this.copyNodes = function (nodes, parent) {
                 var i;
                 if (self.isLibraryRoot(parent) || self.isLibraryElement(parent)) {
-                    return new Error('cannot add nodes inside a library');
+                    return new Error('Not allowed to add nodes inside a library.');
                 }
 
                 for (i = 0; i < nodes.length; i += 1) {
                     if (self.isLibraryRoot(nodes[i])) {
-                        return new Error('cannot copy library root');
+                        return new Error('Not allowed to copy library root.');
                     }
                 }
 
@@ -257,11 +250,11 @@ define([
 
             this.moveNode = function (node, parent) {
                 if (self.isLibraryRoot(parent) || self.isLibraryElement(parent)) {
-                    return new Error('cannot add nodes inside a library');
+                    return new Error('Not allowed to add nodes inside a library.');
                 }
 
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot move library elements');
+                    return new Error('Not allowed to move library elements.');
                 }
 
                 return innerCore.moveNode(node, parent);
@@ -269,7 +262,7 @@ define([
 
             this.setAttribute = function (node, name, value) {
                 if (self.isLibraryElement(node) || self.isLibraryRoot(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.setAttribute(node, name, value);
@@ -277,7 +270,7 @@ define([
 
             this.delAttribute = function (node, name) {
                 if (self.isLibraryElement(node) || self.isLibraryRoot(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.delAttribute(node, name);
@@ -285,7 +278,7 @@ define([
 
             this.setRegistry = function (node, name, value) {
                 if (self.isLibraryElement(node) || self.isLibraryRoot(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.setRegistry(node, name, value);
@@ -293,7 +286,7 @@ define([
 
             this.delRegistry = function (node, name) {
                 if (self.isLibraryElement(node) || self.isLibraryRoot(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.delRegistry(node, name);
@@ -301,7 +294,7 @@ define([
 
             this.setPointer = function (node, name, target) {
                 if (self.isLibraryElement(node) || self.isLibraryRoot(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.setPointer(node, name, target);
@@ -309,7 +302,7 @@ define([
 
             this.deletePointer = function (node, name) {
                 if (self.isLibraryElement(node) || self.isLibraryRoot(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.deletePointer(node, name);
@@ -317,11 +310,11 @@ define([
 
             this.setBase = function (node, base) {
                 if (self.isLibraryElement(node) || self.isLibraryRoot(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 if (base && self.isLibraryRoot(base)) {
-                    return new Error('library root cannot have instances');
+                    return new Error('Not allowed to instantiate library root.');
                 }
 
                 return innerCore.setBase(node, base);
@@ -329,7 +322,7 @@ define([
 
             this.addMember = function (node, name, member) {
                 if (self.isLibraryElement(node) || self.isLibraryRoot(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.addMember(node, name, member);
@@ -337,7 +330,7 @@ define([
 
             this.delMember = function (node, name, path) {
                 if (self.isLibraryElement(node) || self.isLibraryRoot(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.delMember(node, name, path);
@@ -345,42 +338,42 @@ define([
 
             this.setMemberAttribute = function (node, setName, memberPath, attrName, value) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
                 return innerCore.setMemberAttribute(node, setName, memberPath, attrName, value);
             };
 
             this.delMemberAttribute = function (node, setName, memberPath, attrName) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
                 return innerCore.delMemberAttribute(node, setName, memberPath, attrName);
             };
 
             this.setMemberRegistry = function (node, setName, memberPath, regName, value) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
                 return innerCore.setMemberRegistry(node, setName, memberPath, regName, value);
             };
 
             this.delMemberRegistry = function (node, setName, memberPath, regName) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
                 return innerCore.delMemberRegistry(node, setName, memberPath, regName);
             };
 
             this.createSet = function (node, name) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
                 return innerCore.createSet(node, name);
             };
 
             this.deleteSet = function (node, name) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
                 return innerCore.deleteSet(node, name);
             };
@@ -388,7 +381,7 @@ define([
             this.setGuid = function (node, guid) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
                     //FIXME cannot return any error in async functions :/
-                    // /return new Error('cannot modify library elements');
+                    // /return new Error('Not allowed to modify library elements.');
                 } else {
                     return innerCore.setGuid(node, guid);
                 }
@@ -396,21 +389,21 @@ define([
 
             this.setConstraint = function (node, name, constraint) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
                 return innerCore.setConstraint(node, name, constraint);
             };
 
             this.delConstraint = function (node, name) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
                 return innerCore.delConstraint(node, name);
             };
 
             this.clearMetaRules = function (node) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.clearMetaRules(node);
@@ -418,7 +411,7 @@ define([
 
             this.setAttributeMeta = function (node, name, rule) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.setAttributeMeta(node, name, rule);
@@ -426,7 +419,7 @@ define([
 
             this.delAttributeMeta = function (node, name) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.delAttributeMeta(node, name);
@@ -434,11 +427,11 @@ define([
 
             this.setChildMeta = function (node, child, min, max) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 if (self.isLibraryRoot(child)) {
-                    return new Error('library root cannot be a valid child');
+                    return new Error('Not allowed to use library root as valid child.');
                 }
 
                 return innerCore.setChildMeta(node, child, min, max);
@@ -446,7 +439,7 @@ define([
 
             this.delChildMeta = function (node, childPath) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.delChildMeta(node, childPath);
@@ -454,7 +447,7 @@ define([
 
             this.setChildrenMetaLimits = function (node, min, max) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.setChildrenMetaLimits(node, min, max);
@@ -462,7 +455,7 @@ define([
 
             this.setPointerMetaTarget = function (node, name, target, min, max) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.setPointerMetaTarget(node, name, target, min, max);
@@ -470,7 +463,7 @@ define([
 
             this.delPointerMetaTarget = function (node, name, targetPath) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.delPointerMetaTarget(node, name, targetPath);
@@ -478,7 +471,7 @@ define([
 
             this.setPointerMetaLimits = function (node, name, min, max) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.setPointerMetaLimits(node, name, min, max);
@@ -486,7 +479,7 @@ define([
 
             this.delPointerMeta = function (node, name) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.delPointerMeta(node, name);
@@ -494,7 +487,7 @@ define([
 
             this.setAspectMetaTarget = function (node, name, target) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.setAspectMetaTarget(node, name, target);
@@ -502,7 +495,7 @@ define([
 
             this.delAspectMetaTarget = function (node, name, targetPath) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.delAspectMetaTarget(node, name, targetPath);
@@ -510,7 +503,7 @@ define([
 
             this.delAspectMeta = function (node, name) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.delAspectMeta(node, name);
@@ -518,7 +511,7 @@ define([
 
             this.delMixin = function (node, mixinPath) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.delMixin(node, mixinPath);
@@ -529,12 +522,12 @@ define([
                     root = self.getRoot(node);
 
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 for (libraryName in root.libraryRoots) {
                     if (self.getPath(root.libraryRoots[libraryName]) === mixinPath) {
-                        return new Error('library root cannot be a mixin');
+                        return new Error('Not allowed to use library root as mixin.');
                     }
                 }
 
@@ -543,7 +536,7 @@ define([
 
             this.clearMixins = function (node) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('cannot modify library elements');
+                    return new Error('Not allowed to modify library elements.');
                 }
 
                 return innerCore.clearMixins(node);
@@ -583,20 +576,30 @@ define([
                 return getLibraryName(node) + self.getAttribute(node, 'name');
             };
 
-            this.getLibraryGuid = function (node, libraryRoot) {
+            this.getLibraryGuid = function (node, name) {
                 ASSERT(self.isValidNode(node));
-                if (!libraryRoot) {
-                    libraryRoot = getLibraryRoot(node);
+                var libraryRoot;
+
+                if (!self.isLibraryElement(node)) {
+                    return new Error('Node is not a library member');
                 }
-                ASSERT(self.isValidNode(libraryRoot) &&
-                    getLibraryName(node).indexOf(getLibraryName(libraryRoot) === 0));
+
+                if (!name) {
+                    libraryRoot = getLibraryRoot(node);
+                } else {
+                    libraryRoot = getRootOfLibrary(node, name);
+                }
+
+                if (!libraryRoot) {
+                    return new Error('Unknown library was given');
+                }
+
+                if (self.getFullyQualifiedName(node).indexOf(self.getFullyQualifiedName(libraryRoot)) !== 0) {
+                    return new Error('Node is not a member of the library');
+                }
 
                 if (self.isLibraryRoot(node) && self.getPath(node) === self.getPath(libraryRoot)) {
                     return innerCore.getDataGuid(node);
-                }
-
-                if (!self.isLibraryElement(node)) {
-                    return null; //normal nodes do not have library GUID
                 }
 
                 return innerCore.getDeductedGuid(node, self.getLibraryGuid(self.getParent(node), libraryRoot));
@@ -708,7 +711,6 @@ define([
                                 innerCore.setBase(libraryFCO, FCO);
 
                                 //adding new nodes to the global META
-                                console.log('NNP', newNodePaths, inMeta);
                                 for (i = 0; i < newLibraryNodes.length; i += 1) {
                                     if (newNodePaths.indexOf(self.getPath(newLibraryNodes[i])) !== -1 &&
                                         inMeta.indexOf(self.getPath(newLibraryNodes[i])) !== -1) {
@@ -728,14 +730,13 @@ define([
 
             this.removeLibrary = function (node, name) {
                 ASSERT(self.isValidNode(node));
-                var root = self.getRoot(node);
+                var root = self.getRoot(node),
+                    libraryRoot = root.libraryRoots[name];
 
-                ASSERT(typeof name === 'string' &&
-                    name.indexOf(CONSTANTS.NAMESPACE_SEPARATOR) === -1 &&
-                    root.libraryRoots[name]);
-
-                innerCore.deleteNode(root.libraryRoots[name], true);
-                delete root.libraryRoots[name];
+                if (libraryRoot && !self.isLibraryElement(libraryRoot)) {
+                    innerCore.deleteNode(root.libraryRoots[name], true);
+                    delete root.libraryRoots[name];
+                }
 
             };
 
@@ -758,7 +759,7 @@ define([
                 return Object.keys(self.getRoot(node).libraryRoots);
             };
 
-            this.getLibraryNodes = function (node, name) {
+            this.getLibraryMetaNodes = function (node, name) {
                 var allNodes = self.getAllMetaNodes(node),
                     libraryNodes = {},
                     path;

@@ -72,7 +72,7 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
      * @param callback
      * @returns {*}
      */
-    function addAssetsFromExportedProject(logger, blobClient, mainMetadata) {
+    function addAssetsFromExportedProject(logger, blobClient, mainMetadata, callback) {
         var projectFileHash = null,
             softLinkNames = Object.keys(mainMetadata.content),
             deferred = Q.defer();
@@ -103,7 +103,7 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
             })
             .catch(deferred.reject);
 
-        return deferred.promise;
+        return deferred.promise.nodeify(callback);
     }
 
     function _gatherFilesFromMetadataHashRec(logger, blobClient, metadata, assetHash, artifact) {
@@ -113,7 +113,6 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
             filenameContent;
 
         logger.debug('_gatherFilesFromMetadataHashRec, metadata:', metadata);
-        console.log('_gatherFilesFromMetadataHashRec, metadata:', metadata);
 
         if (metadata.contentType === BlobMetadata.CONTENT_TYPES.OBJECT) {
             filenameContent = assetHash + '.content';
@@ -126,11 +125,10 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
                     deferred.resolve();
                 })
                 .catch(function (err) {
-                    err = err instanceof Error ? err : new Error(err);
                     if (err.message.indexOf('Another content with the same name was already added.') > -1) {
                         deferred.resolve();
                     } else {
-                        deferred.reject(new Error(err));
+                        deferred.reject(err);
                     }
                 });
 
@@ -153,11 +151,9 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
                 .then(function () {
                     deferred.resolve();
                 })
-                .catch(function (err) {
-                    deferred.reject(new Error(err));
-                });
+                .catch(deferred.reject);
         } else {
-            deferred.reject(new Error('Unsupported content type', metadata.contentType));
+            deferred.reject(new Error('Unsupported content type: '+metadata.contentType));
         }
 
         return deferred.promise;
@@ -173,14 +169,12 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
      * @returns {*}
      */
     function buildProjectPackage(logger, blobClient, jsonExport, addAssets, callback) {
-        console.log('exporting.', addAssets);
         var artie = blobClient.createArtifact(jsonExport.projectId +
                 '_' + (jsonExport.branchName || jsonExport.commitHash)),
             assets = jsonExport.hashes.assets || [];
 
         artie.descriptor.name = jsonExport.projectId +
             '_' + (jsonExport.branchName || jsonExport.commitHash) + '.webgmeX';
-        console.log('exporting:', assets);
 
         if (!addAssets) {
             assets = [];
@@ -198,12 +192,11 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
 
                 for (i = 0; i < result.length; i += 1) {
                     if (result[i].state === 'rejected') {
-                        error = result[i].reason instanceof Error ? result[i].reason : new Error(result[i].reason);
+                        error = result[i].reason;
                         logger.debug('Gathering returned with error', assets[i], error);
                         if (error.message.indexOf('Another content with the same name was already added.') === -1) {
                             //some real error
-                            logger.error('Error for gathering asset failed:', assets[i], error);
-                            throw new Error('gathering assets [' + assets[i] + '] failed:' + error);
+                            throw new Error('gathering assets [' + assets[i] + '] failed:' + error.message);
                         }
                     }
                 }

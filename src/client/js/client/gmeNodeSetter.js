@@ -5,7 +5,7 @@
  */
 define([], function () {
     'use strict';
-    function gmeNodeSetter(logger, state, saveRoot, storeNode, sendError) {
+    function gmeNodeSetter(logger, state, saveRoot, storeNode, printCoreError) {
 
         function _setAttrAndRegistry(node, desc) {
             var name;
@@ -33,7 +33,7 @@ define([], function () {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 error = state.core.setAttribute(state.nodes[path].node, name, value);
                 if (error instanceof Error) {
-                    sendError(error);
+                    printCoreError(error);
                     return;
                 }
                 msg = msg || 'setAttribute(' + path + ',' + name + ',' + value + ')';
@@ -47,7 +47,7 @@ define([], function () {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 error = state.core.delAttribute(state.nodes[path].node, name);
                 if (error instanceof Error) {
-                    sendError(error);
+                    printCoreError(error);
                     return;
                 }
                 msg = msg || 'delAttribute(' + path + ',' + name + ')';
@@ -61,7 +61,7 @@ define([], function () {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 error = state.core.setRegistry(state.nodes[path].node, name, value);
                 if (error instanceof Error) {
-                    sendError(error);
+                    printCoreError(error);
                     return;
                 }
                 msg = msg || 'setRegistry(' + path + ',' + ',' + name + ',' + value + ')';
@@ -75,7 +75,7 @@ define([], function () {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 error = state.core.delRegistry(state.nodes[path].node, name);
                 if (error instanceof Error) {
-                    sendError(error);
+                    printCoreError(error);
                     return;
                 }
                 msg = msg || 'delRegistry(' + path + ',' + ',' + name + ')';
@@ -106,7 +106,7 @@ define([], function () {
                     newNode = state.core.copyNode(state.nodes[pathestocopy[0]].node,
                         state.nodes[parameters.parentId].node);
                     if (newNode instanceof Error) {
-                        sendError(newNode);
+                        printCoreError(newNode);
                         return;
                     }
                     storeNode(newNode);
@@ -115,7 +115,7 @@ define([], function () {
                 } else {
                     newNodes = _copyMultipleNodes(pathestocopy, parameters.parentId);
                     if (newNodes instanceof Error) {
-                        sendError(newNodes);
+                        printCoreError(newNodes);
                         return;
                     }
                     for (nodePath in newNodes) {
@@ -356,7 +356,7 @@ define([], function () {
                         relid: parameters.relid
                     });
                     if (child instanceof Error) {
-                        sendError(child);
+                        printCoreError(child);
                         return;
                     }
 
@@ -368,13 +368,13 @@ define([], function () {
                                 y: parameters.position.y || 100
                             });
                         if (error instanceof Error) {
-                            sendError(error);
+                            printCoreError(error);
                             return;
                         }
                     } else {
                         error = state.core.setRegistry(child, 'position', {x: 100, y: 100});
                         if (error instanceof Error) {
-                            sendError(error);
+                            printCoreError(error);
                             return;
                         }
                     }
@@ -478,7 +478,7 @@ define([], function () {
             if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 error = state.core.deleteSet(state.nodes[path].node, setid);
                 if (error instanceof Error) {
-                    sendError(error);
+                    printCoreError(error);
                     return;
                 }
                 msg = msg || 'deleteSet(' + path + ',' + setid + ')';
@@ -495,7 +495,7 @@ define([], function () {
                 typeof state.nodes[basepath].node === 'object') {
                 error = state.core.setBase(state.nodes[path].node, state.nodes[basepath].node);
                 if (error instanceof Error) {
-                    sendError(error);
+                    printCoreError(error);
                     return;
                 }
                 saveRoot('setBase(' + path + ',' + basepath + ')');
@@ -507,7 +507,7 @@ define([], function () {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 error = state.core.setBase(state.nodes[path].node, null);
                 if (error instanceof Error) {
-                    sendError(error);
+                    printCoreError(error);
                     return;
                 }
                 saveRoot('delBase(' + path + ')');
@@ -519,7 +519,7 @@ define([], function () {
             if (state.core && state.nodes[nodePath] && typeof state.nodes[nodePath].node === 'object') {
                 error = state.core.addMixin(state.nodes[nodePath].node, mixinPath);
                 if (error instanceof Error) {
-                    sendError(error);
+                    printCoreError(error);
                     return;
                 }
                 saveRoot('addMixin(' + nodePath + ',' + mixinPath + ')');
@@ -531,7 +531,7 @@ define([], function () {
             if (state.core && state.nodes[nodePath] && typeof state.nodes[nodePath].node === 'object') {
                 error = state.core.delMixin(state.nodes[nodePath].node, mixinPath);
                 if (error instanceof Error) {
-                    sendError(error);
+                    printCoreError(error);
                     return;
                 }
 

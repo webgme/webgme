@@ -1009,7 +1009,7 @@ define(['js/logger',
         if (typeof options.hideLibraries === 'boolean') {
             self._currentFilters.hideLibraries = options.hideLibraries;
             self._filterFunctions.push(function (node) {
-                // Filter out connection nodes.
+                // Filter out library nodes.
                 if (self._currentFilters.hideLibraries === true) {
                     return node.data.isLibrary !== true;
                 } else {

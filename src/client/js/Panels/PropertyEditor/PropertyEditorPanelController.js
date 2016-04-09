@@ -220,7 +220,7 @@ define(['js/logger',
 
                 if (cNode.isLibraryElement()) {
                     propList[' GUIDl'] = {
-                        name: 'GUID[library]',
+                        name: 'GUID (library)',
                         value: cNode.getLibraryGuid(),
                         valueType: typeof selectedObjIDs[0],
                         isCommon: true,

@@ -27,7 +27,8 @@
       "toggled": {
         "hideConnections": false,
         "hideAbstracts": false,
-        "hideLeaves": false
+        "hideLeaves": false,
+        "hideLibraries": false
       }
     },
     "treeRoot": "",

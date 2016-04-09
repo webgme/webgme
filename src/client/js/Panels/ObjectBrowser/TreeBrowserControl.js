@@ -519,7 +519,7 @@ define(['js/logger',
                 menuItems.followLibrary = {
                     name: 'Follow library ...',
                     callback: function (/*key, options*/) {
-                        self._client.followLibrary(nodeId);
+                        self._client.openLibraryOriginInNewWindow(nodeId);
                     },
                     icon: false
                 }

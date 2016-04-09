@@ -19,8 +19,7 @@ define(['js/Loader/LoaderCircles',
 
     'use strict';
 
-    var UpdateDialog,
-        MAX_FILE_SIZE = 100000000;
+    var UpdateDialog;
 
     UpdateDialog = function (client) {
         this._client = client;

@@ -24,11 +24,11 @@ define([], function () {
             _saveFunc(message);
         }
 
-        function initialize(core, nodes, save, error) {
+        function initialize(core, nodes, save, printCoreError) {
             _core = core;
             _nodes = nodes;
             _saveFunc = save;
-            _errorFunc = error;
+            _errorFunc = printCoreError;
             _initialized = true;
         }
 

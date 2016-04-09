@@ -5,7 +5,7 @@
  */
 define(['js/Constants'], function (CONSTANTS) {
     'use strict';
-    function gmeLibraries(logger, state, storage, saveFunction) {
+    function gmeLibraries(logger, state, storage, saveRoot) {
 
         function getLibraryNames() {
             if (state.core && state.nodes[CONSTANTS.PROJECT_ROOT_ID] &&
@@ -71,15 +71,15 @@ define(['js/Constants'], function (CONSTANTS) {
 
         function removeLibrary(libraryName) {
             state.core.removeLibrary(state.nodes[CONSTANTS.PROJECT_ROOT_ID].node, libraryName);
-            saveFunction('removeLibrary(' + libraryName + ')');
+            saveRoot('removeLibrary(' + libraryName + ')');
         }
 
         function renameLibrary(oldName, newName) {
             state.core.renameLibrary(state.nodes[CONSTANTS.PROJECT_ROOT_ID].node, oldName, newName);
-            saveFunction('renameLibrary(' + oldName + ',' + newName + ')');
+            saveRoot('renameLibrary(' + oldName + ',' + newName + ')');
         }
 
-        function followLibrary(libraryRootId) {
+        function openLibraryOriginInNewWindow(libraryRootId) {
             var address,
                 info;
             if (!state.nodes[libraryRootId]) {
@@ -118,7 +118,7 @@ define(['js/Constants'], function (CONSTANTS) {
             removeLibrary: removeLibrary,
             renameLibrary: renameLibrary,
             getLibraryInfo: getLibraryInfo,
-            followLibrary: followLibrary
+            openLibraryOriginInNewWindow: openLibraryOriginInNewWindow
         };
     }
 

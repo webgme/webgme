@@ -6,14 +6,14 @@
 
 define(['./addDialog',
     './updateDialog',
-    './removeConfirmDialog',
-    './renameDialog'
-], function (AddDialog, UpdateDialog, RemoveConfirmDialog, RenameDialog) {
+    './renameDialog',
+    'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog'
+], function (AddDialog, UpdateDialog, RenameDialog, ConfirmDelete) {
 
     var LibraryManager = function (client) {
         this._add = new AddDialog(client);
         this._update = new UpdateDialog(client);
-        this._remove = new RemoveConfirmDialog();
+        this._remove = new ConfirmDelete();
         this._rename = new RenameDialog();
         this._doNotAskRemove = false;
         this._client = client;
