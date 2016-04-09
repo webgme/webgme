@@ -87,7 +87,7 @@ define([
 
                 if (currentConfiguration.shouldFail) {
                     //self.result.setError('Failed on purpose.');
-                    callbackn(new Error('Failed on purpose.'), self.result);
+                    callback(new Error('Failed on purpose.'), self.result);
                 } else {
                     self.result.setSuccess(true);
                     callback(null, self.result);
