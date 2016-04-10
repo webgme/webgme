@@ -20,7 +20,7 @@ var Path = require('path'),
     multipart = require('connect-multiparty'),
     Http = require('http'),
     URL = require('url'),
-    REGEXP = requireJS('common/regexp'),
+    ejs = requireJS('common/util/ejs'),
 
     MongoAdapter = require('./storage/mongo'),
     RedisAdapter = require('./storage/datastores/redisadapter'),
@@ -595,22 +595,18 @@ function StandAloneServer(gmeConfig) {
             projectId = req.query.project;
 
         logger.debug('resolved url', url);
-        if (REGEXP.HTML_ELEMENT.test(projectId)) {
-            logger.error('HTML tag sent as query parameter', projectId);
-            projectId = null;
-        }
 
-        fs.readFile(indexHtmlPath, 'utf8', function (err, data) {
+        fs.readFile(indexHtmlPath, 'utf8', function (err, indexTemp) {
             if (err) {
                 logger.error(err);
                 res.send(404);
             } else {
                 res.contentType('text/html');
-                res.send(
-                    data.replace(/__URL__/g, url)
-                        .replace(/__IMAGE_URL__/g, imageUrl)
-                        .replace(/__TITLE__/g, projectId ? projectId.replace('+', '/') : 'WebGME')
-                );
+                res.send(ejs.render(indexTemp, {
+                    url: url,
+                    imageUrl: imageUrl,
+                    projectId: projectId ? projectId.replace('+', '/') : 'WebGME'
+                }));
             }
         });
     });
