@@ -3,7 +3,10 @@
   "name": "Configuration and Artifacts",
   "version": "1.7.0",
   "description": "Illustrates how to setup a configuration for the plugin and how to generate and return artifacts.",
-  "icon": "glyphicon glyphicon-list-alt",
+  "icon": {
+    "src": "",
+    "class": "glyphicon glyphicon-list-alt"
+  },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "configStructure": [

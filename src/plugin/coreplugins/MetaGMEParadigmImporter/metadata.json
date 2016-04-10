@@ -3,7 +3,10 @@
   "name": "MetaGME Paradigm Importer",
   "version": "1.7.0",
   "description": "Imports a desktop GME XMP file into the meta sheet.",
-  "icon": "/gme.png",
+  "icon": {
+    "src": "/gme.png",
+    "class": ""
+  },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "configStructure": [

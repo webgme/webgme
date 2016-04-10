@@ -3,7 +3,10 @@
   "name": "Merge Example",
   "version": "1.7.0",
   "description": "Example plugin to show how to use the merge capabilities of webgme.",
-  "icon": "fa fa-share-alt fa-rotate-90",
+  "icon":  {
+    "src": "",
+    "class": "fa fa-share-alt fa-rotate-90"
+  },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "configStructure": [

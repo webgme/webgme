@@ -3,7 +3,10 @@
   "name": "Layout Generator",
   "version": "1.7.0",
   "description": "Generates a template of a custom layout for the generic UI.",
-  "icon": "fa fa-cogs",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cogs"
+  },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "configStructure": [

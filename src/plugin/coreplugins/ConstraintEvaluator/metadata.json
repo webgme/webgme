@@ -3,7 +3,10 @@
   "name": "Constraint Evaluator",
   "version": "1.7.0",
   "description": "Plugin for developers to test, evaluate and add custom constraints.",
-  "icon": "glyphicon glyphicon-ok-circle",
+  "icon": {
+    "src": "",
+    "class": "glyphicon glyphicon-ok-circle"
+  },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "configStructure": [

@@ -75,15 +75,15 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
                 // TODO: In next version use metadata for all
                 if (metadata) {
                     params.data = metadata;
-                    if (metadata.icon.indexOf('.') > -1) {
-                        // Image files have an extension with a dot ..
-                        iconPath = ['/plugin', metadata.id, metadata.id, metadata.icon].join('/');
-                        params.icon = $('<img class="plugin-icon" src="' + iconPath + '"/>');
+                    if (metadata.icon.src) {
+                        params.icon = $('<img/>', {
+                            src: ['/plugin', metadata.id, metadata.id, metadata.icon.src].join('/')
+                        });
                     } else {
-                        // css classes do not.
-                        params.icon = $('<i class="plugin-icon ' + metadata.icon + '"/>');
+                        params.icon = $('<i/>');
                     }
 
+                    params.icon.addClass('plugin-icon ' + metadata.icon.class);
                     params.text = metadata.name;
                     params.title = metadata.id + ' v' + metadata.version + ' - ' + metadata.description;
                 }

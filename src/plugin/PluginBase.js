@@ -120,7 +120,11 @@ define([
      * @returns {string}
      */
     PluginBase.prototype.getName = function () {
-        return this.pluginMetadata.name;
+        if (this.pluginMetadata) {
+            return this.pluginMetadata.name;
+        } else {
+            throw new Error('If pluginMetadata is not defined - implement this function in the derived class');
+        }
     };
 
     //</editor-fold>

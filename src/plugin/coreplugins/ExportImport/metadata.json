@@ -3,7 +3,10 @@
   "name": "Export, Import and Update Library",
   "version": "1.7.0",
   "description": "Example of how to export, import and update a library from and to webgme.\n The active node (i.e. open node on the canvas) will be the starting point, expect when importing a project.",
-  "icon": "glyphicon glyphicon-refresh",
+  "icon": {
+    "src": "",
+    "class": "glyphicon glyphicon-refresh"
+  },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "configStructure": [

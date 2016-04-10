@@ -3,7 +3,10 @@
   "name": "Executor Plugin",
   "version": "1.7.0",
   "description": "Example of how to use the Executor Client",
-  "icon": "fa fa-cloud",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cloud"
+  },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "configStructure": [

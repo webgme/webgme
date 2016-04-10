@@ -3,7 +3,10 @@
   "name": "AddOn Generator",
   "version": "1.7.0",
   "description": "Generates a functional addOn that extends the AddOnBase.",
-  "icon": "fa fa-cogs",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cogs"
+  },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "configStructure": [

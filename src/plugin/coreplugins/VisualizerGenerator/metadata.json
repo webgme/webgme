@@ -3,7 +3,10 @@
   "name": "Visualizer Generator",
   "version": "1.7.0",
   "description": "Generates a template for a visualizer.",
-  "icon": "fa fa-cogs",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cogs"
+  },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
   "configStructure": [

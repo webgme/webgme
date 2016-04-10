@@ -146,7 +146,6 @@ describe('REST API', function () {
             it('should 404 for non-existing plugin /api/plugin/DoesNotExist/metadata', function (done) {
                 agent.get(server.getUrl() + '/api/v1/plugin/DoesNotExist/metadata')
                     .end(function (err, res) {
-                        console.log(res.body);
                         expect(res.status).equal(404, err);
                         done();
                     });
@@ -155,7 +154,6 @@ describe('REST API', function () {
             it('should 404 for plugin with no metadata /api/plugin/PluginForked/metadata', function (done) {
                 agent.get(server.getUrl() + '/api/v1/plugin/PluginForked/metadata')
                     .end(function (err, res) {
-                        console.log(res.body);
                         expect(res.status).equal(404, err);
                         done();
                     });
