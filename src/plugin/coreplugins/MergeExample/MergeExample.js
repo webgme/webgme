@@ -11,11 +11,14 @@
 define([
     'plugin/PluginConfig',
     'plugin/PluginBase',
+    'text!./metadata.json',
     'common/core/users/merge',
     'q',
     'common/regexp'
-], function (PluginConfig, PluginBase, merge, Q, REGEXP) {
+], function (PluginConfig, PluginBase, pluginMetadata, merge, Q, REGEXP) {
     'use strict';
+
+    pluginMetadata = JSON.parse(pluginMetadata);
 
     /**
      * Initializes a new instance of MergeExample.
@@ -24,95 +27,17 @@ define([
      * @classdesc This class represents the plugin MergeExample.
      * @constructor
      */
-    var MergeExample = function () {
+    function MergeExample() {
         // Call base class' constructor.
         PluginBase.call(this);
-    };
+        this.pluginMetadata = pluginMetadata;
+    }
+
+    MergeExample.metadata = pluginMetadata;
 
     // Prototypal inheritance from PluginBase.
     MergeExample.prototype = Object.create(PluginBase.prototype);
     MergeExample.prototype.constructor = MergeExample;
-
-    /**
-     * Gets the name of the MergeExample.
-     * @returns {string} The name of the plugin.
-     * @public
-     */
-    MergeExample.prototype.getName = function () {
-        return 'Merge Example';
-    };
-
-    /**
-     * Gets the semantic version (semver.org) of the MergeExample.
-     * @returns {string} The version of the plugin.
-     * @public
-     */
-    MergeExample.prototype.getVersion = function () {
-        return '0.1.0';
-    };
-
-    /**
-     * Gets the description of the MergeExample.
-     * @returns {string} The description of the plugin.
-     * @public
-     */
-    MergeExample.prototype.getDescription = function () {
-        return 'Example plugin to show how to use the merge capabilities of webgme.';
-    };
-
-    /**
-     * Gets the configuration structure for the MergeExample.
-     * The ConfigurationStructure defines the configuration for the plugin
-     * and will be used to populate the GUI when invoking the plugin from webGME.
-     * @returns {object} The version of the plugin.
-     * @public
-     */
-    MergeExample.prototype.getConfigStructure = function () {
-        return [
-            {
-                'name': 'mergeFrom',
-                'displayName': 'Merge from',
-                //'regex': '^[a-zA-Z]+$', // TODO: verify branch or hash
-                //'regexMessage': 'Name can only contain English characters!',
-                'description': 'Merging changes from this branch or commit hash.',
-                'value': 'development',
-                'valueType': 'string',
-                'readOnly': false
-            },
-            {
-                'name': 'mergeTo',
-                'displayName': 'Merge to',
-                //'regex': '^[a-zA-Z]+$', // TODO: verify branch or hash
-                //'regexMessage': 'Name can only contain English characters!',
-                'description': 'Merging changes to this branch or commit hash.',
-                'value': 'master',
-                'valueType': 'string',
-                'readOnly': false
-            },
-            {
-                'name': 'createNewBranch',
-                'displayName': 'Create a new branch for target',
-                //'regex': '^[a-zA-Z]+$', // TODO: verify branch or hash
-                //'regexMessage': 'Name can only contain English characters!',
-                'description': 'Creates a new branch for "to" first then merges changes "from"',
-                'value': false,
-                'valueType': 'boolean',
-                'readOnly': false
-            },
-            {
-                'name': 'newBranchName',
-                'displayName': 'Name of the new branch',
-                'regex': '^[a-zA-Z]+$', // TODO: verify branch or hash
-                'regexMessage': 'Name can only contain English characters!',
-                'description': 'Name of the new branch where the result of the merge will be stored.',
-                'value': 'merge',
-                'valueType': 'string',
-                'readOnly': false
-            }
-
-        ];
-    };
-
 
     /**
      * Main function for the plugin to execute. This will perform the execution.

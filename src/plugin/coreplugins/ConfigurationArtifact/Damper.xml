@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<Design DesignID="{a5984898-4825-4a99-9323-9c8d50bde534}" Name="Wheel">
+    <RootContainer Name="Wheel">
+        <Property Name="DamperCoeff">
+            <Value DimensionType="Scalar" DataType="String">
+                <ValueExpression type="FixedValue">
+                    <Value>2</Value>
+                </ValueExpression>
+            </Value>
+        </Property>
+        <ComponentInstance Name="Inertia" ID="{b2a8a8a7-d528-4bf0-8b09-83775cb339ff}">
+            <PrimitivePropertyInstance IDinComponentModel="id-b59c60e6-cf92-4828-b087-ac9ef4b6aae3">
+                <Value DataType="String"/>
+            </PrimitivePropertyInstance>
+            <ConnectorInstance ID="{b2a8a8a7-d528-4bf0-8b09-83775cb339ff}-3abe6223-70d3-42ec-815b-f21f3c08c2b3"/>
+        </ComponentInstance>
+        <Connector Name="WheelRotationalInput" ID="2f20ec5e-b1d7-4a0b-9cab-424fb45bb13d"/>
+        <Connector Name="WheelTranslationalOutput" ID="f9f60d89-6f29-4391-a539-82b2841f8107"/>
+    </RootContainer>
+</Design>

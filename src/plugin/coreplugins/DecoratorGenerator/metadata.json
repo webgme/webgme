@@ -1,0 +1,32 @@
+{
+  "id": "DecoratorGenerator",
+  "name": "Decorator Generator",
+  "version": "1.7.0",
+  "description": "Generates a functional decorator for the generic UI.",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cogs"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "configStructure": [
+    {
+      "name": "decoratorName",
+      "displayName": "Name of decorator",
+      "regex": "^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|Circle|Model|Document|Meta|SVG|Default|arguments|interface|protected|implements|instanceof)$)[a-zA-Z_$][0-9a-zA-Z_$]*",
+      "regexMessage": "No spaces and special characters allowed. This value is used as the name of the generated decorator class.",
+      "description": "Unique name for the decorator (\"Decorator\" will be appended).",
+      "value": "SomeName",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "inherit",
+      "displayName": "Inherit from ModelEditor",
+      "description": "Generates a decorator that inherits from the ModelEditor.",
+      "value": false,
+      "valueType": "boolean",
+      "readOnly": false
+    }
+  ]
+}

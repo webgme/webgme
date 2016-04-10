@@ -18,12 +18,15 @@
 define([
     'plugin/PluginConfig',
     'plugin/PluginBase',
+    'text!./metadata.json',
     'executor/ExecutorClient',
     'common/util/ejs',
-    'plugin/ExecutorPlugin/ExecutorPlugin/Templates/Templates',
+    'text!./Templates/generate_name.py.ejs',
     'q'
-], function (PluginConfig, PluginBase, ExecutorClient, ejs, TEMPLATES, Q) {
+], function (PluginConfig, PluginBase, pluginMetadata, ExecutorClient, ejs, TEMPLATE, Q) {
     'use strict';
+
+    pluginMetadata = JSON.parse(pluginMetadata);
 
     /**
      * Initializes a new instance of ExecutorPlugin.
@@ -32,80 +35,17 @@ define([
      * @classdesc This class represents the plugin ExecutorPlugin.
      * @constructor
      */
-    var ExecutorPlugin = function () {
+    function ExecutorPlugin() {
         // Call base class' constructor.
         PluginBase.call(this);
-    };
+        this.pluginMetadata = pluginMetadata;
+    }
 
-    // Prototypal inheritance from PluginBase.
+    ExecutorClient.metadata = pluginMetadata;
+
+    // Prototypical inheritance from PluginBase.
     ExecutorPlugin.prototype = Object.create(PluginBase.prototype);
     ExecutorPlugin.prototype.constructor = ExecutorPlugin;
-
-    /**
-     * Gets the name of the ExecutorPlugin.
-     * @returns {string} The name of the plugin.
-     * @public
-     */
-    ExecutorPlugin.prototype.getName = function () {
-        return 'Executor Plugin';
-    };
-
-    /**
-     * Gets the semantic version (semver.org) of the ExecutorPlugin.
-     * @returns {string} The version of the plugin.
-     * @public
-     */
-    ExecutorPlugin.prototype.getVersion = function () {
-        return '0.1.0';
-    };
-
-    /**
-     * Gets the description of the ExecutorPlugin.
-     * @returns {string} The description of the plugin.
-     * @public
-     */
-    ExecutorPlugin.prototype.getDescription = function () {
-        return 'Plugin using the Executor Client';
-    };
-
-    ExecutorPlugin.prototype.getConfigStructure = function () {
-        return [
-            {
-                name: 'pythonCmd',
-                displayName: 'Python path',
-                description: 'How Python is executed',
-                value: 'C:/Python27/python.exe',
-                valueType: 'string',
-                readOnly: false
-            },
-            {
-                name: 'update',
-                displayName: 'Write back to model',
-                description: 'If false no need to provide active node.',
-                value: true,
-                valueType: 'boolean',
-                readOnly: false
-            },
-            {
-                name: 'success',
-                displayName: 'Should succeed',
-                description: 'Should the execution exit with 0?',
-                value: true,
-                valueType: 'boolean',
-                readOnly: false
-            },
-            {
-                name: 'time',
-                displayName: 'Execution time [s]',
-                description: 'How long should the script run?',
-                value: 1,
-                valueType: 'number',
-                minValue: 0.1,
-                maxValue: 10000,
-                readOnly: false
-            }
-        ];
-    };
 
     /**
      * Main function for the plugin to execute. This will perform the execution.
@@ -154,7 +94,7 @@ define([
         // The hash of the artifact with these files will define the job. N.B. executor_config.json must exist.
         filesToAdd = {
             'executor_config.json': JSON.stringify(executorConfig, null, 2),
-            'generate_name.py': ejs.render(TEMPLATES['generate_name.py.ejs'], {
+            'generate_name.py': ejs.render(TEMPLATE, {
                 exitCode: config.success ? 0 : 1,
                 sleepTime: config.time
             })

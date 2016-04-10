@@ -1,0 +1,30 @@
+{
+  "id": "MinimalWorkingExample",
+  "name": "Minimal Working Example",
+  "version": "1.7.0",
+  "description": "Simple plugin illustrating how to save to a model from a plugin.",
+  "icon": {
+    "src": "",
+    "class": "glyphicon glyphicon-floppy-save"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "configStructure": [
+    {
+      "name": "shouldFail",
+      "displayName": "Should fail",
+      "description": "Example if the plugin execution fails",
+      "value": false,
+      "valueType": "boolean",
+      "readOnly": false
+    },
+    {
+      "name": "save",
+      "displayName": "Should save the model",
+      "description": "Will update the model if true",
+      "value": true,
+      "valueType": "boolean",
+      "readOnly": false
+    }
+  ]
+}

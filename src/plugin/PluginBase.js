@@ -26,6 +26,12 @@ define([
      */
     var PluginBase = function () {
         // set by initialize
+
+        /**
+         * @type {PluginMetadata}
+         */
+        this.pluginMetadata = null;
+
         /**
          * @type {GmeConfig}
          */
@@ -93,19 +99,6 @@ define([
         this.notificationHandlers = [];
     };
 
-    /**
-     * By default set to <b>false</b>. Set to <b>true</b> to disable browser executions (from the generic UI).
-     * @type {boolean}
-     */
-    PluginBase.disableBrowserExecution = false;
-
-    /**
-     * By default set to <b>false</b>. Set to <b>true</b> to disable server executions (from the generic UI).
-     * @type {boolean}
-     */
-    PluginBase.disableServerExecution = false;
-
-
     //<editor-fold desc="Methods must be overridden by the derived classes">
 
     /**
@@ -127,8 +120,11 @@ define([
      * @returns {string}
      */
     PluginBase.prototype.getName = function () {
-        throw new Error('implement this function in the derived class - getting type automatically is a bad idea,' +
-            'when the js scripts are minified names are useless.');
+        if (this.pluginMetadata) {
+            return this.pluginMetadata.name;
+        } else {
+            throw new Error('If pluginMetadata is not defined - implement this function in the derived class');
+        }
     };
 
     //</editor-fold>
@@ -139,7 +135,7 @@ define([
      * @returns {string}
      */
     PluginBase.prototype.getVersion = function () {
-        return '0.1.0';
+        return this.pluginMetadata ? this.pluginMetadata.version : '0.1.0';
     };
 
     /**
@@ -148,7 +144,7 @@ define([
      * @returns {string}
      */
     PluginBase.prototype.getDescription = function () {
-        return '';
+        return this.pluginMetadata ? this.pluginMetadata.description : '';
     };
 
     /**
@@ -190,7 +186,7 @@ define([
      * @returns {object[]}
      */
     PluginBase.prototype.getConfigStructure = function () {
-        return [];
+        return this.pluginMetadata ? this.pluginMetadata.configStructure : [];
     };
     //</editor-fold>
     //<editor-fold desc="Methods that can be used by the derived classes">
@@ -563,6 +559,15 @@ define([
      */
     PluginBase.prototype.setCurrentConfig = function (newConfig) {
         this._currentConfig = newConfig;
+    };
+
+    /**
+     * Gets the metadata for the plugin.
+     *
+     * @returns {PluginMetaData}
+     */
+    PluginBase.prototype.getMetadata = function () {
+        return this.pluginMetadata;
     };
     //</editor-fold>
 

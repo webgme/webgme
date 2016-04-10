@@ -1,0 +1,23 @@
+{
+  "id": "LayoutGenerator",
+  "name": "Layout Generator",
+  "version": "1.7.0",
+  "description": "Generates a template of a custom layout for the generic UI.",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cogs"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "configStructure": [
+    {
+      "name": "layoutID",
+      "displayName": "Layout ID",
+      "regex": "^[a-zA-Z]+$",
+      "regexMessage": "Name can only contain English characters (use camelcase)!",
+      "value": "MyCustomLayout",
+      "valueType": "string",
+      "readOnly": false
+    }
+  ]
+}

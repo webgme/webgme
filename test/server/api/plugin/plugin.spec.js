@@ -83,8 +83,84 @@ describe('REST API', function () {
                     });
             });
 
-            it('should get config via /api/plugins/ExportImport/config', function (done) {
-                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/config')
+            it('should list all available metadata for plugins and null where none exist /api/plugins/metadata',
+                function (done) {
+                    var testPlugins = ['InvalidActiveNode', 'MultipleMainCallbackCalls', 'PluginForked'],
+                        pluginNames;
+
+                    agent.get(server.getUrl() + '/api/v1/plugins')
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body instanceof Array).to.equal(true);
+                            pluginNames = res.body;
+                            agent.get(server.getUrl() + '/api/v1/plugins/metadata')
+                                .end(function (err, res) {
+                                    var metadata;
+                                    expect(res.status).equal(200, err);
+                                    expect(typeof res.body === 'object').to.equal(true);
+                                    metadata = res.body;
+                                    expect(Object.keys(metadata)).to.deep.equal(pluginNames);
+                                    pluginNames.forEach(function (name) {
+                                        if (testPlugins.indexOf(name) === -1) {
+                                            expect(Object.keys(metadata[name])).to.deep.equal([
+                                                'id',
+                                                'name',
+                                                'version',
+                                                'description',
+                                                'icon',
+                                                'disableServerSideExecution',
+                                                'disableBrowserSideExecution',
+                                                'configStructure'
+                                            ]);
+                                        } else {
+                                            expect(metadata[name]).to.equal(null);
+                                        }
+                                    });
+
+                                    done();
+                                });
+                        });
+                }
+            );
+
+            it('should get metadata for /api/plugin/AddOnGenerator/metadata', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/AddOnGenerator/metadata')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(typeof res.body === 'object').to.equal(true);
+                        expect(Object.keys(res.body)).to.deep.equal([
+                            'id',
+                            'name',
+                            'version',
+                            'description',
+                            'icon',
+                            'disableServerSideExecution',
+                            'disableBrowserSideExecution',
+                            'configStructure'
+                        ]);
+
+                        done();
+                    });
+            });
+
+            it('should 404 for non-existing plugin /api/plugin/DoesNotExist/metadata', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/DoesNotExist/metadata')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should 404 for plugin with no metadata /api/plugin/PluginForked/metadata', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/PluginForked/metadata')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
+
+            it('should get config via /api/plugin/ExportImport/config', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/config')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body).to.deep.equal({
@@ -96,8 +172,8 @@ describe('REST API', function () {
                     });
             });
 
-            it('should get configStructure via /api/plugins/ExportImport/configStructure', function (done) {
-                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/configStructure')
+            it('should get configStructure via /api/plugin/ExportImport/configStructure', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/configStructure')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body instanceof Array).to.equal(true);
@@ -109,17 +185,17 @@ describe('REST API', function () {
                     });
             });
 
-            it('should 404 when getting config for non-existing plugin /api/plugins/EE/config', function (done) {
-                agent.get(server.getUrl() + '/api/v1/plugins/EE/config')
+            it('should 404 when getting config for non-existing plugin /api/plugin/EE/config', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/EE/config')
                     .end(function (err, res) {
                         expect(res.status).equal(404, err);
                         done();
                     });
             });
 
-            it('should 404 when getting configStructure for non-existing plugin /api/plugins/EE/configStructure',
+            it('should 404 when getting configStructure for non-existing plugin /api/plugin/EE/configStructure',
                 function (done) {
-                    agent.get(server.getUrl() + '/api/v1/plugins/EE/configStructure')
+                    agent.get(server.getUrl() + '/api/v1/plugin/EE/configStructure')
                         .end(function (err, res) {
                             expect(res.status).equal(404, err);
                             done();
@@ -127,9 +203,9 @@ describe('REST API', function () {
                 }
             );
 
-            it('should 404 when for non-existing result /api/plugins/SOME_PLUGIN/results/BOGUS',
+            it('should 404 when for non-existing result /api/plugin/SOME_PLUGIN/results/BOGUS',
                 function (done) {
-                    agent.get(server.getUrl() + '/api/v1/plugins/SOME_PLUGIN/results/BOGUS')
+                    agent.get(server.getUrl() + '/api/v1/plugin/SOME_PLUGIN/results/BOGUS')
                         .end(function (err, res) {
                             expect(res.status).equal(404, err);
                             done();
@@ -137,7 +213,7 @@ describe('REST API', function () {
                 }
             );
 
-            it('should execute ExportImport [pluginId, projectId, branchName] /api/plugins/ExportImport/execute',
+            it('should execute ExportImport [pluginId, projectId, branchName] /api/plugin/ExportImport/execute',
                 function (done) {
                     var requestBody = {
                         pluginId: 'ExportImport',
@@ -145,14 +221,14 @@ describe('REST API', function () {
                         branchName: 'master'
                     };
                     this.timeout(4000);
-                    agent.post(server.getUrl() + '/api/v1/plugins/ExportImport/execute')
+                    agent.post(server.getUrl() + '/api/v1/plugin/ExportImport/execute')
                         .send(requestBody)
                         .end(function (err, res) {
                             var resultId = res.body.resultId;
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                            agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                 .end(function (err, res) {
                                     var cnt = 0,
                                         intervalId;
@@ -160,7 +236,7 @@ describe('REST API', function () {
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
 
                                     intervalId = setInterval(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                                        agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(200, err);
                                                 if (res.body.status === 'FINISHED') {
@@ -169,7 +245,7 @@ describe('REST API', function () {
                                                         'success'); //etc.
                                                     expect(res.body.result.success).to.equal(true);
                                                     agent.get(server.getUrl() +
-                                                        '/api/v1/plugins/ExportImport/results/' + resultId)
+                                                        '/api/v1/plugin/ExportImport/results/' + resultId)
                                                         .end(function (err, res) {
                                                             expect(res.status).equal(404, err);
                                                             done();
@@ -192,24 +268,24 @@ describe('REST API', function () {
                 }
             );
 
-            it('should execute with ERROR status ExportImport [pluginId] /api/plugins/ExportImport/execute',
+            it('should execute with ERROR status ExportImport [pluginId] /api/plugin/ExportImport/execute',
                 function (done) {
                     var requestBody = {
                         pluginId: 'ExportImport'
                     };
-                    agent.post(server.getUrl() + '/api/v1/plugins/ExportImport/execute')
+                    agent.post(server.getUrl() + '/api/v1/plugin/ExportImport/execute')
                         .send(requestBody)
                         .end(function (err, res) {
                             var resultId = res.body.resultId;
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                            agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                 .end(function (err, res) {
                                     expect(res.status).equal(200, err);
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
                                     setTimeout(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                                        agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(200, err);
                                                 expect(res.body.status).to.equal('ERROR');
@@ -218,7 +294,7 @@ describe('REST API', function () {
                                                 expect(res.body.err).to.equal('Invalid argument, data.projectId is ' +
                                                     'not a string.');
                                                 expect(res.body.result.success).to.equal(false);
-                                                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                                                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                                     .end(function (err, res) {
                                                         expect(res.status).equal(404, err);
                                                         done();
@@ -263,8 +339,8 @@ describe('REST API', function () {
                     });
             });
 
-            it('should get config via /api/plugins/ExportImport/config', function (done) {
-                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/config')
+            it('should get config via /api/plugin/ExportImport/config', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/config')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body).to.deep.equal({
@@ -276,8 +352,8 @@ describe('REST API', function () {
                     });
             });
 
-            it('should get configStructure via /api/plugins/ExportImport/configStructure', function (done) {
-                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/configStructure')
+            it('should get configStructure via /api/plugin/ExportImport/configStructure', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/configStructure')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body instanceof Array).to.equal(true);
@@ -289,17 +365,17 @@ describe('REST API', function () {
                     });
             });
 
-            it('should 404 when getting config for non-existing plugin /api/plugins/EE/config', function (done) {
-                agent.get(server.getUrl() + '/api/v1/plugins/EE/config')
+            it('should 404 when getting config for non-existing plugin /api/plugin/EE/config', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/EE/config')
                     .end(function (err, res) {
                         expect(res.status).equal(404, err);
                         done();
                     });
             });
 
-            it('should 404 when getting configStructure for non-existing plugin /api/plugins/EE/configStructure',
+            it('should 404 when getting configStructure for non-existing plugin /api/plugin/EE/configStructure',
                 function (done) {
-                    agent.get(server.getUrl() + '/api/v1/plugins/EE/configStructure')
+                    agent.get(server.getUrl() + '/api/v1/plugin/EE/configStructure')
                         .end(function (err, res) {
                             expect(res.status).equal(404, err);
                             done();
@@ -307,9 +383,9 @@ describe('REST API', function () {
                 }
             );
 
-            it('should 404 when for non-existing result /api/plugins/SOME_PLUGIN/results/BOGUS',
+            it('should 404 when for non-existing result /api/plugin/SOME_PLUGIN/results/BOGUS',
                 function (done) {
-                    agent.get(server.getUrl() + '/api/v1/plugins/SOME_PLUGIN/results/BOGUS')
+                    agent.get(server.getUrl() + '/api/v1/plugin/SOME_PLUGIN/results/BOGUS')
                         .end(function (err, res) {
                             expect(res.status).equal(404, err);
                             done();
@@ -317,7 +393,7 @@ describe('REST API', function () {
                 }
             );
 
-            it('should execute ExportImport [pluginId, projectId, branchName] /api/plugins/ExportImport/execute',
+            it('should execute ExportImport [pluginId, projectId, branchName] /api/plugin/ExportImport/execute',
                 function (done) {
                     var requestBody = {
                         pluginId: 'ExportImport',
@@ -325,14 +401,14 @@ describe('REST API', function () {
                         branchName: 'master'
                     };
                     this.timeout(4000);
-                    agent.post(server.getUrl() + '/api/v1/plugins/ExportImport/execute')
+                    agent.post(server.getUrl() + '/api/v1/plugin/ExportImport/execute')
                         .send(requestBody)
                         .end(function (err, res) {
                             var resultId = res.body.resultId;
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                            agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                 .end(function (err, res) {
                                     var cnt = 0,
                                         intervalId;
@@ -340,7 +416,7 @@ describe('REST API', function () {
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
 
                                     intervalId = setInterval(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                                        agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(200, err);
                                                 if (res.body.status === 'FINISHED') {
@@ -349,7 +425,7 @@ describe('REST API', function () {
                                                         'success'); //etc.
                                                     expect(res.body.result.success).to.equal(true);
                                                     agent.get(server.getUrl() +
-                                                        '/api/v1/plugins/ExportImport/results/' + resultId)
+                                                        '/api/v1/plugin/ExportImport/results/' + resultId)
                                                         .end(function (err, res) {
                                                             expect(res.status).equal(404, err);
                                                             done();
@@ -372,24 +448,24 @@ describe('REST API', function () {
                 }
             );
 
-            it('should execute with ERROR status ExportImport [pluginId] /api/plugins/ExportImport/execute',
+            it('should execute with ERROR status ExportImport [pluginId] /api/plugin/ExportImport/execute',
                 function (done) {
                     var requestBody = {
                         pluginId: 'ExportImport'
                     };
-                    agent.post(server.getUrl() + '/api/v1/plugins/ExportImport/execute')
+                    agent.post(server.getUrl() + '/api/v1/plugin/ExportImport/execute')
                         .send(requestBody)
                         .end(function (err, res) {
                             var resultId = res.body.resultId;
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                            agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                 .end(function (err, res) {
                                     expect(res.status).equal(200, err);
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
                                     setTimeout(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                                        agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(200, err);
                                                 expect(res.body.status).to.equal('ERROR');
@@ -398,7 +474,7 @@ describe('REST API', function () {
                                                 expect(res.body.err).to.equal('Invalid argument, data.projectId is ' +
                                                     'not a string.');
                                                 expect(res.body.result.success).to.equal(false);
-                                                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                                                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                                     .end(function (err, res) {
                                                         expect(res.status).equal(404, err);
                                                         done();
@@ -432,8 +508,8 @@ describe('REST API', function () {
                 agent = superagent.agent();
             });
 
-            it('should 404 when ExportImport [pluginId, projectId, branchName] /api/plugins/ExportImport/execute ' +
-                'and timeout passed /api/v1/plugins/ExportImport/results/%RESULT_ID%',
+            it('should 404 when ExportImport [pluginId, projectId, branchName] /api/plugin/ExportImport/execute ' +
+                'and timeout passed /api/v1/plugin/ExportImport/results/%RESULT_ID%',
                 function (done) {
                     var requestBody = {
                         pluginId: 'ExportImport',
@@ -443,7 +519,7 @@ describe('REST API', function () {
                         }
                     };
                     this.timeout(5000);
-                    agent.post(server.getUrl() + '/api/v1/plugins/ExportImport/execute')
+                    agent.post(server.getUrl() + '/api/v1/plugin/ExportImport/execute')
                         .send(requestBody)
                         .end(function (err, res) {
                             var resultId = res.body.resultId,
@@ -454,7 +530,7 @@ describe('REST API', function () {
                             expect(typeof resultId).to.equal('string');
 
                             intervalId = setInterval(function () {
-                                agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' + resultId)
+                                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
                                     .end(function (err, res) {
                                         expect(res.status).equal(200, err);
 
@@ -469,7 +545,7 @@ describe('REST API', function () {
                                             } else {
                                                 clearInterval(intervalId);
                                                 setTimeout(function () {
-                                                    agent.get(server.getUrl() + '/api/v1/plugins/ExportImport/results/' +
+                                                    agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' +
                                                         resultId)
                                                         .end(function (err, res) {
                                                             expect(res.status).equal(404, err);

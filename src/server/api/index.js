@@ -1521,9 +1521,69 @@ function createAPI(app, mountPath, middlewareOpts) {
         res.send(result);
     });
 
-    router.get('/plugins/:pluginId/config', ensureAuthenticated, function (req, res) {
-        var plugin = getPlugin(req.params.pluginId);
+    router.get('/plugins/metadata', ensureAuthenticated, function (req, res, next) {
+        var pluginNames = webgmeUtils.getComponentNames(gmeConfig.plugin.basePaths),
+            result = {},
+            promises = [],
+            basePath,
+            i;
 
+        for (i = 0; i < pluginNames.length; i += 1) {
+            basePath = webgmeUtils.getBasePathByName(pluginNames[i], gmeConfig.plugin.basePaths);
+            promises.push(Q.nfcall(fs.readFile, path.join(basePath, pluginNames[i], 'metadata.json'), 'utf8'));
+        }
+
+        Q.allSettled(promises)
+            .then(function (fileRes) {
+                for (i = 0; i < fileRes.length; i += 1) {
+                    if (fileRes[i].state === 'fulfilled') {
+                        try {
+                            result[pluginNames[i]] = JSON.parse(fileRes[i].value);
+                        } catch (e) {
+                            logger.error(e);
+                        }
+                    } else if (fileRes[i].state === 'rejected') {
+                        if (fileRes[i].reason.code === 'ENOENT') {
+                            logger.warn('Plugin does not have a metadata.json', pluginNames[i]);
+                        } else {
+                            logger.error(fileRes[i].reason);
+                        }
+                    } else {
+                        logger.error(new Error('Unknown q promise state'));
+                    }
+
+                    result[pluginNames[i]] = result[pluginNames[i]] || null;
+                }
+
+                res.json(result);
+            })
+            .catch(next);
+    });
+
+    router.get('/plugin/:pluginId/metadata', ensureAuthenticated, function (req, res, next) {
+        var basePath = webgmeUtils.getBasePathByName(req.params.pluginId, gmeConfig.plugin.basePaths);
+
+        if (!basePath) {
+            res.sendStatus(404);
+            return;
+        }
+
+        Q.nfcall(fs.readFile, path.join(basePath, req.params.pluginId, 'metadata.json'), 'utf8')
+            .then(function (content) {
+                res.json(JSON.parse(content));
+            })
+            .catch(function (err) {
+                if (err.code === 'ENOENT') {
+                    res.sendStatus(404);
+                } else {
+                    next(err);
+                }
+            });
+    });
+
+    router.get('/plugin/:pluginId/config', ensureAuthenticated, function (req, res) {
+        var plugin = getPlugin(req.params.pluginId);
+        // TODO: In next release this should use metadata
         if (plugin instanceof Error) {
             logger.error(plugin);
             res.sendStatus(404);
@@ -1532,9 +1592,9 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
     });
 
-    router.get('/plugins/:pluginId/configStructure', ensureAuthenticated, function (req, res) {
+    router.get('/plugin/:pluginId/configStructure', ensureAuthenticated, function (req, res) {
         var plugin = getPlugin(req.params.pluginId);
-
+        // TODO: In next release this should use metadata
         if (plugin instanceof Error) {
             logger.error(plugin);
             res.sendStatus(404);
@@ -1543,7 +1603,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
     });
 
-    router.post('/plugins/:pluginId/execute', function (req, res, next) {
+    router.post('/plugin/:pluginId/execute', function (req, res, next) {
         var resultId = GUID(),
             userId = getUserId(req),
             pluginContext = {
@@ -1594,7 +1654,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             .catch(next);
     });
 
-    router.get('/plugins/:pluginId/results/:resultId', ensureAuthenticated, function (req, res) {
+    router.get('/plugin/:pluginId/results/:resultId', ensureAuthenticated, function (req, res) {
         var pluginExecution = runningPlugins[req.params.resultId];
         logger.debug('Plugin-result request for ', req.params.pluginId, req.params.resultId);
         if (pluginExecution) {

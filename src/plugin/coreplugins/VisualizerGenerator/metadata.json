@@ -1,0 +1,23 @@
+{
+  "id": "VisualizerGenerator",
+  "name": "Visualizer Generator",
+  "version": "1.7.0",
+  "description": "Generates a template for a visualizer.",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cogs"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "configStructure": [
+    {
+      "name": "visualizerID",
+      "displayName": "Visualizer ID",
+      "regex": "^[a-zA-Z]+$",
+      "regexMessage": "Name can only contain English characters (use camelcase)!",
+      "value": "MyCustomVisualizer",
+      "valueType": "string",
+      "readOnly": false
+    }
+  ]
+}

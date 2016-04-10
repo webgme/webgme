@@ -5,7 +5,8 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
+define([
+    'js/Controls/PropertyGrid/PropertyGridWidgetManager',
     'text!./templates/PluginConfigDialog.html',
     'css!./styles/PluginConfigDialog.css'
 ], function (PropertyGridWidgetManager,
@@ -22,9 +23,10 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     //jscs:enable maximumLineLength
         DESCRIPTION_BASE = $('<div class="desc muted col-sm-8"></div>');
 
-    PluginConfigDialog = function () {
+    PluginConfigDialog = function (config) {
         this._propertyGridWidgetManager = new PropertyGridWidgetManager();
         this._propertyGridWidgetManager.registerWidgetForType('boolean', 'iCheckBox');
+        this._pluginMetadata = config;
     };
 
     PluginConfigDialog.prototype.show = function (pluginConfigs, pluginClass, fnCallback) {
@@ -65,6 +67,7 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     PluginConfigDialog.prototype._initDialog = function (pluginConfigs) {
         var self = this,
             p,
+            iconEl,
             pluginSectionEl;
 
         this._dialog = $(pluginConfigDialogTemplate);
@@ -74,8 +77,30 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         this._divContainer = this._dialog.find('.modal-body');
 
         this._saveConfigurationCb = this._dialog.find('.save-configuration');
+        this._modalHeader = this._dialog.find('.modal-header');
 
-        this._title = this._dialog.find('.modal-title');
+        if (this._pluginMetadata.icon) {
+            if (this._pluginMetadata.icon.src) {
+                iconEl = $('<img>', {
+                    class: this._pluginMetadata.icon.class,
+                    src: ['/plugin', this._pluginMetadata.id, this._pluginMetadata.id, this._pluginMetadata.icon.src]
+                        .join('/')
+                });
+                this._modalHeader.prepend();
+            } else {
+                iconEl = $('<i/>', {
+                    class: this._pluginMetadata.icon.class || 'glyphicon glyphicon-cog'
+                });
+            }
+
+            iconEl.addClass('plugin-icon pull-left');
+        } else {
+            iconEl = $('<i class="plugin-icon pull-left glyphicon glyphicon-cog"/>');
+        }
+
+        this._modalHeader.prepend(iconEl);
+
+        this._title = this._modalHeader.find('.modal-title');
         this._title.text((new this._currentPluginClass()).getName());
         this._widgets = {};
 

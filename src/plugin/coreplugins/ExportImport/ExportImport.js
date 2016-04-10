@@ -15,17 +15,21 @@
 define([
     'plugin/PluginConfig',
     'plugin/PluginBase',
+    'text!./metadata.json',
     'common/core/users/serialization',
     'blob/BlobMetadata',
     'blob/util',
     'q'
 ], function (PluginConfig,
              PluginBase,
+             pluginMetadata,
              serialization,
              BlobMetadata,
              blobUtil,
              Q) {
     'use strict';
+
+    pluginMetadata = JSON.parse(pluginMetadata);
 
     /**
      * Initializes a new instance of ExportImport.
@@ -34,84 +38,17 @@ define([
      * @classdesc This class represents the plugin ExportImport.
      * @constructor
      */
-    var ExportImport = function () {
+    function ExportImport() {
         // Call base class' constructor.
         PluginBase.call(this);
-    };
+        this.pluginMetadata = pluginMetadata;
+    }
+
+    ExportImport.metadata = pluginMetadata;
 
     // Prototypal inheritance from PluginBase.
     ExportImport.prototype = Object.create(PluginBase.prototype);
     ExportImport.prototype.constructor = ExportImport;
-
-    /**
-     * Gets the name of the ExportImport.
-     * @returns {string} The name of the plugin.
-     * @public
-     */
-    ExportImport.prototype.getName = function () {
-        return 'Export, Import and Update Library';
-    };
-
-    /**
-     * Gets the semantic version (semver.org) of the ExportImport.
-     * @returns {string} The version of the plugin.
-     * @public
-     */
-    ExportImport.prototype.getVersion = function () {
-        return '0.14.0';
-    };
-
-    /**
-     * Gets the description of the ExportImport.
-     * @returns {string} The description of the plugin.
-     * @public
-     */
-    ExportImport.prototype.getDescription = function () {
-        return 'Example of how to export, import and update a library from and to webgme.\n' +
-            'The active node (i.e. open node on the canvas) will be the starting point, ' +
-            'expect when importing a project.';
-    };
-
-    /**
-     * Gets the configuration structure for the ExportImport.
-     * The ConfigurationStructure defines the configuration for the plugin
-     * and will be used to populate the GUI when invoking the plugin from webGME.
-     * @returns {object} The version of the plugin.
-     * @public
-     */
-    ExportImport.prototype.getConfigStructure = function () {
-        return [
-            {
-                name: 'type',
-                displayName: 'Type',
-                description: 'What library action should be taken?',
-                value: 'Export',
-                valueType: 'string',
-                valueItems: [
-                    'Export',
-                    'ImportProject',
-                    'ImportLibrary',
-                    'UpdateLibrary'
-                ]
-            },
-            {
-                name: 'file',
-                displayName: 'Import file(s)',
-                description: 'WebGME library file and optionally exported assets.',
-                value: '',
-                valueType: 'asset',
-                readOnly: false
-            },
-            {
-                name: 'assets',
-                displayName: 'Export assets',
-                description: 'Export all encountered assets and return a zip package.',
-                value: false,
-                valueType: 'boolean',
-                readOnly: false
-            },
-        ];
-    };
 
     /**
      * Main function for the plugin to execute. This will perform the execution.

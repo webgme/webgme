@@ -141,9 +141,29 @@ require(
                 return deferred.promise;
             }
 
+            function requestPluginMetadata () {
+                var deferred = Q.defer();
+
+                superagent.get('/api/plugins/metadata')
+                    .end(function (err, res) {
+                        if (res.status === 200) {
+                            WebGMEGlobal.allPlugins = Object.keys(res.body);
+                            WebGMEGlobal.allPluginsMetadata = res.body;
+                            deferred.resolve();
+                        } else {
+                            log.error('/api/' + name + 'failed');
+                            WebGMEGlobal.allPlugins = [];
+                            WebGMEGlobal.allPluginsMetadata = {};
+                            deferred.reject(err);
+                        }
+                    });
+
+                return deferred.promise;
+            }
+
             return Q.all([
                 requestExtensionPoint('visualizers'),
-                requestExtensionPoint('plugins'),
+                requestPluginMetadata(),
                 requestExtensionPoint('decorators'),
                 requestExtensionPoint('seeds'),
                 requestExtensionPoint('addOns')

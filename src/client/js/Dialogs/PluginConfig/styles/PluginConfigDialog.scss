@@ -5,8 +5,17 @@
  */
 .plugin-config-dialog {
 
-  .model-header {
-    padding: 10px;
+  .modal-header {
+    img.plugin-icon {
+      width: 28px;
+      display: inline-block;
+      margin-right: 10px;
+    }
+    i.plugin-icon {
+      font-size: 28px;
+      display: inline-block;
+      margin-right: 10px;
+    }
   }
 
   .modal-body {

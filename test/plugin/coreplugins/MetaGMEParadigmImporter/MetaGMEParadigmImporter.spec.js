@@ -83,7 +83,7 @@ describe('Plugin MetaGMEParadigmImporter', function () {
         var plugin = pluginManager.initializePlugin(pluginName);
         expect(plugin instanceof PluginBase).to.equal(true);
         expect(plugin.getName()).to.equal('MetaGME Paradigm Importer');
-        expect(plugin.getVersion()).to.equal('0.1.0');
+        expect(plugin.getVersion()).to.equal('1.7.0');
         expect(plugin.getDescription ()).to.include('Imports a desktop GME XMP file into the meta sheet');
         expect(plugin.getConfigStructure() instanceof Array).to.equal(true);
         expect(plugin.getConfigStructure().length).to.equal(1);

@@ -141,7 +141,7 @@ describe('PluginGenerator', function () {
                 keys = Object.keys(files),
                 i;
 
-            expect(keys.length).to.equal(3);
+            expect(keys.length).to.equal(4);
             for (i = 0; i < keys.length; i += 1) {
                 logger.debug(files[keys[i]]);
                 if (keys[i] === 'src/plugins/null/I have a space/meta.js' ||
@@ -163,10 +163,14 @@ describe('PluginGenerator', function () {
                 i;
 
             expect(err).to.equal(null);
-            expect(keys.length).to.equal(3);
+            expect(keys.length).to.equal(4);
             for (i = 0; i < keys.length; i += 1) {
-                logger.debug(files[keys[i]]);
-                expect(isValidJs(files[keys[i]])).to.equal(null);
+                if (keys[i].indexOf('.json') > -1) {
+                    JSON.parse(files[keys[i]]);
+                } else {
+                    logger.debug(files[keys[i]]);
+                    expect(isValidJs(files[keys[i]])).to.equal(null);
+                }
             }
             done();
         });
@@ -181,10 +185,14 @@ describe('PluginGenerator', function () {
                 i;
 
             expect(err).to.equal(null);
-            expect(keys.length).to.equal(3);
+            expect(keys.length).to.equal(4);
             for (i = 0; i < keys.length; i += 1) {
-                logger.debug(files[keys[i]]);
-                expect(isValidJs(files[keys[i]])).to.equal(null);
+                if (keys[i].indexOf('.json') > -1) {
+                    JSON.parse(files[keys[i]]);
+                } else {
+                    logger.debug(files[keys[i]]);
+                    expect(isValidJs(files[keys[i]])).to.equal(null);
+                }
             }
             done();
         });
@@ -199,16 +207,20 @@ describe('PluginGenerator', function () {
                 i;
 
             expect(err).to.equal(null);
-            expect(keys.length).to.equal(2);
+            expect(keys.length).to.equal(3);
             for (i = 0; i < keys.length; i += 1) {
-                logger.debug(files[keys[i]]);
-                expect(isValidJs(files[keys[i]])).to.equal(null);
+                if (keys[i].indexOf('.json') > -1) {
+                    JSON.parse(files[keys[i]]);
+                } else {
+                    logger.debug(files[keys[i]]);
+                    expect(isValidJs(files[keys[i]])).to.equal(null);
+                }
             }
             done();
         });
     });
 
-    it('meta = false, configStructure = true should generate three valid js files', function (done) {
+    it('meta = false, configStructure = true should generate two valid js files', function (done) {
         var config = Object.create(pluginConfig);
         config.meta = false;
         config.configStructure = true;
@@ -218,10 +230,14 @@ describe('PluginGenerator', function () {
                 i;
 
             expect(err).to.equal(null);
-            expect(keys.length).to.equal(2);
+            expect(keys.length).to.equal(3);
             for (i = 0; i < keys.length; i += 1) {
-                logger.debug(files[keys[i]]);
-                expect(isValidJs(files[keys[i]])).to.equal(null);
+                if (keys[i].indexOf('.json') > -1) {
+                    JSON.parse(files[keys[i]]);
+                } else {
+                    logger.debug(files[keys[i]]);
+                    expect(isValidJs(files[keys[i]])).to.equal(null);
+                }
             }
             done();
         });
@@ -236,10 +252,14 @@ describe('PluginGenerator', function () {
                 i;
 
             expect(err).to.equal(null);
-            expect(keys.length).to.equal(2);
+            expect(keys.length).to.equal(3);
             for (i = 0; i < keys.length; i += 1) {
-                logger.debug(files[keys[i]]);
-                expect(isValidJs(files[keys[i]])).to.equal(null);
+                if (keys[i].indexOf('.json') > -1) {
+                    JSON.parse(files[keys[i]]);
+                } else {
+                    logger.debug(files[keys[i]]);
+                    expect(isValidJs(files[keys[i]])).to.equal(null);
+                }
             }
             done();
         });
@@ -254,10 +274,12 @@ describe('PluginGenerator', function () {
                 i;
 
             expect(err).to.equal(null);
-            expect(keys.length).to.equal(5);
+            expect(keys.length).to.equal(6);
             for (i = 0; i < keys.length; i += 1) {
                 logger.debug(files[keys[i]]);
-                if (keys[i] === 'src/plugins/null/NewPlugin/Templates/Python.py.ejs') {
+                if (keys[i].indexOf('.json') > -1) {
+                    JSON.parse(files[keys[i]]);
+                } else if (keys[i] === 'src/plugins/null/NewPlugin/Templates/Python.py.ejs') {
                     expect(isValidJs(files[keys[i]])).to.not.equal(null);
                 } else {
                     expect(isValidJs(files[keys[i]])).to.equal(null);
@@ -277,10 +299,12 @@ describe('PluginGenerator', function () {
                 i;
 
             expect(err).to.equal(null);
-            expect(keys.length).to.equal(4);
+            expect(keys.length).to.equal(5);
             for (i = 0; i < keys.length; i += 1) {
                 logger.debug(files[keys[i]]);
-                if (keys[i] === 'src/plugins/null/NewPlugin/Templates/Python.py.ejs') {
+                if (keys[i].indexOf('.json') > -1) {
+                    JSON.parse(files[keys[i]]);
+                } else if (keys[i] === 'src/plugins/null/NewPlugin/Templates/Python.py.ejs') {
                     expect(isValidJs(files[keys[i]])).to.not.equal(null);
                 } else {
                     expect(isValidJs(files[keys[i]])).to.equal(null);
@@ -299,10 +323,12 @@ describe('PluginGenerator', function () {
                 i;
 
             expect(err).to.equal(null);
-            expect(keys.length).to.equal(5);
+            expect(keys.length).to.equal(6);
             for (i = 0; i < keys.length; i += 1) {
                 logger.debug(files[keys[i]]);
-                if (keys[i] === 'src/plugins/null/NewPlugin/Templates/JavaScript.js.ejs') {
+                if (keys[i].indexOf('.json') > -1) {
+                    JSON.parse(files[keys[i]]);
+                } else if (keys[i] === 'src/plugins/null/NewPlugin/Templates/JavaScript.js.ejs') {
                     expect(isValidJs(files[keys[i]])).to.not.equal(null);
                 } else {
                     expect(isValidJs(files[keys[i]])).to.equal(null);
@@ -321,10 +347,12 @@ describe('PluginGenerator', function () {
                 i;
 
             expect(err).to.equal(null);
-            expect(keys.length).to.equal(5);
+            expect(keys.length).to.equal(6);
             for (i = 0; i < keys.length; i += 1) {
                 logger.debug(files[keys[i]]);
-                if (keys[i] === 'src/plugins/null/NewPlugin/Templates/CSharp.cs.ejs') {
+                if (keys[i].indexOf('.json') > -1) {
+                    JSON.parse(files[keys[i]]);
+                } else if (keys[i] === 'src/plugins/null/NewPlugin/Templates/CSharp.cs.ejs') {
                     expect(isValidJs(files[keys[i]])).to.not.equal(null);
                 } else {
                     expect(isValidJs(files[keys[i]])).to.equal(null);
