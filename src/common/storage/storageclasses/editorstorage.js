@@ -414,15 +414,14 @@ define([
                     //if (keys[i] === rootHash) {
                         //console.timeEnd('root-patch-computation');
                     //}
-                } else if (coreObjects[keys[i]].newData) {
+                } else if (coreObjects[keys[i]].newData && coreObjects[keys[i]].newHash) {
                     // A new object with no previous data (send the entire data).
                     commitData.coreObjects[keys[i]] = coreObjects[keys[i]].newData;
                     persistQueueElement[keys[i]] = coreObjects[keys[i]].newData;
                 } else {
                     // A regular object.
-                    // TODO: Is this deprecated?
-                    logger.error('deprecated object passed to makeCommit');
                     commitData.coreObjects[keys[i]] = coreObjects[keys[i]];
+                    persistQueueElement[keys[i]] = coreObjects[keys[i]];
                 }
             }
             //console.timeEnd('patch-computation');

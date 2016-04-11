@@ -304,8 +304,8 @@ define(['q'], function (Q) {
             },
             meta;
 
-        if (core.getPath(node) === '') {
-            // Do not check the meta-rules for the root-node
+        if (core.getPath(node) === '' || core.isLibraryRoot(node)) {
+            // Do not check the meta-rules for the root-node or library-roots.
             return Q(result);
         }
 
