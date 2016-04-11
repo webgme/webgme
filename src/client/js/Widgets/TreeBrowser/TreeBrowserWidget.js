@@ -293,6 +293,7 @@ define(['js/logger',
                 isConnection: objDescriptors[i].isConnection,
                 isAbstract: objDescriptors[i].isAbstract,
                 isLibrary: objDescriptors[i].isLibrary,
+                isLibraryRoot: objDescriptors[i].isLibraryRoot,
                 libraryInfo: objDescriptors[i].libraryInfo,
                 metaType: objDescriptors[i].metaType
             });
@@ -364,10 +365,12 @@ define(['js/logger',
             isConnection: objDescriptor.isConnection,
             isAbstract: objDescriptor.isAbstract,
             isLibrary: objDescriptor.isLibrary,
+            isLibraryRoot: objDescriptor.isLibraryRoot,
             libraryInfo: objDescriptor.libraryInfo,
             metaType: objDescriptor.metaType
         }, beforeNode);
 
+        this.sortChildren(parentNode, false);
         this._logger.debug('New node created: ' + newNode.key);
 
         //return the newly created node
@@ -488,6 +491,12 @@ define(['js/logger',
             nodeDataChanged = true;
         }
 
+        if (objDescriptor.hasOwnProperty('isLibraryRoot') && objDescriptor.isLibraryRoot !== node.data.isLibraryRoot) {
+            node.data.isLibraryRoot = objDescriptor.isLibraryRoot;
+            //mark that change happened
+            nodeDataChanged = true;
+        }
+
         //if there were any change related to this node
         if (nodeDataChanged === true) {
             node.render(true);
@@ -496,13 +505,17 @@ define(['js/logger',
             this._logger.debug('Node updated: ' + node.key);
         }
 
-        if (nodeDataChanged === true || nodeNameChanged === true) {
+        if (nodeNameChanged === true) {
             //find it's new place based on alphabetical order
             parentNode = node.getParent();
 
             if (parentNode) {
                 this.sortChildren(parentNode, false);
             }
+        }
+
+        if (nodeDataChanged && objDescriptor.hasChildren === true) {
+            this.sortChildren(node, false);
         }
     };
 
@@ -1139,9 +1152,9 @@ define(['js/logger',
                 return 1;
             } else if (nodeB.data.isConnection === true && !nodeA.data.isConnection) {
                 return -1;
-            } else if (nodeA.data.isLibrary === true && !nodeB.data.isLibrary) {
+            } else if (nodeA.data.isLibraryRoot === true && !nodeB.data.isLibraryRoot) {
                 return -1;
-            } else if (nodeB.data.isLibrary === true && !nodeA.data.isLibrary) {
+            } else if (nodeB.data.isLibraryRoot === true && !nodeA.data.isLibraryRoot) {
                 return 1;
             } else {
                 if (nodeA.title.toLowerCase() > nodeB.title.toLowerCase()) {

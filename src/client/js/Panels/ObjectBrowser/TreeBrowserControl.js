@@ -263,6 +263,7 @@ define(['js/logger',
                             isConnection: childNode.isConnection(),
                             isAbstract: childNode.isAbstract(),
                             isLibrary: childNode.isLibraryRoot() || childNode.isLibraryElement(),
+                            isLibraryRoot: childNode.isLibraryRoot(),
                             metaType: getMetaTypeName(childNode),
                             libraryInfo: getLibraryInfo(childNode),
                             // Data used locally here.
@@ -662,6 +663,7 @@ define(['js/logger',
                                 isConnection: updatedObject.isConnection(),
                                 isAbstract: updatedObject.isAbstract(),
                                 isLibrary: updatedObject.isLibraryRoot() || updatedObject.isLibraryElement(),
+                                isLibraryRoot: updatedObject.isLibraryRoot(),
                                 libraryInfo: getLibraryInfo(updatedObject),
                                 metaType: getMetaTypeName(updatedObject)
                             };
@@ -689,6 +691,7 @@ define(['js/logger',
                                 isConnection: updatedObject.isConnection(),
                                 isAbstract: updatedObject.isAbstract(),
                                 isLibrary: updatedObject.isLibraryRoot() || updatedObject.isLibraryElement(),
+                                isLibraryRoot: updatedObject.isLibraryRoot(),
                                 libraryInfo: getLibraryInfo(updatedObject),
                                 metaType: getMetaTypeName(updatedObject)
                             };
@@ -768,6 +771,7 @@ define(['js/logger',
                                             isConnection: childNode.isConnection(),
                                             isAbstract: childNode.isAbstract(),
                                             isLibrary: childNode.isLibraryRoot() || childNode.isLibraryElement(),
+                                            isLibraryRoot: childNode.isLibraryRoot(),
                                             libraryInfo: getLibraryInfo(childNode),
                                             metaType: getMetaTypeName(childNode)
                                         });
