@@ -597,25 +597,25 @@ define([
 
         if (self.config.disableProjectActions === false) {
             self.projects[projectId].menu[0].items.unshift({
-                    id: 'transferProject',
-                    label: 'Transfer project',
-                    iconClass: 'glyphicon glyphicon-transfer',
-                    disabled: !rights.delete,
-                    action: transferProject,
-                    actionData: {
-                        projectId: projectId
-                    }
-                });
+                id: 'transferProject',
+                label: 'Transfer project',
+                iconClass: 'glyphicon glyphicon-transfer',
+                disabled: !rights.delete,
+                action: transferProject,
+                actionData: {
+                    projectId: projectId
+                }
+            });
             self.projects[projectId].menu[0].items.unshift({
-                    id: 'deleteProject',
-                    label: 'Delete project',
-                    iconClass: 'glyphicon glyphicon-remove',
-                    disabled: !rights.delete,
-                    action: deleteProject,
-                    actionData: {
-                        projectId: projectId
-                    }
-                });
+                id: 'deleteProject',
+                label: 'Delete project',
+                iconClass: 'glyphicon glyphicon-remove',
+                disabled: !rights.delete,
+                action: deleteProject,
+                actionData: {
+                    projectId: projectId
+                }
+            });
         }
 
         if (self.gmeClient) {
@@ -673,27 +673,15 @@ define([
 
         if (self.gmeClient) {
             exportBranch = function (data) {
-                var dialog = new ExportErrorsDialog();
-                self.gmeClient.getExportProjectBranchUrl(data.projectId,
-                    data.branchId, data.projectId + '_' + data.branchId, function (err, url) {
-                        if (url) {
-                            if (err) {
-                                dialog.show(self.gmeClient, self.logger,
-                                    data.projectId, data.commitHash, err.message, function () {
-                                        saveToDisk.saveUrlToDisk(url);
-                                    }
-                                );
-                            } else {
-                                saveToDisk.saveUrlToDisk(url);
-                            }
+                // By default the export contains assets.
+                self.gmeClient.saveProject(self.gmeClient.getActiveProjectId(),
+                    self.gmeClient.getActiveBranchName(),
+                    self.gmeClient.getActiveCommitHash(), true, function (err, url) {
+                        if (err) {
+                            self.logger.error('unable to save project', err);
                         } else {
-                            self.logger.error('Failed to retrieve export url for', data);
+                            saveToDisk.saveUrlToDisk(url);
                         }
-                        //if (!err && url) {
-                        //    saveToDisk.saveUrlToDisk(url);
-                        //} else {
-                        //    self.logger.error('Failed to get project export url for', data);
-                        //}
                     }
                 );
             };
@@ -1145,7 +1133,6 @@ define([
                 if (self.projects[projectId].projectIsReadOnly === false) {
                     self.projects[projectId].branches[branchId].applyCommitQueueItem.disabled = false;
                 }
-
 
                 if (self.gmeClient) {
                     if (branchId !== self.gmeClient.getActiveBranchName()) {
