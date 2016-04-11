@@ -164,7 +164,9 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Transports and options for the server (winston) logger.
 - `config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']`
  - Array of regular expressions that will hinder access to files via the '/extlib/' route. Requests to files matching any of the provided pattern will result in 403.
-
+- `config.server.behindSecureProxy = false`
+ - Indicate if the webgme server is behind a secure proxy (needed for adding correct OG Metadata in index.html).
+ 
 ##### socketIO
 - `config.socketIO.clientOptions = see config`
  - Options passed to the [socketIO client](https://github.com/socketio/socket.io-client#managerurlstring-optsobject) when connecting to the sever.
@@ -178,8 +180,8 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Number of core-objects stored before emptying cache (client side).
 - `config.storage.broadcastProjectEvents = false`
  - If true, events regarding project/branch creation/deletion are only broadcasted and not emitted back to the socket who made the change. Only modify this if you are writing a custom GUI.
-- `config.storage.emitCommittedCoreObjects = true`
- - If true, all the committed core objects (in a `makeCommit`) will be broadcasted to all sockets. If this is enabled the number of round-trips to the server can be reduced after a `BRANCH_HASH_UPDATED` event. However it also means that the server might send unused data to clients. If false, only the core object for the root node will be sent.
+- `config.storage.maxEmittedCoreObjects = -1`
+ - If greater than -1, the maximum number of core objects that will be emitted to other clients. N.B. this only applies to newly created nodes, any modified data will always be sent as patches.
 - `config.storage.loadBucketSize = 100`
  - Size of bucket before triggering a load of objects from the server.
 - `config.storage.loadBucketTimer = 10`
@@ -190,8 +192,6 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Type of database to store the data (metadata e.g. _users is always stored in mongo), can be `'mongo'`, `'redis'` or `'memory'`.
 - `config.storage.database.options = '{}'`
  - Options passed to database client (unless mongo is specified, in that case `config.mongo.options` are used).
-- `config.storage.patchRootCommunicationEnabled = true`
- - If true, changes in the root object are communicated via small diff/patch files rather than complete objects. 
 
 ##### visualization
 - `config.visualization.decoratorPaths = ['./src/client/decorators']`

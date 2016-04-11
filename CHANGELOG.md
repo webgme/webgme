@@ -1,5 +1,62 @@
 # Change Log
 
+## [1.7.0](https://github.com/webgme/webgme/tree/1.7.0) (2016-04-11)
+[Full Changelog](https://github.com/webgme/webgme/compare/v1.6.0...1.7.0)
+
+**Implemented enhancements:**
+
+- zoom +/- buttons with collapsible zoom slider [\#907](https://github.com/webgme/webgme/issues/907)
+- Requiring text in plugin causes tests to fail [\#898](https://github.com/webgme/webgme/issues/898)
+- User experience issue : adding connector to a crosscut [\#897](https://github.com/webgme/webgme/issues/897)
+- LayoutGenerator should use ComponentSettings [\#893](https://github.com/webgme/webgme/issues/893)
+- Create a default crosscut [\#866](https://github.com/webgme/webgme/issues/866)
+- Hover response is too aggressive [\#843](https://github.com/webgme/webgme/issues/843)
+- Require bower from a node-script in postinstall instead of relying on path to bin script. [\#936](https://github.com/webgme/webgme/pull/936) ([pmeijer](https://github.com/pmeijer))
+- Css fixes and isis ui components [\#930](https://github.com/webgme/webgme/pull/930) ([pmeijer](https://github.com/pmeijer))
+- FIX: \#902 Use ejs for html templating [\#929](https://github.com/webgme/webgme/pull/929) ([pmeijer](https://github.com/pmeijer))
+- FIX for \#902 security issue regarding html-elements. [\#927](https://github.com/webgme/webgme/pull/927) ([pmeijer](https://github.com/pmeijer))
+- Plugin metadata and support for plugin Icons. Closes \#898 too. [\#926](https://github.com/webgme/webgme/pull/926) ([pmeijer](https://github.com/pmeijer))
+- Add library support to WebGME [\#925](https://github.com/webgme/webgme/pull/925) ([kecso](https://github.com/kecso))
+- Add debug.html entry point that does not use dist and min. [\#924](https://github.com/webgme/webgme/pull/924) ([pmeijer](https://github.com/pmeijer))
+- Make ZoomWidget with buttons and collapsible slider - closes \#907 [\#921](https://github.com/webgme/webgme/pull/921) ([pmeijer](https://github.com/pmeijer))
+- Update to isis-ui-components v0.2.18 Closes \#843 [\#918](https://github.com/webgme/webgme/pull/918) ([pmeijer](https://github.com/pmeijer))
+- Add tabs in the svg selector and display short names [\#914](https://github.com/webgme/webgme/pull/914) ([pmeijer](https://github.com/pmeijer))
+- Add option to generate decorator inheriting from ModelDecorator [\#911](https://github.com/webgme/webgme/pull/911) ([pmeijer](https://github.com/pmeijer))
+- Make the cookieId of JWT configurable. [\#908](https://github.com/webgme/webgme/pull/908) ([pmeijer](https://github.com/pmeijer))
+- Cross cut fixes \#866 \#897 \#905 [\#906](https://github.com/webgme/webgme/pull/906) ([pmeijer](https://github.com/pmeijer))
+- Set www.ogp.me metadata in index.html when requested. [\#902](https://github.com/webgme/webgme/pull/902) ([pmeijer](https://github.com/pmeijer))
+- Update config/README.md with missing parameters. [\#901](https://github.com/webgme/webgme/pull/901) ([pmeijer](https://github.com/pmeijer))
+- Added component settings to boilerplate. Fixes \#893 [\#894](https://github.com/webgme/webgme/pull/894) ([brollb](https://github.com/brollb))
+
+**Fixed bugs:**
+
+- Download url for libraries are not working when server is behind a proxy. [\#932](https://github.com/webgme/webgme/issues/932)
+- Exclude library roots from meta-rule checker. [\#931](https://github.com/webgme/webgme/issues/931)
+- Null pointers not handled correctly [\#919](https://github.com/webgme/webgme/issues/919)
+- MetaCache doesn't handle node removal during load [\#909](https://github.com/webgme/webgme/issues/909)
+- Suppress auto visualizer look-up when switching panels in split view [\#905](https://github.com/webgme/webgme/issues/905)
+- Crosscut visualizer does not automatically load nodes from other branches [\#904](https://github.com/webgme/webgme/issues/904)
+- Generated plugins fork logger as "NewPlugin" in the tests [\#899](https://github.com/webgme/webgme/issues/899)
+- Fixes library element ordering in ObjectBrowser [\#935](https://github.com/webgme/webgme/pull/935) ([kecso](https://github.com/kecso))
+- Fixes \#932 Download url for libraries are not working when server is behind a proxy. [\#934](https://github.com/webgme/webgme/pull/934) ([kecso](https://github.com/kecso))
+- Closes \#931 Exclude lib-roots from meta-rule checking. [\#933](https://github.com/webgme/webgme/pull/933) ([pmeijer](https://github.com/pmeijer))
+- Closes \#919 Make sure to remove ptr completely if no items left or empty. [\#928](https://github.com/webgme/webgme/pull/928) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#909 MetaCache doesn't handle node removal during load [\#912](https://github.com/webgme/webgme/pull/912) ([kecso](https://github.com/kecso))
+- Cross cut fixes \\#866 \\#897 \\#905 [\#906](https://github.com/webgme/webgme/pull/906) ([pmeijer](https://github.com/pmeijer))
+- Updated forked logger name. Fixes \#899 [\#900](https://github.com/webgme/webgme/pull/900) ([brollb](https://github.com/brollb))
+
+**Closed issues:**
+
+- Prototypal-Inheritance v. Class-Inheritance [\#910](https://github.com/webgme/webgme/issues/910)
+- Add tests for reassigning guids. [\#889](https://github.com/webgme/webgme/issues/889)
+- Provide "Speculative" Collaboration via External Databases \(especially Graph Databases\) [\#875](https://github.com/webgme/webgme/issues/875)
+
+**Merged pull requests:**
+
+- Adds feature to export commit-queue and apply it to a branch. [\#923](https://github.com/webgme/webgme/pull/923) ([pmeijer](https://github.com/pmeijer))
+- Send patch objects for all nodes and calc. changed nodes. [\#920](https://github.com/webgme/webgme/pull/920) ([pmeijer](https://github.com/pmeijer))
+- Notify clients on uncaught exceptions. [\#913](https://github.com/webgme/webgme/pull/913) ([pmeijer](https://github.com/pmeijer))
+
 ## [v1.6.0](https://github.com/webgme/webgme/tree/v1.6.0) (2016-03-14)
 [Full Changelog](https://github.com/webgme/webgme/compare/v1.5.1...v1.6.0)
 
@@ -10,7 +67,7 @@
 - Enable custom css files to be loaded at start up. [\#884](https://github.com/webgme/webgme/issues/884)
 - Layout config in component settings [\#879](https://github.com/webgme/webgme/issues/879)
 - UMLStateMachine decorator should respect colors. [\#863](https://github.com/webgme/webgme/issues/863)
-- Hover response is too aggressive [\#843](https://github.com/webgme/webgme/issues/843)
+- Pre-release 1.6.0 [\#891](https://github.com/webgme/webgme/pull/891) ([kecso](https://github.com/kecso))
 - Vulcan ui config [\#888](https://github.com/webgme/webgme/pull/888) ([pmeijer](https://github.com/pmeijer))
 - Make a build for commonly used client side files. [\#877](https://github.com/webgme/webgme/pull/877) ([pmeijer](https://github.com/pmeijer))
 - Add DEMO tab in Projects Dialog. [\#873](https://github.com/webgme/webgme/pull/873) ([pmeijer](https://github.com/pmeijer))
@@ -25,6 +82,9 @@
 - Add config-file for hound [\#850](https://github.com/webgme/webgme/pull/850) ([pmeijer](https://github.com/pmeijer))
 - Add clean\_up bin script. [\#849](https://github.com/webgme/webgme/pull/849) ([pmeijer](https://github.com/pmeijer))
 - Update to isis-ui-components@0.2.17, delay dropdown menu [\#848](https://github.com/webgme/webgme/pull/848) ([lattmann](https://github.com/lattmann))
+- Log output from executor-works to console. [\#844](https://github.com/webgme/webgme/pull/844) ([pmeijer](https://github.com/pmeijer))
+- Add button for opening node on the canvas. [\#841](https://github.com/webgme/webgme/pull/841) ([pmeijer](https://github.com/pmeijer))
+- Update travis build matrix to include node v4.3 [\#839](https://github.com/webgme/webgme/pull/839) ([lattmann](https://github.com/lattmann))
 
 **Fixed bugs:**
 
@@ -51,12 +111,6 @@
 
 ## [v1.5.1](https://github.com/webgme/webgme/tree/v1.5.1) (2016-02-20)
 [Full Changelog](https://github.com/webgme/webgme/compare/v1.5.0...v1.5.1)
-
-**Implemented enhancements:**
-
-- Log output from executor-works to console. [\#844](https://github.com/webgme/webgme/pull/844) ([pmeijer](https://github.com/pmeijer))
-- Add button for opening node on the canvas. [\#841](https://github.com/webgme/webgme/pull/841) ([pmeijer](https://github.com/pmeijer))
-- Update travis build matrix to include node v4.3 [\#839](https://github.com/webgme/webgme/pull/839) ([lattmann](https://github.com/lattmann))
 
 **Fixed bugs:**
 
@@ -424,7 +478,6 @@
 
 **Implemented enhancements:**
 
-- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 - Squashing commits [\#466](https://github.com/webgme/webgme/issues/466)
 - Object browser auto scroll, when navigating with the keyboard [\#408](https://github.com/webgme/webgme/issues/408)
 - No Bezier Curves with the AutoRouter [\#314](https://github.com/webgme/webgme/issues/314)
@@ -564,6 +617,10 @@
 
 ## [v0.14.1](https://github.com/webgme/webgme/tree/v0.14.1) (2015-09-07)
 [Full Changelog](https://github.com/webgme/webgme/compare/v0.14.0...v0.14.1)
+
+**Implemented enhancements:**
+
+- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 
 **Fixed bugs:**
 
@@ -1080,6 +1137,10 @@
 - Use one blobClient [\#213](https://github.com/webgme/webgme/issues/213)
 - Autorouter: section\_HasBlockedEdge assert failure [\#169](https://github.com/webgme/webgme/issues/169)
 
+**Merged pull requests:**
+
+- clean-up outdated and unused files from the project [\#202](https://github.com/webgme/webgme/pull/202) ([kecso](https://github.com/kecso))
+
 ## [v0.7.1](https://github.com/webgme/webgme/tree/v0.7.1) (2015-02-25)
 [Full Changelog](https://github.com/webgme/webgme/compare/v0.7.0...v0.7.1)
 
@@ -1220,6 +1281,11 @@
 - Ctrl + mouse scroll causes Browser to zoom, distorts WebGME objects [\#33](https://github.com/webgme/webgme/issues/33)
 - Tree auto-expand on project open [\#18](https://github.com/webgme/webgme/issues/18)
 
+**Merged pull requests:**
+
+- corerel: optimize overlayInsert perf [\#101](https://github.com/webgme/webgme/pull/101) ([ksmyth](https://github.com/ksmyth))
+- Fix createEmptyProject and createProjectAsync [\#99](https://github.com/webgme/webgme/pull/99) ([ksmyth](https://github.com/ksmyth))
+
 ## [webgme_0.6.5](https://github.com/webgme/webgme/tree/webgme_0.6.5) (2014-06-30)
 [Full Changelog](https://github.com/webgme/webgme/compare/webgme_0.6.3...webgme_0.6.5)
 
@@ -1227,6 +1293,7 @@
 
 - webgme uses too much memory and crashes [\#66](https://github.com/webgme/webgme/issues/66)
 - Loading objects within a territory creates multiple events. [\#65](https://github.com/webgme/webgme/issues/65)
+- Failing to load a rextrast module should be a fatal error [\#59](https://github.com/webgme/webgme/pull/59) ([ksmyth](https://github.com/ksmyth))
 
 ## [webgme_0.6.3](https://github.com/webgme/webgme/tree/webgme_0.6.3) (2014-06-26)
 [Full Changelog](https://github.com/webgme/webgme/compare/webgme_0.5.12...webgme_0.6.3)
@@ -1261,6 +1328,7 @@
 - Requesting html template from client while WebGME is initializing crashes server [\#42](https://github.com/webgme/webgme/issues/42)
 - Status code logged is wrong for some requests [\#40](https://github.com/webgme/webgme/issues/40)
 - Tree-browser string handling [\#29](https://github.com/webgme/webgme/issues/29)
+- Fix status code logging of many successful requests, e.g. GET / [\#41](https://github.com/webgme/webgme/pull/41) ([ksmyth](https://github.com/ksmyth))
 
 **Closed issues:**
 
@@ -1268,6 +1336,10 @@
 - Sometimes the mongo object is null and it stops the webserver [\#14](https://github.com/webgme/webgme/issues/14)
 - Self containment issue [\#8](https://github.com/webgme/webgme/issues/8)
 - Create UI wireframes and mockups [\#1](https://github.com/webgme/webgme/issues/1)
+
+**Merged pull requests:**
+
+- Add jszip, filesaver, and PluginFSClient. [\#7](https://github.com/webgme/webgme/pull/7) ([lattmann](https://github.com/lattmann))
 
 ## [webgme_0.4.4](https://github.com/webgme/webgme/tree/webgme_0.4.4) (2014-02-05)
 **Closed issues:**
