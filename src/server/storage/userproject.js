@@ -92,12 +92,11 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
                 // Patch type object.
                 data.coreObjects[keys[i]] = UTIL.getPatchObject(coreObjects[keys[i]].oldData,
                     coreObjects[keys[i]].newData);
-            } else if (coreObjects[keys[i]].newData) {
+            } else if (coreObjects[keys[i]].newData && coreObjects[keys[i]].newHash) {
                 // A new object with no previous data (send the entire data).
                 data.coreObjects[keys[i]] = coreObjects[keys[i]].newData;
             } else {
                 // A regular object.
-                // TODO: Is this deprecated?
                 data.coreObjects[keys[i]] = coreObjects[keys[i]];
             }
         }
