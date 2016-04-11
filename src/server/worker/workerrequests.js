@@ -1035,7 +1035,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         if (err) {
                             deferred.reject(err);
                         } else {
-                            deferred.resolve(blobClient.getDownloadURL(hash));
+                            deferred.resolve(blobClient.getRelativeDownloadURL(hash));
                         }
                     }
                 );
