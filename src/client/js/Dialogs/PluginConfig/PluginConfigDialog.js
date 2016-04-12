@@ -1,6 +1,7 @@
 /*globals define, $*/
 /*jshint browser: true*/
 /**
+ * TODO: FIX ME!!!
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
@@ -29,12 +30,11 @@ define([
         this._pluginMetadata = config;
     };
 
-    PluginConfigDialog.prototype.show = function (pluginConfigs, pluginClass, fnCallback) {
+    PluginConfigDialog.prototype.show = function (configStructure, fnCallback) {
         var self = this;
-        this._currentPluginClass = pluginClass;
         this._fnCallback = fnCallback;
 
-        this._initDialog(pluginConfigs);
+        this._initDialog(configStructure);
 
         this._dialog.on('hidden.bs.modal', function () {
             var save = self._saveConfigurationCb.find('input').is(':checked');
@@ -64,7 +64,7 @@ define([
         }
     };
 
-    PluginConfigDialog.prototype._initDialog = function (pluginConfigs) {
+    PluginConfigDialog.prototype._initDialog = function (configStructure) {
         var self = this,
             p,
             iconEl,

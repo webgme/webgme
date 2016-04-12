@@ -21,6 +21,7 @@ define([
     'common/core/users/serialization',
     'blob/BlobClient',
     'js/client/stateloghelpers',
+    'js/client/pluginmanager',
     'superagent'
 ], function (Logger,
              Storage,
@@ -38,6 +39,7 @@ define([
              Serialization,
              BlobClient,
              stateLogHelpers,
+             PluginManager,
              superagent) {
     'use strict';
 
@@ -88,6 +90,7 @@ define([
             },
             blobClient,
             monkeyPatchKey,
+            pluginManager,
             nodeSetterFunctions,
             coreLibraryFunctions,
         //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
@@ -221,7 +224,15 @@ define([
             return null;
         }
 
-        // Monkey patching from other files..
+        // Plugin Manager
+        pluginManager = new PluginManager(self, storage, state, logger, gmeConfig);
+        this.getCurrentPluginContext = pluginManager.getCurrentPluginContext;
+        this.runBrowserPlugin = pluginManager.runBrowserPlugin;
+        this.runServerPlugin = pluginManager.runServerPlugin;
+        this.filterPlugins = pluginManager.filterPlugins;
+        this.dispatchPluginNotification = pluginManager.dispatchPluginNotification;
+
+        // Meta methods
         this.meta = new META();
 
         for (monkeyPatchKey in this.meta) {
@@ -292,6 +303,8 @@ define([
                 message: error.message
             });
         }
+
+        // Node setters and getters.
 
         nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode, printCoreError);
 
@@ -2201,7 +2214,7 @@ define([
             } else {
                 callback(new Error('invalid parameters!'));
             }
-        }
+        };
 
         this.gmeConfig = gmeConfig;
 

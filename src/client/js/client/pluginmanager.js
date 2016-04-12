@@ -15,6 +15,15 @@ define([
 
     var ROOT_PATH = '';
 
+    /**
+     *
+     * @param client
+     * @param storage
+     * @param state
+     * @param mainLogger
+     * @param gmeConfig
+     * @constructor
+     */
     function PluginManager(client, storage, state, mainLogger, gmeConfig) {
 
         var self = this,

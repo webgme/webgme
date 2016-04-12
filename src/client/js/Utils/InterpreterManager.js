@@ -63,7 +63,7 @@ define([
         dialogConfig[metadata.id] = metadata.configStructure;
         dialogConfig[this.GLOBAL_OPTIONS] = globalOptions;
 
-        configDialog.show(dialogConfig, plugin, function (userConfig, save) {
+        configDialog.show(dialogConfig, metadata, function (userConfig, save) {
             console.log(userConfig);
             if (save === true) {
                 self.saveSettingsInUser(metadata.id, plugin, userConfig);
@@ -178,27 +178,27 @@ define([
                     if (serverAllowedPlugin) {
                         // This is the default
                     } else {
-                        runOptions.readOnly = true;
-                        runOptions.description = 'This plugin can not run on the server.';
+                        runOption.readOnly = true;
+                        runOption.description = 'This plugin can not run on the server.';
                     }
                 } else {
-                    runOptions.readOnly = true;
-                    runOptions.value = true;
-                    runOptions.description = 'This plugin can not run in the browser.';
+                    runOption.readOnly = true;
+                    runOption.value = true;
+                    runOption.description = 'This plugin can not run in the browser.';
                 }
             } else {
                 if (browserAllowedPlugin) {
-                    runOptions.readOnly = true;
-                    runOptions.description = 'Server execution is disabled.';
+                    runOption.readOnly = true;
+                    runOption.description = 'Server execution is disabled.';
                 } else {
                     errorMessage = 'This plugin can only run on the server which is disabled!';
                 }
             }
         } else {
             if (browserAllowedPlugin) {
-                runOptions.readOnly = true;
-                runOptions.value = true;
-                runOptions.description = 'Browser execution is disabled.';
+                runOption.readOnly = true;
+                runOption.value = true;
+                runOption.description = 'Browser execution is disabled.';
             } else {
                 errorMessage = 'This plugin can only run on the server which is disabled!';
             }
@@ -209,8 +209,7 @@ define([
         } else {
             return [runOption];
         }
-
-    }
+    };
 
     InterpreterManager.prototype.getStoredConfiguration = function (pluginId, plugin) {
         var config,

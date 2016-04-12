@@ -59,34 +59,27 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
 
             //add plugin names
             pluginIds.forEach(function (pluginId) {
-                var params = {
-                        title: pluginId,
-                        text: pluginId,
-                        data: {
-                            id: pluginId,
-                            icon: 'glyphicon glyphicon-cog'
-                        },
+                var metadata = WebGMEGlobal.allPluginsMetadata[pluginId],
+                    params = {
+                        title: metadata.id + ' v' + metadata.version + ' - ' + metadata.description,
+                        text: metadata.name,
+                        data: metadata,
                         clickFn: executeClickFunction,
-                        icon: $('<i class="plugin-icon glyphicon glyphicon-cog"/>')
-                    },
-                    metadata = WebGMEGlobal.allPluginsMetadata[pluginId],
-                    iconPath;
+                        icon: $('<i class="plugin-icon"/>')
+                    };
 
-                // TODO: In next version use metadata for all
-                if (metadata) {
-                    params.data = metadata;
-                    if (metadata.icon.src) {
-                        params.icon = $('<img/>', {
-                            src: ['/plugin', metadata.id, metadata.id, metadata.icon.src].join('/')
-                        });
-                    } else {
-                        params.icon = $('<i/>');
-                    }
-
-                    params.icon.addClass('plugin-icon ' + metadata.icon.class);
-                    params.text = metadata.name;
-                    params.title = metadata.id + ' v' + metadata.version + ' - ' + metadata.description;
+                if (metadata.icon.src) {
+                    params.icon = $('<img/>', {
+                        src: ['/plugin', metadata.id, metadata.id, metadata.icon.src].join('/')
+                    });
+                    params.icon.addClass(metadata.icon.class);
+                } else if (metadata.icon.class) {
+                    params.icon.addClass(metadata.icon.class);
+                } else {
+                    params.icon.addClass('glyphicon glyphicon-cog');
                 }
+
+                params.icon.addClass('plugin-icon');
 
                 params.icon.css({
                     width: '14px',
@@ -98,7 +91,7 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
         };
 
         executePlugin = function (data) {
-            WebGMEGlobal.InterpreterManager.run(data, null, function (result) {
+            WebGMEGlobal.InterpreterManager.configureAndRun(data, function (result) {
                 result.__unread = true;
                 self._results.splice(0, 0, result);
                 self.$btnExecutePlugin.el.find('.btn').disable(false);
