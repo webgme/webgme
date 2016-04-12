@@ -1,11 +1,11 @@
-/*globals*/
+/*globals requireJS*/
 /*jshint node:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';
 
-var PluginNodeManagerBase = require('./nodemanagerbase'),
+var PluginManagerBase = requireJS('plugin/managerbase'),
     BlobClientWithFSBackend = require('../server/middleware/blob/BlobClientWithFSBackend');
 
 /**
@@ -19,11 +19,11 @@ var PluginNodeManagerBase = require('./nodemanagerbase'),
 function PluginCliManager(project, mainLogger, gmeConfig) {
     var blobClient = new BlobClientWithFSBackend(gmeConfig, mainLogger);
 
-    PluginNodeManagerBase.call(this, blobClient, project, mainLogger, gmeConfig);
+    PluginManagerBase.call(this, blobClient, project, mainLogger, gmeConfig);
 }
 
-// Inherit from PluginNodeManagerBase
-PluginCliManager.prototype = Object.create(PluginNodeManagerBase.prototype);
+// Inherit from PluginManagerBase
+PluginCliManager.prototype = Object.create(PluginManagerBase.prototype);
 PluginCliManager.prototype.constructor = PluginCliManager;
 
 module.exports = PluginCliManager;
