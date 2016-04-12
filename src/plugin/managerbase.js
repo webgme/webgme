@@ -33,6 +33,7 @@ define([
 
         this.logger = mainLogger.fork('PluginManagerBase');
         this.notificationHandlers = [];
+        this.blobClient = blobClient;
 
         /**
          *
@@ -83,7 +84,7 @@ define([
                 throw new Error('disableServerExecution is set to true - plugin will not be executed on server!');
             }
             plugin = new Plugin();
-            plugin.initialize(pluginLogger, blobClient, gmeConfig);
+            plugin.initialize(pluginLogger, self.blobClient, gmeConfig);
 
             return plugin;
         };
@@ -94,8 +95,8 @@ define([
          * @param {object} pluginConfig - configuration for the plugin.
          * @param {object} context
          * @param {string} context.branchName - name of branch that should be updated
-         * @param {string} [context.commitHash] - commit from which to start the plugin, defaults to latest for branchName.
-         * @param {ProjectInterface} [context.project=project] - project instance if different from the one passed in ctor.
+         * @param {string} [context.commitHash=<%brashHash%>] - commit from which to start the plugin.
+         * @param {ProjectInterface} [context.project=project] - project instance if different from the one passed in.
          * @param {string} [context.activeNode=''] - path to active node
          * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
          * @param {function} callback
@@ -108,20 +109,18 @@ define([
 
             if (pluginConfig) {
                 for (key in pluginConfig) {
-                    if (pluginConfig.hasOwnProperty(key)) {
-                        pluginConfiguration[key] = pluginConfig[key];
-                    }
+                    // We do allow extra config-parameters that aren't specified in the default config.
+                    pluginConfiguration[key] = pluginConfig[key];
                 }
             }
 
-            //TODO: Check that a passed config is consistent with the structure..
             plugin.setCurrentConfig(pluginConfiguration);
 
             context.project = context.project || project;
 
             if (context.project instanceof ProjectInterface === false) {
-                deferred.reject(new Error('project is not an instance of ProjectInterface, pass it via context or set it ' +
-                    'in the constructor of NodeManagerBase.'));
+                deferred.reject(new Error('project is not an instance of ProjectInterface, ' +
+                    'pass it via context or set it in the constructor of PluginManagerBase.'));
             } else {
                 self.loadContext(context)
                     .then(function (pluginContext) {

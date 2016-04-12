@@ -366,6 +366,10 @@ define([
      * Saves all current changes if there is any to a new commit.
      * If the commit result is either 'FORKED' or 'CANCELED', it creates a new branch.
      *
+     * N.B. This is a utility function for saving/persisting data. The plugin has access to the project and core
+     * instances and may persist and make the commit as define its own behavior for e.g. 'FORKED' commits.
+     * To report the commits in the PluginResult make sure to invoke this.addCommitToResult with the given status.
+     *
      * @param {string|null} message - commit message
      * @param {function(Error|string, module:Storage~commitResult)} callback
      */
@@ -448,6 +452,12 @@ define([
             .nodeify(callback);
     };
 
+    /**
+     * Adds the commit to the results. N.B. if you're using your own save method - make sure to update
+     * this.currentHash and this.branchName accordingly before adding the commit.
+     *
+     * @param {string} status - Status of the commit 'SYNCED', 'FORKED', 'CANCELED', null.
+     */
     PluginBase.prototype.addCommitToResult = function (status) {
         var newCommit = {
             commitHash: this.currentHash,
