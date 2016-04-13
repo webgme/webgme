@@ -74,7 +74,7 @@ define([
                 callback(null);
             }];
 
-            pluginManager(pluginId, context.pluginConfig, context.managerConfig, callback);
+            pluginManager.executePlugin(pluginId, context.pluginConfig, context.managerConfig, callback);
         };
 
         /**

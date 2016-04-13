@@ -37,7 +37,7 @@ define([
 
         /**
          *
-         * @param {string} pluginName
+         * @param {string} pluginId
          * @param {object} pluginConfig - configuration for the plugin.
          * @param {object} context
          * @param {string} [context.branchName] - name of branch that should be updated
@@ -47,22 +47,18 @@ define([
          * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
          * @param {function} callback
          */
-        this.executePlugin = function (pluginName, pluginConfig, context, callback) {
+        this.executePlugin = function (pluginId, pluginConfig, context, callback) {
             var plugin;
-
-            try {
-                plugin = self.initializePlugin(pluginName);
-            } catch (err) {
-                callback(err.message, self.getPluginErrorResult(pluginName, 'Failed to load plugin: ' + err.message));
-                return;
-            }
-
-            self.configurePlugin(plugin, pluginConfig, context)
+            self.initializePlugin(pluginId)
+                .then(function (plugin_) {
+                    plugin = plugin_;
+                    return self.configurePlugin(plugin, pluginConfig, context);
+                })
                 .then(function () {
                     self.runPluginMain(plugin, callback);
                 })
                 .catch(function (err) {
-                    var pluginResult = self.getPluginErrorResult(pluginName, 'Exception was raised, err: ' + err.stack,
+                    var pluginResult = self.getPluginErrorResult(pluginId, 'Exception was raised, err: ' + err.stack,
                         plugin && plugin.projectId);
                     self.logger.error(err.stack);
                     callback(err.message, pluginResult);
@@ -70,23 +66,23 @@ define([
         };
 
         /**
-         *
-         * @param {string} - pluginName
-         * @returns {object} the initialized plugin.
+         * Retrives plugin script files and creates instance.
+         * @param {string} - pluginId
+         * @param {function} callback
+         * @returns {promise}
          */
-        this.initializePlugin = function (pluginName) {
-            var plugin,
-                Plugin,
-                pluginLogger = self.logger.fork('plugin:' + pluginName);
+        this.initializePlugin = function (pluginId, callback) {
+            return getPlugin(pluginId)
+                .then(function (PluginClass) {
+                    var pluginLogger = self.logger.fork('plugin:' + pluginId),
+                        plugin;
 
-            Plugin = getPlugin(pluginName);
-            if (Plugin.disableServerExecution === true) {
-                throw new Error('disableServerExecution is set to true - plugin will not be executed on server!');
-            }
-            plugin = new Plugin();
-            plugin.initialize(pluginLogger, self.blobClient, gmeConfig);
+                    plugin = new PluginClass();
+                    plugin.initialize(pluginLogger, self.blobClient, gmeConfig);
 
-            return plugin;
+                    return plugin;
+                })
+                .nodeify(callback);
         };
 
         /**
@@ -186,10 +182,21 @@ define([
             });
         };
 
-        function getPlugin(name) {
-            var pluginPath = 'plugin/' + name + '/' + name + '/' + name;
-            self.logger.debug('requirejs plugin from path: ' + pluginPath);
-            return requirejs(pluginPath);
+        function getPlugin(pluginId, callback) {
+            var deferred = Q.defer(),
+                pluginPath = 'plugin/' + pluginId + '/' + pluginId + '/' + pluginId;
+
+            requirejs([pluginPath],
+                function (PluginClass) {
+                    self.logger.debug('requirejs plugin from path: ' + pluginPath);
+                    deferred.resolve(PluginClass);
+                },
+                function (err) {
+                    deferred.reject(err);
+                }
+            );
+
+            return deferred.promise.nodeify(callback);
         }
 
         this.getPluginErrorResult = function (pluginName, message, projectId) {
