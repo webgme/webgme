@@ -4,7 +4,7 @@
  */
 var testFixture = require('../../_globals.js');
 
-describe('Library core ', function () {
+describe.only('Library core ', function () {
     'use strict';
 
     var gmeConfig,
@@ -851,5 +851,30 @@ describe('Library core ', function () {
                 expect(core.getAllMetaNodes(node)[libPath] + '/Cont/toMove').not.to.equal(undefined);
             })
             .nodeify(done);
+    });
+
+    it ('getNamespace should return empty string for non-library nodes', function () {
+        expect(core.getNamespace(core.getFCO(root))).to.equal('');
+    });
+
+    it ('getNamespace should return library name for nodes in a library', function () {
+        var libNodes = core.getLibraryMetaNodes(root, 'basicLibrary');
+
+        Object.keys(libNodes).forEach(function (libNodePath) {
+            expect(core.getNamespace(libNodes[libNodePath])).to.equal('basicLibrary');
+        });
+    });
+
+    it('getLibraryMetaNodes should distinguish between nodes with same full-name', function () {
+        var fcoNode = core.getFCO(root),
+            libNames = core.getLibraryNames(fcoNode),
+            newFcoName;
+
+        expect(libNames).to.deep.equal(['basicLibrary']);
+
+        newFcoName = 'basicLibrary' + '.' + 'I';
+        core.setAttribute(fcoNode, 'name', newFcoName);
+
+        expect(Object.keys(core.getLibraryMetaNodes(fcoNode, 'basicLibrary'))).to.deep.equal(['/L/I']);
     });
 });

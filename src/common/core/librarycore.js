@@ -571,6 +571,17 @@ define([
                 return false;
             };
 
+            this.getNamespace = function (node) {
+                var libPrefix = getLibraryName(node);
+
+                if (libPrefix) {
+                    // Trim the trailing dot..
+                    libPrefix = libPrefix.substring(0, libPrefix.length - 1);
+                }
+
+                return libPrefix;
+            };
+
             this.getFullyQualifiedName = function (node) {
                 ASSERT(self.isValidNode(node));
                 return getLibraryName(node) + self.getAttribute(node, 'name');
@@ -765,8 +776,7 @@ define([
                     path;
 
                 for (path in allNodes) {
-                    if (self.getFullyQualifiedName(allNodes[path])
-                            .indexOf(name + CONSTANTS.NAMESPACE_SEPARATOR) === 0) {
+                    if (self.getNamespace(allNodes[path]) === name) {
                         libraryNodes[path] = allNodes[path];
                     }
                 }
