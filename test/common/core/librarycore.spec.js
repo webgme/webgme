@@ -4,7 +4,7 @@
  */
 var testFixture = require('../../_globals.js');
 
-describe.only('Library core ', function () {
+describe('Library core ', function () {
     'use strict';
 
     var gmeConfig,
