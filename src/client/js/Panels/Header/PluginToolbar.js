@@ -92,6 +92,10 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
 
         executePlugin = function (data) {
             WebGMEGlobal.InterpreterManager.configureAndRun(data, function (result) {
+                if (result === false) {
+                    console.log('ABorted in toolbar');
+                    return;
+                }
                 result.__unread = true;
                 self._results.splice(0, 0, result);
                 self.$btnExecutePlugin.el.find('.btn').disable(false);

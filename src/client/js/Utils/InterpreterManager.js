@@ -51,26 +51,31 @@ define([
      */
     InterpreterManager.prototype.configureAndRun = function (metadata, callback) {
         var self = this,
-            configDialog = new PluginConfigDialog(metadata),
-            dialogConfig = {},
+            configDialog = new PluginConfigDialog(),
             globalOptions = this.getGlobalOptions(metadata);
 
         if (globalOptions instanceof PluginResult) {
             callback(globalOptions);
             return;
         }
+        //
+        //dialogConfig[metadata.id] = metadata.configStructure;
+        //dialogConfig[this.GLOBAL_OPTIONS] = globalOptions;
 
-        dialogConfig[metadata.id] = metadata.configStructure;
-        dialogConfig[this.GLOBAL_OPTIONS] = globalOptions;
+        configDialog.show(globalOptions, metadata, this._savedConfigs[metadata.id],
+            function (globalConfig, pluginConfig, save) {
+                if (globalConfig === false) {
+                    console.log('Aborted');
 
-        configDialog.show(dialogConfig, metadata, function (userConfig, save) {
-            console.log(userConfig);
-            if (save === true) {
-                self.saveSettingsInUser(metadata.id, plugin, userConfig);
+                }
+
+                if (save === true) {
+                    self.saveSettingsInUser(metadata, pluginConfig);
+                }
+
+                callback(getPluginErrorResult(metadata.id, 'PSSS', (new Date()).toISOString()), self._client.getActiveProjectId());
             }
-
-            callback(getPluginErrorResult(metadata.id, 'PSSS', (new Date()).toISOString()), self._client.getActiveProjectId());
-        });
+        );
 
         //            runWithConfiguration = function (updatedConfig) {
         //                //when Save&Run is clicked in the dialog (or silentPluginCfg was passed)
@@ -226,31 +231,33 @@ define([
         return config;
     };
 
-    InterpreterManager.prototype.saveSettingsInUser = function (pluginId, plugin, pluginConfig, callback) {
+    InterpreterManager.prototype.saveSettingsInUser = function (pluginMetadata, pluginConfig, callback) {
         var self = this,
-            componentId = this.getPluginComponentId(pluginId, plugin);
+            componentId = this.getPluginComponentId(pluginMetadata.id);
 
         this.logger.debug('Saving plugin config in user', componentId, pluginConfig);
 
-        ComponentSettings.overwriteComponentSettings(componentId, pluginConfig[pluginId], function (err, newSettings) {
-            if (callback) {
-                if (err) {
-                    callback(err);
+        ComponentSettings.overwriteComponentSettings(componentId, pluginConfig[pluginMetadata.id],
+            function (err, newSettings) {
+                if (callback) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        callback(null, newSettings);
+                    }
                 } else {
-                    callback(null, newSettings);
-                }
-            } else {
-                if (err) {
-                    self.logger.error(new Error('Failed storing settings for user'), err);
-                } else {
-                    self.logger.debug('Stored new settings for plugin at', componentId, newSettings);
+                    if (err) {
+                        self.logger.error(new Error('Failed storing settings for user'), err);
+                    } else {
+                        self.logger.debug('Stored new settings for plugin at', componentId, newSettings);
+                    }
                 }
             }
-        });
+        );
     };
 
-    InterpreterManager.prototype.getPluginComponentId = function (pluginId, plugin) {
-        var componentId = 'Plugin_' + pluginId + '__' + plugin.prototype.getVersion().split('.').join('_');
+    InterpreterManager.prototype.getPluginComponentId = function (pluginMetadata) {
+        var componentId = 'Plugin_' + pluginMetadata.id + '__' + pluginMetadata.version.split('.').join('_');
         this.logger.debug('Resolved componentId for plugin "' + componentId + '"');
         return componentId;
     };
