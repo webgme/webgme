@@ -307,10 +307,24 @@ define([
                     return self.loadNodesByPath(pluginContext, metaIds, true);
                 })
                 .then(function (metaNodes) {
-                    var metaNames = metaNodes.length,
+                    var libraryNames = pluginContext.core.getLibraryNames(pluginContext.rootNode),
+                        libraryMetaNodes,
                         i;
+
                     pluginContext.META_BY_NS[''] = metaNodes;
-                    // TODO: Fix me
+
+                    for (i = 0; libraryNames.length; i += 1) {
+                        pluginContext.META_BY_NS[libraryNames[i]] = {};
+                        libraryMetaNodes = pluginContext.core.getLibraryMetaNodes(pluginContext.rootNode,
+                            libraryNames[i]);
+
+                        libraryMetaNodes.map(function (path) {
+                            var libraryNode = libraryMetaNodes[path];
+                            pluginContext.META_BY_NS[libraryNames[i]] = pluginContext.core.
+                                getFullyQualifiedName(libraryNode).substring(libraryNames[i].length + 1);
+                        });
+                    }
+
                     deferred.resolve(pluginContext);
                 })
                 .catch(function (err) {
@@ -348,7 +362,10 @@ define([
 
                 if (returnNameMap) {
                     nodes.map(function (node) {
-                        //TODO: what if the names are equal?
+                        if (nameToNode[pluginContext.core.getFullyQualifiedName(node)]) {
+                            self.logger.error('Meta-nodes share the same full name. Will still proceed..',
+                                pluginContext.core.getFullyQualifiedName(node));
+                        }
                         nameToNode[pluginContext.core.getFullyQualifiedName(node)] = node;
                     });
                     deferred.resolve(nameToNode);
