@@ -60,18 +60,27 @@ describe('climanager', function () {
             .nodeify(done);
     });
 
-    it('should initializePlugin with an existing plugin', function () {
-        var manager = new PluginCliManager(null, logger, gmeConfig),
-            plugin = manager.initializePlugin(pluginName);
-        expect(typeof plugin.main).to.equal('function');
+    it('should initializePlugin with an existing plugin', function (done) {
+        var manager = new PluginCliManager(null, logger, gmeConfig);
+
+        manager.initializePlugin(pluginName)
+            .then(function (plugin) {
+                expect(typeof plugin.main).to.equal('function');
+            })
+            .nodeify(done);
     });
 
-    it('should throw exception when initializePlugin on a non-existing plugin', function () {
-        var manager = new PluginCliManager(null, logger, gmeConfig),
-            initBogus = function () {
-                manager.initializePlugin('bogusPlugin');
-            };
-        expect(initBogus).to.throw(Error, 'Tried loading');
+    it('should throw exception when initializePlugin on a non-existing plugin', function (done) {
+        var manager = new PluginCliManager(null, logger, gmeConfig);
+
+        manager.initializePlugin(pluginName)
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err).to.deep.equal({});
+            })
+            .nodeify(done);
     });
 
     it('should configurePlugin using default project from manager', function (done) {
@@ -81,9 +90,14 @@ describe('climanager', function () {
                 commitHash: commitHash,
                 branchName: branchName
             },
-            plugin = manager.initializePlugin(pluginName);
+            plugin;
 
-        manager.configurePlugin(plugin, pluginConfig, context)
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+
+                return manager.configurePlugin(plugin, pluginConfig, context);
+            })
             .then(function () {
                 expect(plugin.isConfigured).to.equal(true);
                 expect(plugin.project).to.equal(project);
@@ -99,9 +113,14 @@ describe('climanager', function () {
                 branchName: branchName,
                 project: project
             },
-            plugin = manager.initializePlugin(pluginName);
+            plugin;
 
-        manager.configurePlugin(plugin, pluginConfig, context)
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+
+                return manager.configurePlugin(plugin, pluginConfig, context);
+            })
             .then(function () {
                 expect(plugin.isConfigured).to.equal(true);
                 expect(plugin.project).to.equal(project);
@@ -116,9 +135,14 @@ describe('climanager', function () {
                 commitHash: commitHash,
                 branchName: branchName
             },
-            plugin = manager.initializePlugin(pluginName);
+            plugin;
 
-        manager.configurePlugin(plugin, pluginConfig, context)
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+
+                return manager.configurePlugin(plugin, pluginConfig, context);
+            })
             .then(function () {
                 done(new Error('Should have failed to configure with no project'));
             })
@@ -141,9 +165,14 @@ describe('climanager', function () {
                 commitHash: commitHash,
                 branchName: branchName
             },
-            plugin = manager.initializePlugin(pluginName);
+            plugin;
 
-        manager.configurePlugin(plugin, pluginConfig, context)
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+
+                return manager.configurePlugin(plugin, pluginConfig, context);
+            })
             .then(function () {
                 expect(plugin.isConfigured).to.equal(true);
                 expect(plugin.project).to.equal(project);
@@ -256,15 +285,17 @@ describe('climanager', function () {
     );
 
     it('should fail with error during runPluginMain if plugin not configured', function (done) {
-        var manager = new PluginCliManager(null, logger, gmeConfig),
-            plugin = manager.initializePlugin(pluginName);
+        var manager = new PluginCliManager(null, logger, gmeConfig);
 
-        manager.runPluginMain(plugin, function (err, pluginResult) {
-            expect(pluginResult.success).to.equal(false);
-            expect(err).to.equal('Plugin is not configured.');
-
-            done();
-        });
+        manager.initializePlugin(pluginName)
+            .then(function (plugin) {
+                manager.runPluginMain(plugin, function (err, pluginResult) {
+                    expect(pluginResult.success).to.equal(false);
+                    expect(err).to.equal('Plugin is not configured.');
+                    done();
+                });
+            })
+            .catch(done);
     });
 
     it('should configure a plugin twice and use latest configuration', function (done) {
@@ -273,9 +304,13 @@ describe('climanager', function () {
                 commitHash: commitHash,
                 branchName: 'b1'
             },
-            plugin = manager.initializePlugin(pluginName);
+            plugin;
 
-        manager.configurePlugin(plugin, {save: false}, context)
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+                return manager.configurePlugin(plugin, {save: false}, context);
+            })
             .then(function () {
                 var newContext = {
                     commitHash: commitHash,

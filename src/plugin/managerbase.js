@@ -186,6 +186,16 @@ define([
             var deferred = Q.defer(),
                 pluginPath = 'plugin/' + pluginId + '/' + pluginId + '/' + pluginId;
 
+            if (self.serverSide && !gmeConfig.plugin.allowServerExecution) {
+                deferred.reject(new Error('Plugin execution on server side is disabled from gmeConfig.'));
+                return;
+            } else if (self.browserSide && !gmeConfig.plugin.allowServerExecution) {
+                deferred.reject(new Error('Plugin execution in browser is disabled from gmeConfig.'));
+                return;
+            } else {
+                self.logger.debug('Running as CLI - does not respect gmeConfig.plugin.allowServerExecution..');
+            }
+
             requirejs([pluginPath],
                 function (PluginClass) {
                     self.logger.debug('requirejs plugin from path: ' + pluginPath);

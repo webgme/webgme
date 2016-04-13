@@ -69,6 +69,8 @@ define([
             var blobClient = new BlobClient(),
                 pluginManager = new PluginManagerBase(blobClient, null, mainLogger, gmeConfig);
 
+            pluginManager.browserSide = true;
+
             pluginManager.notificationHandlers = [function (data, callback) {
                 self.dispatchPluginNotification(data);
                 callback(null);

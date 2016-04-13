@@ -18,6 +18,8 @@ function PluginNodeManager(webgmeToken, project, mainLogger, gmeConfig) {
         });
 
     PluginManagerBase.call(this, blobClient, project, mainLogger, gmeConfig);
+
+    this.serverSide = true;
 }
 
 // Inherit from PluginManagerBase

@@ -72,13 +72,16 @@ describe('Plugin ConstraintEvaluator', function () {
             .nodeify(done);
     });
 
-    it('should initialize plugin and get name, version and description', function () {
-        var plugin = pluginManager.initializePlugin(pluginName);
-        expect(plugin instanceof PluginBase).to.equal(true);
-        expect(plugin.getName()).to.equal('Constraint Evaluator');
-        expect(typeof plugin.getDescription ()).to.equal('string');
-        expect(plugin.getConfigStructure() instanceof Array).to.equal(true);
-        expect(plugin.getConfigStructure().length).to.equal(2);
+    it('should initialize plugin and get name, version and description', function (done) {
+        pluginManager.initializePlugin(pluginName)
+            .then(function (plugin) {
+                expect(plugin instanceof PluginBase).to.equal(true);
+                expect(plugin.getName()).to.equal('Constraint Evaluator');
+                expect(typeof plugin.getDescription ()).to.equal('string');
+                expect(plugin.getConfigStructure() instanceof Array).to.equal(true);
+                expect(plugin.getConfigStructure().length).to.equal(2);
+            })
+            .nodeify(done);
     });
 
     it('should fail with unexpected mode', function (done) {
