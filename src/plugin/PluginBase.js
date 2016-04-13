@@ -85,7 +85,21 @@ define([
         this.activeSelection = [];
 
         /**
-         * @type {Object<string,module:Core~Node>}
+         * The namespace the META nodes are coming from (set by invoker).
+         * The default is the full meta, i.e. the empty string namespace.
+         * @type {string}
+         */
+        this.activeNameSpace = '';
+
+        /**
+         * Mapping from namespace-identifier (library root name) to objects of meta-nodes indexed by name.
+         * @type {Object<string, Object<string, module:Core~Node>>}
+         */
+        this.META_BY_NS = null;
+
+        /**
+         * The resolved META nodes based on the activeNameSpace.
+         * @type {Object<string, module:Core~Node>}
          */
         this.META = null;
 
@@ -535,7 +549,11 @@ define([
         this.rootNode = config.rootNode;
         this.activeNode = config.activeNode;
         this.activeSelection = config.activeSelection;
-        this.META = config.META;
+
+        this.META_BY_NS = config.META_BY_NS;
+        this.activeNameSpace = config.activeNameSpace || '';
+
+        this.META = this.META_BY_NS[this.activeNameSpace];
 
         this.result = new PluginResult();
         this.result.setProjectId(this.projectId);

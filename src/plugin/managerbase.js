@@ -252,7 +252,8 @@ define([
                     rootNode: null,
                     activeNode: null,
                     activeSelection: null,
-                    META: null,
+                    META_BY_NS: {},
+                    activeNameSpace: context.activeNameSpace,
 
                     project: context.project,
                     projectId: context.project.projectId,
@@ -306,8 +307,10 @@ define([
                     return self.loadNodesByPath(pluginContext, metaIds, true);
                 })
                 .then(function (metaNodes) {
-                    pluginContext.META = metaNodes;
-                    self.logger.debug('metaNodes loaded');
+                    var metaNames = metaNodes.length,
+                        i;
+                    pluginContext.META_BY_NS[''] = metaNodes;
+                    // TODO: Fix me
                     deferred.resolve(pluginContext);
                 })
                 .catch(function (err) {
@@ -346,7 +349,7 @@ define([
                 if (returnNameMap) {
                     nodes.map(function (node) {
                         //TODO: what if the names are equal?
-                        nameToNode[pluginContext.core.getAttribute(node, 'name')] = node;
+                        nameToNode[pluginContext.core.getFullyQualifiedName(node)] = node;
                     });
                     deferred.resolve(nameToNode);
                 } else {
