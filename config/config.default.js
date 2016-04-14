@@ -130,7 +130,7 @@ var path = require('path'),
                     transportType: 'File',
                     options: {
                         name: 'info-file',
-                        filename: './server.log',
+                        filename: './server-info.log',
                         level: 'info',
                         json: false
                     }
