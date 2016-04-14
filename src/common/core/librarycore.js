@@ -571,6 +571,17 @@ define([
                 return false;
             };
 
+            this.getNamespace = function (node) {
+                var libPrefix = getLibraryName(node);
+
+                if (libPrefix) {
+                    // Trim the trailing dot..
+                    libPrefix = libPrefix.substring(0, libPrefix.length - 1);
+                }
+
+                return libPrefix;
+            };
+
             this.getFullyQualifiedName = function (node) {
                 ASSERT(self.isValidNode(node));
                 return getLibraryName(node) + self.getAttribute(node, 'name');
@@ -759,15 +770,20 @@ define([
                 return Object.keys(self.getRoot(node).libraryRoots);
             };
 
-            this.getLibraryMetaNodes = function (node, name) {
+            this.getLibraryMetaNodes = function (node, name, onlyOwn) {
                 var allNodes = self.getAllMetaNodes(node),
                     libraryNodes = {},
                     path;
 
                 for (path in allNodes) {
-                    if (self.getFullyQualifiedName(allNodes[path])
-                            .indexOf(name + CONSTANTS.NAMESPACE_SEPARATOR) === 0) {
-                        libraryNodes[path] = allNodes[path];
+                    if (onlyOwn) {
+                        if (self.getNamespace(allNodes[path]) === name) {
+                            libraryNodes[path] = allNodes[path];
+                        }
+                    } else {
+                        if (self.getNamespace(allNodes[path]).indexOf(name) === 0) {
+                            libraryNodes[path] = allNodes[path];
+                        }
                     }
                 }
 

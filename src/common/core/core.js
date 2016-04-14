@@ -1859,6 +1859,21 @@ define([
         this.isLibraryElement = core.isLibraryElement;
 
         /**
+         * Returns the resolved namespace for the node. If node is not in a library it returns the
+         * empty string. If the node is in a library of a library -
+         * the full name space is the library names joined together by dots.
+         *
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string} - Returns the name space of the node.
+         *
+         * @example NS1.NS2
+         *
+         * @func
+         */
+        this.getNamespace = core.getNamespace;
+
+        /**
          * Returns the fully qualified name of the node, which is the list of its namespaces separated
          * by dot and followed by the name of the node.
          *
@@ -1935,9 +1950,11 @@ define([
 
         /**
          * Returns all the Meta nodes within the given library.
+         * By default it will include nodes defined in any library within the given library.
          *
          * @param {module:Core~Node} node - any node of your project.
          * @param {string} name - name of your library.
+         * @param {bool} [onlyOwn] - if true only returns with Meta nodes defined in the library itself.
          *
          * @return {module:Core~Node[]} - Returns an array of core nodes that are part of your meta from
          * the given library.
