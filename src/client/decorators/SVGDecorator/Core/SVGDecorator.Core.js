@@ -1,4 +1,4 @@
-/*globals define, $, _*/
+/*globals define, $, _, WebGMEGlobal*/
 /*jshint browser: true*/
 
 /**
@@ -37,7 +37,7 @@ define([
      * @type {{}}
      * @private
      */
-    //var svgCache = {};
+    var SVG_CACHE = {};
 
     /**
      * Svg element that can be used as a placeholder for the icon if the icon does not exist on the server.
@@ -48,6 +48,7 @@ define([
 
     SVGDecoratorCore = function () {
         DecoratorBase.apply(this, []);
+        this.svgCache = SVG_CACHE;
     };
 
     _.extend(SVGDecoratorCore.prototype, DecoratorBase.prototype);
@@ -71,8 +72,6 @@ define([
                 }
             }
         }
-
-        this.svgCache = {};
     };
 
     /**** Override from *.WidgetDecoratorBase ****/

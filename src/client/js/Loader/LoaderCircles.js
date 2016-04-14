@@ -20,7 +20,8 @@ define(['css!js/Loader/styles/LoaderCircles.css'], function () {
         this._el = params.containerElement;
 
         if (this._el.length === 0) {
-            throw 'LoaderCircles\'s container control with id:"' + params.containerElement + '" could not be found';
+            throw new Error('LoaderCircles\'s container control with id:"' +
+                params.containerElement + '" could not be found');
         }
 
         this._loaderBackgroundCssProps = {};

@@ -14,12 +14,13 @@ define([
     'use strict';
 
     var _client,
-        _loader = new LoaderCircles({containerElement: $('body')});
+        _loader;
 
     var _initialize = function (c) {
         //if already initialized, just return
         if (!_client) {
             _client = c;
+            _loader = new LoaderCircles({containerElement: $('body')});
         }
     };
 
