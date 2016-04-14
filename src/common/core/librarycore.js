@@ -770,14 +770,20 @@ define([
                 return Object.keys(self.getRoot(node).libraryRoots);
             };
 
-            this.getLibraryMetaNodes = function (node, name) {
+            this.getLibraryMetaNodes = function (node, name, onlyOwn) {
                 var allNodes = self.getAllMetaNodes(node),
                     libraryNodes = {},
                     path;
 
                 for (path in allNodes) {
-                    if (self.getNamespace(allNodes[path]) === name) {
-                        libraryNodes[path] = allNodes[path];
+                    if (onlyOwn) {
+                        if (self.getNamespace(allNodes[path]) === name) {
+                            libraryNodes[path] = allNodes[path];
+                        }
+                    } else {
+                        if (self.getNamespace(allNodes[path]).indexOf(name) === 0) {
+                            libraryNodes[path] = allNodes[path];
+                        }
                     }
                 }
 
