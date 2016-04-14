@@ -10,8 +10,10 @@ define([
     'js/logger',
     'js/Constants',
     'js/DragDrop/DragSource',
+    'js/Toolbar/ToolbarDropDownButton',
+    'js/Toolbar/ToolbarButton',
     'css!./styles/PartBrowserWidget.css'
-], function (Logger, CONSTANTS, dragSource) {
+], function (Logger, CONSTANTS, dragSource, ToolbarDropDownButton, ToolbarButton) {
 
     'use strict';
 
@@ -32,15 +34,30 @@ define([
 
     PartBrowserWidget.prototype._initialize = function () {
         //set Widget title
-        this._el.addClass(PART_BROWSER_CLASS);
-
+        //this._el.addClass(PART_BROWSER_CLASS);
+        this._container = $('<div/>');
+        this._container.addClass(PART_BROWSER_CLASS);
         this._list = $('<ul/>');
+        //this._list.addClass(PART_BROWSER_CLASS);
+        this._listSwitcher = new ToolbarButton({
+            icon:'glyphicon glyphicon-home'
+        });
 
+        this._selector = new ToolbarDropDownButton({
+            title: 'Namespace list',
+            icon: 'glyphicon glyphicon-list',
+            showSelected: true,
+            text: 'checking'
+        });
+
+        this._container.append(this._selector.el);
+        this._container.append(this._listSwitcher.el);
+        this._container.append(this._list);
         this._parts = {};
 
         this._partDraggableEl = {};
 
-        this._el.append(this._list);
+        this._el.append(this._container);
     };
 
     PartBrowserWidget.prototype.clear = function () {
