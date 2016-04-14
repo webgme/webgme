@@ -18,6 +18,7 @@ var Core = requireJS('common/core/coreQ'),
     GUID = requireJS('common/util/guid'),
     REGEXP = requireJS('common/regexp'),
     BlobConfig = requireJS('common/blob/BlobConfig'),
+    webgmeUtils = require('../../utils'),
 
 // JsZip can't for some reason extract the exported files..
     AdmZip = require('adm-zip'),
@@ -394,6 +395,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     // Seeding functionality
     function _findSeedFilename(name) {
         var deferred = Q.defer(),
+            seedDictionary = webgmeUtils.getSeedDictionary(gmeConfig),
             i,
             filename,
             names;
@@ -404,17 +406,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         if (gmeConfig.seedProjects.enable !== true) {
             deferred.reject(new Error('seeding is disabled'));
         } else {
-            for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
-                names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]);
-                if (names.indexOf(name + '.json') !== -1) {
-                    filename = gmeConfig.seedProjects.basePaths[i] + '/' + name + '.json';
-                    break;
-                } else if (names.indexOf(name + '.zip') !== -1) {
-                    filename = gmeConfig.seedProjects.basePaths[i] + '/' + name + '.zip';
-                    break;
-                }
-            }
-
+            filename = seedDictionary[name];
             if (filename) {
                 deferred.resolve(filename);
             } else {
@@ -461,14 +453,25 @@ function WorkerRequests(mainLogger, gmeConfig) {
     function _getSeedFromFile(name, webgmeToken) {
         return _findSeedFilename(name)
             .then(function (filename) {
-                var blobClient;
+                var blobClient,
+                    legacy = true,
+                    deferred;
 
-                if (filename.indexOf('.json') > -1) {
+                if (filename.toLowerCase().indexOf('.json') > -1) {
                     logger.debug('Found .json seed at:', filename);
                     return Q.ninvoke(FS, 'readFile', filename);
-                } else if (filename.indexOf('.zip') > -1) {
+                } else if (filename.toLowerCase().indexOf('.zip') > -1 ||
+                    filename.toLowerCase().indexOf('.webgmex') > -1) {
+                    deferred = Q.defer();
 
-                    logger.debug('Found .zip seed at:', filename);
+                    if (filename.toLowerCase().indexOf('.webgmex') > -1) {
+                        logger.debug('Found .webgmex seed at:', filename);
+                        legacy = false;
+                    } else {
+                        logger.debug('Found .zip seed at:', filename);
+
+                    }
+
                     blobClient = new BlobClientClass({
                         serverPort: gmeConfig.server.port,
                         httpsecure: false,
@@ -477,13 +480,26 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         logger: logger.fork('BlobClient')
                     });
 
-                    return _addZippedExportToBlob(filename, blobClient);
+                    _addZippedExportToBlob(filename, blobClient)
+                        .then(function (jsonProject) {
+                            if (legacy) {
+                                deferred.resolve(jsonProject);
+                            } else {
+                                deferred.resolve(JSON.stringify({
+                                    seed: JSON.parse(jsonProject),
+                                    isLegacy: false
+                                }));
+                            }
+                        })
+                        .catch(deferred.reject);
+
+                    return deferred.promise;
                 } else {
                     throw new Error('Unexpected file');
                 }
             })
-            .then(function (projectStr) {
-                return JSON.parse(projectStr);
+            .then(function (jsonStr) {
+                return JSON.parse(jsonStr);
             });
     }
 
@@ -590,7 +606,13 @@ function WorkerRequests(mainLogger, gmeConfig) {
      */
     function seedProject(webgmeToken, projectName, ownerId, parameters, callback) {
         var storage,
+            legacy = true,
             finish = function (err, result) {
+                if (legacy === false) {
+                    result = {
+                        projectId: result
+                    };
+                }
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
                     logger.error('seeding [' + parameters.seedName + '] failed with error', err);
@@ -628,7 +650,14 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 }
             })
             .then(function (jsonSeed) {
-                _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, parameters.seedName, finish);
+                if (jsonSeed && jsonSeed.seed && jsonSeed.isLegacy === false) {
+                    legacy = false;
+                    //TODO it should be changed so that all functions above returns with the new format of project
+                    _createProjectFromRawJson(storage, projectName, ownerId,
+                        parameters.branchName || 'master', jsonSeed.seed, finish);
+                } else {
+                    _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, parameters.seedName, finish);
+                }
             })
             .catch(finish);
     }
@@ -1008,7 +1037,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {object} parameters
      * @param {function} callback
      */
-    function save(webgmeToken, parameters, callback) {
+    function saveProjectIntoFile(webgmeToken, parameters, callback) {
         var output = {};
 
         _getRawJsonProject(webgmeToken,
@@ -1129,34 +1158,11 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise;
     }
 
-    /**
-     *
-     * @param {string} webgmeToken
-     * @param {object} parameters
-     * @param {function} callback
-     */
-    function load(webgmeToken, parameters, callback) {
-        var project,
-            projectId,
-            jsonProject,
-            storage,
-            blobClient = new BlobClientClass({
-                serverPort: gmeConfig.server.port,
-                httpsecure: false,
-                server: '127.0.0.1',
-                webgmeToken: webgmeToken,
-                logger: logger.fork('BlobClient')
-            });
+    function _createProjectFromRawJson(storage, projectName, ownerId, branchName, jsonProject, callback) {
+        var projectId,
+            project;
 
-        getConnectedStorage(webgmeToken)
-            .then(function (storage_) {
-                storage = storage_;
-                return _importProjectPackage(blobClient, parameters.blobHash);
-            })
-            .then(function (jsonProject_) {
-                jsonProject = jsonProject_;
-                return Q.ninvoke(storage, 'createProject', parameters.projectName, parameters.ownerId);
-            })
+        Q.ninvoke(storage, 'createProject', projectName, ownerId)
             .then(function (projectId_) {
                 var deferred = Q.defer();
 
@@ -1178,10 +1184,38 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     'loading project from package');
             })
             .then(function (commitResult) {
-                return project.createBranch(parameters.branchName, commitResult.hash);
+                return project.createBranch(branchName, commitResult.hash);
             })
             .then(function () {
                 return (projectId);
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {function} callback
+     */
+    function importProjectFromFile(webgmeToken, parameters, callback) {
+        var storage,
+            blobClient = new BlobClientClass({
+                serverPort: gmeConfig.server.port,
+                httpsecure: false,
+                server: '127.0.0.1',
+                webgmeToken: webgmeToken,
+                logger: logger.fork('BlobClient')
+            });
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _importProjectPackage(blobClient, parameters.blobHash);
+            })
+            .then(function (jsonProject) {
+                return Q.nfcall(_createProjectFromRawJson,
+                    storage, parameters.projectName, parameters.ownerId, parameters.branchName, jsonProject);
             })
             .nodeify(callback);
     }
@@ -1375,8 +1409,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
         // This is exposed for unit tests..
         _addZippedExportToBlob: _addZippedExportToBlob,
         reassignGuids: reassignGuids,
-        saveProjectIntoFile: save,
-        importProjectFromFile: load,
+        saveProjectIntoFile: saveProjectIntoFile,
+        importProjectFromFile: importProjectFromFile,
         addLibrary: addLibrary,
         updateLibrary: updateLibrary
     };
