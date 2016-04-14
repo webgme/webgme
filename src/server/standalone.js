@@ -8,6 +8,9 @@
 
 'use strict';
 
+require('systemd');
+require('autoquit');
+
 var Path = require('path'),
     OS = require('os'),
     Q = require('q'),
@@ -193,9 +196,14 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
-        __httpServer.listen(gmeConfig.server.port, function () {
+        // https://github.com/rubenv/node-autoquit
+        __httpServer.autoQuit({ timeout: (gmeConfig.server.timeout ? gmeConfig.server.timeout : 1800)});
+
+        // https://github.com/rubenv/node-systemd
+        var port = gmeConfig.server.port ? gmeConfig.server.port : 'systemd';
+        __httpServer.listen(port, function () {
             // Note: the listening function does not return with an error, errors are handled by the error event
-            logger.debug('Http server is listening on ', {metadata: {port: gmeConfig.server.port}});
+            logger.debug('Http server is listening on ', {metadata: {port: port}});
             serverDeferred.resolve();
         });
 

@@ -25,6 +25,7 @@
   "dependencies": {
     "adm-zip": "0.4.7",
     "agentkeepalive": "2.0.3",
+    "autoquit": "0.1.6",
     "aws-sdk": "2.2.39",
     "bcryptjs": "2.3.0",
     "body-parser": "1.15.0",
@@ -60,6 +61,7 @@
     "socket.io": "1.4.5",
     "socket.io-client": "1.4.5",
     "socket.io-redis": "1.0.0",
+    "systemd": "0.2.6",
     "superagent": "1.7.2",
     "underscore": "1.8.3",
     "unzip": "0.1.11",
