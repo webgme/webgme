@@ -153,7 +153,7 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
                 })
                 .catch(deferred.reject);
         } else {
-            deferred.reject(new Error('Unsupported content type: '+metadata.contentType));
+            deferred.reject(new Error('Unsupported content type: ' + metadata.contentType));
         }
 
         return deferred.promise;
@@ -174,7 +174,7 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
             assets = jsonExport.hashes.assets || [];
 
         artie.descriptor.name = jsonExport.projectId +
-            '_' + (jsonExport.branchName || jsonExport.commitHash) + '.webgmeX';
+            '_' + (jsonExport.branchName || jsonExport.commitHash) + '.webgmex';
 
         if (!addAssets) {
             assets = [];
