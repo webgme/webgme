@@ -17,7 +17,7 @@ define([
     };
 
     /**** Override from WidgetDecoratorBase ****/
-    CircleDecoratorCore.prototype.DECORATOR_DEFAULT_PARAMS = {'displayName': true};
+    CircleDecoratorCore.prototype.DECORATOR_DEFAULT_PARAMS = {displayName: true};
 
     CircleDecoratorCore.prototype._initializeVariables = function (params) {
         this.formattedName = '';
