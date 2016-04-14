@@ -10,7 +10,6 @@
 
 'use strict';
 
-
 /**
  * Mounts the API functions to a given express app.
  *
@@ -898,7 +897,6 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-
     // PROJECTS
 
     function loadNodePathByCommitHash(userId, projectId, commitHash, path) {
@@ -976,7 +974,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.get('/projects/:ownerId/:projectName', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
-            projectId =  StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
             data = {
                 username: userId,
                 projectId: projectId
@@ -999,7 +997,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.patch('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
-            projectId =  StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
+            projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
 
         gmeAuth.getProjectAuthorizationByUserId(userId, projectId)
             .then(function (rights) {
@@ -1169,7 +1167,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(result[0]);
             })
             .catch(function (err) {
-                if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
+                if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1) {
                     err.status = 404;
                 }
                 next(err);
@@ -1188,7 +1186,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     res.json(nodeObj);
                 })
                 .catch(function (err) {
-                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
+                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1) {
                         err.status = 404;
                     }
                     next(err);
@@ -1206,7 +1204,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                     projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                         req.params.projectName)
                 };
-
 
             safeStorage.openProject(data)
                 .then(function (project) {
@@ -1369,7 +1366,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     res.json(dataObj);
                 })
                 .catch(function (err) {
-                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
+                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1) {
                         err.status = 404;
                     }
                     next(err);
@@ -1696,6 +1693,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 for (j = 0; j < names.length; j++) {
                     seedName = path.basename(names[j], '.json');
                     seedName = path.basename(seedName, '.zip');
+                    seedName = path.basename(seedName, '.webgmex');
                     if (result.indexOf(seedName) === -1) {
                         result.push(seedName);
                     }
@@ -1804,10 +1802,8 @@ function createAPI(app, mountPath, middlewareOpts) {
     logger.debug('Latest api path: ' + latestAPIPath);
     app.use(latestAPIPath, router);
 
-
     return Q.all([htmlDocDeferred.promise]);
 }
-
 
 module.exports = {
     createAPI: createAPI
