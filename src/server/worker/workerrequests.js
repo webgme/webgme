@@ -393,7 +393,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     // Seeding functionality
     function _findSeedFilename(name) {
-        console.log('FS:', name);
         var deferred = Q.defer(),
             i,
             filename,
@@ -406,7 +405,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             deferred.reject(new Error('seeding is disabled'));
         } else {
             for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
-                names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]);
+                names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]).toString().toLowerCase();
                 if (names.indexOf(name + '.json') !== -1) {
                     filename = gmeConfig.seedProjects.basePaths[i] + '/' + name + '.json';
                     break;
@@ -1050,7 +1049,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {object} parameters
      * @param {function} callback
      */
-    function save(webgmeToken, parameters, callback) {
+    function saveProjectIntoFile(webgmeToken, parameters, callback) {
         var output = {};
 
         _getRawJsonProject(webgmeToken,
@@ -1211,7 +1210,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {object} parameters
      * @param {function} callback
      */
-    function load(webgmeToken, parameters, callback) {
+    function importProjectFromFile(webgmeToken, parameters, callback) {
         var storage,
             blobClient = new BlobClientClass({
                 serverPort: gmeConfig.server.port,
@@ -1422,8 +1421,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
         // This is exposed for unit tests..
         _addZippedExportToBlob: _addZippedExportToBlob,
         reassignGuids: reassignGuids,
-        saveProjectIntoFile: save,
-        importProjectFromFile: load,
+        saveProjectIntoFile: saveProjectIntoFile,
+        importProjectFromFile: importProjectFromFile,
         addLibrary: addLibrary,
         updateLibrary: updateLibrary
     };

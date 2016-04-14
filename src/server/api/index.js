@@ -1685,15 +1685,21 @@ function createAPI(app, mountPath, middlewareOpts) {
         var names = [],
             result = [],
             seedName,
+            extension,
+            extLowerCase,
             i,
             j;
         if (gmeConfig.seedProjects.enable === true) {
             for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
                 names = fs.readdirSync(gmeConfig.seedProjects.basePaths[i]);
                 for (j = 0; j < names.length; j++) {
-                    seedName = path.basename(names[j], '.json');
-                    seedName = path.basename(seedName, '.zip');
-                    seedName = path.basename(seedName, '.webgmex');
+                    extension = path.extname(names[j]);
+                    extLowerCase = extension.toLowerCase();
+
+                    if (extLowerCase === '.json' || extLowerCase === '.zip' || extLowerCase === '.webgmex') {
+                        seedName = path.basename(names[j], extension);
+                    }
+
                     if (result.indexOf(seedName) === -1) {
                         result.push(seedName);
                     }
