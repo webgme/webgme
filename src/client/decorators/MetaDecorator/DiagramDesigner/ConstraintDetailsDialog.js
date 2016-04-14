@@ -49,10 +49,10 @@ define([
 
         closeSave = function () {
             var constDesc = {
-                'name': self._inputName.val(),
-                'script': self._codeMirror.getValue(),
-                'priority': self._inputPriority.val(),
-                'info': self._inputMessage.val()
+                name: self._inputName.val(),
+                script: self._codeMirror.getValue(),
+                priority: self._inputPriority.val(),
+                info: self._inputMessage.val()
             };
 
             self._dialog.modal('hide');
@@ -118,12 +118,14 @@ define([
 
         //click on SAVE button
         this._btnSave.on('click', function (event) {
-            var val = self._codeMirror.getValue();
+            var name = self._inputName.val();
 
             event.stopPropagation();
             event.preventDefault();
 
-            if (isValidConstraintName(val)) {
+            // TODO: Check the code using esprima...
+
+            if (isValidConstraintName(name)) {
                 closeSave();
             }
         });
