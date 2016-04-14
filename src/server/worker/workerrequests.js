@@ -18,6 +18,7 @@ var Core = requireJS('common/core/coreQ'),
     GUID = requireJS('common/util/guid'),
     REGEXP = requireJS('common/regexp'),
     BlobConfig = requireJS('common/blob/BlobConfig'),
+    webgmeUtils = require('../../utils'),
 
 // JsZip can't for some reason extract the exported files..
     AdmZip = require('adm-zip'),
@@ -394,6 +395,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     // Seeding functionality
     function _findSeedFilename(name) {
         var deferred = Q.defer(),
+            seedDictionary = webgmeUtils.getSeedDictionary(gmeConfig),
             i,
             filename,
             names;
@@ -404,21 +406,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         if (gmeConfig.seedProjects.enable !== true) {
             deferred.reject(new Error('seeding is disabled'));
         } else {
-            for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
-                names = FS.readdirSync(gmeConfig.seedProjects.basePaths[i]).toString().toLowerCase();
-                if (names.indexOf(name + '.json') !== -1) {
-                    filename = gmeConfig.seedProjects.basePaths[i] + '/' + name + '.json';
-                    break;
-                } else if (names.indexOf(name + '.zip') !== -1) {
-                    filename = gmeConfig.seedProjects.basePaths[i] + '/' + name + '.zip';
-                    break;
-                }
-                else if (names.indexOf(name + '.webgmex') !== -1) {
-                    filename = gmeConfig.seedProjects.basePaths[i] + '/' + name + '.webgmex';
-                    break;
-                }
-            }
-
+            filename = seedDictionary[name];
             if (filename) {
                 deferred.resolve(filename);
             } else {
@@ -495,12 +483,12 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     _addZippedExportToBlob(filename, blobClient)
                         .then(function (jsonProject) {
                             if (legacy) {
-                                deferred.resolve(JSON.pasre(jsonProject));
+                                deferred.resolve(jsonProject);
                             } else {
-                                deferred.resolve({
+                                deferred.resolve(JSON.stringify({
                                     seed: JSON.parse(jsonProject),
                                     isLegacy: false
-                                });
+                                }));
                             }
                         })
                         .catch(deferred.reject);
@@ -510,8 +498,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     throw new Error('Unexpected file');
                 }
             })
-            .then(function (projectJson) {
-                return projectJson;
+            .then(function (jsonStr) {
+                return JSON.parse(jsonStr);
             });
     }
 

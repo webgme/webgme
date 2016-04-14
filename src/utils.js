@@ -64,13 +64,13 @@ function copySvgDirsAndRegenerateSVGList(gmeConfig, logger, callback) {
     ncp.stopOnErr = true;
 
     Q.all(gmeConfig.visualization.svgDirs.map(function (svgDir) {
-        var dirName = path.parse(svgDir).name,
-            destination = path.join(svgAssetDir, dirName);
+            var dirName = path.parse(svgDir).name,
+                destination = path.join(svgAssetDir, dirName);
 
-        logger.info('Custom SVGs will be copied', svgDir, destination);
+            logger.info('Custom SVGs will be copied', svgDir, destination);
 
-        return Q.nfcall(ncp, svgDir, destination);
-    }))
+            return Q.nfcall(ncp, svgDir, destination);
+        }))
         .then(function () {
             return genDecoratorSvgList();
         })
@@ -211,6 +211,34 @@ function getRedirectUrlParameter(req) {
     return '?redirect=' + encodeURIComponent(req.originalUrl);
 }
 
+function getSeedDictionary(config) {
+    var names = [],
+        result = {},
+        seedName,
+        extension,
+        extLowerCase,
+        i,
+        j;
+    if (config.seedProjects.enable === true) {
+        for (i = 0; i < config.seedProjects.basePaths.length; i++) {
+            names = fs.readdirSync(config.seedProjects.basePaths[i]);
+            for (j = 0; j < names.length; j++) {
+                extension = path.extname(names[j]);
+                extLowerCase = extension.toLowerCase();
+
+                if (extLowerCase === '.json' || extLowerCase === '.zip' || extLowerCase === '.webgmex') {
+                    seedName = path.basename(names[j], extension);
+                }
+
+                if (!result[seedName]) {
+                    result[seedName] = config.seedProjects.basePaths[i] + '/' + seedName + extLowerCase;
+                }
+            }
+        }
+    }
+    return result;
+}
+
 module.exports = {
     isGoodExtraAsset: isGoodExtraAsset,
     getComponentNames: getComponentNames,
@@ -222,5 +250,6 @@ module.exports = {
     getRelPathFromUrlArray: getRelPathFromUrlArray,
     getRouteFor: getRouteFor,
     getBasePathByName: getBasePathByName,
-    getRedirectUrlParameter: getRedirectUrlParameter
+    getRedirectUrlParameter: getRedirectUrlParameter,
+    getSeedDictionary: getSeedDictionary,
 };

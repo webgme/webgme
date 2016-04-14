@@ -1682,32 +1682,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     // TODO:router.post('/addOns/:addOnId/query', ensureAuthenticated, function (req, res) {});
 
     router.get('/seeds', ensureAuthenticated, function (req, res) {
-        var names = [],
-            result = [],
-            seedName,
-            extension,
-            extLowerCase,
-            i,
-            j;
-        if (gmeConfig.seedProjects.enable === true) {
-            for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
-                names = fs.readdirSync(gmeConfig.seedProjects.basePaths[i]);
-                for (j = 0; j < names.length; j++) {
-                    extension = path.extname(names[j]);
-                    extLowerCase = extension.toLowerCase();
+        var seedDictionary = webgmeUtils.getSeedDictionary(gmeConfig);
 
-                    if (extLowerCase === '.json' || extLowerCase === '.zip' || extLowerCase === '.webgmex') {
-                        seedName = path.basename(names[j], extension);
-                    }
-
-                    if (result.indexOf(seedName) === -1) {
-                        result.push(seedName);
-                    }
-                }
-            }
-        }
-        logger.debug('/seeds', {metadata: result});
-        res.send(result);
+        logger.debug('/seeds', {metadata: seedDictionary});
+        res.send(Object.keys(seedDictionary));
     });
 
     function getVisualizersDescriptor() {
