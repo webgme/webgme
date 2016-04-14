@@ -15,7 +15,27 @@ define([
     'use strict';
 
     var MetaDecoratorDiagramDesignerWidgetConstraints,
-        SCRIPT_TEMPLATE = 'function(core, node, callback) {\ncallback(null,{hasViolation:false,message:\'\'});\n}';
+        SCRIPT_TEMPLATE = [
+            '/**',
+            ' * To be called when the constraint has been evaluated.',
+            ' * @callback constraintCallback',
+            ' * @param {string|Error} err - Should be null unless unexpected execution errors.',
+            ' * @param {object} result - Result of the constraint evaluation.',
+            ' * @param {boolean} result.hasViolation - Set to true if there were violations.',
+            ' * @param {string} [result.message] - Message to display in case of violation.',
+            ' */',
+            '',
+            '/**',
+            ' * The function defining the constraint.',
+            ' * @param {Core} core - API for retrieving data about the node.',
+            ' * @param {Node} node - The node being checked.',
+            ' * @param {constraintCallback} callback',
+            ' */',
+            'function (core, node, callback) {',
+            '    var result = {hasViolation: false, message: \'\'};',
+            '    // Here goes the constraint checking..',
+            '    callback(null, result)',
+            '}'].join('\n');
 
     MetaDecoratorDiagramDesignerWidgetConstraints = function () {
     };

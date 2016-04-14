@@ -157,7 +157,7 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
         self.customContraints[script].call(self.customContraintsStorage[script], self.core, node,
             function (err, result) {
                 if (err) {
-                    deferred.reject(err);
+                    deferred.reject(err instanceof Error ? err : new Error(err));
                 } else {
                     deferred.resolve(result);
                 }
