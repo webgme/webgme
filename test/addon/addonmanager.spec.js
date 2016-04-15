@@ -5,7 +5,7 @@
 
 var testFixture = require('../_globals');
 
-describe('AddOnManager', function () {
+describe.skip('AddOnManager', function () {
     'use strict';
     var expect = testFixture.expect,
         AddOnManager = require('../../src/addon/addonmanager'),
@@ -67,7 +67,7 @@ describe('AddOnManager', function () {
 
         }
 
-        it.skip('should dispatch NO_MONITORS after open branch and closing AFTER the monitor opened the branch',
+        it('should dispatch NO_MONITORS after open branch and closing AFTER the monitor opened the branch',
             function (done) {
                 var manager = new AddOnManager('mockProjectId', logger, gmeConfig),
                     storage = new StorageMock(manager, done),
@@ -354,7 +354,7 @@ describe('AddOnManager', function () {
             }
         );
 
-        it.skip('should enter StopAndStarted and succeed gracefully with two new monitors',
+        it('should enter StopAndStarted and succeed gracefully with two new monitors',
             function (done) {
                 var manager = new AddOnManager('mockProjectId', logger, gmeConfig),
                     storage = new StorageMock(manager, done),
