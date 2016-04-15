@@ -459,6 +459,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
                 if (filename.toLowerCase().indexOf('.json') > -1) {
                     logger.debug('Found .json seed at:', filename);
+                    logger.warn('Seeding from an exported json-file is deprecated and will be removed in v2.0.0. ' +
+                        'Export your libraries as webgmex files instead.');
                     return Q.ninvoke(FS, 'readFile', filename);
                 } else if (filename.toLowerCase().indexOf('.zip') > -1 ||
                     filename.toLowerCase().indexOf('.webgmex') > -1) {
@@ -469,7 +471,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         legacy = false;
                     } else {
                         logger.debug('Found .zip seed at:', filename);
-
+                        logger.warn('Seeding from an exported zip-file is deprecated and will be removed in v2.0.0. ' +
+                            'Export your libraries as webgmex files instead.');
                     }
 
                     blobClient = new BlobClientClass({
@@ -644,6 +647,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     logger.debug('seedProject - seeding from existing project:', parameters.seedName);
                     return _getSeedFromProject(storage, parameters.seedName, parameters.seedBranch);
                 } else if (parameters.type === 'blob') {
+                    logger.warn('Seeding from an exported json is deprecated and will be removed in v2.0.0. ' +
+                        'Export your libraries as webgmex files and use importProjectFromFile.');
                     return _getSeedFromBlob(parameters.seedName, webgmeToken);
                 } else {
                     throw new Error('Unknown seeding type [' + parameters.type + ']');

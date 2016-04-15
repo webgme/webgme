@@ -201,6 +201,9 @@ define(['js/Loader/LoaderCircles',
             // TODO: Support exported zip file too.
             self.assetWidget.getTargetAsJson(function (targetJson) {
                 if (targetJson) {
+                    console.warn('Seeding from an exported json is deprecated and will be removed in v2.0.0. ' +
+                        'Export your projects as webgmex files and use them instead.');
+
                     var checkResult = self._client.checkImport(targetJson, CORE_CONSTANTS.EXPORT_TYPE_PROJECT);
 
                     if (checkResult) {
