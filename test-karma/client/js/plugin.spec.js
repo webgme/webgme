@@ -23,7 +23,7 @@ describe('Plugin', function () {
             'text!gmeConfig.json',
             'superagent',
             'js/Utils/InterpreterManager',
-            'MinimalWorkingExample',
+            'plugin/MinimalWorkingExample/MinimalWorkingExample/MinimalWorkingExample',
             'PluginForked'
         ], function (Client_, gmeConfigJSON, superagent, InterpreterManager_, MinimalWorkingExample, PluginForked) {
             Client = Client_;

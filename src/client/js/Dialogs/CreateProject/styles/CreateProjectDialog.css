@@ -1,13 +1,13 @@
 /*
  * @author pmeijer / https://github.com/pmeijer
  */
-div.create-new-project-dialog div.modal-content div.modal-header .gme-icon {
-  background-image: url("../../../../img/gme-icon-24.png");
+div.create-new-project-dialog div.modal-content div.modal-header .header-icon {
   height: 24px;
   width: 24px;
   margin-right: 1ex;
   display: inline-block;
-  vertical-align: middle; }
+  vertical-align: middle;
+  background-size: 24px 24px; }
 div.create-new-project-dialog div.modal-content div.modal-header span {
   font-size: 24px;
   vertical-align: middle; }
@@ -58,3 +58,5 @@ div.create-new-project-dialog div.modal-content div.modal-footer button.btn-crea
   display: none; }
   div.create-new-project-dialog div.modal-content div.modal-footer button.btn-create.activated {
     display: inline-block; }
+
+/*# sourceMappingURL=CreateProjectDialog.css.map */

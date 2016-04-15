@@ -18,17 +18,16 @@ WebGMEGlobal.SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPo
 // configure require path and modules
 require.config({
     baseUrl: './',
-
-    //TODO paths should be fixed as the rules collide with each other
     map: {
         '*': {
-            css: 'bower_components/require-css/css.min'
-            //text: 'lib/require/require-text/text',
+            panel: 'js/Panels',
+            'layout/DefaultLayout': 'js/Layouts',
         }
     },
-
-
     paths: {
+        css: 'bower_components/require-css/css.min',
+        text: 'lib/require/require-text/text',
+
         //jQuery and stuff
         jquery: 'bower_components/jquery/dist/jquery.min',
         'jquery-ui': 'bower_components/jquery-ui/jquery-ui.min',

@@ -2,13 +2,13 @@
   opacity: 0; }
   .projects-dialog .modal-content.in-background * {
     opacity: 0; }
-.projects-dialog .modal-content .modal-header .gme-icon {
-  background-image: url("../../../../img/gme-icon.png");
+.projects-dialog .modal-content .modal-header .header-icon {
   height: 28px;
   width: 28px;
   margin-right: 1ex;
   display: inline-block;
-  vertical-align: middle; }
+  vertical-align: middle;
+  background-size: 28px 28px; }
 .projects-dialog .modal-content .modal-header span {
   font-size: 28px;
   vertical-align: middle; }
@@ -118,3 +118,4 @@
 .txt-project-name {
   width: 50%; }
 
+/*# sourceMappingURL=ProjectsDialog.css.map */

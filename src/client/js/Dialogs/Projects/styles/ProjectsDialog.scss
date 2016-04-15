@@ -7,13 +7,13 @@
       }
     }
     .modal-header {
-        .gme-icon {
-          background-image: url('../../../../img/gme-icon.png');
+        .header-icon {
           height: 28px;
           width: 28px;
           margin-right: 1ex;
           display: inline-block;
           vertical-align: middle;
+          background-size: 28px 28px;
         }
         span {
           font-size: 28px;

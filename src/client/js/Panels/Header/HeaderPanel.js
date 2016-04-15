@@ -32,7 +32,7 @@ define([
         'gme.ui.headerPanel', [
             'isis.ui.dropdownNavigator',
             'gme.ui.ProjectNavigator'
-        ]).run(function ($rootScope, $location) {
+        ]).run(['$rootScope', '$location', function ($rootScope, $location) {
             // FIXME: this might not be the best place to put it...
             if (WebGMEGlobal && WebGMEGlobal.State) {
                 WebGMEGlobal.State.on('change', function () {
@@ -53,7 +53,7 @@ define([
                 // FIXME: this should be a hard error, we do not have a logger here.
                 console.error('WebGMEGlobal.State does not exist, cannot update url based on state changes.');
             }
-        });
+        }]);
 
     HeaderPanel = function (layoutManager, params) {
         var options = {};
@@ -89,7 +89,8 @@ define([
         // TODO: would be nice to get the app as a parameter
         app = angular.module('gmeApp');
 
-        app.controller('ProjectNavigatorController', ProjectNavigatorController);
+        app.controller('ProjectNavigatorController', ['$scope', 'gmeClient', '$timeout', '$window', '$http',
+            ProjectNavigatorController]);
 
         //project title
         projectTitleEl = $(

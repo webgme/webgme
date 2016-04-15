@@ -20,42 +20,26 @@ define([
     'isis-ui-components',
     'isis-ui-components-templates',
 
-    //Commonly used dialogs and decorators
+    //layout
+    'js/Layouts/DefaultLayout/DefaultLayout',
 
-    // TODO: The following includes should ideally be built based on the gme-config
-    // TODO: (decorators-, panel- and visualizer-paths)
+    //panels from default layout
+    'js/Panels/Header/HeaderPanel',
+    'js/Panels/FooterControls/FooterControlsPanel',
+    'js/Panels/Visualizer/VisualizerPanel',
+    'js/Panels/ObjectBrowser/ObjectBrowserPanel',
+    'js/Panels/Visualizer/VisualizerPanel',
+    'js/Panels/PartBrowser/PartBrowserPanel',
+    'js/Panels/PropertyEditor/PropertyEditorPanel',
 
-    'js/Dialogs/Branches/BranchesDialog',
-    'js/Dialogs/Commit/CommitDialog',
-    'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
-    'js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog',
-    'js/Dialogs/ConstraintCheckResults/ConstraintCheckResultsDialog',
-    'js/Dialogs/CreateProject/CreateProjectDialog',
-    'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
-    'js/Dialogs/Import/ImportDialog',
-    'js/Dialogs/Merge/MergeDialog',
-    'js/Dialogs/PluginConfig/PluginConfigDialog',
-    'js/Dialogs/PluginResults/PluginResultsDialog',
-    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
-    'js/Dialogs/ProjectRights/ProjectRightsDialog',
-    'js/Dialogs/Projects/ProjectsDialog',
+    //panels from visualizers.json
+    'js/Panels/MetaEditor/MetaEditorPanel',
+    'js/Panels/ModelEditor/ModelEditorPanel',
+    'js/Panels/SetEditor/SetEditorPanel',
+    'js/Panels/Crosscut/CrosscutPanel',
+    'js/Panels/GraphViz/GraphVizPanel',
 
-    'js/Widgets/BranchSelector/BranchSelectorWidget',
-    'js/Widgets/BranchStatus/BranchStatusWidget',
-    'js/Widgets/Crosscut/CrosscutWidget',
-    'js/Widgets/GraphViz/GraphVizWidget',
-    'js/Widgets/KeyboardManager/KeyboardManagerWidget',
-    'js/Widgets/MetaEditor/MetaEditorWidget',
-    'js/Widgets/ModelEditor/ModelEditorWidget',
-    'js/Widgets/NetworkStatus/NetworkStatusWidget',
-    'js/Widgets/Notification/NotificationWidget',
-    'js/Widgets/PartBrowser/PartBrowserWidget',
-    'js/Widgets/ProjectRepository/ProjectRepositoryWidget',
-    'js/Widgets/ProjectTitle/ProjectTitleWidget',
-    'js/Widgets/SetEditor/SetEditorWidget',
-    'js/Widgets/TreeBrowser/TreeBrowserWidget',
-    'js/Widgets/UserProfile/UserProfileWidget',
-
+    //decorators
     'decorators/CircleDecorator/CircleDecorator',
     'decorators/DefaultDecorator/DefaultDecorator',
     'decorators/DocumentDecorator/DocumentDecorator',

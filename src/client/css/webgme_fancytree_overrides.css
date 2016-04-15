@@ -1,0 +1,112 @@
+/**
+ * @author pmeijer / https://github.com/pmeijer
+ */
+/* FancyTree Vista-theme overrides */
+ul.fancytree-container {
+  overflow: visible !important;
+  padding-bottom: 0 !important;
+  height: auto;
+  font-size: 13px;
+  background-color: transparent;
+  border: none; }
+  ul.fancytree-container a {
+    border: 1px solid transparent; }
+
+.fancytree-has-children span.fancytree-icon {
+  background-position: 0px -16px; }
+
+.fancytree-icon {
+  margin-top: 1px;
+  cursor: pointer; }
+
+.fancytree-loading span.fancytree-expander {
+  background-position: 0 0;
+  background-image: url("../img/progress.gif"); }
+
+ul.fancytree-container a:focus,
+span.fancytree-focused a:link {
+  background-color: transparent;
+  outline: none; }
+
+/* END OF --- FancyTree Vista-theme overrides */
+ul.fancytree-container {
+  outline-width: 0; }
+  ul.fancytree-container li {
+    line-height: 16px;
+    outline-width: 0; }
+    ul.fancytree-container li span.fancytree-node {
+      /* 'Loading' node style with italic gray font and progress bar icon */ }
+      ul.fancytree-container li span.fancytree-node span.fancytree-title {
+        margin-left: 0; }
+        ul.fancytree-container li span.fancytree-node span.fancytree-title input[type=text] {
+          padding: 0;
+          font-size: 12px !important;
+          line-height: 12px;
+          margin-top: -3px !important;
+          width: 100px !important; }
+      ul.fancytree-container li span.fancytree-node span.fancytree-title:hover {
+        background-color: #F2F7FD;
+        border-color: #F2F7FD; }
+      ul.fancytree-container li span.fancytree-node.fancytree-selected span.fancytree-title {
+        font-style: normal;
+        background: #BEEBFF;
+        border: 1px solid #99DEFD; }
+      ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-focused span.fancytree-title {
+        background: #a3d7f3;
+        outline: none; }
+      ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-active span.fancytree-title {
+        font-style: normal;
+        background: #BEEBFF;
+        border: 1px solid #99DEFD; }
+      ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-active.fancytree-focused span.fancytree-title {
+        background: #a3d7f3;
+        outline: none; }
+      ul.fancytree-container li span.fancytree-node.fancytree-active span.fancytree-title {
+        font-style: normal;
+        background: transparent;
+        border: 1px solid transparent;
+        outline: none; }
+      ul.fancytree-container li span.fancytree-node.fancytree-focus span.fancytree-title {
+        background: transparent;
+        outline: none; }
+      ul.fancytree-container li span.fancytree-node.node-progress span.fancytree-title {
+        color: #AAAAAA;
+        font-style: italic; }
+      ul.fancytree-container li span.fancytree-node.node-progress span.fancytree-icon {
+        background: url("../img/progress.gif") 0 0; }
+
+ul.fancytree-container span.fancytree-icon {
+  margin-left: 0;
+  background: url("../img/gmeicons.png") 0 0; }
+ul.fancytree-container span.gme-model span.fancytree-icon {
+  background-position: -48px 0 !important; }
+ul.fancytree-container span.gme-atom span.fancytree-icon {
+  background-position: -16px 0 !important; }
+ul.fancytree-container span.gme-aspect span.fancytree-icon {
+  background-position: -32px 0 !important; }
+ul.fancytree-container span.gme-connection span.fancytree-icon {
+  background-position: -64px 0 !important; }
+ul.fancytree-container span.gme-root span.fancytree-icon {
+  background-position: -80px 0 !important; }
+ul.fancytree-container span.gme-library span.fancytree-icon {
+  background-position: -0px 0 !important; }
+
+i.gme-connection {
+  background: url("../img/gmeicons.png") 0 0;
+  background-position: -64px 0 !important;
+  width: 16px;
+  height: 16px; }
+
+i.gme-atom {
+  background: url("../img/gmeicons.png") 0 0;
+  background-position: -16px 0 !important;
+  width: 16px;
+  height: 16px; }
+
+i.gme-library {
+  background: url("../img/gmeicons.png") 0 0;
+  background-position: -0px 0 !important;
+  width: 16px;
+  height: 16px; }
+
+/*# sourceMappingURL=webgme_fancytree_overrides.css.map */
