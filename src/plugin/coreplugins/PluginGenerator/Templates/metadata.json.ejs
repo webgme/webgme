@@ -1,0 +1,73 @@
+{
+  "id": "<%= pluginID %>",
+  "name": "<%= pluginName %>",
+  "version": "0.1.0",
+  "description": "<%= description %>",
+  "icon": {
+    "class": "glyphicon glyphicon-cog",
+    "src": ""
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,<%if (configStructure) {%>
+  "configStructure": [
+    {
+      "name": "species",
+      "displayName": "Animal Species",
+      "regex": "^[a-zA-Z]+$",
+      "regexMessage": "Name can only contain English characters!",
+      "description": "Which species does the animal belong to.",
+      "value": "Horse",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "age",
+      "displayName": "Age",
+      "description": "How old is the animal.",
+      "value": 3,
+      "valueType": "number",
+      "minValue": 0,
+      "maxValue": 10000,
+      "readOnly": false
+    },
+    {
+      "name": "carnivore",
+      "displayName": "Carnivore",
+      "description": "Does the animal eat other animals?",
+      "value": false,
+      "valueType": "boolean",
+      "readOnly": false
+    },
+    {
+      "name": "classification",
+      "displayName": "Classification",
+      "description": "",
+      "value": "Vertebrates",
+      "valueType": "string",
+      "valueItems": [
+        "Vertebrates",
+        "Invertebrates",
+        "Unknown"
+      ]
+    },
+    {
+      "name": "color",
+      "displayName": "Color",
+      "description": "The hex color code for the animal.",
+      "readOnly": false,
+      "value": "#FF0000",
+      "regex": "^#([A-Fa-f0-9]{6})$",
+      "valueType": "string"
+    },
+    {
+      "name": "anAsset",
+      "displayName": "Document",
+      "description": "",
+      "value": "",
+      "valueType": "asset",
+      "readOnly": false
+    }
+  ]<%} else {%>
+  "configStructure": []
+<%}%>
+}

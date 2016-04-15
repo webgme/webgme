@@ -1,0 +1,33 @@
+{
+  "id": "ConstraintEvaluator",
+  "name": "Constraint Evaluator",
+  "version": "1.7.0",
+  "description": "Plugin for developers to test, evaluate and add custom constraints.",
+  "icon": {
+    "src": "",
+    "class": "glyphicon glyphicon-ok-circle"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "configStructure": [
+    {
+      "name": "mode",
+      "displayName": "Execution mode",
+      "description": "Select if Constraints.js should be evaluated, generated or populated in model.",
+      "value": "EvaluateConstraints",
+      "valueType": "string",
+      "valueItems": [
+        "EvaluateConstraints",
+        "GenerateConstraints",
+        "PopulateFromConstraints"
+      ]
+    },
+    {
+      "name": "clear",
+      "displayName": "Clear existing constraints",
+      "description": "Clear all existing constraints when populating model with constraints.",
+      "value": false,
+      "valueType": "boolean"
+    }
+  ]
+}

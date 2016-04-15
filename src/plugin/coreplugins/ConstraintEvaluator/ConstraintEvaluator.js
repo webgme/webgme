@@ -27,14 +27,16 @@
  */
 
 define([
-    'plugin/PluginConfig',
     'plugin/PluginBase',
+    'text!./metadata.json',
     './Constraints',
     './Templates/Templates',
     'common/util/ejs',
     'q'
-], function (PluginConfig, PluginBase, Constraints, TEMPLATES, ejs, Q) {
+], function (PluginBase, pluginMetadata, Constraints, TEMPLATES, ejs, Q) {
     'use strict';
+
+    pluginMetadata = JSON.parse(pluginMetadata);
 
     /**
      * Initializes a new instance of ConstraintEvaluator.
@@ -43,73 +45,17 @@ define([
      * @classdesc This class represents the plugin ConstraintEvaluator.
      * @constructor
      */
-    var ConstraintEvaluator = function () {
+    function ConstraintEvaluator() {
         // Call base class' constructor.
         PluginBase.call(this);
-    };
+        this.pluginMetadata = pluginMetadata;
+    }
 
-    // Prototypal inheritance from PluginBase.
+    ConstraintEvaluator.metadata = pluginMetadata;
+
+    // Prototypical inheritance from PluginBase.
     ConstraintEvaluator.prototype = Object.create(PluginBase.prototype);
     ConstraintEvaluator.prototype.constructor = ConstraintEvaluator;
-
-    /**
-     * Gets the name of the ConstraintEvaluator.
-     * @returns {string} The name of the plugin.
-     * @public
-     */
-    ConstraintEvaluator.prototype.getName = function () {
-        return 'Constraint Evaluator';
-    };
-
-    /**
-     * Gets the semantic version (semver.org) of the ConstraintEvaluator.
-     * @returns {string} The version of the plugin.
-     * @public
-     */
-    ConstraintEvaluator.prototype.getVersion = function () {
-        return '0.1.0';
-    };
-
-    /**
-     * Gets the description of the ConstraintEvaluator.
-     * @returns {string} The description of the plugin.
-     * @public
-     */
-    ConstraintEvaluator.prototype.getDescription = function () {
-        return 'Plugin for developers to test, evaluate and add custom constraints.';
-    };
-
-    /**
-     * Gets the configuration structure for the ConstraintEvaluator.
-     * The ConfigurationStructure defines the configuration for the plugin
-     * and will be used to populate the GUI when invoking the plugin from webGME.
-     * @returns {object} The version of the plugin.
-     * @public
-     */
-    ConstraintEvaluator.prototype.getConfigStructure = function () {
-        return [
-            {
-                name: 'mode',
-                displayName: 'Execution mode',
-                description: 'Select if Constraints.js should be evaluated, generated or populated in model.',
-                value: 'EvaluateConstraints',
-                valueType: 'string',
-                valueItems: [
-                    'EvaluateConstraints',
-                    'GenerateConstraints',
-                    'PopulateFromConstraints'
-                ]
-            },
-            {
-                name: 'clear',
-                displayName: 'Clear existing constraints',
-                description: 'Clear all existing constraints when populating model with constraints.',
-                value: false,
-                valueType: 'boolean'
-            }
-        ];
-    };
-
 
     /**
      * Main function for the plugin to execute. This will perform the execution.

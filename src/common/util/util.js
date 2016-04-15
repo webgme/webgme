@@ -29,8 +29,34 @@ define([], function () {
         }
     }
 
+    function orderStringArrayByElementLength(strArray) {
+        var ordered = [],
+            i, j, index;
+
+        for (i = 0; i < strArray.length; i += 1) {
+            index = -1;
+            j = 0;
+            while (index === -1 && j < ordered.length) {
+                if (ordered[j].length > strArray[i].length) {
+                    index = j;
+                }
+
+                j += 1;
+            }
+
+            if (index === -1) {
+                ordered.push(strArray[i]);
+            } else {
+                ordered.splice(index, 0, strArray[i]);
+            }
+        }
+
+        return ordered;
+    }
+
     return {
         isTrueObject: isTrueObject,
-        updateFieldsRec: updateFieldsRec
+        updateFieldsRec: updateFieldsRec,
+        orderStringArrayByElementLength: orderStringArrayByElementLength
     };
 })

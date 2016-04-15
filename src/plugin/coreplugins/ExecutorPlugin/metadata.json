@@ -1,0 +1,48 @@
+{
+  "id": "ExecutorPlugin",
+  "name": "Executor Plugin",
+  "version": "1.7.0",
+  "description": "Example of how to use the Executor Client",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cloud"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "configStructure": [
+    {
+      "name": "pythonCmd",
+      "displayName": "Python path",
+      "description": "How Python is executed",
+      "value": "C:/Python27/python.exe",
+      "valueType": "string",
+      "readOnly": false
+    },
+    {
+      "name": "update",
+      "displayName": "Write back to model",
+      "description": "If false no need to provide active node.",
+      "value": true,
+      "valueType": "boolean",
+      "readOnly": false
+    },
+    {
+      "name": "success",
+      "displayName": "Should succeed",
+      "description": "Should the execution exit with 0?",
+      "value": true,
+      "valueType": "boolean",
+      "readOnly": false
+    },
+    {
+      "name": "time",
+      "displayName": "Execution time [s]",
+      "description": "How long should the script run?",
+      "value": 1,
+      "valueType": "number",
+      "minValue": 0.1,
+      "maxValue": 10000,
+      "readOnly": false
+    }
+  ]
+}

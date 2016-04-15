@@ -16,6 +16,7 @@ define([], function () {
         PROJECT_NAME = new RegExp('^[0-9a-zA-Z_]+$'),
 
         INVALID_CSS_CHARS = new RegExp('[!"#$%&\'()\*\+,\./:;<=>\?@\[\\\]^`{\|}~ ]+', 'g'),
+        HTML_ELEMENT = new RegExp('<[a-z][\\s\\S]*>', 'i'),
         GUID = new RegExp('[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}', 'i');
 
     return {
@@ -28,6 +29,7 @@ define([], function () {
         DOCUMENT_KEY: DOCUMENT_KEY,
         GUID: GUID,
         INVALID_CSS_CHARS: INVALID_CSS_CHARS,
+        HTML_ELEMENT: HTML_ELEMENT,
         PROJECT_NAME: PROJECT_NAME
     };
 });

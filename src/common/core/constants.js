@@ -15,6 +15,7 @@ define([], function () {
         SET_MODIFIED_REGISTRY: '_sets_',
         MEMBER_RELATION: 'member',
         BASE_POINTER: 'base',
+        PATH_SEP: '/',
 
         NULLPTR_NAME: '_null_pointer',
         NULLPTR_RELID: '_nullptr',
@@ -52,6 +53,8 @@ define([], function () {
 
         EXPORT_TYPE_PROJECT: 'project',
         EXPORT_TYPE_LIBRARY: 'library',
+
+        NAMESPACE_SEPARATOR: '.',
 
         MAX_AGE: 3,
         MAX_TICKS: 2000,

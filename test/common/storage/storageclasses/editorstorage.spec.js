@@ -393,7 +393,7 @@ describe('storage storageclasses editorstorage', function () {
             .then(function () {
                 return Q.ninvoke(storage, 'forkBranch', projectName2Id(projectName), 'master', 'commit_and_fork', null);
             })
-            .then(function (result) {
+            .then(function (/*result*/) {
                 // TODO: check commit hash
             })
             .nodeify(done);
@@ -476,6 +476,159 @@ describe('storage storageclasses editorstorage', function () {
                 expect(result.status).to.equal(STORAGE_CONSTANTS.SYNCED);
             })
             .nodeify(done);
+    });
+
+    it('should persist commits with no open project', function (done) {
+        // jshint ignore:start
+        // jscs:disable
+        var commitQueueDump = {
+            "webgmeVersion": "1.7.0-beta1",
+            "projectId": "guest+StorageProject",
+            "branchName": "master",
+            "branchStatus": "AHEAD_SYNC",
+            "commitQueue": [
+                {
+                    "rootHash": "#03e07581e39ebc0518cf9fa8559f8038a1c831ae",
+                    "projectId": "guest+StorageProject",
+                    "commitObject": {
+                        "root": "#03e07581e39ebc0518cf9fa8559f8038a1c831ae",
+                        "parents": [
+                            importResult.commitHash
+                        ],
+                        "updater": [
+                            "guest"
+                        ],
+                        "time": 1460046151041,
+                        "message": "createChildren({\"/1\":\"/6\"})",
+                        "type": "commit",
+                        "_id": "#7a8194dbf8bae42c9a096ab924dfef7dc3ceaa98"
+                    },
+                    "coreObjects": {
+                        "#ac3ade88c1e50e32061480a9ab7c5731dbeca3c5": {
+                            "_id": "#ac3ade88c1e50e32061480a9ab7c5731dbeca3c5",
+                            "atr": {
+                                "_relguid": "a99a761cba000eeba6365007e6ce1f6d"
+                            },
+                            "reg": {
+                                "position": {
+                                    "x": 101,
+                                    "y": 408
+                                }
+                            }
+                        },
+                        "#03e07581e39ebc0518cf9fa8559f8038a1c831ae": {
+                            "type": "patch",
+                            "base": importResult.rootHash,
+                            "patch": [
+                                {
+                                    "op": "add",
+                                    "path": "/6",
+                                    "value": "#ac3ade88c1e50e32061480a9ab7c5731dbeca3c5"
+                                },
+                                {
+                                    "op": "add",
+                                    "path": "/ovr/%2f6",
+                                    "value": {
+                                        "base": "/1"
+                                    }
+                                },
+                                {
+                                    "op": "add",
+                                    "path": "/ovr/%2f1/base-inv",
+                                    "value": [
+                                        "/6"
+                                    ]
+                                }
+                            ],
+                            "_id": "#03e07581e39ebc0518cf9fa8559f8038a1c831ae"
+                        }
+                    },
+                    "changedNodes": {
+                        "load": {
+                            "/6": true
+                        },
+                        "unload": {},
+                        "update": {
+                            "": true
+                        },
+                        "partialUpdate": {
+                            "/1": true
+                        }
+                    },
+                    "branchName": "master"
+                },
+                {
+                    "rootHash": "#7d91031d0cba01e4f987e8e856d8c00b9c28255e",
+                    "projectId": "guest+StorageProject",
+                    "commitObject": {
+                        "root": "#7d91031d0cba01e4f987e8e856d8c00b9c28255e",
+                        "parents": [
+                            "#7a8194dbf8bae42c9a096ab924dfef7dc3ceaa98"
+                        ],
+                        "updater": [
+                            "guest"
+                        ],
+                        "time": 1460046153051,
+                        "message": "[\nsetRegistry(/1,,position,[object Object])\n]",
+                        "type": "commit",
+                        "_id": "#e15e9b56e0c16ca08358cef9913aca4677abb549"
+                    },
+                    "coreObjects": {
+                        "#63c1fb91ed4a68a9970653750f992cb082638287": {
+                            "type": "patch",
+                            "base": "#7f9626a859234e2a6948b3dd925fcd48ebc0a46e",
+                            "patch": [
+                                {
+                                    "op": "replace",
+                                    "path": "/reg/position",
+                                    "value": {
+                                        "x": 473,
+                                        "y": 100
+                                    }
+                                }
+                            ],
+                            "_id": "#63c1fb91ed4a68a9970653750f992cb082638287"
+                        },
+                        "#7d91031d0cba01e4f987e8e856d8c00b9c28255e": {
+                            "type": "patch",
+                            "base": "#03e07581e39ebc0518cf9fa8559f8038a1c831ae",
+                            "patch": [
+                                {
+                                    "op": "replace",
+                                    "path": "/1",
+                                    "value": "#63c1fb91ed4a68a9970653750f992cb082638287"
+                                }
+                            ],
+                            "_id": "#7d91031d0cba01e4f987e8e856d8c00b9c28255e"
+                        }
+                    },
+                    "changedNodes": {
+                        "load": {},
+                        "unload": {},
+                        "update": {
+                            "/1": true,
+                            "": true
+                        },
+                        "partialUpdate": {}
+                    },
+                    "branchName": "master"
+                }
+            ]
+        };
+
+        Q.ninvoke(storage, 'persistCommits', commitQueueDump.commitQueue)
+            .then(function (commitHash) {
+                expect(commitHash).to.equal(commitQueueDump.commitQueue[1].commitObject._id);
+                return Q.ninvoke(storage,'createBranch', projectName2Id(projectName), 'fromPersistCommits', commitHash);
+            })
+            .then(function (result) {
+                expect(result.status).to.equal(STORAGE_CONSTANTS.SYNCED);
+                expect(result.hash).to.equal(commitQueueDump.commitQueue[1].commitObject._id);
+            })
+            .nodeify(done);
+
+        // jshint ignore:end
+        // jscs:enable
     });
 
     it('should makeCommit with open branch and get canceled', function (done) {
@@ -646,7 +799,8 @@ describe('storage storageclasses editorstorage', function () {
             .nodeify(done);
     });
 
-    it('makeCommit should failed in a branch referring to a non-existing rootObject', function (done) {
+    it.skip('makeCommit should failed in a branch referring to a non-existing rootObject', function (done) {
+        // We no longer load the root node in these cases.
         var project,
             branches,
             access,
@@ -703,14 +857,13 @@ describe('storage storageclasses editorstorage', function () {
             branches,
             access,
             storageOther,
+            projectOther,
             newCommitHash,
             openingBranch = true,
             updateReceivedDeferred = Q.defer(),
             forkName = 'pullChanges_fork',
             coreOther,
             gmeConfigOther = testFixture.getGmeConfig();
-
-        gmeConfigOther.storage.patchRootCommunicationEnabled = false;
 
         Q.nfcall(storage.openProject, projectName2Id(projectName))
             .then(function (result) {
@@ -773,7 +926,8 @@ describe('storage storageclasses editorstorage', function () {
                 return Q.nfcall(storageOther.openProject, projectName2Id(projectName));
             })
             .then(function (project) {
-                coreOther = new testFixture.Core(project[0], {
+                projectOther = project[0];
+                coreOther = new testFixture.Core(projectOther, {
                     globConf: gmeConfigOther,
                     logger: logger
                 });
@@ -793,15 +947,15 @@ describe('storage storageclasses editorstorage', function () {
             })
             .then(function (root) {
                 var persisted;
-                coreOther.setAttribute(root, 'name', 'New name'); // FIXME: Bogus modification to get makeCommit working.
+                coreOther.setAttribute(root, 'name', 'New name');
                 persisted = coreOther.persist(root);
 
                 expect(persisted.rootHash).not.to.equal(undefined);
-                expect(persisted.objects[persisted.rootHash]).not.to.have.keys(
+                expect(persisted.objects[persisted.rootHash]).to.have.keys(
                     ['oldHash', 'newHash', 'oldData', 'newData']);
 
-                return Q.ninvoke(storageOther, 'makeCommit', projectName2Id(projectName), forkName,
-                    [importResult.commitHash], persisted.rootHash, persisted.objects, 'new commit');
+                return projectOther.makeCommit(forkName, [importResult.commitHash], persisted.rootHash,
+                    persisted.objects, 'new commit');
             })
             .then(function (result) {
                 newCommitHash = result.hash;
@@ -809,6 +963,7 @@ describe('storage storageclasses editorstorage', function () {
             })
             .then(function (commit) {
                 expect(commit.commitObject._id).to.equal(newCommitHash);
+                expect(commit.changedNodes.update['']).to.equal(true);
             })
             .nodeify(done);
     });

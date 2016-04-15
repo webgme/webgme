@@ -1237,7 +1237,7 @@ define(['js/logger',
         if (sourceNode && targetNode) {
             this._client.removeValidTargetItem(sourceID, pointerName, targetID);
             pointerMetaDescriptor = this._client.getValidTargetItems(sourceID, pointerName);
-            if (pointerMetaDescriptor && pointerMetaDescriptor.length === 0) {
+            if (!pointerMetaDescriptor || pointerMetaDescriptor.length === 0) {
                 if (isSet === false) {
                     //single pointer
                     this._client.deleteMetaPointer(sourceID, pointerName);

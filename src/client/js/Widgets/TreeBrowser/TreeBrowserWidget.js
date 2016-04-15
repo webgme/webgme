@@ -283,7 +283,8 @@ define(['js/logger',
         for (i = 0; i < objDescriptors.length; i += 1) {
             childrenParams.push({
                 title: objDescriptors[i].name,
-                tooltip: objDescriptors[i].metaType ? '<<' + objDescriptors[i].metaType + '>>' : '',
+                tooltip: objDescriptors[i].libraryInfo ? objDescriptors[i].libraryInfo :
+                    objDescriptors[i].metaType ? '<<' + objDescriptors[i].metaType + '>>' : '',
                 key: objDescriptors[i].id,
                 folder: false,
                 lazy: objDescriptors[i].hasChildren,
@@ -291,6 +292,9 @@ define(['js/logger',
                 icon: objDescriptors[i].icon || null,
                 isConnection: objDescriptors[i].isConnection,
                 isAbstract: objDescriptors[i].isAbstract,
+                isLibrary: objDescriptors[i].isLibrary,
+                isLibraryRoot: objDescriptors[i].isLibraryRoot,
+                libraryInfo: objDescriptors[i].libraryInfo,
                 metaType: objDescriptors[i].metaType
             });
         }
@@ -351,7 +355,8 @@ define(['js/logger',
         // Call the FancyTreeNode.addChildren() and pass options for the new node.
         newNode = parentNode.addChildren({
             title: objDescriptor.name,
-            tooltip: objDescriptor.metaType ? '<<' + objDescriptor.metaType + '>>' : '',
+            tooltip: objDescriptor.libraryInfo ? objDescriptor.libraryInfo :
+                objDescriptor.metaType ? '<<' + objDescriptor.metaType + '>>' : '',
             key: objDescriptor.id,
             folder: false,
             lazy: objDescriptor.hasChildren,
@@ -359,10 +364,13 @@ define(['js/logger',
             icon: objDescriptor.icon || null,
             isConnection: objDescriptor.isConnection,
             isAbstract: objDescriptor.isAbstract,
+            isLibrary: objDescriptor.isLibrary,
+            isLibraryRoot: objDescriptor.isLibraryRoot,
+            libraryInfo: objDescriptor.libraryInfo,
             metaType: objDescriptor.metaType
         }, beforeNode);
 
-
+        this.sortChildren(parentNode, false);
         this._logger.debug('New node created: ' + newNode.key);
 
         //return the newly created node
@@ -399,7 +407,6 @@ define(['js/logger',
             nodeName,
             parentNode;
 
-
         //check if valid node
         if (!node) {
             return;
@@ -407,7 +414,6 @@ define(['js/logger',
 
         //set new text value (if any)
         if (objDescriptor.hasOwnProperty('name') && node.title !== objDescriptor.name) {
-
 
             nodeName = objDescriptor.name;
 
@@ -453,21 +459,40 @@ define(['js/logger',
             }
         }
 
-        if (objDescriptor.isAbstract !== node.data.isAbstract) {
+        if (objDescriptor.hasOwnProperty('isAbstract') && objDescriptor.isAbstract !== node.data.isAbstract) {
             node.data.isAbstract = objDescriptor.isAbstract;
             //mark that change happened
             nodeDataChanged = true;
         }
 
-        if (objDescriptor.isConnection !== node.data.isConnection) {
+        if (objDescriptor.hasOwnProperty('isConnection') && objDescriptor.isConnection !== node.data.isConnection) {
             node.data.isConnection = objDescriptor.isConnection;
             //mark that change happened
             nodeDataChanged = true;
         }
 
-        if (objDescriptor.metaType !== node.data.metaType) {
+        if (objDescriptor.hasOwnProperty('metaType') && objDescriptor.metaType !== node.data.metaType) {
             node.data.metaType = objDescriptor.metaType;
             node.tooltip = '<<' + objDescriptor.metaType + '>>';
+            //mark that change happened
+            nodeDataChanged = true;
+        }
+
+        if (objDescriptor.hasOwnProperty('libraryInfo') && typeof objDescriptor.librayInfo === 'string' &&
+            objDescriptor.libraryInfo !== node.data.libraryInfo) {
+            node.data.libraryInfo = objDescriptor.libraryInfo;
+            node.tooltip = objDescriptor.libraryInfo;
+            nodeDataChanged = true;
+        }
+
+        if (objDescriptor.hasOwnProperty('isLibrary') && objDescriptor.isLibrary !== node.data.isLibrary) {
+            node.data.isLibrary = objDescriptor.isLibrary;
+            //mark that change happened
+            nodeDataChanged = true;
+        }
+
+        if (objDescriptor.hasOwnProperty('isLibraryRoot') && objDescriptor.isLibraryRoot !== node.data.isLibraryRoot) {
+            node.data.isLibraryRoot = objDescriptor.isLibraryRoot;
             //mark that change happened
             nodeDataChanged = true;
         }
@@ -480,7 +505,7 @@ define(['js/logger',
             this._logger.debug('Node updated: ' + node.key);
         }
 
-        if (nodeDataChanged === true || nodeNameChanged === true) {
+        if (nodeNameChanged === true) {
             //find it's new place based on alphabetical order
             parentNode = node.getParent();
 
@@ -488,8 +513,11 @@ define(['js/logger',
                 this.sortChildren(parentNode, false);
             }
         }
-    };
 
+        if (nodeDataChanged && objDescriptor.hasChildren === true) {
+            this.sortChildren(node, false);
+        }
+    };
 
     /**
      * Called when a node is opened in the tree
@@ -729,24 +757,30 @@ define(['js/logger',
                     },
                     icon: false
                 },
-                openInVisualizer: { // The "select (aka double-click)" menu item
-                    name: 'Open in visualizer',
-                    callback: function (/*key, options*/) {
-                        self.onNodeDoubleClicked.call(self, node.key);
-                    },
-                    icon: false
-                },
                 selectNode: { // The "select (aka double-click)" menu item
                     name: 'Select node',
                     callback: function (/*key, options*/) {
                         self.onMakeNodeSelected.call(self, node.key);
                     },
                     icon: false
+                },
+                open: { // The "select (aka double-click)" menu item
+                    name: 'Open in',
+                    items: {
+                        visualizer: {
+                            name: 'Visualizer',
+                            callback: function (/*key, options*/) {
+                                self.onNodeDoubleClicked.call(self, node.key);
+                            },
+                            icon: false
+                        }
+                    },
+                    icon: 'paste'
                 }
             };
 
+            menuItems.separatorOperationsStart = '-';
             if (contextMenuOptions.rename === true) {
-                menuItems.separatorRename = '-';
                 menuItems.rename = { // The "rename" menu item
                     name: 'Rename',
                     callback: function (/*key, options*/) {
@@ -757,7 +791,6 @@ define(['js/logger',
             }
 
             if (contextMenuOptions.delete === true) {
-                menuItems.separatorDelete = '-';
                 menuItems.delete = { // The "delete" menu item
                     name: 'Delete',
                     callback: function (/*key, options*/) {
@@ -836,7 +869,6 @@ define(['js/logger',
                 caseInsensBtn,
                 caseSensBtn,
                 regexBtn;
-
 
             if (!inputTypeSpan) {
                 // TODO: Currently these are shared decide how to display them separatly.
@@ -987,6 +1019,20 @@ define(['js/logger',
             addToggleBtn('hideLeaves', 'leaf nodes', '<i class="fa gme-atom"/>');
         }
 
+        if (typeof options.hideLibraries === 'boolean') {
+            self._currentFilters.hideLibraries = options.hideLibraries;
+            self._filterFunctions.push(function (node) {
+                // Filter out library nodes.
+                if (self._currentFilters.hideLibraries === true) {
+                    return node.data.isLibrary !== true;
+                } else {
+                    return true;
+                }
+            });
+
+            addToggleBtn('hideLibraries', 'libraries', '<i class="fa gme-library"/>');
+        }
+
         if (buttonGroupSpan) {
             filterForm.append(buttonGroupSpan);
         }
@@ -1022,16 +1068,17 @@ define(['js/logger',
                 // Filter based on name.
                 if (self._currentFilters.metaTypeFilter.text) {
                     if (self._currentFilters.metaTypeFilter.type === 'caseInsensitive') {
-                        return node.title.toLowerCase().indexOf(
+                        return (node.data.metaType || '').toLowerCase().indexOf(
                                 self._currentFilters.metaTypeFilter.text.toLowerCase()) > -1;
                     } else if (self._currentFilters.metaTypeFilter.type === 'regex') {
                         try {
-                            return (new RegExp(self._currentFilters.metaTypeFilter.text).test(node.title));
+                            return (new RegExp(self._currentFilters.metaTypeFilter.text)
+                                .test((node.data.metaType || '')));
                         } catch (err) {
                             return true;
                         }
                     } else {
-                        return node.title.indexOf(self._currentFilters.metaTypeFilter.text) > -1;
+                        return (node.data.metaType || '').indexOf(self._currentFilters.metaTypeFilter.text) > -1;
                     }
                 } else {
                     return true;
@@ -1100,11 +1147,15 @@ define(['js/logger',
 
     TreeBrowserWidget.prototype.sortChildren = function (node, rec) {
         var compareFn = function (nodeA, nodeB) {
-            // Move connections to bottom
+            // Move connections to bottom and libraries to top
             if (nodeA.data.isConnection === true && !nodeB.data.isConnection) {
                 return 1;
             } else if (nodeB.data.isConnection === true && !nodeA.data.isConnection) {
                 return -1;
+            } else if (nodeA.data.isLibraryRoot === true && !nodeB.data.isLibraryRoot) {
+                return -1;
+            } else if (nodeB.data.isLibraryRoot === true && !nodeA.data.isLibraryRoot) {
+                return 1;
             } else {
                 if (nodeA.title.toLowerCase() > nodeB.title.toLowerCase()) {
                     return 1;

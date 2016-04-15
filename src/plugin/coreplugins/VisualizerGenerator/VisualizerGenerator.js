@@ -10,14 +10,18 @@
 define([
     'plugin/PluginConfig',
     'plugin/PluginBase',
+    'text!./metadata.json',
     'common/util/ejs',
     'plugin/VisualizerGenerator/VisualizerGenerator/Templates/Templates'
 ], function (
     PluginConfig,
     PluginBase,
+    pluginMetadata,
     ejs,
     TEMPLATES) {
     'use strict';
+
+    pluginMetadata = JSON.parse(pluginMetadata);
 
     /**
      * Initializes a new instance of VisualizerGenerator.
@@ -26,54 +30,17 @@ define([
      * @classdesc This class represents the plugin VisualizerGenerator.
      * @constructor
      */
-    var VisualizerGenerator = function () {
+    function VisualizerGenerator() {
         // Call base class' constructor.
         PluginBase.call(this);
-    };
+        this.pluginMetadata = pluginMetadata;
+    }
 
-    // Prototypal inheritance from PluginBase.
+    VisualizerGenerator.metadata = pluginMetadata;
+
+    // Prototypical inheritance from PluginBase.
     VisualizerGenerator.prototype = Object.create(PluginBase.prototype);
     VisualizerGenerator.prototype.constructor = VisualizerGenerator;
-
-    /**
-     * Gets the name of the VisualizerGenerator.
-     * @returns {string} The name of the plugin.
-     * @public
-     */
-    VisualizerGenerator.prototype.getName = function () {
-        return 'Visualizer Generator';
-    };
-
-    /**
-     * Gets the semantic version (semver.org) of the VisualizerGenerator.
-     * @returns {string} The version of the plugin.
-     * @public
-     */
-    VisualizerGenerator.prototype.getVersion = function () {
-        return '0.1.0';
-    };
-
-    /**
-     * Gets the configuration structure for the VisualizerGenerator.
-     * The ConfigurationStructure defines the configuration for the plugin
-     * and will be used to populate the GUI when invoking the plugin from webGME.
-     * @returns {object} The version of the plugin.
-     * @public
-     */
-    VisualizerGenerator.prototype.getConfigStructure = function () {
-        return [
-            {
-                name: 'visualizerID',
-                displayName: 'Visualizer ID',
-                regex: '^[a-zA-Z]+$',
-                regexMessage: 'Name can only contain English characters (use camelcase)!',
-                value: 'MyCustomVisualizer',
-                valueType: 'string',
-                readOnly: false
-            }
-        ];
-    };
-
 
     /**
      * Main function for the plugin to execute. This will perform the execution.

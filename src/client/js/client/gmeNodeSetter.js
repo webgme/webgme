@@ -5,7 +5,7 @@
  */
 define([], function () {
     'use strict';
-    function gmeNodeSetter(logger, state, saveRoot, storeNode) {
+    function gmeNodeSetter(logger, state, saveRoot, storeNode, printCoreError) {
 
         function _setAttrAndRegistry(node, desc) {
             var name;
@@ -28,32 +28,56 @@ define([], function () {
         }
 
         function setAttributes(path, name, value, msg) {
+            var error;
+
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.setAttribute(state.nodes[path].node, name, value);
+                error = state.core.setAttribute(state.nodes[path].node, name, value);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
                 msg = msg || 'setAttribute(' + path + ',' + name + ',' + value + ')';
                 saveRoot(msg);
             }
         }
 
         function delAttributes(path, name, msg) {
+            var error;
+
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.delAttribute(state.nodes[path].node, name);
+                error = state.core.delAttribute(state.nodes[path].node, name);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
                 msg = msg || 'delAttribute(' + path + ',' + name + ')';
                 saveRoot(msg);
             }
         }
 
         function setRegistry(path, name, value, msg) {
+            var error;
+
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.setRegistry(state.nodes[path].node, name, value);
+                error = state.core.setRegistry(state.nodes[path].node, name, value);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
                 msg = msg || 'setRegistry(' + path + ',' + ',' + name + ',' + value + ')';
                 saveRoot(msg);
             }
         }
 
         function delRegistry(path, name, msg) {
+            var error;
+
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.delRegistry(state.nodes[path].node, name);
+                error = state.core.delRegistry(state.nodes[path].node, name);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
                 msg = msg || 'delRegistry(' + path + ',' + ',' + name + ')';
                 saveRoot(msg);
             }
@@ -63,7 +87,8 @@ define([], function () {
             var pathestocopy = [],
                 nodePath,
                 newNodes,
-                newNode;
+                newNode,
+                error;
 
             if (typeof parameters.parentId === 'string' && state.nodes[parameters.parentId] &&
                 typeof state.nodes[parameters.parentId].node === 'object') {
@@ -80,11 +105,19 @@ define([], function () {
                 } else if (pathestocopy.length === 1) {
                     newNode = state.core.copyNode(state.nodes[pathestocopy[0]].node,
                         state.nodes[parameters.parentId].node);
+                    if (newNode instanceof Error) {
+                        printCoreError(newNode);
+                        return;
+                    }
                     storeNode(newNode);
                     _setAttrAndRegistry(newNode, parameters[pathestocopy[0]]);
                     saveRoot(msg);
                 } else {
                     newNodes = _copyMultipleNodes(pathestocopy, parameters.parentId);
+                    if (newNodes instanceof Error) {
+                        printCoreError(newNodes);
+                        return;
+                    }
                     for (nodePath in newNodes) {
                         if (newNodes.hasOwnProperty(nodePath) && parameters[nodePath]) {
                             _setAttrAndRegistry(newNodes[nodePath], parameters[nodePath]);
@@ -306,7 +339,8 @@ define([], function () {
         }
 
         function createChild(parameters, msg) {
-            var newID;
+            var newID,
+                error;
 
             if (state.core) {
                 if (typeof parameters.parentId === 'string' && state.nodes[parameters.parentId] &&
@@ -321,15 +355,28 @@ define([], function () {
                         guid: parameters.guid,
                         relid: parameters.relid
                     });
+                    if (child instanceof Error) {
+                        printCoreError(child);
+                        return;
+                    }
+
                     if (parameters.position) {
-                        state.core.setRegistry(child,
+                        error = state.core.setRegistry(child,
                             'position',
                             {
                                 x: parameters.position.x || 100,
                                 y: parameters.position.y || 100
                             });
+                        if (error instanceof Error) {
+                            printCoreError(error);
+                            return;
+                        }
                     } else {
-                        state.core.setRegistry(child, 'position', {x: 100, y: 100});
+                        error = state.core.setRegistry(child, 'position', {x: 100, y: 100});
+                        if (error instanceof Error) {
+                            printCoreError(error);
+                            return;
+                        }
                     }
                     storeNode(child);
                     newID = state.core.getPath(child);
@@ -427,51 +474,67 @@ define([], function () {
         }
 
         function deleteSet(path, setid, msg) {
+            var error;
             if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.deleteSet(state.nodes[path].node, setid);
+                error = state.core.deleteSet(state.nodes[path].node, setid);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
                 msg = msg || 'deleteSet(' + path + ',' + setid + ')';
                 saveRoot(msg);
             }
         }
 
         function setBase(path, basepath) {
-            /*if (state.core &&
-             state.nodes[path] && typeof state.nodes[path].node === 'object') {
-             state.core.setRegistry(state.nodes[path].node,'base',basepath);
-             saveRoot('setBase('+path+','+basepath+')');
-             }*/
+            var error;
             if (state.core &&
                 state.nodes[path] &&
                 typeof state.nodes[path].node === 'object' &&
                 state.nodes[basepath] &&
                 typeof state.nodes[basepath].node === 'object') {
-                state.core.setBase(state.nodes[path].node, state.nodes[basepath].node);
+                error = state.core.setBase(state.nodes[path].node, state.nodes[basepath].node);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
                 saveRoot('setBase(' + path + ',' + basepath + ')');
             }
         }
 
         function delBase(path) {
-            /*if (state.core &&
-             state.nodes[path] && typeof state.nodes[path].node === 'object') {
-             state.core.delRegistry(state.nodes[path].node,'base');
-             saveRoot('delBase('+path+')');
-             }*/
+            var error;
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.setBase(state.nodes[path].node, null);
+                error = state.core.setBase(state.nodes[path].node, null);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
                 saveRoot('delBase(' + path + ')');
             }
         }
 
         function addMixin(nodePath, mixinPath) {
+            var error;
             if (state.core && state.nodes[nodePath] && typeof state.nodes[nodePath].node === 'object') {
-                state.core.addMixin(state.nodes[nodePath].node, mixinPath);
+                error = state.core.addMixin(state.nodes[nodePath].node, mixinPath);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
                 saveRoot('addMixin(' + nodePath + ',' + mixinPath + ')');
             }
         }
 
         function delMixin(nodePath, mixinPath) {
+            var error;
             if (state.core && state.nodes[nodePath] && typeof state.nodes[nodePath].node === 'object') {
-                state.core.delMixin(state.nodes[nodePath].node, mixinPath);
+                error = state.core.delMixin(state.nodes[nodePath].node, mixinPath);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
                 saveRoot('delMixin(' + nodePath + ',' + mixinPath + ')');
             }
         }

@@ -32,7 +32,6 @@ define([
         BORDER_COLOR_CLASS = 'border-color',
         TEXT_COLOR_CLASS = 'text-color';
 
-
     /**
      * Contains downloaded svg elements from the server.
      * @type {{}}
@@ -46,7 +45,6 @@ define([
      * @private
      */
     var defaultSVG = $(DefaultSvgTemplate);
-
 
     SVGDecoratorCore = function () {
         DecoratorBase.apply(this, []);
@@ -75,7 +73,6 @@ define([
             }
         }
     };
-
 
     /**** Override from *.WidgetDecoratorBase ****/
     SVGDecoratorCore.prototype.doSearch = function (searchDesc) {
@@ -147,7 +144,8 @@ define([
             noName = '(N/A)';
 
         if (nodeObj) {
-            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+            //this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+            this.name = nodeObj.getFullyQualifiedName();
             this.formattedName = displayFormat.resolve(nodeObj);
         } else {
             this.name = '';
@@ -304,7 +302,7 @@ define([
     };
 
     /***** PORT FUNCTIONALITY *****/
-        //Overridden in SVGDecorator.Ports.js
+    //Overridden in SVGDecorator.Ports.js
     SVGDecoratorCore.prototype._updatePorts = function () {
         //If no ports in model, does nothing
     };
@@ -314,7 +312,7 @@ define([
     };
 
     /***** CONNECTION FUNCTIONALITY *****/
-        //Overridden in SVGDecorator.Connection.js
+    //Overridden in SVGDecorator.Connection.js
     SVGDecoratorCore.prototype._discoverCustomConnectionAreas = function () {
         //If no connections in model, does nothing
     };

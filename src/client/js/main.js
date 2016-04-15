@@ -1,6 +1,8 @@
 /*globals require*/
 /*jshint browser:true, camelcase:false*/
 /**
+ * N.B. This and mainDEBUG.js should only differ w.r.t. using minified versions or not and
+ * if text mapped and what files are required at start.
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  */
@@ -20,7 +22,7 @@ require.config({
     //TODO paths should be fixed as the rules collide with each other
     map: {
         '*': {
-            css: 'bower_components/require-css/css' + ( DEBUG ? '' : '.min' ),
+            css: 'bower_components/require-css/css.min'
             //text: 'lib/require/require-text/text',
         }
     },
@@ -28,29 +30,29 @@ require.config({
 
     paths: {
         //jQuery and stuff
-        jquery: 'bower_components/jquery/dist/jquery' + ( DEBUG ? '' : '.min' ),
-        'jquery-ui': 'bower_components/jquery-ui/jquery-ui' + ( DEBUG ? '' : '.min' ),
+        jquery: 'bower_components/jquery/dist/jquery.min',
+        'jquery-ui': 'bower_components/jquery-ui/jquery-ui.min',
         'jquery-ui-iPad': 'lib/jquery/jquery.ui.ipad',
-        'jquery-dataTables': 'lib/jquery/jquery.dataTables' + ( DEBUG ? '' : '.min' ),
+        'jquery-dataTables': 'lib/jquery/jquery.dataTables.min',
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
         'jquery-spectrum': 'bower_components/spectrum/spectrum',
-        'jquery-gritter': 'bower_components/jquery.gritter/js/jquery.gritter' + ( DEBUG ? '' : '.min' ),
-        'jquery-fancytree': 'bower_components/jquery.fancytree/dist/jquery.fancytree-all' + ( DEBUG ? '' : '.min' ),
+        'jquery-gritter': 'bower_components/jquery.gritter/js/jquery.gritter.min',
+        'jquery-fancytree': 'bower_components/jquery.fancytree/dist/jquery.fancytree-all.min',
+        'jquery-layout': 'lib/jquery/jquery.layout.min',
 
-        //TODO: The used version (1.6.0) does not exist as bower-component (1.4 is the latest).
-        'jquery-contextMenu': 'lib/jquery/jquery.contextMenu' + ( DEBUG ? '' : '.min' ),
-        //TODO: Clone/get permission to http://github.com/rkereskenyi/jquery.csszoom and make a bower release.
+        'jquery-contextMenu': 'lib/jquery/jquery.contextMenu.min',
         'jquery-csszoom': 'lib/jquery/jquery.csszoom',
 
         //Bootstrap stuff
-        bootstrap: 'bower_components/bootstrap/dist/js/bootstrap' + ( DEBUG ? '' : '.min' ),
+        bootstrap: 'bower_components/bootstrap/dist/js/bootstrap.min',
         'bootstrap-multiselect': 'bower_components/bootstrap-multiselect/dist/js/bootstrap-multiselect',
+        'bootstrap-notify': 'bower_components/remarkable-bootstrap-notify/dist/bootstrap-notify.min',
 
         //Other modules
-        AutoRouterActionApplier: 'lib/autorouter/action-applier' + ( DEBUG ? '' : '.min' ),
+        AutoRouterActionApplier: 'lib/autorouter/action-applier.min',
         underscore: 'bower_components/underscore/underscore-min',
         backbone: 'bower_components/backbone/backbone',
-        d3: 'bower_components/d3/d3' + ( DEBUG ? '' : '.min' ),
+        d3: 'bower_components/d3/d3.min',
 
         //RaphaelJS family
         eve: 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
@@ -97,9 +99,11 @@ require.config({
 
         'jquery-ui': ['jquery'],
         'jquery-ui-iPad': ['jquery', 'jquery-ui'],
+        'jquery-layout': ['jquery', 'jquery-ui'],
 
         bootstrap: ['jquery'],
         'bootstrap-multiselect': ['jquery', 'bootstrap'],
+        'bootstrap-notify': ['jquery', 'bootstrap'],
 
         backbone: ['underscore'],
         'js/util': ['jquery'],

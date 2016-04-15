@@ -5,32 +5,31 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['jquery-csszoom'], function () {
+define(['js/Widgets/ZoomWidget/ZoomWidget'], function (ZoomWidget) {
 
     'use strict';
 
-    var DiagramDesignerWidgetZoom,
-        DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10];
+    var DiagramDesignerWidgetZoom;
 
     DiagramDesignerWidgetZoom = function () {
     };
 
     DiagramDesignerWidgetZoom.prototype._initZoom = function (params) {
         var self = this,
-            zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
+            zoomValues = params.zoomValues,
+            zoomWidget = new ZoomWidget({
+                class: 'diagram-designer-zoom-container',
+                sliderClass: 'diagram-designer-zoom-slider',
+                zoomTarget: this.skinParts.$itemsContainer,
+                zoomValues: zoomValues,
+                onZoom: function (zoomLevel) {
+                    self._zoomRatio = zoomLevel;
+                    self._resizeItemContainer();
+                }
+            });
 
-        //zoom
-        this._zoomSlider = $('<div/>', {class: 'diagram-designer-zoom'});
-        this.$el.parent().append(this._zoomSlider);
-
-        this._zoomSlider.csszoom({
-            zoomTarget: this.skinParts.$itemsContainer,
-            zoomLevels: zoomValues,
-            onZoom: function (zoomLevel) {
-                self._zoomRatio = zoomLevel;
-                self._resizeItemContainer();
-            }
-        });
+        this._zoomSlider = zoomWidget.$zoomSlider;
+        this.$el.parent().append(zoomWidget.$zoomContainer);
 
         //add zoom level UI and handlers
         this._addZoomMouseHandler(this.$el);

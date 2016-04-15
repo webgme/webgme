@@ -186,12 +186,12 @@
     .diagram-designer .drop-region.reject-droppable {
       background-color: rgba(255, 0, 0, 0.1); }
 
-div.css-zoom.diagram-designer-zoom {
+.diagram-designer-zoom-container {
   position: absolute;
   top: 30px;
   left: 10px; }
 
-.w-tabs div.css-zoom.diagram-designer-zoom {
+.w-tabs .diagram-designer-zoom-container {
   top: 70px; }
 
 div.diagram-designer-drag-outline {

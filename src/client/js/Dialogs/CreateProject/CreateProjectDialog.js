@@ -43,6 +43,8 @@ define(['js/Loader/LoaderCircles',
         this.assetWidget.el.addClass('form-control selector pull-left');
         this.initialTab = initialTab || 'seed';
 
+        this._blobIsPackage = false;
+
         this._logger.debug('Create form seed ctor');
     };
 
@@ -187,7 +189,7 @@ define(['js/Loader/LoaderCircles',
             event.stopPropagation();
             self._dialog.modal('hide');
             if (self._fnCallback && self.assetWidget.propertyValue) {
-                self._fnCallback('blob', self.assetWidget.propertyValue, null, null);
+                self._fnCallback(self._blobIsPackage ? 'package' : 'blob', self.assetWidget.propertyValue, null, null);
             }
         });
 
@@ -202,13 +204,19 @@ define(['js/Loader/LoaderCircles',
                     var checkResult = self._client.checkImport(targetJson, CORE_CONSTANTS.EXPORT_TYPE_PROJECT);
 
                     if (checkResult) {
-                        alert(checkResult);
+                        //alert(checkResult);
+                        // TODO we should check the new package input somehow
+                        self._blobIsPackage = true;
                     } else {
-                        self._btnCreateBlob.disable(false);
+                        //self._btnCreateBlob.disable(false);
                     }
+                    self._btnCreateBlob.disable(false);
                 } else {
                     //TODO: Better feedback here.
-                    alert('Uploaded file must be a json file (from Export branch)');
+                    //alert('Uploaded file must be a json file (from Export branch)');
+                    //TODO for now we handle as a pakcage
+                    self._blobIsPackage = true;
+                    self._btnCreateBlob.disable(false);
                 }
             });
         });

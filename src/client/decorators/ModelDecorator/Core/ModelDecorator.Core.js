@@ -38,7 +38,6 @@ define([
         CONN_TYPE_BASE = $('<div/>', {class: CONNECTION_TYPE_CLASS}),
         EMBEDDED_SVG_IMG_BASE = $('<img>', {class: EMBEDDED_SVG_CLASS});
 
-
     ModelDecoratorCore = function (params) {
         DecoratorWithPortsBase.apply(this, []);
 
@@ -78,7 +77,6 @@ define([
             this.removePort(this.portIDs[len]);
         }
     };
-
 
     /**** Override from *.WidgetDecoratorBase ****/
     ModelDecoratorCore.prototype.doSearch = function (searchDesc) {
@@ -156,7 +154,8 @@ define([
             noName = '(N/A)';
 
         if (nodeObj) {
-            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+            //this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+            this.name = nodeObj.getFullyQualifiedName();
             this.formattedName = displayFormat.resolve(nodeObj);
         } else {
             this.name = '';
@@ -186,7 +185,6 @@ define([
         }
     };
 
-
     /***** UPDATE THE PORTS OF THE NODE *****/
     ModelDecoratorCore.prototype._updatePorts = function () {
         this.updatePortIDList();
@@ -208,7 +206,6 @@ define([
 
         return portInstance;
     };
-
 
     ModelDecoratorCore.prototype._addPortToContainer = function (portNode, portInstance) {
         var portId = portNode.getId(),
@@ -263,10 +260,8 @@ define([
         }
     };
 
-
     ModelDecoratorCore.prototype._portPositionChanged = function (/*portId*/) {
     };
-
 
     ModelDecoratorCore.prototype._updatePort = function (portId) {
         var idx = this.portIDs.indexOf(portId),
@@ -293,7 +288,6 @@ define([
         }
     };
 
-
     ModelDecoratorCore.prototype._updatePortPosition = function (portId) {
         var portNode = this._control._client.getNode(portId),
             portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || {x: 0, y: 0};
@@ -309,7 +303,6 @@ define([
             this._addPortToContainer(portNode, this.ports[portId]);
         }
     };
-
 
     ModelDecoratorCore.prototype._checkTerritoryReady = function () {
         //the territory rule here is all children
@@ -343,7 +336,6 @@ define([
         }
     };
 
-
     ModelDecoratorCore.prototype._showPortProgressBar = function () {
         var pgBar = this.$el.find('.' + ModelDecoratorConstants.PROGRESS_BAR_CLASS);
         if (pgBar.length === 0) {
@@ -355,7 +347,6 @@ define([
         }
     };
 
-
     ModelDecoratorCore.prototype._hidePortProgressBar = function () {
         if (this._loader) {
             this._loader.stop();
@@ -366,10 +357,8 @@ define([
         this.$el.find('.' + ModelDecoratorConstants.PROGRESS_BAR_CLASS).remove();
     };
 
-
     ModelDecoratorCore.prototype._ptrUIDOMBase =
         $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '"><i class="glyphicon glyphicon-share"></i></div>');
-
 
     ModelDecoratorCore.prototype._updatePointers = function () {
         var ptrTo;
@@ -395,7 +384,6 @@ define([
             }
         }
     };
-
 
     //return all the pointer names (set or unset for this item other than the excluded ones)
     ModelDecoratorCore.prototype._getPointerNames = function () {
@@ -444,7 +432,6 @@ define([
         return validPtrNames;
     };
 
-
     //return all the set pointer names and targets
     ModelDecoratorCore.prototype._getPointerTargets = function () {
         var pointerTargets = [],
@@ -482,7 +469,6 @@ define([
 
         return pointerTargets;
     };
-
 
     ModelDecoratorCore.prototype._setPointerTarget = function (targetID, mousePos) {
         var ptrNames = this._getValidPointersForTarget(targetID);
@@ -608,7 +594,6 @@ define([
             }
         }
     };
-
 
     return ModelDecoratorCore;
 });

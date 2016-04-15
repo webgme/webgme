@@ -52,7 +52,8 @@ define([
         }
         this._codeMirror = codeMirror(this._pMeta[0], {
             value: metaText,
-            mode: 'javascript'
+            mode: 'javascript',
+            readOnly: true
         });
     };
 

@@ -23,10 +23,13 @@
 define([
     'plugin/PluginConfig',
     'plugin/PluginBase',
+    'text!./metadata.json',
     'common/util/xmljsonconverter',
     'common/util/guid'
-], function (PluginConfig, PluginBase, Converters, GUID) {
+], function (PluginConfig, PluginBase, pluginMetadata, Converters, GUID) {
     'use strict';
+
+    pluginMetadata = JSON.parse(pluginMetadata);
 
     /**
      * Initializes a new instance of MetaGMEParadigmImporter.
@@ -38,58 +41,14 @@ define([
     var MetaGMEParadigmImporter = function () {
         // Call base class' constructor.
         PluginBase.call(this);
+        this.pluginMetadata = pluginMetadata;
     };
 
-    // Prototypal inheritance from PluginBase.
+    MetaGMEParadigmImporter.metadata = pluginMetadata;
+
+    // Prototypical inheritance from PluginBase.
     MetaGMEParadigmImporter.prototype = Object.create(PluginBase.prototype);
     MetaGMEParadigmImporter.prototype.constructor = MetaGMEParadigmImporter;
-
-    /**
-     * Gets the name of the MetaGMEParadigmImporter.
-     * @returns {string} The name of the plugin.
-     * @public
-     */
-    MetaGMEParadigmImporter.prototype.getName = function () {
-        return 'MetaGME Paradigm Importer';
-    };
-
-    /**
-     * Gets the semantic version (semver.org) of the MetaGMEParadigmImporter.
-     * @returns {string} The version of the plugin.
-     * @public
-     */
-    MetaGMEParadigmImporter.prototype.getVersion = function () {
-        return '0.1.0';
-    };
-
-    /**
-     * Gets the description of the MetaGMEParadigmImporter.
-     * @returns {string} The description of the plugin.
-     * @public
-     */
-    MetaGMEParadigmImporter.prototype.getDescription = function () {
-        return 'Imports a desktop GME XMP file into the meta sheet.';
-    };
-
-    /**
-     * Gets the configuration structure for the MetaGMEParadigmImporter.
-     * The ConfigurationStructure defines the configuration for the plugin
-     * and will be used to populate the GUI when invoking the plugin from webGME.
-     * @returns {object} The version of the plugin.
-     * @public
-     */
-    MetaGMEParadigmImporter.prototype.getConfigStructure = function () {
-        return [
-            {
-                name: 'xmpFile',
-                displayName: 'XMP file',
-                description: 'Flat desktop GME meta model in .xmp file format.',
-                value: '', //'0afba05ea2640d9ebc2af8223b7a24cff95c5e20',
-                valueType: 'asset',
-                readOnly: false
-            }
-        ];
-    };
 
 
     /**

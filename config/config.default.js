@@ -172,7 +172,7 @@ var path = require('path'),
             // If true events such as PROJECT_CREATED and BRANCH_CREATED will only be broadcasted
             // and not emitted back to the web-socket that triggered the event.
             broadcastProjectEvents: false,
-            emitCommittedCoreObjects: true,
+            maxEmittedCoreObjects: -1,
             loadBucketSize: 100,
             loadBucketTimer: 10,
             clientCacheSize: 2000, // overwrites cache on client
@@ -182,8 +182,7 @@ var path = require('path'),
                 options: { // if mongo - settings will be used from config.mongo
                     //port: 6666
                 }
-            },
-            patchRootCommunicationEnabled: true
+            }
         },
 
         visualization: {

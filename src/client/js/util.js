@@ -105,9 +105,19 @@ define(['urlparse', 'jquery'], function (URLPARSE) {
         },
 
         getURLParameterByName: function (name) {
-            var queryParams = URLPARSE(location,true).param();
+            var queryParams = URLPARSE(location, true).param();
 
-            if(queryParams[name] !== undefined){
+            if (queryParams[name] !== undefined) {
+                return queryParams[name];
+            }
+
+            return '';
+        },
+
+        getURLParameterByNameFromString: function (url, name) {
+            var queryParams = URLPARSE(url, true).param();
+
+            if (queryParams[name] !== undefined) {
                 return queryParams[name];
             }
 

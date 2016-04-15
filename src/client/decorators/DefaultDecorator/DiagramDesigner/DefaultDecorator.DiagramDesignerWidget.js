@@ -68,7 +68,8 @@ define([
         this.$el.attr({'data-id': this._metaInfo[CONSTANTS.GME_ID]});
 
         if (nodeObj) {
-            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
+            //this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
+            this.name = nodeObj.getFullyQualifiedName();
         }
 
         //find name placeholder
@@ -82,7 +83,7 @@ define([
             newName = '';
 
         if (nodeObj) {
-            newName = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
+            newName = nodeObj.getFullyQualifiedName();
 
             if (this.name !== newName) {
                 this.name = newName;

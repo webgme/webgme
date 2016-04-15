@@ -8,13 +8,15 @@
  */
 
 define([
-    'plugin/PluginConfig',
     'plugin/PluginBase',
+    'text!./metadata.json',
     'plugin/DecoratorGenerator/DecoratorGenerator/TemplatesInherit/Templates',
     'plugin/DecoratorGenerator/DecoratorGenerator/TemplatesMinimal/Templates',
     'common/util/ejs'
-], function (PluginConfig, PluginBase, TEMPLATES_INHERIT, TEMPLATES_MINIMAL, ejs) {
+], function (PluginBase, pluginMetadata, TEMPLATES_INHERIT, TEMPLATES_MINIMAL, ejs) {
     'use strict';
+
+    pluginMetadata = JSON.parse(pluginMetadata);
 
     /**
      * Initializes a new instance of DecoratorGenerator.
@@ -23,78 +25,17 @@ define([
      * @classdesc This class represents the plugin DecoratorGenerator.
      * @constructor
      */
-    var DecoratorGenerator = function () {
+    function DecoratorGenerator() {
         // Call base class' constructor.
         PluginBase.call(this);
-        this.jsRegExpStr = '^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void' +
-            '|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|' +
-            'static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|' +
-            'Circle|Model|Document|Meta|SVG|Default|' +
-            'arguments|interface|protected|implements|instanceof)$)[a-zA-Z_$][0-9a-zA-Z_$]*';
-    };
+        this.pluginMetadata = pluginMetadata;
+    }
+
+    DecoratorGenerator.metadata = pluginMetadata;
 
     // Prototypical inheritance from PluginBase.
     DecoratorGenerator.prototype = Object.create(PluginBase.prototype);
     DecoratorGenerator.prototype.constructor = DecoratorGenerator;
-
-    /**
-     * Gets the name of the DecoratorGenerator.
-     * @returns {string} The name of the plugin.
-     * @public
-     */
-    DecoratorGenerator.prototype.getName = function () {
-        return 'Decorator Generator';
-    };
-
-    /**
-     * Gets the semantic version (semver.org) of the DecoratorGenerator.
-     * @returns {string} The version of the plugin.
-     * @public
-     */
-    DecoratorGenerator.prototype.getVersion = function () {
-        return '0.1.0';
-    };
-
-    /**
-     * Gets the description of the DecoratorGenerator.
-     * @returns {string} The description of the plugin.
-     * @public
-     */
-    DecoratorGenerator.prototype.getDescription = function () {
-        return 'Generates all necessary files for a decorator.';
-    };
-
-    /**
-     * Gets the configuration structure for the DecoratorGenerator.
-     * The ConfigurationStructure defines the configuration for the plugin
-     * and will be used to populate the GUI when invoking the plugin from webGME.
-     * @returns {object} The version of the plugin.
-     * @public
-     */
-    DecoratorGenerator.prototype.getConfigStructure = function () {
-        var self = this;
-        return [
-            {
-                name: 'decoratorName',
-                displayName: 'Name of decorator',
-                regex: self.jsRegExpStr,
-                regexMessage: 'No spaces and special characters allowed. This value is used as the name of the ' +
-                'generated decorator class.',
-                description: 'Unique name for the decorator ("Decorator" will be appended).',
-                value: 'SomeName',
-                valueType: 'string',
-                readOnly: false
-            },
-            {
-                name: 'inherit',
-                displayName: 'Inherit from ModelEditor',
-                description: 'Generates a decorator that inherits from the ModelEditor.',
-                value: false,
-                valueType: 'boolean',
-                readOnly: false
-            }
-        ];
-    };
 
     /**
      * Main function for the plugin to execute. This will perform the execution.

@@ -1,0 +1,66 @@
+.zoom-widget-container {
+  .btn-zoom {
+    display: block;
+    width: 14px;
+    height: 14px;
+    margin-left: -5px;
+    text-align: center;
+    cursor: pointer;
+    color: #3160ab;
+    text-decoration: none;
+    outline: none;
+    &.btn-zoom-in {
+      border-bottom-right-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+    &.btn-zoom-out {
+      border-top-right-radius: 0;
+      border-top-left-radius: 0;
+    }
+    i {
+      font-size: 9px;
+      display: block;
+    }
+  }
+  .zoom-widget-label {
+    display: block;
+    margin-left: -5px;
+    margin-top: 2px;
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    color: black;
+    font-weight: normal;
+  }
+  .css-zoom {
+    &.hidden {
+      display: none;
+    }
+    width: 3px;
+    position: relative;
+    display: block;
+    border-radius: 0;
+    .ui-slider-handle {
+      display: block;
+      width: 18px;
+      height: 7px;
+      line-height: 7px;
+      left: -8px;
+      outline: none;
+      margin-top: -1px;
+      margin-bottom: -6px;
+      cursor: pointer;
+    }
+    .css-zoom-label {
+      display: none;
+    }
+  }
+  .popover {
+    min-width: 88px;
+    .popover-content {
+      font-size: 10px;
+    }
+    .popover-title {
+      font-size: 12px;
+    }
+  }
+}

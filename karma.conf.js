@@ -141,6 +141,7 @@ module.exports = function (config) {
             {pattern: 'src/client/lib/require/**/*.js', included: false},
             {pattern: 'src/client/lib/superagent/*.js', included: false},
             {pattern: 'src/client/bower_components/q/*.js', included: false},
+            {pattern: 'src/client/bower_components/underscore/underscore.js', included: false},
             {pattern: 'src/plugin/*.js', included: false},
             {pattern: 'src/plugin/coreplugins/MinimalWorkingExample/**/*.js', included: false},
             {pattern: 'src/plugin/coreplugins/PluginGenerator/**/*.js', included: false},
@@ -212,7 +213,10 @@ module.exports = function (config) {
             '/base/gmeConfig.json': 'http://localhost:' + gmeConfig.server.port + '/gmeConfig.json',
             '/docs': 'http://localhost:' + gmeConfig.server.port + '/docs',
             '/rest': 'http://localhost:' + gmeConfig.server.port + '/rest',
-            '/api': 'http://localhost:' + gmeConfig.server.port + '/api'
+            '/api': 'http://localhost:' + gmeConfig.server.port + '/api',
+            //TODO: this will have to be added for all plugins in test. Is there a better way?
+            '/base/metadata.json':
+            'http://localhost:' + gmeConfig.server.port + '/plugin/MinimalWorkingExample/MinimalWorkingExample/metadata.json'
         }
     });
 };

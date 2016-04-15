@@ -69,7 +69,8 @@ define([
         }
 
         if (nodeObj) {
-            this.skinParts.$name.text(nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '');
+            //this.skinParts.$name.text(nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '');
+            this.skinParts.$name.text(nodeObj.getFullyQualifiedName());
         }
     };
 

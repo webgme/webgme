@@ -10,7 +10,6 @@
 
 'use strict';
 
-
 /**
  * Mounts the API functions to a given express app.
  *
@@ -898,7 +897,6 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-
     // PROJECTS
 
     function loadNodePathByCommitHash(userId, projectId, commitHash, path) {
@@ -976,7 +974,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.get('/projects/:ownerId/:projectName', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
-            projectId =  StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
             data = {
                 username: userId,
                 projectId: projectId
@@ -999,7 +997,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.patch('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
-            projectId =  StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
+            projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
 
         gmeAuth.getProjectAuthorizationByUserId(userId, projectId)
             .then(function (rights) {
@@ -1169,7 +1167,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(result[0]);
             })
             .catch(function (err) {
-                if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
+                if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1) {
                     err.status = 404;
                 }
                 next(err);
@@ -1188,7 +1186,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     res.json(nodeObj);
                 })
                 .catch(function (err) {
-                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
+                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1) {
                         err.status = 404;
                     }
                     next(err);
@@ -1206,7 +1204,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                     projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                         req.params.projectName)
                 };
-
 
             safeStorage.openProject(data)
                 .then(function (project) {
@@ -1369,7 +1366,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     res.json(dataObj);
                 })
                 .catch(function (err) {
-                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1 ) {
+                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1) {
                         err.status = 404;
                     }
                     next(err);
@@ -1521,9 +1518,69 @@ function createAPI(app, mountPath, middlewareOpts) {
         res.send(result);
     });
 
-    router.get('/plugins/:pluginId/config', ensureAuthenticated, function (req, res) {
-        var plugin = getPlugin(req.params.pluginId);
+    router.get('/plugins/metadata', ensureAuthenticated, function (req, res, next) {
+        var pluginNames = webgmeUtils.getComponentNames(gmeConfig.plugin.basePaths),
+            result = {},
+            promises = [],
+            basePath,
+            i;
 
+        for (i = 0; i < pluginNames.length; i += 1) {
+            basePath = webgmeUtils.getBasePathByName(pluginNames[i], gmeConfig.plugin.basePaths);
+            promises.push(Q.nfcall(fs.readFile, path.join(basePath, pluginNames[i], 'metadata.json'), 'utf8'));
+        }
+
+        Q.allSettled(promises)
+            .then(function (fileRes) {
+                for (i = 0; i < fileRes.length; i += 1) {
+                    if (fileRes[i].state === 'fulfilled') {
+                        try {
+                            result[pluginNames[i]] = JSON.parse(fileRes[i].value);
+                        } catch (e) {
+                            logger.error(e);
+                        }
+                    } else if (fileRes[i].state === 'rejected') {
+                        if (fileRes[i].reason.code === 'ENOENT') {
+                            logger.warn('Plugin does not have a metadata.json', pluginNames[i]);
+                        } else {
+                            logger.error(fileRes[i].reason);
+                        }
+                    } else {
+                        logger.error(new Error('Unknown q promise state'));
+                    }
+
+                    result[pluginNames[i]] = result[pluginNames[i]] || null;
+                }
+
+                res.json(result);
+            })
+            .catch(next);
+    });
+
+    router.get('/plugin/:pluginId/metadata', ensureAuthenticated, function (req, res, next) {
+        var basePath = webgmeUtils.getBasePathByName(req.params.pluginId, gmeConfig.plugin.basePaths);
+
+        if (!basePath) {
+            res.sendStatus(404);
+            return;
+        }
+
+        Q.nfcall(fs.readFile, path.join(basePath, req.params.pluginId, 'metadata.json'), 'utf8')
+            .then(function (content) {
+                res.json(JSON.parse(content));
+            })
+            .catch(function (err) {
+                if (err.code === 'ENOENT') {
+                    res.sendStatus(404);
+                } else {
+                    next(err);
+                }
+            });
+    });
+
+    router.get('/plugin/:pluginId/config', ensureAuthenticated, function (req, res) {
+        var plugin = getPlugin(req.params.pluginId);
+        // TODO: In next release this should use metadata
         if (plugin instanceof Error) {
             logger.error(plugin);
             res.sendStatus(404);
@@ -1532,9 +1589,9 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
     });
 
-    router.get('/plugins/:pluginId/configStructure', ensureAuthenticated, function (req, res) {
+    router.get('/plugin/:pluginId/configStructure', ensureAuthenticated, function (req, res) {
         var plugin = getPlugin(req.params.pluginId);
-
+        // TODO: In next release this should use metadata
         if (plugin instanceof Error) {
             logger.error(plugin);
             res.sendStatus(404);
@@ -1543,7 +1600,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
     });
 
-    router.post('/plugins/:pluginId/execute', function (req, res, next) {
+    router.post('/plugin/:pluginId/execute', function (req, res, next) {
         var resultId = GUID(),
             userId = getUserId(req),
             pluginContext = {
@@ -1594,7 +1651,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             .catch(next);
     });
 
-    router.get('/plugins/:pluginId/results/:resultId', ensureAuthenticated, function (req, res) {
+    router.get('/plugin/:pluginId/results/:resultId', ensureAuthenticated, function (req, res) {
         var pluginExecution = runningPlugins[req.params.resultId];
         logger.debug('Plugin-result request for ', req.params.pluginId, req.params.resultId);
         if (pluginExecution) {
@@ -1625,25 +1682,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     // TODO:router.post('/addOns/:addOnId/query', ensureAuthenticated, function (req, res) {});
 
     router.get('/seeds', ensureAuthenticated, function (req, res) {
-        var names = [],
-            result = [],
-            seedName,
-            i,
-            j;
-        if (gmeConfig.seedProjects.enable === true) {
-            for (i = 0; i < gmeConfig.seedProjects.basePaths.length; i++) {
-                names = fs.readdirSync(gmeConfig.seedProjects.basePaths[i]);
-                for (j = 0; j < names.length; j++) {
-                    seedName = path.basename(names[j], '.json');
-                    seedName = path.basename(seedName, '.zip');
-                    if (result.indexOf(seedName) === -1) {
-                        result.push(seedName);
-                    }
-                }
-            }
-        }
-        logger.debug('/seeds', {metadata: result});
-        res.send(result);
+        var seedDictionary = webgmeUtils.getSeedDictionary(gmeConfig);
+
+        logger.debug('/seeds', {metadata: seedDictionary});
+        res.send(Object.keys(seedDictionary));
     });
 
     function getVisualizersDescriptor() {
@@ -1744,10 +1786,8 @@ function createAPI(app, mountPath, middlewareOpts) {
     logger.debug('Latest api path: ' + latestAPIPath);
     app.use(latestAPIPath, router);
 
-
     return Q.all([htmlDocDeferred.promise]);
 }
-
 
 module.exports = {
     createAPI: createAPI

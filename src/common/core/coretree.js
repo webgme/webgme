@@ -143,7 +143,7 @@ define([
             return relid.charAt(0) !== '_';
         }
 
-        function __saveData(data) {
+        function __saveData(data, root, path) {
             ASSERT(__isMutableData(data));
 
             var done = __getEmptyData(),
@@ -157,7 +157,7 @@ define([
                 key = keys[i];
                 child = data[key];
                 if (__isMutableData(child)) {
-                    sub = __saveData(child);
+                    sub = __saveData(child, root, path + '/' + key);
                     if (sub === __getEmptyData()) {
                         delete data[key];
                     } else {
@@ -180,7 +180,19 @@ define([
                     data[ID_NAME] = hash;
 
                     done = data;
+
                     storage.insertObject(data, stackedObjects);
+                    stackedObjects[hash] = {
+                        newHash: hash,
+                        newData: data,
+                        oldHash: root.initial[path] && root.initial[path].hash,
+                        oldData: root.initial[path] && root.initial[path].data
+                    };
+
+                    root.initial[path] = {
+                        hash: hash,
+                        data: data
+                    };
                     //stackedObjects[hash] = data;
                 }
             }
@@ -196,8 +208,10 @@ define([
                 children: [],
                 data: data,
                 initial: {
-                    hash: data[storage.ID_NAME],
-                    data: data
+                    '': {
+                        hash: data[storage.ID_NAME],
+                        data: data
+                    }
                 },
                 rootid: ++rootCounter
             };
@@ -209,12 +223,18 @@ define([
         }
 
         function __loadChild2(node, newdata) {
+            var root = self.getRoot(node),
+                path = self.getPath(node);
+
             node = self.normalize(node);
 
             // TODO: this is a hack, we should avoid loading it multiple times
             if (REGEXP.DB_HASH.test(node.data)) {
                 ASSERT(node.data === newdata[ID_NAME]);
-
+                root.initial[path] = {
+                    hash: node.data,
+                    data: newdata
+                };
                 node.data = newdata;
                 __reloadChildrenData(node);
             } else {
@@ -280,27 +300,27 @@ define([
         }
 
         function isValidNodeThrow(node) {
-          __test('object', typeof node === 'object' && node !== null);
-          __test('object 2', node.hasOwnProperty('parent') && node.hasOwnProperty('relid'));
-          __test('parent', typeof node.parent === 'object');
-          __test('relid', typeof node.relid === 'string' || node.relid === null);
-          __test('parent 2', (node.parent === null) === (node.relid === null));
-          __test('age', node.age >= 0 && node.age <= CONSTANTS.MAX_AGE);
-          __test('children', node.children === null || node.children instanceof Array);
-          __test('children 2', (node.age === CONSTANTS.MAX_AGE) === (node.children === null));
-          __test('data', typeof node.data === 'object' || typeof node.data === 'string' ||
-              typeof node.data === 'number');
+            __test('object', typeof node === 'object' && node !== null);
+            __test('object 2', node.hasOwnProperty('parent') && node.hasOwnProperty('relid'));
+            __test('parent', typeof node.parent === 'object');
+            __test('relid', typeof node.relid === 'string' || node.relid === null);
+            __test('parent 2', (node.parent === null) === (node.relid === null));
+            __test('age', node.age >= 0 && node.age <= CONSTANTS.MAX_AGE);
+            __test('children', node.children === null || node.children instanceof Array);
+            __test('children 2', (node.age === CONSTANTS.MAX_AGE) === (node.children === null));
+            __test('data', typeof node.data === 'object' || typeof node.data === 'string' ||
+                typeof node.data === 'number');
 
-          if (node.parent !== null) {
-              __test('age 2', node.age >= node.parent.age);
-              __test('mutable', !__isMutableData(node.data) || __isMutableData(node.parent.data));
-          }
+            if (node.parent !== null) {
+                __test('age 2', node.age >= node.parent.age);
+                __test('mutable', !__isMutableData(node.data) || __isMutableData(node.parent.data));
+            }
 
-          if (!checkValidTreeRunning) {
-              checkValidTreeRunning = true;
-              __checkValidTree(self.getRoot(node));
-              checkValidTreeRunning = false;
-          }
+            if (!checkValidTreeRunning) {
+                checkValidTreeRunning = true;
+                __checkValidTree(self.getRoot(node));
+                checkValidTreeRunning = false;
+            }
         }
 
         // ------- static methods
@@ -496,7 +516,9 @@ define([
                 data: {
                     _mutable: true
                 },
-                initial: null,
+                initial: {
+                    '': null
+                },
                 rootid: ++rootCounter
             };
             root.data[ID_NAME] = '';
@@ -546,8 +568,6 @@ define([
             return __isMutableData(node.data);
         };
 
-
-
         this.isEmpty = function (node) {
             node = self.normalize(node);
             if (typeof node.data !== 'object' || node.data === null) {
@@ -578,7 +598,7 @@ define([
 
                 for (var i = 0; i < roots.length; ++i) {
                     if (__isMutableData(roots[i].data)) {
-                        __saveData(roots[i].data);
+                        __saveData(roots[i].data, roots[i], '');
                     }
                 }
             }
@@ -802,7 +822,7 @@ define([
                 return {rootHash: node.data[ID_NAME], objects: {}};
             }
 
-            updated = __saveData(node.data);
+            updated = __saveData(node.data, node, '');
             if (updated !== __getEmptyData()) {
                 result = {};
                 result.objects = stackedObjects;
@@ -811,23 +831,23 @@ define([
             } else {
                 result = {rootHash: node.data[ID_NAME], objects: {}};
             }
-            if (result.objects[result.rootHash]) {
-                if (gmeConfig.storage.patchRootCommunicationEnabled && node.initial) {
-                    //TODO this method will change when we will pack similar data for every node
-                    result.objects[result.rootHash] = {
-                        newData: result.objects[result.rootHash],
-                        newHash: result.rootHash,
-                        oldData: node.initial.data,
-                        oldHash: node.initial.hash
-                    };
-                }
-
-                node.initial = {
-                    data: result.objects[result.rootHash].newData || result.objects[result.rootHash],
-                    hash: result.rootHash
-                };
-
-            }
+            //if (result.objects[result.rootHash]) {
+            //    if (gmeConfig.storage.patchRootCommunicationEnabled && node.initial) {
+            //        //TODO this method will change when we will pack similar data for every node
+            //        result.objects[result.rootHash] = {
+            //            newData: result.objects[result.rootHash],
+            //            newHash: result.rootHash,
+            //            oldData: node.initial.data,
+            //            oldHash: node.initial.hash
+            //        };
+            //    }
+            //
+            //    node.initial = {
+            //        data: result.objects[result.rootHash].newData || result.objects[result.rootHash],
+            //        hash: result.rootHash
+            //    };
+            //
+            //}
 
             return result;
         };
@@ -899,6 +919,18 @@ define([
         //        };
         //    }
         //});
+
+        this.removeChildFromCache = function (node, relid) {
+            var i;
+            for (i = 0; i < node.children.length; i += 1) {
+                if (node.children[i].relid === relid) {
+                    node.children.splice(i, 1);
+                    return node;
+                }
+            }
+
+            return node;
+        }
     }
 
     return CoreTree;

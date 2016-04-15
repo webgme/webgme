@@ -41,6 +41,7 @@ define([
 
         self.logger = logger;
         self.userId = null;
+        self.serverVersion = null;
 
         StorageObjectLoaders.call(this, webSocket, mainLogger, gmeConfig);
 
@@ -52,6 +53,7 @@ define([
                 } else if (connectionState === CONSTANTS.CONNECTED) {
                     self.connected = true;
                     self.userId = webSocket.userId;
+                    self.serverVersion = webSocket.serverVersion;
                     networkHandler(connectionState);
                 } else if (connectionState === CONSTANTS.RECONNECTED) {
                     self.connected = true;
@@ -328,40 +330,58 @@ define([
 
             forkData = branch.getCommitsForNewFork(commitHash, forkName); // commitHash = null defaults to latest commit
             self.logger.debug('forkBranch - forkData', forkData);
+
             if (forkData === false) {
                 callback(new Error('Could not find specified commitHash: ' + commitHash));
                 return;
             }
 
-            function commitNext() {
-                var currentCommitData = forkData.queue.shift();
+            self.persistCommits(forkData.queue, function (err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
 
-                logger.debug('forkBranch - commitNext, currentCommitData', currentCommitData);
-                if (currentCommitData) {
+                self.createBranch(projectId, forkName, forkData.commitHash, function (err) {
+                    if (err) {
+                        logger.error('forkBranch - failed creating new branch', err);
+                        callback(err);
+                        return;
+                    }
+
+                    callback(null, forkData.commitHash);
+                });
+            });
+        };
+
+        this.persistCommits = function (commitQueue, callback) {
+            var commitHash;
+
+            function commitNext(i) {
+                var currentCommitData = commitQueue[i];
+
+                if (i < commitQueue.length) {
+                    currentCommitData = commitQueue[i];
+                    logger.debug('persistCommits - commitNext, currentCommitData', currentCommitData);
                     delete currentCommitData.branchName;
+                    commitHash = currentCommitData.commitObject[CONSTANTS.MONGO_ID];
 
                     webSocket.makeCommit(currentCommitData, function (err, result) {
                         if (err) {
-                            logger.error('forkBranch - failed committing', err);
+                            logger.error('persistCommits - failed committing', err);
                             callback(err);
                             return;
                         }
-                        logger.debug('forkBranch - commit successful, hash', result);
-                        commitNext();
+
+                        logger.debug('persistCommits - commit successful, hash', result);
+                        commitNext(i += 1);
                     });
                 } else {
-                    self.createBranch(projectId, forkName, forkData.commitHash, function (err) {
-                        if (err) {
-                            logger.error('forkBranch - failed creating new branch', err);
-                            callback(err);
-                            return;
-                        }
-                        callback(null, forkData.commitHash);
-                    });
+                    callback(null, commitHash);
                 }
             }
 
-            commitNext();
+            commitNext(0);
         };
 
         this.makeCommit = function (projectId, branchName, parents, rootHash, coreObjects, msg, callback) {
@@ -374,27 +394,41 @@ define([
                     rootHash: rootHash,
                     projectId: projectId,
                     commitObject: null,
-                    coreObjects: {}
+                    coreObjects: {},
+                    changedNodes: null
                 },
                 keys = Object.keys(coreObjects),
                 i;
 
             //handling patch object creation
+            //console.time('patch-computation');
             for (i = 0; i < keys.length; i += 1) {
-                if (coreObjects[keys[i]].oldHash &&
-                    coreObjects[keys[i]].newHash &&
-                    coreObjects[keys[i]].oldData &&
-                    coreObjects[keys[i]].newData) {
-                    //patch type object
+                if (UTIL.coreObjectHasOldAndNewData(coreObjects[keys[i]])) {
+                    // Patch type object.
                     persistQueueElement[keys[i]] = coreObjects[keys[i]].newData;
+                    if (keys[i] === rootHash) {
+                        //console.time('root-patch-computation');
+                    }
                     commitData.coreObjects[keys[i]] = UTIL.getPatchObject(coreObjects[keys[i]].oldData,
                         coreObjects[keys[i]].newData);
-
+                    //if (keys[i] === rootHash) {
+                        //console.timeEnd('root-patch-computation');
+                    //}
+                } else if (coreObjects[keys[i]].newData && coreObjects[keys[i]].newHash) {
+                    // A new object with no previous data (send the entire data).
+                    commitData.coreObjects[keys[i]] = coreObjects[keys[i]].newData;
+                    persistQueueElement[keys[i]] = coreObjects[keys[i]].newData;
                 } else {
+                    // A regular object.
                     commitData.coreObjects[keys[i]] = coreObjects[keys[i]];
                     persistQueueElement[keys[i]] = coreObjects[keys[i]];
                 }
             }
+            //console.timeEnd('patch-computation');
+            //console.time('getChangedNodes');
+            commitData.changedNodes = UTIL.getChangedNodes(commitData.coreObjects, rootHash);
+
+            //console.timeEnd('getChangedNodes');
 
             commitData.commitObject = self._getCommitObject(projectId, parents, commitData.rootHash, msg);
 
@@ -441,7 +475,7 @@ define([
                 project.loadObject(newHash, function (err, commitObject) {
                     var commitData;
                     if (err) {
-                        logger.error('setBranchHash, faild to load in commitObject');
+                        logger.error('setBranchHash, failed to load in commitObject');
                         //branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
                         callback(err);
                         return;
@@ -450,7 +484,8 @@ define([
                     commitData = {
                         projectId: projectId,
                         branchName: branchName,
-                        coreObjects: [],
+                        coreObjects: {},
+                        changedNodes: null,
                         commitObject: commitObject,
                         oldHash: oldHash
                     };

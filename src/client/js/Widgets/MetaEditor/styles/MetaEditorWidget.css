@@ -1,11 +1,14 @@
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
+.meta-editor-widget.w-tabs .diagram-designer-zoom-container {
+  top: 45px; }
+
 div.filterPanel {
   position: absolute;
   top: 34px;
   right: 11px;
-  background-color: white;
+  background-color: #FFFFFF;
   border: 1px solid rgba(0, 0, 0, 0.2);
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;

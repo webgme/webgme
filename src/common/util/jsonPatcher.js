@@ -9,7 +9,11 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/canon'], function (CANON) {
+define([
+    'common/util/canon',
+    'common/util/random',
+    'common/core/constants'
+], function (CANON, RANDOM, CORE_CONSTANTS) {
 
     'use strict';
 
@@ -31,17 +35,26 @@ define(['common/util/canon'], function (CANON) {
                 for (i in target) {
                     if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
                         if (!source.hasOwnProperty(i)) {
-                            patch.push({op: 'add', path: basePath + _strEncode(i), value: target[i]});
+                            patch.push({
+                                op: 'add',
+                                path: basePath + _strEncode(i),
+                                value: target[i]
+                            });
                         }
                     }
                 }
 
-                //update
+                //replace
                 if (!noUpdate) {
                     for (i in target) {
                         if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
                             if (source.hasOwnProperty(i) && CANON.stringify(source[i]) !== CANON.stringify(target[i])) {
-                                patch.push({op: 'replace', path: basePath + _strEncode(i), value: target[i]});
+                                patch.push({
+                                    op: 'replace',
+                                    path: basePath + _strEncode(i),
+                                    value: target[i]
+                                    //oldValue: source[i]
+                                });
                             }
                         }
                     }
@@ -51,7 +64,11 @@ define(['common/util/canon'], function (CANON) {
                 for (i in source) {
                     if (excludeList.indexOf(i) === -1 && source.hasOwnProperty(i)) {
                         if (!target.hasOwnProperty(i)) {
-                            patch.push({op: 'remove', path: basePath + _strEncode(i)});
+                            patch.push({
+                                op: 'remove',
+                                path: basePath + _strEncode(i)
+                                //oldValue: source[i]
+                            });
                         }
                     }
                 }
@@ -182,8 +199,171 @@ define(['common/util/canon'], function (CANON) {
         return result;
     }
 
+    function _endsWith(str, pattern) {
+        var d = str.length - pattern.length;
+        return d >= 0 && str.lastIndexOf(pattern) === d;
+    }
+
+    function _startsWith(str, pattern) {
+        return str.indexOf(pattern) === 0;
+    }
+
+    function _isOvr(path) {
+        return path.indexOf('/ovr/') === 0;
+    }
+
+    function _isRelid(path) {
+        return RANDOM.isValidRelid(path.substring(1));
+    }
+
+    function _isGmePath(path) {
+        var relIds = path.split('/'),
+            result = false,
+            i;
+
+        for (i = 1; i < relIds.length; i += 1) {
+            if (RANDOM.isValidRelid(relIds[i]) === false) {
+                return false;
+            } else {
+                result = true;
+            }
+        }
+
+        return result;
+    }
+
+    function _inLoadOrUnload(res, gmePath) {
+        var pathPieces = gmePath.split('/'),
+            parentPath;
+
+        parentPath = gmePath;
+
+        do {
+            if (res.load[parentPath] || res.unload[parentPath]) {
+                return true;
+            }
+
+            pathPieces.pop();
+            parentPath = pathPieces.join('/');
+        } while (pathPieces.length > 1);
+
+        return false;
+    }
+
+    function _removeFromUpdates(res, gmePath) {
+        var updatesPath,
+            i;
+
+        updatesPath = Object.keys(res.update);
+        for (i = 0; i < updatesPath; i += 1) {
+            if (_startsWith(updatesPath[i], gmePath)) {
+                delete res.update[gmePath];
+            }
+        }
+
+        updatesPath = Object.keys(res.partialUpdate);
+        for (i = 0; i < updatesPath; i += 1) {
+            if (_startsWith(updatesPath[i], gmePath)) {
+                delete res.partialUpdate[gmePath];
+            }
+        }
+    }
+
+    function _getChangedNodesRec(patch, res, hash, gmePath) {
+        var nodePatches = patch[hash] && patch[hash].patch, // Changes regarding node with hash
+            i,
+            ownChange = false,
+            pathPieces,
+            relGmePath,
+            absGmePath,
+            patchPath;
+
+        if (!nodePatches) {
+            // E.g. if the node was added the full data is given instead of a patch.
+            return;
+        }
+
+        for (i = 0; i < nodePatches.length; i += 1) {
+            patchPath = nodePatches[i].path;
+
+            if (_isOvr(patchPath) === true) {
+                pathPieces = patchPath.substring('/ovr/'.length).split('/');
+                relGmePath = _strDecode(pathPieces[0]);
+                absGmePath = gmePath + relGmePath;
+                if (_isGmePath(relGmePath) && _inLoadOrUnload(res, absGmePath) === false) {
+                    if (pathPieces.length === 1) {
+                        // The entire stored overlay was removed/added - trigger a full event.
+                        // TODO: There are rare cases where only partialUpdates should be triggered.
+                        res.update[absGmePath] = true;
+                    } else if (pathPieces.length === 2) {
+                        if (_endsWith(pathPieces[1], CORE_CONSTANTS.COLLECTION_NAME_SUFFIX)) {
+                            // Target-change - only trigger event for the actual node.
+                            res.partialUpdate[absGmePath] = true;
+                        } else {
+                            // Source-change - trigger full event.
+                            res.update[absGmePath] = true;
+                        }
+                    } else {
+                        throw new Error('pathPieces longer than 2 ' + nodePatches[i]);
+                    }
+                } else if (relGmePath === '/_nullptr') {
+                    ownChange = true;
+                }
+
+            } else if (_isRelid(patchPath) === true) {
+                // There was a change in one of the children..
+                switch (nodePatches[i].op) {
+                    case 'add':
+                        res.load[gmePath + patchPath] = true;
+                        _removeFromUpdates(res, gmePath + patchPath);
+                        break;
+                    case 'remove':
+                        res.unload[gmePath + patchPath] = true;
+                        _removeFromUpdates(res, gmePath + patchPath);
+                        break;
+                    case 'replace':
+                        _getChangedNodesRec(patch, res, nodePatches[i].value, gmePath + patchPath);
+                        break;
+                    default:
+                        throw new Error('Unexpected patch operation ' + nodePatches[i]);
+                }
+            } else {
+                ownChange = true;
+            }
+        }
+
+        if (ownChange) {
+            res.update[gmePath] = true;
+        }
+    }
+
+    /**
+     *
+     * @param {object} patch
+     * @returns {object}
+     */
+    function getChangedNodes(patch, rootHash) {
+        var res;
+
+        if (patch[rootHash] && patch[rootHash].patch) {
+            res = {
+                load: {},
+                unload: {},
+                update: {},
+                partialUpdate: {}
+            };
+
+            _getChangedNodesRec(patch, res, rootHash, '');
+        } else {
+            res = null;
+        }
+
+        return res;
+    }
+
     return {
         create: create,
-        apply: apply
+        apply: apply,
+        getChangedNodes: getChangedNodes
     };
 });

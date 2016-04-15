@@ -17,6 +17,7 @@ define([
     'common/util/url',
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter',
+    'js/client/libraries',
     'common/core/users/serialization',
     'blob/BlobClient',
     'js/client/stateloghelpers',
@@ -33,6 +34,7 @@ define([
              URL,
              getNode,
              getNodeSetters,
+             getLibraryFunctions,
              Serialization,
              BlobClient,
              stateLogHelpers,
@@ -79,6 +81,7 @@ define([
                 loading: {
                     rootHash: null,
                     commitHash: null,
+                    changedNodes: null,
                     next: null
                 }
 
@@ -86,6 +89,7 @@ define([
             blobClient,
             monkeyPatchKey,
             nodeSetterFunctions,
+            coreLibraryFunctions,
         //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
         //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
@@ -206,7 +210,9 @@ define([
                 if (state.nodes[path]) {
                     //TODO we try to avoid this
                 } else {
-                    state.nodes[path] = {node: node, hash: ''/*,incomplete:true,basic:basic*/};
+                    state.nodes[path] = {
+                        node: node
+                    };
                     //TODO this only needed when real eventing will be reintroduced
                     //_inheritanceHash[path] = getInheritanceChain(node);
                 }
@@ -234,7 +240,8 @@ define([
                 keys = Object.keys(nodes || {}),
                 name;
             for (i = 0; i < keys.length; i += 1) {
-                name = core.getAttribute(nodes[keys[i]], 'name');
+                //name = core.getAttribute(nodes[keys[i]], 'name');
+                name = core.getFullyQualifiedName(nodes[keys[i]]);
                 if (names.indexOf(name) === -1) {
                     names.push(name);
                 } else {
@@ -277,7 +284,16 @@ define([
             }
         }
 
-        nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode);
+        function printCoreError(error) {
+            logger.error('Faulty core usage raised an error', error);
+            self.dispatchEvent(CONSTANTS.NOTIFICATION, {
+                type: 'CORE',
+                severity: 'error',
+                message: error.message
+            });
+        }
+
+        nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode, printCoreError);
 
         for (monkeyPatchKey in nodeSetterFunctions) {
             if (nodeSetterFunctions.hasOwnProperty(monkeyPatchKey)) {
@@ -285,9 +301,17 @@ define([
             }
         }
 
+        coreLibraryFunctions = getLibraryFunctions(logger, state, storage, saveRoot);
+
+        for (monkeyPatchKey in coreLibraryFunctions) {
+            if (coreLibraryFunctions.hasOwnProperty(monkeyPatchKey)) {
+                self[monkeyPatchKey] = coreLibraryFunctions[monkeyPatchKey];
+            }
+        }
+
         // Main API functions (with helpers) for connecting, selecting project and branches etc.
         this.connectToDatabase = function (callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 logger.warn('connectToDatabase - already connected');
                 callback(null);
                 return;
@@ -401,7 +425,7 @@ define([
                 callback = branchName;
                 branchName = undefined;
             }
-            if (isConnected() === false) {
+            if (self.isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
             }
             var prevProjectId,
@@ -421,7 +445,7 @@ define([
                     logger: logger.fork('core')
                 });
                 state.projectAccess = access;
-                self.meta.initialize(state.core, state.metaNodes, saveRoot);
+                self.meta.initialize(state.core, state.metaNodes, saveRoot, printCoreError);
                 logState('info', 'projectOpened');
                 logger.debug('projectOpened, branches: ', branches);
                 self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
@@ -506,6 +530,7 @@ define([
         };
 
         function closeProject(projectId, callback) {
+
             state.project = null;
             //TODO what if for some reason we are in transaction?
             storage.closeProject(projectId, function (err) {
@@ -543,7 +568,7 @@ define([
         this.selectBranch = function (branchName, branchStatusHandler, callback) {
             var prevBranchName = state.branchName;
             logger.debug('selectBranch', branchName);
-            if (isConnected() === false) {
+            if (self.isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
                 return;
             }
@@ -595,7 +620,7 @@ define([
 
         this.selectCommit = function (commitHash, callback) {
             logger.debug('selectCommit', commitHash);
-            if (isConnected() === false) {
+            if (self.isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
                 return;
             }
@@ -618,7 +643,7 @@ define([
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
                         self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
-                        loading(commitObj.root, commitHash, function (err, aborted) {
+                        loading(commitObj.root, commitHash, null, function (err, aborted) {
                             if (err) {
                                 logger.error('loading returned error', commitObj.root, err);
                                 logState('error', 'selectCommit loading');
@@ -685,7 +710,7 @@ define([
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
 
                 logger.debug('loading commitHash, local?', commitHash, data.local);
-                loading(commitData.commitObject.root, commitHash, function (err, aborted) {
+                loading(commitData.commitObject.root, commitHash, commitData.changedNodes, function (err, aborted) {
                     if (err) {
                         logger.error('hashUpdateHandler invoked loading and it returned error',
                             commitData.commitObject.root, err);
@@ -732,8 +757,18 @@ define([
         };
 
         // State getters.
+        this.isConnected = function () {
+            return state.connection === CONSTANTS.STORAGE.CONNECTED ||
+                state.connection === CONSTANTS.STORAGE.RECONNECTED;
+        };
+
         this.getNetworkStatus = function () {
             return state.connection;
+        };
+
+        this.getConnectedStorageVersion = function () {
+            // This is the version of the server the storage is currently connected to.
+            return storage.serverVersion;
         };
 
         this.getBranchStatus = function () {
@@ -771,6 +806,25 @@ define([
 
         this.getProjectObject = function () {
             return state.project;
+        };
+
+        this.getCommitQueue = function () {
+            if (state.project && state.branchName && state.project.branches.hasOwnProperty(state.branchName)) {
+                return state.project.branches[state.branchName].getCommitQueue();
+            }
+
+            return [];
+        };
+
+        this.downloadCommitQueue = function () {
+            var commitQueue = this.getCommitQueue();
+
+            if (commitQueue.length > 0) {
+                stateLogHelpers.downloadCommitQueue(self, commitQueue);
+                return true;
+            }
+
+            return false;
         };
 
         this.getProjectAccess = function () {
@@ -887,12 +941,58 @@ define([
             );
         };
 
+        /**
+         * Persists all commits in commitQueue and optionally tries to fast-forward the current branch.
+         * If not fast-forwarding or it fails to do that - a new branch will be created.
+         *
+         * @param {commitQueue} commitQueue -
+         * @param {object} [options] - optional parameters
+         * @param {object} [options.fastForward] - If truthy will attempt to setBranchHash from current branch to last in queue.
+         * @param {object} [options.newBranchName=%currentBranch_time-now%] - Name of new branch if needed.
+         */
+        this.applyCommitQueue = function (commitQueue, options, callback) {
+            var branchName = self.getActiveBranchName(),
+                projectId = commitQueue[0].projectId,
+                firstCommitsParents = commitQueue[0].commitObject.parents,
+                lastCommitHash = commitQueue[commitQueue.length - 1].commitObject._id;
+
+            options = options || {};
+            options.newBranchName = options.newBranchName || self.getActiveBranchName() + '_' + Date.now();
+
+            function createNewBranch() {
+                storage.createBranch(projectId, options.newBranchName, lastCommitHash, callback);
+            }
+
+            storage.persistCommits(commitQueue, function (err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+
+                if (options.fastForward && firstCommitsParents.indexOf(self.getActiveCommitHash()) > -1) {
+                    storage.setBranchHash(projectId, branchName, lastCommitHash, self.getActiveCommitHash(),
+                        function (err, result) {
+                            if (err) {
+                                callback(err);
+                            } else if (result.status !== CONSTANTS.STORAGE.SYNCED) {
+                                createNewBranch();
+                            } else {
+                                callback();
+                            }
+                        }
+                    );
+                } else {
+                    createNewBranch();
+                }
+            });
+        };
+
         // REST-like functions and forwarded to storage TODO: add these to separate base class
 
         //  Getters
         this.getProjects = function (options, callback) {
             var asObject;
-            if (isConnected()) {
+            if (self.isConnected()) {
                 if (options.asObject) {
                     asObject = true;
                     delete options.asObject;
@@ -924,7 +1024,7 @@ define([
         };
 
         this.getBranches = function (projectId, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.getBranches(projectId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -932,7 +1032,7 @@ define([
         };
 
         this.getTags = function (projectId, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.getTags(projectId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -940,7 +1040,7 @@ define([
         };
 
         this.getCommits = function (projectId, before, number, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.getCommits(projectId, before, number, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -948,7 +1048,7 @@ define([
         };
 
         this.getHistory = function (projectId, start, number, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.getHistory(projectId, start, number, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -956,7 +1056,7 @@ define([
         };
 
         this.getLatestCommitData = function (projectId, branchName, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.getLatestCommitData(projectId, branchName, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -965,7 +1065,7 @@ define([
 
         //  Setters
         this.createProject = function (projectName, parameters, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.createProject(projectName, parameters, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -973,7 +1073,7 @@ define([
         };
 
         this.deleteProject = function (projectId, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.deleteProject(projectId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -981,7 +1081,7 @@ define([
         };
 
         this.transferProject = function (projectId, newOwnerId, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.transferProject(projectId, newOwnerId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -989,7 +1089,7 @@ define([
         };
 
         this.duplicateProject = function (projectId, projectName, newOwnerId, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.duplicateProject(projectId, projectName, newOwnerId, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -997,7 +1097,7 @@ define([
         };
 
         this.createBranch = function (projectId, branchName, newHash, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.createBranch(projectId, branchName, newHash, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -1005,7 +1105,7 @@ define([
         };
 
         this.deleteBranch = function (projectId, branchName, oldHash, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.deleteBranch(projectId, branchName, oldHash, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -1013,7 +1113,7 @@ define([
         };
 
         this.createTag = function (projectId, tagName, commitHash, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.createTag(projectId, tagName, commitHash, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -1021,7 +1121,7 @@ define([
         };
 
         this.deleteTag = function (projectId, tagName, callback) {
-            if (isConnected()) {
+            if (self.isConnected()) {
                 storage.deleteTag(projectId, tagName, callback);
             } else {
                 callback(new Error('There is no open database connection!'));
@@ -1094,11 +1194,6 @@ define([
         };
 
         // Internal functions
-        function isConnected() {
-            return state.connection === CONSTANTS.STORAGE.CONNECTED ||
-                state.connection === CONSTANTS.STORAGE.RECONNECTED;
-        }
-
         var ROOT_PATH = ''; //FIXME: This should come from constants..
 
         function COPY(object) {
@@ -1138,17 +1233,86 @@ define([
 
         function getModifiedNodes(newerNodes) {
             var modifiedNodes = [],
+                updatedMetaPaths = [],
+                metaNodes,
+                metaPath,
+                updatePath,
+                nodePath,
+                loadUnloadPath,
+                pathPieces,
                 i;
 
-            for (i in state.nodes) {
-                if (state.nodes.hasOwnProperty(i)) {
-                    if (newerNodes[i]) {
-                        if (newerNodes[i].hash !== state.nodes[i].hash && state.nodes[i].hash !== '') {
-                            modifiedNodes.push(i);
+            // For the client these rules apply for finding the affected nodes.
+            // 1. Updates should be triggered to any node that core.isTypeOf (i.e. mixins accounted for).
+            // 2. Root node should always be triggered.
+            // 3. loads/unloads should trigger updates for the parent chain.
+
+            if (state.loading.changedNodes) {
+                // 1. Account for mixins - i.e resolve isTypeOf.
+                // Gather all meta-nodes that had an update.
+                metaNodes = state.core.getAllMetaNodes(newerNodes[ROOT_PATH].node);
+                for (updatePath in state.loading.changedNodes.update) {
+                    if (metaNodes.hasOwnProperty(updatePath)) {
+                        updatedMetaPaths.push(updatePath);
+                    }
+                }
+
+                if (updatedMetaPaths.length > 0) {
+                    // There are meta-nodes with updates.
+                    for (metaPath in metaNodes) {
+                        // For all meta nodes..
+                        if (metaNodes.hasOwnProperty(metaPath)) {
+                            for (i = 0; i < updatedMetaPaths.length; i += 1) {
+                                // check if it is a typeOf (includes mixins) any of the updated meta-nodes
+                                if (state.core.isTypeOf(metaNodes[metaPath],
+                                        metaNodes[updatedMetaPaths[i]]) === true) {
+                                    // if so add its path to the update nodes.
+                                    state.loading.changedNodes.update[metaPath] = true;
+                                }
+                            }
                         }
                     }
                 }
+                //console.log('Update after meta considered', Object.keys(state.loading.changedNodes.update));
+
+                // 2. Add Root node
+                state.loading.changedNodes.update[ROOT_PATH] = true;
+
+                // 3. Account for loads and unloads.
+                for (loadUnloadPath in state.loading.changedNodes.load) {
+                    if (state.loading.changedNodes.load.hasOwnProperty(loadUnloadPath)) {
+                        pathPieces = loadUnloadPath.split(CONSTANTS.CORE.PATH_SEP);
+                        while (pathPieces.length > 2) {
+                            pathPieces.pop();
+                            state.loading.changedNodes
+                                .update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
+                        }
+                    }
+                }
+
+                for (loadUnloadPath in state.loading.changedNodes.unload) {
+                    if (state.loading.changedNodes.unload.hasOwnProperty(loadUnloadPath)) {
+                        pathPieces = loadUnloadPath.split(CONSTANTS.CORE.PATH_SEP);
+                        while (pathPieces.length > 2) {
+                            pathPieces.pop();
+                            state.loading.changedNodes
+                                .update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
+                        }
+                    }
+                }
+
+                //console.log('Update after loads and unloads considered',
+                //    Object.keys(state.loading.changedNodes.update));
             }
+
+            for (nodePath in state.nodes) {
+                if (state.nodes.hasOwnProperty(nodePath) && newerNodes.hasOwnProperty(nodePath) &&
+                    wasNodeUpdated(state.loading.changedNodes, newerNodes[nodePath].node)) {
+
+                    modifiedNodes.push(nodePath);
+                }
+            }
+            //console.log('NewerNodes, modifiedNodes', Object.keys(newerNodes).length, modifiedNodes.length);
             return modifiedNodes;
         }
 
@@ -1271,7 +1435,9 @@ define([
                 };
 
             if (!nodesSoFar[path]) {
-                nodesSoFar[path] = {node: node, incomplete: true, basic: true, hash: getStringHash(node)};
+                nodesSoFar[path] = {
+                    node: node
+                };
             }
             if (level > 0) {
                 if (missing > 0) {
@@ -1326,10 +1492,7 @@ define([
                         path = core.getPath(node);
                         if (!nodesSoFar[path]) {
                             nodesSoFar[path] = {
-                                node: node,
-                                incomplete: false,
-                                basic: true,
-                                hash: getStringHash(node)
+                                node: node
                             };
                         }
                         base = node;
@@ -1339,30 +1502,6 @@ define([
                     }
                 });
             }
-        }
-
-        // FIXME: Move this to common/util
-        function orderStringArrayByElementLength(strArray) {
-            var ordered = [],
-                i, j, index;
-
-            for (i = 0; i < strArray.length; i++) {
-                index = -1;
-                j = 0;
-                while (index === -1 && j < ordered.length) {
-                    if (ordered[j].length > strArray[i].length) {
-                        index = j;
-                    }
-                    j++;
-                }
-
-                if (index === -1) {
-                    ordered.push(strArray[i]);
-                } else {
-                    ordered.splice(index, 0, strArray[i]);
-                }
-            }
-            return ordered;
         }
 
         this.startTransaction = function (msg) {
@@ -1534,12 +1673,16 @@ define([
             var modifiedPaths,
                 i;
 
+            //console.time('switchStates');
+
             logger.debug('switching project state [C#' +
                 state.commitHash + ']->[C#' + state.loading.commitHash + '] : [R#' +
                 state.rootHash + ']->[R#' + state.loading.rootHash + ']');
             refreshMetaNodes(state.nodes, state.loadNodes);
 
+            //console.time('getModifiedNodes');
             modifiedPaths = getModifiedNodes(state.loadNodes);
+            //console.timeEnd('getModifiedNodes');
             state.nodes = state.loadNodes;
             state.loadNodes = {};
 
@@ -1563,9 +1706,11 @@ define([
             } else {
                 state.loading.next(null);
             }
+
+            //console.timeEnd('switchStates');
         }
 
-        function loading(newRootHash, newCommitHash, callback) {
+        function loading(newRootHash, newCommitHash, changedNodes, callback) {
             var i, j,
                 userIds,
                 patternPaths,
@@ -1582,6 +1727,7 @@ define([
             state.loading.rootHash = newRootHash;
             state.loading.commitHash = newCommitHash;
             state.loading.next = callback;
+            state.loading.changedNodes = changedNodes;
 
             state.core.loadRoot(state.loading.rootHash, function (err, root) {
                 if (err) {
@@ -1591,14 +1737,11 @@ define([
 
                 state.inLoading = true;
                 state.loadNodes[state.core.getPath(root)] = {
-                    node: root,
-                    incomplete: true,
-                    basic: true,
-                    hash: getStringHash(root)
+                    node: root
                 };
 
                 //we first only set the counter of patterns but we also generate a completely separate pattern queue
-                //as we cannot be sure if all the users will remain at the point of giving the actual load command!!!
+                //as we cannot be sure if all the users will remain at the point of giving the actual load command!
                 userIds = Object.keys(state.users);
                 for (i = 0; i < userIds.length; i += 1) {
                     state.ongoingLoadPatternsCounter += Object.keys(state.users[userIds[i]].PATTERNS || {}).length;
@@ -1637,6 +1780,29 @@ define([
                         patternsToLoad[i].id, patternsToLoad[i].pattern, state.loadNodes, loadingPatternFinished);
                 }
             });
+        }
+
+        function wasNodeUpdated(changedNodes, node) {
+            // Is changedNodes available at all, if not emitt for all nodes.
+            if (!changedNodes) {
+                return true;
+            }
+
+            // Did the node have a collection update?
+            if (changedNodes.partialUpdate[state.core.getPath(node)] === true) {
+                return true;
+            }
+
+            // Did any of the base classes have a non-collection update?
+            while (node) {
+                if (changedNodes.update[state.core.getPath(node)] === true) {
+                    return true;
+                }
+
+                node = state.core.getBase(node);
+            }
+
+            return false;
         }
 
         function cleanUsersTerritories() {
@@ -1735,6 +1901,26 @@ define([
                         );
                     });
                 });
+            });
+        };
+
+        this.createProjectFromPackage = function (projectName, branchName, blobHash, ownerId, url, callback) {
+            var parameters = {
+                command: 'importProjectFromFile',
+                projectName: projectName,
+                blobHash: blobHash,
+                branchName: branchName,
+                ownerId: ownerId,
+                url: url
+            };
+
+            logger.debug('creating project from package', parameters);
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
             });
         };
 
@@ -2069,6 +2255,30 @@ define([
 
         //checking if the import is in the proper format as its intended usage
         this.checkImport = Serialization.checkImport;
+
+        //package save
+        this.saveProject = function (projectId, branchName, commitHash, withAssets, callback) {
+            var command = {};
+            command.command = 'exportProjectToFile';
+            command.projectId = projectId;
+            command.branchName = branchName;
+            command.commitHash = commitHash;
+            command.withAssets = withAssets
+            //command.fileName = fileName || projectId + '__' + (branchName || commitHash);
+            logger.debug('saveProject, command', command);
+            if (command.projectId && (command.branchName || commitHash)) {
+                storage.simpleRequest(command, function (err, result) {
+                    if (err && !result) {
+                        logger.error('saveProject failed with error', err);
+                        callback(err);
+                    } else {
+                        callback(err, result);
+                    }
+                });
+            } else {
+                callback(new Error('invalid parameters!'));
+            }
+        }
 
         this.gmeConfig = gmeConfig;
 

@@ -109,6 +109,7 @@ define([
                 )
             );
         }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -141,19 +142,7 @@ define([
         //<editor-fold=Added Methods>
         this.getGuid = function (node) {
             if (node) {
-                return toExternalGuid(
-                    xorGuids(
-                        getRelidGuid(node),
-                        xorGuids(
-                            self.getAttribute(node, CONSTANTS.OWN_GUID),
-                            toInternalGuid(
-                                self.getGuid(
-                                    self.getParent(node)
-                                )
-                            )
-                        )
-                    )
-                );
+                return self.getDeductedGuid(node, self.getGuid(self.getParent(node)));
             } else {
                 return CONSTANTS.NULL_GUID;
             }
@@ -178,6 +167,26 @@ define([
                     setDataGuid(children[i], childrenGuids[i]);
                 }
             }, self.loadChildren(node));
+        };
+
+        this.getDataGuid = function (node) {
+            return toExternalGuid(self.getAttribute(node, CONSTANTS.OWN_GUID));
+        };
+
+        this.getDeductedGuid = function (node, baseGuid) {
+            if (node && REGEXP.GUID.test(baseGuid)) {
+                return toExternalGuid(
+                    xorGuids(
+                        getRelidGuid(node),
+                        xorGuids(
+                            self.getAttribute(node, CONSTANTS.OWN_GUID),
+                            toInternalGuid(baseGuid)
+                        )
+                    )
+                );
+            } else {
+                return CONSTANTS.NULL_GUID;
+            }
         };
         //</editor-fold>
     }

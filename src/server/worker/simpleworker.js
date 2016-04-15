@@ -14,7 +14,6 @@ var WEBGME = require(__dirname + '/../../../webgme'),
     Logger = require('../logger'),
     WorkerRequests = require('./workerrequests'),
     wr,
-
     initialized = false,
     gmeConfig,
     logger;
@@ -136,6 +135,46 @@ process.on('message', function (parameters) {
         });
     } else if (parameters.command === CONSTANTS.workerCommands.reassignGuids) {
         wr.reassignGuids(parameters.webgmeToken, parameters.projectId, parameters.commitHash,
+            function (err, result) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.result,
+                    error: err ? err.message : null,
+                    result: result
+                });
+            });
+    } else if (parameters.command === CONSTANTS.workerCommands.exportProjectToFile) {
+        wr.saveProjectIntoFile(parameters.webgmeToken, parameters, function (err, result) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.result,
+                    error: err ? err.message : null,
+                    result: result
+                })
+            }
+        );
+    } else if (parameters.command === CONSTANTS.workerCommands.importProjectFromFile) {
+        wr.importProjectFromFile(parameters.webgmeToken, parameters,
+            function (err, result) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.result,
+                    error: err ? err.message : null,
+                    result: result
+                });
+            });
+    } else if (parameters.command === CONSTANTS.workerCommands.addLibrary) {
+        wr.addLibrary(parameters.webgmeToken, parameters,
+            function (err, result) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.result,
+                    error: err && err instanceof Error ? err.message : err || null,
+                    result: result
+                });
+            });
+    } else if (parameters.command === CONSTANTS.workerCommands.updateLibrary) {
+        wr.updateLibrary(parameters.webgmeToken, parameters,
             function (err, result) {
                 safeSend({
                     pid: process.pid,

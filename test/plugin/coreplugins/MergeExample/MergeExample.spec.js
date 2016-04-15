@@ -96,7 +96,7 @@ describe('Plugin MergeExample', function () {
         var plugin = pluginManager.initializePlugin(pluginName);
         expect(plugin instanceof PluginBase).to.equal(true);
         expect(plugin.getName()).to.equal('Merge Example');
-        expect(plugin.getVersion()).to.equal('0.1.0');
+        expect(plugin.getVersion()).to.equal('1.7.0');
         expect(plugin.getDescription ()).to.include('Example plugin to show how to use the merge capabilities');
         expect(plugin.getConfigStructure() instanceof Array).to.equal(true);
         expect(plugin.getConfigStructure().length).to.equal(4);

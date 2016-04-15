@@ -67,6 +67,12 @@ define(['js/logger',
                 container.getValidAspectNames().indexOf(self._aspect) === -1) {
                 self._aspect = null;
             }
+
+            if (container && self._client && !self._client.isProjectReadOnly() && self._partBrowserView) {
+                self._partBrowserView.setReadOnly(container.isLibraryElement() || container.isLibraryRoot());
+                self.setReadOnly(container.isLibraryElement() || container.isLibraryRoot());
+            }
+
             self._updateDescriptor(self._getPartDescriptorCollection());
         });
 
@@ -292,7 +298,8 @@ define(['js/logger',
 
             objDescriptor.id = nodeObj.getId();
             objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || DEFAULT_DECORATOR;
-            objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+            //objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+            objDescriptor.name = nodeObj.getFullyQualifiedName();
         } else {
             this._logger.error('Node not loaded', nodeId);
         }

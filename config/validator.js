@@ -214,7 +214,11 @@ function validateConfig(configOrFileName) {
     expectedKeys.push('storage');
     assertObject('config.storage', config.storage);
     assertBoolean('config.storage.broadcastProjectEvents', config.storage.broadcastProjectEvents);
-    assertBoolean('config.storage.emitCommittedCoreObjects', config.storage.emitCommittedCoreObjects);
+    warnDeprecated('config.storage.emitCommittedCoreObjects', config.storage.emitCommittedCoreObjects,
+        'see new config at config.storage.maxEmittedCoreObjects');
+    assertNumber('config.storage.maxEmittedCoreObjects', config.storage.maxEmittedCoreObjects);
+    warnDeprecated('config.storage.patchRootCommunicationEnabled', config.storage.patchRootCommunicationEnabled,
+        'Since 1.7.0 all node changes are transmitted as patch objects (unless newly created).');
     assertNumber('config.storage.cache', config.storage.cache);
     assertNumber('config.storage.loadBucketSize', config.storage.loadBucketSize);
     assertNumber('config.storage.loadBucketTimer', config.storage.loadBucketTimer);

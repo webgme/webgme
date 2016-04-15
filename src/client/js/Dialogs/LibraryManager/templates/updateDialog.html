@@ -1,0 +1,37 @@
+<div class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <h5 id="title">Update library</h5>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal col-sm-10 col-sm-offset-1">
+                    <div class="form-group">
+                        <label for="packageInput">webgmeX</label>
+                        <i class="glyphicon glyphicon-info-sign"
+                           title="Use project package as the source of the library"/>
+                        <span id="packageInput"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="urlInput">intra deployment URL</label>
+                        <i class="glyphicon glyphicon-info-sign"
+                           title="Use the URL of the project as the source of the library"/>
+                        <input type="text" id="urlInput" class="form-control"/>
+                    </div>
+                    <label class="label-danger hidden" id="errorText">
+                    </label>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn  btn-warning" id="btnRefresh" disabled
+                        title="based on the current library info,
+                        if it follows a branch we can refresh from the original source">
+                    Refresh
+                </button>
+                <button class="btn btn-primary" id="btnUpdate" disabled>Update</button>
+                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -62,15 +62,21 @@ define([
             },
 
             registerActiveBranchName: function (branchName) {
-                this.set(CONSTANTS.STATE_ACTIVE_BRANCH_NAME, branchName);
+                var newState = {};
+                newState[CONSTANTS.STATE_ACTIVE_BRANCH_NAME] = branchName;
+                newState[CONSTANTS.STATE_ACTIVE_COMMIT] = null;
+                this.set(newState);
             },
 
             getActiveBranch: function () {
                 return this.get(CONSTANTS.STATE_ACTIVE_BRANCH_NAME);
             },
 
-            registerActiveCommit: function (project) {
-                this.set(CONSTANTS.STATE_ACTIVE_COMMIT, project);
+            registerActiveCommit: function (commitHash) {
+                var newState = {};
+                newState[CONSTANTS.STATE_ACTIVE_BRANCH_NAME] = null;
+                newState[CONSTANTS.STATE_ACTIVE_COMMIT] = commitHash;
+                this.set(newState);
             },
 
             getActiveCommit: function () {
@@ -109,7 +115,6 @@ define([
 
             return _WebGMEState;
         };
-
 
     //return utility functions
     return {
