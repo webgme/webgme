@@ -86,6 +86,9 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
                     params.icon.addClass('plugin-icon ' + metadata.icon.class);
                     params.text = metadata.name;
                     params.title = metadata.id + ' v' + metadata.version + ' - ' + metadata.description;
+                } else {
+                    console.warn('Plugin [', pluginId, '] did not have metadata. In v2.0.0 plugins without metadata ' +
+                        'will no longer be supported.');
                 }
 
                 params.icon.css({

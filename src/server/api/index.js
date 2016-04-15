@@ -1541,7 +1541,8 @@ function createAPI(app, mountPath, middlewareOpts) {
                         }
                     } else if (fileRes[i].state === 'rejected') {
                         if (fileRes[i].reason.code === 'ENOENT') {
-                            logger.warn('Plugin does not have a metadata.json', pluginNames[i]);
+                            logger.warn('Plugin does not have a metadata.json', pluginNames[i], 'Such plugins will ' +
+                                'not be supported in v2.0.0. See /src/plugin/coreplugins for examples.');
                         } else {
                             logger.error(fileRes[i].reason);
                         }

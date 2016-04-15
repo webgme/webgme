@@ -84,6 +84,8 @@ process.on('message', function (parameters) {
             }
         );
     } else if (parameters.command === CONSTANTS.workerCommands.exportLibrary) {
+        logger.warn('exportLibrary is deprecated and will be removed in v2.0.0. Export your libraries as ' +
+            'webgmex files using saveProjectIntoFile.');
         wr.exportLibrary(parameters.webgmeToken, parameters.projectId, parameters.path, parameters,
             function (err, result) {
                 safeSend({
@@ -134,6 +136,8 @@ process.on('message', function (parameters) {
             });
         });
     } else if (parameters.command === CONSTANTS.workerCommands.reassignGuids) {
+        logger.warn('reassignGuids is deprecated and will be removed in v2.0.0. Export your projects/libraries as ' +
+            'webgmex files.');
         wr.reassignGuids(parameters.webgmeToken, parameters.projectId, parameters.commitHash,
             function (err, result) {
                 safeSend({
