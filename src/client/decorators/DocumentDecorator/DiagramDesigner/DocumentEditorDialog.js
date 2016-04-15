@@ -6,8 +6,7 @@
 
 define(['js/util',
     '../Libs/EpicEditor/js/epiceditor.min',
-    'text!./DocumentEditorDialog.html',
-    'css!../Libs/EpicEditor/themes/base/epiceditor.css'
+    'text!./DocumentEditorDialog.html'
 ], function (Util,
              marked,
              DocumentEditorDialogTemplate) {
