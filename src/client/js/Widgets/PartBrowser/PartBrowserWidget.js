@@ -11,15 +11,16 @@ define([
     'js/Constants',
     'js/DragDrop/DragSource',
     'js/Toolbar/ToolbarDropDownButton',
-    'js/Toolbar/ToolbarButton',
+    'js/Toolbar/ToolbarRadioButtonGroup',
     'css!./styles/PartBrowserWidget.css'
-], function (Logger, CONSTANTS, dragSource, ToolbarDropDownButton, ToolbarButton) {
+], function (Logger, CONSTANTS, dragSource, ToolbarDropDownButton, ToolbarRadioButtonGroup) {
 
     'use strict';
 
     var PartBrowserWidget,
         PART_BROWSER_CLASS = 'part-browser',
-        PART_CLASS = 'part';
+        PART_CLASS = 'part',
+        NAME_PART_CLASS = 'name-part';
 
     PartBrowserWidget = function (container /*, params*/) {
         this._logger = Logger.create('gme:Widgets:PartBrowser:PartBrowserWidget.DecoratorBase',
@@ -33,31 +34,57 @@ define([
     };
 
     PartBrowserWidget.prototype._initialize = function () {
+        var self = this;
         //set Widget title
         //this._el.addClass(PART_BROWSER_CLASS);
+        this._showNamesOnly = true;
         this._container = $('<div/>');
         this._container.addClass(PART_BROWSER_CLASS);
         this._list = $('<ul/>');
+        this._namelist = $('<ul/>');
         //this._list.addClass(PART_BROWSER_CLASS);
-        this._listSwitcher = new ToolbarButton({
-            icon:'glyphicon glyphicon-home'
+        this._listSwitcher = new ToolbarRadioButtonGroup(function (data) {
+            if (data.isList) {
+                self._showNamesOnly = true;
+                self._list.hide();
+                self._namelist.show();
+            } else {
+                self._showNamesOnly = false;
+                self._list.show();
+                self._namelist.hide();
+            }
+        });
+        this._listSwitcher.addButton({
+            title: 'Only part name list',
+            icon: 'glyphicon glyphicon-list',
+            data: {isList: true}
+        });
+
+        this._listSwitcher.addButton({
+            title: 'Decorated part list',
+            icon: 'glyphicon glyphicon-th-large',
+            data: {isList: false}
         });
 
         this._selector = new ToolbarDropDownButton({
             title: 'Namespace list',
-            icon: 'glyphicon glyphicon-list',
             showSelected: true,
-            text: 'checking'
+            text: 'active library selection'
         });
 
         this._container.append(this._selector.el);
         this._container.append(this._listSwitcher.el);
         this._container.append(this._list);
+        this._container.append(this._namelist);
         this._parts = {};
 
         this._partDraggableEl = {};
 
         this._el.append(this._container);
+
+        // By default only names are listed.
+        this._list.hide();
+        this._namelist.show();
     };
 
     PartBrowserWidget.prototype.clear = function () {
@@ -69,20 +96,27 @@ define([
         }
 
         this._list.empty();
+        this._namelist.empty();
     };
 
     //jshint camelcase: false
     PartBrowserWidget.prototype.$_DOMBase = $('<div/>').attr({class: PART_CLASS});
+    PartBrowserWidget.prototype.$_DOMBaseForName = $('<div/>').attr({class: NAME_PART_CLASS});
 
     PartBrowserWidget.prototype.addPart = function (partId, partDesc) {
         var partContainerDiv = this._getPartDiv(partId),
-            partContainerLi = $('<li/>'),
+            partContainerLi = {decorated: $('<li/>'), onlyName: $('<li/>')},
             DecoratorClass = partDesc.decoratorClass,
             decoratorInstance;
 
-        if (partContainerDiv.length > 0) {
+        if (partContainerDiv.decorated.length > 0) {
             return this.updatePart(partId, partDesc);
         } else {
+            partContainerDiv = {
+                decorated: null,
+                onlyName: null
+            };
+
             decoratorInstance = new DecoratorClass({
                 'preferencesHelper': partDesc.preferencesHelper,
                 'aspect': partDesc.aspect
@@ -90,25 +124,36 @@ define([
             decoratorInstance.setControl(partDesc.control);
             decoratorInstance.setMetaInfo(partDesc.metaInfo);
 
-            partContainerDiv = this.$_DOMBase.clone();
-            partContainerDiv.attr({id: partId});
+            partContainerDiv.decorated = this.$_DOMBase.clone();
+            partContainerDiv.decorated.attr({id: partId});
+
+            partContainerDiv.onlyName = this.$_DOMBaseForName.clone();
+            partContainerDiv.onlyName.attr({id: partId});
+            partContainerDiv.onlyName.append(partDesc.name);
 
             //render the part inside 'partContainerDiv'
             decoratorInstance.beforeAppend();
-            partContainerDiv.append(decoratorInstance.$el);
+            partContainerDiv.decorated.append(decoratorInstance.$el);
 
             //store draggable DIV in list
             this._partDraggableEl[partId] = partContainerDiv;
 
             //add part's GUI
-            this._list.append(partContainerLi.append(partContainerDiv));
+            this._list.append(partContainerLi.decorated.append(partContainerDiv.decorated));
+            this._namelist.append(partContainerLi.onlyName.append(partContainerDiv.onlyName));
 
             decoratorInstance.afterAppend();
 
             this._makeDraggable({
-                el: partContainerDiv,
+                el: partContainerDiv.decorated,
                 partDesc: partDesc,
                 partId: partId
+            });
+            this._makeDraggable({
+                el: partContainerDiv.onlyName,
+                partDesc: partDesc,
+                partId: partId,
+                realDragTarget: partContainerDiv.decorated
             });
 
             this._parts[partId] = {
@@ -122,19 +167,26 @@ define([
 
     PartBrowserWidget.prototype._makeDraggable = function (params) {
         var el = params.el,
-            self = this;
+            self = this,
+            dragParams = {
+                dragItems: function (el) {
+                    return self.getDragItems(el);
+                },
+                dragEffects: function (el) {
+                    return self.getDragEffects(el);
+                },
+                dragParams: function (el) {
+                    return self.getDragParams(el);
+                }
+            };
 
-        dragSource.makeDraggable(el, {
-            dragItems: function (el) {
-                return self.getDragItems(el);
-            },
-            dragEffects: function (el) {
-                return self.getDragEffects(el);
-            },
-            dragParams: function (el) {
-                return self.getDragParams(el);
+        if (params.realDragTarget) {
+            dragParams.helper = function (el, event, dragInfo) {
+                return params.realDragTarget.clone();
             }
-        });
+        }
+
+        dragSource.makeDraggable(el, dragParams);
     };
 
     PartBrowserWidget.prototype.getDragItems = function (/*el*/) {
@@ -184,17 +236,25 @@ define([
      };*/
 
     PartBrowserWidget.prototype._getPartDiv = function (partId) {
-        return this._list.find('div.' + PART_CLASS + '[id="' + partId + '"]');
+        var parts = {decorated: null, onlyName: null};
+        parts.decorated = this._list.find('div.' + PART_CLASS + '[id="' + partId + '"]');
+        parts.onlyName = this._namelist.find('div.' + NAME_PART_CLASS + '[id="' + partId + '"]');
+
+        return parts;
     };
 
     PartBrowserWidget.prototype.removePart = function (partId) {
         var partContainer = this._getPartDiv(partId);
 
-        if (partContainer.length > 0) {
-            dragSource.destroyDraggable(partContainer);
-            partContainer = partContainer.parent(); //this is the <li> contains the part
-            partContainer.remove();
-            partContainer.empty();
+        if (partContainer && partContainer.decorated.length > 0) {
+            dragSource.destroyDraggable(partContainer.decorated);
+            dragSource.destroyDraggable(partContainer.onlyName);
+            partContainer.decorated = partContainer.decorated.parent(); //this is the <li> contains the part
+            partContainer.decorated.remove();
+            partContainer.decorated.empty();
+            partContainer.onlyName = partContainer.onlyName.parent(); //this is the <li> contains the part
+            partContainer.onlyName.remove();
+            partContainer.onlyName.empty();
 
             delete this._parts[partId];
             delete this._partDraggableEl[partId];
@@ -230,8 +290,10 @@ define([
 
                 //attach new one
                 partDecoratorInstance.beforeAppend();
-                partContainerDiv.append(partDecoratorInstance.$el);
+                partContainerDiv.decorated.append(partDecoratorInstance.$el);
                 partDecoratorInstance.afterAppend();
+                partContainerDiv.onlyName.empty();
+                partContainerDiv.onlyName.append(partDesc.name);
 
                 //update in partList
                 this._parts[partId].decoratorInstance = partDecoratorInstance;
@@ -245,6 +307,9 @@ define([
                 //let the decorator instance know about the update
                 partDecoratorInstance.update();
 
+                //update name part
+                partContainerDiv.onlyName.empty();
+                partContainerDiv.onlyName.append(partDesc.name);
                 //return undefined;
 
                 return partDecoratorInstance;
@@ -252,7 +317,7 @@ define([
             }
         } else {
             //not present in the list yet
-            if (partContainerDiv.length === 0) {
+            if (partContainerDiv.decorated.length === 0) {
                 return this.addPart(partId, partDesc);
             }
         }
@@ -283,12 +348,48 @@ define([
         var partContainerDiv = this._partDraggableEl[partId] ? this._partDraggableEl[partId] : undefined;
 
         if (partContainerDiv) {
-            dragSource.enableDraggable(partContainerDiv, enabled);
+            dragSource.enableDraggable(partContainerDiv.decorated, enabled);
+            dragSource.enableDraggable(partContainerDiv.onlyName, enabled);
             if (enabled) {
-                partContainerDiv.fadeTo(1, 1);
+                partContainerDiv.decorated.fadeTo(1, 1);
+                partContainerDiv.onlyName.fadeTo(1, 1);
             } else {
-                partContainerDiv.fadeTo(1, 0.3);
+                partContainerDiv.decorated.fadeTo(1, 0.3);
+                partContainerDiv.onlyName.fadeTo(1, 0.3);
             }
+        }
+    };
+
+    PartBrowserWidget.prototype.hidePart = function (partId) {
+        var partDiv = this._getPartDiv(partId);
+
+        if (partDiv && partDiv.decorated && partDiv.onlyName) {
+            partDiv.decorated.hide();
+            partDiv.onlyName.hide();
+        } else {
+            this._logger.warn('Unknown partId [' + partId + '] to hide.');
+        }
+    };
+
+    PartBrowserWidget.prototype.showPart = function (partId) {
+        var partDiv = this._getPartDiv(partId);
+
+        if (partDiv && partDiv.decorated && partDiv.onlyName) {
+            partDiv.decorated.show();
+            partDiv.onlyName.show();
+        } else {
+            this._logger.warn('Unknown partId [' + partId + '] to show.');
+        }
+    };
+
+    PartBrowserWidget.prototype.setNameSpaceList = function(namespaces){
+        var i;
+        this._selector.clear();
+
+        for(i=0;i<namespaces.length;i+=1){
+            this._selector.addButton({
+
+            });
         }
     };
 

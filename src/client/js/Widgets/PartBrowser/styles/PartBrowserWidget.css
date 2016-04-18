@@ -17,3 +17,6 @@
       .part-browser > ul > li div.part {
         display: inline-block;
         cursor: pointer; }
+      .part-browser > ul > li div.name-part {
+        display: inline-block;
+        cursor: pointer; }

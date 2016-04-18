@@ -143,7 +143,6 @@ define(['js/logger',
             keys,
             i,
             self = this,
-            div,
             newTerritoryRules;
 
         // TODO: later we should apply project specific sorting if it is defined.
@@ -167,14 +166,13 @@ define(['js/logger',
 
             if (!this._descriptorCollection[keys[i]] ||
                 (this._descriptorCollection[keys[i]].visibility !== newDescriptor[keys[i]].visibility)) {
-                div = this._partBrowserView._getPartDiv(keys[i]);
                 if (newDescriptor[keys[i]].visibility === 'hidden') {
-                    div.hide();
+                    this._partBrowserView.hidePart(keys[i]);
                 } else if (newDescriptor[keys[i]].visibility === 'visible') {
-                    div.show();
+                    this._partBrowserView.showPart(keys[i]);
                     this._partBrowserView.setEnabled(keys[i], true);
                 } else {
-                    div.show();
+                    this._partBrowserView.showPart(keys[i]);
                     this._partBrowserView.setEnabled(keys[i], false);
                 }
             }
