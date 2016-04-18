@@ -1,16 +1,43 @@
 # Change Log
 
-## [1.7.0](https://github.com/webgme/webgme/tree/1.7.0) (2016-04-11)
-[Full Changelog](https://github.com/webgme/webgme/compare/v1.6.0...1.7.0)
+## [v1.7.1](https://github.com/webgme/webgme/tree/v1.7.1) (2016-04-18)
+[Full Changelog](https://github.com/webgme/webgme/compare/v1.7.0...v1.7.1)
 
 **Implemented enhancements:**
 
+- Trying to use an exported webgmeX \(or its json\) as a seed fails [\#943](https://github.com/webgme/webgme/issues/943)
+- Provide a legitimate save/load mechanism [\#895](https://github.com/webgme/webgme/issues/895)
+- Print warnings in functions/API that will be removed in v2.0.0 [\#952](https://github.com/webgme/webgme/pull/952) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#943 Trying to use an exported webgmeX \(or its json\) as a seed fails [\#950](https://github.com/webgme/webgme/pull/950) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- Loader Circles created before body populated. [\#946](https://github.com/webgme/webgme/issues/946)
+- Trying to use an exported webgmeX \\(or its json\\) as a seed fails [\#943](https://github.com/webgme/webgme/issues/943)
+- Custom constraints produces server error [\#939](https://github.com/webgme/webgme/issues/939)
+- DocumentDecorator uses default classes when rendering onto Object [\#938](https://github.com/webgme/webgme/issues/938)
+- Closes \#938 Do not apply Epic Editor's css rules to UI. [\#951](https://github.com/webgme/webgme/pull/951) ([pmeijer](https://github.com/pmeijer))
+- Fixes \\#943 Trying to use an exported webgmeX \\(or its json\\) as a seed fails [\#950](https://github.com/webgme/webgme/pull/950) ([kecso](https://github.com/kecso))
+- SVG caching and fix minor bug regarding loader circles. Closes \#946 [\#947](https://github.com/webgme/webgme/pull/947) ([pmeijer](https://github.com/pmeijer))
+- Ensure Error when rejecting constraint after eval. Closes \#939 [\#944](https://github.com/webgme/webgme/pull/944) ([pmeijer](https://github.com/pmeijer))
+- Introduce getNamespace on core to distinguish between meta-nodes with dots in name. [\#941](https://github.com/webgme/webgme/pull/941) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Child containment minimum cardinality should be respected during model creation [\#942](https://github.com/webgme/webgme/issues/942)
+
+## [v1.7.0](https://github.com/webgme/webgme/tree/v1.7.0) (2016-04-11)
+[Full Changelog](https://github.com/webgme/webgme/compare/v1.6.0...v1.7.0)
+
+**Implemented enhancements:**
+
+- LayoutGenerator should use ComponentSettings [\#893](https://github.com/webgme/webgme/issues/893)
 - zoom +/- buttons with collapsible zoom slider [\#907](https://github.com/webgme/webgme/issues/907)
 - Requiring text in plugin causes tests to fail [\#898](https://github.com/webgme/webgme/issues/898)
 - User experience issue : adding connector to a crosscut [\#897](https://github.com/webgme/webgme/issues/897)
-- LayoutGenerator should use ComponentSettings [\#893](https://github.com/webgme/webgme/issues/893)
 - Create a default crosscut [\#866](https://github.com/webgme/webgme/issues/866)
 - Hover response is too aggressive [\#843](https://github.com/webgme/webgme/issues/843)
+- Update CONTRIBUTING and config-readme. [\#937](https://github.com/webgme/webgme/pull/937) ([pmeijer](https://github.com/pmeijer))
 - Require bower from a node-script in postinstall instead of relying on path to bin script. [\#936](https://github.com/webgme/webgme/pull/936) ([pmeijer](https://github.com/pmeijer))
 - Css fixes and isis ui components [\#930](https://github.com/webgme/webgme/pull/930) ([pmeijer](https://github.com/pmeijer))
 - FIX: \#902 Use ejs for html templating [\#929](https://github.com/webgme/webgme/pull/929) ([pmeijer](https://github.com/pmeijer))
@@ -30,13 +57,13 @@
 
 **Fixed bugs:**
 
+- Crosscut visualizer does not automatically load nodes from other branches [\#904](https://github.com/webgme/webgme/issues/904)
+- Generated plugins fork logger as "NewPlugin" in the tests [\#899](https://github.com/webgme/webgme/issues/899)
 - Download url for libraries are not working when server is behind a proxy. [\#932](https://github.com/webgme/webgme/issues/932)
 - Exclude library roots from meta-rule checker. [\#931](https://github.com/webgme/webgme/issues/931)
 - Null pointers not handled correctly [\#919](https://github.com/webgme/webgme/issues/919)
 - MetaCache doesn't handle node removal during load [\#909](https://github.com/webgme/webgme/issues/909)
 - Suppress auto visualizer look-up when switching panels in split view [\#905](https://github.com/webgme/webgme/issues/905)
-- Crosscut visualizer does not automatically load nodes from other branches [\#904](https://github.com/webgme/webgme/issues/904)
-- Generated plugins fork logger as "NewPlugin" in the tests [\#899](https://github.com/webgme/webgme/issues/899)
 - Fixes library element ordering in ObjectBrowser [\#935](https://github.com/webgme/webgme/pull/935) ([kecso](https://github.com/kecso))
 - Fixes \#932 Download url for libraries are not working when server is behind a proxy. [\#934](https://github.com/webgme/webgme/pull/934) ([kecso](https://github.com/kecso))
 - Closes \#931 Exclude lib-roots from meta-rule checking. [\#933](https://github.com/webgme/webgme/pull/933) ([pmeijer](https://github.com/pmeijer))
