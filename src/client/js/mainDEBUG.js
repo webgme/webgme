@@ -55,7 +55,7 @@ require.config({
 
         //WebGME custom modules
         common: '/common',
-        blob: 'common/blob',
+        blob: '/common/blob',
         executor: '/common/executor',
         plugin: '/plugin',
         layout: '/layout',

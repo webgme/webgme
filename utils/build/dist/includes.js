@@ -26,7 +26,6 @@ define([
     //panels from default layout
     'js/Panels/Header/HeaderPanel',
     'js/Panels/FooterControls/FooterControlsPanel',
-    'js/Panels/Visualizer/VisualizerPanel',
     'js/Panels/ObjectBrowser/ObjectBrowserPanel',
     'js/Panels/Visualizer/VisualizerPanel',
     'js/Panels/PartBrowser/PartBrowserPanel',

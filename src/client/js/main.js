@@ -20,8 +20,21 @@ require.config({
     baseUrl: './',
     map: {
         '*': {
-            panel: 'js/Panels',
+            //layout
             'layout/DefaultLayout': 'js/Layouts',
+            //panels from default layout
+            'panel/Header': 'js/Panels/Header',
+            'panel/FooterControls': 'js/Panels/FooterControls',
+            'panel/Visualizer': 'js/Panels/Visualizer',
+            'panel/ObjectBrowser': 'js/Panels/ObjectBrowser',
+            'panel/PartBrowser': 'js/Panels/PartBrowser',
+            'panel/PropertyEditor': 'js/Panels/PropertyEditor',
+            //panels from visualizers.json
+            'panel/MetaEditor': 'js/Panels/MetaEditor',
+            'panel/ModelEditor': 'js/Panels/ModelEditor',
+            'panel/SetEditor': 'js/Panels/SetEditor',
+            'panel/Crosscut': 'js/Panels/Crosscut',
+            'panel/GraphViz': 'js/Panels/GraphViz'
         }
     },
     paths: {
@@ -62,7 +75,7 @@ require.config({
 
         //WebGME custom modules
         common: '/common',
-        blob: 'common/blob',
+        blob: '/common/blob',
         executor: '/common/executor',
         plugin: '/plugin',
         layout: '/layout',
