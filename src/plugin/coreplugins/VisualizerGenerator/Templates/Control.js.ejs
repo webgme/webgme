@@ -57,14 +57,14 @@ define(['js/Constants',
         self._currentNodeId = nodeId;
         self._currentNodeParentId = undefined;
 
-        if (self._currentNodeId || self._currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
+        if (typeof self._currentNodeId === 'string') {
             // Put new node's info into territory rules
             self._selfPatterns = {};
             self._selfPatterns[nodeId] = {children: 0};  // Territory "rule"
 
             self._widget.setTitle(desc.name.toUpperCase());
 
-            if (desc.parentId || desc.parentId === CONSTANTS.PROJECT_ROOT_ID) {
+            if (typeof desc.parentId === 'string') {
                 self.$btnModelHierarchyUp.show();
             } else {
                 self.$btnModelHierarchyUp.hide();
@@ -151,7 +151,11 @@ define(['js/Constants',
     };
 
     <%= visualizerID %>Control.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
-        this.selectedObjectChanged(activeObjectId);
+        if (this._currentNodeId === activeObjectId) {
+            // The same node selected as before - do not trigger
+        } else {
+            this.selectedObjectChanged(activeObjectId);
+        }
     };
 
     /* * * * * * * * Visualizer life cycle callbacks * * * * * * * */
@@ -172,6 +176,12 @@ define(['js/Constants',
     <%= visualizerID %>Control.prototype.onActivate = function () {
         this._attachClientEventListeners();
         this._displayToolbarItems();
+
+        if (this._currentNodeId === 'string') {
+            WebGMEGlobal.State.registerSuppressVisualizerFromNode(true);
+            WebGMEGlobal.State.registerActiveObject(this._currentNodeId);
+            WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
+        }
     };
 
     <%= visualizerID %>Control.prototype.onDeactivate = function () {

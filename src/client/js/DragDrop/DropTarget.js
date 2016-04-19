@@ -1,6 +1,13 @@
 /*globals define, _ */
 /*jshint browser: true*/
 /**
+ * Helpers for making an element a drop-target in the sense of jquery-ui (https://jqueryui.com/droppable/).
+ * If the dragged/dropped element was made draggable via DragSource the dispatched events will contain gme-
+ * specific dragInfo regarding the node.
+ *
+ * N.B. Other UI pieces with the jquery-ui class 'ui-draggable' defined will also trigger events. These are not
+ * filtered here - but will contain no dragInfo (it will be undefined).
+ *
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
