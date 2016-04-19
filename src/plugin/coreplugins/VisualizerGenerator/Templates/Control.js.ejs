@@ -91,11 +91,11 @@ define(['js/Constants',
 
         if (nodeObj) {
             objDescriptor = {
-                'id': undefined,
-                'name': undefined,
-                'childrenIds': undefined,
-                'parentId': undefined,
-                'isConnection': false
+                id: undefined,
+                name: undefined,
+                childrenIds: undefined,
+                parentId: undefined,
+                isConnection: false
             };
 
             objDescriptor.id = nodeObj.getId();
@@ -177,7 +177,7 @@ define(['js/Constants',
         this._attachClientEventListeners();
         this._displayToolbarItems();
 
-        if (this._currentNodeId === 'string') {
+        if (typeof this._currentNodeId === 'string') {
             WebGMEGlobal.State.registerSuppressVisualizerFromNode(true);
             WebGMEGlobal.State.registerActiveObject(this._currentNodeId);
             WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
@@ -244,7 +244,7 @@ define(['js/Constants',
             title: 'toggle checkbox',
             icon: 'gme icon-gme_diagonal-arrow',
             checkChangedFn: function (data, checked) {
-                self._logger.log('Checkbox has been clicked!');
+                self._logger.debug('Checkbox has been clicked!');
             }
         });
         this._toolbarItems.push(this.$cbShowConnection);
