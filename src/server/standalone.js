@@ -203,7 +203,6 @@ function StandAloneServer(gmeConfig) {
         // https://github.com/herzi/systemd-socket
         // https://nodejs.org/api/http.html#http_server_listen_handle_callback
         __httpServer.listen(systemdSocket(0) || gmeConfig.server.port, function () {
-        __httpServer.listen(gmeConfig.server.port, function () {
             // Note: the listening function does not return with an error, errors are handled by the error event
             logger.error('Http server is listening on ',
                           {metadata: {fd: systemdSocket,
