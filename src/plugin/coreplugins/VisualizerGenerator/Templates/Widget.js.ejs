@@ -42,7 +42,7 @@ define(['css!./styles/<%= visualizerID %>Widget.css'], function () {
     };
 
     <%= visualizerID %>Widget.prototype.onWidgetContainerResize = function (width, height) {
-        console.log('Widget is resizing...');
+        this._logger.debug('Widget is resizing...');
     };
 
     // Adding/Removing/Updating items
@@ -67,20 +67,20 @@ define(['css!./styles/<%= visualizerID %>Widget.css'], function () {
 
     <%= visualizerID %>Widget.prototype.removeNode = function (gmeId) {
         var desc = this.nodes[gmeId];
-        this._el.append('<div>Removing node "'+desc.name+'"</div>');
+        this._el.append('<div>Removing node "' + desc.name + '"</div>');
         delete this.nodes[gmeId];
     };
 
     <%= visualizerID %>Widget.prototype.updateNode = function (desc) {
         if (desc) {
-            console.log('Updating node:', desc);
-            this._el.append('<div>Updating node "'+desc.name+'"</div>');
+            this._logger.debug('Updating node:', desc);
+            this._el.append('<div>Updating node "' + desc.name + '"</div>');
         }
     };
 
     /* * * * * * * * Visualizer event handlers * * * * * * * */
 
-    <%= visualizerID %>Widget.prototype.onNodeClick = function (id) {
+    <%= visualizerID %>Widget.prototype.onNodeClick = function (/*id*/) {
         // This currently changes the active node to the given id and
         // this is overridden in the controller.
     };
@@ -94,11 +94,11 @@ define(['css!./styles/<%= visualizerID %>Widget.css'], function () {
     };
 
     <%= visualizerID %>Widget.prototype.onActivate = function () {
-        console.log('<%= visualizerID %>Widget has been activated');
+        this._logger.debug('<%= visualizerID %>Widget has been activated');
     };
 
     <%= visualizerID %>Widget.prototype.onDeactivate = function () {
-        console.log('<%= visualizerID %>Widget has been deactivated');
+        this._logger.debug('<%= visualizerID %>Widget has been deactivated');
     };
 
     return <%= visualizerID %>Widget;
