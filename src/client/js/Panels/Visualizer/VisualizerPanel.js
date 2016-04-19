@@ -12,21 +12,18 @@ define(['js/logger',
     'js/RegistryKeys',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
-    'text!/api/visualizers',
     'css!./styles/VisualizerPanel.css'
 ], function (Logger,
              LoaderProgressBar,
              CONSTANTS,
              REGISTRY_KEYS,
              PanelBaseWithHeader,
-             SplitPanel,
-             VisualizersJSON) {
+             SplitPanel) {
 
     'use strict';
 
-    var VisualizerPanel;
-
-    VisualizersJSON = JSON.parse(VisualizersJSON);
+    var VisualizerPanel,
+        VisualizersJSON = WebGMEGlobal.allVisualizers;
 
     VisualizerPanel = function (layoutManager, params) {
         var options = {};

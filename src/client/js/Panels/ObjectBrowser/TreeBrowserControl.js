@@ -13,8 +13,7 @@ define(['js/logger',
     'js/RegistryKeys',
     './ObjectBrowserControlBase',
     'js/Dialogs/LibraryManager/LibraryManager',
-    'js/Utils/SaveToDisk',
-    'css!./styles/TreeBrowserControl.css'
+    'js/Utils/SaveToDisk'
 ], function (Logger,
              nodePropertyNames,
              ExportManager,

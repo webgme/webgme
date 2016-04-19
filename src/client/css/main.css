@@ -12,7 +12,9 @@
 @import url("../bower_components/spectrum/spectrum.css");
 @import url("../bower_components/bootstrap-multiselect/dist/css/bootstrap-multiselect.css");
 @import url("../bower_components/jquery.fancytree/dist/skin-vista/ui.fancytree.css");
+@import url("webgme_fancytree_overrides.css");
 @import url("contextmenu/jquery.contextMenu.min.css");
+@import url("webgme_contextmenu_overrides.css");
 
 @import url("print.css");
 @import url("themes/dawn.css");
@@ -21,6 +23,10 @@
 @import url("../bower_components/isis-ui-components/dist/isis-ui-components.css");
 
 /* OWN STYLES */
+.gme-icon {
+    background-image: url('../img/gme-icon.png');
+}
+
 html,body {
     margin: 0;
     padding: 0;

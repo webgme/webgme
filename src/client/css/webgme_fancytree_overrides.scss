@@ -1,0 +1,189 @@
+/**
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+
+/* FancyTree Vista-theme overrides */
+$progress-image-url: url("../img/progress.gif");
+$focused-node-background-color: #a3d7f3;
+$selected-node-background-color: #BEEBFF;
+$selected-node-border-color: #99DEFD;
+$node-progress-font-color: #AAAAAA;
+
+ul.fancytree-container {
+  overflow: visible !important;
+  padding-bottom: 0 !important;
+  height: auto;
+  font-size: 13px;
+  background-color: transparent;
+  border: none;
+
+  a {
+    border: 1px solid transparent;
+  }
+}
+
+.fancytree-has-children span.fancytree-icon /* Default icon */
+{
+  background-position: 0px -16px;
+}
+
+.fancytree-icon /* Default icon */
+{
+  margin-top: 1px;
+  cursor: pointer;
+}
+
+.fancytree-loading span.fancytree-expander  /* 'Loading' status overrides all others */
+{
+  background-position: 0 0;
+  background-image: $progress-image-url;
+}
+
+ul.fancytree-container a:focus,
+span.fancytree-focused a:link  /* @IE */
+{
+  background-color: transparent;
+  outline: none;
+}
+/* END OF --- FancyTree Vista-theme overrides */
+
+ul.fancytree-container {
+  outline-width: 0;
+  li {
+    line-height: 16px;
+    outline-width: 0;
+
+    span.fancytree-node {
+
+      span.fancytree-title {
+        margin-left: 0;
+
+        input[type=text] {
+          padding: 0;
+          font-size: 12px !important;
+          line-height: 12px;
+          margin-top: -3px !important;
+          width: 100px !important;
+        }
+      }
+      span.fancytree-title:hover {
+        background-color: #F2F7FD;
+        border-color: #F2F7FD;
+      }
+
+      &.fancytree-selected {
+
+        span.fancytree-title {
+          font-style: normal;
+          background: $selected-node-background-color;
+          border: 1px solid $selected-node-border-color;
+        }
+
+        &.fancytree-focused {
+          span.fancytree-title {
+            background: $focused-node-background-color;
+            outline: none;
+          }
+        }
+
+        &.fancytree-active {
+          span.fancytree-title {
+            font-style: normal;
+            background: $selected-node-background-color;
+            border: 1px solid $selected-node-border-color;
+          }
+          &.fancytree-focused {
+            span.fancytree-title {
+              background: $focused-node-background-color;
+              outline: none;
+            }
+          }
+        }
+      }
+
+      &.fancytree-active {
+        span.fancytree-title {
+          font-style: normal;
+          background: transparent;
+          border: 1px solid transparent;
+          outline: none;
+        }
+      }
+
+      &.fancytree-focus {
+        span.fancytree-title {
+          background: transparent;
+          outline: none;
+        }
+      }
+
+      /* 'Loading' node style with italic gray font and progress bar icon */
+      &.node-progress {
+
+        span.fancytree-title {
+          color: $node-progress-font-color;
+          font-style: italic;
+        }
+
+        span.fancytree-icon {
+          background: $progress-image-url 0 0;
+        }
+      }
+    }
+  }
+}
+
+ul.fancytree-container {
+
+  span.fancytree-icon {
+    margin-left: 0;
+    background: url("../img/gmeicons.png") 0 0;
+  }
+
+  span.gme-model span.fancytree-icon {
+    background-position: -48px 0 !important;
+  }
+
+  span.gme-atom span.fancytree-icon {
+    background-position: -16px 0 !important;
+  }
+
+  span.gme-aspect span.fancytree-icon {
+    background-position: -32px 0 !important;
+  }
+
+  span.gme-connection span.fancytree-icon {
+    background-position: -64px 0 !important;
+  }
+
+  span.gme-root span.fancytree-icon {
+    background-position: -80px 0 !important;
+  }
+
+  span.gme-library span.fancytree-icon {
+    background-position: -0px 0 !important;
+  }
+}
+
+// This could be dangerous but right now the filter buttons use these too so cannot scope it under fancy tree.
+i.gme-connection {
+  background: url("../img/gmeicons.png") 0 0;
+  background-position: -64px 0 !important;
+  width: 16px;
+  height: 16px;
+}
+
+i.gme-atom {
+  background: url("../img/gmeicons.png") 0 0;
+  background-position: -16px 0 !important;
+  width: 16px;
+  height: 16px;
+}
+
+i.gme-library {
+  background: url("../img/gmeicons.png") 0 0;
+  background-position: -0px 0 !important;
+  width: 16px;
+  height: 16px;
+}

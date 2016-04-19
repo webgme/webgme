@@ -17,12 +17,8 @@ global.requireJS = requirejs;
 requirejs.config({
     nodeRequire: require,
     baseUrl: requireJsBase,
-    map: {
-        '*': {
-            text: 'client/lib/require/require-text/text',
-        }
-    },
     paths: {
+        text: 'client/lib/require/require-text/text',
         blob: 'common/blob',
         executor: 'common/executor'
     }
