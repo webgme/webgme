@@ -1,0 +1,13 @@
+{
+  "id": "MultipleMainCallbackCalls",
+  "name": "Multiple Main Callbacks Calls",
+  "version": "1.7.0",
+  "description": "This plugin calls the main callback multiple times.",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cogs"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "configStructure": []
+}
