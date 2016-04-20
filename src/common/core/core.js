@@ -240,7 +240,7 @@ define([
         //this.isObject = core.isObject;
 
         /**
-         * Checks if the node in question exists or not.
+         * Checks if the node in question has some actual data.
          * @param {module:Core~Node} node - the node in question.
          *
          * @return {bool} Returns true if the node is 'empty' meaning that it is not reserved by real data.
@@ -300,10 +300,10 @@ define([
          * Loads the child of the given parent pointed by the relative id. Behind the scenes, it means
          * that it actually loads the data pointed by a hash stored inside the parent under the given id
          * and wraps it in a node object which will be connected to the parent as a child in the containment
-         * hierarchy.
+         * hierarchy. If there is no such relative id reserved, the call will return with null.
          * @param {module:Core~Node} parent - the container node in question.
          * @param {string} relativeId - the relative id of the child in question.
-         * @param {function(string, module:Core~Node)} callback
+         * @param {function(string, module:Core~Node | null)} callback
          *
          * @func
          */
@@ -311,11 +311,10 @@ define([
 
         /**
          * From the given starting node, it loads the path given as a series of relative ids (separated by '/')
-         * and returns the node it finds at the ends of the path. If there is no node, it will not stop but create
-         * empty nodes on demand and return a new empty node back.
+         * and returns the node it finds at the ends of the path. If there is no node, the function will return null.
          * @param {module:Core~Node} startNode - the starting node of our search.
          * @param {string} relativePath - the relative path - built by relative ids - of the node in question.
-         * @param {function(string, module:Core~Node)} callback
+         * @param {function(string, module:Core~Node | null)} callback
          *
          * @func
          */
@@ -349,7 +348,7 @@ define([
          * finally if the returned value is undefined than there is no such pointer defined for the given node.
          * @param {module:Core~Node} source - the container node in question.
          * @param {string} pointerName - the relative id of the child in question.
-         * @param {function(string, module:Core~Node)} callback
+         * @param {function(string, module:Core~Node | null | undefined)} callback
          *
          * @func
          */

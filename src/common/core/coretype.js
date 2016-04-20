@@ -79,7 +79,7 @@ define([
                 }
             }
             //normal child - as every node should have a base, it is normally mean a direct child of the ROOT
-            if(self.getChildrenRelids(node).indexOf(relid) === -1){
+            if (self.getChildrenRelids(node).indexOf(relid) === -1) {
                 return null;
             }
 
@@ -797,7 +797,7 @@ define([
         };
 
         this.getBase = function (node) {
-            ASSERT((node));
+            ASSERT(self.isValidNode(node));
 
             // TODO: check if base has moved
             return node.base;

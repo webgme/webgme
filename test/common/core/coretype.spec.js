@@ -15,9 +15,11 @@ describe('coretype', function () {
         Type = testFixture.requirejs('common/core/coretype'),
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
+        NullPtr = testFixture.requirejs('common/core/nullpointercore'),
         TASYNC = testFixture.requirejs('common/core/tasync'),
         Core = function (s, options) {
-            return new Type(new Rel(new Tree(s, options), options), options);
+            return new NullPtr(
+                new Type(new NullPtr(new Rel(new Tree(s, options), options), options), options), options);
         },
         projectName = 'coreTypeTesting',
         projectId = testFixture.projectName2Id(projectName),
@@ -37,9 +39,9 @@ describe('coretype', function () {
 
     after(function (done) {
         Q.allDone([
-            storage.closeDatabase(),
-            gmeAuth.unload()
-        ])
+                storage.closeDatabase(),
+                gmeAuth.unload()
+            ])
             .nodeify(done);
     });
 
@@ -122,7 +124,6 @@ describe('coretype', function () {
             core.getPath(core.getTypeRoot(instance)).should.be.eql(core.getPath(base));
             (core.getTypeRoot(base) === null).should.be.true;
 
-
             done();
         }, core.loadChildren(root));
     });
@@ -143,7 +144,6 @@ describe('coretype', function () {
             (core.getOwnPointerPath(instance, 'parent') === undefined).should.be.true;
             core.getOwnPointerNames(instance).should.be.eql(['base']);
             core.getPointerPath(instance, 'parent').should.be.eql(core.getPath(root));
-
 
             done();
         }, core.loadChildren(root));
@@ -411,7 +411,6 @@ describe('coretype', function () {
             instB = core.createNode({parent: root, base: typeB}),
             relid = core.getRelid(instA);
 
-
         instA = core.moveNode(instA, instB);
         instB = core.moveNode(instB, typeA);
 
@@ -427,7 +426,6 @@ describe('coretype', function () {
             typeB = core.createNode({parent: root}),
             instA = core.createNode({parent: root, base: typeA}),
             path = core.getPath(instA);
-
 
         typeA = core.moveNode(typeA, typeB);
         typeB = core.moveNode(typeB, instA);
@@ -449,6 +447,7 @@ describe('coretype', function () {
             instA = core.createNode({parent: root, base: typeA, relid: '12'}),
             path = core.getPath(instA);
 
+        expect(core.getPointerPath(typeA, 'base')).to.equal(null);
         //we have to save and reload otherwise the base is still in the cache so it can be loaded without a problem
         core.persist(root);
 
