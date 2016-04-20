@@ -29,27 +29,18 @@ require.config({
         // plugins
         // TODO: populate plugin list dynamically based on config.json
         'plugin/MinimalWorkingExample': './src/plugin/coreplugins',
-        PluginForked: './test/plugin/scenarios/plugins/PluginForked/PluginForked',
-        'js/Dialogs/PluginConfig/PluginConfigDialog': './utils/build/empty/empty',
+        'plugin/PluginForked': './test/plugin/scenarios/plugins',
 
-        // MAGIC ... from src/client/js/main.js
         executor: './src/common/executor',
         blob: './src/common/blob',
         common: './src/common',
-        //'core': './src/common/core',
-        //'storage': './src/common/storage',
 
         js: './src/client/js',
-        //'util': './src/common/util',
-        //'eventDispatcher': './src/common/EventDispatcher',
-        //'logManager': './src/common/LogManager',
-        //'coreclient': './src/common/core/users',
 
         superagent: './src/client/lib/superagent/superagent',
         jszip: './src/client/bower_components/jszip/dist/jszip',
         debug: './src/client/bower_components/visionmedia-debug/dist/debug',
         underscore: './src/client/bower_components/underscore/underscore',
-        //Q: './src/client/lib/q/q', //FIXME: this should be removed
         q: './src/client/bower_components/q/q',
 
         karmatest: './test-karma',
