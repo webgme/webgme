@@ -12,7 +12,7 @@ define(['q'], function (Q) {
     function loadNode(core, rootNode, nodePath) {
         return core.loadByPath(rootNode, nodePath)
             .then(function (node) {
-                if (core.isEmpty(node)) {
+                if (node === null) {
                     throw new Error('Given nodePath does not exist "' + nodePath + '"!');
                 } else {
                     return node;
@@ -101,7 +101,6 @@ define(['q'], function (Q) {
          *       maxItems: [ -1, 4 ]
          *   }
          */
-
 
         // Initialize the number of matches for each valid type.
         matches = subMetaRules.items.map(function () {
@@ -312,11 +311,11 @@ define(['q'], function (Q) {
         meta = core.getJsonMeta(node);
 
         return Q.all([
-            checkPointerRules(meta, core, node),
-            checkSetRules(meta, core, node),
-            checkChildrenRules(meta, core, node),
-            checkAttributeRules(meta, core, node)
-        ])
+                checkPointerRules(meta, core, node),
+                checkSetRules(meta, core, node),
+                checkChildrenRules(meta, core, node),
+                checkAttributeRules(meta, core, node)
+            ])
             .then(function (results) {
                 var i;
                 for (i = 0; i < results.length; i += 1) {
