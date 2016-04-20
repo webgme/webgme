@@ -225,7 +225,6 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
         })
         .catch(deferred.reject);
 
-
     return deferred.promise.nodeify(callback);
 }
 
@@ -348,7 +347,7 @@ function loadNode(core, rootNode, nodePath, callback) {
     core.loadByPath(rootNode, nodePath, function (err, node) {
         if (err) {
             deferred.reject(new Error(err));
-        } else if (core.isEmpty(node)) {
+        } else if (node === null) {
             deferred.reject(new Error('Given nodePath does not exist "' + nodePath + '"!'));
         } else {
             deferred.resolve(node);
@@ -463,10 +462,8 @@ function openSocketIo(server, agent, userName, password, token) {
             deferred.reject(err);
         });
 
-
     return deferred.promise;
 }
-
 
 WebGME.addToRequireJsPaths(gmeConfig);
 

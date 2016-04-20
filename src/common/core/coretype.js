@@ -78,7 +78,11 @@ define([
                     }, basechild, child, node, relid);
                 }
             }
-            //normal child
+            //normal child - as every node should have a base, it is normally mean a direct child of the ROOT
+            if (self.getChildrenRelids(node).indexOf(relid) === -1) {
+                return null;
+            }
+
             return TASYNC.call(loadBase, innerCore.loadChild(node, relid));
         }
 
@@ -130,14 +134,16 @@ define([
                 ASSERT(node.base === undefined || node.base === null); //kecso
 
                 if (target === null) {
-                    node.base = null;
-                    return node;
-                } else {
-                    return TASYNC.call(function (n, b) {
-                        n.base = b;
-                        return n;
-                    }, node, loadBase(target));
+                    // At this point the base node should be a valid node
+                    logger.warn('node [' + innerCore.getPath(node) +
+                        '] removed due to missing base in inheritance chain');
+                    innerCore.deleteNode(node);
+                    //core.persist(core.getRoot(node));
+                    return null;
                 }
+
+                node.base = target;
+                return node;
             }
         }
 
@@ -304,7 +310,6 @@ define([
             test('base', typeof node.base === 'object');
         }
 
-
         function getProperty(node, name) {
             var property;
             while (property === undefined && node !== null) {
@@ -371,6 +376,7 @@ define([
             }
             return filtered;
         }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -392,7 +398,7 @@ define([
             return TASYNC.call(function (child) {
                 if (child && self.isInheritanceContainmentCollision(child, self.getParent(child))) {
                     logger.error('node[' + self.getPath(child) +
-                                 '] was deleted due to inheritance-containment collision');
+                        '] was deleted due to inheritance-containment collision');
                     self.deleteNode(child);
                     //core.persist(core.getRoot(child));
                     return null;
@@ -791,7 +797,7 @@ define([
         };
 
         this.getBase = function (node) {
-            ASSERT((node));
+            ASSERT(self.isValidNode(node));
 
             // TODO: check if base has moved
             return node.base;
@@ -807,7 +813,7 @@ define([
             //TODO this restriction should be removed after clarification of the different scenarios and outcomes
             //changing base from or to a node which has children is not allowed currently
             ASSERT((base === null || oldBase === null) ||
-                   (self.getChildrenRelids(base).length === 0 && self.getChildrenRelids(oldBase).length === 0));
+                (self.getChildrenRelids(base).length === 0 && self.getChildrenRelids(oldBase).length === 0));
 
             if (!!base) {
                 //TODO maybe this is not the best way, needs to be double checked
