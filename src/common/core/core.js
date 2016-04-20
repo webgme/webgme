@@ -303,7 +303,7 @@ define([
          * hierarchy. If there is no such relative id reserved, the call will return with null.
          * @param {module:Core~Node} parent - the container node in question.
          * @param {string} relativeId - the relative id of the child in question.
-         * @param {function(string, module:Core~Node | null)} callback
+         * @param {function(string, module:Core~Node)} callback
          *
          * @func
          */
@@ -314,7 +314,7 @@ define([
          * and returns the node it finds at the ends of the path. If there is no node, the function will return null.
          * @param {module:Core~Node} startNode - the starting node of our search.
          * @param {string} relativePath - the relative path - built by relative ids - of the node in question.
-         * @param {function(string, module:Core~Node | null)} callback
+         * @param {function(string, module:Core~Node)} callback
          *
          * @func
          */
@@ -348,7 +348,7 @@ define([
          * finally if the returned value is undefined than there is no such pointer defined for the given node.
          * @param {module:Core~Node} source - the container node in question.
          * @param {string} pointerName - the relative id of the child in question.
-         * @param {function(string, module:Core~Node | null | undefined)} callback
+         * @param {function(string, module:Core~Node)} callback
          *
          * @func
          */
