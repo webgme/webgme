@@ -91,6 +91,7 @@ define([
 
                 context = self._client.getCurrentPluginContext();
                 context.pluginConfig = pluginConfig;
+                context.managerConfig.namespace = globalConfig.namespace;
 
                 // Before executing the plugin - make sure the client is in SYNC.
                 // (If not plugin could be executed on the server on a commitHash that does not exist).
@@ -117,6 +118,17 @@ define([
                 description: '',
                 value: false,
                 valueType: 'boolean',
+                readOnly: false
+            },
+            namespace = {
+                name: 'namespace',
+                displayName: 'Used Namespace',
+                description: 'The namespace the plugin should run under.',
+                value: '',
+                valueType: 'string',
+                valueItems: [
+                    ''
+                ],
                 readOnly: false
             },
             serverAllowedGlobal = this.gmeConfig.plugin.allowServerExecution === true,
@@ -164,7 +176,7 @@ define([
         if (errorMessage) {
             return getPluginErrorResult(pluginMetadata.id, errorMessage, (new Date()).toISOString());
         } else {
-            return [runOption];
+            return [runOption, namespace];
         }
     };
 

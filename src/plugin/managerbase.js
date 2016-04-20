@@ -45,6 +45,7 @@ define([
          * @param {ProjectInterface} [context.project=project] - project instance if different from the one passed in.
          * @param {string} [context.activeNode=''] - path to active node
          * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
+         * @param {string} [context.namespace=''] - used namespace during execution ('' is the root).
          * @param {function} callback
          */
         this.executePlugin = function (pluginId, pluginConfig, context, callback) {
@@ -95,6 +96,7 @@ define([
          * @param {ProjectInterface} [context.project=project] - project instance if different from the one passed in.
          * @param {string} [context.activeNode=''] - path to active node
          * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
+         * @param {string} [context.namespace=''] - used namespace during execution ('' is the root).
          * @param {function} callback
          * @returns {promise}
          */
@@ -241,6 +243,7 @@ define([
          * @param {string} [context.commitHash=<%branchHash%>] - commit from which to start the plugin.
          * @param {string} [context.activeNode=''] - path to active node
          * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
+         * @param {string} [context.namespace=''] - used namespace during execution ('' is the root).
          * @param {object} pluginLogger - logger for the plugin.
          */
         this.loadContext = function (context) {
@@ -252,8 +255,8 @@ define([
                     rootNode: null,
                     activeNode: null,
                     activeSelection: null,
-                    META_BY_NS: {},
-                    activeNameSpace: context.activeNameSpace,
+                    META: {},
+                    namespace: context.namespace || '',
 
                     project: context.project,
                     projectId: context.project.projectId,
@@ -304,25 +307,44 @@ define([
                     self.logger.debug('activeSelection loaded');
                     // Load meta nodes
                     var metaIds = pluginContext.core.getMemberPaths(pluginContext.rootNode, 'MetaAspectSet');
-                    return self.loadNodesByPath(pluginContext, metaIds, true);
+                    return self.loadNodesByPath(pluginContext, metaIds, !context.namespace);
                 })
                 .then(function (metaNodes) {
                     var libraryNames = pluginContext.core.getLibraryNames(pluginContext.rootNode),
-                        libraryMetaNodes,
+                        metaNodeName,
+                        nodeNamespace,
                         i;
 
-                    pluginContext.META_BY_NS[''] = metaNodes;
+                    function startsWith(str, pattern) {
+                        return str.indexOf(pattern) === 0;
+                    }
 
-                    for (i = 0; libraryNames.length; i += 1) {
-                        pluginContext.META_BY_NS[libraryNames[i]] = {};
-                        libraryMetaNodes = pluginContext.core.getLibraryMetaNodes(pluginContext.rootNode,
-                            libraryNames[i]);
+                    if (context.namespace) {
+                        if (libraryNames.indexOf(context.namespace) === -1) {
+                            //TODO: Does getLibraryNames get the inner names too? If not maybe add getNamespaces?
 
-                        libraryMetaNodes.map(function (path) {
-                            var libraryNode = libraryMetaNodes[path];
-                            pluginContext.META_BY_NS[libraryNames[i]] = pluginContext.core.
-                                getFullyQualifiedName(libraryNode).substring(libraryNames[i].length + 1);
-                        });
+                            throw new Error('Given namespace does not exist among the available: "' +
+                                libraryNames + '".');
+                        }
+
+                        for (i = 0; i < metaNodes.length; i += 1) {
+                            nodeNamespace = pluginContext.core.getNamespace(metaNodes[i]);
+                            metaNodeName = pluginContext.core.getAttribute(metaNodes[i], 'name');
+
+                            if (startsWith(nodeNamespace, context.namespace)) {
+                                // Trim the based on the chosen namespace (+1 is to remove any dot).
+                                nodeNamespace = nodeNamespace.substring(context.namespace.length + 1);
+                                if (nodeNamespace) {
+                                    pluginContext.META[nodeNamespace + '.' + metaNodeName] = metaNodes[i];
+                                } else {
+                                    pluginContext.META[metaNodeName] = metaNodes[i];
+                                }
+                            } else {
+                                // Meta node is not within the given namespace and will not be added to META.
+                            }
+                        }
+                    } else {
+                        pluginContext.META = metaNodes;
                     }
 
                     deferred.resolve(pluginContext);

@@ -87,18 +87,25 @@ define([
         /**
          * The namespace the META nodes are coming from (set by invoker).
          * The default is the full meta, i.e. the empty string namespace.
+         * For example, if a project has a library A with a library B. The possible namespaces are:
+         * '', 'A' and 'A.B'.
          * @type {string}
          */
-        this.activeNameSpace = '';
+        this.namespace = '';
 
         /**
-         * Mapping from namespace-identifier (library root name) to objects of meta-nodes indexed by name.
-         * @type {Object<string, Object<string, module:Core~Node>>}
-         */
-        this.META_BY_NS = null;
-
-        /**
-         * The resolved META nodes based on the activeNameSpace.
+         * The resolved META nodes based on the active namespace. Index by the fully qualified meta node names
+         * with the namespace stripped off at the start.
+         *
+         * For example, if a project has a library A with a library B. If the project and the libraries all have
+         * two meta nodes named a and b. Depending on the namespace the META will have the following keys:
+         *
+         * 1) namespace = '' -> ['a', 'b', 'A.a', 'A.b', 'A.B.a', 'A.B.b']
+         * 2) namespace = 'A' -> ['a', 'b', 'B.a', 'B.b']
+         * 3) namespace = 'A.B' -> ['a', 'b']
+         *
+         * (N.B. 'a' and 'b' in example 3) are pointing to the meta nodes defined in A.B.)
+         *
          * @type {Object<string, module:Core~Node>}
          */
         this.META = null;
@@ -269,9 +276,17 @@ define([
      */
     PluginBase.prototype.getMetaType = function (node) {
         var self = this,
+            namespace,
             name;
+
         while (node) {
             name = self.core.getAttribute(node, 'name');
+            namespace = self.core.getNamespace(node).substr(self.namespace.length);
+
+            if (namespace) {
+                name = namespace + '.' + name;
+            }
+
             if (self.META.hasOwnProperty(name) && self.core.getGuid(node) === self.core.getGuid(self.META[name])) {
                 break;
             }
@@ -288,12 +303,20 @@ define([
     PluginBase.prototype.baseIsMeta = function (node) {
         var self = this,
             baseName,
+            namespace,
             baseNode = self.core.getBase(node);
         if (!baseNode) {
             // FCO does not have a base node, by definition function returns true.
             return true;
         }
+
         baseName = self.core.getAttribute(baseNode, 'name');
+        namespace = self.core.getNamespace(baseNode).substr(self.namespace.length);
+
+        if (namespace) {
+            baseName = namespace + '.' + baseName;
+        }
+
         return self.META.hasOwnProperty(baseName) &&
             self.core.getGuid(self.META[baseName]) === self.core.getGuid(baseNode);
     };
@@ -550,10 +573,9 @@ define([
         this.activeNode = config.activeNode;
         this.activeSelection = config.activeSelection;
 
-        this.META_BY_NS = config.META_BY_NS;
-        this.activeNameSpace = config.activeNameSpace || '';
+        this.namespace = config.namespace || '';
 
-        this.META = this.META_BY_NS[this.activeNameSpace];
+        this.META = this.META = config.META;
 
         this.result = new PluginResult();
         this.result.setProjectId(this.projectId);
