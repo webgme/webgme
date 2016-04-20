@@ -83,7 +83,7 @@ describe('REST API', function () {
                     });
             });
 
-            it('should list all available metadata for plugins and null where none exist /api/plugins/metadata',
+            it.skip('should list all available metadata for plugins and null where none exist /api/plugins/metadata',
                 function (done) {
                     var testPlugins = ['InvalidActiveNode', 'MultipleMainCallbackCalls', 'PluginForked'],
                         pluginNames;
@@ -151,7 +151,7 @@ describe('REST API', function () {
                     });
             });
 
-            it('should 404 for plugin with no metadata /api/plugin/PluginForked/metadata', function (done) {
+            it.skip('should 404 for plugin with no metadata /api/plugin/PluginForked/metadata', function (done) {
                 agent.get(server.getUrl() + '/api/v1/plugin/PluginForked/metadata')
                     .end(function (err, res) {
                         expect(res.status).equal(404, err);
