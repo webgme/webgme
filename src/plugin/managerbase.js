@@ -186,27 +186,30 @@ define([
 
         function getPlugin(pluginId, callback) {
             var deferred = Q.defer(),
+                rejected = false,
                 pluginPath = 'plugin/' + pluginId + '/' + pluginId + '/' + pluginId;
 
             if (self.serverSide && !gmeConfig.plugin.allowServerExecution) {
                 deferred.reject(new Error('Plugin execution on server side is disabled from gmeConfig.'));
-                return;
-            } else if (self.browserSide && !gmeConfig.plugin.allowServerExecution) {
+                rejected = true;
+            } else if (self.browserSide && !gmeConfig.plugin.allowBrowserExecution) {
                 deferred.reject(new Error('Plugin execution in browser is disabled from gmeConfig.'));
-                return;
+                rejected = true;
             } else {
                 self.logger.debug('Running as CLI - does not respect gmeConfig.plugin.allowServerExecution..');
             }
 
-            requirejs([pluginPath],
-                function (PluginClass) {
-                    self.logger.debug('requirejs plugin from path: ' + pluginPath);
-                    deferred.resolve(PluginClass);
-                },
-                function (err) {
-                    deferred.reject(err);
-                }
-            );
+            if (rejected === false) {
+                requirejs([pluginPath],
+                    function (PluginClass) {
+                        self.logger.debug('requirejs plugin from path: ' + pluginPath);
+                        deferred.resolve(PluginClass);
+                    },
+                    function (err) {
+                        deferred.reject(err);
+                    }
+                );
+            }
 
             return deferred.promise.nodeify(callback);
         }

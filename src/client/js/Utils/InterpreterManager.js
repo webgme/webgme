@@ -80,6 +80,7 @@ define([
                 if (globalConfig === false) {
                     // Canceled from dialog..
                     callback(false);
+                    return;
                 }
 
                 // Store the config in memory for this session.
@@ -127,7 +128,8 @@ define([
                 value: '',
                 valueType: 'string',
                 valueItems: [
-                    ''
+                    '',
+                    //'FSM'
                 ],
                 readOnly: false
             },

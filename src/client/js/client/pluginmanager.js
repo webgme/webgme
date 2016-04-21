@@ -67,7 +67,7 @@ define([
          * @param {function(err, PluginResult)} callback
          */
         this.runBrowserPlugin = function (pluginId, context, callback) {
-            var blobClient = new BlobClient(),
+            var blobClient = new BlobClient({logger: logger.fork('BlobClient')}),
                 pluginManager = new PluginManagerBase(blobClient, null, mainLogger, gmeConfig);
 
             pluginManager.browserSide = true;
