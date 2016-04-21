@@ -4,8 +4,151 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-define(['common/storage/constants', 'common/util/jsonPatcher'], function (CONSTANTS, jsonPatcher) {
+define([
+    'common/storage/constants',
+    'common/util/jsonPatcher',
+    'q',
+    'common/regexp'
+], function (CONSTANTS, jsonPatcher, Q, REGEXP) {
     'use strict';
+
+    function _getRootHash(project, parameters) {
+        var deferred = Q.defer();
+
+        if (parameters.branchName) {
+            Q.ninvoke(project, 'getBranchHash', parameters.branchName)
+                .then(function (commitHash) {
+                    parameters.commitHash = commitHash;
+                    return Q.ninvoke(project, 'loadObject', commitHash);
+                })
+                .then(function (commitObject) {
+                    parameters.rootHash = commitObject.root;
+                    deferred.resolve(commitObject.root);
+                })
+                .catch(deferred.reject);
+        } else if (parameters.commitHash) {
+            Q.ninvoke(project, 'loadObject', parameters.commitHash)
+                .then(function (commitObject) {
+                    parameters.rootHash = commitObject.root;
+                    deferred.resolve(commitObject.root);
+                })
+                .catch(deferred.reject);
+        } else if (parameters.tagName) {
+            Q.ninvoke(project, 'getAllTags')
+                .then(function (tags) {
+                    if (tags[parameters.tagName]) {
+                        parameters.commitHash = tags[parameters.tagName];
+                        return Q.ninvoke(project, 'loadObject', tags[parameters.tagName]);
+                    } else {
+                        throw new Error('Unknown tag name [' + parameters.tagName + ']');
+                    }
+                })
+                .then(function (commitObject) {
+                    parameters.rootHash = commitObject.root;
+                    deferred.resolve(commitObject.root);
+                })
+                .catch(deferred.reject);
+        } else if (parameters.rootHash) {
+            deferred.resolve(parameters.rootHash);
+        } else {
+            deferred.reject(new Error('No valid input was given to search for rootHash'));
+        }
+
+        return deferred.promise;
+    }
+
+    function _collectObjects(project, objectHashArray) {
+        var deferred = Q.defer(),
+            promises = [],
+            objects = [],
+            i;
+
+        for (i = 0; i < objectHashArray.length; i += 1) {
+            promises.push(Q.ninvoke(project, 'loadObject', objectHashArray[i]));
+        }
+
+        Q.allSettled(promises)
+            .then(function (results) {
+                var error = null,
+                    i;
+                for (i = 0; i < results.length; i += 1) {
+                    if (results[i].state === 'fulfilled') {
+                        objects.push(results[i].value);
+                    } else {
+                        error = error || results[i].reason || new Error('unable to load');
+                    }
+                }
+
+                if (error) {
+                    deferred.reject(error);
+                } else {
+                    deferred.resolve(objects);
+                }
+            });
+        return deferred.promise;
+    }
+
+    function _collectObjectAndAssetHashes(project, rootHash) {
+        var deferred = Q.defer(),
+            objects = {},
+            assets = {},
+            queue = [rootHash],
+            task,
+            error = null,
+            working = false,
+            timerId;
+
+        timerId = setInterval(function () {
+            if (!working) {
+                task = queue.shift();
+                if (task === undefined) {
+                    clearInterval(timerId);
+                    if (error) {
+                        deferred.reject(error);
+                    } else {
+                        deferred.resolve({objects: Object.keys(objects), assets: Object.keys(assets)});
+                    }
+                    return;
+                }
+
+                if (!objects[task]) {
+                    working = true;
+                    project.loadObject(task, function (err, object) {
+                        var key;
+
+                        error = error || err;
+                        if (!err && object) {
+                            objects[task] = true;
+                            if (object) {
+                                //now put every sub-object on top of the queue
+                                for (key in object) {
+                                    if (typeof object[key] === 'string' && REGEXP.HASH.test(object[key])) {
+                                        queue.push(object[key]);
+                                    }
+                                }
+
+                                //looking for assets
+                                if (object.atr) {
+                                    for (key in object.atr) {
+                                        //TODO why can't we inlcude BlobConfig???
+                                        if (typeof object.atr[key] === 'string' &&
+                                            REGEXP.BLOB_HASH.test(object.atr[key])) {
+                                            assets[object.atr[key]] = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        working = false;
+                    });
+                }
+
+            }
+        }, 1);
+
+        return deferred.promise;
+    }
+
     return {
         CONSTANTS: CONSTANTS,
         getProjectFullNameFromProjectId: function (projectId) {
@@ -56,6 +199,76 @@ define(['common/storage/constants', 'common/util/jsonPatcher'], function (CONSTA
             return !!(coreObj.oldHash && coreObj.newHash && coreObj.oldData && coreObj.newData);
         },
         getChangedNodes: jsonPatcher.getChangedNodes,
-        applyPatch: jsonPatcher.apply
+        applyPatch: jsonPatcher.apply,
+
+        /**
+         * Extracts a serializable json representation of a project tree.
+         * To specify starting point set one of the four options. If more than one is set the order of precedence is:
+         * rootHash, commitHash, tagName and branchName.
+         *
+         * @param {ProjectInterface} project
+         * @param {object} parameters - Specifies which project tree should be serialized:
+         * @param {string} [parameters.rootHash] - The hash of the tree root.
+         * @param {string} [parameters.commitHash] - The tree associated with the commitHash.
+         * @param {string} [parameters.tagName] - The tree at the given tag.
+         * @param {string} [parameters.branchName] - The tree at the given branch.
+         * @param {function} callback
+         */
+        getProjectJson: function (project, parameters, callback) {
+            var deferred = Q.defer(),
+                rawJson;
+
+            _getRootHash(project, parameters)
+                .then(function (rootHash) {
+                    return _collectObjectAndAssetHashes(project, rootHash);
+                })
+                .then(function (hashes) {
+                    rawJson = {
+                        rootHash: parameters.rootHash,
+                        projectId: project.projectId,
+                        branchName: parameters.branchName,
+                        commitHash: parameters.commitHash,
+                        hashes: hashes
+                    };
+                    return _collectObjects(project, hashes.objects);
+                })
+                .then(function (objects) {
+                    rawJson.objects = objects;
+                    deferred.resolve(rawJson);
+                })
+                .catch(deferred.reject);
+
+            return deferred.promise.nodeify(callback);
+        },
+
+        /**
+         * Inserts a serialized project tree into the storage and associates it with a commitHash.
+         *
+         * @param {ProjectInterface} project
+         * @param {object} [options]
+         * @param {string} [options.commitMessage='information about the insertion']
+         * @param {function(Error, hashes)} callback
+         */
+        insertProjectJson: function (project, projectJson, options, callback) {
+            var deferred = Q.defer(),
+                toPersist = {},
+                rootHash = projectJson.rootHash,
+                defaultCommitMessage = 'Importing contents of [' +
+                    projectJson.projectId + '@' + rootHash + ']',
+                objects = projectJson.objects,
+                i;
+
+            for (i = 0; i < objects.length; i += 1) {
+                toPersist[objects[i]._id] = objects[i];
+            }
+
+            project.makeCommit(null, [], rootHash, toPersist, options.commitMessage || defaultCommitMessage)
+                .then(function (commitResult) {
+                    deferred.resolve(commitResult.hash);
+                })
+                .catch(deferred.reject);
+
+            return deferred.promise.nodeify(callback);
+        }
     };
 });

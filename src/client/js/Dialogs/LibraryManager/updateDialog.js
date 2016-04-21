@@ -120,9 +120,10 @@ define(['js/Loader/LoaderCircles',
                 function (err) {
                     if (err) {
                         self.setError('unable to refresh library: ' + err);
-                        self._btnRefresh.disabled(true);
+                        self._btnRefresh.disable(true);
+                    } else {
+                        self._dialog.modal('hide');
                     }
-                    self._dialog.modal('hide');
                 }
             );
         });
