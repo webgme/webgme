@@ -259,14 +259,8 @@ define([
      * @returns {boolean} - True if the given object was of the META type.
      */
     PluginBase.prototype.isMetaTypeOf = function (node, metaNode) {
-        var self = this;
-        while (node) {
-            if (self.core.getGuid(node) === self.core.getGuid(metaNode)) {
-                return true;
-            }
-            node = self.core.getBase(node);
-        }
-        return false;
+        // This includes mixins.
+        return this.core.isTypeOf(node, metaNode);
     };
 
     /**

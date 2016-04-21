@@ -41,6 +41,8 @@ main = function (argv, callback) {
         .option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '')
         .option('-a, --activeSelection <webGMEIDs>', 'IDs of selected components (comma separated with no spaces).',
         list)
+        .option('-n, --namespace',
+        'Namespace the plugin should run under.', '')
         .option('-m, --mongo-database-uri [url]',
         'URI of the MongoDB [default from the configuration file]', gmeConfig.mongo.uri)
         .option('-u, --user [string]', 'the user of the command [if not given we use the default user]',
@@ -122,7 +124,8 @@ main = function (argv, callback) {
                     activeNode: program.selectedObjID,
                     activeSelection: program.activeSelection || [],
                     branchName: program.branchName,
-                    commitHash: commitHash
+                    commitHash: commitHash,
+                    namespace: program.namespace
                 };
 
             pluginManager.executePlugin(pluginName, pluginConfig, context,

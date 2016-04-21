@@ -127,12 +127,10 @@ define([
                 description: 'The namespace the plugin should run under.',
                 value: '',
                 valueType: 'string',
-                valueItems: [
-                    '',
-                    //'FSM'
-                ],
+                valueItems: [],
                 readOnly: false
             },
+            result = [],
             serverAllowedGlobal = this.gmeConfig.plugin.allowServerExecution === true,
             serverAllowedPlugin = !(pluginMetadata.disableServerSideExecution),
             browserAllowedGlobal = this.gmeConfig.plugin.allowBrowserExecution === true,
@@ -178,7 +176,15 @@ define([
         if (errorMessage) {
             return getPluginErrorResult(pluginMetadata.id, errorMessage, (new Date()).toISOString());
         } else {
-            return [runOption, namespace];
+            result.push(runOption);
+            namespace.valueItems = this._client.getLibraryNames();
+
+            if (namespace.valueItems.length > 0) {
+                namespace.valueItems.unshift('');
+                result.push(namespace);
+            }
+
+            return result;
         }
     };
 
