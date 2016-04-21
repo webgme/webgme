@@ -324,8 +324,6 @@ define([
 
                     if (context.namespace) {
                         if (libraryNames.indexOf(context.namespace) === -1) {
-                            //TODO: Does getLibraryNames get the inner names too? If not maybe add getNamespaces?
-
                             throw new Error('Given namespace does not exist among the available: "' +
                                 libraryNames + '".');
                         }
