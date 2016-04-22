@@ -199,6 +199,9 @@ define(['js/logger',
             if (nodeId !== this.currentNodeInfo.id) {
                 //fill the descriptor based on its type
                 if (GMEConcepts.isConnection(nodeId)) {
+                    objDescriptor.connectionChanged = this._GMEModels.indexOf(nodeId) > -1 &&
+                        this._GMEConnections.indexOf(nodeId) === -1;
+
                     objDescriptor.kind = 'CONNECTION';
                     objDescriptor.source = nodeObj.getPointer(SRC_POINTER_NAME).to;
                     objDescriptor.target = nodeObj.getPointer(DST_POINTER_NAME).to;
@@ -214,6 +217,8 @@ define(['js/logger',
                     }
                 } else {
                     objDescriptor.kind = 'MODEL';
+                    objDescriptor.connectionChanged = this._GMEModels.indexOf(nodeId) === -1 &&
+                        this._GMEConnections.indexOf(nodeId) > -1;
 
                     //aspect specific coordinate
                     if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
@@ -267,16 +272,20 @@ define(['js/logger',
 
     // PUBLIC METHODS
     ModelEditorControl.prototype._eventCallback = function (events) {
-        var i = events ? events.length : 0;
+        var i = events ? events.length : 0,
+            refresh;
 
         this.logger.debug('_eventCallback "' + i + '" items');
 
         if (i > 0) {
             this.eventQueue.push(events);
-            this.processNextInQueue();
+            refresh = this.processNextInQueue();
         }
 
         this.logger.debug('_eventCallback "' + events.length + '" items - DONE');
+        if (refresh === true) {
+            this.selectedObjectChanged(this.currentNodeInfo.id);
+        }
     };
 
     ModelEditorControl.prototype.processNextInQueue = function () {
@@ -284,6 +293,7 @@ define(['js/logger',
             len = this.eventQueue.length,
             decoratorsToDownload = [DEFAULT_DECORATOR],
             itemDecorator,
+            refresh = false,
             self = this;
 
         if (len > 0) {
@@ -294,9 +304,9 @@ define(['js/logger',
             while (len--) {
                 if ((nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) ||
                     (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
-                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ?
-                        _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid)) :
-                        this._getObjectDescriptor(nextBatchInQueue[len].eid);
+
+                    nextBatchInQueue[len].desc = this._getObjectDescriptor(nextBatchInQueue[len].eid);
+                    refresh = refresh || nextBatchInQueue[len].desc.connectionChanged === true;
 
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
 
@@ -312,6 +322,8 @@ define(['js/logger',
                 self._dispatchEvents(nextBatchInQueue);
             });
         }
+
+        return refresh;
     };
 
     ModelEditorControl.prototype._dispatchEvents = function (events) {
