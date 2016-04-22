@@ -49,7 +49,7 @@ var requirejs = require('requirejs'),
             'jquery-spectrum': 'client/bower_components/spectrum/spectrum',
             'jquery-csszoom': 'empty:',
             'jquery-fancytree': 'empty:',
-            'jquery-layout': 'client/lib/jquery/jquery.layout.min',
+            'jquery-layout': 'empty:',
             'jquery-contextMenu': 'client/lib/jquery/jquery.contextMenu.min',
             'jquery-gritter': 'client/bower_components/jquery.gritter/js/jquery.gritter.min',
 
