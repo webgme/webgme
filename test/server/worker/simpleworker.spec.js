@@ -2055,7 +2055,7 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.addLibrary,
                     webGMESessionId: webGMESessionId,
                     projectId: projectId,
-                    libraryName: 'SFS',
+                    libraryName: 'SFS2',
                     branchName: libraryProjectContext.branch,
                     blobHash: blobHash
                 });
@@ -2081,7 +2081,7 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.updateLibrary,
                     webGMESessionId: webGMESessionId,
                     projectId: projectId,
-                    libraryName: 'SFS',
+                    libraryName: 'SFS2',
                     branchName: libraryProjectContext.branch,
                     blobHash: blobHash
                 });
