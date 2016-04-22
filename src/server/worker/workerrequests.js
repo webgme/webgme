@@ -1169,7 +1169,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         if (err) {
                             deferred.reject(err);
                         } else {
-                            storageUtils.insertProjectJson(project, {
+                            storageUtils.getProjectJson(project, {
                                     branchName: parameters.libraryInfo.branchName,
                                     commitHash: parameters.libraryInfo.commitHash
                                 })
