@@ -204,7 +204,7 @@ define([
         /**
          * Extracts a serializable json representation of a project tree.
          * To specify starting point set one of the four options. If more than one is set the order of precedence is:
-         * rootHash, commitHash, tagName and branchName.
+         * branchName, commitHash, tagName and rootHash.
          *
          * @param {ProjectInterface} project
          * @param {object} parameters - Specifies which project tree should be serialized:
@@ -218,7 +218,7 @@ define([
             var deferred = Q.defer(),
                 rawJson;
 
-            _getRootHash(project, parameters)
+            _getRootHash(project, parameters || {})
                 .then(function (rootHash) {
                     return _collectObjectAndAssetHashes(project, rootHash);
                 })
