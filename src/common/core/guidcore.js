@@ -142,7 +142,7 @@ define([
         //<editor-fold=Added Methods>
         this.getGuid = function (node) {
             if (node) {
-                return self.getDeductedGuid(node, self.getGuid(self.getParent(node)));
+                return self.getDeducedGuid(node, self.getGuid(self.getParent(node)));
             } else {
                 return CONSTANTS.NULL_GUID;
             }
@@ -173,7 +173,7 @@ define([
             return toExternalGuid(self.getAttribute(node, CONSTANTS.OWN_GUID));
         };
 
-        this.getDeductedGuid = function (node, baseGuid) {
+        this.getDeducedGuid = function (node, baseGuid) {
             if (node && REGEXP.GUID.test(baseGuid)) {
                 return toExternalGuid(
                     xorGuids(

@@ -38,6 +38,7 @@ define([
                 }
             }
         }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -63,23 +64,14 @@ define([
                 typeCounters = {},
                 children = parameters.children || [],
                 rules,
-                inAspect,
-                temp;
+                inAspect;
 
             rules = innerCore.getChildrenMeta(node) || {};
 
             for (i = 0; i < keys.length; i += 1) {
-                temp = metaNodes[keys[i]];
-                while (temp) {
-                    if (rules[innerCore.getPath(temp)]) {
-                        validNodes.push(metaNodes[keys[i]]);
-                        break;
-                    }
-                    temp = innerCore.getBase(temp);
+                if (self.isValidChildOf(metaNodes[keys[i]], node)) {
+                    validNodes.push(metaNodes[keys[i]]);
                 }
-                //if (core.isValidChildOf(metaNodes[keys[i]], node)) {
-                //    validNodes.push(metaNodes[keys[i]]);
-                //}
             }
 
             //before every next step we check if we still have potential nodes
@@ -171,22 +163,17 @@ define([
         this.getValidSetElementsMetaNodes = function (parameters) {
             var validNodes = [],
                 node = parameters.node,
+                name = parameters.name,
                 metaNodes = self.getAllMetaNodes(node),
                 keys = Object.keys(metaNodes || {}),
                 i, j,
                 typeCounters = {},
                 members = parameters.members || [],
-                rules = self.getPointerMeta(node, parameters.name) || {},
-                temp;
+                rules = self.getPointerMeta(node, name) || {};
 
             for (i = 0; i < keys.length; i += 1) {
-                temp = metaNodes[keys[i]];
-                while (temp) {
-                    if (rules[innerCore.getPath(temp)]) {
-                        validNodes.push(metaNodes[keys[i]]);
-                        break;
-                    }
-                    temp = innerCore.getBase(temp);
+                if (metaNodes[keys[i]] && self.isValidTargetOf(metaNodes[keys[i]], node, name)) {
+                    validNodes.push(metaNodes[keys[i]]);
                 }
             }
 
@@ -245,7 +232,7 @@ define([
                             rules[keys[j]].max > -1 &&
                             rules[keys[j]].max <= typeCounters[keys[j]] &&
                             innerCore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
-                            validNodes.splice(i, 1); //FIXME slow, use only push instea
+                            validNodes.splice(i, 1); //FIXME slow, use only push instead
                             break;
                         }
                     }

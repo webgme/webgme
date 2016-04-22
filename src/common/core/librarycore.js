@@ -613,7 +613,7 @@ define([
                     return innerCore.getDataGuid(node);
                 }
 
-                return innerCore.getDeductedGuid(node, self.getLibraryGuid(self.getParent(node), name));
+                return innerCore.getDeducedGuid(node, self.getLibraryGuid(self.getParent(node), name));
             };
 
             this.addLibrary = function (node, name, libraryRootHash, libraryInfo) {
