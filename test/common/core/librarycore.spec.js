@@ -9,7 +9,7 @@ describe('Library core ', function () {
 
     var gmeConfig,
         logger,
-        Q,
+            Q,
         expect,
         storage,
         projectName = 'libCoreTests',
@@ -19,6 +19,7 @@ describe('Library core ', function () {
         commitHash,
         rootHash,
         REGEXP = testFixture.requirejs('common/regexp'),
+        CONSTANTS = testFixture.requirejs('common/core/constants'),
 
         gmeAuth;
 
@@ -129,10 +130,14 @@ describe('Library core ', function () {
     it('should be able to compute the library GUID for every node', function () {
         expect(core.getGuid(core.getLibraryRoot(root, 'basicLibrary')))
             .not.to.equal(core.getLibraryGuid(core.getLibraryRoot(root, 'basicLibrary')));
+        expect(core.getLibraryGuid(core.getLibraryRoot(root, 'basicLibrary'))).not.to.equal(CONSTANTS.NULL_GUID);
+        expect(core.getGuid(core.getLibraryRoot(root, 'basicLibrary'))).not.to.equal(CONSTANTS.NULL_GUID);
         expect(core.getGuid(core.getAllMetaNodes(root)['/L/I']))
             .not.to.equal(core.getLibraryGuid(core.getAllMetaNodes(root)['/L/I']));
-        expect(core.getLibraryGuid(core.getAllMetaNodes(root)['/L/I'],'basicLibrary'))
+        expect(core.getLibraryGuid(core.getAllMetaNodes(root)['/L/I'], 'basicLibrary'))
             .to.equal(core.getLibraryGuid(core.getAllMetaNodes(root)['/L/I']));
+        expect(core.getLibraryGuid(core.getAllMetaNodes(root)['/L/I'])).not.to.equal(CONSTANTS.NULL_GUID);
+        expect(core.getGuid(core.getAllMetaNodes(root)['/L/I'])).not.to.equal(CONSTANTS.NULL_GUID);
     });
 
     it('should give error if not a library member is asked for library GUID', function () {
@@ -140,8 +145,8 @@ describe('Library core ', function () {
         expect(error.message).to.contain('Node is not a library member');
     });
 
-    it('should give error if unknown library was given to look for library GUID',function(){
-        var error = core.getLibraryGuid(core.getAllMetaNodes(root)['/L/I'],'unknown');
+    it('should give error if unknown library was given to look for library GUID', function () {
+        var error = core.getLibraryGuid(core.getAllMetaNodes(root)['/L/I'], 'unknown');
         expect(error.message).to.contain('Unknown library was given');
     });
 
@@ -853,11 +858,11 @@ describe('Library core ', function () {
             .nodeify(done);
     });
 
-    it ('getNamespace should return empty string for non-library nodes', function () {
+    it('getNamespace should return empty string for non-library nodes', function () {
         expect(core.getNamespace(core.getFCO(root))).to.equal('');
     });
 
-    it ('getNamespace should return library name for nodes in a library', function () {
+    it('getNamespace should return library name for nodes in a library', function () {
         var libNodes = core.getLibraryMetaNodes(root, 'basicLibrary');
 
         Object.keys(libNodes).forEach(function (libNodePath) {

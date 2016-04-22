@@ -16,7 +16,6 @@ var Core = requireJS('common/core/coreQ'),
     constraint = requireJS('common/core/users/constraintchecker'),
     UINT = requireJS('common/util/uint'),
     GUID = requireJS('common/util/guid'),
-    REGEXP = requireJS('common/regexp'),
     BlobConfig = requireJS('common/blob/BlobConfig'),
     webgmeUtils = require('../../utils'),
     storageUtils = requireJS('common/storage/util'),
@@ -1048,6 +1047,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 var deferred = Q.defer();
                 context = context_;
 
+                if (typeof parameters.libraryName !== 'string' ||
+                    context.core.getLibraryNames(context.rootNode).indexOf(parameters.libraryName) !== -1) {
+                    deferred.reject(new Error('New library name should be unique'));
+                }
                 if (parameters.blobHash) {
                     _importProjectPackage(blobClient, parameters.blobHash)
                         .then(deferred.resolve)
