@@ -246,7 +246,7 @@ define([
          *
          * @param {ProjectInterface} project
          * @param {object} [options]
-         * @param {string} [options.commitMessage='information about the insertion']
+         * @param {string} [options.commitMessage=%defaultCommitMessage%] information about the insertion
          * @param {function(Error, hashes)} callback
          */
         insertProjectJson: function (project, projectJson, options, callback) {
