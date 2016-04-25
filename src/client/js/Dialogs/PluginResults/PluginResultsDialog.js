@@ -291,23 +291,50 @@ define(['js/util',
         dialog.on('click', '.btn-node', function (/* event */) {
             var nodeBtn = $(this),
                 resultEntry = JSON.parse(nodeBtn.attr('node-result-details')),
+                nodeId = resultEntry.activeNode.id,
                 projectId = resultEntry.projectId,
-                node = client.getNode(resultEntry.activeNode.id),
-                parentId = node ? node.getParentId() : null;
+                patterns = {},
+                territoryId = client.addUI(this, function (events) {
+                    var nodeLoaded = false;
+                    events.forEach(function (event) {
+                        if (event.etype === 'load' && event.eid === nodeId) {
+                            nodeLoaded = true;
+                        }
+                    });
+
+                    if (nodeLoaded) {
+                        WebGMEGlobal.State.registerActiveObject(nodeId);
+                        WebGMEGlobal.State.registerActiveSelection([]);
+                        dialog.modal('hide');
+                    } else {
+                        self.logger.error('Could not load the linked node at path', nodeId);
+                    }
+
+                    client.removeUI(territoryId);
+                });
 
             if (client.getProjectObject() && client.getProjectObject().projectId === projectId) {
-                if (!node) {
-                    self.logger.error('Node does not exist');
-                    return;
-                }
-                //TODO maybe this could be done in a more nicer way
-                if (typeof parentId === 'string') {
-                    WebGMEGlobal.State.registerActiveObject(parentId);
-                    WebGMEGlobal.State.registerActiveSelection([resultEntry.activeNode.id]);
-                } else {
-                    WebGMEGlobal.State.registerActiveObject(resultEntry.activeNode.id);
-                }
-                dialog.modal('hide');
+                territoryId = client.addUI(this, function (events) {
+                    var nodeLoaded = false;
+                    events.forEach(function (event) {
+                        if (event.etype === 'load' && event.eid === nodeId) {
+                            nodeLoaded = true;
+                        }
+                    });
+
+                    if (nodeLoaded) {
+                        WebGMEGlobal.State.registerActiveObject(nodeId);
+                        WebGMEGlobal.State.registerActiveSelection([]);
+                        dialog.modal('hide');
+                    } else {
+                        self.logger.error('Could not load the linked node at path', nodeId);
+                    }
+
+                    client.removeUI(territoryId);
+                });
+
+                patterns[nodeId] = {children: 0};
+                client.updateTerritory(territoryId, patterns);
             } else {
                 self.logger.error('Project for result is not the same as open project', projectId);
             }
