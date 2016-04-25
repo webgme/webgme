@@ -214,7 +214,7 @@ describe('meta cache core', function () {
                 expect(Object.keys(core.getAllMetaNodes(root))).to.have.length(2);
 
                 itemBase = core.getAllMetaNodes(root)[itemBasePath];
-                core.deleteNode(itemBase,true);
+                core.deleteNode(itemBase, true);
                 core.persist(root);
                 hash = core.getHash(root);
 
@@ -224,5 +224,36 @@ describe('meta cache core', function () {
                 expect(Object.keys(core.getAllMetaNodes(root))).to.have.length(0);
             })
             .nodeify(done);
+    });
+
+    it('should clean up the meta-cache if an upper node is deleted in an type-chain', function (done) {
+        var root = core.createNode(),
+            FCO = core.createNode({parent: root, relid: 'FCO'}),
+            top = core.createNode({parent: root, base: FCO, relid: 'top'}),
+            middle = core.createNode({parent: root, base: top, relid: 'middle'}),
+            bottom = core.createNode({parent: root, base: middle, relid: 'bottom'});
+
+        core.addMember(root, 'MetaAspectSet', FCO);
+        core.addMember(root, 'MetaAspectSet', top);
+        core.addMember(root, 'MetaAspectSet', middle);
+        core.addMember(root, 'MetaAspectSet', bottom);
+
+        expect(Object.keys(core.getAllMetaNodes(root))).to.have.length(4);
+
+        core.persist(root);
+
+        core.loadRoot(core.getHash(root))
+            .then(function (root_) {
+                expect(Object.keys(core.getAllMetaNodes(root_))).to.have.length(4);
+                core.deleteNode(core.getAllMetaNodes(root_)['/top']);
+                core.persist(root_);
+
+                return core.loadRoot(core.getHash(root_));
+            })
+            .then(function(root_){
+                expect(Object.keys(core.getAllMetaNodes(root_))).to.have.length(1);
+            })
+            .nodeify(done);
+
     });
 });

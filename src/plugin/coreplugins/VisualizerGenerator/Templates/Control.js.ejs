@@ -57,14 +57,14 @@ define(['js/Constants',
         self._currentNodeId = nodeId;
         self._currentNodeParentId = undefined;
 
-        if (self._currentNodeId || self._currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
+        if (typeof self._currentNodeId === 'string') {
             // Put new node's info into territory rules
             self._selfPatterns = {};
             self._selfPatterns[nodeId] = {children: 0};  // Territory "rule"
 
             self._widget.setTitle(desc.name.toUpperCase());
 
-            if (desc.parentId || desc.parentId === CONSTANTS.PROJECT_ROOT_ID) {
+            if (typeof desc.parentId === 'string') {
                 self.$btnModelHierarchyUp.show();
             } else {
                 self.$btnModelHierarchyUp.hide();
@@ -91,11 +91,11 @@ define(['js/Constants',
 
         if (nodeObj) {
             objDescriptor = {
-                'id': undefined,
-                'name': undefined,
-                'childrenIds': undefined,
-                'parentId': undefined,
-                'isConnection': false
+                id: undefined,
+                name: undefined,
+                childrenIds: undefined,
+                parentId: undefined,
+                isConnection: false
             };
 
             objDescriptor.id = nodeObj.getId();
@@ -151,7 +151,11 @@ define(['js/Constants',
     };
 
     <%= visualizerID %>Control.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
-        this.selectedObjectChanged(activeObjectId);
+        if (this._currentNodeId === activeObjectId) {
+            // The same node selected as before - do not trigger
+        } else {
+            this.selectedObjectChanged(activeObjectId);
+        }
     };
 
     /* * * * * * * * Visualizer life cycle callbacks * * * * * * * */
@@ -172,6 +176,12 @@ define(['js/Constants',
     <%= visualizerID %>Control.prototype.onActivate = function () {
         this._attachClientEventListeners();
         this._displayToolbarItems();
+
+        if (typeof this._currentNodeId === 'string') {
+            WebGMEGlobal.State.registerSuppressVisualizerFromNode(true);
+            WebGMEGlobal.State.registerActiveObject(this._currentNodeId);
+            WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
+        }
     };
 
     <%= visualizerID %>Control.prototype.onDeactivate = function () {
@@ -234,7 +244,7 @@ define(['js/Constants',
             title: 'toggle checkbox',
             icon: 'gme icon-gme_diagonal-arrow',
             checkChangedFn: function (data, checked) {
-                self._logger.log('Checkbox has been clicked!');
+                self._logger.debug('Checkbox has been clicked!');
             }
         });
         this._toolbarItems.push(this.$cbShowConnection);

@@ -18,6 +18,13 @@ define([
     var _WebGMEState,
         logger,
         WebGMEStateModel = Backbone.Model.extend({
+
+            /**
+             * Sets the active node to the given id.
+             * N.B. Do NOT call this unless the node is guaranteed to be loaded. Either check that getNode(objId) is
+             * defined or (even better) create a territory and check if the node could be loaded.
+             * @param {string} objId
+             */
             registerActiveObject: function (objId) {
                 objId = objId === 'root' ? '' : objId;
                 logger.debug('registerActiveObject, objId: ', objId);

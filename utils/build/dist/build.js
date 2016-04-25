@@ -15,11 +15,6 @@ var requirejs = require('requirejs'),
     path = require('path'),
     config = {
         baseUrl: path.join(__dirname, '../../../src'),
-        map: {
-            '*': {
-                css: 'client/bower_components/require-css/css.min'
-            }
-        },
         paths: {
             js: 'client/js',
             decorators: 'client/decorators',
@@ -30,6 +25,11 @@ var requirejs = require('requirejs'),
             executor: 'common/executor',
 
             text: 'client/lib/require/require-text/text',
+            css: 'client/bower_components/require-css/css',
+            // Temporary fix to ensure that the CSS plugins internal modules are loaded correctly.
+            // https://github.com/requirejs/r.js/issues/289
+            'css-builder': 'client/bower_components/require-css/css-builder',
+            normalize: 'client/bower_components/require-css/normalize',
 
             q: 'client/bower_components/q/q',
             superagent: 'client/lib/superagent/superagent',
@@ -49,7 +49,7 @@ var requirejs = require('requirejs'),
             'jquery-spectrum': 'client/bower_components/spectrum/spectrum',
             'jquery-csszoom': 'empty:',
             'jquery-fancytree': 'empty:',
-            'jquery-layout': 'lib/jquery/jquery.layout.min',
+            'jquery-layout': 'empty:',
             'jquery-contextMenu': 'client/lib/jquery/jquery.contextMenu.min',
             'jquery-gritter': 'client/bower_components/jquery.gritter/js/jquery.gritter.min',
 
@@ -70,6 +70,7 @@ var requirejs = require('requirejs'),
             //raphael_svg: ['raphael_core'],
             //raphael_vml: ['raphael_core']
         },
+        exclude: ['normalize'],
         packages: [{
             name: 'codemirror',
             location: 'client/bower_components/codemirror',

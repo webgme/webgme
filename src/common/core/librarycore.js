@@ -591,7 +591,7 @@ define([
                 ASSERT(self.isValidNode(node));
                 var libraryRoot;
 
-                if (!self.isLibraryElement(node)) {
+                if (!self.isLibraryElement(node) && !self.isLibraryRoot(node)) {
                     return new Error('Node is not a library member');
                 }
 
@@ -613,7 +613,7 @@ define([
                     return innerCore.getDataGuid(node);
                 }
 
-                return innerCore.getDeductedGuid(node, self.getLibraryGuid(self.getParent(node), libraryRoot));
+                return innerCore.getDeducedGuid(node, self.getLibraryGuid(self.getParent(node), name));
             };
 
             this.addLibrary = function (node, name, libraryRootHash, libraryInfo) {

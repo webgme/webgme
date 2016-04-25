@@ -18,17 +18,29 @@ WebGMEGlobal.SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPo
 // configure require path and modules
 require.config({
     baseUrl: './',
-
-    //TODO paths should be fixed as the rules collide with each other
     map: {
         '*': {
-            css: 'bower_components/require-css/css.min'
-            //text: 'lib/require/require-text/text',
+            //layout
+            'layout/DefaultLayout': 'js/Layouts',
+            //panels from default layout
+            'panel/Header': 'js/Panels/Header',
+            'panel/FooterControls': 'js/Panels/FooterControls',
+            'panel/Visualizer': 'js/Panels/Visualizer',
+            'panel/ObjectBrowser': 'js/Panels/ObjectBrowser',
+            'panel/PartBrowser': 'js/Panels/PartBrowser',
+            'panel/PropertyEditor': 'js/Panels/PropertyEditor',
+            //panels from visualizers.json
+            'panel/MetaEditor': 'js/Panels/MetaEditor',
+            'panel/ModelEditor': 'js/Panels/ModelEditor',
+            'panel/SetEditor': 'js/Panels/SetEditor',
+            'panel/Crosscut': 'js/Panels/Crosscut',
+            'panel/GraphViz': 'js/Panels/GraphViz'
         }
     },
-
-
     paths: {
+        css: 'bower_components/require-css/css.min',
+        text: 'lib/require/require-text/text',
+
         //jQuery and stuff
         jquery: 'bower_components/jquery/dist/jquery.min',
         'jquery-ui': 'bower_components/jquery-ui/jquery-ui.min',
@@ -63,7 +75,7 @@ require.config({
 
         //WebGME custom modules
         common: '/common',
-        blob: 'common/blob',
+        blob: '/common/blob',
         executor: '/common/executor',
         plugin: '/plugin',
         layout: '/layout',

@@ -1,0 +1,29 @@
+.context-menu-list {
+
+  li.context-menu-item {
+    display: list-item;
+
+    &.icon {
+      width: auto;
+    }
+  }
+
+  .context-menu-item.icon-edit {
+    background-image: url(../img/edit.png);
+  }
+  .context-menu-item.icon-cut {
+    background-image: url(../img/cut.png);
+  }
+  .context-menu-item.icon-copy {
+    background-image: url(../img/copy.png);
+  }
+  .context-menu-item.icon-paste {
+    background-image: url(../img/paste.png);
+  }
+  .context-menu-item.icon-delete {
+    background-image: url(../img/delete.png);
+  }
+  .context-menu-item.icon-add {
+    background-image: url(../img/create.png);
+  }
+}

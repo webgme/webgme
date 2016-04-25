@@ -21,20 +21,14 @@ require.config({
     // Karma serves files under /base, which is the basePath from your config file
     baseUrl: '/base',
 
-    map: {
-        '*': {
-            css: './src/client/lib/require/require-css/css',
-            text: './src/client/lib/require/require-text/text'
-        }
-    },
-
     paths: {
         // plugin base classes
         plugin: './src/plugin',
+        text: './src/client/lib/require/require-text/text',
 
         // plugins
         // TODO: populate plugin list dynamically based on config.json
-        MinimalWorkingExample: './src/plugin/coreplugins/MinimalWorkingExample/MinimalWorkingExample',
+        'plugin/MinimalWorkingExample': './src/plugin/coreplugins',
         PluginForked: './test/plugin/scenarios/plugins/PluginForked/PluginForked',
         'js/Dialogs/PluginConfig/PluginConfigDialog': './utils/build/empty/empty',
 

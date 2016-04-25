@@ -1,6 +1,8 @@
 /*globals define, _, $ */
 /*jshint browser: true*/
 /**
+ * Helpers for making an element draggable in the sense of jquery-ui (https://jqueryui.com/droppable/).
+ *
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 

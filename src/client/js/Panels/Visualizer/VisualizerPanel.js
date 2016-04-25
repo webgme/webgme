@@ -12,21 +12,18 @@ define(['js/logger',
     'js/RegistryKeys',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
-    'text!/api/visualizers',
     'css!./styles/VisualizerPanel.css'
 ], function (Logger,
              LoaderProgressBar,
              CONSTANTS,
              REGISTRY_KEYS,
              PanelBaseWithHeader,
-             SplitPanel,
-             VisualizersJSON) {
+             SplitPanel) {
 
     'use strict';
 
-    var VisualizerPanel;
-
-    VisualizersJSON = JSON.parse(VisualizersJSON);
+    var VisualizerPanel,
+        VisualizersJSON = WebGMEGlobal.allVisualizers;
 
     VisualizerPanel = function (layoutManager, params) {
         var options = {};
@@ -221,7 +218,7 @@ define(['js/logger',
         return panelListName === 'p1' ? this._ul1 : this._ul2;
     };
 
-    VisualizerPanel.prototype._updateListedVisualizersAndSelect = function () {
+    VisualizerPanel.prototype._updateListedVisualizers = function (setActiveViz) {
         var self = this,
             ul = this._getActivePanelElem(),
             activeVisualizer,
@@ -274,7 +271,7 @@ define(['js/logger',
         }
 
         // Only set the visualizer only if we were able to select some valid one.
-        if (activeVisualizer) {
+        if (setActiveViz && activeVisualizer) {
             setTimeout(function () {
                 self._setActiveVisualizer(activeVisualizer, ul);
             }, 0);
@@ -382,9 +379,7 @@ define(['js/logger',
     VisualizerPanel.prototype.selectedObjectChanged = function (currentNodeId) {
         this._currentNodeID = currentNodeId;
         this._updateValidVisualizers(currentNodeId);
-        if (!WebGMEGlobal.State.getSuppressVisualizerFromNode()) {
-            this._updateListedVisualizersAndSelect();
-        }
+        this._updateListedVisualizers(!WebGMEGlobal.State.getSuppressVisualizerFromNode());
     };
 
     VisualizerPanel.prototype._p2Editor = function (enabled) {

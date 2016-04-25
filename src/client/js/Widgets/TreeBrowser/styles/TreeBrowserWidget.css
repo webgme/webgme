@@ -1,32 +1,9 @@
 /**
- * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author pmeijer / https://github.com/pmeijer
  */
 /*IMPORTS*/
 .tree-browser {
-  /* FancyTree Vista-theme overrides */
-  /* END OF --- FancyTree Vista-theme overrides */
   /* OWN STYLES */ }
-  .tree-browser ul.fancytree-container {
-    overflow: visible !important;
-    padding-bottom: 0 !important;
-    height: auto;
-    font-size: 13px;
-    background-color: transparent;
-    border: none; }
-    .tree-browser ul.fancytree-container a {
-      border: 1px solid transparent; }
-  .tree-browser .fancytree-has-children span.fancytree-icon {
-    background-position: 0px -16px; }
-  .tree-browser .fancytree-icon {
-    margin-top: 1px;
-    cursor: pointer; }
-  .tree-browser .fancytree-loading span.fancytree-expander {
-    background-position: 0 0;
-    background-image: url("../../../../img/progress.gif"); }
-  .tree-browser ul.fancytree-container a:focus,
-  .tree-browser span.fancytree-focused a:link {
-    background-color: transparent;
-    outline: none; }
   .tree-browser .filter-container {
     margin: 1px;
     padding-top: 1px; }
@@ -59,82 +36,5 @@
     padding: 12px;
     color: #AAA;
     font-style: italic; }
-  .tree-browser i.gme-connection {
-    background: url("../../../../img/gmeicons.png") 0 0;
-    background-position: -64px 0 !important;
-    width: 16px;
-    height: 16px; }
-  .tree-browser i.gme-atom {
-    background: url("../../../../img/gmeicons.png") 0 0;
-    background-position: -16px 0 !important;
-    width: 16px;
-    height: 16px; }
-  .tree-browser i.gme-library {
-    background: url("../../../../img/gmeicons.png") 0 0;
-    background-position: -0px 0 !important;
-    width: 16px;
-    height: 16px; }
   .tree-browser .fa {
     line-height: 18px; }
-  .tree-browser ul.fancytree-container {
-    outline-width: 0; }
-    .tree-browser ul.fancytree-container li {
-      line-height: 16px;
-      outline-width: 0; }
-      .tree-browser ul.fancytree-container li span.fancytree-node {
-        /* 'Loading' node style with italic gray font and progress bar icon */ }
-        .tree-browser ul.fancytree-container li span.fancytree-node span.fancytree-title {
-          margin-left: 0; }
-          .tree-browser ul.fancytree-container li span.fancytree-node span.fancytree-title input[type=text] {
-            padding: 0;
-            font-size: 12px !important;
-            line-height: 12px;
-            margin-top: -3px !important;
-            width: 100px !important; }
-        .tree-browser ul.fancytree-container li span.fancytree-node span.fancytree-title:hover {
-          background-color: #F2F7FD;
-          border-color: #F2F7FD; }
-        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected span.fancytree-title {
-          font-style: normal;
-          background: #BEEBFF;
-          border: 1px solid #99DEFD; }
-        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-focused span.fancytree-title {
-          background: #a3d7f3;
-          outline: none; }
-        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-active span.fancytree-title {
-          font-style: normal;
-          background: #BEEBFF;
-          border: 1px solid #99DEFD; }
-        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-selected.fancytree-active.fancytree-focused span.fancytree-title {
-          background: #a3d7f3;
-          outline: none; }
-        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-active span.fancytree-title {
-          font-style: normal;
-          background: transparent;
-          border: 1px solid transparent;
-          outline: none; }
-        .tree-browser ul.fancytree-container li span.fancytree-node.fancytree-focus span.fancytree-title {
-          background: transparent;
-          outline: none; }
-        .tree-browser ul.fancytree-container li span.fancytree-node.node-progress span.fancytree-title {
-          color: #AAAAAA;
-          font-style: italic; }
-        .tree-browser ul.fancytree-container li span.fancytree-node.node-progress span.fancytree-icon {
-          background: url("../../../../img/progress.gif") 0 0; }
-
-.context-menu-list li.context-menu-item {
-  display: list-item; }
-  .context-menu-list li.context-menu-item.icon {
-    width: auto; }
-.context-menu-list .context-menu-item.icon-edit {
-  background-image: url(../../../../img/edit.png); }
-.context-menu-list .context-menu-item.icon-cut {
-  background-image: url(../../../../img/cut.png); }
-.context-menu-list .context-menu-item.icon-copy {
-  background-image: url(../../../../img/copy.png); }
-.context-menu-list .context-menu-item.icon-paste {
-  background-image: url(../../../../img/paste.png); }
-.context-menu-list .context-menu-item.icon-delete {
-  background-image: url(../../../../img/delete.png); }
-.context-menu-list .context-menu-item.icon-add {
-  background-image: url(../../../../img/create.png); }

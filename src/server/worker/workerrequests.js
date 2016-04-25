@@ -16,9 +16,9 @@ var Core = requireJS('common/core/coreQ'),
     constraint = requireJS('common/core/users/constraintchecker'),
     UINT = requireJS('common/util/uint'),
     GUID = requireJS('common/util/guid'),
-    REGEXP = requireJS('common/regexp'),
     BlobConfig = requireJS('common/blob/BlobConfig'),
     webgmeUtils = require('../../utils'),
+    storageUtils = requireJS('common/storage/util'),
 
 // JsZip can't for some reason extract the exported files..
     AdmZip = require('adm-zip'),
@@ -871,166 +871,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
             .nodeify(finish);
     }
 
-    function _collectObjects(project, objectHashArray) {
-        var deferred = Q.defer(),
-            promises = [],
-            objects = [],
-            i;
-
-        for (i = 0; i < objectHashArray.length; i += 1) {
-            promises.push(Q.ninvoke(project, 'loadObject', objectHashArray[i]));
-        }
-
-        Q.allSettled(promises)
-            .then(function (results) {
-                var error = null,
-                    i;
-                for (i = 0; i < results.length; i += 1) {
-                    if (results[i].state === 'fulfilled') {
-                        objects.push(results[i].value);
-                    } else {
-                        error = error || results[i].reason || new Error('unable to load');
-                    }
-                }
-
-                if (error) {
-                    deferred.reject(error);
-                } else {
-                    deferred.resolve(objects);
-                }
-            });
-        return deferred.promise;
-    }
-
-    function _collectObjectAndAssetHashes(project, rootHash) {
-        var deferred = Q.defer(),
-            objects = {},
-            assets = {},
-            queue = [rootHash],
-            task,
-            error = null,
-            working = false,
-            timerId;
-
-        timerId = setInterval(function () {
-            if (!working) {
-                task = queue.shift();
-                if (task === undefined) {
-                    clearInterval(timerId);
-                    if (error) {
-                        deferred.reject(error);
-                    } else {
-                        deferred.resolve({objects: Object.keys(objects), assets: Object.keys(assets)});
-                    }
-                    return;
-                }
-
-                if (!objects[task]) {
-                    working = true;
-                    project.loadObject(task, function (err, object) {
-                        var key;
-
-                        error = error || err;
-                        if (!err && object) {
-                            objects[task] = true;
-                            if (object) {
-                                //now put every sub-object on top of the queue
-                                for (key in object) {
-                                    if (typeof object[key] === 'string' && REGEXP.HASH.test(object[key])) {
-                                        queue.push(object[key]);
-                                    }
-                                }
-
-                                //looking for assets
-                                if (object.atr) {
-                                    for (key in object.atr) {
-                                        if (typeof object.atr[key] === 'string' &&
-                                            BlobConfig.hashRegex.test(object.atr[key])) {
-                                            assets[object.atr[key]] = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        working = false;
-                    });
-                }
-
-            }
-        }, 1);
-
-        return deferred.promise;
-    }
-
-    function _getRawJsonProject(webgmeToken, projectId, branchName, commitHash, rootHash) {
-        var project,
-            rawJson = {},
-            deferred = Q.defer();
-
-        getConnectedStorage(webgmeToken)
-            .then(function (storage) {
-                var deferred = Q.defer();
-
-                storage.openProject(projectId, function (err, project_, branches) {
-                    if (err) {
-                        deferred.reject(err);
-                    } else {
-                        project = project_;
-                        deferred.resolve(branches);
-                    }
-                });
-                return deferred.promise;
-            })
-            .then(function (branches) {
-                var deferred = Q.defer();
-
-                if (rootHash) {
-                    deferred.resolve(rootHash);
-                } else if (commitHash) {
-                    project.loadObject(commitHash, function (err, commitObj) {
-                        if (!err && commitObj) {
-                            deferred.resolve(commitObj.root);
-                        } else {
-                            deferred.reject(err || new Error('no commit was found!'));
-                        }
-                    });
-                } else if (branchName && branches[branchName]) {
-                    commitHash = branches[branchName];
-                    project.loadObject(commitHash, function (err, commitObj) {
-                        if (!err && commitObj) {
-                            deferred.resolve(commitObj.root);
-                        } else {
-                            deferred.reject(err || new Error('no commit was found!'));
-                        }
-                    });
-                } else {
-                    deferred.reject(new Error('bad parameters, cannot figure out rootHash'));
-                }
-                return deferred.promise;
-            })
-            .then(function (rootHash_) {
-                rootHash = rootHash_;
-                return _collectObjectAndAssetHashes(project, rootHash);
-            })
-            .then(function (hashes) {
-                rawJson = {
-                    rootHash: rootHash,
-                    projectId: projectId,
-                    branchName: branchName,
-                    commitHash: commitHash,
-                    hashes: hashes
-                };
-                return _collectObjects(project, hashes.objects);
-            })
-            .then(function (objects) {
-                rawJson.objects = objects;
-                deferred.resolve(rawJson);
-            })
-            .catch(deferred.reject);
-
-        return deferred.promise;
-    }
-
     /**
      *
      * @param {string} webgmeToken
@@ -1038,16 +878,29 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {function} callback
      */
     function saveProjectIntoFile(webgmeToken, parameters, callback) {
-        var output = {};
+        getConnectedStorage(webgmeToken)
+            .then(function (storage) {
+                var deferred = Q.defer();
+                storage.openProject(parameters.projectId, function (err, project/*, branches, access*/) {
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve(project);
+                    }
+                });
 
-        _getRawJsonProject(webgmeToken,
-            parameters.projectId,
-            parameters.branchName,
-            parameters.commitHash,
-            parameters.rootHash)
+                return deferred.promise;
+            })
+            .then(function (project) {
+                return storageUtils.getProjectJson(project, {
+                    branchName: parameters.branchName,
+                    commitHash: parameters.commitHash,
+                    rootHash: parameters.rootHash
+                });
+            })
             .then(function (rawJson) {
-                output = rawJson;
-                var blobClient = new BlobClientClass({
+                var output = rawJson,
+                    blobClient = new BlobClientClass({
                         serverPort: gmeConfig.server.port,
                         httpsecure: false,
                         server: '127.0.0.1',
@@ -1072,24 +925,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return deferred.promise;
             })
             .nodeify(callback);
-    }
-
-    function _putRawObjectsIntoDb(project, objects, rootHash, message) {
-        var deferred = Q.defer(),
-            toPersist = {},
-            i;
-
-        for (i = 0; i < objects.length; i += 1) {
-            toPersist[objects[i]._id] = objects[i];
-        }
-
-        project.makeCommit(null, [], rootHash, toPersist, message)
-            .then(function (commitResult) {
-                deferred.resolve(commitResult);
-            })
-            .catch(deferred.reject);
-
-        return deferred.promise;
     }
 
     function _importProjectPackage(blobClient, packageHash) {
@@ -1130,34 +965,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise;
     }
 
-    function _getFreshestLibrary(webgmeToken, projectId, branchName, libraryName) {
-        var deferred = Q.defer(),
-            storage;
-
-        getConnectedStorage(webgmeToken)
-            .then(function (storage_) {
-                storage = storage_;
-                if (!branchName) {
-                    throw new Error('getting freshest library can be done only by branch!');
-                }
-                return _getCoreAndRootNode(storage, projectId, null, branchName);
-            })
-            .then(function (context) {
-                var libraryInfo = context.core.getLibraryInfo(context.rootNode, libraryName);
-                if (libraryInfo && libraryInfo.projectId && libraryInfo.branchName) {
-                    return _getRawJsonProject(webgmeToken, libraryInfo.projectId, libraryInfo.branchName, null);
-                } else {
-                    throw new Error('only libraries that follows branch can be refreshed!');
-                }
-            })
-            .then(function (jsonProject) {
-                deferred.resolve(jsonProject);
-            })
-            .catch(deferred.reject);
-
-        return deferred.promise;
-    }
-
     function _createProjectFromRawJson(storage, projectName, ownerId, branchName, jsonProject, callback) {
         var projectId,
             project;
@@ -1178,13 +985,12 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return deferred.promise;
             })
             .then(function () {
-                return _putRawObjectsIntoDb(project,
-                    jsonProject.objects,
-                    jsonProject.rootHash,
-                    'loading project from package');
+                return storageUtils.insertProjectJson(project, jsonProject, {
+                    commitMessage: 'loading project from package'
+                });
             })
-            .then(function (commitResult) {
-                return project.createBranch(branchName, commitResult.hash);
+            .then(function (commitHash) {
+                return project.createBranch(branchName, commitHash);
             })
             .then(function () {
                 return (projectId);
@@ -1221,8 +1027,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     }
 
     function addLibrary(webgmeToken, parameters, callback) {
-        var projectId = parameters.projectId,
-            jsonProject,
+        var jsonProject,
             context,
             storage,
             blobClient = new BlobClientClass({
@@ -1236,28 +1041,53 @@ function WorkerRequests(mainLogger, gmeConfig) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                if (parameters.blobHash) {
-                    return _importProjectPackage(blobClient, parameters.blobHash);
-                } else {
-                    return _getRawJsonProject(webgmeToken,
-                        parameters.libraryInfo.projectId,
-                        parameters.libraryInfo.branchName,
-                        parameters.libraryInfo.commitHash,
-                        null);
+                return _getCoreAndRootNode(storage, parameters.projectId, null, parameters.branchName);
+            })
+            .then(function (context_) {
+                var deferred = Q.defer();
+                context = context_;
+
+                if (typeof parameters.libraryName !== 'string' ||
+                    context.core.getLibraryNames(context.rootNode).indexOf(parameters.libraryName) !== -1) {
+                    deferred.reject(new Error('New library name should be unique'));
                 }
+                if (parameters.blobHash) {
+                    _importProjectPackage(blobClient, parameters.blobHash)
+                        .then(deferred.resolve)
+                        .catch(deferred.reject);
+                } else if (parameters.libraryInfo) {
+                    if (parameters.libraryInfo.projectId === parameters.projectId) {
+                        deferred.reject(new Error('It is unsafe to add self as a library!'));
+                    } else {
+                        storage.openProject(parameters.libraryInfo.projectId,
+                            function (err, project/*,branches,access*/) {
+                                if (err) {
+                                    deferred.reject(err);
+                                } else {
+                                    storageUtils.getProjectJson(project, {
+                                            branchName: parameters.libraryInfo.branchName,
+                                            commitHash: parameters.libraryInfo.commitHash
+                                        })
+                                        .then(deferred.resolve)
+                                        .catch(deferred.reject);
+                                }
+                            }
+                        );
+                    }
+                } else {
+                    deferred.reject(new Error('Missing information about the library to add.'));
+                }
+
+                return deferred.promise;
             })
             .then(function (jsonProject_) {
                 jsonProject = jsonProject_;
-                return _getCoreAndRootNode(storage, projectId, null, parameters.branchName);
+
+                return storageUtils.insertProjectJson(context.project,
+                    jsonProject,
+                    {commitMessage: 'commit that represents the library to be imported'});
             })
-            .then(function (context_) {
-                context = context_;
-                return _putRawObjectsIntoDb(context.project,
-                    jsonProject.objects,
-                    jsonProject.rootHash,
-                    'commit that represents the library to be imported');
-            })
-            .then(function (/*commitResult*/) {
+            .then(function (/*commitHash*/) {
 
                 return Q.nfcall(context.core.addLibrary,
                     context.rootNode,
@@ -1310,9 +1140,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     function updateLibrary(webgmeToken, parameters, callback) {
         var projectId = parameters.projectId,
-            jsonProject,
             context,
             storage,
+            jsonProject,
             blobClient = new BlobClientClass({
                 serverPort: gmeConfig.server.port,
                 httpsecure: false,
@@ -1324,29 +1154,57 @@ function WorkerRequests(mainLogger, gmeConfig) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                if (parameters.blobHash) {
-                    return _importProjectPackage(blobClient, parameters.blobHash);
-                } else if (parameters.libraryInfo) {
-                    return _getRawJsonProject(webgmeToken,
-                        parameters.libraryInfo.projectId,
-                        parameters.libraryInfo.branchName,
-                        parameters.libraryInfo.commitHash,
-                        null);
-                } else {
-                    return _getFreshestLibrary(webgmeToken, projectId, parameters.branchName, parameters.libraryName);
-                }
-            })
-            .then(function (jsonProject_) {
-                jsonProject = jsonProject_;
-
                 return _getCoreAndRootNode(storage, projectId, null, parameters.branchName);
             })
             .then(function (context_) {
+                var deferred = Q.defer(),
+                    libraryInfo;
                 context = context_;
-                return _putRawObjectsIntoDb(context.project,
-                    jsonProject.objects,
-                    jsonProject.rootHash,
-                    'commit that represents the library to be updated');
+                if (parameters.blobHash) {
+                    _importProjectPackage(blobClient, parameters.blobHash)
+                        .then(deferred.resolve)
+                        .catch(deferred.reject);
+                } else if (parameters.libraryInfo) {
+                    storage.openProject(parameters.libraryInfo.projectId, function (err, project/*,branches,access*/) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            storageUtils.getProjectJson(project, {
+                                    branchName: parameters.libraryInfo.branchName,
+                                    commitHash: parameters.libraryInfo.commitHash
+                                })
+                                .then(deferred.resolve)
+                                .catch(deferred.reject);
+                        }
+                    });
+                } else {
+                    // We have to dig out library info from our own project
+                    libraryInfo = context.core.getLibraryInfo(context.rootNode, parameters.libraryName);
+                    if (libraryInfo && libraryInfo.projectId && libraryInfo.branchName) {
+                        if (projectId === libraryInfo.projectId) {
+                            deferred.reject(new Error('Automatic update of self-contained libraries are not allowed!'));
+                        } else {
+                            storage.openProject(libraryInfo.projectId, function (err, project/*, branches, access*/) {
+                                if (err) {
+                                    deferred.reject(err);
+                                } else {
+                                    storageUtils.getProjectJson(project, {branchName: libraryInfo.branchName})
+                                        .then(deferred.resolve)
+                                        .catch(deferred.reject);
+                                }
+                            });
+                        }
+                    } else {
+                        deferred.reject(new Error('only libraries that follows branch can be refreshed!'));
+                    }
+                }
+                return deferred.promise;
+            })
+            .then(function (jsonProject_) {
+                jsonProject = jsonProject_;
+                return storageUtils.insertProjectJson(context.project, jsonProject, {
+                    commitMessage: 'commit that represents the library to be updated'
+                });
             })
             .then(function (/*commitResult*/) {
 

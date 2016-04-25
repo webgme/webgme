@@ -283,15 +283,23 @@ define([
             if (!realNode(node)) {
                 return true;
             }
-            var ruleHolders = getAllMatchingRuleHolders(parentNode, 'containment', containmentGetter, {}),
+            var childrenPaths,
+                metaNodes,
                 i;
 
-            for (i = 0; i < ruleHolders.length; i += 1) {
-                if (innerCore.isValidChildOf(node, ruleHolders[i])) {
+            if (innerCore.isValidChildOf(node, parentNode)) {
+                return true;
+            }
+
+            // Now we have to look deeper as containment rule may come from a mixin
+            childrenPaths = self.getValidChildrenPaths(parentNode);
+            metaNodes = self.getAllMetaNodes(node);
+
+            for (i = 0; i < childrenPaths.length; i += 1) {
+                if (metaNodes[childrenPaths[i]] && self.isTypeOf(node, metaNodes[childrenPaths[i]])) {
                     return true;
                 }
             }
-
             return false;
         };
 
@@ -300,11 +308,20 @@ define([
                 return true;
             }
 
-            var ruleHolders = getAllMatchingRuleHolders(source, name, allValidRelationsNameGetter, {}),
+            var targetPaths,
+                metaNodes,
                 i;
 
-            for (i = 0; i < ruleHolders.length; i += 1) {
-                if (innerCore.isValidTargetOf(node, ruleHolders[i], name)) {
+            if (innerCore.isValidTargetOf(node, source, name)) {
+                return true;
+            }
+
+            // Now we have to look deeper as pointer rule may come from a mixin
+            targetPaths = self.getValidTargetPaths(source, name);
+            metaNodes = self.getAllMetaNodes(node);
+
+            for (i = 0; i < targetPaths.length; i += 1) {
+                if (metaNodes[targetPaths[i]] && self.isTypeOf(node, metaNodes[targetPaths[i]])) {
                     return true;
                 }
             }

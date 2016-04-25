@@ -50,9 +50,9 @@ describe('CoreQ Async with Promises', function () {
 
     after(function (done) {
         Q.allDone([
-            storage.closeDatabase(),
-            gmeAuth.unload()
-        ])
+                storage.closeDatabase(),
+                gmeAuth.unload()
+            ])
             .nodeify(done);
     });
 
@@ -251,5 +251,26 @@ describe('CoreQ Async with Promises', function () {
                 expect(err.message).to.include('ASSERT failed');
             })
             .nodeify(done);
+    });
+
+    it('should return with an null if invalid path is loaded', function (done) {
+        core.loadRoot(rootHash)
+            .then(function (root) {
+                return core.loadByPath(root, '/not/valid/path');
+            })
+            .then(function (node) {
+                expect(node).to.equal(null);
+            })
+            .nodeify(done);
+    });
+
+    it('should ASSERT if isEmpty is called on a non-node object', function () {
+        try {
+            core.isEmpty({});
+        } catch (e) {
+            expect(e).not.to.equal(null);
+            return;
+        }
+        throw new Error('should have failed to use isEmpty');
     });
 });
