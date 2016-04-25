@@ -489,7 +489,7 @@ describe('mixin core', function () {
         it('should check if a target is valid based on the combined rule-set', function () {
             expect(core.isValidTargetOf(FCO, A, 'FCO')).to.equal(true);
             expect(core.isValidTargetOf(M1, A, 'FCO')).to.equal(true);
-            expect(core.isValidTargetOf(FCO, A, 'Ms')).to.equal(false);
+            expect(core.isValidTargetOf(FCO, A, 'Ms')).to.equal(true);
             expect(core.isValidTargetOf(M1, A, 'Ms')).to.equal(true);
             expect(core.isValidTargetOf(M2, A, 'Ms')).to.equal(true);
             expect(core.isValidTargetOf(M3, A, 'FCO')).to.equal(true);
@@ -498,10 +498,10 @@ describe('mixin core', function () {
         });
 
         it('should check if a given node is a valid child based on the composed rule-set', function () {
-            expect(core.isValidChildOf(A, FCO)).to.equal(false);
+            expect(core.isValidChildOf(A, FCO)).to.equal(true);
             expect(core.isValidChildOf(M2, FCO)).to.equal(true);
 
-            expect(core.isValidChildOf(FCO, A)).to.equal(false);
+            expect(core.isValidChildOf(FCO, A)).to.equal(true);
             expect(core.isValidChildOf(M1, A)).to.equal(true);
             expect(core.isValidChildOf(M2, A)).to.equal(true);
             expect(core.isValidChildOf(M3, A)).to.equal(true);
@@ -634,14 +634,45 @@ describe('mixin core', function () {
 
         it('should respond if setting something as a mixin is Ok, or not', function () {
             expect(core.canSetAsMixin(A, '/M3').isOk).to.equal(true);
-            expect(core.canSetAsMixin(A,'/A').isOk).to.equals(false);
-            expect(core.canSetAsMixin(A,'/1').isOk).to.equals(false);
+            expect(core.canSetAsMixin(A, '/A').isOk).to.equals(false);
+            expect(core.canSetAsMixin(A, '/1').isOk).to.equals(false);
 
             core.delMember(ROOT, 'MetaAspectSet', '/M4');
 
             expect(core.canSetAsMixin(A, '/M4').isOk).to.equal(false);
 
             core.addMember(ROOT, 'MetaAspectSet', M4);
+        });
+
+        it('should containment validity should based on the isTypeOf relation', function () {
+            var root = core.createNode(),
+                base = core.createNode({parent:root,relid:'B'}),
+                container = core.createNode({parent:root, base:base, relid:'C'}),
+                element = core.createNode({parent:root, base: base, relid:'E'}),
+                mixin = core.createNode({parent:root, base: base,relid:'M'}),
+                subElement = core.createNode({parent:root, base:element, relid:'S'}),
+                mixed = core.createNode({parent:root,base:base, relid:'m'}),
+                connection = core.createNode({parent:root,base:base,relid:'c'});
+
+            core.addMember(root, 'MetaAspectSet', base);
+            core.addMember(root, 'MetaAspectSet', container);
+            core.addMember(root, 'MetaAspectSet', element);
+            core.addMember(root, 'MetaAspectSet', mixin);
+            core.addMember(root, 'MetaAspectSet', subElement);
+            core.addMember(root, 'MetaAspectSet', mixed);
+            core.addMember(root, 'MetaAspectSet', connection);
+
+            core.setPointerMetaTarget(connection,'ptr',mixin,0,1);
+            core.setChildMeta(container,mixin,0,1);
+            core.setChildMeta(container,element,0,10);
+
+            core.addMixin(mixed,core.getPath(mixin));
+
+            expect(core.isValidChildOf(mixed,container)).to.equal(true);
+            expect(core.isValidChildOf(mixin,container)).to.equal(true);
+            expect(core.isValidChildOf(element,container)).to.equal(true);
+            expect(core.isValidChildOf(subElement,container)).to.equal(true);
+            expect(core.isValidTargetOf(mixed,connection,'ptr')).to.equal(true);
         });
     });
 });
