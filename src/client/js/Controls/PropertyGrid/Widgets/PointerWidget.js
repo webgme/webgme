@@ -208,13 +208,18 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         if (ptrTo && ptrTo !== '_nullptr') {
             targetNodeObj = client.getNode(ptrTo);
             if (targetNodeObj) {
-                if (targetNodeObj.getParentId() || targetNodeObj.getParentId() === CONSTANTS.PROJECT_ROOT_ID) {
-                    WebGMEGlobal.State.registerActiveObject(targetNodeObj.getParentId());
-                    WebGMEGlobal.State.registerActiveSelection([ptrTo]);
-                } else {
-                    WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
-                    WebGMEGlobal.State.registerActiveSelection([ptrTo]);
-                }
+                WebGMEGlobal.State.registerActiveObject(ptrTo);
+                WebGMEGlobal.State.registerActiveSelection([]);
+                // Opening the parent and setting activeSelection does not makes sense for all visualizers.
+                //if (targetNodeObj.getParentId() || targetNodeObj.getParentId() === CONSTANTS.PROJECT_ROOT_ID) {
+                //    WebGMEGlobal.State.registerActiveObject(targetNodeObj.getParentId());
+                //    WebGMEGlobal.State.registerActiveSelection([ptrTo]);
+                //} else {
+                //    WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
+                //    WebGMEGlobal.State.registerActiveSelection([ptrTo]);
+                //}
+            } else {
+                // The targetNode should be loaded by the territory.
             }
         }
     };

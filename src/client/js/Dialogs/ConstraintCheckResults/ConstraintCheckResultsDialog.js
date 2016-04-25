@@ -8,14 +8,18 @@
 
 define(['js/util',
     'common/regexp',
+    'js/logger',
     'text!./templates/ConstraintCheckResultsDialog.html',
     'css!./styles/ConstraintCheckResultsDialog.css'
-], function (clientUtil, REGEXP, pluginResultsDialogTemplate) {
+], function (clientUtil, REGEXP, Logger, pluginResultsDialogTemplate) {
 
     'use strict';
 
-    var ContraintCheckResultsDialog = function (title) {
+    var ConstraintCheckResultsDialog = function (title) {
             this._dialogTitle = title;
+            this.logger = Logger.create('gme:Dialogs:ConstraintCheckResults:ConstraintCheckResultsDialog',
+                WebGMEGlobal.gmeConfig.client.log);
+            this.logger.debug('ctor');
         },
         PLUGIN_RESULT_ENTRY_BASE = $('<div/>', {class: 'constraint-check-result'}),
         PLUGIN_RESULT_HEADER_BASE = $('<div class="alert"></div>'),
@@ -35,7 +39,7 @@ define(['js/util',
     //jscs:enable maximumLineLength
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>');
 
-    ContraintCheckResultsDialog.prototype.show = function (client, pluginResults) {
+    ConstraintCheckResultsDialog.prototype.show = function (client, pluginResults) {
         var self = this;
 
         this._dialog = $(pluginResultsDialogTemplate);
@@ -54,9 +58,10 @@ define(['js/util',
         this._dialog.modal('show');
     };
 
-    ContraintCheckResultsDialog.prototype._initDialog = function (pluginResults) {
+    ConstraintCheckResultsDialog.prototype._initDialog = function (pluginResults) {
         var dialog = this._dialog,
             client = this._client,
+            self = this,
             resultEntry,
             body = dialog.find('.modal-body'),
             UNREAD_CSS = 'unread',
@@ -184,24 +189,32 @@ define(['js/util',
         });
 
         dialog.on('click', '.btn-node', function (/* event */) {
-            var node = client.getNode($(this).parent().attr('GMEpath')),
-                parentId;
+            var nodeId = $(this).parent().attr('GMEpath'),
+                patterns = {},
+                territoryId = client.addUI(this, function (events) {
+                    var nodeLoaded = false;
+                    events.forEach(function (event) {
+                        if (event.etype === 'load' && event.eid === nodeId) {
+                            nodeLoaded = true;
+                        }
+                    });
 
-            if (node) {
-                parentId = node.getParentId();
-                //TODO maybe this could be done in a more nicer way
-                if (typeof parentId === 'string') {
-                    WebGMEGlobal.State.registerActiveObject(parentId);
-                    WebGMEGlobal.State.registerActiveSelection([node.getId()]);
-                } else {
-                    WebGMEGlobal.State.registerActiveObject(node.getId());
-                }
-                dialog.modal('hide');
-            }
+                    if (nodeLoaded) {
+                        WebGMEGlobal.State.registerActiveObject(nodeId);
+                        WebGMEGlobal.State.registerActiveSelection([]);
+                        dialog.modal('hide');
+                    } else {
+                        self.logger.error('Could not load the linked node at path', nodeId);
+                    }
 
+                    client.removeUI(territoryId);
+                });
+
+            patterns[nodeId] = {children: 0};
+            client.updateTerritory(territoryId, patterns);
         });
 
     };
 
-    return ContraintCheckResultsDialog;
+    return ConstraintCheckResultsDialog;
 });
