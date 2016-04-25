@@ -17,8 +17,8 @@ define([], function () {
 
         INVALID_CSS_CHARS = new RegExp('[!"#$%&\'()\*\+,\./:;<=>\?@\[\\\]^`{\|}~ ]+', 'g'),
         HTML_ELEMENT = new RegExp('<[a-z][\\s\\S]*>', 'i'),
-        GUID = new RegExp('[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}', 'i');
-
+        GUID = new RegExp('[a-z0-9]{8}(-[a-z0-9]{4}){3}-[a-z0-9]{12}', 'i'),
+        BLOB_HASH = new RegExp('^[0-9a-f]{40}$');
     return {
         HASH: HASH,
         DB_HASH: DB_HASH,
@@ -30,6 +30,7 @@ define([], function () {
         GUID: GUID,
         INVALID_CSS_CHARS: INVALID_CSS_CHARS,
         HTML_ELEMENT: HTML_ELEMENT,
-        PROJECT_NAME: PROJECT_NAME
+        PROJECT_NAME: PROJECT_NAME,
+        BLOB_HASH: BLOB_HASH
     };
 });
