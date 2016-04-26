@@ -47,7 +47,7 @@ describe('common storage project', function () {
             .then(function () {
                 return Q.allDone([
                     testFixture.importProject(safeStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'test/seeds/EmptyProject.webgmex',
                         projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger
