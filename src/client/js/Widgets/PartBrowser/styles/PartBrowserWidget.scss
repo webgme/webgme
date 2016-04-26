@@ -2,8 +2,8 @@ $part-browser-li-margin-top: 15px;
 
 .part-browser {
   text-align: center;
-  overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-x: visible;
+  overflow-y: visible;
 
   > ul {
     list-style-type: none;

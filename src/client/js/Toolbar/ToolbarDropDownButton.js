@@ -158,5 +158,21 @@ define(['./ButtonBase',
         this._logger.debug('destroyed');
     };
 
+    ToolbarDropDownButton.prototype.dropDownText = function (value) {
+        var oldHtml = this._dropDownBtn.html(),
+            index,
+            newHtml;
+
+        if (typeof value === 'string') {
+            //setter
+            index = oldHtml.indexOf('<span');
+            newHtml = value + ' ' + oldHtml.substr(index);
+            this._dropDownBtn.html(newHtml);
+        } else {
+            //getter
+            return oldHtml.slice(0, oldHtml.indexOf('<span')).slice(0, -1);
+        }
+    };
+
     return ToolbarDropDownButton;
 });

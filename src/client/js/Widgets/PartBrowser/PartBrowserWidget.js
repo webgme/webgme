@@ -67,9 +67,8 @@ define([
         });
 
         this._selector = new ToolbarDropDownButton({
-            title: 'Namespace list',
-            showSelected: true,
-            text: 'active library selection'
+            title: 'Namespace selector',
+            showSelected: true
         });
 
         this._container.append(this._selector.el);
@@ -158,7 +157,8 @@ define([
 
             this._parts[partId] = {
                 decoratorInstance: decoratorInstance,
-                decoratorClass: partDesc.decoratorClass
+                decoratorClass: partDesc.decoratorClass,
+                filtered: false
             };
 
             return decoratorInstance;
@@ -360,10 +360,13 @@ define([
         }
     };
 
-    PartBrowserWidget.prototype.hidePart = function (partId) {
+    PartBrowserWidget.prototype.hidePart = function (partId, becauseFilter) {
         var partDiv = this._getPartDiv(partId);
 
         if (partDiv && partDiv.decorated && partDiv.onlyName) {
+            if (becauseFilter) {
+
+            }
             partDiv.decorated.hide();
             partDiv.onlyName.hide();
         } else {
@@ -371,7 +374,7 @@ define([
         }
     };
 
-    PartBrowserWidget.prototype.showPart = function (partId) {
+    PartBrowserWidget.prototype.showPart = function (partId, becauseFilter) {
         var partDiv = this._getPartDiv(partId);
 
         if (partDiv && partDiv.decorated && partDiv.onlyName) {
@@ -382,15 +385,44 @@ define([
         }
     };
 
-    PartBrowserWidget.prototype.setNameSpaceList = function(namespaces){
-        var i;
-        this._selector.clear();
+    PartBrowserWidget.prototype.getCurrentSelectorValue = function () {
+        return this._selector.dropDownText();
+    };
 
-        for(i=0;i<namespaces.length;i+=1){
-            this._selector.addButton({
+    PartBrowserWidget.prototype.updateSelectorInfo = function (valueList) {
+        var i,
+            self = this,
+            currentSelection = self.getCurrentSelectorValue(),
+            selection = function (selectionData) {
 
-            });
+                if (self._selector.dropDownText() !== selectionData.value) {
+                    self._selector.dropDownText(selectionData.value);
+                    self.onSelectorChanged(selectionData.value);
+                }
+            };
+
+        self._selector.clear();
+
+        for (i = 0; i < valueList.length; i += 1) {
+            if (valueList[i] === '-') {
+                self._selector.addDivider();
+            } else {
+                self._selector.addButton({
+                    text: valueList[i],
+                    clickFn: selection,
+                    data: {value: valueList[i]}
+                });
+            }
         }
+
+        if (valueList.indexOf(currentSelection) === -1) {
+            self._selector.dropDownText(valueList[0]);
+            self.onSelectorChanged(valueList[0]);
+        }
+    };
+
+    PartBrowserWidget.prototype.onSelectorChanged = function (newValue) {
+        this._logger.error('onSelectorChanged function should be overwritten for proper usage!');
     };
 
     return PartBrowserWidget;

@@ -238,15 +238,19 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     GMENode.prototype.isLibraryElement = function () {
         return this._state.core.isLibraryElement(this._state.nodes[this._id].node);
     };
-    
+
     GMENode.prototype.getFullyQualifiedName = function () {
         return this._state.core.getFullyQualifiedName(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getNamespace = function () {
+        return this._state.core.getNamespace(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getLibraryGuid = function () {
         return this._state.core.getLibraryGuid(this._state.nodes[this._id].node);
     };
-    
+
     GMENode.prototype.getCrosscutsInfo = function () {
         return this._state.core.getRegistry(this._state.nodes[this._id].node, REG_KEYS.CROSSCUTS) || [];
     };

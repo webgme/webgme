@@ -1,7 +1,7 @@
 .part-browser {
   text-align: center;
-  overflow-x: hidden;
-  overflow-y: hidden; }
+  overflow-x: visible;
+  overflow-y: visible; }
   .part-browser > ul {
     list-style-type: none;
     margin: 0;

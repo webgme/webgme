@@ -29,6 +29,10 @@ define(['js/logger',
         this._client = myClient;
         this._partBrowserView = myPartBrowserView;
 
+        this._partBrowserView.onSelectorChanged = function (newValue) {
+            self._updateDescriptor(self._getPartDescriptorCollection());
+        };
+
         //the ID of the node whose valid children types should be displayed
         this._containerNodeId = WebGMEGlobal.State.getActiveObject() || null;
 
@@ -52,6 +56,9 @@ define(['js/logger',
 
         //the current visualizer
         this._visualizer = null;
+
+        //library filtering
+        this._libraryFilter = {};
 
         this._initDragDropFeatures();
 
@@ -117,6 +124,7 @@ define(['js/logger',
             }
 
             if (metaChange) {
+                self._updateLibrarySelector();
                 self._updateDescriptor(self._getPartDescriptorCollection());
             } else {
                 self._updateDecorators();
@@ -171,6 +179,8 @@ define(['js/logger',
                 } else if (newDescriptor[keys[i]].visibility === 'visible') {
                     this._partBrowserView.showPart(keys[i]);
                     this._partBrowserView.setEnabled(keys[i], true);
+                } else if (newDescriptor[keys[i]].visibility === 'filtered') {
+                    this._partBrowserView.hidePart(keys[i]);
                 } else {
                     this._partBrowserView.showPart(keys[i]);
                     this._partBrowserView.setEnabled(keys[i], false);
@@ -188,6 +198,7 @@ define(['js/logger',
             }
         }
 
+        
         this._descriptorCollection = newDescriptor;
         newTerritoryRules = this._getTerritoryPatterns();
         if (JSON.stringify(this._territoryRules) !== JSON.stringify(newTerritoryRules)) {
@@ -207,7 +218,21 @@ define(['js/logger',
             descriptor,
             validInfo,
             keys,
+            librarySelector = this._partBrowserView.getCurrentSelectorValue(),
+            shouldFilterOutItem = function (key) {
+                var namespace = librarySelector;
+                if (librarySelector === '_all_') {
+                    return false;
+                }
+
+                if (librarySelector === '_none_') {
+                    namespace = '';
+                }
+
+                return descriptorCollection[key].namespace !== namespace;
+            },
             i;
+
         //getSetName = function () {
         //    var setNamesOrdered = (containerNode.getSetNames() || []).sort(),
         //        tabId = WebGMEGlobal.State.getActiveTab();
@@ -256,6 +281,10 @@ define(['js/logger',
                 } else {
                     descriptorCollection[keys[i]].visibility = 'grayed';
                 }
+
+                if (shouldFilterOutItem(keys[i])) {
+                    descriptorCollection[keys[i]].visibility = 'filtered';
+                }
             }
         }
 
@@ -297,6 +326,7 @@ define(['js/logger',
             objDescriptor.id = nodeObj.getId();
             objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || DEFAULT_DECORATOR;
             //objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+            objDescriptor.namespace = nodeObj.getNamespace();
             objDescriptor.name = nodeObj.getFullyQualifiedName();
         } else {
             this._logger.error('Node not loaded', nodeId);
@@ -376,5 +406,13 @@ define(['js/logger',
         }
     };
 
+    PartBrowserControl.prototype._updateLibrarySelector = function () {
+        var self = this,
+            libraryNames = self._client.getLibraryNames().sort();
+        libraryNames.unshift('-');
+        libraryNames.unshift('_none_');
+        libraryNames.unshift('_all_');
+        self._partBrowserView.updateSelectorInfo(libraryNames);
+    };
     return PartBrowserControl;
 });
