@@ -38,7 +38,8 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
                     client.filterPlugins(WebGMEGlobal.allPlugins, WebGMEGlobal.State.getActiveObject()),
                 executeClickFunction = function (data) {
                     executePlugin(data);
-                };
+                },
+                projectAccess = client.getProjectAccess();
 
             //clear dropdown
             self.$btnExecutePlugin.clear();
@@ -65,6 +66,7 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
                         text: metadata.name,
                         data: metadata,
                         clickFn: executeClickFunction,
+                        disabled: metadata.writeAccessRequired === true && projectAccess.write === false,
                         icon: $('<i class="plugin-icon"/>')
                     };
 

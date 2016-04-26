@@ -9,6 +9,7 @@
   },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
+  "writeAccessRequired": false,
   "configStructure": [
     {
       "name": "species",
@@ -28,7 +29,8 @@
       "valueType": "number",
       "minValue": 0,
       "maxValue": 10000,
-      "readOnly": false
+      "readOnly": false,
+      "writeAccessRequired": true
     },
     {
       "name": "carnivore",

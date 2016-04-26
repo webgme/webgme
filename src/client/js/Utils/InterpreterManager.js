@@ -51,7 +51,7 @@ define([
      */
     InterpreterManager.prototype.configureAndRun = function (metadata, callback) {
         var self = this,
-            configDialog = new PluginConfigDialog(),
+            configDialog = new PluginConfigDialog({client: this._client}),
             globalOptions = this.getGlobalOptions(metadata);
 
         if (globalOptions instanceof PluginResult) {

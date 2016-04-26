@@ -24,13 +24,14 @@ define([
     //jscs:enable maximumLineLength
         DESCRIPTION_BASE = $('<div class="desc muted col-sm-8"></div>');
 
-    PluginConfigDialog = function () {
+    PluginConfigDialog = function (params) {
         this._propertyGridWidgetManager = new PropertyGridWidgetManager();
         this._propertyGridWidgetManager.registerWidgetForType('boolean', 'iCheckBox');
         this._pluginWidgets = {};
         this._globalWidgets = {};
         this._globalConfig = null;
         this._pluginConfig = null;
+        this._client = params.client;
     };
 
     PluginConfigDialog.prototype.show = function (globalOptions, pluginMetadata, prevConfig, callback) {

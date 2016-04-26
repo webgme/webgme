@@ -20,7 +20,8 @@ define([], function () {
      * @alias PluginNodeDescription
      */
     var PluginNodeDescription = function (config) {
-        var keys;
+        var keys,
+            i;
 
         this.name = '';
         this.id = '';

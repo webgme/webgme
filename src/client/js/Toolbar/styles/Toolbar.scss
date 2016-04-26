@@ -70,6 +70,12 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
       .iCheckBox {
         top: 1px;
       }
+      .dropdown-list-button {
+        &.disabled {
+          color: gray;
+          cursor: not-allowed;
+        }
+      }
     }
   }
 

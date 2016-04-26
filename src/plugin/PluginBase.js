@@ -339,7 +339,7 @@ define([
             };
 
         //FIXME: Use a proper check for determining if it is a Core node or not.
-        if (node.hasOwnProperty('parent') && node.hasOwnProperty('relid')) {
+        if (node && node.hasOwnProperty('parent') && node.hasOwnProperty('relid')) {
             nodeDescriptor.name = this.core.getAttribute(node, 'name');
             nodeDescriptor.id = this.core.getPath(node);
         }
