@@ -67,7 +67,7 @@ define([
         };
 
         /**
-         * Retrives plugin script files and creates instance.
+         * Retrieves plugin script files and creates instance.
          * @param {string} - pluginId
          * @param {function} callback
          * @returns {promise}

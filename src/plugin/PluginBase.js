@@ -327,12 +327,22 @@ define([
     /**
      * Creates a new message for the user and adds it to the result.
      *
-     * @param {module:Core~Node} node - webgme object which is related to the message
+     * @param {module:Core~Node|object} node - webgme object which is related to the message
      * @param {string} message - feedback to the user
      * @param {string} severity - severity level of the message: 'debug', 'info' (default), 'warning', 'error'.
      */
     PluginBase.prototype.createMessage = function (node, message, severity) {
-        var severityLevel = severity || 'info';
+        var severityLevel = severity || 'info',
+            nodeDescriptor = {
+                name: '',
+                id: ''
+            };
+
+        //FIXME: Use a proper check for determining if it is a Core node or not.
+        if (node.hasOwnProperty('parent') && node.hasOwnProperty('relid')) {
+            nodeDescriptor.name = this.core.getAttribute(node, 'name');
+            nodeDescriptor.id = this.core.getPath(node);
+        }
         //this occurrence of the function will always handle a single node
 
         var descriptor = new PluginNodeDescription({
