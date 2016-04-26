@@ -20,7 +20,7 @@ var webgme = require('../../webgme'),
     blobUtil = webgme.requirejs('common/blob/util'),
     main;
 
-function _importProjectPackage(blobClient, packageHash) {
+function _addPackageArtifacts(blobClient, packageHash) {
     var zip = new AdmZip(),
         artifact = blobClient.createArtifact('files'),
         projectStr,
@@ -63,7 +63,7 @@ function _addProjectPackageToBlob(blobClient, packagePath) {
     blobClient.putFile(path.basename(packagePath),
         FS.readFileSync(packagePath))
         .then(function (hash) {
-            return _importProjectPackage(blobClient, hash);
+            return _addPackageArtifacts(blobClient, hash);
         })
         .then(deferred.resolve)
         .catch(deferred.reject);
@@ -238,7 +238,8 @@ main = function (argv) {
 };
 
 module.exports = {
-    main: main
+    main: main,
+    _addProjectPackageToBlob: _addProjectPackageToBlob
 };
 
 if (require.main === module) {
