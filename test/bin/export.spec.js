@@ -10,8 +10,8 @@ describe('export CLI tests', function () {
 
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
-        exportCli = require('../../src/bin/export'),
-        filename = require('path').normalize('src/bin/export.js'),
+        exportCli = require('../../src/bin/export_v1'),
+        filename = require('path').normalize('src/bin/export_v1.js'),
         projectName = 'exportCliTest',
         //projectId = testFixture.projectName2Id(projectName),
         outputPath = './test-tmp/exportCliTest.out',
