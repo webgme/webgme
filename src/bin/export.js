@@ -15,14 +15,10 @@ var webgme = require('../../webgme'),
     path = require('path'),
     gmeConfig,
     logger,
-    Serialization = webgme.serializer,
     STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
     REGEXP = webgme.requirejs('common/regexp'),
     main,
     mainDeferred,
-    runInternal,
-    runRaw,
-    run,
     getMissingRequiredParam,
     BlobClient = require('../../src/server/middleware/blob/BlobClientWithFSBackend'),
     storageUtils = webgme.requirejs('common/storage/util'),
@@ -44,12 +40,6 @@ getMissingRequiredParam = function (params) {
     return null;
 };
 
-/**
- * Entrypoint for CLI usage
- *
- * @param {Array<String>} argv
- * @return {undefined}
- */
 main = function (argv) {
     var Command = require('commander').Command,
         program = new Command(),
@@ -61,7 +51,7 @@ main = function (argv) {
     webgme.addToRequireJsPaths(gmeConfig);
     mainDeferred = Q.defer();
     program
-        .version('0.2.0')
+        .version('1.7.2')
         .option('-m, --mongo-database-uri [url]',
             'URI of the MongoDB [by default we use the one from the configuration file]')
         .option('-u, --user [string]', 'the user of the command [if not given we use the default user]')
@@ -85,78 +75,7 @@ main = function (argv) {
     return runInternal(program);
 };
 
-/**
- * Entry point for usage as a module.
- *
- * @param {Dictionary<String,String>} params
- * @return {undefined}
- */
-run = function (params) {
-    var missingParam = getMissingRequiredParam(params);
-    gmeConfig = params.gmeConfig;
-    mainDeferred = Q.defer();
-
-    if (missingParam) {
-        logger.error(missingParam + ' is a mandatory parameter!');
-    }
-    logger = webgme.Logger.create('gme:bin:export', gmeConfig.bin.log, false);
-    webgme.addToRequireJsPaths(gmeConfig);
-
-    return runInternal(params);
-};
-
-runRaw = function (project, rootHash) {
-    var deferred = Q.defer(),
-        exportedObjects = [],
-        taskQueue = [rootHash],
-        loadedObjects = [],
-        working = false,
-        task,
-        error = null,
-        timerId;
-
-    timerId = setInterval(function () {
-        if (!working) {
-            task = taskQueue.shift();
-            if (task === undefined) {
-                if (error) {
-                    deferred.reject(error);
-                } else {
-                    deferred.resolve(exportedObjects);
-                }
-                return;
-            }
-
-            if (loadedObjects.indexOf(task) === -1) {
-                working = true;
-                project.loadObject(task, function (err, object) {
-                    loadedObjects.push(task);
-                    var keys,
-                        i;
-                    error = error || err;
-                    if (object) {
-                        exportedObjects.push(object);
-                        //now put every sub-object on top of the queue
-                        keys = Object.keys(object);
-                        for (i = 0; i < keys.length; i += 1) {
-                            if (typeof object[keys[i]] === 'string' &&
-                                REGEXP.HASH.test(object[keys[i]]) &&
-                                loadedObjects.indexOf(object[keys[i]]) === -1) {
-                                taskQueue.push(object[keys[i]]);
-                            }
-                        }
-                    }
-                    working = false;
-                });
-            }
-
-        }
-    }, 10);
-
-    return deferred.promise;
-};
-
-runInternal = function (params) {
+function runInternal(params) {
     var finishUp = function (error) {
         var ended = function () {
             if (error) {
@@ -230,9 +149,9 @@ runInternal = function (params) {
             return storageUtils.getProjectJson(project, projectParams);
         })
         .then(function (jsonExport) {
-            return Q.ninvoke(blobUtil,'buildProjectPackage',logger, blobClient, jsonExport, params.noAssets !== true);
+            return blobUtil.buildProjectPackage(logger, blobClient, jsonExport, params.noAssets !== true);
         })
-        .then(function(blobHash){
+        .then(function (blobHash) {
             return blobClient.getObject(blobHash);
         })
         .then(function (buffer) {
@@ -242,11 +161,10 @@ runInternal = function (params) {
         .catch(finishUp);
 
     return mainDeferred.promise;
-};
+}
 
 module.exports = {
-    main: main,
-    run: run
+    main: main
 };
 
 if (require.main === module) {

@@ -107,7 +107,7 @@ main = function (argv) {
         };
 
     program
-        .version('0.2.0')
+        .version('1.7.2')
         .usage('<project-package-file> [options]')
         .option('-m, --mongo-database-uri [url]',
             'URI of the MongoDB [by default we use the one from the configuration file]')
