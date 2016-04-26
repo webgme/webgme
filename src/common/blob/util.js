@@ -171,7 +171,8 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
     function buildProjectPackage(logger, blobClient, jsonExport, addAssets, callback) {
         var artie = blobClient.createArtifact(jsonExport.projectId +
                 '_' + (jsonExport.branchName || jsonExport.commitHash)),
-            assets = jsonExport.hashes.assets || [];
+            assets = jsonExport.hashes.assets || [],
+            deferred = Q.defer();
 
         artie.descriptor.name = jsonExport.projectId +
             '_' + (jsonExport.branchName || jsonExport.commitHash) + '.webgmex';
@@ -207,7 +208,10 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
             .then(function () {
                 return artie.save();
             })
-            .nodeify(callback);
+            .then(deferred.resolve)
+            .catch(deferred.reject);
+
+        return deferred.promise.nodeify(callback);
     }
 
     return {

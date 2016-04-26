@@ -12,76 +12,26 @@ var webgme = require('../../webgme'),
     Q = require('q'),
     MongoURI = require('mongo-uri'),
     STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
+    jsonProject,
     gmeConfig = require(path.join(process.cwd(), 'config')),
+    gmeAuth,
     logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
-    AdmZip = require('adm-zip'),
-    BlobClient = require('../../src/server/middleware/blob/BlobClientWithFSBackend'),
-    storageUtils = webgme.requirejs('common/storage/util'),
-    blobUtil = webgme.requirejs('common/blob/util'),
+//REGEXP = webgme.REGEXP,
+    Serialization = webgme.serializer,
     main;
-
-function _importProjectPackage(blobClient, packageHash) {
-    var zip = new AdmZip(),
-        artifact = blobClient.createArtifact('files'),
-        projectStr,
-        deferred = Q.defer();
-
-    Q.ninvoke(blobClient, 'getObject', packageHash)
-        .then(function (buffer) {
-            if (buffer instanceof Buffer !== true) {
-                throw new Error('invalid package received');
-            }
-
-            zip = new AdmZip(buffer);
-            return Q.all(zip.getEntries().map(function (entry) {
-                    var entryName = entry.entryName;
-                    if (entryName === 'project.json') {
-                        projectStr = zip.readAsText(entry);
-                    } else {
-                        return Q.ninvoke(artifact, 'addFileAsSoftLink', entryName, zip.readFile(entry));
-                    }
-                })
-            );
-        })
-        .then(function () {
-            if (!projectStr) {
-                throw new Error('given package missing project data!');
-            }
-            var metadata = artifact.descriptor;
-            return blobUtil.addAssetsFromExportedProject(logger, blobClient, metadata);
-        })
-        .then(function () {
-            deferred.resolve(JSON.parse(projectStr));
-        })
-        .catch(deferred.reject);
-
-    return deferred.promise;
-}
-
-function _addProjectPackageToBlob(blobClient, packagePath) {
-    var deferred = Q.defer();
-    blobClient.putFile(path.basename(packagePath),
-        FS.readFileSync(packagePath))
-        .then(function (hash) {
-            return _importProjectPackage(blobClient, hash);
-        })
-        .then(deferred.resolve)
-        .catch(deferred.reject);
-    return deferred.promise;
-}
 
 main = function (argv) {
     var mainDeferred = Q.defer(),
-        jsonProject,
-        gmeAuth,
         Command = require('commander').Command,
         program = new Command(),
         syntaxFailure = false,
         cliStorage,
         project,
+        core,
+        root,
         params,
         commitHash,
-        blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
+        persisted = null,
         finishUp = function (error) {
             var ended = function () {
                 if (error) {
@@ -107,8 +57,8 @@ main = function (argv) {
         };
 
     program
-        .version('1.7.2')
-        .usage('<project-package-file> [options]')
+        .version('0.2.0')
+        .usage('<project-file> [options]')
         .option('-m, --mongo-database-uri [url]',
             'URI of the MongoDB [by default we use the one from the configuration file]')
         .option('-u, --user [string]', 'the user of the command [if not given we use the default user]')
@@ -143,10 +93,9 @@ main = function (argv) {
         .then(function (gmeAuth__) {
             gmeAuth = gmeAuth__;
 
-            return _addProjectPackageToBlob(blobClient, program.args[0]);
-        })
-        .then(function (jsonProject_) {
-            jsonProject = jsonProject_;
+            jsonProject = JSON.parse(FS.readFileSync(program.args[0], 'utf-8'));
+
+
             cliStorage = webgme.getStorage(logger.fork('storage'), gmeConfig, gmeAuth);
             return cliStorage.openDatabase();
         })
@@ -215,13 +164,42 @@ main = function (argv) {
                 project.setUser(program.user);
             }
 
-            return storageUtils.insertProjectJson(project, jsonProject, {
-                commitMessage: 'loading project from package'
-            });
+            if (jsonProject instanceof Array) {
+                //if the input is an array, then we handle them as an array of objects
+                persisted = {
+                    rootHash: jsonProject[0][STORAGE_CONSTANTS.MONGO_ID],
+                    objects: jsonProject
+                };
+                return;
+            } else {
+                //right now if the input is an object it should be an ordinary export
+                core = new webgme.core(project, {
+                    globConf: gmeConfig,
+                    logger: logger.fork('core')
+                });
+                root = core.createNode({parent: null, base: null});
+
+                persisted = null;
+
+                return Q.nfcall(Serialization.import, core, root, jsonProject);
+            }
 
         })
-        .then(function (commitHash_) {
-            commitHash = commitHash_;
+        .then(function () {
+            var msg = 'raw project imported by import.js CLI';
+            if (persisted === null) {
+                persisted = core.persist(root);
+                msg = 'project imported by import.js CLI';
+            }
+
+            return project.makeCommit(null,
+                [],
+                persisted.rootHash,
+                persisted.objects,
+                msg);
+        })
+        .then(function (commitResult) {
+            commitHash = commitResult.hash;
             params.branchName = program.branch;
             return cliStorage.deleteBranch(params);
         })

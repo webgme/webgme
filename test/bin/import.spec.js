@@ -10,8 +10,8 @@ describe('import CLI tests', function () {
 
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
-        importCLI = require('../../src/bin/import'),
-        filename = require('path').normalize('src/bin/import.js'),
+        importCLI = require('../../src/bin/import_v1'),
+        filename = require('path').normalize('src/bin/import_v1.js'),
         importPath = './test/bin/import/project.json',
         projectName,
         projectId,
