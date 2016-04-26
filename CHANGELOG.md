@@ -1,12 +1,40 @@
 # Change Log
 
+## [v1.7.2](https://github.com/webgme/webgme/tree/v1.7.2) (2016-04-26)
+[Full Changelog](https://github.com/webgme/webgme/compare/v1.7.1...v1.7.2)
+
+**Implemented enhancements:**
+
+- ImportProject in testFixture supports webgmex seeds. [\#979](https://github.com/webgme/webgme/pull/979) ([pmeijer](https://github.com/pmeijer))
+- Enable webgmex usage in import/export bin scripts [\#977](https://github.com/webgme/webgme/pull/977) ([kecso](https://github.com/kecso))
+- Refactoring of export import functionality regarding new project package [\#974](https://github.com/webgme/webgme/pull/974) ([kecso](https://github.com/kecso))
+- Client build cont [\#960](https://github.com/webgme/webgme/pull/960) ([pmeijer](https://github.com/pmeijer))
+- Generated Visualizers should behave well in split mode. PR also closes \#957. [\#958](https://github.com/webgme/webgme/pull/958) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Updating a library \(created w/ url\) using URL fails [\#971](https://github.com/webgme/webgme/issues/971)
+- Containment and pointer rules do not propagate properly from mixins [\#968](https://github.com/webgme/webgme/issues/968)
+- The displayed library guids are all 00000000-0000... [\#966](https://github.com/webgme/webgme/issues/966)
+- Add Library Exception [\#961](https://github.com/webgme/webgme/issues/961)
+- Suppressing look up of visualizer from node should still update listed visualizers. [\#957](https://github.com/webgme/webgme/issues/957)
+- When checking project constraints the links to offending nodes are broken. [\#948](https://github.com/webgme/webgme/issues/948)
+- Refactoring of export import functionality regarding new project package [\#974](https://github.com/webgme/webgme/pull/974) ([kecso](https://github.com/kecso))
+- Fix for panels not being resizable when using distribution. [\#967](https://github.com/webgme/webgme/pull/967) ([pmeijer](https://github.com/pmeijer))
+- Closes \#948 Ensure node loaded when setting state [\#965](https://github.com/webgme/webgme/pull/965) ([pmeijer](https://github.com/pmeijer))
+- Fix base loading mechanism [\#962](https://github.com/webgme/webgme/pull/962) ([kecso](https://github.com/kecso))
+
+**Closed issues:**
+
+- Exception updating library [\#978](https://github.com/webgme/webgme/issues/978)
+
 ## [v1.7.1](https://github.com/webgme/webgme/tree/v1.7.1) (2016-04-18)
 [Full Changelog](https://github.com/webgme/webgme/compare/v1.7.0...v1.7.1)
 
 **Implemented enhancements:**
 
-- Trying to use an exported webgmeX \(or its json\) as a seed fails [\#943](https://github.com/webgme/webgme/issues/943)
 - Provide a legitimate save/load mechanism [\#895](https://github.com/webgme/webgme/issues/895)
+- Trying to use an exported webgmeX \(or its json\) as a seed fails [\#943](https://github.com/webgme/webgme/issues/943)
 - Print warnings in functions/API that will be removed in v2.0.0 [\#952](https://github.com/webgme/webgme/pull/952) ([pmeijer](https://github.com/pmeijer))
 - Fixes \#943 Trying to use an exported webgmeX \(or its json\) as a seed fails [\#950](https://github.com/webgme/webgme/pull/950) ([kecso](https://github.com/kecso))
 
@@ -31,7 +59,6 @@
 
 **Implemented enhancements:**
 
-- LayoutGenerator should use ComponentSettings [\#893](https://github.com/webgme/webgme/issues/893)
 - zoom +/- buttons with collapsible zoom slider [\#907](https://github.com/webgme/webgme/issues/907)
 - Requiring text in plugin causes tests to fail [\#898](https://github.com/webgme/webgme/issues/898)
 - User experience issue : adding connector to a crosscut [\#897](https://github.com/webgme/webgme/issues/897)
@@ -57,13 +84,12 @@
 
 **Fixed bugs:**
 
-- Crosscut visualizer does not automatically load nodes from other branches [\#904](https://github.com/webgme/webgme/issues/904)
-- Generated plugins fork logger as "NewPlugin" in the tests [\#899](https://github.com/webgme/webgme/issues/899)
 - Download url for libraries are not working when server is behind a proxy. [\#932](https://github.com/webgme/webgme/issues/932)
 - Exclude library roots from meta-rule checker. [\#931](https://github.com/webgme/webgme/issues/931)
 - Null pointers not handled correctly [\#919](https://github.com/webgme/webgme/issues/919)
 - MetaCache doesn't handle node removal during load [\#909](https://github.com/webgme/webgme/issues/909)
 - Suppress auto visualizer look-up when switching panels in split view [\#905](https://github.com/webgme/webgme/issues/905)
+- Generated plugins fork logger as "NewPlugin" in the tests [\#899](https://github.com/webgme/webgme/issues/899)
 - Fixes library element ordering in ObjectBrowser [\#935](https://github.com/webgme/webgme/pull/935) ([kecso](https://github.com/kecso))
 - Fixes \#932 Download url for libraries are not working when server is behind a proxy. [\#934](https://github.com/webgme/webgme/pull/934) ([kecso](https://github.com/kecso))
 - Closes \#931 Exclude lib-roots from meta-rule checking. [\#933](https://github.com/webgme/webgme/pull/933) ([pmeijer](https://github.com/pmeijer))
@@ -75,6 +101,7 @@
 **Closed issues:**
 
 - Prototypal-Inheritance v. Class-Inheritance [\#910](https://github.com/webgme/webgme/issues/910)
+- Crosscut visualizer does not automatically load nodes from other branches [\#904](https://github.com/webgme/webgme/issues/904)
 - Add tests for reassigning guids. [\#889](https://github.com/webgme/webgme/issues/889)
 - Provide "Speculative" Collaboration via External Databases \(especially Graph Databases\) [\#875](https://github.com/webgme/webgme/issues/875)
 
@@ -89,6 +116,7 @@
 
 **Implemented enhancements:**
 
+- LayoutGenerator should use ComponentSettings [\#893](https://github.com/webgme/webgme/issues/893)
 - Enable selection of node when switching to project. [\#887](https://github.com/webgme/webgme/issues/887)
 - ProjectNavigator should have option to disable and hide project-actions. [\#885](https://github.com/webgme/webgme/issues/885)
 - Enable custom css files to be loaded at start up. [\#884](https://github.com/webgme/webgme/issues/884)
