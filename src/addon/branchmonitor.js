@@ -6,7 +6,7 @@
 'use strict';
 
 var Q = require('q'),
-    BlobClientClass = requireJS('common/blob/BlobClient'),
+    BlobClientClass = requireJS('blob/BlobClient'),
     Core = requireJS('common/core/coreQ');
 
 /**

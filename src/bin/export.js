@@ -22,7 +22,7 @@ var webgme = require('../../webgme'),
     getMissingRequiredParam,
     BlobClient = require('../../src/server/middleware/blob/BlobClientWithFSBackend'),
     storageUtils = webgme.requirejs('common/storage/util'),
-    blobUtil = webgme.requirejs('common/blob/util');
+    blobUtil = webgme.requirejs('blob/util');
 
 /**
  * Check for missing required parameters

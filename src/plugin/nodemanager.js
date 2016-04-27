@@ -6,7 +6,7 @@
 'use strict';
 
 var PluginNodeManagerBase = require('./nodemanagerbase'),
-    BlobClientClass = requireJS('common/blob/BlobClient');
+    BlobClientClass = requireJS('blob/BlobClient');
 
 function PluginNodeManager(webgmeToken, project, mainLogger, gmeConfig) {
     var blobClient = new BlobClientClass({
