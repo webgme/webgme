@@ -17,7 +17,10 @@ main = function (argv, callback) {
         Command = require('commander').Command,
         logger = webgme.Logger.create('gme:bin:runplugin', gmeConfig.bin.log),
         program = new Command(),
+        params,
         storage,
+        projectAccess,
+        gmeAuth,
         STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
         PluginCliManager = webgme.PluginCliManager,
         project,
@@ -92,12 +95,13 @@ main = function (argv, callback) {
     }
 
     webgme.getGmeAuth(gmeConfig)
-        .then(function (gmeAuth) {
+        .then(function (gmeAuth_) {
+            gmeAuth = gmeAuth_;
             storage = webgme.getStorage(logger, gmeConfig, gmeAuth);
             return storage.openDatabase();
         })
         .then(function () {
-            var params = {
+            params = {
                 projectId: '',
                 username: program.user
             };
@@ -115,6 +119,12 @@ main = function (argv, callback) {
             logger.info('Project is opened.');
             project = project_;
 
+            return gmeAuth.getProjectAuthorizationByUserId(params.user, params.projectId);
+        })
+        .then(function (access) {
+            logger.info('User has the following writes to the project: ', access);
+            projectAccess = access;
+
             return project.getBranchHash(program.branchName);
         })
         .then(function (commitHash) {
@@ -127,6 +137,8 @@ main = function (argv, callback) {
                     commitHash: commitHash,
                     namespace: program.namespace
                 };
+
+            pluginManager.projectAccess = projectAccess;
 
             pluginManager.executePlugin(pluginName, pluginConfig, context,
                 function (err, pluginResult) {

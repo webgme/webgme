@@ -33,6 +33,24 @@ define([
 
         this.logger = mainLogger.fork('PluginManagerBase');
         this.notificationHandlers = [];
+
+        /**
+         * These are used to determine if the user is allowed to execute a plugin based on
+         * the project access level. It also determines if the user is allowed to modify certain config
+         * parameters of the plugin.
+         * N.B. When reading or writing to the project from the plugin the access level is always checked
+         * by the storage.
+         * @type {{read: boolean, write: boolean, delete: boolean}}
+         */
+        this.projectAccess = {
+            read: true,
+            write: true,
+            delete: true
+        };
+
+        /**
+         *
+         */
         this.blobClient = blobClient;
 
         /**
@@ -103,29 +121,57 @@ define([
         this.configurePlugin = function (plugin, pluginConfig, context, callback) {
             var deferred = Q.defer(),
                 pluginConfiguration = plugin.getDefaultConfig(),
+                writeAccessKeys = {},
+                readOnlyKeys = {},
+                faultyKeys = [],
                 key;
-
-            if (pluginConfig) {
-                for (key in pluginConfig) {
-                    // We do allow extra config-parameters that aren't specified in the default config.
-                    pluginConfiguration[key] = pluginConfig[key];
-                }
-            }
-
-            plugin.setCurrentConfig(pluginConfiguration);
 
             context.project = context.project || project;
 
             if (context.project instanceof ProjectInterface === false) {
                 deferred.reject(new Error('project is not an instance of ProjectInterface, ' +
                     'pass it via context or set it in the constructor of PluginManagerBase.'));
+            } else if (plugin.pluginMetadata.writeAccessRequired === true && this.projectAccess.write === false) {
+                deferred.reject(new Error('Plugin requires write access to the project for execution!'));
             } else {
-                self.loadContext(context)
-                    .then(function (pluginContext) {
-                        plugin.configure(pluginContext);
-                        deferred.resolve();
-                    })
-                    .catch(deferred.reject);
+                plugin.pluginMetadata.configStructure.forEach(function (configStructure) {
+                    if (configStructure.writeAccessRequired === true && this.projectAccess.write === false) {
+                        writeAccessKeys[configStructure.name] = true;
+                    }
+                    if (configStructure.readOnly === true) {
+                        readOnlyKeys[configStructure.name] = true;
+                    }
+                });
+
+                if (pluginConfig) {
+                    for (key in pluginConfig) {
+
+                        if (readOnlyKeys[key] || writeAccessKeys[key]) {
+                            // Parameter is not allowed to be modified, check if it was.
+                            if (pluginConfiguration.hasOwnProperty(key) &&
+                                pluginConfiguration[key] === pluginConfig[key]) {
+                                faultyKeys.push(key);
+                            }
+                        }
+
+                        // We do allow extra config-parameters that aren't specified in the default config.
+                        pluginConfiguration[key] = pluginConfig[key];
+                    }
+                }
+
+                if (faultyKeys.length > 0) {
+                    deferred.reject(new Error('User not allowed to modify configuration parameter(s): ' + faultyKeys));
+                } else {
+
+                    plugin.setCurrentConfig(pluginConfiguration);
+
+                    self.loadContext(context)
+                        .then(function (pluginContext) {
+                            plugin.configure(pluginContext);
+                            deferred.resolve();
+                        })
+                        .catch(deferred.reject);
+                }
             }
 
             return deferred.promise.nodeify(callback);

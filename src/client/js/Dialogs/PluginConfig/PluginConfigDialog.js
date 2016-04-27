@@ -175,6 +175,10 @@ define([
                 pluginConfigEntry.value = this._prevConfg[pluginConfigEntry.name];
             }
 
+            if (this._client.getProjectAccess().write === false && pluginConfigEntry.writeAccessRequired === true) {
+                pluginConfigEntry.readOnly = true;
+            }
+
             widget = this._propertyGridWidgetManager.getWidgetForProperty(pluginConfigEntry);
             if (isGlobal) {
                 this._globalWidgets[pluginConfigEntry.name] = widget;

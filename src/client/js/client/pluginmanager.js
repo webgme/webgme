@@ -77,6 +77,8 @@ define([
                 callback(null);
             }];
 
+            pluginManager.projectAccess = client.getProjectAccess();
+
             pluginManager.executePlugin(pluginId, context.pluginConfig, context.managerConfig, callback);
         };
 

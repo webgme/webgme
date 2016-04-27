@@ -360,7 +360,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                storage.openProject(context.managerConfig.project, function (err, project, branches) {
+                storage.openProject(context.managerConfig.project, function (err, project, branches, access) {
                     var pluginContext;
                     if (err) {
                         finish(err);
@@ -376,6 +376,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         commitHash: context.managerConfig.commit,
                         branchName: context.managerConfig.branchName
                     };
+
                     if (typeof socketId === 'string') {
                         logger.debug('socketId provided for plugin execution - notifications available.');
                         pluginManager.notificationHandlers = [function (data, callback) {
@@ -385,6 +386,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     } else {
                         logger.warn('No socketId provided for plugin execution - notifications NOT available.');
                     }
+
+                    pluginManager.projectAccess = access;
 
                     pluginManager.executePlugin(pluginName, context.pluginConfig, pluginContext, finish);
                 });
