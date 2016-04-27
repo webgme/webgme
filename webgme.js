@@ -18,40 +18,7 @@ var requirejs = require('requirejs'),
     _REGEXP,
     _PluginCliManager,
     exports = {
-        standaloneServer: function (gmeConfig) {
-            var Standalone = require('./src/server/standalone.js');
-            return new Standalone(gmeConfig);
-        },
-        requirejs: requirejs,
-        getStorage: function (logger, gmeConfig, gmeAuth) {
-            var Mongo = require('./src/server/storage/mongo'),
-                SafeStorage = require('./src/server/storage/safestorage'),
-                mongo = new Mongo(logger, gmeConfig);
-
-            return new SafeStorage(mongo, logger, gmeConfig, gmeAuth);
-        },
-        getGmeAuth: function (gmeConfig, callback) {
-            var Q = require('q'),
-                GMEAuth = require('./src/server/middleware/auth/gmeauth'),
-                deferred = Q.defer(),
-                gmeAuth;
-
-            gmeAuth = new GMEAuth(null, gmeConfig);
-            gmeAuth.connect(function (err) {
-                if (err) {
-                    deferred.reject(err);
-                } else {
-                    deferred.resolve(gmeAuth);
-                }
-            });
-
-            return deferred.promise.nodeify(callback);
-        },
-        getGmeConfig: function () {
-            var gmeConfig = require(path.join(process.cwd(), 'config'));
-            addToRequireJsPaths(gmeConfig);
-            return gmeConfig;
-        }
+        requirejs: requirejs
     };
 
 global.requireJS = requirejs;
@@ -151,8 +118,6 @@ function addToRequireJsPaths(gmeConfig) {
     addFromRequireJsPath(gmeConfig.requirejsPaths);
 }
 
-exports.addToRequireJsPaths = addToRequireJsPaths;
-
 Object.defineProperties(exports, {
     core: {
         get: function () {
@@ -204,5 +169,43 @@ Object.defineProperties(exports, {
         }
     }
 });
+
+exports.addToRequireJsPaths = addToRequireJsPaths;
+exports.standaloneServer = function (gmeConfig) {
+    var Standalone = require('./src/server/standalone.js');
+    return new Standalone(gmeConfig);
+};
+
+exports.getStorage = function (logger, gmeConfig, gmeAuth) {
+    var Mongo = require('./src/server/storage/mongo'),
+        SafeStorage = require('./src/server/storage/safestorage'),
+        mongo = new Mongo(logger, gmeConfig);
+
+    return new SafeStorage(mongo, logger, gmeConfig, gmeAuth);
+};
+
+exports.getGmeAuth = function (gmeConfig, callback) {
+    var Q = require('q'),
+        GMEAuth = require('./src/server/middleware/auth/gmeauth'),
+        deferred = Q.defer(),
+        gmeAuth;
+
+    gmeAuth = new GMEAuth(null, gmeConfig);
+    gmeAuth.connect(function (err) {
+        if (err) {
+            deferred.reject(err);
+        } else {
+            deferred.resolve(gmeAuth);
+        }
+    });
+
+    return deferred.promise.nodeify(callback);
+};
+
+exports.getGmeConfig = function () {
+    var gmeConfig = require(path.join(process.cwd(), 'config'));
+    addToRequireJsPaths(gmeConfig);
+    return gmeConfig;
+};
 
 module.exports = exports;
