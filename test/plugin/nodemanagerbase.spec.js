@@ -21,6 +21,12 @@ describe('climanager', function () {
         projectId = testFixture.projectName2Id(projectName),
         commitHash,
 
+        libContext = {
+            commitHash: null,
+            project: null,
+            projectName: 'LibAB'
+        },
+
         gmeAuth;
 
     before(function (done) {
@@ -48,6 +54,21 @@ describe('climanager', function () {
             })
             .then(function () {
                 return project.createBranch('b2', commitHash);
+            })
+            .then(function () {
+                var importParam = {
+                    projectSeed: './test/plugin/PluginManagerBase/Lib.A.B.webgmex',
+                    projectName: libContext.projectName,
+                    branchName: 'master',
+                    logger: logger,
+                    gmeConfig: gmeConfig
+                };
+
+                return testFixture.importProject(storage, importParam);
+            })
+            .then(function (result) {
+                libContext.commitHash = result.commitHash;
+                libContext.project = result.project;
             })
             .nodeify(done);
     });
@@ -433,7 +454,7 @@ describe('climanager', function () {
                     expect(typeof err).to.equal('string');
                     expect(typeof pluginResult).to.equal('object');
                     expect(pluginResult.success).to.equal(false);
-                    expect(err).to.contain('User not allowed to modify configuration parameter(s): age');
+                    expect(err).to.contain('User not allowed to modify configuration parameter(s): "age"');
                     done();
                 } catch (e) {
                     done(e);
@@ -460,7 +481,7 @@ describe('climanager', function () {
                     expect(typeof err).to.equal('string');
                     expect(typeof pluginResult).to.equal('object');
                     expect(pluginResult.success).to.equal(false);
-                    expect(err).to.contain('User not allowed to modify configuration parameter(s): isAnimal');
+                    expect(err).to.contain('User not allowed to modify configuration parameter(s): "isAnimal"');
                     done();
                 } catch (e) {
                     done(e);
@@ -468,4 +489,132 @@ describe('climanager', function () {
             });
         }
     );
+
+    // Namespaces/Libraries
+    // FullQualified META:
+    // FCO:     /1
+    // a:       /M
+    // b:       /V
+    // A.FCO:   /T/1
+    // A.a:     /T/q
+    // A.b:     /T/o
+    // A.B.FCO: /T/7/1
+    // A.B.a:   /T/7/V
+    // A.B.b:   /T/7/R
+
+    it('should configurePlugin without given namespace and set full META', function (done) {
+        var manager = new PluginCliManager(libContext.project, logger, gmeConfig),
+            pluginConfig = {},
+            context = {
+                commitHash: libContext.commitHash
+            },
+            plugin;
+
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+
+                return manager.configurePlugin(plugin, pluginConfig, context);
+            })
+            .then(function () {
+                expect(plugin.isConfigured).to.equal(true);
+                expect(typeof plugin.META).to.equal('object');
+                expect(Object.keys(plugin.META).length).to.equal(9);
+
+                expect(plugin.core.getPath(plugin.META['FCO'])).to.equal('/1');
+                expect(plugin.core.getPath(plugin.META['a'])).to.equal('/M');
+                expect(plugin.core.getPath(plugin.META['b'])).to.equal('/V');
+
+                expect(plugin.core.getPath(plugin.META['A.FCO'])).to.equal('/T/1');
+                expect(plugin.core.getPath(plugin.META['A.a'])).to.equal('/T/q');
+                expect(plugin.core.getPath(plugin.META['A.b'])).to.equal('/T/o');
+
+                expect(plugin.core.getPath(plugin.META['A.B.FCO'])).to.equal('/T/7/1');
+                expect(plugin.core.getPath(plugin.META['A.B.a'])).to.equal('/T/7/V');
+                expect(plugin.core.getPath(plugin.META['A.B.b'])).to.equal('/T/7/R');
+            })
+            .nodeify(done);
+    });
+
+    it('should configurePlugin with namespace A set correct META', function (done) {
+        var manager = new PluginCliManager(libContext.project, logger, gmeConfig),
+            pluginConfig = {},
+            context = {
+                commitHash: libContext.commitHash,
+                namespace: 'A'
+            },
+            plugin;
+
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+
+                return manager.configurePlugin(plugin, pluginConfig, context);
+            })
+            .then(function () {
+                expect(plugin.isConfigured).to.equal(true);
+                expect(typeof plugin.META).to.equal('object');
+                expect(Object.keys(plugin.META).length).to.equal(6);
+
+                expect(plugin.core.getPath(plugin.META['FCO'])).to.equal('/T/1');
+                expect(plugin.core.getPath(plugin.META['a'])).to.equal('/T/q');
+                expect(plugin.core.getPath(plugin.META['b'])).to.equal('/T/o');
+
+                expect(plugin.core.getPath(plugin.META['B.FCO'])).to.equal('/T/7/1');
+                expect(plugin.core.getPath(plugin.META['B.a'])).to.equal('/T/7/V');
+                expect(plugin.core.getPath(plugin.META['B.b'])).to.equal('/T/7/R');
+            })
+            .nodeify(done);
+    });
+
+    it('should configurePlugin with namespace A.B set correct META', function (done) {
+        var manager = new PluginCliManager(libContext.project, logger, gmeConfig),
+            pluginConfig = {},
+            context = {
+                commitHash: libContext.commitHash,
+                namespace: 'A.B'
+            },
+            plugin;
+
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+
+                return manager.configurePlugin(plugin, pluginConfig, context);
+            })
+            .then(function () {
+                expect(plugin.isConfigured).to.equal(true);
+                expect(typeof plugin.META).to.equal('object');
+                expect(Object.keys(plugin.META).length).to.equal(3);
+
+                expect(plugin.core.getPath(plugin.META['FCO'])).to.equal('/T/7/1');
+                expect(plugin.core.getPath(plugin.META['a'])).to.equal('/T/7/V');
+                expect(plugin.core.getPath(plugin.META['b'])).to.equal('/T/7/R');
+            })
+            .nodeify(done);
+    });
+
+    it('configurePlugin should return error when namespace does not exist', function (done) {
+        var manager = new PluginCliManager(libContext.project, logger, gmeConfig),
+            pluginConfig = {},
+            context = {
+                commitHash: libContext.commitHash,
+                namespace: 'A.B.C.D'
+            },
+            plugin;
+
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+
+                return manager.configurePlugin(plugin, pluginConfig, context);
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Given namespace does not exist among the available:');
+            })
+            .nodeify(done);
+    });
 });

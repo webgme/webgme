@@ -13,6 +13,9 @@
   margin-right: 10px; }
 .plugin-config-dialog .modal-body {
   padding: 15px; }
+  .plugin-config-dialog .modal-body .global-and-plugin-divider {
+    margin-top: 0;
+    margin-bottom: 10px; }
 .plugin-config-dialog .modal-footer {
   padding: 10px;
   margin-top: 5px; }

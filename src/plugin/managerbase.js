@@ -161,7 +161,8 @@ define([
                 }
 
                 if (faultyKeys.length > 0) {
-                    deferred.reject(new Error('User not allowed to modify configuration parameter(s): ' + faultyKeys));
+                    deferred.reject(new Error('User not allowed to modify configuration parameter(s): "' +
+                        faultyKeys + '".'));
                 } else {
 
                     plugin.setCurrentConfig(defaultConfig);

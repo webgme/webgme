@@ -126,6 +126,7 @@ define([
 
         // Generate the widget in the body
         this._generateConfigSection(true);
+        this._divContainer.append($('<hr class="global-and-plugin-divider">'));
         this._generateConfigSection();
 
         this._btnSave.on('click', function (event) {
