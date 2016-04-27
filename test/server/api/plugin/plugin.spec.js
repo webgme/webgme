@@ -128,7 +128,7 @@ describe('REST API', function () {
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(typeof res.body === 'object').to.equal(true);
-                        expect(Object.keys(res.body)).to.deep.equal([
+                        expect(Object.keys(res.body)).to.include.members([
                             'id',
                             'name',
                             'version',

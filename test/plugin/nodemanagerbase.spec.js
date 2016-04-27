@@ -258,7 +258,7 @@ describe('climanager', function () {
                 project: project
             };
 
-        manager.executePlugin(pluginName, pluginConfig, context, function (err, pluginResult) {
+        manager.executePlugin(pluginName, pluginConfig, context, function (err/*, pluginResult*/) {
             expect(err).to.contain('Neither commitHash nor branchHash from branch was obtained');
 
             done();
@@ -348,4 +348,124 @@ describe('climanager', function () {
             })
             .catch(done);
     });
+
+    it('should fail with error if plugin writeAccessRequired=true and projectAccess.write=false', function (done) {
+        var manager = new PluginCliManager(null, logger, gmeConfig),
+            pluginConfig = {},
+            context = {
+                commitHash: commitHash,
+                branchName: branchName,
+                project: project
+            };
+
+        manager.projectAccess = {
+            read: true,
+            write: false,
+            delete: false
+        };
+
+        manager.executePlugin(pluginName, pluginConfig, context, function (err, pluginResult) {
+            try {
+                expect(typeof err).to.equal('string');
+                expect(typeof pluginResult).to.equal('object');
+                expect(pluginResult.success).to.equal(false);
+                expect(err).to.contain('Plugin requires write access to the project for execution');
+                done();
+            } catch (e) {
+                done(e);
+            }
+        });
+    });
+
+    it('should succeed if plugin writeAccessRequired=false and and projectAccess.write=false', function (done) {
+        var manager = new PluginCliManager(null, logger, gmeConfig),
+            pluginConfig = {
+                species: 'cat',
+                isAnimal: true,
+                age: 3
+            },
+            context = {
+                commitHash: commitHash,
+                branchName: branchName,
+                project: project
+            };
+
+        manager.projectAccess = {
+            read: true,
+            write: false,
+            delete: false
+        };
+
+        manager.executePlugin('ConfigurationArtifact', pluginConfig, context, function (err, pluginResult) {
+            try {
+                expect(err).to.equal(null);
+                expect(typeof pluginResult).to.equal('object');
+                expect(pluginResult.success).to.equal(true);
+                done();
+            } catch (e) {
+                done(e);
+            }
+        });
+    });
+
+    it('should fail with error if plugin config.parm.writeAccessRequired=true and projectAccess.write=false',
+        function (done) {
+            var manager = new PluginCliManager(null, logger, gmeConfig),
+                pluginConfig = {
+                    age: 10,
+                    species: 'cat',
+                    isAnimal: true
+                },
+                context = {
+                    commitHash: commitHash,
+                    branchName: branchName,
+                    project: project
+                };
+
+            manager.projectAccess = {
+                read: true,
+                write: false,
+                delete: false
+            };
+
+            manager.executePlugin('ConfigurationArtifact', pluginConfig, context, function (err, pluginResult) {
+                try {
+                    expect(typeof err).to.equal('string');
+                    expect(typeof pluginResult).to.equal('object');
+                    expect(pluginResult.success).to.equal(false);
+                    expect(err).to.contain('User not allowed to modify configuration parameter(s): age');
+                    done();
+                } catch (e) {
+                    done(e);
+                }
+            });
+        }
+    );
+
+    it('should fail with error if plugin config.parm.readOnly=true',
+        function (done) {
+            var manager = new PluginCliManager(null, logger, gmeConfig),
+                pluginConfig = {
+                    isAnimal: false,
+                    age: 10
+                },
+                context = {
+                    commitHash: commitHash,
+                    branchName: branchName,
+                    project: project
+                };
+
+            manager.executePlugin('ConfigurationArtifact', pluginConfig, context, function (err, pluginResult) {
+                try {
+                    expect(typeof err).to.equal('string');
+                    expect(typeof pluginResult).to.equal('object');
+                    expect(pluginResult.success).to.equal(false);
+                    expect(err).to.contain('User not allowed to modify configuration parameter(s): isAnimal');
+                    done();
+                } catch (e) {
+                    done(e);
+                }
+            });
+        }
+    );
 });

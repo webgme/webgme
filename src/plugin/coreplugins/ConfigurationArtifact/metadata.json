@@ -41,6 +41,14 @@
       "readOnly": false
     },
     {
+      "name": "isAnimal",
+      "displayName": "Is Animal",
+      "description": "Is this animal an animal? [Read-only]",
+      "value": true,
+      "valueType": "boolean",
+      "readOnly": true
+    },
+    {
       "name": "classification",
       "displayName": "Classification",
       "description": "",

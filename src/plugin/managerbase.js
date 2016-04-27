@@ -120,7 +120,8 @@ define([
          */
         this.configurePlugin = function (plugin, pluginConfig, context, callback) {
             var deferred = Q.defer(),
-                pluginConfiguration = plugin.getDefaultConfig(),
+                self = this,
+                defaultConfig = plugin.getDefaultConfig(),
                 writeAccessKeys = {},
                 readOnlyKeys = {},
                 faultyKeys = [],
@@ -131,11 +132,11 @@ define([
             if (context.project instanceof ProjectInterface === false) {
                 deferred.reject(new Error('project is not an instance of ProjectInterface, ' +
                     'pass it via context or set it in the constructor of PluginManagerBase.'));
-            } else if (plugin.pluginMetadata.writeAccessRequired === true && this.projectAccess.write === false) {
+            } else if (plugin.pluginMetadata.writeAccessRequired === true && self.projectAccess.write === false) {
                 deferred.reject(new Error('Plugin requires write access to the project for execution!'));
             } else {
                 plugin.pluginMetadata.configStructure.forEach(function (configStructure) {
-                    if (configStructure.writeAccessRequired === true && this.projectAccess.write === false) {
+                    if (configStructure.writeAccessRequired === true && self.projectAccess.write === false) {
                         writeAccessKeys[configStructure.name] = true;
                     }
                     if (configStructure.readOnly === true) {
@@ -143,27 +144,27 @@ define([
                     }
                 });
 
-                if (pluginConfig) {
-                    for (key in pluginConfig) {
+                pluginConfig = pluginConfig || {};
 
-                        if (readOnlyKeys[key] || writeAccessKeys[key]) {
-                            // Parameter is not allowed to be modified, check if it was.
-                            if (pluginConfiguration.hasOwnProperty(key) &&
-                                pluginConfiguration[key] === pluginConfig[key]) {
-                                faultyKeys.push(key);
-                            }
+                for (key in pluginConfig) {
+
+                    if (readOnlyKeys[key] || writeAccessKeys[key]) {
+                        // Parameter is not allowed to be modified, check if it was.
+                        if (pluginConfig.hasOwnProperty(key) &&
+                            pluginConfig[key] !== defaultConfig[key]) {
+                            faultyKeys.push(key);
                         }
-
-                        // We do allow extra config-parameters that aren't specified in the default config.
-                        pluginConfiguration[key] = pluginConfig[key];
                     }
+
+                    // We do allow extra config-parameters that aren't specified in the default config.
+                    defaultConfig[key] = pluginConfig[key];
                 }
 
                 if (faultyKeys.length > 0) {
                     deferred.reject(new Error('User not allowed to modify configuration parameter(s): ' + faultyKeys));
                 } else {
 
-                    plugin.setCurrentConfig(pluginConfiguration);
+                    plugin.setCurrentConfig(defaultConfig);
 
                     self.loadContext(context)
                         .then(function (pluginContext) {

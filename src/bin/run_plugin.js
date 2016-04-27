@@ -119,7 +119,7 @@ main = function (argv, callback) {
             logger.info('Project is opened.');
             project = project_;
 
-            return gmeAuth.getProjectAuthorizationByUserId(params.user, params.projectId);
+            return gmeAuth.getProjectAuthorizationByUserId(params.username, params.projectId);
         })
         .then(function (access) {
             logger.info('User has the following writes to the project: ', access);
