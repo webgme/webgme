@@ -95,7 +95,7 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
         executePlugin = function (data) {
             WebGMEGlobal.InterpreterManager.configureAndRun(data, function (result) {
                 if (result === false) {
-                    console.log('ABorted in toolbar');
+                    // Aborted in dialog.
                     return;
                 }
                 result.__unread = true;
