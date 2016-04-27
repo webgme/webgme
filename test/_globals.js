@@ -25,28 +25,11 @@ var WebGME = require('../webgme'),
         }
         return JSON.parse(JSON.stringify(gmeConfig));
     },
-    Core = requireJS('common/core/coreQ'),
-    NodeStorage = requireJS('../src/common/storage/nodestorage'),
-    storageUtil = requireJS('common/storage/util'),
-
-    Logger = require('../src/server/logger'),
-
-    logger = Logger.create('gme:test', {
-        //patterns: ['gme:test:*cache'],
-        transports: [{
-            transportType: 'Console',
-            options: {
-                level: 'error',
-                colorize: true,
-                timestamp: true,
-                prettyPrint: true,
-                //handleExceptions: true, // ignored by default when you create the logger, see the logger.create
-                //exitOnError: false,
-                depth: 4,
-                debugStdout: true
-            }
-        }]
-    }, false),
+    _Core,
+    _NodeStorage,
+    _storageUtil,
+    _Logger,
+    _logger,
     getMongoStorage = function (logger, gmeConfig, gmeAuth) {
         var SafeStorage = require('../src/server/storage/safestorage'),
             Mongo = require('../src/server/storage/mongo'),
@@ -66,25 +49,210 @@ var WebGME = require('../webgme'),
 
         return new SafeStorage(redisAdapter, logger, gmeConfig, gmeAuth);
     },
-    generateKey = requireJS('common/util/key'),
+    _generateKey,
 
-    GMEAuth = require('../src/server/middleware/auth/gmeauth'),
+    _GMEAuth,
 
-    ExecutorClient = requireJS('common/executor/ExecutorClient'),
-    BlobClient = requireJS('blob/BlobClient'),
-    Project = require('../src/server/storage/userproject'),
-    STORAGE_CONSTANTS = requireJS('common/storage/constants'),
+    _ExecutorClient,
+    _BlobClient,
+    _Project,
+    _STORAGE_CONSTANTS,
 
-    should = require('chai').should(),
-    expect = require('chai').expect,
+    _should,
+    _expect,
 
-    superagent = require('superagent'),
-    mongodb = require('mongodb'),
+    _superagent,
+    _mongodb,
     Q = require('q'),
-    fs = require('fs'),
-    path = require('path'),
-    rimraf = require('rimraf'),
-    childProcess = require('child_process');
+    _fs,
+    _path,
+    _rimraf,
+    _childProcess,
+    _SEED_DIR,
+    exports = {
+        WebGME: WebGME,
+        // test logger instance, used by all tests and only tests
+        requirejs: requireJS,
+        Q: Q
+    };
+
+Object.defineProperties(exports, {
+    Project: {
+        get: function () {
+            if (!_Project) {
+                _Project = require('../src/server/storage/userproject');
+            }
+            return _Project;
+        }
+    },
+    NodeStorage: {
+        get: function () {
+            if (!_NodeStorage) {
+                _NodeStorage = requireJS('../src/common/storage/nodestorage');
+            }
+            return _NodeStorage;
+        }
+    },
+    Logger: {
+        get: function () {
+            if (!_Logger) {
+                _Logger = require('../src/server/logger');
+            }
+            return _Logger;
+        }
+    },
+    logger: {
+        get: function () {
+            if (!_logger) {
+                _logger = exports.Logger.create('gme:test', {
+                    //patterns: ['gme:test:*cache'],
+                    transports: [{
+                        transportType: 'Console',
+                        options: {
+                            level: 'error',
+                            colorize: true,
+                            timestamp: true,
+                            prettyPrint: true,
+                            //handleExceptions: true, // ignored by default
+                            //exitOnError: false,
+                            depth: 4,
+                            debugStdout: true
+                        }
+                    }]
+                }, false);
+            }
+            return _logger;
+        }
+    },
+    BlobClient: {
+        get: function () {
+            if (!_BlobClient) {
+                _BlobClient = requireJS('blob/BlobClient');
+            }
+            return _BlobClient;
+        }
+    },
+    ExecutorClient: {
+        get: function () {
+            if (!_ExecutorClient) {
+                _ExecutorClient  = requireJS('common/executor/ExecutorClient');
+            }
+            return _ExecutorClient;
+        }
+    },
+    Core: {
+        get: function () {
+            if (!_Core) {
+                _Core = requireJS('common/core/coreQ');
+            }
+            return _Core;
+        }
+    },
+    GMEAuth: {
+        get: function () {
+            if (!_GMEAuth) {
+                _GMEAuth = require('../src/server/middleware/auth/gmeauth');
+            }
+            return _GMEAuth;
+        }
+    },
+    generateKey: {
+        get: function () {
+            if (!_generateKey) {
+                _generateKey = requireJS('common/util/key');
+            }
+            return _generateKey;
+        }
+    },
+    superagent: {
+        get: function () {
+            if (!_superagent) {
+                _superagent = require('superagent');
+            }
+            return _superagent;
+        }
+    },
+    mongodb: {
+        get: function () {
+            if (!_mongodb) {
+                _mongodb = require('mongodb');
+            }
+            return _mongodb;
+        }
+    },
+    rimraf: {
+        get: function () {
+            if (!_rimraf) {
+                _rimraf = require('rimraf');
+            }
+            return _rimraf;
+        }
+    },
+    childProcess: {
+        get: function () {
+            if (!_childProcess) {
+                _childProcess = require('child_process');
+            }
+            return _childProcess;
+        }
+    },
+    path: {
+        get: function () {
+            if (!_path) {
+                _path = require('path');
+            }
+            return _path;
+        }
+    },
+    fs: {
+        get: function () {
+            if (!_fs) {
+                _fs = require('fs');
+            }
+            return _fs;
+        }
+    },
+    SEED_DIR: {
+        get: function () {
+            if (!_SEED_DIR) {
+                _SEED_DIR = exports.path.join(__dirname, '../seeds/');
+            }
+            return _SEED_DIR;
+        }
+    },
+    STORAGE_CONSTANTS: {
+        get: function () {
+            if (!_STORAGE_CONSTANTS) {
+                _STORAGE_CONSTANTS = requireJS('common/storage/constants');
+            }
+            return _STORAGE_CONSTANTS;
+        }
+    },
+    storageUtil: {
+        get: function () {
+            if (!_storageUtil) {
+                _storageUtil = requireJS('common/storage/util');
+            }
+            return _storageUtil;
+        }
+    },
+    should: {
+        get: function () {
+            if (!_should) {
+                _should = require('chai').should();
+            }
+            return _should;
+        }
+    },
+    expect: {
+        get: function () {
+            if (!_expect) {
+                _expect = require('chai').expect;
+            }
+            return _expect;
+        }
+    },
+});
 
 /**
  * A combination of Q.allSettled and Q.all. It works like Q.allSettled in the sense that
@@ -124,7 +292,7 @@ function clearDatabase(gmeConfigParameter, callback) {
     var deferred = Q.defer(),
         db;
 
-    Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfigParameter.mongo.uri, gmeConfigParameter.mongo.options)
+    Q.ninvoke(exports.mongodb.MongoClient, 'connect', gmeConfigParameter.mongo.uri, gmeConfigParameter.mongo.options)
         .then(function (db_) {
             db = db_;
             return Q.ninvoke(db, 'collectionNames');
@@ -157,7 +325,7 @@ function getGMEAuth(gmeConfigParameter, callback) {
     var deferred = Q.defer(),
         gmeAuth;
 
-    gmeAuth = new GMEAuth(null, gmeConfigParameter);
+    gmeAuth = new exports.GMEAuth(null, gmeConfigParameter);
     gmeAuth.connect(function (err) {
         if (err) {
             deferred.reject(err);
@@ -195,7 +363,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
 
             if (typeof projectNameOrNames === 'string') {
                 projectName = projectNameOrNames;
-                projectId = guestAccount + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
+                projectId = guestAccount + exports.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
                 projectsToAuthorize.push(
                     gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
                         read: true,
@@ -205,7 +373,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                 );
             } else if (projectNameOrNames instanceof Array) {
                 for (i = 0; i < projectNameOrNames.length; i += 1) {
-                    projectId = guestAccount + STORAGE_CONSTANTS.PROJECT_ID_SEP + projectNameOrNames[i];
+                    projectId = guestAccount + exports.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectNameOrNames[i];
                     projectsToAuthorize.push(
                         gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
                             read: true,
@@ -215,7 +383,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                     );
                 }
             } else {
-                logger.warn('No projects to authorize...', projectNameOrNames);
+                exports.logger.warn('No projects to authorize...', projectNameOrNames);
             }
 
             return Q.allDone(projectsToAuthorize);
@@ -231,7 +399,7 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
 //TODO globally used functions to implement
 function loadJsonFile(path) {
     //TODO decide if throwing an exception is fine or we should handle it
-    return JSON.parse(fs.readFileSync(path, 'utf8'));
+    return JSON.parse(exports.fs.readFileSync(path, 'utf8'));
 }
 
 function importProject(storage, parameters, callback) {
@@ -249,14 +417,14 @@ function importProject(storage, parameters, callback) {
         data = {};
 
     // Parameters check.
-    expect(typeof storage).to.equal('object');
-    expect(typeof parameters).to.equal('object');
-    expect(typeof parameters.projectName).to.equal('string');
-    expect(typeof parameters.gmeConfig).to.equal('object');
-    expect(typeof parameters.logger).to.equal('object');
+    exports.expect(typeof storage).to.equal('object');
+    exports.expect(typeof parameters).to.equal('object');
+    exports.expect(typeof parameters.projectName).to.equal('string');
+    exports.expect(typeof parameters.gmeConfig).to.equal('object');
+    exports.expect(typeof parameters.logger).to.equal('object');
 
     if (parameters.hasOwnProperty('username')) {
-        expect(typeof parameters.username).to.equal('string');
+        exports.expect(typeof parameters.username).to.equal('string');
         data.username = parameters.username;
     }
 
@@ -304,7 +472,7 @@ function importProject(storage, parameters, callback) {
             return storage.createProject(data);
         })
         .then(function (project) {
-            var core = new Core(project, {
+            var core = new exports.Core(project, {
                     globConf: parameters.gmeConfig,
                     logger: parameters.logger
                 }),
@@ -437,7 +605,7 @@ function loadRootNodeFromCommit(project, core, commitHash, callback) {
  */
 function projectName2Id(projectName, userId) {
     userId = userId || gmeConfig.authentication.guestAccount;
-    return storageUtil.getProjectIdFromOwnerIdAndProjectName(userId, projectName);
+    return exports.storageUtil.getProjectIdFromOwnerIdAndProjectName(userId, projectName);
 }
 
 function logIn(server, agent, userName, password) {
@@ -493,7 +661,7 @@ function openSocketIo(server, agent, userName, password, token) {
             socket = io.connect(serverBaseUrl, options);
 
             socket.on('error', function (err) {
-                logger.error(err);
+                exports.logger.error(err);
                 deferred.reject(err || 'could not connect');
                 socket.disconnect();
             });
@@ -520,54 +688,23 @@ requireJS.config({
     }
 });
 
-module.exports = {
-    getGmeConfig: getGmeConfig,
-
-    WebGME: WebGME,
-    NodeStorage: NodeStorage,
-    getMongoStorage: getMongoStorage,
-    getMemoryStorage: getMemoryStorage,
-    getRedisStorage: getRedisStorage,
-    getBlobTestClient: function () {
-        return require('../src/server/middleware/blob/BlobClientWithFSBackend');
-    },
-    Project: Project,
-    Logger: Logger,
-    Core: Core,
-    // test logger instance, used by all tests and only tests
-    logger: logger,
-    generateKey: generateKey,
-
-    GMEAuth: GMEAuth,
-
-    ExecutorClient: ExecutorClient,
-    BlobClient: BlobClient,
-
-    requirejs: requireJS,
-    Q: Q,
-    fs: fs,
-    path: path,
-    superagent: superagent,
-    mongodb: mongodb,
-    rimraf: rimraf,
-    childProcess: childProcess,
-
-    should: should,
-    expect: expect,
-
-    clearDatabase: clearDatabase,
-    getGMEAuth: getGMEAuth,
-    clearDBAndGetGMEAuth: clearDBAndGetGMEAuth,
-
-    loadJsonFile: loadJsonFile,
-    importProject: importProject,
-    projectName2Id: projectName2Id,
-    logIn: logIn,
-    openSocketIo: openSocketIo,
-    loadRootNodeFromCommit: loadRootNodeFromCommit,
-    loadNode: loadNode,
-
-    storageUtil: storageUtil,
-    SEED_DIR: path.join(__dirname, '../seeds/'),
-    STORAGE_CONSTANTS: STORAGE_CONSTANTS
+exports.getGmeConfig = getGmeConfig;
+exports.getMongoStorage = getMongoStorage;
+exports.getMemoryStorage = getMemoryStorage;
+exports.getRedisStorage = getRedisStorage;
+exports.getBlobTestClient = function () {
+    return require('../src/server/middleware/blob/BlobClientWithFSBackend');
 };
+exports.clearDatabase = clearDatabase;
+exports.getGMEAuth = getGMEAuth;
+exports.clearDBAndGetGMEAuth = clearDBAndGetGMEAuth;
+exports.loadJsonFile = loadJsonFile;
+exports.importProject = importProject;
+exports.projectName2Id = projectName2Id;
+exports.logIn = logIn;
+exports.openSocketIo = openSocketIo;
+exports.loadRootNodeFromCommit = loadRootNodeFromCommit;
+exports.loadNode = loadNode;
+exports.loadNode = loadNode;
+
+module.exports = exports;
