@@ -16,6 +16,7 @@ define([], function () {
         MEMBER_RELATION: 'member',
         BASE_POINTER: 'base',
         PATH_SEP: '/',
+        MUTABLE_PROPERTY: '_mutable',
 
         NULLPTR_NAME: '_null_pointer',
         NULLPTR_RELID: '_nullptr',

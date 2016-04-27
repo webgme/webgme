@@ -158,13 +158,13 @@ define([
                     index,
                     key, collKey, i;
 
-                delete fromOverlay._mutable;
+                delete fromOverlay[CONSTANTS.MUTABLE_PROPERTY];
                 for (key in fromOverlay) {
                     if (key.indexOf(CONSTANTS.COLLECTION_NAME_SUFFIX) !== -1) {
                         collKey = key.substr(0, key.length - CONSTANTS.COLLECTION_NAME_SUFFIX.length);
                         for (i = 0; i < fromOverlay[key].length; i += 1) {
                             tempOverlay = JSON.parse(JSON.stringify(self.getProperty(overlay, fromOverlay[key][i])));
-                            delete tempOverlay._mutable;
+                            delete tempOverlay[CONSTANTS.MUTABLE_PROPERTY];
                             tempOverlay[collKey] = to;
                             self.setProperty(overlay, fromOverlay[key][i], tempOverlay);
                         }
@@ -173,7 +173,7 @@ define([
                         index = tempOverlay[key + CONSTANTS.COLLECTION_NAME_SUFFIX].indexOf(from);
                         if (index) {
                             tempOverlay[key + CONSTANTS.COLLECTION_NAME_SUFFIX] = to;
-                            delete tempOverlay._mutable;
+                            delete tempOverlay[CONSTANTS.MUTABLE_PROPERTY];
                             self.setProperty(overlay, fromOverlay[key], tempOverlay);
                         }
                     }

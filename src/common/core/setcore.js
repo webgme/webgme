@@ -110,7 +110,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                     setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']) {
                     keys = Object.keys(setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']);
                     for (i = 0; i < keys.length; i += 1) {
-                        if (keys[i] !== '_mutable' && sets.indexOf(keys[i]) === -1) {
+                        if (keys[i] !== CONSTANTS.MUTABLE_PROPERTY && sets.indexOf(keys[i]) === -1) {
                             sets.push(keys[i]);
                         }
                     }

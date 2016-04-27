@@ -459,4 +459,85 @@ describe('coretype', function () {
             }, core.loadByPath(newroot, path));
         }, core.loadRoot(core.getHash(root)));
     });
+
+    it('should provide the info of instance-internal collections', function (done) {
+        var root = core.createNode(),
+            A = core.createNode({parent: root, base: null, relid: 'A'}),
+            B = core.createNode({parent: root, base: null, relid: 'B'}),
+            C = core.createNode({parent: root, base: null, relid: 'C'}),
+            D = core.createNode({parent: root, base: null, relid: 'D'}),
+            S = core.createNode({parent: root, base: null, relid: 'S'}),
+            V = core.createNode({parent: root, base: null, relid: 'V'}),
+            aP = core.createNode({parent: B, base: A, relid: 'a'}),
+            bP = core.createNode({parent: S, base: B, relid: 'b'}),
+            cP = core.createNode({parent: D, base: C, relid: 'c'}),
+            aP2 = core.createNode({parent: D, base: A, relid: 'aa'}),
+            sP = core.createNode({parent: V, base: S, relid: 's'}),
+            dP = core.createNode({parent: V, base: D, relid: 'd'}),
+            vP = core.createNode({parent: root, base: V, relid: 'v'});
+
+        core.setPointer(cP, 'ref', aP2);
+        core.setPointer(C, 'wrongRef', aP2);
+
+        TASYNC.call(function (node) {
+            expect(core.getPath(node)).to.equal('/v/d/aa');
+            expect(core.getCollectionNames(node)).to.eql(['ref']);
+            expect(core.getCollectionPaths(node, 'ref')).to.eql(['/v/d/c']);
+            done();
+        }, core.loadByPath(root, '/v/d/aa'));
+    });
+
+    it('should provide the info of instance-internal collections (own children)', function (done) {
+        var root = core.createNode(),
+            A = core.createNode({parent: root, base: null, relid: 'A'}),
+            B = core.createNode({parent: root, base: null, relid: 'B'}),
+            C = core.createNode({parent: root, base: null, relid: 'C'}),
+            D = core.createNode({parent: root, base: null, relid: 'D'}),
+            S = core.createNode({parent: root, base: null, relid: 'S'}),
+            V = core.createNode({parent: root, base: null, relid: 'V'}),
+            aP = core.createNode({parent: B, base: A, relid: 'a'}),
+            bP = core.createNode({parent: S, base: B, relid: 'b'}),
+            cP = core.createNode({parent: D, base: C, relid: 'c'}),
+            aP2 = core.createNode({parent: D, base: A, relid: 'aa'}),
+            sP = core.createNode({parent: V, base: S, relid: 's'}),
+            dP = core.createNode({parent: V, base: D, relid: 'd'}),
+            vP = core.createNode({parent: root, base: V, relid: 'v'});
+
+        core.setPointer(cP, 'ref', D);
+        core.setPointer(C, 'wrongRef', D);
+
+        TASYNC.call(function (node) {
+            expect(core.getPath(node)).to.equal('/v/d');
+            expect(core.getCollectionNames(node)).to.eql(['ref']);
+            expect(core.getCollectionPaths(node, 'ref')).to.eql(['/v/d/c']);
+            done();
+        }, core.loadByPath(root, '/v/d'));
+    });
+
+    it('should provide the info of instance-internal collections (own parent)', function (done) {
+        var root = core.createNode(),
+            A = core.createNode({parent: root, base: null, relid: 'A'}),
+            B = core.createNode({parent: root, base: null, relid: 'B'}),
+            C = core.createNode({parent: root, base: null, relid: 'C'}),
+            D = core.createNode({parent: root, base: null, relid: 'D'}),
+            S = core.createNode({parent: root, base: null, relid: 'S'}),
+            V = core.createNode({parent: root, base: null, relid: 'V'}),
+            aP = core.createNode({parent: B, base: A, relid: 'a'}),
+            bP = core.createNode({parent: S, base: B, relid: 'b'}),
+            cP = core.createNode({parent: D, base: C, relid: 'c'}),
+            aP2 = core.createNode({parent: D, base: A, relid: 'aa'}),
+            sP = core.createNode({parent: V, base: S, relid: 's'}),
+            dP = core.createNode({parent: V, base: D, relid: 'd'}),
+            vP = core.createNode({parent: root, base: V, relid: 'v'});
+
+        core.setPointer(D, 'ref', cP);
+        core.setPointer(S, 'wrongRef', cP);
+
+        TASYNC.call(function (node) {
+            expect(core.getPath(node)).to.equal('/v/d/c');
+            expect(core.getCollectionNames(node)).to.eql(['ref']);
+            expect(core.getCollectionPaths(node, 'ref')).to.eql(['/v/d']);
+            done();
+        }, core.loadByPath(root, '/v/d/c'));
+    });
 });
