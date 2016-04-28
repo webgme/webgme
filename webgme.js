@@ -10,7 +10,16 @@ var requirejs = require('requirejs'),
     path = require('path'),
     requireJsBase = path.join(__dirname, 'src'),
     fs = require('fs'),
-    webgmeUtils = require('./src/utils');
+    webgmeUtils = require('./src/utils'),
+    _core,
+    _serializer,
+    _canon,
+    _Logger,
+    _REGEXP,
+    _PluginCliManager,
+    exports = {
+        requirejs: requirejs
+    };
 
 global.requireJS = requirejs;
 
@@ -109,47 +118,94 @@ function addToRequireJsPaths(gmeConfig) {
     addFromRequireJsPath(gmeConfig.requirejsPaths);
 }
 
-module.exports = {
-    standaloneServer: function (gmeConfig) {
-        var Standalone = require('./src/server/standalone.js');
-        return new Standalone(gmeConfig);
-    },
-
-    requirejs: requirejs,
-    addToRequireJsPaths: addToRequireJsPaths,
-    getStorage: function (logger, gmeConfig, gmeAuth) {
-        var Mongo = require('./src/server/storage/mongo'),
-            SafeStorage = require('./src/server/storage/safestorage'),
-            mongo = new Mongo(logger, gmeConfig);
-
-        return new SafeStorage(mongo, logger, gmeConfig, gmeAuth);
-    },
-    getGmeAuth: function (gmeConfig, callback) {
-        var Q = require('q'),
-            GMEAuth = require('./src/server/middleware/auth/gmeauth'),
-            deferred = Q.defer(),
-            gmeAuth;
-
-        gmeAuth = new GMEAuth(null, gmeConfig);
-        gmeAuth.connect(function (err) {
-            if (err) {
-                deferred.reject(err);
-            } else {
-                deferred.resolve(gmeAuth);
+Object.defineProperties(exports, {
+    core: {
+        get: function () {
+            if (!_core) {
+                _core = requirejs('common/core/core');
             }
-        });
+            return _core;
+        }
+    },
+    serializer: {
+        get: function () {
+            if (!_serializer) {
+                _serializer = requirejs('common/core/users/serialization');
+            }
+            return _serializer;
+        }
+    },
+    canon: {
+        get: function () {
+            if (!_canon) {
+                _canon = requirejs('common/util/canon');
+            }
+            return _canon;
+        }
+    },
+    Logger: {
+        get: function () {
+            if (!_Logger) {
+                _Logger = require('./src/server/logger');
+            }
+            return _Logger;
+        }
+    },
+    REGEXP: {
+        get: function () {
+            if (!_REGEXP) {
+                _REGEXP = requirejs('common/regexp');
+            }
+            return _REGEXP;
+        }
+    },
+    PluginCliManager: {
+        get: function () {
+            if (!_PluginCliManager) {
+                _PluginCliManager = require('./src/plugin/climanager');
+            }
 
-        return deferred.promise.nodeify(callback);
-    },
-    getGmeConfig: function () {
-        var gmeConfig = require(path.join(process.cwd(), 'config'));
-        addToRequireJsPaths(gmeConfig);
-        return gmeConfig;
-    },
-    core: requirejs('common/core/core'),
-    serializer: requirejs('common/core/users/serialization'),
-    canon: requirejs('common/util/canon'),
-    Logger: require('./src/server/logger'),
-    REGEXP: requirejs('common/regexp'),
-    PluginCliManager: require('./src/plugin/climanager')
+            return _PluginCliManager;
+        }
+    }
+});
+
+exports.addToRequireJsPaths = addToRequireJsPaths;
+exports.standaloneServer = function (gmeConfig) {
+    var Standalone = require('./src/server/standalone.js');
+    return new Standalone(gmeConfig);
 };
+
+exports.getStorage = function (logger, gmeConfig, gmeAuth) {
+    var Mongo = require('./src/server/storage/mongo'),
+        SafeStorage = require('./src/server/storage/safestorage'),
+        mongo = new Mongo(logger, gmeConfig);
+
+    return new SafeStorage(mongo, logger, gmeConfig, gmeAuth);
+};
+
+exports.getGmeAuth = function (gmeConfig, callback) {
+    var Q = require('q'),
+        GMEAuth = require('./src/server/middleware/auth/gmeauth'),
+        deferred = Q.defer(),
+        gmeAuth;
+
+    gmeAuth = new GMEAuth(null, gmeConfig);
+    gmeAuth.connect(function (err) {
+        if (err) {
+            deferred.reject(err);
+        } else {
+            deferred.resolve(gmeAuth);
+        }
+    });
+
+    return deferred.promise.nodeify(callback);
+};
+
+exports.getGmeConfig = function () {
+    var gmeConfig = require(path.join(process.cwd(), 'config'));
+    addToRequireJsPaths(gmeConfig);
+    return gmeConfig;
+};
+
+module.exports = exports;

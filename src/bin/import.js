@@ -17,7 +17,7 @@ var webgme = require('../../webgme'),
     AdmZip = require('adm-zip'),
     BlobClient = require('../../src/server/middleware/blob/BlobClientWithFSBackend'),
     storageUtils = webgme.requirejs('common/storage/util'),
-    blobUtil = webgme.requirejs('common/blob/util'),
+    blobUtil = webgme.requirejs('blob/util'),
     main;
 
 function _addPackageArtifacts(blobClient, packageHash) {
