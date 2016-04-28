@@ -1,14 +1,15 @@
 /*jshint node: true*/
 
 /**
- * TODO: Add options for storing the results.
- * TODO: Fix the REGEX to work.
+ * Script for gathering data about the project collections.
+ * See options at bottom for usage.
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';
 
 var webgme = require('../../webgme'),
     path = require('path'),
+    fs = require('fs'),
     Core = webgme.requirejs('common/core/coreQ'),
     mongodb = require('mongodb'),
     Q = require('q');
@@ -27,7 +28,7 @@ function getStats(options) {
         storage;
 
     webgme.addToRequireJsPaths(gmeConfig);
-    logger = new webgme.Logger.create('clean_up', gmeConfig.bin.log, false);
+    logger = new webgme.Logger.create('stats', gmeConfig.bin.log, false);
 
     options = options || {};
     params.username = options.username || gmeConfig.authentication.guestAccount;
@@ -38,12 +39,16 @@ function getStats(options) {
         params.regex = new RegExp('.*');
     }
 
-    if (options.fullProjectStat) {
-        params.fullProjectStat = true;
+    if (options.fullNodeStat) {
+        params.fullNodeStat = true;
     }
 
     if (options.excludeMongoStats) {
         params.excludeMongoStats = true;
+    }
+
+    if (typeof options.outputFile === 'string') {
+        params.outputFile = options.outputFile;
     }
 
     return webgme.getGmeAuth(gmeConfig)
@@ -63,6 +68,11 @@ function getStats(options) {
         })
         .then(function (projects) {
             logger.info('Will match project name against "' + params.regex.source + '"');
+
+            projects = projects.filter(function (projectInfo) {
+                return params.regex.test(projectInfo.name);
+            });
+
             function getProjectPromise(projectInfo) {
                 var result = {
                         projectId: projectInfo._id,
@@ -71,7 +81,8 @@ function getStats(options) {
                         nodeCnt: null,
                         branchCnt: Object.keys(projectInfo.branches).length,
                         tagCnt: null,
-                        collectionStats: null
+                        collectionStats: null,
+                        errors: []
                     },
                     project;
 
@@ -99,19 +110,27 @@ function getStats(options) {
                             core.loadRoot(commits[0].root)
                                 .then(function (rootNode) {
                                     result.metaNodeCnt = Object.keys(core.getAllMetaNodes(rootNode)).length;
-                                    if (params.fullProjectStat === true) {
+                                    if (params.fullNodeStat === true) {
                                         logger.warn('Will load entire project-tree, this could take some time...');
                                         core.loadSubTree(rootNode)
                                             .then(function (nodes) {
                                                 result.nodeCnt = nodes.length;
                                                 coreDeferred.resolve(result);
                                             })
-                                            .catch(coreDeferred.reject);
+                                            .catch(function (err) {
+                                                logger.error(err);
+                                                result.errors.push(err);
+                                                coreDeferred.resolve(result);
+                                            });
                                     } else {
                                         coreDeferred.resolve(result);
                                     }
                                 })
-                                .catch(coreDeferred.reject);
+                                .catch(function (err) {
+                                    logger.error(err);
+                                    result.errors.push(err);
+                                    coreDeferred.resolve(result);
+                                });
                         } else {
                             coreDeferred.resolve(result);
                         }
@@ -144,7 +163,8 @@ function getStats(options) {
                                     result.collectionStats = stats;
                                 })
                                 .catch(function (err) {
-                                    logger.error('Failed getting coll stat for project', result.projectId, err);
+                                    logger.error(err);
+                                    result.errors.push(err);
                                 });
                         }
 
@@ -158,11 +178,46 @@ function getStats(options) {
                         mongoDeferred.resolve(results);
                     });
             }
+
             return mongoDeferred.promise;
         })
         .then(function (results) {
-            console.log(results);
+            var packageDeferred = Q.defer(),
+                augmentedResults = {
+                    scriptParams: params,
+                    projects: results,
+                    packageJson: null
+                };
 
+            // Print the source of the regex.
+            augmentedResults.scriptParams.regex = augmentedResults.scriptParams.regex.source;
+
+            Q.nfcall(fs.readFile, 'package.json', 'utf8')
+                .then(function (content) {
+                    augmentedResults.packageJson = JSON.parse(content);
+                    packageDeferred.resolve(augmentedResults);
+                })
+                .catch(function (err) {
+                    logger.error('Error trying to extract package data reading in: ', err);
+                    packageDeferred.resolve(augmentedResults);
+                });
+
+            return packageDeferred.promise;
+        })
+        .then(function (result) {
+            var writeDeferred = Q.defer();
+
+            if (params.outputFile) {
+                writeDeferred.promise = Q.nfcall(fs.writeFile, params.outputFile, JSON.stringify(result));
+            } else {
+                console.log(result);
+                writeDeferred.resolve();
+            }
+
+            return writeDeferred.promise;
+        })
+        .then(function () {
+            logger.info('Script finished' + (params.outputFile ? ', wrote to "' + params.outputFile + '".' : '.'));
         })
         .catch(function (err_) {
             err = err_;
@@ -192,6 +247,7 @@ if (require.main === module) {
         .option('-f, --fullNodeStat [boolean]', 'If true will load all nodes for the project at latest commit ' +
         ' [false].', false)
         .option('-m, --excludeMongoStats [boolean]', 'Set parameter if the data is not stored in mongodb.', false)
+        .option('-o, --outputFile [string]', 'File to output data to instead of console.')
         .on('--help', function () {
             console.log('Use this script to gather statistics about project sizes etc. Since the script uses ' +
                 'the storage API including authorization, the given user must have read access to the projects.');
@@ -201,6 +257,7 @@ if (require.main === module) {
             console.log('    $ node storage_stats.js');
             console.log('    $ node storage_stats.js --username demo --fullNodeStat --regex ^demo_');
             console.log('    $ node storage_stats.js --regex ^startsWith --excludeMongoStats');
+            console.log('    $ node storage_stats.js --outputFile stats.json');
         })
         .parse(process.argv);
 
