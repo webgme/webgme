@@ -104,7 +104,7 @@ define([
         }
 
         function __isMutableData(data) {
-            return typeof data === 'object' && data !== null && data._mutable === true;
+            return typeof data === 'object' && data !== null && data[CONSTANTS.MUTABLE_PROPERTY] === true;
         }
 
         function __isEmptyData(data) {
@@ -151,7 +151,7 @@ define([
                 key,
                 i, child, sub, hash;
 
-            delete data._mutable;
+            delete data[CONSTANTS.MUTABLE_PROPERTY];
 
             for (i = 0; i < keys.length; i++) {
                 key = keys[i];
@@ -587,7 +587,7 @@ define([
 
             if (typeof data !== 'object' || data === null) {
                 return false;
-            } else if (data._mutable === true) {
+            } else if (data[CONSTANTS.MUTABLE_PROPERTY] === true) {
                 return true;
             }
 
@@ -608,15 +608,12 @@ define([
                 return false;
             }
 
-            var copy = {
-                _mutable: true
-            };
+            var copy = __getEmptyData();
 
             for (var key in data) {
                 copy[key] = data[key];
             }
-
-            ASSERT(copy._mutable === true);
+            copy[CONSTANTS.MUTABLE_PROPERTY] = true;
 
             if (typeof data[ID_NAME] === 'string') {
                 copy[ID_NAME] = '';

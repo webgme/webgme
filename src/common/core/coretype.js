@@ -177,32 +177,29 @@ define([
             return node;
         }
 
+        /**
+         * This function collects the inherited collection names.
+         * Although there is no collection inheritance, we know that if a model is instantiated it internal structure
+         * is not duplicated or no new data will be created. This means that in a sense, to keep the prototypical
+         * inheritance correct, we need to build the internal relations on the fly. This means that whenever the user
+         * has a question about the inverse relations of an internal part of the instance, we have to check the
+         * prototype for such 'internal' relations and provide them - like in case of inherited attributes.
+         * The function goes up on the inheritance chain of the questioned node.
+         * At every step, it searches the root of instantiation (the node that is the instance) and collect inverse
+         * relation names that are exists in the prototype structure and has purely internal endpoints.
+         * 
+         * @param node - the node in question
+         * @returns {Array} - the list of names of relations that has the node as target
+         */
         function getInheritedCollectionNames(node) {
-            var target = '',
-                names = [],
-                startNode = node,
-                endNode = getInstanceRoot(node),
-                exit;
+            var names = [],
+                extendCollectionNames = function (overlay, target) {
+                    var child = overlay[target],
+                        name;
 
-            if (self.getPath(startNode) === self.getPath(endNode)) {
-                return names;
-            }
-
-            do {
-                startNode = self.getBase(startNode);
-                endNode = self.getBase(endNode);
-                node = startNode;
-                exit = false;
-                target = '';
-                do {
-                    if (self.getPath(node) === self.getPath(endNode)) {
-                        exit = true;
-                    }
-                    var child = innerCore.getProperty(innerCore.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
-                        target);
                     if (child) {
-                        for (var name in child) {
-                            if (!innerCore.isPointerName(name)) {
+                        for (name in child) {
+                            if (!innerCore.isPointerName(name) && name !== CONSTANTS.MUTABLE_PROPERTY) {
                                 name = name.slice(0, -CONSTANTS.COLLECTION_NAME_SUFFIX.length);
                                 if (names.indexOf(name) < 0) {
                                     names.push(name);
@@ -210,84 +207,80 @@ define([
                             }
                         }
                     }
+                },
+                actualNode = node,
+                startNode = node,
+                endNode,
+                target;
 
-                    target = '/' + innerCore.getRelid(node) + target;
-                    node = innerCore.getParent(node);
-                } while (!exit);
-            } while (isInheritedChild(startNode));
+            while (startNode) {
+                actualNode = self.getBase(startNode);
+                endNode = self.getBase(getInstanceRoot(startNode));
+                target = '';
+                if (actualNode && endNode) {
+                    while (actualNode && self.getPath(actualNode).indexOf(self.getPath(endNode)) === 0) {
+                        extendCollectionNames(
+                            self.getProperty(actualNode, CONSTANTS.OVERLAYS_PROPERTY) || {},
+                            target);
+                        target = '/' + self.getRelid(actualNode) + target;
+                        actualNode = self.getParent(actualNode);
+                    }
+                }
+                startNode = self.getBase(startNode);
+            }
 
             return names;
         }
 
-        function notOverwritten(sNode, eNode, source, name) {
-            var result = true,
-                tNode = sNode,
-                child, target;
-
-            while (self.getPath(tNode) !== self.getPath(eNode)) {
-                child = innerCore.getChild(tNode, CONSTANTS.OVERLAYS_PROPERTY);
-                child = innerCore.getChild(child, source);
-                if (child) {
-                    target = innerCore.getProperty(child, name);
-                    if (target) {
-                        return false;
-                    }
-                }
-                tNode = self.getBase(tNode);
-            }
-
-            return result;
-        }
-
+        /**
+         * This function gathers the paths of the nodes that are pointing to the questioned node. The set of relations
+         * that are checked is the 'inherited' inverse relations.
+         * 
+         * The method of this function is identical to getInheritedCollectionNames, except this function collects the 
+         * sources of the given relations and not just the name of all such relation. To return a correct path (as
+         * the data exists in some bases of the actual nodes) the function always convert it back to the place of
+         * inquiry.
+         * @param node - the node in question
+         * @param name - name of the relation that we are interested in
+         * @returns {Array} - list of paths of sources of inherited relations by the given name
+         */
         function getInheritedCollectionPaths(node, name) {
-            var target = '',
-                result = [],
-                startNode = node,
-                endNode = getInstanceRoot(node),
-                prefixStart = startNode,
-                prefixNode = prefixStart,
-                exit,
-                collName = name + CONSTANTS.COLLECTION_NAME_SUFFIX;
-
-            if (self.getPath(startNode) === self.getPath(endNode)) {
-                return result;
-            }
-
-            do {
-                startNode = self.getBase(startNode);
-                endNode = self.getBase(endNode);
-                node = startNode;
-                prefixNode = prefixStart;
-                exit = false;
-                target = '';
-                do {
-                    if (self.getPath(node) === self.getPath(endNode)) {
-                        exit = true;
-                    }
-                    var child = innerCore.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
-                    child = innerCore.getChild(child, target);
-                    if (child) {
-                        var sources = innerCore.getProperty(child, collName);
-                        if (sources) {
-                            ASSERT(Array.isArray(sources) && sources.length >= 1);
-
-                            var prefix = innerCore.getPath(prefixNode);
-
-                            for (var i = 0; i < sources.length; ++i) {
-                                if (notOverwritten(prefixNode, node, sources[i], name)) {
-                                    result.push(innerCore.joinPaths(prefix, sources[i]));
-                                }
-                            }
+            var sources = [],
+                extendSources = function (overlay, prefixPath, target) {
+                    var items = (overlay[target] || {})[name + CONSTANTS.COLLECTION_NAME_SUFFIX],
+                        i;
+                    if (items) {
+                        ASSERT(Array.isArray(items) && items.length >= 1);
+                        for (i = 0; i < items.length; i += 1) {
+                            sources.push(innerCore.joinPaths(prefixPath, items[i]));
                         }
                     }
+                },
+                prefixNode,
+                actualNode = node,
+                startNode = node,
+                endNode,
+                target;
 
-                    target = '/' + innerCore.getRelid(node) + target;
-                    node = innerCore.getParent(node);
-                    prefixNode = self.getParent(prefixNode);
-                } while (!exit);
-            } while (isInheritedChild(startNode));
+            while (startNode) {
+                actualNode = self.getBase(startNode);
+                endNode = self.getBase(getInstanceRoot(startNode));
+                prefixNode = node;
+                target = '';
+                if (actualNode && endNode) {
+                    while (actualNode && self.getPath(actualNode).indexOf(self.getPath(endNode)) === 0) {
+                        extendSources(self.getProperty(actualNode, CONSTANTS.OVERLAYS_PROPERTY) || {},
+                            self.getPath(prefixNode),
+                            target);
+                        target = '/' + self.getRelid(actualNode) + target;
+                        actualNode = self.getParent(actualNode);
+                        prefixNode = self.getParent(prefixNode);
+                    }
+                }
+                startNode = self.getBase(startNode);
+            }
 
-            return result;
+            return sources;
         }
 
         function inheritedPointerNames(node) {
@@ -365,17 +358,17 @@ define([
             return getProperty(source, name);
         }
 
-        function checkCollNames(node, draft) {
-            var filtered = [],
-                i, sources;
-            for (i = 0; i < draft.length; i++) {
-                sources = self.getCollectionPaths(node, draft[i]);
-                if (sources.length > 0) {
-                    filtered.push(draft[i]);
-                }
-            }
-            return filtered;
-        }
+        // function checkCollNames(node, draft) {
+        //     var filtered = [],
+        //         i, sources;
+        //     for (i = 0; i < draft.length; i++) {
+        //         sources = self.getCollectionPaths(node, draft[i]);
+        //         if (sources.length > 0) {
+        //             filtered.push(draft[i]);
+        //         }
+        //     }
+        //     return filtered;
+        // }
 
         //</editor-fold>
 
@@ -477,7 +470,7 @@ define([
         this.getCollectionNames = function (node) {
             ASSERT(self.isValidNode(node));
             var ownNames = innerCore.getCollectionNames(node),
-                inhNames = checkCollNames(node, getInheritedCollectionNames(node)),
+                inhNames = getInheritedCollectionNames(node),
                 i;
             for (i = 0; i < ownNames.length; i++) {
                 if (inhNames.indexOf(ownNames[i]) < 0) {

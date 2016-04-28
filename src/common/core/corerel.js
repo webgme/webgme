@@ -152,7 +152,7 @@ define([
         this.isPointerName = function (name) {
             ASSERT(typeof name === 'string');
             //TODO this is needed as now we work with modified data as well
-            if (name === '_mutable') {
+            if (name === CONSTANTS.MUTABLE_PROPERTY) {
                 return false;
             }
             return name.slice(-CONSTANTS.COLLECTION_NAME_SUFFIX.length) !==
@@ -673,7 +673,7 @@ define([
                     target);
                 if (child) {
                     for (var name in child) {
-                        if (!self.isPointerName(name) && name !== '_mutable') {
+                        if (!self.isPointerName(name) && name !== CONSTANTS.MUTABLE_PROPERTY) {
                             name = name.slice(0, -CONSTANTS.COLLECTION_NAME_SUFFIX.length);
                             if (self.isPointerName(name) && names.indexOf(name) < 0) {
                                 names.push(name);
