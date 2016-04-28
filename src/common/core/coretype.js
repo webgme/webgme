@@ -177,6 +177,20 @@ define([
             return node;
         }
 
+        /**
+         * This function collects the inherited collection names.
+         * Although there is no collection inheritance, we know that if a model is instantiated it internal structure
+         * is not duplicated or no new data will be created. This means that in a sense, to keep the prototypical
+         * inheritance correct, we need to build the internal relations on the fly. This means that whenever the user
+         * has a question about the inverse relations of an internal part of the instance, we have to check the
+         * prototype for such 'internal' relations and provide them - like in case of inherited attributes.
+         * The function goes up on the inheritance chain of the questioned node.
+         * At every step, it searches the root of instantiation (the node that is the instance) and collect inverse
+         * relation names that are exists in the prototype structure and has purely internal endpoints.
+         * 
+         * @param node - the node in question
+         * @returns {Array} - the list of names of relations that has the node as target
+         */
         function getInheritedCollectionNames(node) {
             var names = [],
                 extendCollectionNames = function (overlay, target) {
@@ -218,26 +232,18 @@ define([
             return names;
         }
 
-        // function notOverwritten(sNode, eNode, source, name) {
-        //     var result = true,
-        //         tNode = sNode,
-        //         child, target;
-        //
-        //     while (self.getPath(tNode) !== self.getPath(eNode)) {
-        //         child = innerCore.getChild(tNode, CONSTANTS.OVERLAYS_PROPERTY);
-        //         child = innerCore.getChild(child, source);
-        //         if (child) {
-        //             target = innerCore.getProperty(child, name);
-        //             if (target) {
-        //                 return false;
-        //             }
-        //         }
-        //         tNode = self.getBase(tNode);
-        //     }
-        //
-        //     return result;
-        // }
-
+        /**
+         * This function gathers the paths of the nodes that are pointing to the questioned node. The set of relations
+         * that are checked is the 'inherited' inverse relations.
+         * 
+         * The method of this function is identical to getInheritedCollectionNames, except this function collects the 
+         * sources of the given relations and not just the name of all such relation. To return a correct path (as
+         * the data exists in some bases of the actual nodes) the function always convert it back to the place of
+         * inquiry.
+         * @param node - the node in question
+         * @param name - name of the relation that we are interested in
+         * @returns {Array} - list of paths of sources of inherited relations by the given name
+         */
         function getInheritedCollectionPaths(node, name) {
             var sources = [],
                 extendSources = function (overlay, prefixPath, target) {
