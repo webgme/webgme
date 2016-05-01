@@ -63,7 +63,7 @@ define([
          * @param {ProjectInterface} [context.project=project] - project instance if different from the one passed in.
          * @param {string} [context.activeNode=''] - path to active node
          * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
-         * @param {string} [context.namespace=''] - used namespace during execution ('' is the root).
+         * @param {string} [context.namespace=''] - used namespace during execution ('' represents all namespaces).
          * @param {function} callback
          */
         this.executePlugin = function (pluginId, pluginConfig, context, callback) {
@@ -114,7 +114,7 @@ define([
          * @param {ProjectInterface} [context.project=project] - project instance if different from the one passed in.
          * @param {string} [context.activeNode=''] - path to active node
          * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
-         * @param {string} [context.namespace=''] - used namespace during execution ('' is the root).
+         * @param {string} [context.namespace=''] - used namespace during execution ('' represents all namespaces).
          * @param {function} callback
          * @returns {promise}
          */
@@ -294,7 +294,7 @@ define([
          * @param {string} [context.commitHash=<%branchHash%>] - commit from which to start the plugin.
          * @param {string} [context.activeNode=''] - path to active node
          * @param {string[]} [context.activeSelection=[]] - paths to selected nodes.
-         * @param {string} [context.namespace=''] - used namespace during execution ('' is the root).
+         * @param {string} [context.namespace=''] - used namespace during execution ('' represents all namespaces).
          * @param {object} pluginLogger - logger for the plugin.
          */
         this.loadContext = function (context) {
@@ -354,17 +354,14 @@ define([
                     return self.loadNodesByPath(pluginContext, context.activeSelection || []);
                 })
                 .then(function (activeSelection) {
-                    pluginContext.activeSelection = activeSelection;
-                    self.logger.debug('activeSelection loaded');
-                    // Load meta nodes
-                    var metaIds = pluginContext.core.getMemberPaths(pluginContext.rootNode, 'MetaAspectSet');
-                    return self.loadNodesByPath(pluginContext, metaIds, !context.namespace);
-                })
-                .then(function (metaNodes) {
-                    var libraryNames = pluginContext.core.getLibraryNames(pluginContext.rootNode),
+                    var paths2MetaNodes = pluginContext.core.getAllMetaNodes(pluginContext.rootNode),
+                        libraryNames = pluginContext.core.getLibraryNames(pluginContext.rootNode),
                         metaNodeName,
                         nodeNamespace,
-                        i;
+                        path;
+
+                    pluginContext.activeSelection = activeSelection;
+                    self.logger.debug('activeSelection loaded');
 
                     function startsWith(str, pattern) {
                         return str.indexOf(pattern) === 0;
@@ -376,24 +373,32 @@ define([
                                 libraryNames + '".');
                         }
 
-                        for (i = 0; i < metaNodes.length; i += 1) {
-                            nodeNamespace = pluginContext.core.getNamespace(metaNodes[i]);
-                            metaNodeName = pluginContext.core.getAttribute(metaNodes[i], 'name');
+                        for (path in paths2MetaNodes) {
+                            nodeNamespace = pluginContext.core.getNamespace(paths2MetaNodes[path]);
+                            metaNodeName = pluginContext.core.getAttribute(paths2MetaNodes[path], 'name');
 
                             if (startsWith(nodeNamespace, context.namespace)) {
                                 // Trim the based on the chosen namespace (+1 is to remove any dot).
                                 nodeNamespace = nodeNamespace.substring(context.namespace.length + 1);
                                 if (nodeNamespace) {
-                                    pluginContext.META[nodeNamespace + '.' + metaNodeName] = metaNodes[i];
+                                    pluginContext.META[nodeNamespace + '.' + metaNodeName] = paths2MetaNodes[path];
                                 } else {
-                                    pluginContext.META[metaNodeName] = metaNodes[i];
+                                    pluginContext.META[metaNodeName] = paths2MetaNodes[path];
                                 }
                             } else {
                                 // Meta node is not within the given namespace and will not be added to META.
                             }
                         }
                     } else {
-                        pluginContext.META = metaNodes;
+                        for (path in paths2MetaNodes) {
+                            if (pluginContext.META[pluginContext.core.getFullyQualifiedName(paths2MetaNodes[path])]) {
+                                self.logger.error('Meta-nodes share the same full name. Will still proceed..',
+                                    pluginContext.core.getFullyQualifiedName(paths2MetaNodes[path]));
+                            }
+
+                            pluginContext.META[pluginContext.core.getFullyQualifiedName(paths2MetaNodes[path])] =
+                                paths2MetaNodes[path];
+                        }
                     }
 
                     deferred.resolve(pluginContext);

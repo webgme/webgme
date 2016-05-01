@@ -122,7 +122,7 @@ main = function (argv, callback) {
             return gmeAuth.getProjectAuthorizationByUserId(params.username, params.projectId);
         })
         .then(function (access) {
-            logger.info('User has the following writes to the project: ', access);
+            logger.info('User has the following rights to the project: ', access);
             projectAccess = access;
 
             return project.getBranchHash(program.branchName);
