@@ -21,6 +21,7 @@ define([
     'common/core/users/serialization',
     'blob/BlobClient',
     'js/client/stateloghelpers',
+    'js/client/pluginmanager',
     'superagent'
 ], function (Logger,
              Storage,
@@ -38,6 +39,7 @@ define([
              Serialization,
              BlobClient,
              stateLogHelpers,
+             PluginManager,
              superagent) {
     'use strict';
 
@@ -88,6 +90,7 @@ define([
             },
             blobClient,
             monkeyPatchKey,
+            pluginManager,
             nodeSetterFunctions,
             coreLibraryFunctions,
         //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
@@ -221,7 +224,15 @@ define([
             return null;
         }
 
-        // Monkey patching from other files..
+        // Plugin Manager
+        pluginManager = new PluginManager(self, storage, state, logger, gmeConfig);
+        this.getCurrentPluginContext = pluginManager.getCurrentPluginContext;
+        this.runBrowserPlugin = pluginManager.runBrowserPlugin;
+        this.runServerPlugin = pluginManager.runServerPlugin;
+        this.filterPlugins = pluginManager.filterPlugins;
+        this.dispatchPluginNotification = pluginManager.dispatchPluginNotification;
+
+        // Meta methods
         this.meta = new META();
 
         for (monkeyPatchKey in this.meta) {
@@ -292,6 +303,8 @@ define([
                 message: error.message
             });
         }
+
+        // Node setters and getters.
 
         nodeSetterFunctions = getNodeSetters(logger, state, saveRoot, storeNode, printCoreError);
 
@@ -2096,83 +2109,6 @@ define([
             );
         };
 
-        /**
-         * Run the plugin on the server inside a worker process.
-         * @param {string} name - name of plugin.
-         * @param {object} context
-         * @param {object} context.managerConfig - where the plugin should execute.
-         * @param {string} context.managerConfig.project - id of project.
-         * @param {string} context.managerConfig.activeNode - path to activeNode.
-         * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
-         * @param {string} context.managerConfig.commit - commit hash to start the plugin from.
-         * @param {string} context.managerConfig.branchName - branch which to save to.
-         * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
-         * @param {function} callback
-         */
-        this.runServerPlugin = function (name, context, callback) {
-            storage.simpleRequest({command: 'executePlugin', name: name, context: context}, callback);
-        };
-
-        /**
-         * @param {string[]} pluginNames - All avaliable plugins from server.
-         * @param {string} [nodePath=''] - Node to get the validPlugins from.
-         * @returns {string[]} - Filtered plugin names.
-         */
-        this.filterPlugins = function (pluginNames, nodePath) {
-            var filteredNames = [],
-                validPlugins,
-                i,
-                node;
-
-            logger.debug('filterPluginsBasedOnNode allPlugins, given nodePath', pluginNames, nodePath);
-            if (!nodePath) {
-                logger.debug('filterPluginsBasedOnNode nodePath not given - will fall back on root-node.');
-                nodePath = ROOT_PATH;
-            }
-
-            node = state.nodes[nodePath];
-
-            if (!node) {
-                logger.warn('filterPluginsBasedOnNode node not loaded - will fall back on root-node.', nodePath);
-                nodePath = ROOT_PATH;
-                node = state.nodes[nodePath];
-            }
-
-            if (!node) {
-                logger.warn('filterPluginsBasedOnNode root node not loaded - will return full list.');
-                return pluginNames;
-            }
-
-            validPlugins = (state.core.getRegistry(node.node, 'validPlugins') || '').split(' ');
-            for (i = 0; i < validPlugins.length; i += 1) {
-                if (pluginNames.indexOf(validPlugins[i]) > -1) {
-                    filteredNames.push(validPlugins[i]);
-                } else if (validPlugins[i] === '') {
-                    // Skip empty strings..
-                } else {
-                    logger.warn('Registered plugin for node at path "' + nodePath +
-                        '" is not amongst available plugins', pluginNames);
-                }
-            }
-
-            return filteredNames;
-        };
-
-        this.dispatchPluginNotification = function (data) {
-            var notification = {
-                severity: data.notification.severity || 'info',
-                message: '[Plugin] ' + data.pluginName + ' - ' + data.notification.message
-            };
-
-            if (typeof data.notification.progress === 'number') {
-                notification.message += ' [' + data.notification.progress + '%]';
-            }
-
-            logger.debug('plugin notification', data);
-            self.dispatchEvent(self.CONSTANTS.NOTIFICATION, notification);
-            self.dispatchEvent(self.CONSTANTS.PLUGIN_NOTIFICATION, data);
-        };
-
         this.dispatchAddOnNotification = function (data) {
             var notification = {
                 severity: data.notification.severity || 'info',
@@ -2278,7 +2214,7 @@ define([
             } else {
                 callback(new Error('invalid parameters!'));
             }
-        }
+        };
 
         this.gmeConfig = gmeConfig;
 

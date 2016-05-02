@@ -17,7 +17,10 @@ main = function (argv, callback) {
         Command = require('commander').Command,
         logger = webgme.Logger.create('gme:bin:runplugin', gmeConfig.bin.log),
         program = new Command(),
+        params,
         storage,
+        projectAccess,
+        gmeAuth,
         STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
         PluginCliManager = webgme.PluginCliManager,
         project,
@@ -41,6 +44,8 @@ main = function (argv, callback) {
         .option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '')
         .option('-a, --activeSelection <webGMEIDs>', 'IDs of selected components (comma separated with no spaces).',
         list)
+        .option('-n, --namespace',
+        'Namespace the plugin should run under.', '')
         .option('-m, --mongo-database-uri [url]',
         'URI of the MongoDB [default from the configuration file]', gmeConfig.mongo.uri)
         .option('-u, --user [string]', 'the user of the command [if not given we use the default user]',
@@ -90,12 +95,13 @@ main = function (argv, callback) {
     }
 
     webgme.getGmeAuth(gmeConfig)
-        .then(function (gmeAuth) {
+        .then(function (gmeAuth_) {
+            gmeAuth = gmeAuth_;
             storage = webgme.getStorage(logger, gmeConfig, gmeAuth);
             return storage.openDatabase();
         })
         .then(function () {
-            var params = {
+            params = {
                 projectId: '',
                 username: program.user
             };
@@ -113,6 +119,12 @@ main = function (argv, callback) {
             logger.info('Project is opened.');
             project = project_;
 
+            return gmeAuth.getProjectAuthorizationByUserId(params.username, params.projectId);
+        })
+        .then(function (access) {
+            logger.info('User has the following rights to the project: ', access);
+            projectAccess = access;
+
             return project.getBranchHash(program.branchName);
         })
         .then(function (commitHash) {
@@ -122,8 +134,11 @@ main = function (argv, callback) {
                     activeNode: program.selectedObjID,
                     activeSelection: program.activeSelection || [],
                     branchName: program.branchName,
-                    commitHash: commitHash
+                    commitHash: commitHash,
+                    namespace: program.namespace
                 };
+
+            pluginManager.projectAccess = projectAccess;
 
             pluginManager.executePlugin(pluginName, pluginConfig, context,
                 function (err, pluginResult) {

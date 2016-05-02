@@ -109,7 +109,7 @@ describe('Plugin Base', function () {
                 }
             };
         pluginBase.initialize(logger, null /* blobClient */, gmeConfig);
-        pluginBase.configure({} /* empty configuration */);
+        pluginBase.configure({META_BY_NS: {'': {}}});
         pluginBase.isConfigured.should.be.true;
     });
 
@@ -123,7 +123,8 @@ describe('Plugin Base', function () {
         pluginBase.initialize(logger, null /* blobClient */, gmeConfig);
         pluginBase.configure({
             branchName: 'master',
-            commitHash: 'abcdefg12345'
+            commitHash: 'abcdefg12345',
+            META_BY_NS: {'': {}}
         });
         pluginBase.commitHash.should.equal('abcdefg12345');
         pluginBase.branchName.should.equal('master');
@@ -138,7 +139,7 @@ describe('Plugin Base', function () {
                 }
             };
         pluginBase.initialize(logger, null /* blobClient */, gmeConfig);
-        pluginBase.configure({} /* empty configuration */);
+        pluginBase.configure({META_BY_NS: {'': {}}});
 
         // setup for this test
         pluginBase.result.success = true;

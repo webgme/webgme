@@ -9,6 +9,7 @@
   },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
+  "writeAccessRequired": true,
   "configStructure": [
     {
       "name": "shouldFail",

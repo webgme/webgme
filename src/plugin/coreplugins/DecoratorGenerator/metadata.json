@@ -9,6 +9,7 @@
   },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
+  "writeAccessRequired": false,
   "configStructure": [
     {
       "name": "decoratorName",

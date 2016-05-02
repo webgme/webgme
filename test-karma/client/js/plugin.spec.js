@@ -22,16 +22,14 @@ describe('Plugin', function () {
             'js/client',
             'text!gmeConfig.json',
             'superagent',
-            'js/Utils/InterpreterManager',
             'plugin/MinimalWorkingExample/MinimalWorkingExample/MinimalWorkingExample',
-            'PluginForked'
-        ], function (Client_, gmeConfigJSON, superagent, InterpreterManager_, MinimalWorkingExample, PluginForked) {
+            'plugin/PluginForked/PluginForked/PluginForked'
+        ], function (Client_, gmeConfigJSON, superagent, MinimalWorkingExample, PluginForked) {
             Client = Client_;
             gmeConfig = JSON.parse(gmeConfigJSON);
             client = new Client(gmeConfig);
             projectId = gmeConfig.authentication.guestAccount + client.CONSTANTS.STORAGE.PROJECT_ID_SEP +
                 projectName;
-            InterpreterManager = InterpreterManager_;
             window.WebGMEGlobal = {};
             window.WebGMEGlobal.plugins = {};
             window.WebGMEGlobal.plugins.MinimalWorkingExample = MinimalWorkingExample;
@@ -127,7 +125,7 @@ describe('Plugin', function () {
     });
 
     it('should run PluginGenerator on the server and return a valid result using default settings', function (done) {
-        var name = 'PluginGenerator',
+        var pluginId = 'PluginGenerator',
             context = {
                 managerConfig: {
                     project: projectId,
@@ -146,7 +144,7 @@ describe('Plugin', function () {
         //* @param {string} context.managerConfig.branchName - branch which to save to.
         //* @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
         //* @param {function} callback
-        client.runServerPlugin(name, context, function (err, pluginResult) {
+        client.runServerPlugin(pluginId, context, function (err, pluginResult) {
             expect(err).to.equal(null);
             expect(pluginResult).not.to.equal(null);
             expect(pluginResult.success).to.equal(true, 'PluginGenerator did not succeed on server!');
@@ -158,12 +156,15 @@ describe('Plugin', function () {
     });
 
     it('should run MinimalWorkingExample in client and update the client', function (done) {
-        var name = 'MinimalWorkingExample',
-            interpreterManager = new InterpreterManager(client, gmeConfig),
-            silentPluginCfg = {
-                activeNode: '',
-                activeSelection: [],
-                runOnServer: false,
+        var pluginId = 'MinimalWorkingExample',
+            context = {
+                managerConfig: {
+                    project: client.getProjectObject(),
+                    activeNode: '',
+                    activeSelection: [],
+                    commit: null,
+                    branchName: 'MinimalWorkingExample1',
+                },
                 pluginConfig: {}
             },
             prevStatus;
@@ -196,13 +197,9 @@ describe('Plugin', function () {
             expect(prevStatus).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
             client.addEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
 
-            //* @param {string} name - name of plugin to be executed.
-            //* @param {object} silentPluginCfg - if falsy dialog window will be shown.
-            //* @param {object.string} silentPluginCfg.activeNode - Path to activeNode.
-            //* @param {object.Array.<string>} silentPluginCfg.activeSelection - Paths to nodes in activeSelection.
-            //* @param {object.boolean} silentPluginCfg.runOnServer - Whether to run the plugin on the server or not.
-            //* @param {object.object} silentPluginCfg.pluginConfig - Plugin specific options.
-            interpreterManager.run(name, silentPluginCfg, function (pluginResult) {
+            context.managerConfig.commit = client.getActiveCommitHash();
+            client.runBrowserPlugin(pluginId, context, function (err, pluginResult) {
+                expect(err).to.equal(null);
                 expect(pluginResult).not.to.equal(null);
                 expect(pluginResult.success).to.equal(true, 'MinimalWorkingExample did not succeed');
                 expect(pluginResult.commits.length).to.equal(2);
@@ -220,12 +217,15 @@ describe('Plugin', function () {
     });
 
     it('should fork when client made changes after invocation', function (done) {
-        var name = 'PluginForked',
-            interpreterManager = new InterpreterManager(client, gmeConfig),
-            silentPluginCfg = {
-                activeNode: '',
-                activeSelection: [],
-                runOnServer: false,
+        var pluginId = 'PluginForked',
+            context = {
+                managerConfig: {
+                    project: client.getProjectObject(),
+                    activeNode: '',
+                    activeSelection: [],
+                    commit: null,
+                    branchName: 'PluginForked1',
+                },
                 pluginConfig: {
                     timeout: 200,
                     forkName: 'PluginForked1Fork'
@@ -251,16 +251,11 @@ describe('Plugin', function () {
                     }, 50);
                 }
             }
-
+            context.managerConfig.commit = client.getActiveCommitHash();
             userGuid = client.addUI({}, nodeEventHandler);
             client.updateTerritory(userGuid, {'': {children: 0}});
-            //* @param {string} name - name of plugin to be executed.
-            //* @param {object} silentPluginCfg - if falsy dialog window will be shown.
-            //* @param {object.string} silentPluginCfg.activeNode - Path to activeNode.
-            //* @param {object.Array.<string>} silentPluginCfg.activeSelection - Paths to nodes in activeSelection.
-            //* @param {object.boolean} silentPluginCfg.runOnServer - Whether to run the plugin on the server or not.
-            //* @param {object.object} silentPluginCfg.pluginConfig - Plugin specific options.
-            interpreterManager.run(name, silentPluginCfg, function (pluginResult) {
+
+            client.runBrowserPlugin(pluginId, context, function (err, pluginResult) {
                 expect(pluginResult).not.to.equal(null);
                 expect(pluginResult.success).to.equal(true, 'PluginForked did not succeed.');
                 expect(pluginResult.commits.length).to.equal(2);

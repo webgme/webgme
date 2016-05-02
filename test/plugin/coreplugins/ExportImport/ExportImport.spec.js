@@ -86,13 +86,16 @@ describe('Plugin ExportImport', function () {
             .nodeify(done);
     });
 
-    it('should initialize plugin and get name, version and description', function () {
-        var plugin = pluginManager.initializePlugin(pluginName);
-        expect(plugin instanceof PluginBase).to.equal(true);
-        expect(plugin.getName()).to.equal('Export, Import and Update Library');
-        expect(typeof plugin.getDescription ()).to.equal('string');
-        expect(plugin.getConfigStructure() instanceof Array).to.equal(true);
-        expect(plugin.getConfigStructure().length).to.equal(3);
+    it('should initialize plugin and get name, version and description', function (done) {
+        pluginManager.initializePlugin(pluginName)
+            .then(function (plugin) {
+                expect(plugin instanceof PluginBase).to.equal(true);
+                expect(plugin.getName()).to.equal('Export, Import and Update Library');
+                expect(typeof plugin.getDescription ()).to.equal('string');
+                expect(plugin.getConfigStructure() instanceof Array).to.equal(true);
+                expect(plugin.getConfigStructure().length).to.equal(3);
+            })
+            .nodeify(done);
     });
 
     it('should fail with no file provided during ImportProject', function (done) {

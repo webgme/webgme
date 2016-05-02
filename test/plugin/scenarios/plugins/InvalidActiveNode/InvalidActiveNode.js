@@ -6,25 +6,24 @@ if (typeof define === 'undefined') {
 } else {
     define([
         'plugin/PluginConfig',
-        'plugin/PluginBase'
+        'plugin/PluginBase',
+        'text!./metadata.json'
     ], function (PluginConfig,
-                 PluginBase) {
+                 PluginBase,
+                 pluginMetadata) {
         'use strict';
+
+        pluginMetadata = JSON.parse(pluginMetadata);
         var InvalidActiveNode = function () {
             // Call base class' constructor.
             PluginBase.call(this);
+            this.pluginMetadata = pluginMetadata;
         };
+
+        InvalidActiveNode.metadata = pluginMetadata;
 
         InvalidActiveNode.prototype = Object.create(PluginBase.prototype);
         InvalidActiveNode.prototype.constructor = InvalidActiveNode;
-
-        InvalidActiveNode.prototype.getName = function () {
-            return 'Invalid Active Node';
-        };
-
-        InvalidActiveNode.prototype.getVersion = function () {
-            return '0.1.0';
-        };
 
         InvalidActiveNode.prototype.main = function (callback) {
             var self = this,

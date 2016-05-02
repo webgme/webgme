@@ -1,4 +1,4 @@
-/*globals define, WebGMEGlobal, requirejs*/
+/*globals define, WebGMEGlobal*/
 /*jshint browser: true*/
 
 /**
@@ -8,16 +8,12 @@
  */
 
 define([
-    'common/core/coreQ',
-    'plugin/PluginManagerBase',
     'plugin/PluginResult',
     'plugin/PluginMessage',
-    'blob/BlobClient',
     'js/Dialogs/PluginConfig/PluginConfigDialog',
     'js/logger',
     'js/Utils/ComponentSettings'
-], function (Core, PluginManagerBase, PluginResult, PluginMessage, BlobClient, PluginConfigDialog, Logger,
-             ComponentSettings) {
+], function (PluginResult, PluginMessage, PluginConfigDialog, Logger, ComponentSettings) {
 
     'use strict';
 
@@ -32,21 +28,6 @@ define([
 
     InterpreterManager.prototype.GLOBAL_OPTIONS = 'Global Options';
 
-    var getPlugin = function (name, callback) {
-        if (typeof WebGMEGlobal !== 'undefined' && WebGMEGlobal.plugins && WebGMEGlobal.plugins.hasOwnProperty(name)) {
-            callback(null, WebGMEGlobal.plugins[name]);
-        } else {
-            requirejs(['/plugin/' + name + '/' + name + '/' + name],
-                function (InterpreterClass) {
-                    callback(null, InterpreterClass);
-                },
-                function (err) {
-                    callback(err, null);
-                }
-            );
-        }
-    };
-
     function getPluginErrorResult(pluginName, message, startTime, projectId) {
         var pluginResult = new PluginResult(),
             pluginMessage = new PluginMessage();
@@ -54,7 +35,7 @@ define([
         pluginMessage.message = message;
         pluginResult.setSuccess(false);
         pluginResult.setPluginName(pluginName);
-        pluginResult.setProjectId(projectId || 'N/A');
+        pluginResult.setProjectId(projectId || this._client.getActiveProjectId() || 'N/A');
         pluginResult.addMessage(pluginMessage);
         pluginResult.setStartTime(startTime);
         pluginResult.setFinishTime((new Date()).toISOString());
@@ -65,248 +46,155 @@ define([
 
     /**
      *
-     * @param {string|object} params - id or data of plugin to be executed.
-     * @param {string} [params.id] - id of plugin.
-     * @param {string} [params.icon] - icon path or css-class.
-     * @param {boolean} [params.disableServerSideExecution]
-     * @param {boolean} [params.disableBrowserSideExecution]
-     * @param {object} silentPluginCfg - if falsy dialog window will be shown.
-     * @param {object.string} silentPluginCfg.activeNode - Path to activeNode.
-     * @param {object.Array.<string>} silentPluginCfg.activeSelection - Paths to nodes in activeSelection.
-     * @param {object.boolean} silentPluginCfg.runOnServer - Whether to run the plugin on the server or not.
-     * @param {object.object} silentPluginCfg.pluginConfig - Plugin specific options.
-     * @param callback
+     * @param {object} metadata - metadata of plugin to be executed.
+     * @param {function(PluginResult|boolean)} callback - If canceled from dialog returns with false.
      */
-    InterpreterManager.prototype.run = function (params, silentPluginCfg, callback) {
+    InterpreterManager.prototype.configureAndRun = function (metadata, callback) {
         var self = this,
-            projectId = self._client.getProjectObject().projectId,
-            startTime = (new Date()).toISOString();
+            configDialog = new PluginConfigDialog({client: this._client}),
+            globalOptions = this.getGlobalOptions(metadata);
 
-        if (typeof params === 'string') {
-            params = {
-                id: params
-            };
+        if (globalOptions instanceof PluginResult) {
+            callback(globalOptions);
+            return;
         }
 
-        getPlugin(params.id, function (err, plugin) {
-            self.logger.debug('Getting getPlugin in run.');
-            if (!err && plugin) {
-                var plugins = {},
-                    runWithConfiguration;
-                plugins[params.id] = plugin;
-                var pluginManager = new PluginManagerBase(self._client.getProjectObject(), Core, self.logger, plugins,
-                    self.gmeConfig);
-                pluginManager.notificationHandlers = [function (data, callback) {
-                    self._client.dispatchPluginNotification(data);
-                    callback(null);
-                }];
-                pluginManager.initialize(null, function (pluginConfigs, configSaveCallback) {
-                    //#1: display config to user
-                    var serverAllowedGlobal = self.gmeConfig.plugin.allowServerExecution === true,
-                        serverAllowedPlugin = !(plugin.disableServerExecution || params.disableServerSideExecution),
-                        browserAllowedGlobal = self.gmeConfig.plugin.allowBrowserExecution === true,
-                        browserAllowedPlugin = !(plugin.disableBrowserSideExecution ||
-                            params.disableBrowserSideExecution),
-                        runOptions = {
-                            name: 'runOnServer',
-                            displayName: 'Execute on Server',
-                            description: '',
-                            value: false,
-                            valueType: 'boolean',
-                            readOnly: false
-                        },
-                        hackedConfig = {},
-                        i, j, d, len;
+        configDialog.show(globalOptions, metadata, this.getStoredConfiguration(metadata),
+            function (globalConfig, pluginConfig, storeInUser) {
+                var context,
+                    startTime = (new Date()).toISOString();
 
-                    hackedConfig[self.GLOBAL_OPTIONS] = [runOptions];
-
-                    if (serverAllowedGlobal === false && browserAllowedGlobal === false) {
-                        callback(getPluginErrorResult(params.id, 'Plugin execution is disabled!', startTime, projectId));
-                        return;
-                    }
-
-                    if (serverAllowedPlugin === false && browserAllowedPlugin === false) {
-                        callback(getPluginErrorResult(params.id, 'This plugin cannot run on the server nor in the browser!?',
-                            startTime, projectId));
-                        return;
-                    }
-
-                    if (browserAllowedGlobal) {
-                        if (serverAllowedGlobal) {
-                            if (browserAllowedPlugin) {
-                                if (serverAllowedPlugin) {
-                                    // This is the default
-                                } else {
-                                    runOptions.readOnly = true;
-                                    runOptions.description = 'This plugin can not run on the server.';
-                                }
-                            } else {
-                                runOptions.readOnly = true;
-                                runOptions.value = true;
-                                runOptions.description = 'This plugin can not run in the browser.';
-                            }
+                function execCallback(err, result) {
+                    if (err) {
+                        self.logger.error(err);
+                        if (result) {
+                            callback(new PluginResult(result));
                         } else {
-                            if (browserAllowedPlugin) {
-                                runOptions.readOnly = true;
-                                runOptions.description = 'Server execution is disabled.';
-                            } else {
-                                callback(getPluginErrorResult(params.id,
-                                    'This plugin can only run on the server which is disabled!', startTime, projectId));
-                                return;
-                            }
+                            callback(getPluginErrorResult(metadata.id, err.message, startTime, context.project.projectId));
                         }
                     } else {
-                        if (browserAllowedPlugin) {
-                            runOptions.readOnly = true;
-                            runOptions.value = true;
-                            runOptions.description = 'Browser execution is disabled.';
-                        } else {
-                            callback(getPluginErrorResult(params.id,
-                                'This plugin can only run on the server which is disabled!', startTime, projectId));
-                            return;
-                        }
+                        callback(new PluginResult(result));
                     }
+                }
 
-                    for (i in pluginConfigs) {
-                        if (pluginConfigs.hasOwnProperty(i)) {
-                            hackedConfig[i] = pluginConfigs[i];
+                if (globalConfig === false) {
+                    // Canceled from dialog..
+                    callback(false);
+                    return;
+                }
 
-                            // retrieve user settings from previous run
-                            var iConfig = self.getStoredConfiguration(i, plugin);
-                            if (iConfig) {
-                                len = hackedConfig[i].length;
+                // Store the config in memory for this session.
+                self._savedConfigs[metadata.id] = pluginConfig;
 
-                                while (len--) {
-                                    if (iConfig.hasOwnProperty(hackedConfig[i][len].name)) {
-                                        hackedConfig[i][len].value = iConfig[hackedConfig[i][len].name];
-                                    }
-                                }
-                            }
-                        }
-                    }
+                if (storeInUser === true) {
+                    self.saveSettingsInUser(metadata, pluginConfig);
+                }
 
-                    runWithConfiguration = function (updatedConfig) {
-                        //when Save&Run is clicked in the dialog (or silentPluginCfg was passed)
-                        var globalconfig = updatedConfig['Global Options'],
-                            activeNode,
-                            errMessage,
-                            activeSelection;
-                        delete updatedConfig['Global Options'];
+                context = self._client.getCurrentPluginContext();
+                context.pluginConfig = pluginConfig;
+                context.managerConfig.namespace = globalConfig.namespace;
 
-                        activeNode = silentPluginCfg.activeNode;
-                        if (!activeNode && WebGMEGlobal && WebGMEGlobal.State) {
-                            activeNode = WebGMEGlobal.State.getActiveObject();
-                        }
-                        activeSelection = silentPluginCfg.activeSelection;
-                        if (!activeSelection && WebGMEGlobal && WebGMEGlobal.State) {
-                            activeSelection = WebGMEGlobal.State.getActiveSelection();
-                        }
-                        // save config from user
-                        for (i in updatedConfig) {
-                            self._savedConfigs[i] = updatedConfig[i];
-                        }
+                // Before executing the plugin - make sure the client is in SYNC.
+                // (If not plugin could be executed on the server on a commitHash that does not exist).
+                if (self._client.getBranchStatus() &&
+                    self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC) {
+                    callback(getPluginErrorResult(metadata.id, 'Not allowed to invoke plugin while local branch' +
+                        ' is AHEAD or PULLING changes from server.', startTime));
+                    return;
+                }
 
-                        //#2: save it back and run the plugin
-                        if (configSaveCallback) {
-                            configSaveCallback(updatedConfig);
-
-                            if (self._client.getBranchStatus() &&
-                                self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC) {
-                                errMessage = 'Not allowed to invoke plugin while local branch is AHEAD or ' +
-                                    'PULLING changes from server.';
-                                self.logger.error(errMessage);
-                                callback(getPluginErrorResult(params.id, errMessage, startTime, projectId));
-                                return;
-                            }
-
-                            // TODO: If global config says try to merge branch then we
-                            // TODO: should pass the name of the branch.
-                            var config = {
-                                project: self._client.getActiveProjectId(),
-                                token: '',
-                                activeNode: activeNode, // active object in the editor
-                                activeSelection: activeSelection || [],
-                                commit: self._client.getActiveCommitHash(), //#668b3babcdf2ddcd7ba38b51acb62d63da859d90,
-                                // This will get loaded too which will provide a sanity check on the client state.
-                                rootHash: self._client.getActiveRootHash(),
-                                branchName: self._client.getActiveBranchName()
-                            };
-
-                            if (globalconfig.runOnServer === true || silentPluginCfg.runOnServer === true) {
-                                var context = {
-                                    managerConfig: config,
-                                    pluginConfig: updatedConfig[params.id]
-                                };
-                                self._client.runServerPlugin(params.id, context, function (err, result) {
-                                    if (err) {
-                                        self.logger.error(err);
-                                        if (result) {
-                                            callback(new PluginResult(result));
-                                        } else {
-                                            errMessage = 'Plugin execution resulted in error, err: ' + err;
-                                            callback(getPluginErrorResult(params.id, errMessage, startTime, projectId));
-                                        }
-                                    } else {
-                                        var resultObject = new PluginResult(result);
-                                        callback(resultObject);
-                                    }
-                                });
-                            } else {
-                                config.blobClient = new BlobClient({logger: self.logger.fork('BlobClient')});
-
-                                pluginManager.executePlugin(params.id, config, function (err, result) {
-                                    if (err) {
-                                        self.logger.error(err);
-                                    }
-                                    callback(result);
-                                });
-                            }
-                        }
-                    };
-
-                    if (silentPluginCfg) {
-                        var updatedConfig = {};
-                        for (i in hackedConfig) {
-                            updatedConfig[i] = {};
-                            len = hackedConfig[i].length;
-                            while (len--) {
-                                updatedConfig[i][hackedConfig[i][len].name] = hackedConfig[i][len].value;
-                            }
-
-                            if (silentPluginCfg && silentPluginCfg.pluginConfig) {
-                                for (j in silentPluginCfg.pluginConfig) {
-                                    updatedConfig[i][j] = silentPluginCfg.pluginConfig[j];
-                                }
-                            }
-                        }
-                        runWithConfiguration(updatedConfig);
-                    } else {
-                        d = new PluginConfigDialog(params);
-                        silentPluginCfg = {};
-                        d.show(hackedConfig, plugin, function (userConfig, save) {
-                            if (save === true) {
-                                self.saveSettingsInUser(params.id, plugin, userConfig);
-                            }
-
-                            runWithConfiguration(userConfig);
-                        });
-                    }
-                });
-            } else {
-                self.logger.error(err);
-                self.logger.error('Unable to load plugin');
-                callback(getPluginErrorResult(params.id, 'Unable to load plugin, err:' + err, startTime, projectId));
+                if (globalConfig.runOnServer === true) {
+                    self._client.runServerPlugin(metadata.id, context, execCallback);
+                } else {
+                    self._client.runBrowserPlugin(metadata.id, context, execCallback);
+                }
             }
-        });
+        );
     };
 
-    InterpreterManager.prototype.getStoredConfiguration = function (pluginId, plugin) {
+    InterpreterManager.prototype.getGlobalOptions = function (pluginMetadata) {
+        var runOption = {
+                name: 'runOnServer',
+                displayName: 'Execute on Server',
+                description: '',
+                value: false,
+                valueType: 'boolean',
+                readOnly: false
+            },
+            namespace = {
+                name: 'namespace',
+                displayName: 'Used Namespace',
+                description: 'The namespace the plugin should run under.',
+                value: '',
+                valueType: 'string',
+                valueItems: [],
+                readOnly: false
+            },
+            result = [],
+            serverAllowedGlobal = this.gmeConfig.plugin.allowServerExecution === true,
+            serverAllowedPlugin = !(pluginMetadata.disableServerSideExecution),
+            browserAllowedGlobal = this.gmeConfig.plugin.allowBrowserExecution === true,
+            browserAllowedPlugin = !(pluginMetadata.disableBrowserSideExecution),
+            errorMessage;
+
+        if (serverAllowedGlobal === false && browserAllowedGlobal === false) {
+            errorMessage = 'Plugin execution is disabled!';
+        } else if (serverAllowedPlugin === false && browserAllowedPlugin === false) {
+            errorMessage = 'This plugin cannot run on the server nor in the browser!?';
+        } else if (browserAllowedGlobal) {
+            if (serverAllowedGlobal) {
+                if (browserAllowedPlugin) {
+                    if (serverAllowedPlugin) {
+                        // This is the default
+                    } else {
+                        runOption.readOnly = true;
+                        runOption.description = 'This plugin can not run on the server.';
+                    }
+                } else {
+                    runOption.readOnly = true;
+                    runOption.value = true;
+                    runOption.description = 'This plugin can not run in the browser.';
+                }
+            } else {
+                if (browserAllowedPlugin) {
+                    runOption.readOnly = true;
+                    runOption.description = 'Server execution is disabled.';
+                } else {
+                    errorMessage = 'This plugin can only run on the server which is disabled!';
+                }
+            }
+        } else {
+            if (browserAllowedPlugin) {
+                runOption.readOnly = true;
+                runOption.value = true;
+                runOption.description = 'Browser execution is disabled.';
+            } else {
+                errorMessage = 'This plugin can only run on the server which is disabled!';
+            }
+        }
+
+        if (errorMessage) {
+            return getPluginErrorResult(pluginMetadata.id, errorMessage, (new Date()).toISOString());
+        } else {
+            result.push(runOption);
+            namespace.valueItems = this._client.getLibraryNames();
+
+            if (namespace.valueItems.length > 0) {
+                namespace.valueItems.unshift('');
+                result.push(namespace);
+            }
+
+            return result;
+        }
+    };
+
+    InterpreterManager.prototype.getStoredConfiguration = function (pluginMetadata) {
         var config,
-            componentId = this.getPluginComponentId(pluginId, plugin);
+            componentId = this.getPluginComponentId(pluginMetadata);
 
         // Always use the configuration stored from a previous run if it's available.
-        if (this._savedConfigs.hasOwnProperty(pluginId)) {
-            config = this._savedConfigs[pluginId];
+        if (this._savedConfigs.hasOwnProperty(pluginMetadata.id)) {
+            config = this._savedConfigs[pluginMetadata.id];
         } else if (typeof WebGMEGlobal !== 'undefined') {
             config = {};
             ComponentSettings.resolveWithWebGMEGlobal(config, componentId);
@@ -315,13 +203,13 @@ define([
         return config;
     };
 
-    InterpreterManager.prototype.saveSettingsInUser = function (pluginId, plugin, pluginConfig, callback) {
+    InterpreterManager.prototype.saveSettingsInUser = function (pluginMetadata, pluginConfig, callback) {
         var self = this,
-            componentId = this.getPluginComponentId(pluginId, plugin);
+            componentId = this.getPluginComponentId(pluginMetadata.id);
 
         this.logger.debug('Saving plugin config in user', componentId, pluginConfig);
 
-        ComponentSettings.overwriteComponentSettings(componentId, pluginConfig[pluginId], function (err, newSettings) {
+        ComponentSettings.overwriteComponentSettings(componentId, pluginConfig, function (err, newSettings) {
             if (callback) {
                 if (err) {
                     callback(err);
@@ -338,8 +226,8 @@ define([
         });
     };
 
-    InterpreterManager.prototype.getPluginComponentId = function (pluginId, plugin) {
-        var componentId = 'Plugin_' + pluginId + '__' + plugin.prototype.getVersion().split('.').join('_');
+    InterpreterManager.prototype.getPluginComponentId = function (pluginMetadata) {
+        var componentId = 'Plugin_' + pluginMetadata.id + '__' + pluginMetadata.version.split('.').join('_');
         this.logger.debug('Resolved componentId for plugin "' + componentId + '"');
         return componentId;
     };

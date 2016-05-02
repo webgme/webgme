@@ -144,10 +144,10 @@ module.exports = function (config) {
             {pattern: 'src/client/bower_components/underscore/underscore.js', included: false},
             {pattern: 'src/plugin/*.js', included: false},
             {pattern: 'src/plugin/coreplugins/MinimalWorkingExample/**/*', included: false},
-            {pattern: 'src/plugin/coreplugins/PluginGenerator/**/*.js', included: false},
+            {pattern: 'src/plugin/coreplugins/PluginGenerator/**/*', included: false},
             {pattern: 'src/*.js', included: false},
             {pattern: 'utils/build/empty/empty.js', included: false},
-            {pattern: 'test/plugin/scenarios/plugins/**/*.js', included: false},
+            {pattern: 'test/plugin/scenarios/plugins/**/*', included: false},
             {pattern: 'seeds/*.json', included: false}, //seeds
             {pattern: 'test-karma/**/*.spec.js', included: false},
             // {pattern: 'test-karma/**/*.inc.js', included: false}, //test include scripts

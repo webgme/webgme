@@ -22,7 +22,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
         this.__select = $('<select/>');
 
-        if (propertyDesc.value === '') {
+        if (propertyDesc.value === null) {
             opt = EMPTY_OPTION_BASE.clone();
             opt.text('');
             this.__select.append(opt);

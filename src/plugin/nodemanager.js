@@ -5,8 +5,8 @@
  */
 'use strict';
 
-var PluginNodeManagerBase = require('./nodemanagerbase'),
-    BlobClientClass = requireJS('blob/BlobClient');
+var PluginManagerBase = requireJS('plugin/managerbase'),
+    BlobClientClass = requireJS('common/blob/BlobClient');
 
 function PluginNodeManager(webgmeToken, project, mainLogger, gmeConfig) {
     var blobClient = new BlobClientClass({
@@ -17,11 +17,13 @@ function PluginNodeManager(webgmeToken, project, mainLogger, gmeConfig) {
             logger: mainLogger.fork('BlobClient')
         });
 
-    PluginNodeManagerBase.call(this, blobClient, project, mainLogger, gmeConfig);
+    PluginManagerBase.call(this, blobClient, project, mainLogger, gmeConfig);
+
+    this.serverSide = true;
 }
 
-// Inherit from PluginNodeManagerBase
-PluginNodeManager.prototype = Object.create(PluginNodeManagerBase.prototype);
+// Inherit from PluginManagerBase
+PluginNodeManager.prototype = Object.create(PluginManagerBase.prototype);
 PluginNodeManager.prototype.constructor = PluginNodeManager;
 
 module.exports = PluginNodeManager;

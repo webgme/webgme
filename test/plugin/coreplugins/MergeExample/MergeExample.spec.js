@@ -92,14 +92,16 @@ describe('Plugin MergeExample', function () {
             .nodeify(done);
     });
 
-    it('should initialize plugin and get name, version and description', function () {
-        var plugin = pluginManager.initializePlugin(pluginName);
-        expect(plugin instanceof PluginBase).to.equal(true);
-        expect(plugin.getName()).to.equal('Merge Example');
-        expect(plugin.getVersion()).to.equal('1.7.0');
-        expect(plugin.getDescription ()).to.include('Example plugin to show how to use the merge capabilities');
-        expect(plugin.getConfigStructure() instanceof Array).to.equal(true);
-        expect(plugin.getConfigStructure().length).to.equal(4);
+    it('should initialize plugin and get name, version and description', function (done) {
+        pluginManager.initializePlugin(pluginName)
+            .then(function (plugin) {
+                expect(plugin instanceof PluginBase).to.equal(true);
+                expect(plugin.getName()).to.equal('Merge Example');
+                expect(typeof plugin.getDescription ()).to.equal('string');
+                expect(plugin.getConfigStructure() instanceof Array).to.equal(true);
+                expect(plugin.getConfigStructure().length).to.equal(4);
+            })
+            .nodeify(done);
     });
 
     it('should merge an identical branches into an existing branch', function (done) {

@@ -20,12 +20,17 @@ define([], function () {
      * @alias PluginNodeDescription
      */
     var PluginNodeDescription = function (config) {
+        var keys,
+            i;
+
+        this.name = '';
+        this.id = '';
+
         if (config) {
-            this.name = config.name;
-            this.id = config.id;
-        } else {
-            this.name = '';
-            this.id = '';
+            keys = Object.keys(config);
+            for (i = 0; i < keys.length; i += 1) {
+                this[keys[i]] = config[keys[i]];
+            }
         }
     };
 
@@ -40,7 +45,6 @@ define([], function () {
             i;
 
         for (i = 0; i < keys.length; i += 1) {
-            // TODO: check for type on serialization
             result[keys[i]] = this[keys[i]];
         }
 

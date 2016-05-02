@@ -93,8 +93,14 @@ define(['./ButtonBase',
         }
 
         btn = buttonBase.createButton(params);
+        btn.removeClass('btn btn-mini');
+        btn.addClass('dropdown-list-button');
 
-        li.append(btn.removeClass('btn btn-mini'));
+        if (params.disabled === true) {
+            btn.disable(true);
+        }
+
+        li.append(btn);
 
         this._ulMenu.append(li);
     };

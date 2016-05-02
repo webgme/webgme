@@ -9,6 +9,7 @@
   },
   "disableServerSideExecution": false,
   "disableBrowserSideExecution": false,
+  "writeAccessRequired": false,
   "configStructure": [
     {
       "name": "species",
@@ -28,7 +29,8 @@
       "valueType": "number",
       "minValue": 0,
       "maxValue": 10000,
-      "readOnly": false
+      "readOnly": false,
+      "writeAccessRequired": true
     },
     {
       "name": "carnivore",
@@ -37,6 +39,14 @@
       "value": false,
       "valueType": "boolean",
       "readOnly": false
+    },
+    {
+      "name": "isAnimal",
+      "displayName": "Is Animal",
+      "description": "Is this animal an animal? [Read-only]",
+      "value": true,
+      "valueType": "boolean",
+      "readOnly": true
     },
     {
       "name": "classification",

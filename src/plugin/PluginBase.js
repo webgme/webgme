@@ -85,7 +85,28 @@ define([
         this.activeSelection = [];
 
         /**
-         * @type {Object<string,module:Core~Node>}
+         * The namespace the META nodes are coming from (set by invoker).
+         * The default is the full meta, i.e. the empty string namespace.
+         * For example, if a project has a library A with a library B. The possible namespaces are:
+         * '', 'A' and 'A.B'.
+         * @type {string}
+         */
+        this.namespace = '';
+
+        /**
+         * The resolved META nodes based on the active namespace. Index by the fully qualified meta node names
+         * with the namespace stripped off at the start.
+         *
+         * For example, if a project has a library A with a library B. If the project and the libraries all have
+         * two meta nodes named a and b. Depending on the namespace the META will have the following keys:
+         *
+         * 1) namespace = '' -> ['a', 'b', 'A.a', 'A.b', 'A.B.a', 'A.B.b']
+         * 2) namespace = 'A' -> ['a', 'b', 'B.a', 'B.b']
+         * 3) namespace = 'A.B' -> ['a', 'b']
+         *
+         * (N.B. 'a' and 'b' in example 3) are pointing to the meta nodes defined in A.B.)
+         *
+         * @type {Object<string, module:Core~Node>}
          */
         this.META = null;
 
@@ -238,14 +259,8 @@ define([
      * @returns {boolean} - True if the given object was of the META type.
      */
     PluginBase.prototype.isMetaTypeOf = function (node, metaNode) {
-        var self = this;
-        while (node) {
-            if (self.core.getGuid(node) === self.core.getGuid(metaNode)) {
-                return true;
-            }
-            node = self.core.getBase(node);
-        }
-        return false;
+        // This includes mixins.
+        return this.core.isTypeOf(node, metaNode);
     };
 
     /**
@@ -255,9 +270,17 @@ define([
      */
     PluginBase.prototype.getMetaType = function (node) {
         var self = this,
+            namespace,
             name;
+
         while (node) {
             name = self.core.getAttribute(node, 'name');
+            namespace = self.core.getNamespace(node).substr(self.namespace.length);
+
+            if (namespace) {
+                name = namespace + '.' + name;
+            }
+
             if (self.META.hasOwnProperty(name) && self.core.getGuid(node) === self.core.getGuid(self.META[name])) {
                 break;
             }
@@ -274,12 +297,20 @@ define([
     PluginBase.prototype.baseIsMeta = function (node) {
         var self = this,
             baseName,
+            namespace,
             baseNode = self.core.getBase(node);
         if (!baseNode) {
             // FCO does not have a base node, by definition function returns true.
             return true;
         }
+
         baseName = self.core.getAttribute(baseNode, 'name');
+        namespace = self.core.getNamespace(baseNode).substr(self.namespace.length);
+
+        if (namespace) {
+            baseName = namespace + '.' + baseName;
+        }
+
         return self.META.hasOwnProperty(baseName) &&
             self.core.getGuid(self.META[baseName]) === self.core.getGuid(baseNode);
     };
@@ -296,12 +327,22 @@ define([
     /**
      * Creates a new message for the user and adds it to the result.
      *
-     * @param {module:Core~Node} node - webgme object which is related to the message
+     * @param {module:Core~Node|object} node - webgme object which is related to the message
      * @param {string} message - feedback to the user
      * @param {string} severity - severity level of the message: 'debug', 'info' (default), 'warning', 'error'.
      */
     PluginBase.prototype.createMessage = function (node, message, severity) {
-        var severityLevel = severity || 'info';
+        var severityLevel = severity || 'info',
+            nodeDescriptor = {
+                name: '',
+                id: ''
+            };
+
+        //FIXME: Use a proper check for determining if it is a Core node or not.
+        if (node && node.hasOwnProperty('parent') && node.hasOwnProperty('relid')) {
+            nodeDescriptor.name = this.core.getAttribute(node, 'name');
+            nodeDescriptor.id = this.core.getPath(node);
+        }
         //this occurrence of the function will always handle a single node
 
         var descriptor = new PluginNodeDescription({
@@ -365,6 +406,10 @@ define([
     /**
      * Saves all current changes if there is any to a new commit.
      * If the commit result is either 'FORKED' or 'CANCELED', it creates a new branch.
+     *
+     * N.B. This is a utility function for saving/persisting data. The plugin has access to the project and core
+     * instances and may persist and make the commit as define its own behavior for e.g. 'FORKED' commits.
+     * To report the commits in the PluginResult make sure to invoke this.addCommitToResult with the given status.
      *
      * @param {string|null} message - commit message
      * @param {function(Error|string, module:Storage~commitResult)} callback
@@ -448,6 +493,12 @@ define([
             .nodeify(callback);
     };
 
+    /**
+     * Adds the commit to the results. N.B. if you're using your own save method - make sure to update
+     * this.currentHash and this.branchName accordingly before adding the commit.
+     *
+     * @param {string} status - Status of the commit 'SYNCED', 'FORKED', 'CANCELED', null.
+     */
     PluginBase.prototype.addCommitToResult = function (status) {
         var newCommit = {
             commitHash: this.currentHash,
@@ -525,7 +576,10 @@ define([
         this.rootNode = config.rootNode;
         this.activeNode = config.activeNode;
         this.activeSelection = config.activeSelection;
-        this.META = config.META;
+
+        this.namespace = config.namespace || '';
+
+        this.META = this.META = config.META;
 
         this.result = new PluginResult();
         this.result.setProjectId(this.projectId);

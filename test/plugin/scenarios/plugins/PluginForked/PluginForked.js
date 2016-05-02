@@ -10,9 +10,12 @@ if (typeof define === 'undefined') {
     define([
         'plugin/PluginConfig',
         'plugin/PluginBase',
+        'text!./metadata.json',
         'common/storage/constants'
-    ], function (PluginConfig, PluginBase, STORAGE_CONSTANTS) {
+    ], function (PluginConfig, PluginBase, pluginMetadata, STORAGE_CONSTANTS) {
         'use strict';
+
+        pluginMetadata = JSON.parse(pluginMetadata);
 
         /**
          * Initializes a new instance of PluginForked.
@@ -24,67 +27,13 @@ if (typeof define === 'undefined') {
         var PluginForked = function () {
             // Call base class' constructor.
             PluginBase.call(this);
+            this.pluginMetadata = pluginMetadata;
         };
 
-        // Prototypal inheritance from PluginBase.
+        PluginForked.metadata = pluginMetadata;
+
         PluginForked.prototype = Object.create(PluginBase.prototype);
         PluginForked.prototype.constructor = PluginForked;
-
-        /**
-         * Gets the name of the PluginForked.
-         * @returns {string} The name of the plugin.
-         * @public
-         */
-        PluginForked.prototype.getName = function () {
-            return 'Plugin Forked';
-        };
-
-        /**
-         * Gets the semantic version (semver.org) of the PluginForked.
-         * @returns {string} The version of the plugin.
-         * @public
-         */
-        PluginForked.prototype.getVersion = function () {
-            return '0.1.0';
-        };
-
-        /**
-         * Gets the description of the PluginForked.
-         * @returns {string} The description of the plugin.
-         * @public
-         */
-        PluginForked.prototype.getDescription = function () {
-            return 'This plugin calls the main callback ';
-        };
-
-        PluginForked.prototype.getConfigStructure = function () {
-            return [
-                {
-                    name: 'fork',
-                    displayName: 'fork',
-                    description: 'Inject a branchHashUpdate before save.',
-                    value: false,
-                    valueType: 'boolean',
-                    readOnly: false
-                },
-                {
-                    name: 'forkName',
-                    displayName: 'forkName',
-                    description: 'Name to save fork to.',
-                    value: '',
-                    valueType: 'string',
-                    readOnly: false
-                },
-                {
-                    name: 'timeout',
-                    displayName: 'timeout',
-                    description: 'Time before committing change',
-                    value: 0,
-                    valueType: 'number',
-                    readOnly: false
-                }
-            ];
-        };
 
         /**
          * Main function for the plugin to execute. This will perform the execution.

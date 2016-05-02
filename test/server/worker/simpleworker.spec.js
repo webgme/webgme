@@ -40,6 +40,13 @@ describe('Simple worker', function () {
             rootHash: '',
             branch: 'master'
         },
+        readOnlyProjectContext = {
+            name: 'ReadOnlyProject',
+            id: '',
+            commitHash: '',
+            rootHash: '',
+            branch: 'master'
+        },
         libraryProjectContext = {
             name: 'LibraryEmptyBase',
             id: '',
@@ -96,8 +103,31 @@ describe('Simple worker', function () {
                 libraryProjectContext.commitHash = result.commitHash;
                 libraryProjectContext.id = result.project.projectId;
                 libraryProjectContext.rootHash = result.core.getHash(result.rootNode);
+
+                return testFixture.importProject(storage,
+                    {
+                        projectSeed: 'seeds/EmptyProject.json',
+                        projectName: readOnlyProjectContext.name,
+                        branchName: readOnlyProjectContext.branch,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
             })
-            .then(function () {
+            .then(function (result) {
+                readOnlyProjectContext.commitHash = result.commitHash;
+                readOnlyProjectContext.id = result.project.projectId;
+                readOnlyProjectContext.rootHash = result.core.getHash(result.rootNode);
+
+                return gmeAuth.authorizeByUserId(guestAccount, readOnlyProjectContext.id,
+                    'set', {
+                        read: true,
+                        write: false,
+                        delete: false
+                    }
+                );
+            })
+            .then(function (result) {
+
                 return testFixture.importProject(storage,
                     {
                         projectSeed: 'seeds/EmptyProject.json',
@@ -112,6 +142,7 @@ describe('Simple worker', function () {
                 baseProjectContext.id = result.project.projectId;
                 baseProjectContext.rootHash = result.core.getHash(result.rootNode);
                 project = result.project;
+
                 return project.createBranch('corruptBranch', result.commitHash);
             })
             .then(function (result) {
@@ -1076,6 +1107,42 @@ describe('Simple worker', function () {
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
+    });
+
+    it('should fail to execute a plugin where writeAccessRequired on a read-only project', function (done) {
+        var worker = getSimpleWorker(),
+            pluginContext = {
+                managerConfig: {
+                    project: readOnlyProjectContext.id,
+                    activeNode: '/1',
+                    commit: readOnlyProjectContext.commitHash,
+                    branchName: readOnlyProjectContext.branch,
+                    activeSelection: []
+                }
+            };
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.executePlugin,
+                    name: 'MinimalWorkingExample',
+                    userId: 'myUser',
+                    webGMESessionId: webGMESessionId,
+                    context: pluginContext
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Plugin requires write access to the project for execution');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
     });
 
     it('should execute a plugin and notify socket', function (done) {

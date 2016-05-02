@@ -820,7 +820,7 @@ describe('GME client', function () {
 
         it('should fail to remove an unknown branch', function (done) {
             client.deleteBranch('someProject', 'unknown_branch', 'unknown_hash', function (err) {
-                console.warn(err);
+                //console.warn(err);
                 expect(err).not.to.equal(null);
 
                 done();
@@ -2724,9 +2724,9 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'checking') {
-                    events.forEach(function (e) {
-                        console.log(e);
-                    });
+                    //events.forEach(function (e) {
+                    //    console.log(e);
+                    //});
                     expect(events).to.have.length(7);
 
                     //find out the new node paths
