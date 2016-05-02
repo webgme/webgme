@@ -111,7 +111,7 @@ function getStats(options) {
                                 .then(function (rootNode) {
                                     result.metaNodeCnt = Object.keys(core.getAllMetaNodes(rootNode)).length;
                                     if (params.fullNodeStat === true) {
-                                        logger.warn('Will load entire project-tree, this could take some time...');
+                                        logger.info('Load project-tree for', result.projectId);
                                         core.loadSubTree(rootNode)
                                             .then(function (nodes) {
                                                 result.nodeCnt = nodes.length;
@@ -210,7 +210,7 @@ function getStats(options) {
             if (params.outputFile) {
                 writeDeferred.promise = Q.nfcall(fs.writeFile, params.outputFile, JSON.stringify(result));
             } else {
-                console.log(result);
+                console.log(result.projects);
                 writeDeferred.resolve();
             }
 
