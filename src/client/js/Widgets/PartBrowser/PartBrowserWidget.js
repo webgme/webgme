@@ -20,7 +20,7 @@ define([
     var PartBrowserWidget,
         PART_BROWSER_CLASS = 'part-browser',
         PART_CLASS = 'part',
-        NAME_PART_CLASS = 'name-part';
+        NAME_PART_CLASS = 'name-part open-link';
 
     PartBrowserWidget = function (container /*, params*/) {
         this._logger = Logger.create('gme:Widgets:PartBrowser:PartBrowserWidget.DecoratorBase',
@@ -39,7 +39,9 @@ define([
         //this._el.addClass(PART_BROWSER_CLASS);
         this._showNamesOnly = true;
         this._container = $('<div/>');
-        this._container.addClass(PART_BROWSER_CLASS);
+        this._toolbar = $('<div/>');
+        this._partsContainer = $('<div/>');
+        this._partsContainer.addClass(PART_BROWSER_CLASS);
         this._list = $('<ul/>');
         this._list.addClass(PART_CLASS);
         this._namelist = $('<ul/>');
@@ -74,14 +76,16 @@ define([
             limitTxtLength: 9
         });
 
-        this._container.append(this._selector.el);
-        this._container.append(this._listSwitcher.el);
-        this._container.append(this._list);
-        this._container.append(this._namelist);
+        this._toolbar.append(this._listSwitcher.el);
+        this._toolbar.append(this._selector.el);
+        this._partsContainer.append(this._list);
+        this._partsContainer.append(this._namelist);
         this._parts = {};
 
         this._partDraggableEl = {};
 
+        this._container.append(this._toolbar);
+        this._container.append(this._partsContainer);
         this._el.append(this._container);
 
         // By default only names are listed.
@@ -107,7 +111,7 @@ define([
 
     PartBrowserWidget.prototype.addPart = function (partId, partDesc) {
         var partContainerDiv = this._getPartDiv(partId),
-            partContainerLi = {decorated: $('<li/>'), onlyName: $('<li/>')},
+            partContainerLi = {decorated: $('<li />'), onlyName: $('<li />')},
             DecoratorClass = partDesc.decoratorClass,
             decoratorInstance;
 
