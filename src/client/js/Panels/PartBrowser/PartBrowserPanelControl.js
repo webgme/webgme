@@ -51,6 +51,9 @@ define(['js/logger',
         //the decorator instances of the parts
         this._partInstances = {};
 
+        //the meta descriptor that looks for the changes in meta
+        this._shortMetaDescriptor = {};
+
         //the territory rules
         this._territoryRules = {'': {children: 0}};
 
@@ -106,24 +109,26 @@ define(['js/logger',
         });
 
         this._nodeEventHandling = function (events) {
-            var metaChange = false,
-                metaNodes = self._client.getAllMetaNodes() || [],
-                metaPaths = [],
-                i;
+            var /*metaChange = false,
+             metaNodes = self._client.getAllMetaNodes() || [],
+             metaPaths = [],
+             i,*/
+                newShortMetaDescriptor = self._getShortMetaDescriptor();
 
-            for (i = 0; i < metaNodes.length; i += 1) {
-                metaPaths.push(metaNodes[i].getId());
-            }
-            metaPaths.push(CONSTANTS.PROJECT_ROOT_ID);
+            // for (i = 0; i < metaNodes.length; i += 1) {
+            //     metaPaths.push(metaNodes[i].getId());
+            // }
+            // metaPaths.push(CONSTANTS.PROJECT_ROOT_ID);
 
-            for (i = 0; i < events.length; i += 1) {
-                if (metaPaths.indexOf(events[i].eid) !== -1) {
-                    metaChange = true;
-                    break;
-                }
-            }
+            // for (i = 0; i < events.length; i += 1) {
+            //     if (metaPaths.indexOf(events[i].eid) !== -1) {
+            //         metaChange = true;
+            //         break;
+            //     }
+            // }
 
-            if (metaChange) {
+            if (JSON.stringify(self._shortMetaDescriptor) !== JSON.stringify(newShortMetaDescriptor)) {
+                self._shortMetaDescriptor = newShortMetaDescriptor;
                 self._updateLibrarySelector();
                 self._updateDescriptor(self._getPartDescriptorCollection());
             } else {
@@ -144,6 +149,29 @@ define(['js/logger',
         } else {
             return a.id.localeCompare(b.id);
         }
+    };
+
+    PartBrowserControl.prototype._getShortMetaDescriptor = function () {
+        var result = {},
+            allMetaNodes = this._client.getAllMetaNodes(),
+            i,
+            guidLookupTable = {},
+            guids;
+
+        for (i = 0; i < allMetaNodes.length; i += 1) {
+            guidLookupTable[allMetaNodes[i].getGuid()] = i;
+        }
+
+        guids = Object.keys(guidLookupTable).sort();
+
+        for (i = 0; i < guids.length; i += 1) {
+            result[guids[i]] = {
+                path: allMetaNodes[guidLookupTable[guids[i]]].getId(),
+                name: allMetaNodes[guidLookupTable[guids[i]]].getAttribute('name')
+            }
+        }
+
+        return result;
     };
 
     PartBrowserControl.prototype._updateDescriptor = function (newDescriptor) {
@@ -168,7 +196,8 @@ define(['js/logger',
             if (!this._descriptorCollection[keys[i]]) {
                 //new item
                 this._partInstances[keys[i]] = this._partBrowserView.addPart(keys[i], newDescriptor[keys[i]]);
-            } else if (this._descriptorCollection[keys[i]].decorator !== newDescriptor[keys[i]].decorator) {
+            } else if (this._descriptorCollection[keys[i]].decorator !== newDescriptor[keys[i]].decorator ||
+                this._descriptorCollection[keys[i]].name !== newDescriptor[keys[i]].name) {
                 this._partInstances[keys[i]] = this._partBrowserView.updatePart(keys[i], newDescriptor[keys[i]]);
             }
 
@@ -198,7 +227,6 @@ define(['js/logger',
             }
         }
 
-        
         this._descriptorCollection = newDescriptor;
         newTerritoryRules = this._getTerritoryPatterns();
         if (JSON.stringify(this._territoryRules) !== JSON.stringify(newTerritoryRules)) {
@@ -221,11 +249,11 @@ define(['js/logger',
             librarySelector = this._partBrowserView.getCurrentSelectorValue(),
             shouldFilterOutItem = function (key) {
                 var namespace = librarySelector;
-                if (librarySelector === '_all_') {
+                if (librarySelector === 'all namespaces') {
                     return false;
                 }
 
-                if (librarySelector === '_none_') {
+                if (librarySelector === 'local') {
                     namespace = '';
                 }
 
@@ -409,9 +437,11 @@ define(['js/logger',
     PartBrowserControl.prototype._updateLibrarySelector = function () {
         var self = this,
             libraryNames = self._client.getLibraryNames().sort();
-        libraryNames.unshift('-');
-        libraryNames.unshift('_none_');
-        libraryNames.unshift('_all_');
+        if (libraryNames.length > 0) {
+            libraryNames.unshift('-');
+        }
+        libraryNames.unshift('local');
+        libraryNames.unshift('all namespaces');
         self._partBrowserView.updateSelectorInfo(libraryNames);
     };
     return PartBrowserControl;

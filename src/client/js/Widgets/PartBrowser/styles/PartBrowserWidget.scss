@@ -29,4 +29,10 @@ $part-browser-li-margin-top: 15px;
       }
     }
   }
+  > ul.part {
+    text-align: center;
+  }
+  > ul.name-part {
+    text-align: left;
+  }
 }

@@ -41,7 +41,9 @@ define([
         this._container = $('<div/>');
         this._container.addClass(PART_BROWSER_CLASS);
         this._list = $('<ul/>');
+        this._list.addClass(PART_CLASS);
         this._namelist = $('<ul/>');
+        this._namelist.addClass(NAME_PART_CLASS);
         //this._list.addClass(PART_BROWSER_CLASS);
         this._listSwitcher = new ToolbarRadioButtonGroup(function (data) {
             if (data.isList) {
@@ -68,7 +70,8 @@ define([
 
         this._selector = new ToolbarDropDownButton({
             title: 'Namespace selector',
-            showSelected: true
+            showSelected: true,
+            limitTxtLength: 9
         });
 
         this._container.append(this._selector.el);
@@ -392,6 +395,7 @@ define([
     PartBrowserWidget.prototype.updateSelectorInfo = function (valueList) {
         var i,
             self = this,
+            title,
             currentSelection = self.getCurrentSelectorValue(),
             selection = function (selectionData) {
 
@@ -407,7 +411,15 @@ define([
             if (valueList[i] === '-') {
                 self._selector.addDivider();
             } else {
+                if (valueList[i] === 'all namespaces') {
+                    title = 'show all Meta elements';
+                } else if (valueList[i] === 'local') {
+                    title = 'show elements that were defined in this project';
+                } else {
+                    title = 'show elements of \'' + valueList[i] + '\' namespace';
+                }
                 self._selector.addButton({
+                    title: title,
                     text: valueList[i],
                     clickFn: selection,
                     data: {value: valueList[i]}
