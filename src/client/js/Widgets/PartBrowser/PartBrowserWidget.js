@@ -20,7 +20,7 @@ define([
     var PartBrowserWidget,
         PART_BROWSER_CLASS = 'part-browser',
         PART_CLASS = 'part',
-        NAME_PART_CLASS = 'name-part open-link';
+        NAME_PART_CLASS = 'name-part';
 
     PartBrowserWidget = function (container /*, params*/) {
         this._logger = Logger.create('gme:Widgets:PartBrowser:PartBrowserWidget.DecoratorBase',
@@ -58,11 +58,6 @@ define([
                 self._namelist.hide();
             }
         });
-        this._listSwitcher.addButton({
-            title: 'Only part name list',
-            icon: 'glyphicon glyphicon-list',
-            data: {isList: true}
-        });
 
         this._listSwitcher.addButton({
             title: 'Decorated part list',
@@ -70,10 +65,23 @@ define([
             data: {isList: false}
         });
 
+        this._listSwitcher.addButton({
+            title: 'Only part name list',
+            icon: 'glyphicon glyphicon-list',
+            data: {isList: true}
+        });
+
         this._selector = new ToolbarDropDownButton({
             title: 'Namespace selector',
             showSelected: true,
-            limitTxtLength: 9
+            limitTxtLength: 8,
+            clickFn: function () {
+                if (self._el.css('overflow') === 'auto') {
+                    self._el.css('overflow', 'visible');
+                } else {
+                    self._el.css('overflow', 'auto');
+                }
+            }
         });
 
         this._toolbar.append(this._listSwitcher.el);
@@ -89,8 +97,8 @@ define([
         this._el.append(this._container);
 
         // By default only names are listed.
-        this._list.hide();
-        this._namelist.show();
+        this._list.show();
+        this._namelist.hide();
     };
 
     PartBrowserWidget.prototype.clear = function () {
@@ -134,7 +142,7 @@ define([
             partContainerDiv.decorated.attr({id: partId});
 
             partContainerDiv.onlyName = this.$_DOMBaseForName.clone();
-            partContainerDiv.onlyName.attr({id: partId});
+            partContainerDiv.onlyName.attr({id: partId, title: partDesc.name});
             partContainerDiv.onlyName.append(partDesc.name);
 
             //render the part inside 'partContainerDiv'
@@ -402,7 +410,7 @@ define([
             title,
             currentSelection = self.getCurrentSelectorValue(),
             selection = function (selectionData) {
-
+                self._el.css('overflow', 'auto');
                 if (self._selector.dropDownText() !== selectionData.value) {
                     self._selector.dropDownText(selectionData.value);
                     self.onSelectorChanged(selectionData.value);
