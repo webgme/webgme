@@ -39,8 +39,10 @@ define([
         //this._el.addClass(PART_BROWSER_CLASS);
         this._showNamesOnly = true;
         this._container = $('<div/>');
+        this._container.css({width: '100%', height: '100%'});
         this._toolbar = $('<div/>');
         this._partsContainer = $('<div/>');
+        this._partsContainer.css({width: '100%', height: '100%'});
         this._partsContainer.addClass(PART_BROWSER_CLASS);
         this._list = $('<ul/>');
         this._list.addClass(PART_CLASS);
@@ -74,14 +76,7 @@ define([
         this._selector = new ToolbarDropDownButton({
             title: 'Namespace selector',
             showSelected: true,
-            limitTxtLength: 8,
-            clickFn: function () {
-                if (self._el.css('overflow') === 'auto') {
-                    self._el.css('overflow', 'visible');
-                } else {
-                    self._el.css('overflow', 'auto');
-                }
-            }
+            limitTxtLength: 8
         });
 
         this._toolbar.append(this._listSwitcher.el);
@@ -410,7 +405,6 @@ define([
             title,
             currentSelection = self.getCurrentSelectorValue(),
             selection = function (selectionData) {
-                self._el.css('overflow', 'auto');
                 if (self._selector.dropDownText() !== selectionData.value) {
                     self._selector.dropDownText(selectionData.value);
                     self.onSelectorChanged(selectionData.value);

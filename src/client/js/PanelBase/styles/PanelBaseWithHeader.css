@@ -50,7 +50,6 @@
       left: 0; }
   .panel-base-wh .panel-body {
     position: relative;
-    overflow: auto;
     background-color: white; }
   .panel-base-wh .floating-title {
     position: absolute;
