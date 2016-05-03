@@ -433,10 +433,16 @@ define([
             }
         }
 
-        if (valueList.indexOf(currentSelection) === -1) {
-            self._selector.dropDownText(valueList[0]);
-            self.onSelectorChanged(valueList[0]);
+        if(valueList.length === 0){
+            self._selector.hide();
+        } else {
+            self._selector.show();
+            if (valueList.indexOf(currentSelection) === -1) {
+                self._selector.dropDownText(valueList[0]);
+                self.onSelectorChanged(valueList[0]);
+            }
         }
+
     };
 
     PartBrowserWidget.prototype.onSelectorChanged = function (newValue) {

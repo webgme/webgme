@@ -171,6 +171,7 @@ define(['js/logger',
             }
         }
 
+        result.libraryNames = this._client.getLibraryNames().sort();
         return result;
     };
 
@@ -439,9 +440,9 @@ define(['js/logger',
             libraryNames = self._client.getLibraryNames().sort();
         if (libraryNames.length > 0) {
             libraryNames.unshift('-');
+            libraryNames.unshift('local');
+            libraryNames.unshift('all namespaces');
         }
-        libraryNames.unshift('local');
-        libraryNames.unshift('all namespaces');
         self._partBrowserView.updateSelectorInfo(libraryNames);
     };
     return PartBrowserControl;
