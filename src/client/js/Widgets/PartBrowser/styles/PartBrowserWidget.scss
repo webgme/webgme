@@ -16,7 +16,12 @@ $part-browser-li-margin-top: 15px;
     > li {
       list-style-type: none;
       padding: 0px;
-      margin: $part-browser-li-margin-top 10px 5px 10px;
+      &.decorated-list-item {
+        margin: $part-browser-li-margin-top 10px 5px 10px;
+      }
+      &.name-list-item {
+        margin: 0 0 0 0;
+      }
       text-decoration: none;
       color: black;
       font-size: 10px;
@@ -34,9 +39,10 @@ $part-browser-li-margin-top: 15px;
         height: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
+        padding: 3px 12px 3px 12px;
       }
       div.name-part:hover{
-        text-decoration: underline;
+        //text-decoration: underline;
         color: #FF7700;
         background-color:#EEEEEE;
       }

@@ -1,7 +1,7 @@
 .part-browser {
-  text-align: center;
   height: 100%;
   width: 100%;
+  text-align: center;
   overflow-x: auto;
   overflow-y: auto; }
   .part-browser > ul {
@@ -9,25 +9,19 @@
     margin: 0;
     white-space: nowrap;
     padding: 0; }
-  .part-browser > ul.part {
-    text-align: center;
-  }
-  .part-browser > ul.name-part {
-    text-align: left;
-    overflow-x: hidden;
-    text-overflow: ellipsis;
-  }
     .part-browser > ul > li {
       list-style-type: none;
       padding: 0px;
-      margin: 15px 10px 5px 10px;
       text-decoration: none;
       color: black;
       font-size: 10px; }
+      .part-browser > ul > li.decorated-list-item {
+        margin: 15px 10px 5px 10px; }
+      .part-browser > ul > li.name-list-item {
+        margin: 0 0 0 0; }
       .part-browser > ul > li div.part {
         display: inline-block;
-        cursor: pointer;
-      }
+        cursor: pointer; }
       .part-browser > ul > li div.name-part {
         display: inline-block;
         cursor: pointer;
@@ -37,9 +31,11 @@
         height: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
-      }
+        padding: 3px 12px 3px 12px; }
       .part-browser > ul > li div.name-part:hover {
-        text-decoration: underline;
         color: #FF7700;
-        background-color:#EEEEEE;
-      }
+        background-color: #EEEEEE; }
+  .part-browser > ul.part {
+    text-align: center; }
+  .part-browser > ul.name-part {
+    text-align: left; }

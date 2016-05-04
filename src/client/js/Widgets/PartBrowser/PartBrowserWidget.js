@@ -18,6 +18,8 @@ define([
     'use strict';
 
     var PartBrowserWidget,
+        ALL_NSP = 'ALL',
+        NO_LIBS = 'Exclude Libraries',
         PART_BROWSER_CLASS = 'part-browser',
         PART_CLASS = 'part',
         NAME_PART_CLASS = 'name-part';
@@ -114,7 +116,10 @@ define([
 
     PartBrowserWidget.prototype.addPart = function (partId, partDesc) {
         var partContainerDiv = this._getPartDiv(partId),
-            partContainerLi = {decorated: $('<li />'), onlyName: $('<li />')},
+            partContainerLi = {
+                decorated: $('<li />', {class: 'decorated-list-item'}),
+                onlyName: $('<li />', {class: 'name-list-item'})
+            },
             DecoratorClass = partDesc.decoratorClass,
             decoratorInstance;
 
@@ -191,9 +196,9 @@ define([
             };
 
         if (params.realDragTarget) {
-            dragParams.helper = function (el, event, dragInfo) {
+            dragParams.helper = function (/*el, event, dragInfo*/) {
                 return params.realDragTarget.clone();
-            }
+            };
         }
 
         dragSource.makeDraggable(el, dragParams);
@@ -384,7 +389,7 @@ define([
         }
     };
 
-    PartBrowserWidget.prototype.showPart = function (partId, becauseFilter) {
+    PartBrowserWidget.prototype.showPart = function (partId/*, becauseFilter*/) {
         var partDiv = this._getPartDiv(partId);
 
         if (partDiv && partDiv.decorated && partDiv.onlyName) {
@@ -421,12 +426,12 @@ define([
             if (valueList[i] === '-') {
                 self._selector.addDivider();
             } else {
-                if (valueList[i] === 'all namespaces') {
-                    title = 'show all Meta elements';
-                } else if (valueList[i] === 'local') {
-                    title = 'show elements that were defined in this project';
+                if (valueList[i] === ALL_NSP) {
+                    title = 'Show all available meta nodes.';
+                } else if (valueList[i] === NO_LIBS) {
+                    title = 'Exclude meta nodes defined in attached libraries.';
                 } else {
-                    title = 'show elements of \'' + valueList[i] + '\' namespace';
+                    title = 'Show meta nodes from the library/namespace "' + valueList[i] + '".';
                 }
                 self._selector.addButton({
                     title: title,
@@ -450,7 +455,7 @@ define([
     };
 
     PartBrowserWidget.prototype.onSelectorChanged = function (newValue) {
-        this._logger.error('onSelectorChanged function should be overwritten for proper usage!');
+        this._logger.error('onSelectorChanged function should be overwritten for proper usage!', newValue);
     };
 
     return PartBrowserWidget;

@@ -20,6 +20,8 @@ define(['js/logger',
     'use strict';
 
     var PartBrowserControl,
+        ALL_NSP = 'ALL',
+        NO_LIBS = 'Exclude Libraries',
         WIDGET_NAME = 'PartBrowser',
         DEFAULT_DECORATOR = 'ModelDecorator';
 
@@ -29,7 +31,7 @@ define(['js/logger',
         this._client = myClient;
         this._partBrowserView = myPartBrowserView;
 
-        this._partBrowserView.onSelectorChanged = function (newValue) {
+        this._partBrowserView.onSelectorChanged = function (/*newValue*/) {
             self._updateDescriptor(self._getPartDescriptorCollection());
         };
 
@@ -108,7 +110,7 @@ define(['js/logger',
             }
         });
 
-        this._nodeEventHandling = function (events) {
+        this._nodeEventHandling = function (/*events*/) {
             var /*metaChange = false,
              metaNodes = self._client.getAllMetaNodes() || [],
              metaPaths = [],
@@ -168,7 +170,7 @@ define(['js/logger',
             result[guids[i]] = {
                 path: allMetaNodes[guidLookupTable[guids[i]]].getId(),
                 name: allMetaNodes[guidLookupTable[guids[i]]].getAttribute('name')
-            }
+            };
         }
 
         result.libraryNames = this._client.getLibraryNames().sort();
@@ -188,7 +190,7 @@ define(['js/logger',
                 return descriptor[key];
             })  // turn the object into an array
             .sort(self._defaultCompare)                 // sort the objects, using the default compare
-            .map(function (value, index) {
+            .map(function (value/*, index*/) {
                 return value.id;
             }); // get only the ids
 
@@ -250,11 +252,11 @@ define(['js/logger',
             librarySelector = this._partBrowserView.getCurrentSelectorValue(),
             shouldFilterOutItem = function (key) {
                 var namespace = librarySelector;
-                if (librarySelector === 'all namespaces') {
+                if (librarySelector === ALL_NSP) {
                     return false;
                 }
 
-                if (librarySelector === 'local') {
+                if (librarySelector === NO_LIBS) {
                     namespace = '';
                 }
 
@@ -440,8 +442,8 @@ define(['js/logger',
             libraryNames = self._client.getLibraryNames().sort();
         if (libraryNames.length > 0) {
             libraryNames.unshift('-');
-            libraryNames.unshift('local');
-            libraryNames.unshift('all namespaces');
+            libraryNames.unshift(NO_LIBS);
+            libraryNames.unshift(ALL_NSP);
         }
         self._partBrowserView.updateSelectorInfo(libraryNames);
     };
