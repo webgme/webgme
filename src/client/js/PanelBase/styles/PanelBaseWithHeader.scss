@@ -116,7 +116,6 @@ $panel-header-title-font-size: 0.85em;
 
   .panel-body {
     position: relative;
-    overflow: auto;
     background-color: $panel-body-background-color;
   }
 
@@ -189,6 +188,11 @@ $panel-header-title-font-size: 0.85em;
   }
 }
 
+.panel-base-scroll {
+  .panel-body {
+    overflow: auto;
+  }
+}
 .side-panel {
 
   .panel-base-wh {

@@ -20,6 +20,8 @@ define(['js/logger',
     'use strict';
 
     var PartBrowserControl,
+        ALL_NSP = 'ALL',
+        NO_LIBS = 'Exclude Libraries',
         WIDGET_NAME = 'PartBrowser',
         DEFAULT_DECORATOR = 'ModelDecorator';
 
@@ -28,6 +30,10 @@ define(['js/logger',
 
         this._client = myClient;
         this._partBrowserView = myPartBrowserView;
+
+        this._partBrowserView.onSelectorChanged = function (/*newValue*/) {
+            self._updateDescriptor(self._getPartDescriptorCollection());
+        };
 
         //the ID of the node whose valid children types should be displayed
         this._containerNodeId = WebGMEGlobal.State.getActiveObject() || null;
@@ -47,11 +53,17 @@ define(['js/logger',
         //the decorator instances of the parts
         this._partInstances = {};
 
+        //the meta descriptor that looks for the changes in meta
+        this._shortMetaDescriptor = {};
+
         //the territory rules
         this._territoryRules = {'': {children: 0}};
 
         //the current visualizer
         this._visualizer = null;
+
+        //library filtering
+        this._libraryFilter = {};
 
         this._initDragDropFeatures();
 
@@ -98,25 +110,28 @@ define(['js/logger',
             }
         });
 
-        this._nodeEventHandling = function (events) {
-            var metaChange = false,
-                metaNodes = self._client.getAllMetaNodes() || [],
-                metaPaths = [],
-                i;
+        this._nodeEventHandling = function (/*events*/) {
+            var /*metaChange = false,
+             metaNodes = self._client.getAllMetaNodes() || [],
+             metaPaths = [],
+             i,*/
+                newShortMetaDescriptor = self._getShortMetaDescriptor();
 
-            for (i = 0; i < metaNodes.length; i += 1) {
-                metaPaths.push(metaNodes[i].getId());
-            }
-            metaPaths.push(CONSTANTS.PROJECT_ROOT_ID);
+            // for (i = 0; i < metaNodes.length; i += 1) {
+            //     metaPaths.push(metaNodes[i].getId());
+            // }
+            // metaPaths.push(CONSTANTS.PROJECT_ROOT_ID);
 
-            for (i = 0; i < events.length; i += 1) {
-                if (metaPaths.indexOf(events[i].eid) !== -1) {
-                    metaChange = true;
-                    break;
-                }
-            }
+            // for (i = 0; i < events.length; i += 1) {
+            //     if (metaPaths.indexOf(events[i].eid) !== -1) {
+            //         metaChange = true;
+            //         break;
+            //     }
+            // }
 
-            if (metaChange) {
+            if (JSON.stringify(self._shortMetaDescriptor) !== JSON.stringify(newShortMetaDescriptor)) {
+                self._shortMetaDescriptor = newShortMetaDescriptor;
+                self._updateLibrarySelector();
                 self._updateDescriptor(self._getPartDescriptorCollection());
             } else {
                 self._updateDecorators();
@@ -138,12 +153,35 @@ define(['js/logger',
         }
     };
 
+    PartBrowserControl.prototype._getShortMetaDescriptor = function () {
+        var result = {},
+            allMetaNodes = this._client.getAllMetaNodes(),
+            i,
+            guidLookupTable = {},
+            guids;
+
+        for (i = 0; i < allMetaNodes.length; i += 1) {
+            guidLookupTable[allMetaNodes[i].getGuid()] = i;
+        }
+
+        guids = Object.keys(guidLookupTable).sort();
+
+        for (i = 0; i < guids.length; i += 1) {
+            result[guids[i]] = {
+                path: allMetaNodes[guidLookupTable[guids[i]]].getId(),
+                name: allMetaNodes[guidLookupTable[guids[i]]].getAttribute('name')
+            };
+        }
+
+        result.libraryNames = this._client.getLibraryNames().sort();
+        return result;
+    };
+
     PartBrowserControl.prototype._updateDescriptor = function (newDescriptor) {
         var descriptor = newDescriptor || {},
             keys,
             i,
             self = this,
-            div,
             newTerritoryRules;
 
         // TODO: later we should apply project specific sorting if it is defined.
@@ -152,7 +190,7 @@ define(['js/logger',
                 return descriptor[key];
             })  // turn the object into an array
             .sort(self._defaultCompare)                 // sort the objects, using the default compare
-            .map(function (value, index) {
+            .map(function (value/*, index*/) {
                 return value.id;
             }); // get only the ids
 
@@ -161,20 +199,22 @@ define(['js/logger',
             if (!this._descriptorCollection[keys[i]]) {
                 //new item
                 this._partInstances[keys[i]] = this._partBrowserView.addPart(keys[i], newDescriptor[keys[i]]);
-            } else if (this._descriptorCollection[keys[i]].decorator !== newDescriptor[keys[i]].decorator) {
+            } else if (this._descriptorCollection[keys[i]].decorator !== newDescriptor[keys[i]].decorator ||
+                this._descriptorCollection[keys[i]].name !== newDescriptor[keys[i]].name) {
                 this._partInstances[keys[i]] = this._partBrowserView.updatePart(keys[i], newDescriptor[keys[i]]);
             }
 
             if (!this._descriptorCollection[keys[i]] ||
                 (this._descriptorCollection[keys[i]].visibility !== newDescriptor[keys[i]].visibility)) {
-                div = this._partBrowserView._getPartDiv(keys[i]);
                 if (newDescriptor[keys[i]].visibility === 'hidden') {
-                    div.hide();
+                    this._partBrowserView.hidePart(keys[i]);
                 } else if (newDescriptor[keys[i]].visibility === 'visible') {
-                    div.show();
+                    this._partBrowserView.showPart(keys[i]);
                     this._partBrowserView.setEnabled(keys[i], true);
+                } else if (newDescriptor[keys[i]].visibility === 'filtered') {
+                    this._partBrowserView.hidePart(keys[i]);
                 } else {
-                    div.show();
+                    this._partBrowserView.showPart(keys[i]);
                     this._partBrowserView.setEnabled(keys[i], false);
                 }
             }
@@ -209,7 +249,21 @@ define(['js/logger',
             descriptor,
             validInfo,
             keys,
+            librarySelector = this._partBrowserView.getCurrentSelectorValue(),
+            shouldFilterOutItem = function (key) {
+                var namespace = librarySelector;
+                if (librarySelector === ALL_NSP) {
+                    return false;
+                }
+
+                if (librarySelector === NO_LIBS) {
+                    namespace = '';
+                }
+
+                return descriptorCollection[key].namespace !== namespace;
+            },
             i;
+
         //getSetName = function () {
         //    var setNamesOrdered = (containerNode.getSetNames() || []).sort(),
         //        tabId = WebGMEGlobal.State.getActiveTab();
@@ -258,6 +312,10 @@ define(['js/logger',
                 } else {
                     descriptorCollection[keys[i]].visibility = 'grayed';
                 }
+
+                if (shouldFilterOutItem(keys[i])) {
+                    descriptorCollection[keys[i]].visibility = 'filtered';
+                }
             }
         }
 
@@ -299,6 +357,7 @@ define(['js/logger',
             objDescriptor.id = nodeObj.getId();
             objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || DEFAULT_DECORATOR;
             //objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+            objDescriptor.namespace = nodeObj.getNamespace();
             objDescriptor.name = nodeObj.getFullyQualifiedName();
         } else {
             this._logger.error('Node not loaded', nodeId);
@@ -378,5 +437,15 @@ define(['js/logger',
         }
     };
 
+    PartBrowserControl.prototype._updateLibrarySelector = function () {
+        var self = this,
+            libraryNames = self._client.getLibraryNames().sort();
+        if (libraryNames.length > 0) {
+            libraryNames.unshift('-');
+            libraryNames.unshift(NO_LIBS);
+            libraryNames.unshift(ALL_NSP);
+        }
+        self._partBrowserView.updateSelectorInfo(libraryNames);
+    };
     return PartBrowserControl;
 });

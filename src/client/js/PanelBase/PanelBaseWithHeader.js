@@ -11,7 +11,8 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
     'use strict';
 
     var PanelBaseWithHeader,
-        BASE_CLASS = 'panel-base-wh'; // /styles/PanelBaseWithHeader.scss
+        BASE_CLASS = 'panel-base-wh', // /styles/PanelBaseWithHeader.scss
+        SCROLL_CLASS = 'panel-base-scroll';
 
     //inherit from PanelBase Phase #1
     PanelBaseWithHeader = function (options, layoutManager) {
@@ -32,10 +33,10 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
     //inherit from PanelBase Phase #2
     PanelBaseWithHeader.OPTIONS = _.extend(PanelBase.OPTIONS, {
         HEADER_TITLE: 'HEADER_TITLE',
-        FLOATING_TITLE: 'FLOATING_TITLE'
+        FLOATING_TITLE: 'FLOATING_TITLE',
+        NO_SCROLLING: 'NO_SCROLLING'
     });
     _.extend(PanelBaseWithHeader.prototype, PanelBase.prototype);
-
 
     /* OVERRIDE PanelBase members */
     PanelBaseWithHeader.prototype.setSize = function (width, height) {
@@ -44,11 +45,9 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
         this.onResize(this.size.width, this.size.height);
     };
 
-
     PanelBaseWithHeader.prototype.onReadOnlyChanged = function (isReadOnly) {
         this._onReadOnlyChanged(isReadOnly);
     };
-
 
     /* CUSTOM MEMBERS */
     PanelBaseWithHeader.prototype.initUI = function (options) {
@@ -62,6 +61,11 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
 
         //add own class
         this.$_el.addClass(BASE_CLASS);
+
+        //by default we also add the scrolling
+        if (options[PanelBaseWithHeader.OPTIONS.NO_SCROLLING] !== true) {
+            this.$_el.addClass(SCROLL_CLASS);
+        }
 
         //Create Panel's HEADER
         this.$panelHeader = $('<div/>', {
@@ -121,7 +125,6 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
         }
     };
 
-
     /************** CUSTOM RESIZE HANDLER *****************/
     PanelBaseWithHeader.prototype._setSize = function (w, h) {
         var panelHeaderHeight = this.$panelHeader.outerHeight(true),
@@ -150,7 +153,6 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
         };
     };
     /************** END OF --- CUSTOM RESIZE HANDLER *****************/
-
 
     /************** CUSTOM READ-ONLY CHANGED HANDLER *****************/
     PanelBaseWithHeader.prototype._onReadOnlyChanged = function (isReadOnly) {

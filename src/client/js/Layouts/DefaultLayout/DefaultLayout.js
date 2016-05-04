@@ -94,6 +94,7 @@ define(['jquery-layout',
             }, west: {
                 size: SIDE_PANEL_WIDTH,
                 minSize: SIDE_PANEL_WIDTH,
+                showOverflowOnHover:true,
                 resizable: true,
                 slidable: false,
                 spacing_open: SPACING_OPEN, //jshint ignore: line

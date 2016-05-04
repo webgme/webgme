@@ -21,6 +21,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'PartBrowserPanel';
         options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = false;
+        options[PanelBaseWithHeader.OPTIONS.NO_SCROLLING] = true;
 
         //call parent's constructor
         __parent__.apply(this, [options]);

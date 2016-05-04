@@ -42,7 +42,14 @@ define(['./ButtonBase',
         }
         //delete params.clickFn;
 
+        this._dropDownTxt = params.text;
+        this._dropDownLimit = params.limitTxtLength || 0;
+        delete params.text;
+
         this._dropDownBtn = buttonBase.createButton(params);
+
+        this.dropDownText(this._dropDownTxt);
+
         caret = CARET_BASE.clone();
 
         this._ulMenu = UL_BASE.clone();
@@ -156,6 +163,28 @@ define(['./ButtonBase',
         this.el.empty();
         this.el = undefined;
         this._logger.debug('destroyed');
+    };
+
+    ToolbarDropDownButton.prototype.dropDownText = function (value) {
+        var oldHtml = this._dropDownBtn.html(),
+            index,
+            newHtml,
+            label;
+
+        if (typeof value === 'string') {
+            this._dropDownTxt = value;
+            label = value;
+            if (this._dropDownLimit && label.length > this._dropDownLimit) {
+                label = label.substr(0, this._dropDownLimit) + '...';
+            }
+            //setter
+            index = oldHtml.indexOf('<span');
+            newHtml = label + ' ' + oldHtml.substr(index);
+            this._dropDownBtn.html(newHtml);
+        } else {
+            //getter
+            return this._dropDownTxt;
+        }
     };
 
     return ToolbarDropDownButton;
