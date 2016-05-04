@@ -50,6 +50,7 @@ define([
         this.name = '';
         this._attributeNames = [];
         this._attributes = {};
+        this._inLibrary = false;
         this._skinParts = {
             $name: undefined,
             $attributesContainer: undefined,
@@ -78,17 +79,15 @@ define([
     //jshint camelcase: false
     MetaDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         var self = this,
-            node = self._control._client.getNode(self._metaInfo[CONSTANTS.GME_ID]),
-            belongsToLibrary = false;
+            node = self._control._client.getNode(self._metaInfo[CONSTANTS.GME_ID]);
 
         if (node && (node.isLibraryElement() || node.isLibraryRoot())) {
-            belongsToLibrary = true;
             self._inLibrary = true;
         }
 
         this._renderContent();
 
-        if (belongsToLibrary) {
+        if (self._inLibrary) {
             this.readOnlyMode(true);
         } else {
             // set title editable on double-click
