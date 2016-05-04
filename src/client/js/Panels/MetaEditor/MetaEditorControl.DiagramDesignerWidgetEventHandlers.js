@@ -518,8 +518,13 @@ define(['js/logger',
 
                     //if the items is not present anywhere else, remove it from the META's global sheet too
                     if (self._metaAspectSheetsPerMember[gmeID].length === 1) {
-                        _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                        _client.setMeta(gmeID, {});
+                        nodeObj = _client.getNode(gmeID);
+                        if (nodeObj && (nodeObj.isLibraryElement() || nodeObj.isLibraryRoot())) {
+                            //library elements will not be lost at all
+                        } else {
+                            _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                            _client.setMeta(gmeID, {});
+                        }
                     }
                 } else if (self._connectionListByID.hasOwnProperty(itemsToDelete[len])) {
                     //entity is a connection, just simply delete it
@@ -540,7 +545,12 @@ define(['js/logger',
                 //entity is a box
                 //check to see if this gmeID is present on any other sheet at all
                 if (this._metaAspectSheetsPerMember[gmeID].length === 1) {
-                    metaInfoToBeLost.push(gmeID);
+                    nodeObj = _client.getNode(gmeID);
+                    if (nodeObj && (nodeObj.isLibraryElement() || nodeObj.isLibraryRoot())) {
+                        //library elements will not be lost at all
+                    } else {
+                        metaInfoToBeLost.push(gmeID);
+                    }
                 }
             }
         }
@@ -833,7 +843,12 @@ define(['js/logger',
                 //entity is a box
                 //check to see if this gmeID is present on any other sheet at all
                 if (this._metaAspectSheetsPerMember[gmeID].length === 1) {
-                    metaAspectMemberToBeLost.push(gmeID);
+                    nodeObj = _client.getNode(gmeID);
+                    if (nodeObj && (nodeObj.isLibraryElement() || nodeObj.isLibraryRoot())) {
+                        //library elements will not be lost
+                    } else {
+                        metaAspectMemberToBeLost.push(gmeID);
+                    }
                 }
             }
         }

@@ -112,6 +112,14 @@
     width: 15px;
     margin-top: 2px;
     border-radius: 5px; }
+.meta-decorator .meta-lock {
+  position: absolute;
+  top: 0;
+  left: 1px;
+  height: 15px;
+  width: 15px;
+  margin-top: 2px;
+  border-radius: 5px; }
   .meta-decorator.abstract .name {
     font-style: italic;
     color: #aaaaaa; }

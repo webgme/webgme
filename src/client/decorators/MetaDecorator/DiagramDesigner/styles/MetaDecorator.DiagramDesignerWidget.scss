@@ -156,6 +156,16 @@ $abstract-class-name-color: #AAAAAA;
     border-radius: 5px;
   }
 
+  .meta-lock {
+    position: absolute;
+    top: 0;
+    left: 1px;
+    height: 15px;
+    width: 15px;
+    margin-top: 2px;
+    border-radius: 5px;
+  }
+
   &.abstract {
     .name {
       font-style: italic;
