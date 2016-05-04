@@ -87,7 +87,9 @@ define(['js/Constants',
     // This next function retrieves the relevant node information for the widget
     <%= visualizerID %>Control.prototype._getObjectDescriptor = function (nodeId) {
         var nodeObj = this._client.getNode(nodeId),
-            objDescriptor;
+            objDescriptor = {
+                name: 'N/A'
+            };
 
         if (nodeObj) {
             objDescriptor = {
