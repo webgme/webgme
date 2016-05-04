@@ -38,7 +38,8 @@ define([
     var MetaDecoratorDiagramDesignerWidget,
         DECORATOR_ID = 'MetaDecorator',
         ABSTRACT_CLASS = 'abstract',
-        TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta"/>');
+        TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta"/>'),
+        TEXT_META_LOCKED_BASE = $('<i class="glyphicon glyphicon-lock meta-lock"/>');
 
     MetaDecoratorDiagramDesignerWidget = function (options) {
 
@@ -76,23 +77,34 @@ define([
 
     //jshint camelcase: false
     MetaDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
-        var self = this;
+        var self = this,
+            node = self._control._client.getNode(self._metaInfo[CONSTANTS.GME_ID]),
+            belongsToLibrary = false;
+
+        if (node && (node.isLibraryElement() || node.isLibraryRoot())) {
+            belongsToLibrary = true;
+            self._inLibrary = true;
+        }
 
         this._renderContent();
 
-        // set title editable on double-click
-        this._skinParts.$name.on('dblclick.editOnDblClick', null, function (event) {
-            if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                $(this).editInPlace({
-                    class: '',
-                    onChange: function (oldValue, newValue) {
-                        self._onNodeTitleChanged(oldValue, newValue);
-                    }
-                });
-            }
-            event.stopPropagation();
-            event.preventDefault();
-        });
+        if (belongsToLibrary) {
+            this.readOnlyMode(true);
+        } else {
+            // set title editable on double-click
+            this._skinParts.$name.on('dblclick.editOnDblClick', null, function (event) {
+                if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+                    $(this).editInPlace({
+                        class: '',
+                        onChange: function (oldValue, newValue) {
+                            self._onNodeTitleChanged(oldValue, newValue);
+                        }
+                    });
+                }
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        }
 
         //set the 'Add new...' clickhandler
         this._skinParts.$addAttributeContainer.on('click', null, function (event) {
@@ -177,6 +189,8 @@ define([
 
         //render text-editor based META editing UI piece
         this._skinParts.$textMetaEditorBtn = TEXT_META_EDIT_BTN_BASE.clone();
+        this._skinParts.$textMetaLock = TEXT_META_LOCKED_BASE.clone();
+
         this.$el.append(this._skinParts.$textMetaEditorBtn);
         this._skinParts.$textMetaEditorBtn.on('click', function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
@@ -185,6 +199,9 @@ define([
             event.stopPropagation();
             event.preventDefault();
         });
+
+        this.$el.append(this._skinParts.$textMetaLock);
+        this._skinParts.$textMetaLock.hide();
 
         if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
             this._skinParts.$addAttributeContainer.detach();
@@ -201,7 +218,8 @@ define([
             newName = '';
 
         if (nodeObj) {
-            newName = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
+            // newName = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
+            newName = nodeObj.getFullyQualifiedName();
 
             if (this.name !== newName) {
                 this.name = newName;
@@ -489,15 +507,17 @@ define([
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype._setReadOnlyMode = function (readOnly) {
-        if (readOnly === true) {
+        if (readOnly === true || this._inLibrary === true) {
             this._skinParts.$addAttributeContainer.detach();
             this._skinParts.$addConstraintContainer.detach();
             this._skinParts.$addAspectContainer.detach();
             this.$el.find('input.new-attr').val('').blur();
+            this._skinParts.$textMetaLock.show();
         } else {
             this._skinParts.$attributesTitle.append(this._skinParts.$addAttributeContainer);
             this._skinParts.$constraintsTitle.append(this._skinParts.$addConstraintContainer);
             this._skinParts.$aspectsTitle.append(this._skinParts.$addAspectContainer);
+            this._skinParts.$textMetaLock.hide();
         }
     };
 
