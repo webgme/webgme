@@ -508,19 +508,25 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     function _getSeedFromProject(storage, projectId, branchName, callback) {
         var deferred = Q.defer();
-        branchName = branchName || 'master';
 
-        _getCoreAndRootNode(storage, projectId, null, branchName)
-            .then(function (res) {
-                Serialization.export(res.core, res.rootNode, function (err, jsonExport) {
-                    if (err) {
-                        deferred.reject(new Error(err));
-                    } else {
-                        deferred.resolve(jsonExport);
-                    }
-                });
-            })
-            .catch(deferred.reject);
+        branchName = branchName || 'master';
+        storage.openProject(projectId, function (err, project, branches/*, access*/) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            if (!branches[branchName]) {
+                deferred.reject(new Error('unknown branch: ' + branchName));
+                return;
+            }
+
+            storageUtils.getProjectJson(project, {branchName: branchName})
+                .then(function (rawJson) {
+                    deferred.resolve({seed: rawJson, isLegacy: false});
+                })
+                .catch(deferred.reject);
+        });
 
         return deferred.promise.nodeify(callback);
     }
