@@ -91,7 +91,10 @@
     border: 1px solid #00235b; }
   .panel-base-wh.w-tabs .floating-title {
     top: 30px; }
-
+.panel-base-scroll {}
+  .panel-base-scroll .panel-body {
+    overflow: auto;
+  }
 .side-panel .panel-base-wh {
   position: relative;
   padding: 0;
