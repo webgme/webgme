@@ -396,7 +396,11 @@ define([
     };
 
     PartBrowserWidget.prototype.getCurrentSelectorValue = function () {
-        return this._selector.dropDownText();
+        if (this._selector.el.is(':hidden')) {
+            return '';
+        }
+
+        return this._selector.dropDownText() || '';
     };
 
     PartBrowserWidget.prototype.updateSelectorInfo = function (valueList) {
@@ -433,7 +437,7 @@ define([
             }
         }
 
-        if(valueList.length === 0){
+        if (valueList.length === 0) {
             self._selector.hide();
         } else {
             self._selector.show();
