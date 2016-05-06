@@ -56,7 +56,6 @@ describe('Simple worker', function () {
         },
         constraintProjectName = 'ConstraintProject',
         constraintProjectImportResult,
-        blobDownloadUrl = 'http://127.0.0.1:' + gmeConfig.server.port + '/rest/blob/download/',
         oldSend = process.send,
         oldOn = process.on,
         socket,

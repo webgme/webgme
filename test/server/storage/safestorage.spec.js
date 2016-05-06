@@ -2360,7 +2360,7 @@ describe('SafeStorage', function () {
             storage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(storage, {
-                        projectSeed: 'test/server/storage/safestorage/loadPaths.json',
+                        projectSeed: 'test/server/storage/safestorage/loadPaths.webgmex',
                         projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger
