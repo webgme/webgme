@@ -1,14 +1,46 @@
 # Change Log
 
+## [2.0.0](https://github.com/webgme/webgme/tree/2.0.0) (2016-05-06)
+[Full Changelog](https://github.com/webgme/webgme/compare/v1.7.2...2.0.0)
+
+**Implemented enhancements:**
+
+- Seeding from existing project loses library info [\#970](https://github.com/webgme/webgme/issues/970)
+- Better feedback when trying to edit/add a constraint to a library node. [\#955](https://github.com/webgme/webgme/issues/955)
+- Remove old serialization [\#991](https://github.com/webgme/webgme/pull/991) ([pmeijer](https://github.com/pmeijer))
+- Provide look-up of selected namespace in plugin-config. [\#989](https://github.com/webgme/webgme/pull/989) ([pmeijer](https://github.com/pmeijer))
+- Continuous integration tests now use node version 4.x and 6.x [\#988](https://github.com/webgme/webgme/pull/988) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#970 Seeding from existing project loses library info [\#986](https://github.com/webgme/webgme/pull/986) ([kecso](https://github.com/kecso))
+- Implemented namespace selector and name-only type list in part-browser [\#985](https://github.com/webgme/webgme/pull/985) ([kecso](https://github.com/kecso))
+- Plugin execution [\#980](https://github.com/webgme/webgme/pull/980) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Gathering collection information for a node inside a complex instantiation crashes the core [\#982](https://github.com/webgme/webgme/issues/982)
+- Connection Not Redrawn [\#969](https://github.com/webgme/webgme/issues/969)
+- Adding and removing library node to main meta sheet removes the node from the global meta. [\#963](https://github.com/webgme/webgme/issues/963)
+- Closes \#969 redraw canvas on connection changes [\#990](https://github.com/webgme/webgme/pull/990) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#963 Adding and removing library node to main meta sheet removes the node from the global meta. [\#987](https://github.com/webgme/webgme/pull/987) ([kecso](https://github.com/kecso))
+- Fixes \#982 Gathering collection information for a node inside a complex instantiation crashes the core [\#983](https://github.com/webgme/webgme/pull/983) ([kecso](https://github.com/kecso))
+
+**Closed issues:**
+
+- Don't prerequire all modules in \_globals [\#653](https://github.com/webgme/webgme/issues/653)
+
+**Merged pull requests:**
+
+- Bin script for generating statistics about projects and their mongodb collections. [\#984](https://github.com/webgme/webgme/pull/984) ([pmeijer](https://github.com/pmeijer))
+- Lazy load modules in \_globals and webgme, closes \#653 [\#981](https://github.com/webgme/webgme/pull/981) ([pmeijer](https://github.com/pmeijer))
+
 ## [v1.7.2](https://github.com/webgme/webgme/tree/v1.7.2) (2016-04-26)
 [Full Changelog](https://github.com/webgme/webgme/compare/v1.7.1...v1.7.2)
 
 **Implemented enhancements:**
 
+- Client build cont [\#960](https://github.com/webgme/webgme/pull/960) ([pmeijer](https://github.com/pmeijer))
 - ImportProject in testFixture supports webgmex seeds. [\#979](https://github.com/webgme/webgme/pull/979) ([pmeijer](https://github.com/pmeijer))
 - Enable webgmex usage in import/export bin scripts [\#977](https://github.com/webgme/webgme/pull/977) ([kecso](https://github.com/kecso))
 - Refactoring of export import functionality regarding new project package [\#974](https://github.com/webgme/webgme/pull/974) ([kecso](https://github.com/kecso))
-- Client build cont [\#960](https://github.com/webgme/webgme/pull/960) ([pmeijer](https://github.com/pmeijer))
 - Generated Visualizers should behave well in split mode. PR also closes \#957. [\#958](https://github.com/webgme/webgme/pull/958) ([pmeijer](https://github.com/pmeijer))
 
 **Fixed bugs:**
@@ -19,8 +51,8 @@
 - Add Library Exception [\#961](https://github.com/webgme/webgme/issues/961)
 - Suppressing look up of visualizer from node should still update listed visualizers. [\#957](https://github.com/webgme/webgme/issues/957)
 - When checking project constraints the links to offending nodes are broken. [\#948](https://github.com/webgme/webgme/issues/948)
-- Refactoring of export import functionality regarding new project package [\#974](https://github.com/webgme/webgme/pull/974) ([kecso](https://github.com/kecso))
 - Fix for panels not being resizable when using distribution. [\#967](https://github.com/webgme/webgme/pull/967) ([pmeijer](https://github.com/pmeijer))
+- Refactoring of export import functionality regarding new project package [\#974](https://github.com/webgme/webgme/pull/974) ([kecso](https://github.com/kecso))
 - Closes \#948 Ensure node loaded when setting state [\#965](https://github.com/webgme/webgme/pull/965) ([pmeijer](https://github.com/pmeijer))
 - Fix base loading mechanism [\#962](https://github.com/webgme/webgme/pull/962) ([kecso](https://github.com/kecso))
 
