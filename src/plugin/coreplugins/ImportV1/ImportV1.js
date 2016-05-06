@@ -12,7 +12,7 @@ define([
     'plugin/PluginConfig',
     'plugin/PluginBase',
     'text!./metadata.json',
-    'common/core/users/serialization', //TODO: This should come from here
+    './serialization',
     'blob/BlobMetadata',
     'blob/util',
     'q'

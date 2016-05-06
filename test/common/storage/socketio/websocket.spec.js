@@ -597,27 +597,6 @@ describe('storage socketio websocket', function () {
             .done();
     });
 
-    it('should exportProject as library using simple request', function (done) {
-        var command = {
-            command: 'exportLibrary',
-            projectId: projectName2Id(projectName),
-            branchName: 'master',
-            path: '' // ROOT_PATH
-        };
-
-        Q.nfcall(webSocket.simpleRequest, command)
-            .then(function (result) {
-                expect(typeof result).to.equal('object');
-                expect(result).to.have.property('file');
-                expect(typeof result.file.hash).to.equal('string');
-                expect(result.file.url).to.include('http');
-                done();
-            })
-            .catch(function (err) {
-                done(new Error(err));
-            });
-    });
-
 
     it('should disconnect', function (done) {
         openSocketIo(server, agent, guestAccount, guestAccount)

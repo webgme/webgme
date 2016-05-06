@@ -12,7 +12,6 @@ var requirejs = require('requirejs'),
     fs = require('fs'),
     webgmeUtils = require('./src/utils'),
     _core,
-    _serializer,
     _canon,
     _Logger,
     _REGEXP,
@@ -125,14 +124,6 @@ Object.defineProperties(exports, {
                 _core = requirejs('common/core/core');
             }
             return _core;
-        }
-    },
-    serializer: {
-        get: function () {
-            if (!_serializer) {
-                _serializer = requirejs('common/core/users/serialization');
-            }
-            return _serializer;
         }
     },
     canon: {
