@@ -598,7 +598,7 @@ describe('corediff apply', function () {
                 })
                 .then(function () {
                     return testFixture.importProject(storage, {
-                        projectSeed: 'test/common/core/corediff/base002.json',
+                        projectSeed: 'test/common/core/corediff/base002.webgmex',
                         projectName: pointerProjectName,
                         branchName: 'base',
                         gmeConfig: pointerGmeConfig,

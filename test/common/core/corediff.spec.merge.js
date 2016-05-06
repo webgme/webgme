@@ -74,7 +74,7 @@ describe('corediff-merge', function () {
             storage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(storage, {
-                        projectSeed: 'test/common/core/corediff/base002.json',
+                        projectSeed: 'test/common/core/corediff/base002.webgmex',
                         projectName: projectName,
                         branchName: 'base',
                         gmeConfig: gmeConfig,
@@ -943,7 +943,7 @@ describe('corediff-merge', function () {
 
         before(function (done) {
             testFixture.importProject(storage, {
-                    projectSeed: 'test/common/core/corediff/base003.json',
+                    projectSeed: 'test/common/core/corediff/base003.webgmex',
                     projectName: projectName,
                     branchName: 'master',
                     gmeConfig: gmeConfig,

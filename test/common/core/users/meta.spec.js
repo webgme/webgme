@@ -42,7 +42,7 @@ describe('meta', function () {
                     gmeConfig: gmeConfig,
                     branchName: 'master',
                     userName: gmeConfig.authentication.guestAccount,
-                    projectSeed: './test/common/core/users/meta/project.json'
+                    projectSeed: './test/common/core/users/meta/project.webgmex'
                 });
             })
             .then(function (result) {

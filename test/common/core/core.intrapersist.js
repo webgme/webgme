@@ -56,7 +56,7 @@ describe('core.intrapersist', function () {
             })
             .then(function () {
                 return testFixture.importProject(storage, {
-                    projectSeed: 'test/common/core/core/intraPersist.json',
+                    projectSeed: 'test/common/core/core/intraPersist.webgmex',
                     projectName: projectName,
                     gmeConfig: gmeConfig,
                     logger: logger
