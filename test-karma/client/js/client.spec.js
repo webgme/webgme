@@ -200,11 +200,8 @@ describe('GME client', function () {
 
             //simple request commands
             expect(client.hasOwnProperty('runServerPlugin')).to.equal(true, 'runServerPlugin');
-            expect(client.hasOwnProperty('getExportItemsUrl')).to.equal(true, 'getExportItemsUrl');
             expect(client.hasOwnProperty('createProjectFromFile')).to.equal(true, 'createProjectFromFile');
             expect(client.hasOwnProperty('seedProject')).to.equal(true, 'seedProject');
-            expect(client.hasOwnProperty('getExportProjectBranchUrl')).to.equal(true, 'getExportProjectBranchUrl');
-            expect(client.hasOwnProperty('getExportLibraryUrl')).to.equal(true, 'getExportLibraryUrl');
             expect(client.hasOwnProperty('updateLibrary')).to.equal(true, 'updateLibrary');
             expect(client.hasOwnProperty('addLibrary')).to.equal(true, 'addLibrary');
             expect(client.hasOwnProperty('autoMerge')).to.equal(true, 'autoMerge');
@@ -3946,49 +3943,6 @@ describe('GME client', function () {
 
     });
 
-    describe('REST-like functions', function () {
-        var Client,
-            gmeConfig,
-            client,
-            projectId,
-            projectName = 'RESTLikeTests';
-
-        before(function (done) {
-            this.timeout(10000);
-            requirejs(['js/client', 'text!gmeConfig.json'], function (Client_, gmeConfigJSON) {
-                Client = Client_;
-                gmeConfig = JSON.parse(gmeConfigJSON);
-                gmeConfig.storage.timeout = 1000;
-                client = new Client(gmeConfig);
-                projectId = projectName2Id(projectName, gmeConfig, client);
-                client.connectToDatabase(function (err) {
-                    expect(err).to.equal(null);
-
-                    client.selectProject(projectId, null, function (err) {
-                        expect(err).to.equal(null);
-
-                        client.addUI({}, function (events) {
-                            expect(events).to.have.length.least(3); //technical event, the root and the FCO
-
-                            done();
-                        }, projectId);
-                        client.updateTerritory(projectId, {'': {children: 1}});
-                    });
-                });
-            });
-        });
-
-        it('should return a url where the given library (sub-tree) is available', function (done) {
-            this.timeout(5000);
-            client.getExportLibraryUrl('', 'output', function (err, url) {
-                expect(err).to.equal(null);
-                expect(url).to.contain('/rest/blob/download');
-
-                done();
-            });
-        });
-    });
-
     describe('import functions', function () {
         it.skip('should update the given library (sub-tree) with the specified import json', function () {
             // updateLibraryAsync
@@ -4271,25 +4225,16 @@ describe('GME client', function () {
     describe('projectSeed', function () {
         var Client,
             gmeConfig,
-            client,
-            refNodeProj,
-            refMetaProj,
-            refSFSProj;
+            client;
 
         before(function (done) {
             this.timeout(10000);
             requirejs([
                     'js/client',
-                    'text!gmeConfig.json',
-                    'text!karmatest/client/js/client/clientNodeTestProject.json',
-                    'text!karmatest/client/js/client/metaTestProject.json',
-                    'text!seeds/SignalFlowSystem.json'],
-                function (Client_, gmeConfigJSON, nodeProjectJSON, metaProjectJSON, SFSProjectJSON) {
+                    'text!gmeConfig.json'],
+                function (Client_, gmeConfigJSON) {
                     Client = Client_;
                     gmeConfig = JSON.parse(gmeConfigJSON);
-                    refNodeProj = JSON.parse(nodeProjectJSON);
-                    refMetaProj = JSON.parse(metaProjectJSON);
-                    refSFSProj = JSON.parse(SFSProjectJSON);
                     client = new Client(gmeConfig);
 
                     client.connectToDatabase(function (err) {
@@ -4313,31 +4258,11 @@ describe('GME client', function () {
                 },
                 projectId = projectName2Id(projectName, gmeConfig, client);
 
-            client.seedProject(seedConfig, function (err) {
+            client.seedProject(seedConfig, function (err, result) {
                 expect(err).to.equal(null);
-
-                client.getExportProjectBranchUrl(projectId, 'master', 'seedTestOutPut',
-                    function (err, url) {
-                        //var karmaUrl;
-                        expect(err).to.equal(null);
-                        expect(url).to.contain('/rest/blob/download/');
-
-                        //karmaUrl = url.replace('http://127.0.0.1:9001', window.location.origin);
-
-                        superagent.get(url, function (err, result) {
-                            expect(err).to.equal(null);
-
-                            client.deleteProject(projectId, function (err /*, didExist*/) {
-                                expect(err).to.equal(null, 'deleteProject returned error');
-
-                                done();
-                            });
-
-                            expect(result.body).to.deep.equal(refNodeProj);
-
-                        });
-                    }
-                );
+                expect(result.projectId).to.equal(projectId);
+                //TODO: Check that the project is there.
+                done();
             });
         });
 
@@ -4351,29 +4276,11 @@ describe('GME client', function () {
                 },
                 projectId = projectName2Id(projectName, gmeConfig, client);
 
-            client.seedProject(seedConfig, function (err) {
+            client.seedProject(seedConfig, function (err, result) {
                 expect(err).to.equal(null);
-
-                client.getExportProjectBranchUrl(projectId, 'master', 'seedTestOutPut',
-                    function (err, url) {
-                        //var karmaUrl;
-                        expect(err).to.equal(null);
-                        expect(url).to.contain('rest/blob/download/');
-
-                        //karmaUrl = url.replace('http://127.0.0.1:9001', window.location.origin);
-
-                        superagent.get(url, function (err, result) {
-                            expect(err).to.equal(null);
-
-                            expect(result.body).to.deep.equal(refSFSProj);
-                            client.deleteProject(projectId, function (err) {
-                                expect(err).to.equal(null);
-
-                                done();
-                            });
-                        });
-                    }
-                );
+                expect(result.projectId).to.equal(projectId);
+                //TODO: Check that the project is there.
+                done();
             });
         });
 
@@ -4462,7 +4369,6 @@ describe('GME client', function () {
             });
         });
 
-        //FIXME what is with the superagent stuff???
         it('should seed a project from an existing one\'s given branch', function (done) {
             var projectName = 'seedTestBasicOther',
                 seedConfig = {
@@ -4472,29 +4378,11 @@ describe('GME client', function () {
                 },
                 projectId = projectName2Id(projectName, gmeConfig, client);
 
-            client.seedProject(seedConfig, function (err) {
+            client.seedProject(seedConfig, function (err, result) {
                 expect(err).to.equal(null);
-
-                client.getExportProjectBranchUrl(projectId, 'master', 'seedTestOutPut',
-                    function (err, url) {
-                        expect(err).to.equal(null);
-
-                        console.warn(url);
-                        client.deleteProject(projectId, function (err) {
-                            expect(err).to.equal(null);
-
-                            done();
-                        });
-
-                        //superagent.get(url, function (err, result) {
-                        //    console.warn('whaaat');
-                        //    expect(err).to.equal(null);
-                        //    //expect(result.body).to.deep.equal(refNodeProj);
-                        //
-                        //    done();
-                        //});
-                    }
-                );
+                expect(result.projectId).to.equal(projectId);
+                //TODO: Check that the project is there.
+                done();
             });
         });
 
@@ -4509,7 +4397,7 @@ describe('GME client', function () {
                 expect(err).not.to.equal(null);
                 console.error('seedProject', err);
                 expect(err.message).to.contain('Project already exists');
-
+                //TODO: Check that the project is there.
                 done();
             });
         });

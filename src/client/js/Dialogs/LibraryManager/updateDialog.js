@@ -103,7 +103,7 @@ define(['js/Loader/LoaderCircles',
 
         this._btnUpdate.on('click', function () {
             if (self.canStartUpdate()) {
-                self._client.refreshLibrary(self._libraryName,
+                self._client.updateLibrary(self._libraryName,
                     self.assetWidget.propertyValue || self._urlProjectInfo,
                     function (err) {
                         if (err) {
@@ -116,7 +116,7 @@ define(['js/Loader/LoaderCircles',
         });
 
         this._btnRefresh.on('click', function () {
-            self._client.refreshLibrary(self._libraryName, null,
+            self._client.updateLibrary(self._libraryName, null,
                 function (err) {
                     if (err) {
                         self.setError('unable to refresh library: ' + err);

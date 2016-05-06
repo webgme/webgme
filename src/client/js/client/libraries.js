@@ -25,7 +25,7 @@ define(['js/Constants'], function (CONSTANTS) {
             return null;
         }
 
-        function importLibrary(name, blobHashOrLibraryInfo, callback) {
+        function addLibrary(name, blobHashOrLibraryInfo, callback) {
             var parameters = {
                 command: 'addLibrary',
                 projectId: state.project.projectId,
@@ -47,7 +47,7 @@ define(['js/Constants'], function (CONSTANTS) {
             });
         }
 
-        function refreshLibrary(name, blobHashOrLibraryInfo, callback) {
+        function updateLibrary(name, blobHashOrLibraryInfo, callback) {
             var parameters = {
                 command: 'updateLibrary',
                 projectId: state.project.projectId,
@@ -113,8 +113,8 @@ define(['js/Constants'], function (CONSTANTS) {
 
         return {
             getLibraryNames: getLibraryNames,
-            importLibrary: importLibrary,
-            refreshLibrary: refreshLibrary,
+            addLibrary: addLibrary,
+            updateLibrary: updateLibrary,
             removeLibrary: removeLibrary,
             renameLibrary: renameLibrary,
             getLibraryInfo: getLibraryInfo,
