@@ -216,7 +216,6 @@ function getSeedDictionary(config) {
         result = {},
         seedName,
         extension,
-        extLowerCase,
         i,
         j;
     if (config.seedProjects.enable === true) {
@@ -224,14 +223,13 @@ function getSeedDictionary(config) {
             names = fs.readdirSync(config.seedProjects.basePaths[i]);
             for (j = 0; j < names.length; j++) {
                 extension = path.extname(names[j]);
-                extLowerCase = extension.toLowerCase();
 
-                if (extLowerCase === '.json' || extLowerCase === '.zip' || extLowerCase === '.webgmex') {
+                if (extension.toLowerCase() === '.webgmex') {
                     seedName = path.basename(names[j], extension);
                 }
 
                 if (!result[seedName]) {
-                    result[seedName] = config.seedProjects.basePaths[i] + '/' + seedName + extLowerCase;
+                    result[seedName] = config.seedProjects.basePaths[i] + '/' + seedName + extension;
                 }
             }
         }
