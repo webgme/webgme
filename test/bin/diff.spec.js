@@ -37,7 +37,7 @@ describe('diff CLI tests', function () {
                     gmeConfig: gmeConfig,
                     branchName: 'source',
                     userName: gmeConfig.authentication.guestAccount,
-                    projectSeed: './test/bin/diff/source001.json',
+                    projectSeed: './test/bin/diff/source001.webgmex',
 
                 });
             })

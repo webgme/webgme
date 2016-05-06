@@ -101,7 +101,7 @@ define(['js/Loader/LoaderCircles',
 
         this._btnUpdate.on('click', function () {
             if (self.canStartUpdate()) {
-                self._client.importLibrary(self._libraryName.val(),
+                self._client.addLibrary(self._libraryName.val(),
                     self.assetWidget.propertyValue || self._urlProjectInfo,
                     function (err) {
                         if (err) {

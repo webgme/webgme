@@ -16,7 +16,6 @@ define([
     'js/Dialogs/Branches/BranchesDialog',
     'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
     'js/Dialogs/ProjectRights/ProjectRightsDialog',
-    'js/Dialogs/ExportErrors/ExportErrorsDialog',
     'js/Dialogs/ApplyCommitQueue/ApplyCommitQueueDialog',
     'common/storage/util',
     'js/Utils/SaveToDisk',
@@ -32,7 +31,6 @@ define([
              BranchesDialog,
              ConfirmDeleteDialog,
              ProjectRightsDialog,
-             ExportErrorsDialog,
              ApplyCommitQueueDialog,
              StorageUtil,
              saveToDisk,
@@ -674,13 +672,13 @@ define([
         if (self.gmeClient) {
             exportBranch = function (data) {
                 // By default the export contains assets.
-                self.gmeClient.saveProject(self.gmeClient.getActiveProjectId(),
+                self.gmeClient.exportProjectToFile(self.gmeClient.getActiveProjectId(),
                     self.gmeClient.getActiveBranchName(),
-                    self.gmeClient.getActiveCommitHash(), true, function (err, url) {
+                    self.gmeClient.getActiveCommitHash(), true, function (err, result) {
                         if (err) {
                             self.logger.error('unable to save project', err);
                         } else {
-                            saveToDisk.saveUrlToDisk(url);
+                            saveToDisk.saveUrlToDisk(result.downloadUrl);
                         }
                     }
                 );

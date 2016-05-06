@@ -30,7 +30,7 @@ describe('Constraint Checker', function () {
             })
             .then(function () {
                 var importParam = {
-                    projectSeed: './test/common/core/users/meta/metaRules.json',
+                    projectSeed: './test/common/core/users/meta/metaRules.webgmex',
                     projectName: projectName,
                     branchName: branchName,
                     logger: logger,

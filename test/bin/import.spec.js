@@ -10,9 +10,9 @@ describe('import CLI tests', function () {
 
     var gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect,
-        importCLI = require('../../src/bin/import_v1'),
-        filename = require('path').normalize('src/bin/import_v1.js'),
-        importPath = './test/bin/import/project.json',
+        importCLI = require('../../src/bin/import'),
+        filename = require('path').normalize('src/bin/import.js'),
+        importPath = './test/bin/import/project.webgmex',
         projectName,
         projectId,
         existingProjectName = 'importCliExisting',
@@ -23,8 +23,7 @@ describe('import CLI tests', function () {
         gmeAuth,
         oldLogFunction = console.log,
         oldWarnFunction = console.warn,
-        oldStdOutFunction = process.stdout.write,
-        jsonProject;
+        oldStdOutFunction = process.stdout.write;
 
     function checkBranch(pId, branchArray) {
         var deferred = Q.defer(),
@@ -43,7 +42,6 @@ describe('import CLI tests', function () {
     }
 
     before(function (done) {
-        jsonProject = testFixture.loadJsonFile(importPath);
         testFixture.clearDBAndGetGMEAuth(gmeConfig, existingProjectName)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
@@ -57,7 +55,7 @@ describe('import CLI tests', function () {
                     gmeConfig: gmeConfig,
                     branchName: 'master',
                     userName: gmeConfig.authentication.guestAccount,
-                    projectSeed: './test/bin/import/project.json'
+                    projectSeed: './test/bin/import/project.webgmex'
 
                 });
             })

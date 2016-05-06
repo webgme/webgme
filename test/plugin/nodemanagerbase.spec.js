@@ -38,7 +38,7 @@ describe('climanager', function () {
             })
             .then(function () {
                 var importParam = {
-                    projectSeed: './seeds/EmptyProject.json',
+                    projectSeed: './seeds/EmptyProject.webgmex',
                     projectName: projectName,
                     branchName: branchName,
                     logger: logger,

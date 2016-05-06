@@ -23,7 +23,7 @@ describe('CorePlugins', function () {
             'ConfigurationArtifact',
             'DecoratorGenerator',
             'ExecutorPlugin',
-            'ExportImport',
+            'ImportV1',
             'MergeExample',
             'MetaGMEParadigmImporter',
             'MinimalWorkingExample',
@@ -42,7 +42,8 @@ describe('CorePlugins', function () {
             'MetaGMEParadigmImporter',
             'MultipleMainCallbackCalls',
             'InvalidActiveNode',
-            'ConstraintEvaluator'
+            'ConstraintEvaluator',
+            'ImportV1'
         ],
         projectNames = pluginNames.map(function (name) {
             return name + 'TestMain';
@@ -88,7 +89,7 @@ describe('CorePlugins', function () {
                     for (i = 0; i < projectNames.length; i += 1) {
                         projectName = projectNames[i];
                         promise = testFixture.importProject(safeStorage, {
-                            projectSeed: './seeds/ActivePanels.json',
+                            projectSeed: './seeds/ActivePanels.webgmex',
                             projectName: projectName,
                             branchName: 'master',
                             gmeConfig: gmeConfig,

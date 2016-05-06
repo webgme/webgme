@@ -5,7 +5,7 @@
 
 var testFixture = require('./../_globals.js');
 
-describe('issue772 testing', function () {
+describe.skip('issue772 testing', function () {
 
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),

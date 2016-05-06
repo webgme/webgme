@@ -11,11 +11,11 @@ $part-browser-li-margin-top: 15px;
     list-style-type: none;
     margin: 0;
     white-space: nowrap;
-    padding: 0;
+    padding: 0 0 30px 0;
 
     > li {
       list-style-type: none;
-      padding: 0px;
+      padding: 0;
       &.decorated-list-item {
         margin: $part-browser-li-margin-top 10px 5px 10px;
       }

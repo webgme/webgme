@@ -34,7 +34,7 @@ describe('REST API', function () {
                 })
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: 'PluginAPI_Test',
                         gmeConfig: gmeConfig,
                         logger: logger
@@ -78,7 +78,7 @@ describe('REST API', function () {
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body instanceof Array).to.equal(true);
-                        expect(res.body).to.include('ExportImport', 'PluginGenerator');
+                        expect(res.body).to.include('ImportV1', 'PluginGenerator');
                         done();
                     });
             });
@@ -159,28 +159,26 @@ describe('REST API', function () {
                     });
             });
 
-            it('should get config via /api/plugin/ExportImport/config', function (done) {
-                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/config')
+            it('should get config via /api/plugin/ImportV1/config', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/ImportV1/config')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body).to.deep.equal({
-                            type: 'Export',
-                            file: '',
-                            assets: false
+                            type: 'ImportProject',
+                            file: ''
                         });
                         done();
                     });
             });
 
-            it('should get configStructure via /api/plugin/ExportImport/configStructure', function (done) {
-                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/configStructure')
+            it('should get configStructure via /api/plugin/ImportV1/configStructure', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/ImportV1/configStructure')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body instanceof Array).to.equal(true);
-                        expect(res.body.length).to.equal(3);
+                        expect(res.body.length).to.equal(2);
                         expect(res.body[0]).to.include.keys('name', 'value', 'description', 'valueType', 'displayName');
                         expect(res.body[1]).to.include.keys('name', 'value', 'description', 'valueType', 'displayName');
-                        expect(res.body[2]).to.include.keys('name', 'value', 'description', 'valueType', 'displayName');
                         done();
                     });
             });
@@ -213,22 +211,22 @@ describe('REST API', function () {
                 }
             );
 
-            it('should execute ExportImport [pluginId, projectId, branchName] /api/plugin/ExportImport/execute',
+            it('should execute ConfigurationArtifact [pluginId, projectId, branchName] /api/plugin/ConfigurationArtifact/execute',
                 function (done) {
                     var requestBody = {
-                        pluginId: 'ExportImport',
+                        pluginId: 'ConfigurationArtifact',
                         projectId: importResult.project.projectId,
                         branchName: 'master'
                     };
                     this.timeout(4000);
-                    agent.post(server.getUrl() + '/api/v1/plugin/ExportImport/execute')
+                    agent.post(server.getUrl() + '/api/v1/plugin/ConfigurationArtifact/execute')
                         .send(requestBody)
                         .end(function (err, res) {
                             var resultId = res.body.resultId;
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
+                            agent.get(server.getUrl() + '/api/v1/plugin/ConfigurationArtifact/results/' + resultId)
                                 .end(function (err, res) {
                                     var cnt = 0,
                                         intervalId;
@@ -236,7 +234,7 @@ describe('REST API', function () {
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
 
                                     intervalId = setInterval(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
+                                        agent.get(server.getUrl() + '/api/v1/plugin/ConfigurationArtifact/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(200, err);
                                                 if (res.body.status === 'FINISHED') {
@@ -268,24 +266,24 @@ describe('REST API', function () {
                 }
             );
 
-            it('should execute with ERROR status ExportImport [pluginId] /api/plugin/ExportImport/execute',
+            it('should execute with ERROR status ConfigurationArtifact [pluginId] /api/plugin/ConfigurationArtifact/execute',
                 function (done) {
                     var requestBody = {
-                        pluginId: 'ExportImport'
+                        pluginId: 'ConfigurationArtifact'
                     };
-                    agent.post(server.getUrl() + '/api/v1/plugin/ExportImport/execute')
+                    agent.post(server.getUrl() + '/api/v1/plugin/ConfigurationArtifact/execute')
                         .send(requestBody)
                         .end(function (err, res) {
                             var resultId = res.body.resultId;
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
+                            agent.get(server.getUrl() + '/api/v1/plugin/ConfigurationArtifact/results/' + resultId)
                                 .end(function (err, res) {
                                     expect(res.status).equal(200, err);
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
                                     setTimeout(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
+                                        agent.get(server.getUrl() + '/api/v1/plugin/ConfigurationArtifact/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(200, err);
                                                 expect(res.body.status).to.equal('ERROR');
@@ -294,7 +292,7 @@ describe('REST API', function () {
                                                 expect(res.body.err).to.equal('Invalid argument, data.projectId is ' +
                                                     'not a string.');
                                                 expect(res.body.result.success).to.equal(false);
-                                                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
+                                                agent.get(server.getUrl() + '/api/v1/plugin/ConfigurationArtifact/results/' + resultId)
                                                     .end(function (err, res) {
                                                         expect(res.status).equal(404, err);
                                                         done();
@@ -334,33 +332,31 @@ describe('REST API', function () {
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body instanceof Array).to.equal(true);
-                        expect(res.body).to.include('ExportImport', 'PluginGenerator');
+                        expect(res.body).to.include('ImportV1', 'PluginGenerator');
                         done();
                     });
             });
 
-            it('should get config via /api/plugin/ExportImport/config', function (done) {
-                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/config')
+            it('should get config via /api/plugin/ImportV1/config', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/ImportV1/config')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body).to.deep.equal({
-                            type: 'Export',
-                            file: '',
-                            assets: false
+                            type: 'ImportProject',
+                            file: ''
                         });
                         done();
                     });
             });
 
-            it('should get configStructure via /api/plugin/ExportImport/configStructure', function (done) {
-                agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/configStructure')
+            it('should get configStructure via /api/plugin/ImportV1/configStructure', function (done) {
+                agent.get(server.getUrl() + '/api/v1/plugin/ImportV1/configStructure')
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body instanceof Array).to.equal(true);
-                        expect(res.body.length).to.equal(3);
+                        expect(res.body.length).to.equal(2);
                         expect(res.body[0]).to.include.keys('name', 'value', 'description', 'valueType', 'displayName');
                         expect(res.body[1]).to.include.keys('name', 'value', 'description', 'valueType', 'displayName');
-                        expect(res.body[2]).to.include.keys('name', 'value', 'description', 'valueType', 'displayName');
                         done();
                     });
             });
@@ -393,22 +389,22 @@ describe('REST API', function () {
                 }
             );
 
-            it('should execute ExportImport [pluginId, projectId, branchName] /api/plugin/ExportImport/execute',
+            it('should execute ExportImport [pluginId, projectId, branchName] /api/plugin/ConfigurationArtifact/execute',
                 function (done) {
                     var requestBody = {
-                        pluginId: 'ExportImport',
+                        pluginId: 'ConfigurationArtifact',
                         projectId: importResult.project.projectId,
                         branchName: 'master'
                     };
                     this.timeout(4000);
-                    agent.post(server.getUrl() + '/api/v1/plugin/ExportImport/execute')
+                    agent.post(server.getUrl() + '/api/v1/plugin/ConfigurationArtifact/execute')
                         .send(requestBody)
                         .end(function (err, res) {
                             var resultId = res.body.resultId;
                             expect(res.status).equal(200, err);
                             expect(typeof resultId).to.equal('string');
 
-                            agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
+                            agent.get(server.getUrl() + '/api/v1/plugin/ConfigurationArtifact/results/' + resultId)
                                 .end(function (err, res) {
                                     var cnt = 0,
                                         intervalId;
@@ -416,7 +412,7 @@ describe('REST API', function () {
                                     expect(res.body).to.deep.equal({status: 'RUNNING'});
 
                                     intervalId = setInterval(function () {
-                                        agent.get(server.getUrl() + '/api/v1/plugin/ExportImport/results/' + resultId)
+                                        agent.get(server.getUrl() + '/api/v1/plugin/ConfigurationArtifact/results/' + resultId)
                                             .end(function (err, res) {
                                                 expect(res.status).equal(200, err);
                                                 if (res.body.status === 'FINISHED') {
@@ -425,7 +421,7 @@ describe('REST API', function () {
                                                         'success'); //etc.
                                                     expect(res.body.result.success).to.equal(true);
                                                     agent.get(server.getUrl() +
-                                                        '/api/v1/plugin/ExportImport/results/' + resultId)
+                                                        '/api/v1/plugin/ConfigurationArtifact/results/' + resultId)
                                                         .end(function (err, res) {
                                                             expect(res.status).equal(404, err);
                                                             done();

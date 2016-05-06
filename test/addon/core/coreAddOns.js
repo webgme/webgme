@@ -43,7 +43,7 @@ describe('Core AddOns', function () {
                     gmeConfig: gmeConfig,
                     branchName: 'master',
                     userName: gmeConfig.authentication.guestAccount,
-                    projectSeed: './seeds/EmptyProject.json'
+                    projectSeed: './seeds/EmptyProject.webgmex'
                 });
             })
             .then(function (result) {

@@ -30,7 +30,7 @@ describe('Plugin MetaGMEParadigmImporter', function () {
 
     before(function (done) {
         var importParam = {
-            projectSeed: './seeds/EmptyProject.json',
+            projectSeed: './seeds/EmptyProject.webgmex',
             projectName: projectName,
             logger: logger,
             gmeConfig: gmeConfig

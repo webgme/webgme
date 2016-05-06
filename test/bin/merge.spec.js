@@ -62,7 +62,7 @@ describe('merge CLI test', function () {
                     gmeConfig: gmeConfig,
                     branchName: 'master',
                     userName: gmeConfig.authentication.guestAccount,
-                    projectSeed: './test/bin/merge/base.json',
+                    projectSeed: './test/bin/merge/base.webgmex',
 
                 });
             })

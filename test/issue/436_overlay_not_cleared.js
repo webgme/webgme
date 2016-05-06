@@ -31,7 +31,7 @@ describe('issue436 testing', function () {
             .then(function () {
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: './test/issue/436/base.json',
+                        projectSeed: './test/issue/436/base.webgmex',
                         projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger

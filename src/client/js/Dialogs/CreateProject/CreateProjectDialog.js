@@ -198,27 +198,25 @@ define(['js/Loader/LoaderCircles',
         this.assetWidget.onFinishChange(function (data) {
             self._btnCreateBlob.disable(true);
 
-            // TODO: Support exported zip file too.
-            self.assetWidget.getTargetAsJson(function (targetJson) {
-                if (targetJson) {
-                    var checkResult = self._client.checkImport(targetJson, CORE_CONSTANTS.EXPORT_TYPE_PROJECT);
+            if (!data.newValue) {
+                self._logger.error(new Error('New data does not have a value, ' + data));
+                return;
+            }
 
-                    if (checkResult) {
-                        //alert(checkResult);
-                        // TODO we should check the new package input somehow
+            self.blobClient.getMetadata(data.newValue)
+                .then(function (metadata) {
+                    if (metadata.name.toLowerCase().lastIndexOf('.webgmex') ===
+                        metadata.name.length - '.webgmex'.length) {
                         self._blobIsPackage = true;
+                        self._btnCreateBlob.disable(false);
                     } else {
-                        //self._btnCreateBlob.disable(false);
+                        throw new Error('Not .webgmex extension');
                     }
-                    self._btnCreateBlob.disable(false);
-                } else {
+                })
+                .catch(function (err) {
                     //TODO: Better feedback here.
-                    //alert('Uploaded file must be a json file (from Export branch)');
-                    //TODO for now we handle as a pakcage
-                    self._blobIsPackage = true;
-                    self._btnCreateBlob.disable(false);
-                }
-            });
+                    self._logger.error('Error in uploaded file', err);
+                });
         });
 
         this._btnDuplicate.on('click', function (event) {

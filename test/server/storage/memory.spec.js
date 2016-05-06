@@ -118,7 +118,7 @@ describe('Memory storage', function () {
             storage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(storage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger
@@ -516,7 +516,7 @@ describe('Memory storage', function () {
             storage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(storage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger
@@ -546,7 +546,7 @@ describe('Memory storage', function () {
             storage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(storage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger

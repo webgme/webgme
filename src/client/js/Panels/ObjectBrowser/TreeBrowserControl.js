@@ -7,8 +7,6 @@
 
 define(['js/logger',
     'js/NodePropertyNames',
-    'js/Utils/ExportManager',
-    'js/Utils/ImportManager',
     'js/Constants',
     'js/RegistryKeys',
     './ObjectBrowserControlBase',
@@ -16,8 +14,6 @@ define(['js/logger',
     'js/Utils/SaveToDisk'
 ], function (Logger,
              nodePropertyNames,
-             ExportManager,
-             ImportManager,
              CONSTANTS,
              REGISTRY_KEYS,
              ObjectBrowserControlBase,
@@ -450,20 +446,20 @@ define(['js/logger',
                     };
                 }
 
-                menuItems.saveProject = {
+                menuItems.exportProject = {
                     name: 'Export project',
                     icon: false,
                     items: {
                         assetless: {
                             name: 'with assets',
                             callback: function (/*key, options*/) {
-                                self._client.saveProject(self._client.getActiveProjectId(),
+                                self._client.exportProjectToFile(self._client.getActiveProjectId(),
                                     self._client.getActiveBranchName(),
-                                    self._client.getActiveCommitHash(), true, function (err, url) {
+                                    self._client.getActiveCommitHash(), true, function (err, result) {
                                         if (err) {
                                             logger.error('unable to save project', err);
                                         } else {
-                                            saveToDisk.saveUrlToDisk(url);
+                                            saveToDisk.saveUrlToDisk(result.downloadUrl);
                                         }
                                     }
                                 );
@@ -473,13 +469,13 @@ define(['js/logger',
                         assetfull: {
                             name: 'without assets',
                             callback: function (/*key, options*/) {
-                                self._client.saveProject(self._client.getActiveProjectId(),
+                                self._client.exportProjectToFile(self._client.getActiveProjectId(),
                                     self._client.getActiveBranchName(),
-                                    self._client.getActiveCommitHash(), false, function (err, url) {
+                                    self._client.getActiveCommitHash(), false, function (err, result) {
                                         if (err) {
                                             logger.error('unable to save project', err);
                                         } else {
-                                            saveToDisk.saveUrlToDisk(url);
+                                            saveToDisk.saveUrlToDisk(result.downloadUrl);
                                         }
                                     }
                                 );

@@ -71,7 +71,7 @@ describe('Library core ', function () {
             .then(function () {
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: projectName,
                         branchName: 'base',
                         gmeConfig: gmeConfig,

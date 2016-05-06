@@ -475,13 +475,13 @@ describe('standalone server', function () {
                 .then(function () {
                     return Q.allDone([
                         testFixture.importProject(safeStorage, {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: project,
                             gmeConfig: gmeConfig,
                             logger: logger
                         }),
                         testFixture.importProject(safeStorage, {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: unauthorizedProject,
                             gmeConfig: gmeConfig,
                             logger: logger
@@ -622,7 +622,7 @@ describe('standalone server', function () {
             var projectName = 'project',
                 projectId = testFixture.projectName2Id(projectName),
                 command = {
-                    command: 'exportLibrary',
+                    command: 'exportProjectToFile',
                     projectId: projectId,
                     branchName: 'master',
                     path: '' // ROOT_PATH
@@ -636,63 +636,10 @@ describe('standalone server', function () {
                         });
                 })
                 .then(function (result) {
-                    var deferred = Q.defer();
-
                     expect(typeof result).to.equal('object');
-                    expect(result).to.have.property('file');
-                    expect(typeof result.file.hash).to.equal('string');
-                    expect(result.file.url).to.include(server.getUrl());
-
-                    agent.get(result.file.url)
-                        .end(function (err, res) {
-                            expect(err).to.equal(null);
-                            expect(res.status).to.equal(200);
-                            expect(res.body.hasOwnProperty('root')).to.equal(true);
-
-                            deferred.resolve(res);
-                        });
-
-                    return deferred.promise;
-                })
-                .nodeify(done);
-        });
-
-
-        it('should be able to export an authorized project /worker/simpleResult/:id', function (done) {
-            var projectName = 'project',
-                projectId = testFixture.projectName2Id(projectName),
-                command = {
-                    command: 'exportLibrary',
-                    projectId: projectId,
-                    branchName: 'master',
-                    path: '' // ROOT_PATH
-                };
-            openSocketIo()
-                .then(function (socket) {
-                    command.webgmeToken = webgmeToken;
-                    return Q.ninvoke(socket, 'emit', 'simpleRequest', command)
-                        .finally(function () {
-                            socket.disconnect();
-                        });
-                })
-                .then(function (result) {
-                    var deferred = Q.defer();
-
-                    expect(typeof result).to.equal('object');
-                    expect(result).to.have.property('file');
-                    expect(typeof result.file.hash).to.equal('string');
-                    expect(result.file.url).to.include(server.getUrl());
-
-                    agent.get(result.file.url)
-                        .end(function (err, res) {
-                            expect(err).to.equal(null);
-                            expect(res.status).to.equal(200);
-                            expect(res.body.hasOwnProperty('root')).to.equal(true);
-
-                            deferred.resolve(res);
-                        });
-
-                    return deferred.promise;
+                    expect(result).to.have.property('hash');
+                    expect(typeof result.hash).to.equal('string');
+                    expect(result.downloadUrl).to.include('/rest/blob/download/');
                 })
                 .nodeify(done);
         });

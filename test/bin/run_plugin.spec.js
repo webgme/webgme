@@ -29,7 +29,7 @@ describe('Run plugin CLI', function () {
             })
             .then(function () {
                 return testFixture.importProject(storage, {
-                    projectSeed: './test/bin/run_plugin/project.json',
+                    projectSeed: './test/bin/run_plugin/project.webgmex',
                     projectName: projectName,
                     branchName: 'master',
                     gmeConfig: gmeConfig,

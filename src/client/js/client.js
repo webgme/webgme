@@ -18,7 +18,6 @@ define([
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter',
     'js/client/libraries',
-    'common/core/users/serialization',
     'blob/BlobClient',
     'js/client/stateloghelpers',
     'js/client/pluginmanager',
@@ -36,7 +35,6 @@ define([
              getNode,
              getNodeSetters,
              getLibraryFunctions,
-             Serialization,
              BlobClient,
              stateLogHelpers,
              PluginManager,
@@ -1845,79 +1843,7 @@ define([
                 'WebGMEGlobal.userInfo, if not the user info is available at GET /api/user');
         };
 
-        //create from file
-        this.createProjectFromFile = function (projectName, branchName, jProject, ownerId, callback) {
-            branchName = branchName || 'master';
-            if (callback === undefined && typeof ownerId === 'function') {
-                callback = ownerId;
-                ownerId = undefined;
-            }
-
-            storage.createProject(projectName, ownerId, function (err, projectId) {
-                if (err) {
-                    callback(err);
-                    return;
-                }
-                storage.openProject(projectId, function (err, project) {
-                    var core,
-                        rootNode,
-                        persisted;
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
-                    core = new Core(project, {
-                        globConf: gmeConfig,
-                        logger: logger.fork('core')
-                    });
-
-                    rootNode = core.createNode({parent: null, base: null});
-                    Serialization.import(core, rootNode, jProject, function (err) {
-                        if (err) {
-                            return callback(err);
-                        }
-
-                        persisted = core.persist(rootNode);
-
-                        storage.makeCommit(projectId,
-                            null,
-                            [],
-                            persisted.rootHash,
-                            persisted.objects,
-                            'creating project from a file',
-                            function (err, commitResult) {
-                                if (err) {
-                                    logger.error('cannot make initial commit for project creation from file');
-                                    callback(err);
-                                    return;
-                                }
-
-                                project.createBranch(branchName, commitResult.hash, function (err) {
-                                    if (err) {
-                                        logger.error('cannot set branch \'master\' for project creation from file');
-                                        callback(err);
-                                        return;
-                                    }
-
-                                    storage.closeProject(projectId, function (err) {
-                                        if (err) {
-                                            logger.error('Closing temporary project failed in project creation ' +
-                                                'from file', err);
-                                            callback(err);
-                                            return;
-                                        }
-                                        callback(null, projectId, branchName);
-                                    });
-                                });
-                            }
-                        );
-                    });
-                });
-            });
-        };
-
-        this.createProjectFromPackage = function (projectName, branchName, blobHash, ownerId, url, callback) {
+        this.importProjectFromFile = function (projectName, branchName, blobHash, ownerId, url, callback) {
             var parameters = {
                 command: 'importProjectFromFile',
                 projectName: projectName,
@@ -2008,107 +1934,6 @@ define([
             });
         };
 
-        //export branch
-        this.getExportProjectBranchUrl = function (projectId, branchName, fileName, callback) {
-            var command = {};
-            command.command = 'exportLibrary';
-            command.projectId = projectId;
-            command.branchName = branchName;
-            command.path = ROOT_PATH;
-            logger.debug('getExportProjectBranchUrl, command', command);
-            if (command.projectId && command.branchName) {
-                storage.simpleRequest(command, function (err, result) {
-                    if (err && !result) {
-                        logger.error('getExportProjectBranchUrl failed with error', err);
-                        callback(err);
-                    } else {
-                        callback(err, blobClient.getDownloadURL(result.file.hash));
-                    }
-                });
-            } else {
-                callback(new Error('invalid parameters!'));
-            }
-        };
-
-        this.getExportItemsUrl = function (paths, filename, callback) {
-            callback(new Error('getExportItemsUrl is no longer supported!'));
-        };
-
-        //library functions
-        /**
-         * Request an export of the given library.
-         * A library can be any sub-tree of the project (the whole project as well).
-         * The export will only keep the internal relation, and it just notices the targets of any
-         * outgoing relation. If those outgoing relations will not present in the source, the result
-         * could be faulty.
-         * @param {string} libraryRootPath - the absolute path of the root node of the library.
-         * @param {string} filename - the requested output name of the library.
-         * @param {funciton} callback - if successful, the result is a URL where the exported format of the library
-         * can be found.
-         */
-        this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
-            var command = {};
-            command.command = 'exportLibrary';
-            command.projectId = state.project.projectId;
-            command.hash = state.rootHash;
-            command.path = libraryRootPath;
-            if (command.projectId && command.hash) {
-                storage.simpleRequest(command, function (err, result) {
-                    if (err) {
-                        logger.error('getExportLibraryUrl failed with error', err);
-                        callback(err);
-                    } else {
-                        callback(null, blobClient.getDownloadURL(result.file.hash));
-                    }
-                });
-            } else {
-                callback(new Error('there is no open project!'));
-            }
-        };
-
-        /**
-         * Updates a library.
-         * 1, it removes the nodes that are not exists in the new library
-         * 2, adds the nodes that only exists in the new library
-         * 3, updates all properties and relations of the nodes in the library
-         * (it keeps all incoming relations, so the instance models will updates their state automatically)
-         * @param {string} libraryRootPath - the absolute path of the root node of the library.
-         * @param {object} newLibrary - JSON export format of the updated library.
-         * @param callback
-         */
-        this.updateLibrary = function (libraryRootPath, newLibrary, callback) {
-            Serialization.import(state.core, state.nodes[libraryRootPath].node, newLibrary, function (err, log) {
-                if (err) {
-                    return callback(err);
-                }
-
-                saveRoot('library update done\nlogs:\n' + log, callback);
-            });
-        };
-
-        /**
-         * Imports a library into the project under the given parent.
-         * @param {string} libraryParentPath - absolute path of the parent node of the library.
-         * @param {object} newLibrary - JSON export format of the library.
-         * @param {function} callback
-         */
-        this.addLibrary = function (libraryParentPath, newLibrary, callback) {
-            self.startTransaction('creating library as a child of ' + libraryParentPath);
-            var libraryRoot = self.createChild({
-                parentId: libraryParentPath,
-                baseId: null
-            }, 'library placeholder');
-            Serialization.import(state.core,
-                state.nodes[libraryRoot].node, newLibrary, function (err, log) {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    self.completeTransaction('library update done\nlogs:\n' + log, callback);
-                }
-            );
-        };
-
         this.dispatchAddOnNotification = function (data) {
             var notification = {
                 severity: data.notification.severity || 'info',
@@ -2168,44 +1993,20 @@ define([
             });
         };
 
-        //reassignGuids - reassigning GUIDs that collide in the given state of the project
-        this.reassignGuids = function (projectId, commitHash, callback) {
-            var command = {};
-            command.command = 'reassignGuids';
-            command.projectId = projectId;
-            command.commitHash = commitHash;
-            logger.debug('reassignGuids, command', command);
-            if (command.projectId && command.commitHash) {
-                storage.simpleRequest(command, function (err, result) {
-                    if (err && !result) {
-                        logger.error('reassignGuids failed with error', err);
-                        callback(err);
-                    } else {
-                        callback(err, result);
-                    }
-                });
-            } else {
-                callback(new Error('invalid parameters!'));
-            }
-        };
-
-        //checking if the import is in the proper format as its intended usage
-        this.checkImport = Serialization.checkImport;
-
         //package save
-        this.saveProject = function (projectId, branchName, commitHash, withAssets, callback) {
+        this.exportProjectToFile = function (projectId, branchName, commitHash, withAssets, callback) {
             var command = {};
             command.command = 'exportProjectToFile';
             command.projectId = projectId;
             command.branchName = branchName;
             command.commitHash = commitHash;
-            command.withAssets = withAssets
+            command.withAssets = withAssets;
             //command.fileName = fileName || projectId + '__' + (branchName || commitHash);
-            logger.debug('saveProject, command', command);
+            logger.debug('exportProjectToFile, command', command);
             if (command.projectId && (command.branchName || commitHash)) {
                 storage.simpleRequest(command, function (err, result) {
                     if (err && !result) {
-                        logger.error('saveProject failed with error', err);
+                        logger.error('exportProjectToFile failed with error', err);
                         callback(err);
                     } else {
                         callback(err, result);

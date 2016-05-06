@@ -34,7 +34,7 @@ describe('Plugin ConstraintEvaluator', function () {
         expect = testFixture.expect;
 
         var importParam = {
-            projectSeed: './seeds/EmptyProject.json',
+            projectSeed: './seeds/EmptyProject.webgmex',
             projectName: projectName,
             logger: logger,
             gmeConfig: gmeConfig

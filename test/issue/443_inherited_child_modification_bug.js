@@ -31,7 +31,7 @@ describe('issue443 testing', function () {
             .then(function () {
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: './seeds/ActivePanels.json',
+                        projectSeed: './seeds/ActivePanels.webgmex',
                         projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger

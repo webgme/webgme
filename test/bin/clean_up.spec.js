@@ -30,37 +30,37 @@ describe('Clean UP CLI tests', function () {
                         projectName: 'Commits2',
                         logger: logger,
                         gmeConfig: gmeConfig,
-                        projectSeed: './seeds/EmptyProject.json'
+                        projectSeed: './seeds/EmptyProject.webgmex'
                     }),
                     testFixture.importProject(storage, {
                         projectName: 'Branches2',
                         logger: logger,
                         gmeConfig: gmeConfig,
-                        projectSeed: './seeds/EmptyProject.json'
+                        projectSeed: './seeds/EmptyProject.webgmex'
                     }),
                     testFixture.importProject(storage, {
                         projectName: 'Commits1',
                         logger: logger,
                         gmeConfig: gmeConfig,
-                        projectSeed: './seeds/EmptyProject.json'
+                        projectSeed: './seeds/EmptyProject.webgmex'
                     }),
                     testFixture.importProject(storage, {
                         projectName: 'Branches1',
                         logger: logger,
                         gmeConfig: gmeConfig,
-                        projectSeed: './seeds/EmptyProject.json'
+                        projectSeed: './seeds/EmptyProject.webgmex'
                     }),
                     testFixture.importProject(storage, {
                         projectName: 'StartsWithMatch',
                         logger: logger,
                         gmeConfig: gmeConfig,
-                        projectSeed: './seeds/EmptyProject.json'
+                        projectSeed: './seeds/EmptyProject.webgmex'
                     }),
                     testFixture.importProject(storage, {
                         projectName: 'something',
                         logger: logger,
                         gmeConfig: gmeConfig,
-                        projectSeed: './seeds/EmptyProject.json'
+                        projectSeed: './seeds/EmptyProject.webgmex'
                     })]
                 );
             })

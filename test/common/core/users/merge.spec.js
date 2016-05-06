@@ -53,7 +53,7 @@ describe('merge - library', function () {
                     gmeConfig: gmeConfig,
                     branchName: 'master',
                     userName: gmeConfig.authentication.guestAccount,
-                    projectSeed: './test/common/core/users/merge/base.json'
+                    projectSeed: './test/common/core/users/merge/base.webgmex'
                 });
             })
             .then(function (result) {

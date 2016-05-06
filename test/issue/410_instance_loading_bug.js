@@ -97,7 +97,7 @@ describe('issue410 testing', function () {
 
         testFixture.importProject(storage,
             {
-                projectSeed: './test/issue/410/input.json',
+                projectSeed: './test/issue/410/input.webgmex',
                 projectName: projectName,
                 gmeConfig: gmeConfig,
                 logger: logger

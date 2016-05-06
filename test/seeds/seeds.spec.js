@@ -1,6 +1,7 @@
 /*jshint node:true, mocha:true*/
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 'use strict';
@@ -14,11 +15,7 @@ describe('Seeds', function () {
         expect = testFixture.expect,
         superagent = testFixture.superagent,
 
-        Project = testFixture.Project,
         WebGME = testFixture.WebGME,
-        serializer = WebGME.serializer, // make sure we use it through webgme
-        fs = require('fs'),
-        path = require('path'),
 
         logger = testFixture.logger.fork('seeds.spec'),
 
@@ -101,115 +98,81 @@ describe('Seeds', function () {
 
             // import seed designs
             it('should import ' + name, function (done) {
-                var data = {
-                        projectName: projectName
-                    },
-                    core,
-                    rootNode;
-
-                safeStorage.createProject(data)
-                    .then(function (dbProject) {
-                        var project = new Project(dbProject, safeStorage, logger, gmeConfig);
-                        core = new WebGME.core(project, {
-                            globConf: gmeConfig,
-                            logger: logger
-                        });
-                        rootNode = core.createNode({parent: null, base: null});
-
-                        return Q.ninvoke(serializer, 'import', core, rootNode, projectContents[name]);
-                    })
-                    .then(function (res) {
-                        //expect(res).to.match(/will be added/);
-                    })
+                testFixture.importProject(safeStorage, {
+                    projectSeed: 'seeds/' + name + '.webgmex',
+                    projectName: projectName,
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                })
                     .nodeify(done);
             });
         }
 
         function createExportTest(name) {
-            var projectName = name + 'Export';
+            var projectName = name + 'Export',
+                seedPath = 'seeds/' + name + '.webgmex';
             projects.push(projectName);
 
             // export seed designs
             it('should import/export ' + name, function (done) {
-
-                var data = {
-                        projectName: projectName
-                    },
-                    core,
-                    rootNode;
-
-                safeStorage.createProject(data)
-                    .then(function (dbProject) {
-                        var project = new Project(dbProject, safeStorage, logger, gmeConfig);
-                        core = new WebGME.core(project, {
-                            globConf: gmeConfig,
-                            logger: logger
-                        });
-                        rootNode = core.createNode({parent: null, base: null});
-
-                        return Q.ninvoke(serializer, 'import', core, rootNode, projectContents[name]);
+                testFixture.importProject(safeStorage, {
+                    projectSeed: seedPath,
+                    projectName: projectName,
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                })
+                    .then(function (ir) {
+                        return testFixture.storageUtil.getProjectJson(ir.project, {commitHash: ir.commitHash});
                     })
-                    .then(function (res) {
-                        //expect(res).to.match(/will be added/);
-
-                        return Q.ninvoke(serializer, 'export', core, rootNode);
-                    })
-                    .then(function (res) {
-                        expect(res).to.deep.equal(projectContents[name]);
+                    .then(function (projectJson) {
+                        return testFixture.compareWebgmexFiles(projectJson, seedPath, logger, gmeConfig);
                     })
                     .nodeify(done);
             });
         }
 
         function createRoundTripTest(name) {
-            var projectName = name + 'RoundTrip';
+            var projectName = name + 'RoundTrip',
+                seedPath = 'seeds/' + name + '.webgmex',
+                ir,
+                importedProjectJson;
             projects.push(projectName);
 
             // import/export/import
             it('should import/export/import ' + name, function (done) {
 
-                var data = {
-                        projectName: projectName
-                    },
-                    core,
-                    rootNode;
-
-                if (name === 'SignalFlowSystem') {
-                    this.timeout(20000);
-                }
-
-                safeStorage.createProject(data)
-                    .then(function (dbProject) {
-                        var project = new Project(dbProject, safeStorage, logger, gmeConfig);
-                        core = new WebGME.core(project, {
-                            globConf: gmeConfig,
-                            logger: logger
-                        });
-                        rootNode = core.createNode({parent: null, base: null});
-
-                        return Q.ninvoke(serializer, 'import', core, rootNode, projectContents[name]);
+                testFixture.importProject(safeStorage, {
+                    projectSeed: seedPath,
+                    projectName: projectName,
+                    branchName: 'master',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                })
+                    .then(function (ir_) {
+                        ir = ir_;
+                        return testFixture.storageUtil.getProjectJson(ir.project, {commitHash: ir.commitHash});
                     })
-                    .then(function (res) {
-                        // expect(res).to.match(/will be added/);
+                    .then(function (projectJson) {
+                        importedProjectJson = projectJson;
 
-                        return Q.ninvoke(serializer, 'export', core, rootNode);
+                        return testFixture.storageUtil.insertProjectJson(ir.project, projectJson);
                     })
-                    .then(function (res) {
-                        return Q.ninvoke(serializer, 'import', core, rootNode, res);
+                    .then(function (newCommitHash) {
+                        expect(newCommitHash).to.not.equal(ir.commitHash);
+
+                        return testFixture.storageUtil.getProjectJson(ir.project, {commitHash: newCommitHash});
                     })
-                    .then(function (res) {
-                        // no new objects, only updates.
-                        //expect(res).to.not.match(/will be added/);
-                        //expect(res).to.match(/will be updated/);
+                    .then(function (projectJson) {
+
+                        return testFixture.compareWebgmexFiles(projectJson, importedProjectJson, logger, gmeConfig);
                     })
                     .nodeify(done);
             });
         }
 
         for (i = 0; i < seedNames.length; i += 1) {
-            projectContents[seedNames[i]] = JSON.parse(fs.readFileSync(path.join('.',
-                'seeds',
-                seedNames[i] + '.json')));
             createImportTest(seedNames[i]);
             createExportTest(seedNames[i]);
             createRoundTripTest(seedNames[i]);

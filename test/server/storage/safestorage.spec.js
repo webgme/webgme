@@ -46,7 +46,7 @@ describe('SafeStorage', function () {
             safeStorage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger
@@ -411,7 +411,7 @@ describe('SafeStorage', function () {
             safeStorage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: 'getCommits',
                         gmeConfig: gmeConfig,
                         logger: logger
@@ -557,7 +557,7 @@ describe('SafeStorage', function () {
             safeStorage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: 'getHistory',
                         gmeConfig: gmeConfig,
                         logger: logger
@@ -771,7 +771,7 @@ describe('SafeStorage', function () {
             safeStorage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: 'safestorageTags',
                         gmeConfig: gmeConfig,
                         logger: logger
@@ -899,7 +899,7 @@ describe('SafeStorage', function () {
             safeStorage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: 'BRANCH_events',
                         gmeConfig: gmeConfig,
                         logger: logger
@@ -1132,7 +1132,7 @@ describe('SafeStorage', function () {
             safeStorage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: 'emitCommittedCoreObjects',
                         gmeConfig: gmeConfigEmit,
                         logger: logger
@@ -1323,7 +1323,7 @@ describe('SafeStorage', function () {
                 parameters.storage.openDatabase()
                     .then(function () {
                         return testFixture.importProject(parameters.storage, {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: parameters.projectName,
                             gmeConfig: parameters.gmeConfig,
                             logger: logger
@@ -2036,7 +2036,7 @@ describe('SafeStorage', function () {
                 storage.openDatabase()
                     .then(function () {
                         return testFixture.importProject(storage, {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: projectName,
                             gmeConfig: gmeConfig,
                             logger: logger
@@ -2156,7 +2156,7 @@ describe('SafeStorage', function () {
                 storage.openDatabase()
                     .then(function () {
                         return testFixture.importProject(storage, {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: projectName,
                             gmeConfig: gmeConfig,
                             logger: logger
@@ -2360,7 +2360,7 @@ describe('SafeStorage', function () {
             storage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(storage, {
-                        projectSeed: 'test/server/storage/safestorage/loadPaths.json',
+                        projectSeed: 'test/server/storage/safestorage/loadPaths.webgmex',
                         projectName: projectName,
                         gmeConfig: gmeConfig,
                         logger: logger

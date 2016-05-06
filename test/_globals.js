@@ -61,6 +61,7 @@ var WebGME = require('../webgme'),
     _should,
     _expect,
 
+    _REGEXP,
     _superagent,
     _mongodb,
     Q = require('q'),
@@ -252,6 +253,14 @@ Object.defineProperties(exports, {
             return _expect;
         }
     },
+    REGEXP: {
+        get: function () {
+            if (!_REGEXP) {
+                _REGEXP = requireJS('common/regexp');
+            }
+            return _REGEXP;
+        }
+    }
 });
 
 /**
@@ -406,12 +415,9 @@ function importProject(storage, parameters, callback) {
     var deferred = Q.defer(),
         extractDeferred = Q.defer(),
         BC,
-        WR,
         blobClient,
-        wr,
         storageUtils,
         cliImport,
-        isV2 = false,
         projectJson,
         branchName,
         data = {};
@@ -428,39 +434,20 @@ function importProject(storage, parameters, callback) {
         data.username = parameters.username;
     }
 
-    if (typeof parameters.projectSeed === 'string') {
-        if (parameters.projectSeed.toLowerCase().indexOf('.zip') > -1) {
-            BC = require('../src/server/middleware/blob/BlobClientWithFSBackend');
-            WR = require('../src/server/worker/workerrequests');
-            blobClient = new BC(parameters.gmeConfig, parameters.logger);
-            wr = new WR(parameters.logger, parameters.gmeConfig);
-            wr._addZippedExportToBlob(parameters.projectSeed, blobClient)
-                .then(function (projectStr) {
-                    var projectJson = JSON.parse(projectStr);
-                    extractDeferred.resolve(projectJson);
-                })
-                .catch(extractDeferred.reject);
-        } else if (parameters.projectSeed.toLowerCase().indexOf('.webgmex') > -1) {
-            isV2 = true;
-            BC = require('../src/server/middleware/blob/BlobClientWithFSBackend');
-            blobClient = new BC(parameters.gmeConfig, parameters.logger);
-            cliImport = require('../src/bin/import');
-            cliImport._addProjectPackageToBlob(blobClient, parameters.projectSeed)
-                .then(function (projectJson) {
-                    extractDeferred.resolve(projectJson);
-                })
-                .catch(extractDeferred.reject);
-        } else {
-            try {
-                extractDeferred.resolve(loadJsonFile(parameters.projectSeed));
-            } catch (e) {
-                extractDeferred.reject(e);
-            }
-        }
+    if (typeof parameters.projectSeed === 'string' && parameters.projectSeed.toLowerCase().indexOf('.webgmex')) {
+        BC = require('../src/server/middleware/blob/BlobClientWithFSBackend');
+        blobClient = new BC(parameters.gmeConfig, parameters.logger);
+        cliImport = require('../src/bin/import');
+        cliImport._addProjectPackageToBlob(blobClient, parameters.projectSeed)
+            .then(function (projectJson) {
+                extractDeferred.resolve(projectJson);
+            })
+            .catch(extractDeferred.reject);
     } else if (typeof parameters.projectSeed === 'object') {
+        extractDeferred.reject(new Error('json file:', parameters.projectSeed));
         extractDeferred.resolve(parameters.projectSeed);
     } else {
-        extractDeferred.reject('parameters.projectSeed must be filePath or object!');
+        extractDeferred.reject('parameters.projectSeed must be filePath to a webgmex file');
     }
     branchName = parameters.branchName || 'master';
     // Parameters check end.
@@ -486,57 +473,29 @@ function importProject(storage, parameters, callback) {
                     jsonProject: projectJson,
                     rootNode: null,
                     rootHash: null,
-                    blobClient: blobClient //Undefined unless importing from zip/webgmex.
-                },
-                rootNode;
+                    blobClient: blobClient
+                };
 
             project.setUser(data.username);
 
-            if (isV2) {
-                storageUtils = requireJS('common/storage/util');
-                storageUtils.insertProjectJson(project, projectJson, {
-                    commitMessage: 'project imported'
+            storageUtils = requireJS('common/storage/util');
+            storageUtils.insertProjectJson(project, projectJson, {
+                commitMessage: 'project imported'
+            })
+                .then(function (commitHash) {
+                    result.commitHash = commitHash;
+                    result.rootHash = projectJson.rootHash;
+                    return project.createBranch(branchName, commitHash);
                 })
-                    .then(function (commitHash) {
-                        result.commitHash = commitHash;
-                        result.rootHash = projectJson.rootHash;
-                        return project.createBranch(branchName, commitHash);
-                    })
-                    .then(function (result_) {
-                        result.status = result_.status;
-                        return core.loadRoot(result.rootHash);
-                    })
-                    .then(function (rootNode) {
-                        result.rootNode = rootNode;
-                        deferred.resolve(result);
-                    })
-                    .catch(deferred.reject);
-            } else {
-
-                rootNode = core.createNode({parent: null, base: null});
-                WebGME.serializer.import(core, rootNode, projectJson, function (err) {
-                    var persisted;
-                    if (err) {
-                        deferred.reject(err);
-                        return;
-                    }
-                    persisted = core.persist(rootNode);
-
-
-                    project.makeCommit(branchName, [''], persisted.rootHash, persisted.objects, 'project imported')
-                        .then(function (result_) {
-                            result.status = result_.status;
-                            result.commitHash = result_.hash;
-                            result.rootNode = rootNode;
-                            result.rootHash = persisted.rootHash;
-
-                            deferred.resolve(result);
-                        })
-                        .catch(function (err) {
-                            deferred.reject(err);
-                        });
-                });
-            }
+                .then(function (result_) {
+                    result.status = result_.status;
+                    return core.loadRoot(result.rootHash);
+                })
+                .then(function (rootNode) {
+                    result.rootNode = rootNode;
+                    deferred.resolve(result);
+                })
+                .catch(deferred.reject);
         })
         .catch(function (err) {
             deferred.reject(err);
@@ -677,6 +636,49 @@ function openSocketIo(server, agent, userName, password, token) {
     return deferred.promise;
 }
 
+/**
+ *
+ * @param {blobHash|filePath|projectJson} file1
+ * @param {blobHash|filePath|projectJson} file2
+ * @param logger
+ * @param gmeConfigParameter
+ * @param callback
+ * @returns {Q.Promise}
+ */
+function compareWebgmexFiles(file1, file2, logger, gmeConfigParameter, callback) {
+    var BC = require('../src/server/middleware/blob/BlobClientWithFSBackend'),
+        blobClient = new BC(gmeConfigParameter, logger),
+        AdmZip = require('adm-zip');
+
+    function getProjectJsonPromise(file) {
+        var deferred = Q.defer();
+        if (exports.REGEXP.BLOB_HASH.test(file) === true) {
+            deferred.promise = blobClient.getObject(file)
+                .then(function (buffer) {
+                    var zip = new AdmZip(buffer);
+                    return JSON.parse(zip.readAsText('project.json', 'utf8'));
+                });
+        } else if (typeof file === 'string') {
+            deferred.promise = Q.ninvoke(exports.fs, 'readFile', file)
+                .then(function (buffer) {
+                    var zip = new AdmZip(buffer);
+                    return JSON.parse(zip.readAsText('project.json', 'utf8'));
+                });
+        } else {
+            deferred.resolve(file);
+        }
+
+        return deferred.promise;
+    }
+
+    return Q.allDone([getProjectJsonPromise(file1), getProjectJsonPromise(file2)])
+        .then(function (projectJsons) {
+            exports.expect(projectJsons[1].hashes).to.deep.equal(projectJsons[0].hashes);
+            exports.expect(projectJsons[1].objects).to.deep.equal(projectJsons[0].objects);
+        })
+        .nodeify(callback);
+}
+
 WebGME.addToRequireJsPaths(gmeConfig);
 
 // This is for the client side test-cases (only add paths here!)
@@ -706,5 +708,7 @@ exports.openSocketIo = openSocketIo;
 exports.loadRootNodeFromCommit = loadRootNodeFromCommit;
 exports.loadNode = loadNode;
 exports.loadNode = loadNode;
+
+exports.compareWebgmexFiles = compareWebgmexFiles;
 
 module.exports = exports;

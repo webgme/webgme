@@ -15,31 +15,31 @@ var testFixture = require('./test/_globals.js'),
     server,
     logger = testFixture.logger.fork('karma.conf'),
     PROJECTS_TO_IMPORT = [
-        {name: 'ProjectAndBranchOperationsTest', path: './test-karma/client/js/client/basicProject.json'},
-        {name: 'noBranchSeedProject', path: './test-karma/client/js/client/pluginProject.json'},
-        {name: 'alreadyExists', path: './test-karma/client/js/client/pluginProject.json'},
-        {name: 'createGenericBranch', path: './test-karma/client/js/client/pluginProject.json'},
-        {name: 'removeGenericBranch', path: './test-karma/client/js/client/pluginProject.json'},
-        {name: 'metaQueryAndManipulationTest', path: './test-karma/client/js/client/metaTestProject.json'},
-        {name: 'ClientNodeInquiryTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
-        {name: 'nodeManipulationProject', path: './test-karma/client/js/client/clientNodeTestProject.json'},
-        {name: 'RESTLikeTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
-        {name: 'undoRedoTests', path: './test-karma/client/js/client/clientNodeTestProject.json'},
-        {name: 'territoryProject', path: './test-karma/client/js/client/clientNodeTestProject.json'},
-        {name: 'projectSeedSingleMaster', path: './test-karma/client/js/client/clientNodeTestProject.json'},
+        {name: 'ProjectAndBranchOperationsTest', path: './test-karma/client/js/client/basicProject.webgmex'},
+        {name: 'noBranchSeedProject', path: './test-karma/client/js/client/pluginProject.webgmex'},
+        {name: 'alreadyExists', path: './test-karma/client/js/client/pluginProject.webgmex'},
+        {name: 'createGenericBranch', path: './test-karma/client/js/client/pluginProject.webgmex'},
+        {name: 'removeGenericBranch', path: './test-karma/client/js/client/pluginProject.webgmex'},
+        {name: 'metaQueryAndManipulationTest', path: './test-karma/client/js/client/metaTestProject.webgmex'},
+        {name: 'ClientNodeInquiryTests', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
+        {name: 'nodeManipulationProject', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
+        {name: 'RESTLikeTests', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
+        {name: 'undoRedoTests', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
+        {name: 'territoryProject', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
+        {name: 'projectSeedSingleMaster', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
         {
             name: 'projectSeedSingleNonMaster',
-            path: './test-karma/client/js/client/clientNodeTestProject.json',
+            path: './test-karma/client/js/client/clientNodeTestProject.webgmex',
             branches: ['other']
         },
         {
             name: 'projectSeedMultiple',
-            path: './test-karma/client/js/client/clientNodeTestProject.json',
+            path: './test-karma/client/js/client/clientNodeTestProject.webgmex',
             branches: ['master', 'other']
         },
-        {name: 'pluginProject', path: './test-karma/client/js/client/pluginProject.json'},
-        {name: 'branchWatcher', path: './test-karma/client/js/client/pluginProject.json'},
-        {name: 'branchStatus', path: './test-karma/client/js/client/pluginProject.json'}
+        {name: 'pluginProject', path: './test-karma/client/js/client/pluginProject.webgmex'},
+        {name: 'branchWatcher', path: './test-karma/client/js/client/pluginProject.webgmex'},
+        {name: 'branchStatus', path: './test-karma/client/js/client/pluginProject.webgmex'}
     ];
 
 (function initializeServer() {
@@ -148,7 +148,7 @@ module.exports = function (config) {
             {pattern: 'src/*.js', included: false},
             {pattern: 'utils/build/empty/empty.js', included: false},
             {pattern: 'test/plugin/scenarios/plugins/**/*', included: false},
-            {pattern: 'seeds/*.json', included: false}, //seeds
+            {pattern: 'seeds/*.webgmex', included: false}, //seeds
             {pattern: 'test-karma/**/*.spec.js', included: false},
             // {pattern: 'test-karma/**/*.inc.js', included: false}, //test include scripts
             {pattern: 'test-karma/**/*.json', included: false}, //test assets

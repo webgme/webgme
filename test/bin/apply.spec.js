@@ -37,7 +37,7 @@ describe('apply CLI tests', function () {
                     gmeConfig: gmeConfig,
                     branchName: 'master',
                     username: gmeConfig.authentication.guestAccount,
-                    projectSeed: './test/bin/apply/base001.json'
+                    projectSeed: './test/bin/apply/base001.webgmex'
                 });
             })
             .nodeify(done);

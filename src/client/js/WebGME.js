@@ -13,8 +13,6 @@ define([
         'js/Panels/MetaEditor/MetaEditorConstants',
         'js/Utils/GMEConcepts',
         'js/Utils/GMEVisualConcepts',
-        'js/Utils/ExportManager',
-        'js/Utils/ImportManager',
         'js/Utils/StateManager',
         'js/Utils/WebGMEUrlManager',
         'js/LayoutManager/LayoutManager',
@@ -37,8 +35,6 @@ define([
                  METACONSTANTS,
                  GMEConcepts,
                  GMEVisualConcepts,
-                 ExportManager,
-                 ImportManager,
                  StateManager,
                  WebGMEUrlManager,
                  LayoutManager,
@@ -126,12 +122,6 @@ define([
                 GMEVisualConcepts.initialize(client);
 
                 PreferencesHelper.initialize(client);
-
-                ExportManager.initialize(client);
-                ImportManager.initialize(client);
-
-                WebGMEGlobal.ExportManager = ExportManager;
-                WebGMEGlobal.ImportManager = ImportManager;
 
                 //hook up branch changed to set read-only mode on panels
                 client.addEventListener(CLIENT_CONSTANTS.BRANCH_CHANGED, function (__project, branchName) {

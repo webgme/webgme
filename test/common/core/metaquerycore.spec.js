@@ -39,7 +39,7 @@ describe('meta query core', function () {
             })
             .then(function () {
                 return testFixture.importProject(storage, {
-                    projectSeed: 'test/common/core/metacachecore/project.json',
+                    projectSeed: 'test/common/core/metacachecore/project.webgmex',
                     projectName: projectName,
                     branchName: 'base',
                     gmeConfig: gmeConfig,

@@ -1025,16 +1025,14 @@ function createAPI(app, mountPath, middlewareOpts) {
      * Creating project by seed
      *
      * @param {string} req.body.type - sets if the seed is coming from file (==='file') source or from some
-     *  existing project(==='db') or from a blob (==='blob')
+     *  existing project(==='db').
      * @param {string} req.body.seedName - the name or rather id of the seed
      *          db - projectId
      *          seed - name of the seed-file (no extension - matches json file)
-     *          blob - hash of metadata for uploaded blob file
      * @param {string} [req.body.seedBranch='master'] - for 'db' optional branch name to seed from.
      *
      * @example {type:'file', seedName:'EmptyProject'}
      * @example {type:'db', seedName:'me+myOldProject', seedBranch:'release'}
-     * @example {type:'blob', seedName:'d3e41b46b5146a97f865eefd813bb6228682d91f'}
      */
     router.put('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),

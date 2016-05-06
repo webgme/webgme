@@ -69,22 +69,28 @@ define([
             'aTextFile.txt': 'This is a text file.'
         };
 
-        artifact.addFiles(filesToAdd)
-            .then(function (hashes) {
-                self.logger.info('Files (metadata) have hashes: ' + hashes.toString());
+        self.sendNotification('Configuration Artifact Running', function (err) {
+            if (err) {
+                self.logger.error('Failed sending notification');
+            }
 
-                return artifact.save();
-            })
-            .then(function (artifactHash) {
-                self.logger.info('Artifact (metadata) has hash: ' + artifactHash);
-                self.result.setSuccess(true);
-                self.result.addArtifact(artifactHash);
-                callback(null, self.result);
-            })
-            .catch(function (err) {
-                self.result.setSuccess(false);
-                callback(err, self.result);
-            });
+            artifact.addFiles(filesToAdd)
+                .then(function (hashes) {
+                    self.logger.info('Files (metadata) have hashes: ' + hashes.toString());
+
+                    return artifact.save();
+                })
+                .then(function (artifactHash) {
+                    self.logger.info('Artifact (metadata) has hash: ' + artifactHash);
+                    self.result.setSuccess(true);
+                    self.result.addArtifact(artifactHash);
+                    callback(null, self.result);
+                })
+                .catch(function (err) {
+                    self.result.setSuccess(false);
+                    callback(err, self.result);
+                });
+        });
     };
 
     return ConfigurationArtifact;
