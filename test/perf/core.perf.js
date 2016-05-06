@@ -1,13 +1,13 @@
 /* jshint node:true, mocha: true*/
 
 /**
+ * TODO: This is outdated as serializer does not exist anymore.
  * @author pmeijer / https://github.com/pmeijer
  */
 var testFixture = require('../_globals.js'),
     PROJECT_FILE = 'seeds/ActivePanels.webgmex',
     jsonPatcher = testFixture.requirejs('common/util/jsonPatcher'),
     getPatchObject = testFixture.requirejs('common/storage/util').getPatchObject,
-    serializer = testFixture.requirejs('common/core/users/serialization'),
     MetaUser = testFixture.requirejs('common/core/users/meta');
 //"C:\\Users\\Zsolt\\Downloads\\Nagx3.json"
 

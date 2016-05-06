@@ -200,7 +200,7 @@ describe('GME client', function () {
 
             //simple request commands
             expect(client.hasOwnProperty('runServerPlugin')).to.equal(true, 'runServerPlugin');
-            expect(client.hasOwnProperty('createProjectFromFile')).to.equal(true, 'createProjectFromFile');
+            expect(client.hasOwnProperty('importProjectFromFile')).to.equal(true, 'importProjectFromFile');
             expect(client.hasOwnProperty('seedProject')).to.equal(true, 'seedProject');
             expect(client.hasOwnProperty('updateLibrary')).to.equal(true, 'updateLibrary');
             expect(client.hasOwnProperty('addLibrary')).to.equal(true, 'addLibrary');

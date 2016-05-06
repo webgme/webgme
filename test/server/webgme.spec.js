@@ -23,7 +23,6 @@ describe('webgme', function () {
         expect(webGME).to.have.property('getStorage');
         expect(webGME).to.have.property('getGmeAuth');
         expect(webGME).to.have.property('core');
-        expect(webGME).to.have.property('serializer');
         expect(webGME).to.have.property('Logger');
         expect(webGME).to.have.property('REGEXP');
     });

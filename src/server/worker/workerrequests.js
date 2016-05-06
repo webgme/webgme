@@ -7,20 +7,16 @@
 
 var Core = requireJS('common/core/coreQ'),
     Storage = requireJS('common/storage/nodestorage'),
-    Serialization = requireJS('common/core/users/serialization'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
     merger = requireJS('common/core/users/merge'),
     BlobClientClass = requireJS('blob/BlobClient'),
     blobUtil = requireJS('blob/util'),
     constraint = requireJS('common/core/users/constraintchecker'),
-    UINT = requireJS('common/util/uint'),
     webgmeUtils = require('../../utils'),
     storageUtils = requireJS('common/storage/util'),
 
 // JsZip can't for some reason extract the exported files..
     AdmZip = require('adm-zip'),
-
-    FS = require('fs'),
     Q = require('q'),
 
     PluginNodeManager = require('../../plugin/nodemanager');
