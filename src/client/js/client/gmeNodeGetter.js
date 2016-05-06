@@ -116,7 +116,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     
     GMENode.prototype.getPointerId = function (name) {
         return this.getPointer(name).to;
-    }
+    };
 
     GMENode.prototype.getOwnPointer = function (name) {
         return {to: this._state.core.getOwnPointerPath(this._state.nodes[this._id].node, name), from: []};
@@ -356,6 +356,14 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
 
     GMENode.prototype.canSetAsMixin = function (mixinPath) {
         return this._state.core.canSetAsMixin(this._state.nodes[this._id].node, mixinPath);
+    };
+
+    //Name space
+    /**
+     * @returns {string} - The namespace, i.e., the name of the library this node is in.
+     */
+    GMENode.prototype.getNamespace = function () {
+        return this._state.core.getNamespace(this._state.nodes[this._id].node);
     };
 
     //getNode
