@@ -4,7 +4,7 @@
 
 #Getting started
 
-WebGME require [NodeJS](https://nodejs.org/) (0.12 <= version < 5) and [MongoDB](https://www.mongodb.com/) (version >= 2.6) installed on the host system (the server).
+WebGME requires [NodeJS](https://nodejs.org/) (0.12 <= version, CI tests are performed on versions 4.x, 6.x) and [MongoDB](https://www.mongodb.com/) (version >= 2.6) installed on the host system (the server).
 In addition the npm installation requires [Git](https://git-scm.com) to be installed and available in PATH.
 
 Options to deploy and run WebGME:
@@ -33,8 +33,8 @@ Each script supports the `--help` or `-h` command line parameter, which will lis
 * `merge.js`: merges two branches if there are no conflicts.
 * `usermanager.js`: manages users, organizations, and project authorization (read, write, delete).
 * `clean_up.js`: lists/removes projects based on supplied criteria (commits, branches, regex etc.).
-* `export.js`: exports a (snapshot of a) branch into a json file.
-* `import.js`: imports a (snapshot of a) branch into a webgme project.
+* `export.js`: exports a (snapshot of a) branch into a webgmex-file.
+* `import.js`: imports a (snapshot of a) branch (from webgmex-file) into a webgme project.
 
 #Extension Components
 * [Plugins](./src/plugin/README.md) - Model interpretation for e.g. code generation.
