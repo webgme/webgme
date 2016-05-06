@@ -62,11 +62,26 @@ define([
             currentConfig = self.getCurrentConfig();
 
         if (currentConfig.type === 'ImportProject') {
-            self.importOrUpdateLibrary(currentConfig, callback);
+            self.sendNotification('Importing Project', function (err) {
+                if (err) {
+                    self.logger.error('Failed sending notification');
+                }
+                self.importOrUpdateLibrary(currentConfig, callback);
+            });
         } else if (currentConfig.type === 'ImportLibrary') {
-            self.importOrUpdateLibrary(currentConfig, callback);
+            self.sendNotification('Importing Library', function (err) {
+                if (err) {
+                    self.logger.error('Failed sending notification');
+                }
+                self.importOrUpdateLibrary(currentConfig, callback);
+            });
         } else if (currentConfig.type === 'UpdateLibrary') {
-            self.importOrUpdateLibrary(currentConfig, callback);
+            self.sendNotification('Updating Library', function (err) {
+                if (err) {
+                    self.logger.error('Failed sending notification');
+                }
+                self.importOrUpdateLibrary(currentConfig, callback);
+            });
         } else {
             callback(new Error('Unexpected type ' + currentConfig.type), self.result);
         }

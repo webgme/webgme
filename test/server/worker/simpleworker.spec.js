@@ -122,7 +122,7 @@ describe('Simple worker', function () {
                     }
                 );
             })
-            .then(function (result) {
+            .then(function (/*result*/) {
 
                 return testFixture.importProject(storage,
                     {
@@ -155,7 +155,7 @@ describe('Simple worker', function () {
 
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: './test/common/core/users/meta/metaRules.json',
+                        projectSeed: './test/common/core/users/meta/metaRules.webgmex',
                         projectName: constraintProjectName,
                         branchName: 'master',
                         logger: logger,
@@ -765,7 +765,7 @@ describe('Simple worker', function () {
                 socket.on('NOTIFICATION', function (data) {
                     try {
                         expect(data.type).to.equal('PLUGIN_NOTIFICATION');
-                        expect(data.pluginName).to.equal('Export, Import and Update Library');
+                        expect(data.pluginName).to.equal('Configuration and Artifacts');
                         expect(typeof data.notification.message).to.equal('string');
                         deferred.resolve();
                     } catch (err) {
@@ -776,7 +776,7 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.executePlugin,
-                    name: 'ExportImport',
+                    name: 'ConfigurationArtifact',
                     socketId: '/#' + socket.id,
                     webGMESessionId: webGMESessionId,
                     context: pluginContext
@@ -816,7 +816,7 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.executePlugin,
-                    name: 'ExportImport',
+                    name: 'ConfigurationArtifact',
                     socketId: 'nonExistingSocket',
                     webGMESessionId: webGMESessionId,
                     context: pluginContext
