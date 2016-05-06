@@ -886,7 +886,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {object} parameters
      * @param {function} callback
      */
-    function saveProjectIntoFile(webgmeToken, parameters, callback) {
+    function saveProjectToFile(webgmeToken, parameters, callback) {
         getConnectedStorage(webgmeToken)
             .then(function (storage) {
                 var deferred = Q.defer();
@@ -1032,9 +1032,19 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return Q.nfcall(_createProjectFromRawJson,
                     storage, parameters.projectName, parameters.ownerId, parameters.branchName, jsonProject);
             })
+            .catch(function (err) {
+                logger.error('importProjectFromFile failed with error', err);
+                throw err;
+            })
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param webgmeToken
+     * @param parameters
+     * @param callback
+     */
     function addLibrary(webgmeToken, parameters, callback) {
         var jsonProject,
             context,
@@ -1144,9 +1154,19 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
                 return deferred.promise;
             })
+            .catch(function (err) {
+                logger.error('addLibrary failed with error', err);
+                throw err;
+            })
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param webgmeToken
+     * @param parameters
+     * @param callback
+     */
     function updateLibrary(webgmeToken, parameters, callback) {
         var projectId = parameters.projectId,
             context,
@@ -1263,6 +1283,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
                 return deferred.promise;
             })
+            .catch(function (err) {
+                logger.error('updateLibrary failed with error', err);
+                throw err;
+            })
             .nodeify(callback);
     }
 
@@ -1276,7 +1300,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         // This is exposed for unit tests..
         _addZippedExportToBlob: _addZippedExportToBlob,
         reassignGuids: reassignGuids,
-        saveProjectIntoFile: saveProjectIntoFile,
+        saveProjectToFile: saveProjectToFile,
         importProjectFromFile: importProjectFromFile,
         addLibrary: addLibrary,
         updateLibrary: updateLibrary

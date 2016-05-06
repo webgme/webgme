@@ -144,13 +144,13 @@ process.on('message', function (parameters) {
                 });
             });
     } else if (parameters.command === CONSTANTS.workerCommands.exportProjectToFile) {
-        wr.saveProjectIntoFile(parameters.webgmeToken, parameters, function (err, result) {
+        wr.saveProjectToFile(parameters.webgmeToken, parameters, function (err, result) {
                 safeSend({
                     pid: process.pid,
                     type: CONSTANTS.msgTypes.result,
                     error: err ? err.message : null,
                     result: result
-                })
+                });
             }
         );
     } else if (parameters.command === CONSTANTS.workerCommands.importProjectFromFile) {

@@ -1917,7 +1917,7 @@ define([
             });
         };
 
-        this.createProjectFromPackage = function (projectName, branchName, blobHash, ownerId, url, callback) {
+        this.importProjectFromFile = function (projectName, branchName, blobHash, ownerId, url, callback) {
             var parameters = {
                 command: 'importProjectFromFile',
                 projectName: projectName,
@@ -2193,15 +2193,15 @@ define([
         this.checkImport = Serialization.checkImport;
 
         //package save
-        this.saveProject = function (projectId, branchName, commitHash, withAssets, callback) {
+        this.exportProjectToFile = function (projectId, branchName, commitHash, withAssets, callback) {
             var command = {};
             command.command = 'exportProjectToFile';
             command.projectId = projectId;
             command.branchName = branchName;
             command.commitHash = commitHash;
-            command.withAssets = withAssets
+            command.withAssets = withAssets;
             //command.fileName = fileName || projectId + '__' + (branchName || commitHash);
-            logger.debug('saveProject, command', command);
+            logger.debug('exportProjectToFile, command', command);
             if (command.projectId && (command.branchName || commitHash)) {
                 storage.simpleRequest(command, function (err, result) {
                     if (err && !result) {

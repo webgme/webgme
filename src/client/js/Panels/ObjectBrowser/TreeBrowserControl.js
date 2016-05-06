@@ -450,14 +450,14 @@ define(['js/logger',
                     };
                 }
 
-                menuItems.saveProject = {
+                menuItems.exportProject = {
                     name: 'Export project',
                     icon: false,
                     items: {
                         assetless: {
                             name: 'with assets',
                             callback: function (/*key, options*/) {
-                                self._client.saveProject(self._client.getActiveProjectId(),
+                                self._client.exportProjectToFile(self._client.getActiveProjectId(),
                                     self._client.getActiveBranchName(),
                                     self._client.getActiveCommitHash(), true, function (err, url) {
                                         if (err) {
@@ -473,7 +473,7 @@ define(['js/logger',
                         assetfull: {
                             name: 'without assets',
                             callback: function (/*key, options*/) {
-                                self._client.saveProject(self._client.getActiveProjectId(),
+                                self._client.exportProjectToFile(self._client.getActiveProjectId(),
                                     self._client.getActiveBranchName(),
                                     self._client.getActiveCommitHash(), false, function (err, url) {
                                         if (err) {

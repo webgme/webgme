@@ -693,7 +693,7 @@ define([
         } else if (type === 'package') {
             //TODO check the possibility of using url
             self._logger.debug('Importing package: ');
-            self._client.createProjectFromPackage(projectName, 'master', seedName,
+            self._client.importProjectFromFile(projectName, 'master', seedName,
                 self._ownerId, '', function (err, projectId) {
                     if (err) {
                         self._logger.error('Failed to import project package', err);

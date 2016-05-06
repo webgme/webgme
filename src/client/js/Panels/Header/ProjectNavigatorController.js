@@ -674,7 +674,7 @@ define([
         if (self.gmeClient) {
             exportBranch = function (data) {
                 // By default the export contains assets.
-                self.gmeClient.saveProject(self.gmeClient.getActiveProjectId(),
+                self.gmeClient.exportProjectToFile(self.gmeClient.getActiveProjectId(),
                     self.gmeClient.getActiveBranchName(),
                     self.gmeClient.getActiveCommitHash(), true, function (err, url) {
                         if (err) {
