@@ -9,14 +9,11 @@ var Core = requireJS('common/core/coreQ'),
     Storage = requireJS('common/storage/nodestorage'),
     Serialization = requireJS('common/core/users/serialization'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
-    CORE_CONSTANTS = requireJS('common/core/constants'),
     merger = requireJS('common/core/users/merge'),
     BlobClientClass = requireJS('blob/BlobClient'),
     blobUtil = requireJS('blob/util'),
     constraint = requireJS('common/core/users/constraintchecker'),
     UINT = requireJS('common/util/uint'),
-    GUID = requireJS('common/util/guid'),
-    BlobConfig = requireJS('blob/BlobConfig'),
     webgmeUtils = require('../../utils'),
     storageUtils = requireJS('common/storage/util'),
 
@@ -99,211 +96,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function _checkNodeForGuidCollision(core, node, guidsSoFar) {
-        var guid = core.getGuid(node),
-            newGuid;
-
-        if (guidsSoFar[guid]) {
-            newGuid = GUID().replace(/-/g, ''); //TODO should we need global utility for this??
-            logger.info('new guid [' + newGuid + '] has been generated for node [' + core.getPath(node) + ']');
-            core.setAttribute(node, CORE_CONSTANTS.OWN_GUID, newGuid);
-            guidsSoFar[core.getGuid(node)] = true;
-        } else {
-            guidsSoFar[guid] = true;
-        }
-    }
-
-    function _checkGuidsNodeByNode(core, root) {
-        var taskQueue = [''],
-            working = false,
-            timerId,
-            deferred = Q.defer(),
-            guids = {};
-
-        timerId = setInterval(function () {
-            var task;
-            if (!working) {
-                task = taskQueue.shift();
-
-                if (typeof task !== 'string') {
-                    //we are done
-                    clearInterval(timerId);
-                    deferred.resolve();
-                    return;
-                }
-
-                working = true;
-                core.loadByPath(root, task, function (err, node) {
-                    if (!err && node) {
-                        _checkNodeForGuidCollision(core, node, guids);
-                        taskQueue = taskQueue.concat(core.getOwnChildrenPaths(node));
-                    } else {
-                        logger.error('[' + task + '] cannot be loaded and will be skipped during check');
-                    }
-                    working = false;
-                });
-            }
-        }, 1);
-
-        return deferred.promise;
-    }
-
-    // Export functionality
-    function _serializeToBlob(webgmeToken, project, rootHash, libraryRootPath, fileName, callback) {
-        var core = new Core(project, {
-                globConf: gmeConfig,
-                logger: logger.fork('core')
-            }),
-            blobClient = new BlobClientClass({
-                serverPort: gmeConfig.server.port,
-                httpsecure: false,
-                server: '127.0.0.1',
-                webgmeToken: webgmeToken,
-                logger: logger.fork('BlobClient')
-            }),
-            artie;
-
-        core.loadRoot(rootHash, function (err, rootNode) {
-            if (err) {
-                callback(new Error(err));
-                return;
-            }
-
-            core.loadByPath(rootNode, libraryRootPath, function (err, libraryRoot) {
-                if (err) {
-                    callback(new Error(err));
-                    return;
-                }
-                Serialization.export(core, libraryRoot, function (error, projectJson) {
-                    if (!projectJson) {
-                        callback(new Error(error || 'no output have been generated as a result of export!'));
-                        return;
-                    }
-
-                    artie = blobClient.createArtifact('exported');
-                    artie.addFile(fileName, JSON.stringify(projectJson, null, 4), function (err, fileHash) {
-                        if (err) {
-                            callback(new Error(err));
-                            return;
-                        }
-                        artie.save(function (err, artifactHash) {
-                            var result;
-                            if (err) {
-                                callback(new Error(err));
-                                return;
-                            }
-
-                            result = {
-                                file: {
-                                    hash: fileHash,
-                                    url: blobClient.getDownloadURL(fileHash)
-                                },
-                                artifact: {
-                                    hash: artifactHash,
-                                    url: blobClient.getDownloadURL(artifactHash)
-                                }
-                            };
-
-                            // We keep the original errors of export.
-                            if (error) {
-                                callback(new Error(error), result);
-                            } else {
-                                callback(null, result);
-                            }
-                        });
-                    });
-                });
-            });
-        });
-    }
-
-    /**
-     *
-     * @param {string} webgmeToken
-     * @param {string} projectId
-     * @param {string} libraryRootPath
-     * @param {object} parameters - Specify one from where to export. If more than one given the precedence order is:
-     * hash, commit, branchName.
-     * @param {string} [parameters.hash] - Root hash to export from.
-     * @param {string} [parameters.commit] - Commit hash to export from.
-     * @param {string} [parameters.branchName] - Branch to export from.
-     * @param {function} callback
-     */
-    function exportLibrary(webgmeToken, projectId, libraryRootPath, parameters, callback) {
-        var storage,
-            finish = function (err, result) {
-                if (err) {
-                    err = err instanceof Error ? err : new Error(err);
-                    logger.error('exportLibrary [' + projectId + '] failed with error', err);
-                } else {
-                    logger.debug('exportLibrary [' + projectId + '] completed fileUrl:', result.file.url);
-                }
-                storage.close(function (closeErr) {
-                    callback(err || closeErr, result);
-                });
-            };
-
-        logger.debug('exportLibrary', projectId);
-
-        if (typeof projectId !== 'string' ||
-            typeof libraryRootPath !== 'string' || !(typeof parameters.hash === 'string' ||
-            typeof parameters.branchName === 'string' ||
-            typeof parameters.commit === 'string')
-        ) {
-            callback(new Error('invalid parameters: ' + JSON.stringify(parameters)));
-            return;
-        }
-
-        getConnectedStorage(webgmeToken)
-            .then(function (storage_) {
-                storage = storage_;
-
-                storage.openProject(projectId, function (err, project, branches) {
-                    var commitHash,
-                        fileName = projectId + '_',
-                        fileEnd = libraryRootPath === '' ? '.json' : '_lib.json';
-                    if (err) {
-                        finish(err);
-                        return;
-                    }
-
-                    if (parameters.hash) {
-                        fileName += parameters.hash.substring(1, 7) + fileEnd;
-                        logger.debug('RootHash was given fileName:', fileName);
-                        _serializeToBlob(webgmeToken, project, parameters.hash, libraryRootPath, fileName, finish);
-                        return;
-                    }
-
-                    if (parameters.commit) {
-                        fileName += parameters.commit.substring(1, 7) + fileEnd;
-                        commitHash = parameters.commit;
-                        logger.debug('CommitHash was given fileName:', fileName);
-                    } else {
-                        commitHash = branches[parameters.branchName];
-                        if (!commitHash) {
-                            logger.error('Branches: ', {metadata: branches});
-                            finish(new Error('Branch not found, projectId: "' + projectId + '", branchName: "' +
-                                parameters.branchName + '".'));
-                            return;
-                        }
-                        fileName += parameters.branchName + fileEnd;
-                        logger.debug('BranchName was given', fileName);
-                    }
-
-                    project.loadObject(commitHash, function (err, commitObject) {
-                        if (err) {
-                            finish(new Error('Failed loading commitHash: ' + err));
-                            return;
-                        }
-
-                        _serializeToBlob(webgmeToken, project, commitObject.root, libraryRootPath, fileName,
-                            finish);
-                    });
-                });
-            })
-            .catch(finish);
-    }
-
     /**
      * Executes a plugin.
      *
@@ -314,7 +106,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} context.managerConfig.project - id of project.
      * @param {string} context.managerConfig.activeNode - path to activeNode.
      * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
-     * @param {string} [context.managerConfig.commit] - commit hash to start the plugin from (if falsy will use HEAD of branchName)
+     * @param {string} [context.managerConfig.commit] - commit hash to start the plugin from
+     * (if falsy will use HEAD of branchName)
      * @param {string} context.managerConfig.branchName - branch which to save to.
      * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
      * @param {function} callback
@@ -399,9 +192,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     function _findSeedFilename(name) {
         var deferred = Q.defer(),
             seedDictionary = webgmeUtils.getSeedDictionary(gmeConfig),
-            i,
-            filename,
-            names;
+            filename;
 
         // TODO: maybe read the dirs async.
         // It uses a promise here to avoid extra try-catch in _getSeedFromFile..
@@ -457,22 +248,13 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return _findSeedFilename(name)
             .then(function (filename) {
                 var blobClient,
-                    legacy = true,
                     deferred;
 
-                if (filename.toLowerCase().indexOf('.json') > -1) {
-                    logger.debug('Found .json seed at:', filename);
-                    return Q.ninvoke(FS, 'readFile', filename);
-                } else if (filename.toLowerCase().indexOf('.zip') > -1 ||
-                    filename.toLowerCase().indexOf('.webgmex') > -1) {
+                if (filename.toLowerCase().indexOf('.webgmex') > -1) {
                     deferred = Q.defer();
 
                     if (filename.toLowerCase().indexOf('.webgmex') > -1) {
                         logger.debug('Found .webgmex seed at:', filename);
-                        legacy = false;
-                    } else {
-                        logger.debug('Found .zip seed at:', filename);
-
                     }
 
                     blobClient = new BlobClientClass({
@@ -485,14 +267,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
                     _addZippedExportToBlob(filename, blobClient)
                         .then(function (jsonProject) {
-                            if (legacy) {
-                                deferred.resolve(jsonProject);
-                            } else {
-                                deferred.resolve(JSON.stringify({
-                                    seed: JSON.parse(jsonProject),
-                                    isLegacy: false
-                                }));
-                            }
+                            deferred.resolve(JSON.stringify({
+                                seed: JSON.parse(jsonProject),
+                            }));
                         })
                         .catch(deferred.reject);
 
@@ -531,77 +308,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function _getSeedFromBlob(hash, webgmeToken) {
-        var blobClient = new BlobClientClass({
-            serverPort: gmeConfig.server.port,
-            httpsecure: false,
-            server: '127.0.0.1',
-            webgmeToken: webgmeToken,
-            logger: logger.fork('BlobClient')
-        });
-
-        return Q.ninvoke(blobClient, 'getMetadata', hash)
-            .then(function (metadata) {
-                if (metadata.mime !== 'application/json') {
-                    throw new Error('Wrong file type of blob seed: ' + JSON.stringify(metadata));
-                }
-
-                return Q.ninvoke(blobClient, 'getObject', hash);
-            })
-            .then(function (buffer) {
-                var jsonProj = JSON.parse(UINT.uint8ArrayToString(new Uint8Array(buffer)));
-
-                if (jsonProj.root && jsonProj.root.path === '') {
-                    return jsonProj;
-                } else {
-                    throw new Error('Provided blob-seed json was not an exported project');
-                }
-            });
-    }
-
-    function _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, seedName, callback) {
-        logger.debug('_createProject');
-        storage.createProject(projectName, ownerId, function (err, projectId) {
-            if (err) {
-                callback(err);
-                return;
-            }
-            storage.openProject(projectId, function (err, project) {
-                var core,
-                    rootNode;
-                if (err) {
-                    callback(err);
-                    return;
-                }
-
-                core = new Core(project, {
-                    globConf: gmeConfig,
-                    logger: logger.fork('core')
-                });
-                rootNode = core.createNode({parent: null, base: null});
-
-                Serialization.import(core, rootNode, jsonSeed, function (err) {
-                    if (err) {
-                        callback(new Error(err));
-                        return;
-                    }
-                    var persisted = core.persist(rootNode);
-
-                    project.makeCommit(null, [], persisted.rootHash, persisted.objects,
-                            'seeding project[' + seedName + ']')
-                        .then(function (commitResult) {
-                            logger.debug('seeding project, commitResult:', {metadata: commitResult});
-                            return project.createBranch('master', commitResult.hash);
-                        })
-                        .then(function () {
-                            callback(null, {projectId: projectId});
-                        })
-                        .catch(callback);
-                });
-            });
-        });
-    }
-
     /**
      *
      * @param {string} webgmeToken
@@ -615,13 +321,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
      */
     function seedProject(webgmeToken, projectName, ownerId, parameters, callback) {
         var storage,
-            legacy = true,
             finish = function (err, result) {
-                if (legacy === false) {
-                    result = {
-                        projectId: result
-                    };
-                }
+                result = {
+                    projectId: result
+                };
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);
                     logger.error('seeding [' + parameters.seedName + '] failed with error', err);
@@ -652,21 +355,15 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 } else if (parameters.type === 'db') {
                     logger.debug('seedProject - seeding from existing project:', parameters.seedName);
                     return _getSeedFromProject(storage, parameters.seedName, parameters.seedBranch);
-                } else if (parameters.type === 'blob') {
-                    return _getSeedFromBlob(parameters.seedName, webgmeToken);
+                //} else if (parameters.type === 'blob') {
+                //    return _getSeedFromBlob(parameters.seedName, webgmeToken);
                 } else {
                     throw new Error('Unknown seeding type [' + parameters.type + ']');
                 }
             })
             .then(function (jsonSeed) {
-                if (jsonSeed && jsonSeed.seed && jsonSeed.isLegacy === false) {
-                    legacy = false;
-                    //TODO it should be changed so that all functions above returns with the new format of project
-                    _createProjectFromRawJson(storage, projectName, ownerId,
-                        parameters.branchName || 'master', jsonSeed.seed, finish);
-                } else {
-                    _createProjectFromSeed(storage, projectName, ownerId, jsonSeed, parameters.seedName, finish);
-                }
+                _createProjectFromRawJson(storage, projectName, ownerId,
+                    parameters.branchName || 'master', jsonSeed.seed, finish);
             })
             .catch(finish);
     }
@@ -832,61 +529,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
     /**
      *
      * @param {string} webgmeToken
-     * @param {string} projectId
-     * @param {object} commitHash - Starting state of the project
-     * @param {function} callback
-     */
-    function reassignGuids(webgmeToken, projectId, commitHash, callback) {
-        var storage,
-            checkType,
-            context,
-            result,
-            finish = function (err) {
-                if (err) {
-                    err = err instanceof Error ? err : new Error(err);
-                    logger.error('reassignGuids [' + projectId + '] failed with error', err);
-                } else {
-                    logger.info('reassignGuids [' + projectId + '] completed');
-                }
-                storage.close(function (closeErr) {
-                    callback(err || closeErr, result);
-                });
-            };
-
-        logger.info('reassignGuids ' + projectId);
-
-        getConnectedStorage(webgmeToken)
-            .then(function (storage_) {
-                storage = storage_;
-                return _getCoreAndRootNode(storage, projectId, commitHash);
-            })
-            .then(function (res) {
-                context = res;
-                return _checkGuidsNodeByNode(res.core, res.rootNode);
-            })
-            .then(function () {
-                var persisted = context.core.persist(context.rootNode);
-
-                return context.project.makeCommit(null, [commitHash], persisted.rootHash, persisted.objects,
-                    'Guid reallocation');
-            })
-            .then(function (commitResult) {
-                var branchName = 'guid_' + (new Date()).getTime();
-
-                result = branchName;
-                logger.debug('put guid reassign result into branch[' + branchName + ']');
-                return context.project.createBranch(branchName, commitResult.hash);
-            })
-            .nodeify(finish);
-    }
-
-    /**
-     *
-     * @param {string} webgmeToken
      * @param {object} parameters
      * @param {function} callback
      */
-    function saveProjectToFile(webgmeToken, parameters, callback) {
+    function exportProjectToFile(webgmeToken, parameters, callback) {
         getConnectedStorage(webgmeToken)
             .then(function (storage) {
                 var deferred = Q.defer();
@@ -1143,7 +789,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     [context.commitObject._id],
                     persisted.rootHash,
                     persisted.objects,
-                    message, function (err, saveResult) {
+                    message, function (err/*, saveResult*/) {
                         if (err) {
                             deferred.reject(err);
                             return;
@@ -1272,7 +918,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     [context.commitObject._id],
                     persisted.rootHash,
                     persisted.objects,
-                    message, function (err, saveResult) {
+                    message, function (err/*, saveResult*/) {
                         if (err) {
                             deferred.reject(err);
                             return;
@@ -1291,7 +937,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
     }
 
     return {
-        exportLibrary: exportLibrary,
         executePlugin: executePlugin,
         seedProject: seedProject,
         autoMerge: autoMerge,
@@ -1299,8 +944,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         checkConstraints: checkConstraints,
         // This is exposed for unit tests..
         _addZippedExportToBlob: _addZippedExportToBlob,
-        reassignGuids: reassignGuids,
-        saveProjectToFile: saveProjectToFile,
+        exportProjectToFile: exportProjectToFile,
         importProjectFromFile: importProjectFromFile,
         addLibrary: addLibrary,
         updateLibrary: updateLibrary

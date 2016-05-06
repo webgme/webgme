@@ -56,7 +56,6 @@ describe.only('Simple worker', function () {
         },
         constraintProjectName = 'ConstraintProject',
         constraintProjectImportResult,
-        baseProjectJson,
         blobDownloadUrl = 'http://127.0.0.1:' + gmeConfig.server.port + '/rest/blob/download/',
         oldSend = process.send,
         oldOn = process.on,
@@ -71,9 +70,7 @@ describe.only('Simple worker', function () {
         BlobClient = testFixture.getBlobTestClient();
         logger = testFixture.logger.fork('simpleworker.spec');
         agent = testFixture.superagent.agent();
-        baseProjectJson = JSON.parse(
-            testFixture.fs.readFileSync('seeds/EmptyProject.json')
-        );
+
         CONSTANTS = require('./../../../src/server/worker/constants');
         CONSTRAINT_TYPES = requireJS('common/core/users/constraintchecker').TYPES;
         //gmeConfig.authentication.enable = true;
@@ -805,151 +802,6 @@ describe.only('Simple worker', function () {
                 }
                 expect(hadProject).to.equal(true,
                     'getProjects did not return the seeded project' + projectId);
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should seedProject from a blob seed', function (done) {
-        var worker = getSimpleWorker(),
-            projectName = 'workerSeedFromBlob',
-            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
-            artifact = blobClient.createArtifact('valid'),
-            projectId = testFixture.projectName2Id(projectName);
-
-        Q.all([
-                Q.ninvoke(artifact, 'addFileAsSoftLink', 'Empty.json', JSON.stringify(baseProjectJson)),
-                worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            ])
-            .spread(function (hash, msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.seedProject,
-                    webGMESessionId: webGMESessionId,
-                    projectName: projectName,
-                    ownerId: gmeConfig.authentication.guestAccount,
-                    type: 'blob',
-                    seedName: hash,
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
-                expect(msg.result).not.equal(null);
-                expect(msg.result).to.include.keys('projectId');
-                expect(msg.result.projectId).to.equal(projectId);
-
-                return storage.getProjects({branches: true});
-            })
-            .then(function (projects) {
-                var i,
-                    hadProject = false;
-                for (i = 0; i < projects.length; i += 1) {
-                    if (projects[i]._id === projectId) {
-                        hadProject = true;
-                        break;
-                    }
-                }
-                expect(hadProject).to.equal(true,
-                    'getProjects did not return the seeded project' + projectId);
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should fail to seed from a non-existing blob seed', function (done) {
-        var worker = getSimpleWorker(),
-            projectName = 'workerSeedFromBlobFail1';
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.seedProject,
-                    webGMESessionId: webGMESessionId,
-                    projectName: projectName,
-                    ownerId: gmeConfig.authentication.guestAccount,
-                    type: 'blob',
-                    seedName: 'af',
-                });
-            })
-            .then(function () {
-                throw new Error('Should have failed');
-            })
-            .catch(function (err) {
-                expect(err.message).to.contain('Not Found');
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should fail to seed from non-json blob seed', function (done) {
-        var worker = getSimpleWorker(),
-            projectName = 'workerSeedFromBlobFail2',
-            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
-            artifact = blobClient.createArtifact('invalid');
-
-        Q.all([
-                Q.ninvoke(artifact, 'addFileAsSoftLink', 'Empty.txt', 'this is a txtFile'),
-                worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            ])
-            .spread(function (hash, msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.seedProject,
-                    webGMESessionId: webGMESessionId,
-                    projectName: projectName,
-                    ownerId: gmeConfig.authentication.guestAccount,
-                    type: 'blob',
-                    seedName: hash,
-                });
-            })
-            .then(function () {
-                throw new Error('Should have failed');
-            })
-            .catch(function (err) {
-                expect(err.message).to.contain('Wrong file type of blob seed');
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should fail to seed from non-project but json blob seed', function (done) {
-        var worker = getSimpleWorker(),
-            projectName = 'workerSeedFromBlobFail3',
-            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
-            artifact = blobClient.createArtifact('invalid2');
-
-        Q.all([
-                Q.ninvoke(artifact, 'addFileAsSoftLink', 'Empty.json', JSON.stringify({a: 1, b: 2})),
-                worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            ])
-            .spread(function (hash, msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.seedProject,
-                    webGMESessionId: webGMESessionId,
-                    projectName: projectName,
-                    ownerId: gmeConfig.authentication.guestAccount,
-                    type: 'blob',
-                    seedName: hash,
-                });
-            })
-            .then(function () {
-                throw new Error('Should have failed');
-            })
-            .catch(function (err) {
-                expect(err.message).to.contain('Provided blob-seed json was not an exported project');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);

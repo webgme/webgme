@@ -18,7 +18,6 @@ define([
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter',
     'js/client/libraries',
-    'common/core/users/serialization',
     'blob/BlobClient',
     'js/client/stateloghelpers',
     'js/client/pluginmanager',
@@ -36,7 +35,6 @@ define([
              getNode,
              getNodeSetters,
              getLibraryFunctions,
-             Serialization,
              BlobClient,
              stateLogHelpers,
              PluginManager,
@@ -1846,6 +1844,7 @@ define([
         };
 
         //create from file
+        //TODO: REMOVE ME
         this.createProjectFromFile = function (projectName, branchName, jProject, ownerId, callback) {
             branchName = branchName || 'master';
             if (callback === undefined && typeof ownerId === 'function') {
@@ -2009,6 +2008,7 @@ define([
         };
 
         //export branch
+        // TODO : REMOVE
         this.getExportProjectBranchUrl = function (projectId, branchName, fileName, callback) {
             var command = {};
             command.command = 'exportLibrary';
@@ -2030,6 +2030,7 @@ define([
             }
         };
 
+        // TODO : REMOVE
         this.getExportItemsUrl = function (paths, filename, callback) {
             callback(new Error('getExportItemsUrl is no longer supported!'));
         };
@@ -2046,6 +2047,8 @@ define([
          * @param {funciton} callback - if successful, the result is a URL where the exported format of the library
          * can be found.
          */
+            // TODO : REMOVE
+
         this.getExportLibraryUrl = function (libraryRootPath, filename, callback) {
             var command = {};
             command.command = 'exportLibrary';
@@ -2076,6 +2079,8 @@ define([
          * @param {object} newLibrary - JSON export format of the updated library.
          * @param callback
          */
+            // TODO : REMOVE
+
         this.updateLibrary = function (libraryRootPath, newLibrary, callback) {
             Serialization.import(state.core, state.nodes[libraryRootPath].node, newLibrary, function (err, log) {
                 if (err) {
@@ -2169,6 +2174,8 @@ define([
         };
 
         //reassignGuids - reassigning GUIDs that collide in the given state of the project
+        // TODO : REMOVE
+
         this.reassignGuids = function (projectId, commitHash, callback) {
             var command = {};
             command.command = 'reassignGuids';

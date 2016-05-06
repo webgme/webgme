@@ -28,12 +28,11 @@ module.exports = {
 
         // Requests
         executePlugin: 'executePlugin',
-        exportLibrary: 'exportLibrary',
         seedProject: 'seedProject',
         autoMerge: 'autoMerge',
         resolve: 'resolve',
         checkConstraints: 'checkConstraints',
-        reassignGuids: 'reassignGuids',
+
         importProjectFromFile: 'importProjectFromFile',
         exportProjectToFile: 'exportProjectToFile',
         addLibrary: 'addLibrary',

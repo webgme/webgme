@@ -83,17 +83,6 @@ process.on('message', function (parameters) {
                 });
             }
         );
-    } else if (parameters.command === CONSTANTS.workerCommands.exportLibrary) {
-        wr.exportLibrary(parameters.webgmeToken, parameters.projectId, parameters.path, parameters,
-            function (err, result) {
-                safeSend({
-                    pid: process.pid,
-                    type: CONSTANTS.msgTypes.result,
-                    error: err ? err.message : null,
-                    result: result
-                });
-            }
-        );
     } else if (parameters.command === CONSTANTS.workerCommands.seedProject) {
         parameters.type = parameters.type || 'db';
         wr.seedProject(parameters.webgmeToken, parameters.projectName, parameters.ownerId, parameters,
@@ -133,18 +122,8 @@ process.on('message', function (parameters) {
                 result: result
             });
         });
-    } else if (parameters.command === CONSTANTS.workerCommands.reassignGuids) {
-        wr.reassignGuids(parameters.webgmeToken, parameters.projectId, parameters.commitHash,
-            function (err, result) {
-                safeSend({
-                    pid: process.pid,
-                    type: CONSTANTS.msgTypes.result,
-                    error: err ? err.message : null,
-                    result: result
-                });
-            });
     } else if (parameters.command === CONSTANTS.workerCommands.exportProjectToFile) {
-        wr.saveProjectToFile(parameters.webgmeToken, parameters, function (err, result) {
+        wr.exportProjectToFile(parameters.webgmeToken, parameters, function (err, result) {
                 safeSend({
                     pid: process.pid,
                     type: CONSTANTS.msgTypes.result,
