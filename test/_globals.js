@@ -415,12 +415,9 @@ function importProject(storage, parameters, callback) {
     var deferred = Q.defer(),
         extractDeferred = Q.defer(),
         BC,
-        WR,
         blobClient,
-        wr,
         storageUtils,
         cliImport,
-        isV2 = false,
         projectJson,
         branchName,
         data = {};
@@ -437,43 +434,20 @@ function importProject(storage, parameters, callback) {
         data.username = parameters.username;
     }
 
-    if (typeof parameters.projectSeed === 'string') {
-        if (parameters.projectSeed.toLowerCase().indexOf('.zip') > -1) {
-            extractDeferred.reject(new Error('zip file:', parameters.projectSeed));
-            BC = require('../src/server/middleware/blob/BlobClientWithFSBackend');
-            WR = require('../src/server/worker/workerrequests');
-            blobClient = new BC(parameters.gmeConfig, parameters.logger);
-            wr = new WR(parameters.logger, parameters.gmeConfig);
-            wr._addZippedExportToBlob(parameters.projectSeed, blobClient)
-                .then(function (projectStr) {
-                    var projectJson = JSON.parse(projectStr);
-                    extractDeferred.resolve(projectJson);
-                })
-                .catch(extractDeferred.reject);
-        } else if (parameters.projectSeed.toLowerCase().indexOf('.webgmex') > -1) {
-            isV2 = true;
-            BC = require('../src/server/middleware/blob/BlobClientWithFSBackend');
-            blobClient = new BC(parameters.gmeConfig, parameters.logger);
-            cliImport = require('../src/bin/import');
-            cliImport._addProjectPackageToBlob(blobClient, parameters.projectSeed)
-                .then(function (projectJson) {
-                    extractDeferred.resolve(projectJson);
-                })
-                .catch(extractDeferred.reject);
-        } else {
-            extractDeferred.reject(new Error('json file:', parameters.projectSeed));
-            return;
-            try {
-                extractDeferred.resolve(loadJsonFile(parameters.projectSeed));
-            } catch (e) {
-                extractDeferred.reject(e);
-            }
-        }
+    if (typeof parameters.projectSeed === 'string' && parameters.projectSeed.toLowerCase().indexOf('.webgmex')) {
+        BC = require('../src/server/middleware/blob/BlobClientWithFSBackend');
+        blobClient = new BC(parameters.gmeConfig, parameters.logger);
+        cliImport = require('../src/bin/import');
+        cliImport._addProjectPackageToBlob(blobClient, parameters.projectSeed)
+            .then(function (projectJson) {
+                extractDeferred.resolve(projectJson);
+            })
+            .catch(extractDeferred.reject);
     } else if (typeof parameters.projectSeed === 'object') {
         extractDeferred.reject(new Error('json file:', parameters.projectSeed));
         extractDeferred.resolve(parameters.projectSeed);
     } else {
-        extractDeferred.reject('parameters.projectSeed must be filePath or object!');
+        extractDeferred.reject('parameters.projectSeed must be filePath to a webgmex file');
     }
     branchName = parameters.branchName || 'master';
     // Parameters check end.
@@ -499,57 +473,29 @@ function importProject(storage, parameters, callback) {
                     jsonProject: projectJson,
                     rootNode: null,
                     rootHash: null,
-                    blobClient: blobClient //Undefined unless importing from zip/webgmex.
-                },
-                rootNode;
+                    blobClient: blobClient
+                };
 
             project.setUser(data.username);
 
-            if (isV2) {
-                storageUtils = requireJS('common/storage/util');
-                storageUtils.insertProjectJson(project, projectJson, {
-                    commitMessage: 'project imported'
+            storageUtils = requireJS('common/storage/util');
+            storageUtils.insertProjectJson(project, projectJson, {
+                commitMessage: 'project imported'
+            })
+                .then(function (commitHash) {
+                    result.commitHash = commitHash;
+                    result.rootHash = projectJson.rootHash;
+                    return project.createBranch(branchName, commitHash);
                 })
-                    .then(function (commitHash) {
-                        result.commitHash = commitHash;
-                        result.rootHash = projectJson.rootHash;
-                        return project.createBranch(branchName, commitHash);
-                    })
-                    .then(function (result_) {
-                        result.status = result_.status;
-                        return core.loadRoot(result.rootHash);
-                    })
-                    .then(function (rootNode) {
-                        result.rootNode = rootNode;
-                        deferred.resolve(result);
-                    })
-                    .catch(deferred.reject);
-            } else {
-
-                rootNode = core.createNode({parent: null, base: null});
-                WebGME.serializer.import(core, rootNode, projectJson, function (err) {
-                    var persisted;
-                    if (err) {
-                        deferred.reject(err);
-                        return;
-                    }
-                    persisted = core.persist(rootNode);
-
-
-                    project.makeCommit(branchName, [''], persisted.rootHash, persisted.objects, 'project imported')
-                        .then(function (result_) {
-                            result.status = result_.status;
-                            result.commitHash = result_.hash;
-                            result.rootNode = rootNode;
-                            result.rootHash = persisted.rootHash;
-
-                            deferred.resolve(result);
-                        })
-                        .catch(function (err) {
-                            deferred.reject(err);
-                        });
-                });
-            }
+                .then(function (result_) {
+                    result.status = result_.status;
+                    return core.loadRoot(result.rootHash);
+                })
+                .then(function (rootNode) {
+                    result.rootNode = rootNode;
+                    deferred.resolve(result);
+                })
+                .catch(deferred.reject);
         })
         .catch(function (err) {
             deferred.reject(err);

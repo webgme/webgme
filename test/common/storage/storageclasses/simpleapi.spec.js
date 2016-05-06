@@ -69,7 +69,7 @@ describe('storage storageclasses simpleapi', function () {
                 .then(function () {
                     return Q.allDone([
                         testFixture.importProject(safeStorage, {
-                            projectSeed: 'test/seeds/EmptyProject.webgmex',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: projectName,
                             gmeConfig: gmeConfig,
                             logger: logger

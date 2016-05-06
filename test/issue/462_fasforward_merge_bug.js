@@ -37,7 +37,7 @@ describe('issue462', function () {
                     gmeConfig: gmeConfig,
                     branchName: 'master',
                     userName: gmeConfig.authentication.guestAccount,
-                    projectSeed: './test/issue/462/project.json'
+                    projectSeed: './test/issue/462/project.webgmex'
                 });
             })
             .then(function (result) {

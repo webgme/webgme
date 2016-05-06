@@ -10,6 +10,7 @@ describe('issue110 testing', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
         expect = testFixture.expect,
+        should = testFixture.should,
         logger = testFixture.logger.fork('issue110.spec'),
         storage = null,
 
@@ -56,7 +57,7 @@ describe('issue110 testing', function () {
     it('import the problematic project', function (done) {
         testFixture.importProject(storage,
             {
-                projectSeed: './test/issue/110/input.json',
+                projectSeed: './test/issue/110/input.webgmex',
                 projectName: projectName,
                 gmeConfig: gmeConfig,
                 logger: logger
@@ -78,7 +79,7 @@ describe('issue110 testing', function () {
 
         testFixture.importProject(storage,
             {
-                projectSeed: './test/issue/110/input.json',
+                projectSeed: './test/issue/110/input.webgmex',
                 projectName: projectName,
                 gmeConfig: gmeConfig,
                 logger: logger
@@ -117,7 +118,7 @@ describe('issue110 testing', function () {
 
         testFixture.importProject(storage,
             {
-                projectSeed: './test/issue/110/input.json',
+                projectSeed: './test/issue/110/input.webgmex',
                 projectName: projectName,
                 gmeConfig: gmeConfig,
                 logger: logger
