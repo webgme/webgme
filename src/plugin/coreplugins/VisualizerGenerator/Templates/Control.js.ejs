@@ -88,7 +88,6 @@ define(['js/Constants',
     <%= visualizerID %>Control.prototype._getObjectDescriptor = function (nodeId) {
         var nodeObj = this._client.getNode(nodeId),
             objDescriptor;
-
         if (nodeObj) {
             objDescriptor = {
                 id: undefined,

@@ -8,7 +8,8 @@
     "src": ""
   },
   "disableServerSideExecution": false,
-  "disableBrowserSideExecution": false,<%if (configStructure) {%>
+  "disableBrowserSideExecution": false,
+  "writeAccessRequired": false,<%if (configStructure) {%>
   "configStructure": [
     {
       "name": "species",
@@ -28,7 +29,8 @@
       "valueType": "number",
       "minValue": 0,
       "maxValue": 10000,
-      "readOnly": false
+      "readOnly": false,
+      "writeAccessRequired": true
     },
     {
       "name": "carnivore",
@@ -68,6 +70,5 @@
       "readOnly": false
     }
   ]<%} else {%>
-  "configStructure": []
-<%}%>
+  "configStructure": []<%}%>
 }

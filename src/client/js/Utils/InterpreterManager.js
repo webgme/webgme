@@ -52,7 +52,8 @@ define([
     InterpreterManager.prototype.configureAndRun = function (metadata, callback) {
         var self = this,
             configDialog = new PluginConfigDialog({client: this._client}),
-            globalOptions = this.getGlobalOptions(metadata);
+            context = self._client.getCurrentPluginContext(metadata.id),
+            globalOptions = this.getGlobalOptions(metadata, {namespace: context.managerConfig.namespace});
 
         if (globalOptions instanceof PluginResult) {
             callback(globalOptions);
@@ -61,8 +62,7 @@ define([
 
         configDialog.show(globalOptions, metadata, this.getStoredConfiguration(metadata),
             function (globalConfig, pluginConfig, storeInUser) {
-                var context,
-                    startTime = (new Date()).toISOString();
+                var startTime = (new Date()).toISOString();
 
                 function execCallback(err, result) {
                     if (err) {
@@ -90,7 +90,6 @@ define([
                     self.saveSettingsInUser(metadata, pluginConfig);
                 }
 
-                context = self._client.getCurrentPluginContext();
                 context.pluginConfig = pluginConfig;
                 context.managerConfig.namespace = globalConfig.namespace;
 
@@ -112,12 +111,12 @@ define([
         );
     };
 
-    InterpreterManager.prototype.getGlobalOptions = function (pluginMetadata) {
+    InterpreterManager.prototype.getGlobalOptions = function (pluginMetadata, defaults) {
         var runOption = {
                 name: 'runOnServer',
                 displayName: 'Execute on Server',
                 description: '',
-                value: false,
+                value: defaults.hasOwnProperty('runOnServer') ? defaults.runOnServer : false,
                 valueType: 'boolean',
                 readOnly: false
             },
@@ -125,7 +124,7 @@ define([
                 name: 'namespace',
                 displayName: 'Used Namespace',
                 description: 'The namespace the plugin should run under.',
-                value: '',
+                value: defaults.hasOwnProperty('namespace') ? defaults.namespace : '',
                 valueType: 'string',
                 valueItems: [],
                 readOnly: false

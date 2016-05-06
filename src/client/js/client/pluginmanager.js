@@ -9,8 +9,9 @@
 define([
     'plugin/managerbase',
     'blob/BlobClient',
-    'common/storage/project/project'
-], function (PluginManagerBase, BlobClient, Project) {
+    'common/storage/project/project',
+    'js/RegistryKeys'
+], function (PluginManagerBase, BlobClient, Project, REG_KEYS) {
     'use strict';
 
     var ROOT_PATH = '';
@@ -29,14 +30,17 @@ define([
         var self = this,
             logger = mainLogger.fork('PluginManager');
 
-        this.getCurrentPluginContext = function () {
-            var context =  {
+        this.getCurrentPluginContext = function (pluginId, activeNodeId) {
+            var activeNode,
+                validPlugins,
+                context =  {
                 managerConfig: {
                     project: client.getProjectObject(),
                     branchName: client.getActiveBranchName(),
                     commit: client.getActiveCommitHash(),
                     activeNode: ROOT_PATH,
-                    activeSelection: []
+                    activeSelection: [],
+                    namespace: ''
                 },
                 pluginConfig: null
             };
@@ -44,9 +48,25 @@ define([
             // If executed from the Generic UI we can access the active- and selected-nodes.
             if (typeof WebGMEGlobal !== 'undefined') {
                 /* jshint -W117 */
-                context.managerConfig.activeNode = WebGMEGlobal.State.getActiveObject();
+                activeNodeId = typeof activeNodeId === 'string' ? activeNodeId : WebGMEGlobal.State.getActiveObject();
                 context.managerConfig.activeSelection = WebGMEGlobal.State.getActiveSelection();
+                context.managerConfig.activeNode = activeNodeId;
                 /* jshint +W117 */
+            }
+
+            // Given the active-node we infer the namespace (user may still select another one).
+            if (activeNodeId && pluginId) {
+                activeNode = client.getNode(activeNodeId);
+                do {
+                    validPlugins = activeNode.getOwnRegistry(REG_KEYS.VALID_PLUGINS);
+                    if (validPlugins && validPlugins.indexOf(pluginId) > -1) {
+                        // The plugin was defined at this particular node, we use the namespace of it.
+                        context.managerConfig.namespace = activeNode.getNamespace();
+                        break;
+                    }
+
+                    activeNode = activeNode.getBaseId() ? client.getNode(activeNode.getBaseId()) : null;
+                } while (activeNode);
             }
 
             return context;
