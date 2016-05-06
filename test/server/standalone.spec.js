@@ -640,8 +640,6 @@ describe('standalone server', function () {
                     expect(result).to.have.property('hash');
                     expect(typeof result.hash).to.equal('string');
                     expect(result.downloadUrl).to.include('/rest/blob/download/');
-
-                    done();
                 })
                 .nodeify(done);
         });
