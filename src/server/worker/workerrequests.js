@@ -529,7 +529,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     /**
      *
      * @param {string} webgmeToken
-     * @param {object} parameters
+     * @param {object} parameters TODO: parameters...
      * @param {function} callback
      */
     function exportProjectToFile(webgmeToken, parameters, callback) {
@@ -572,7 +572,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         if (err) {
                             deferred.reject(err);
                         } else {
-                            deferred.resolve(blobClient.getRelativeDownloadURL(hash));
+                            deferred.resolve({
+                                downloadUrl: blobClient.getRelativeDownloadURL(hash),
+                                hash: hash
+                            });
                         }
                     }
                 );

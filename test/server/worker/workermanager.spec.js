@@ -18,6 +18,7 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
         storage,
         webGMESessionId,
         server,
+        ir,
         workerConstants = require('../../../src/server/worker/constants'),
         ServerWorkerManager = require('../../../src/server/worker/serverworkermanager'),
         workerManagerParameters = {
@@ -42,14 +43,15 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
             })
             .then(function () {
                 return testFixture.importProject(storage, {
-                    projectSeed: 'test/server/worker/workermanager/basicProject.json',
+                    projectSeed: 'seeds/EmptyProject.webgmex',
                     projectName: projectName,
                     branchName: 'master',
                     gmeConfig: gmeConfig,
                     logger: logger
                 });
             })
-            .then(function () {
+            .then(function (ir_) {
+                ir = ir_;
                 return Q.ninvoke(server, 'start');
             })
             .then(function (/*result*/) {
@@ -179,18 +181,16 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
 
         function exportLibrary(next) {
             swm.request({
-                command: workerConstants.workerCommands.exportLibrary,
+                command: workerConstants.workerCommands.exportProjectToFile,
                 branchName: 'master',
-                webGMESessionId: webGMESessionId,
                 projectId: projectId,
-                path: '/323573539'
+                commitHash: ir.commitHash
             }, function (err, result) {
                 expect(err).to.equal(null);
 
                 expect(typeof result).to.equal('object');
-                expect(result).to.have.property('file');
-                expect(typeof result.file.hash).to.equal('string');
-                expect(result.file.url).to.include('http');
+                expect(result).to.have.property('hash');
+                expect(typeof result.hash).to.equal('string');
                 next();
             });
         }

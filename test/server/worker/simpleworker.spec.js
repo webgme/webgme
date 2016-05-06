@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.only('Simple worker', function () {
+describe('Simple worker', function () {
     'use strict';
 
     var WebGME,
@@ -321,259 +321,6 @@ describe.only('Simple worker', function () {
             .nodeify(done);
     });
 
-    // exportLibrary
-    it('should exportLibrary given a branchName.', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary,
-                    webGMESessionId: webGMESessionId,
-                    projectId: baseProjectContext.id,
-                    branchName: 'master',
-                    path: ''
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
-                expect(msg.result).not.equal(null);
-                expect(typeof msg.result.file.hash).to.equal('string');
-                expect(msg.result.file.url).to.include(blobDownloadUrl);
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should exportLibrary given a hash (rootHash)', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary,
-                    webGMESessionId: webGMESessionId,
-                    projectId: baseProjectContext.id,
-                    hash: baseProjectContext.rootHash,
-                    path: ''
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
-                expect(msg.result).not.equal(null);
-                expect(typeof msg.result.file.hash).to.equal('string');
-                expect(msg.result.file.url).to.include(blobDownloadUrl);
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should exportLibrary given a commit (commitHash).', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary,
-                    webGMESessionId: webGMESessionId,
-                    projectId: baseProjectContext.id,
-                    commit: baseProjectContext.commitHash,
-                    path: ''
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.result);
-                expect(msg.error).equal(null);
-
-                expect(msg.result).not.equal(null);
-                expect(typeof msg.result.file.hash).to.equal('string');
-                expect(msg.result.file.url).to.include(blobDownloadUrl);
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should fail to exportLibrary when branchName does not exist.', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary,
-                    webGMESessionId: webGMESessionId,
-                    projectId: baseProjectContext.id,
-                    branchName: 'doesNotExist',
-                    path: ''
-                });
-            })
-            .then(function () {
-                done(new Error('missing error handling'));
-            })
-            .catch(function (err) {
-                expect(err.message).to.contain('Branch not found');
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should fail to exportLibrary when hash (rootHash) does not exist.', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary,
-                    webGMESessionId: webGMESessionId,
-                    projectId: baseProjectContext.id,
-                    hash: 'wrong hash',
-                    path: ''
-                });
-            })
-            .then(function () {
-                done(new Error('missing error handling'));
-            })
-            .catch(function (err) {
-                expect(err.message).to.contain('ASSERT'); //because of the wrong hash format
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should fail to exportLibrary when commit (commitHash) does not exist.', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary,
-                    webGMESessionId: webGMESessionId,
-                    projectId: baseProjectContext.id,
-                    commit: 'wrong hash',
-                    path: ''
-                });
-            })
-            .then(function () {
-                done(new Error('missing error handling'));
-            })
-            .catch(function (err) {
-                expect(err.message).to.contain('Failed loading commitHash');
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
-    it('should fail to exportLibrary when projectId is not correct', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary,
-                    webGMESessionId: webGMESessionId,
-                    projectId: 'badProjectId',
-                    commit: baseProjectContext.commitHash,
-                    path: ''
-                });
-            })
-            .then(function () {
-                done(new Error('missing error handling'));
-            })
-            .catch(function (err) {
-                expect(err.message).to.contain('badProjectId');
-                done();
-            })
-            .finally(restoreProcessFunctions)
-            .done();
-    });
-
-    it('should fail to exportLibrary when command parameters are invalid', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary
-                });
-            })
-            .then(function (/*msg*/) {
-                done(new Error('missing error handling'));
-            })
-            .catch(function (err) {
-                expect(err.message).to.include('parameters');
-
-                done();
-            })
-            .finally(restoreProcessFunctions)
-            .done();
-    });
-
-    //TODO decide if this is a good behaviour, now the loadByPath load any path (creating empty objects on its way)
-    it.skip('should fail to export sub-tree with an unknown starting path', function (done) {
-        var worker = getSimpleWorker();
-
-        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
-
-                return worker.send({
-                    command: CONSTANTS.workerCommands.exportLibrary,
-                    webGMESessionId: webGMESessionId,
-                    projectId: baseProjectContext.id,
-                    commit: baseProjectContext.commitHash,
-                    path: '/bad/path'
-                });
-            })
-            .then(function (msg) {
-                expect(msg.pid).equal(process.pid);
-                expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.error).equal(null);
-
-                expect(msg.resid).not.equal(null);
-
-                return worker.send({command: CONSTANTS.workerCommands.getResult});
-            })
-            .then(function () {
-                done(new Error('missing error handling'));
-            })
-            .catch(function (err) {
-                expect(err.message).to.contain('Failed loading commitHashyyy');
-            })
-            .finally(restoreProcessFunctions)
-            .nodeify(done);
-    });
-
     // seedProject
     it('should seedProject from an existing project', function (done) {
         var worker = getSimpleWorker(),
@@ -755,7 +502,7 @@ describe.only('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should seedProject from a file seed containing assets', function (done) {
+    it.skip('should seedProject from a file seed containing assets', function (done) {
         var worker = getSimpleWorker(),
             projectName = 'workerSeedFromFileAssets',
             gmeConfigMod = JSON.parse(JSON.stringify(gmeConfig)),
@@ -1637,7 +1384,7 @@ describe.only('Simple worker', function () {
     });
 
     //saveProjectIntoFile
-    it('should saveProjectToFile given a branchName.', function (done) {
+    it('should exportProjectToFile given a branchName.', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1658,14 +1405,14 @@ describe.only('Simple worker', function () {
                 expect(msg.error).equal(null);
 
                 expect(msg.result).not.equal(null);
-                expect(typeof msg.result).to.equal('string');
-                expect(msg.result).to.include('/rest/blob/download/');
+                expect(typeof msg.result).to.equal('object');
+                expect(msg.result.downloadUrl).to.include('/rest/blob/download/');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
     });
 
-    it('should saveProjectToFile given a hash (rootHash)', function (done) {
+    it('should exportProjectToFile given a hash (rootHash)', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1686,14 +1433,14 @@ describe.only('Simple worker', function () {
                 expect(msg.error).equal(null);
 
                 expect(msg.result).not.equal(null);
-                expect(typeof msg.result).to.equal('string');
-                expect(msg.result).to.include('/rest/blob/download/');
+                expect(typeof msg.result).to.equal('object');
+                expect(msg.result.downloadUrl).to.include('/rest/blob/download/');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
     });
 
-    it('should saveProjectToFile given a commit (commitHash).', function (done) {
+    it('should exportProjectToFile given a commit (commitHash).', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1714,14 +1461,14 @@ describe.only('Simple worker', function () {
                 expect(msg.error).equal(null);
 
                 expect(msg.result).not.equal(null);
-                expect(typeof msg.result).to.equal('string');
-                expect(msg.result).to.include('/rest/blob/download/');
+                expect(typeof msg.result).to.equal('object');
+                expect(msg.result.downloadUrl).to.include('/rest/blob/download/');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
     });
 
-    it('should fail to saveProjectToFile when branchName does not exist.', function (done) {
+    it('should fail to exportProjectToFile when branchName does not exist.', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1746,7 +1493,7 @@ describe.only('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should fail to saveProjectToFile when hash (rootHash) does not exist.', function (done) {
+    it('should fail to exportProjectToFile when hash (rootHash) does not exist.', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1771,7 +1518,7 @@ describe.only('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should fail to saveProjectToFile when commit (commitHash) does not exist.', function (done) {
+    it('should fail to exportProjectToFile when commit (commitHash) does not exist.', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1796,7 +1543,7 @@ describe.only('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should fail to saveProjectToFile when projectId is not correct', function (done) {
+    it('should fail to exportProjectToFile when projectId is not correct', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1822,7 +1569,7 @@ describe.only('Simple worker', function () {
             .done();
     });
 
-    it('should fail to saveProjectToFile when command parameters are invalid', function (done) {
+    it('should fail to exportProjectToFile when command parameters are invalid', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})

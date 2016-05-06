@@ -674,11 +674,11 @@ define([
                 // By default the export contains assets.
                 self.gmeClient.exportProjectToFile(self.gmeClient.getActiveProjectId(),
                     self.gmeClient.getActiveBranchName(),
-                    self.gmeClient.getActiveCommitHash(), true, function (err, url) {
+                    self.gmeClient.getActiveCommitHash(), true, function (err, result) {
                         if (err) {
                             self.logger.error('unable to save project', err);
                         } else {
-                            saveToDisk.saveUrlToDisk(url);
+                            saveToDisk.saveUrlToDisk(result.downloadUrl);
                         }
                     }
                 );

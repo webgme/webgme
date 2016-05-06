@@ -9,7 +9,6 @@
 define([
     'js/util',
     'js/Constants',
-    'js/Utils/ExportManager',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
@@ -18,7 +17,6 @@ define([
     './MetaRulesToolbar',
 ], function (util,
              CONSTANTS,
-             ExportManager,
              ProjectsDialog,
              CommitDialog,
              ProjectRepositoryDialog,

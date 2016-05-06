@@ -12,8 +12,6 @@ define(['js/logger',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/GMEConcepts',
-    'js/Utils/ExportManager',
-    'js/Utils/ImportManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'js/DragDrop/DragHelper'
 ], function (Logger,
@@ -22,8 +20,6 @@ define(['js/logger',
              nodePropertyNames,
              REGISTRY_KEYS,
              GMEConcepts,
-             ExportManager,
-             ImportManager,
              DiagramDesignerWidgetConstants,
              DragHelper) {
 
@@ -1200,9 +1196,6 @@ define(['js/logger',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds,
                                                                                                        mousePos) {
         var menuItems = {},
-            MENU_EXINTCONF = 'exintconf',
-            MENU_EXPLIB = 'exportlib',
-            MENU_UPDLIB = 'updatelib',
             MENU_CONSTRAINTS_NODE = 'connode',
             MENU_CONSTRAINTS_MODEL = 'conmodel',
             MENU_META_RULES_NODE = 'metaRulesNode',
@@ -1214,14 +1207,6 @@ define(['js/logger',
          "icon": 'glyphicon glyphicon-cog'
          };*/
         if (selectedIds.length === 1) {
-            menuItems[MENU_EXPLIB] = {
-                name: 'Export library...',
-                icon: 'glyphicon glyphicon-book'
-            };
-            menuItems[MENU_UPDLIB] = {
-                name: 'Update library...',
-                icon: 'glyphicon glyphicon-refresh'
-            };
             menuItems[MENU_META_RULES_NODE] = {
                 name: 'Check Meta rules for node...',
                 icon: 'glyphicon glyphicon-ok-sign'
@@ -1262,13 +1247,7 @@ define(['js/logger',
         }
 
         this.designerCanvas.createMenu(menuItems, function (key) {
-                if (key === MENU_EXINTCONF) {
-                    self._exIntConf(selectedIds);
-                } else if (key === MENU_EXPLIB) {
-                    self._expLib(selectedIds);
-                } else if (key === MENU_UPDLIB) {
-                    self._updLib(selectedIds);
-                } else if (key === MENU_CONSTRAINTS_NODE) {
+                if (key === MENU_CONSTRAINTS_NODE) {
                     self._nodeConCheck(selectedIds, false);
                 } else if (key === MENU_CONSTRAINTS_MODEL) {
                     self._nodeConCheck(selectedIds, true);
@@ -1291,45 +1270,6 @@ define(['js/logger',
         this._alignMenu.show(selectedIds, menuPos, function (key) {
             self._onAlignSelection(selectedIds, key);
         });
-    };
-
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._exIntConf = function (selectedIds) {
-        var i = selectedIds.length,
-            gmeIDs = [];
-
-        while (i--) {
-            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
-        }
-
-        ExportManager.exIntConf(gmeIDs);
-    };
-
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._expLib = function (selectedIds) {
-        var i = selectedIds.length,
-            gmeIDs = [],
-            id;
-
-        while (i--) {
-            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
-        }
-
-        id = gmeIDs[0] || null;
-
-        ExportManager.expLib(id);
-    };
-
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._updLib = function (selectedIds) {
-        var i = selectedIds.length,
-            gmeIDs = [],
-            id;
-
-        while (i--) {
-            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
-        }
-
-        id = gmeIDs[0] || null;
-
-        ImportManager.importLibrary(id);
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._metaRulesCheck = function (selectedIds,

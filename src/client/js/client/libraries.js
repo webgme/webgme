@@ -83,7 +83,7 @@ define(['js/Constants'], function (CONSTANTS) {
             var address,
                 info;
             if (!state.nodes[libraryRootId]) {
-                logger.warn('only cached libraryies can be followed!');
+                logger.warn('only cached libraries can be followed!');
                 return;
             }
             info = getLibraryInfo(state.core.getFullyQualifiedName(state.nodes[libraryRootId].node));
