@@ -475,13 +475,13 @@ describe('standalone server', function () {
                 .then(function () {
                     return Q.allDone([
                         testFixture.importProject(safeStorage, {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: project,
                             gmeConfig: gmeConfig,
                             logger: logger
                         }),
                         testFixture.importProject(safeStorage, {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: unauthorizedProject,
                             gmeConfig: gmeConfig,
                             logger: logger

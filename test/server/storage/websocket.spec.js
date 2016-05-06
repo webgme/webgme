@@ -172,37 +172,37 @@ describe('WebSocket', function () {
                     .then(function () {
                         return Q.allDone([
                             testFixture.importProject(safeStorage, {
-                                projectSeed: 'seeds/EmptyProject.json',
+                                projectSeed: 'seeds/EmptyProject.webgmex',
                                 projectName: projectName,
                                 gmeConfig: gmeConfig,
                                 logger: logger
                             }),
                             testFixture.importProject(safeStorage, {
-                                projectSeed: 'seeds/EmptyProject.json',
+                                projectSeed: 'seeds/EmptyProject.webgmex',
                                 projectName: projectNameUnauthorized,
                                 gmeConfig: gmeConfig,
                                 logger: logger
                             }),
                             testFixture.importProject(safeStorage, {
-                                projectSeed: 'seeds/EmptyProject.json',
+                                projectSeed: 'seeds/EmptyProject.webgmex',
                                 projectName: 'WebSocketTest_BRANCH_CREATED',
                                 gmeConfig: gmeConfig,
                                 logger: logger
                             }),
                             testFixture.importProject(safeStorage, {
-                                projectSeed: 'seeds/EmptyProject.json',
+                                projectSeed: 'seeds/EmptyProject.webgmex',
                                 projectName: 'WebSocketTest_BRANCH_DELETED',
                                 gmeConfig: gmeConfig,
                                 logger: logger
                             }),
                             testFixture.importProject(safeStorage, {
-                                projectSeed: 'seeds/EmptyProject.json',
+                                projectSeed: 'seeds/EmptyProject.webgmex',
                                 projectName: 'WebSocketTest_BRANCH_HASH_UPDATED',
                                 gmeConfig: gmeConfig,
                                 logger: logger
                             }),
                             testFixture.importProject(safeStorage, {
-                                projectSeed: 'seeds/EmptyProject.json',
+                                projectSeed: 'seeds/EmptyProject.webgmex',
                                 projectName: 'WebSocketTest_BRANCH_UPDATED',
                                 gmeConfig: gmeConfig,
                                 logger: logger

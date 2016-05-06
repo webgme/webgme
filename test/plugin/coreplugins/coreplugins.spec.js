@@ -88,7 +88,7 @@ describe('CorePlugins', function () {
                     for (i = 0; i < projectNames.length; i += 1) {
                         projectName = projectNames[i];
                         promise = testFixture.importProject(safeStorage, {
-                            projectSeed: './seeds/ActivePanels.json',
+                            projectSeed: './seeds/ActivePanels.webgmex',
                             projectName: projectName,
                             branchName: 'master',
                             gmeConfig: gmeConfig,

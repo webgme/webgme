@@ -34,7 +34,7 @@ describe('REST API', function () {
                 })
                 .then(function () {
                     return testFixture.importProject(safeStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: 'PluginAPI_Test',
                         gmeConfig: gmeConfig,
                         logger: logger

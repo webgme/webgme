@@ -25,7 +25,7 @@ describe('InvalidActiveNode test', function () {
 
     before(function (done) {
         var importParam = {
-            projectSeed: './seeds/EmptyProject.json',
+            projectSeed: './seeds/EmptyProject.webgmex',
             projectName: projectName,
             branchName: branchName,
             logger: logger,

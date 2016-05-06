@@ -34,7 +34,7 @@ describe('Core GUID handling', function () {
             .then(function () {
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: 'seeds/SignalFlowSystem.json',
+                        projectSeed: 'seeds/SignalFlowSystem.webgmex',
                         projectName: projectName,
                         branchName: 'master',
                         gmeConfig: gmeConfig,

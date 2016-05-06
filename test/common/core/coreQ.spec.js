@@ -34,7 +34,7 @@ describe('CoreQ Async with Promises', function () {
             .then(function () {
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: 'seeds/ActivePanels.json',
+                        projectSeed: 'seeds/ActivePanels.webgmex',
                         projectName: projectName,
                         branchName: 'master',
                         gmeConfig: gmeConfig,

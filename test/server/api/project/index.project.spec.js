@@ -62,19 +62,19 @@ describe('REST API', function () {
                         .then(function () {
                             return Q.allDone([
                                 testFixture.importProject(safeStorage, {
-                                    projectSeed: 'seeds/EmptyProject.json',
+                                    projectSeed: 'seeds/EmptyProject.webgmex',
                                     projectName: projectName,
                                     gmeConfig: gmeConfig,
                                     logger: logger
                                 }),
                                 testFixture.importProject(safeStorage, {
-                                    projectSeed: 'seeds/EmptyProject.json',
+                                    projectSeed: 'seeds/EmptyProject.webgmex',
                                     projectName: unauthorizedProjectName,
                                     gmeConfig: gmeConfig,
                                     logger: logger
                                 }),
                                 testFixture.importProject(safeStorage, {
-                                    projectSeed: 'seeds/EmptyProject.json',
+                                    projectSeed: 'seeds/EmptyProject.webgmex',
                                     projectName: toDeleteProjectName,
                                     gmeConfig: gmeConfig,
                                     logger: logger
@@ -1022,21 +1022,21 @@ describe('REST API', function () {
                 .then(function () {
                     return Q.allDone([
                         testFixture.importProject(safeStorage, {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: projectOwnedByUser,
                             gmeConfig: gmeConfig,
                             username: 'user',
                             logger: logger
                         }),
                         testFixture.importProject(safeStorage, {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: projectOwnedByOrg,
                             gmeConfig: gmeConfig,
                             username: 'userOrgAdmin',
                             logger: logger
                         }),
                         testFixture.importProject(safeStorage, {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: projectOwnedByOtherUser,
                             gmeConfig: gmeConfig,
                             logger: logger

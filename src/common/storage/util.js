@@ -228,7 +228,8 @@ define([
                         projectId: project.projectId,
                         branchName: parameters.branchName,
                         commitHash: parameters.commitHash,
-                        hashes: hashes
+                        hashes: hashes,
+                        objects: null
                     };
                     return _collectObjects(project, hashes.objects);
                 })
@@ -261,6 +262,8 @@ define([
             for (i = 0; i < objects.length; i += 1) {
                 toPersist[objects[i]._id] = objects[i];
             }
+
+            options = options || {};
 
             project.makeCommit(null, [], rootHash, toPersist, options.commitMessage || defaultCommitMessage)
                 .then(function (commitResult) {

@@ -32,7 +32,7 @@ describe('Plugin ExportImport', function () {
 
     before(function (done) {
         var importParam = {
-            projectSeed: './seeds/ActivePanels.json',
+            projectSeed: './seeds/ActivePanels.webgmex',
             projectName: projectName,
             logger: logger,
             gmeConfig: gmeConfig

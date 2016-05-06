@@ -61,6 +61,7 @@ var WebGME = require('../webgme'),
     _should,
     _expect,
 
+    _REGEXP,
     _superagent,
     _mongodb,
     Q = require('q'),
@@ -252,6 +253,14 @@ Object.defineProperties(exports, {
             return _expect;
         }
     },
+    REGEXP: {
+        get: function () {
+            if (!_REGEXP) {
+                _REGEXP = requireJS('common/regexp');
+            }
+            return _REGEXP;
+        }
+    }
 });
 
 /**
@@ -677,6 +686,49 @@ function openSocketIo(server, agent, userName, password, token) {
     return deferred.promise;
 }
 
+/**
+ *
+ * @param {blobHash|filePath|projectJson} file1
+ * @param {blobHash|filePath|projectJson} file2
+ * @param logger
+ * @param gmeConfigParameter
+ * @param callback
+ * @returns {Q.Promise}
+ */
+function compareWebgmexFiles(file1, file2, logger, gmeConfigParameter, callback) {
+    var BC = require('../src/server/middleware/blob/BlobClientWithFSBackend'),
+        blobClient = new BC(gmeConfigParameter, logger),
+        AdmZip = require('adm-zip');
+
+    function getProjectJsonPromise(file) {
+        var deferred = Q.defer();
+        if (exports.REGEXP.BLOB_HASH.test(file) === true) {
+            deferred.promise = blobClient.getObject(file)
+                .then(function (buffer) {
+                    var zip = new AdmZip(buffer);
+                    return JSON.parse(zip.readAsText('project.json', 'utf8'));
+                });
+        } else if (typeof file === 'string') {
+            deferred.promise = Q.ninvoke(exports.fs, 'readFile', file)
+                .then(function (buffer) {
+                    var zip = new AdmZip(buffer);
+                    return JSON.parse(zip.readAsText('project.json', 'utf8'));
+                });
+        } else {
+            deferred.resolve(file);
+        }
+
+        return deferred.promise;
+    }
+
+    return Q.allDone([getProjectJsonPromise(file1), getProjectJsonPromise(file2)])
+        .then(function (projectJsons) {
+            exports.expect(projectJsons[1].hashes).to.deep.equal(projectJsons[0].hashes);
+            exports.expect(projectJsons[1].objects).to.deep.equal(projectJsons[0].objects);
+        })
+        .nodeify(callback);
+}
+
 WebGME.addToRequireJsPaths(gmeConfig);
 
 // This is for the client side test-cases (only add paths here!)
@@ -706,5 +758,7 @@ exports.openSocketIo = openSocketIo;
 exports.loadRootNodeFromCommit = loadRootNodeFromCommit;
 exports.loadNode = loadNode;
 exports.loadNode = loadNode;
+
+exports.compareWebgmexFiles = compareWebgmexFiles;
 
 module.exports = exports;

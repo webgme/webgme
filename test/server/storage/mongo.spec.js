@@ -333,7 +333,7 @@ describe('Mongo storage', function () {
             mongoStorage.openDatabase()
                 .then(function () {
                     return testFixture.importProject(mongoStorage, {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: 'importedAndGet',
                         gmeConfig: gmeConfig,
                         logger: logger
@@ -363,7 +363,7 @@ describe('Mongo storage', function () {
 
         beforeEach(function (done) {
             testFixture.importProject(mongoStorage, {
-                projectSeed: 'seeds/EmptyProject.json',
+                projectSeed: 'seeds/EmptyProject.webgmex',
                 projectName: 'projectSpecific',
                 gmeConfig: gmeConfig,
                 logger: logger

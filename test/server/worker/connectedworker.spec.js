@@ -51,7 +51,7 @@ describe('Connected worker', function () {
                 return Q.allDone([
                     testFixture.importProject(storage,
                         {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: 'ConnectedWorkerProject1',
                             branchName: 'master',
                             gmeConfig: gmeConfig,
@@ -59,7 +59,7 @@ describe('Connected worker', function () {
                         }),
                     testFixture.importProject(storage,
                         {
-                            projectSeed: 'seeds/EmptyProject.json',
+                            projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: 'Constraints',
                             branchName: 'master',
                             gmeConfig: gmeConfig,

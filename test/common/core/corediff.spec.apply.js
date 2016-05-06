@@ -45,7 +45,7 @@ describe('corediff apply', function () {
             storage.deleteProject({projectId: projectId})
                 .then(function () {
                     return testFixture.importProject(storage, {
-                        projectSeed: 'seeds/ActivePanels.json',
+                        projectSeed: 'seeds/ActivePanels.webgmex',
                         projectName: projectName,
                         branchName: 'base',
                         gmeConfig: gmeConfig,

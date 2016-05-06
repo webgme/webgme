@@ -942,7 +942,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             projectStr,
             deferred = Q.defer();
 
-        Q.ninvoke(blobClient, 'getObject', packageHash)
+        blobClient.getObject(packageHash)
             .then(function (buffer) {
                 if (buffer instanceof Buffer !== true) {
                     throw new Error('invalid package received');
@@ -954,7 +954,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         if (entryName === 'project.json') {
                             projectStr = zip.readAsText(entry);
                         } else {
-                            return Q.ninvoke(artifact, 'addFileAsSoftLink', entryName, zip.readFile(entry));
+                            return artifact.addFileAsSoftLink(entryName, zip.readFile(entry));
                         }
                     })
                 );

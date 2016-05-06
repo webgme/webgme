@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('Simple worker', function () {
+describe.only('Simple worker', function () {
     'use strict';
 
     var WebGME,
@@ -92,7 +92,7 @@ describe('Simple worker', function () {
             .then(function () {
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: libraryProjectContext.name,
                         branchName: libraryProjectContext.branch,
                         gmeConfig: gmeConfig,
@@ -106,7 +106,7 @@ describe('Simple worker', function () {
 
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: readOnlyProjectContext.name,
                         branchName: readOnlyProjectContext.branch,
                         gmeConfig: gmeConfig,
@@ -130,7 +130,7 @@ describe('Simple worker', function () {
 
                 return testFixture.importProject(storage,
                     {
-                        projectSeed: 'seeds/EmptyProject.json',
+                        projectSeed: 'seeds/EmptyProject.webgmex',
                         projectName: baseProjectContext.name,
                         branchName: baseProjectContext.branch,
                         gmeConfig: gmeConfig,
@@ -1785,7 +1785,7 @@ describe('Simple worker', function () {
     });
 
     //saveProjectIntoFile
-    it('should saveProjectIntoFile given a branchName.', function (done) {
+    it('should saveProjectToFile given a branchName.', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1813,7 +1813,7 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should saveProjectIntoFile given a hash (rootHash)', function (done) {
+    it('should saveProjectToFile given a hash (rootHash)', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1841,7 +1841,7 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should saveProjectIntoFile given a commit (commitHash).', function (done) {
+    it('should saveProjectToFile given a commit (commitHash).', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1869,7 +1869,7 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should fail to saveProjectIntoFile when branchName does not exist.', function (done) {
+    it('should fail to saveProjectToFile when branchName does not exist.', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1894,7 +1894,7 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should fail to saveProjectIntoFile when hash (rootHash) does not exist.', function (done) {
+    it('should fail to saveProjectToFile when hash (rootHash) does not exist.', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1919,7 +1919,7 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should fail to saveProjectIntoFile when commit (commitHash) does not exist.', function (done) {
+    it('should fail to saveProjectToFile when commit (commitHash) does not exist.', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1944,7 +1944,7 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
-    it('should fail to saveProjectIntoFile when projectId is not correct', function (done) {
+    it('should fail to saveProjectToFile when projectId is not correct', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -1970,7 +1970,7 @@ describe('Simple worker', function () {
             .done();
     });
 
-    it('should fail to saveProjectIntoFile when command parameters are invalid', function (done) {
+    it('should fail to saveProjectToFile when command parameters are invalid', function (done) {
         var worker = getSimpleWorker();
 
         worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
@@ -2137,7 +2137,7 @@ describe('Simple worker', function () {
 
                 return restoreProcessFunctions();
             })
-            .then(function(){
+            .then(function () {
                 worker = getSimpleWorker();
                 return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
             })

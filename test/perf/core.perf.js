@@ -4,7 +4,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 var testFixture = require('../_globals.js'),
-    PROJECT_FILE = 'seeds/ActivePanels.json',
+    PROJECT_FILE = 'seeds/ActivePanels.webgmex',
     jsonPatcher = testFixture.requirejs('common/util/jsonPatcher'),
     getPatchObject = testFixture.requirejs('common/storage/util').getPatchObject,
     serializer = testFixture.requirejs('common/core/users/serialization'),

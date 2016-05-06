@@ -64,7 +64,7 @@ describe('Executor Plugin', function () {
             })
             .then(function () {
                 return testFixture.importProject(safeStorage, {
-                    projectSeed: './seeds/ActivePanels.json',
+                    projectSeed: './seeds/ActivePanels.webgmex',
                     projectName: projectName,
                     branchName: 'master',
                     gmeConfig: gmeConfig,
