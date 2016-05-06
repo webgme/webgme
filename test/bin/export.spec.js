@@ -103,7 +103,7 @@ describe('export CLI tests', function () {
             })
             .catch(function (err) {
                 expect(err).not.to.equal(null);
-                expect(err.message).to.include('badOwner');
+                expect(err.message).to.include('invalid argument');
                 done();
             })
             .done();
@@ -120,22 +120,10 @@ describe('export CLI tests', function () {
             })
             .catch(function (err) {
                 expect(err).not.to.equal(null);
-                expect(err.message).to.include('badBranch');
+                expect(err.message).to.include('invalid argument');
                 done();
             })
             .done();
-    });
-
-    it('should export the project to the console', function (done) {
-        exportCli.main(['node', filename,
-            '-p', projectName,
-            '-u', gmeConfig.authentication.guestAccount,
-            '-s', 'master'
-        ])
-            .then(function () {
-                done();
-            })
-            .catch(done);
     });
 
     it('should export the project into a file', function (done) {
@@ -146,20 +134,6 @@ describe('export CLI tests', function () {
         ])
             .then(function () {
                 expect()
-                done();
-            })
-            .catch(done);
-    });
-
-    it('should export using the programmatic interface', function (done) {
-        exportCli.run({gmeConfig: gmeConfig,
-                       projectName: projectName,
-                       source: 'master',
-                       outFile: outputPath})
-            .then(function () {
-                var output = JSON.parse(testFixture.fs.readFileSync(outputPath));
-                expect(output).to.deep.equal(jsonProject);
-
                 done();
             })
             .catch(done);
