@@ -23,7 +23,7 @@ describe('CorePlugins', function () {
             'ConfigurationArtifact',
             'DecoratorGenerator',
             'ExecutorPlugin',
-            'ExportImport',
+            'ImportV1',
             'MergeExample',
             'MetaGMEParadigmImporter',
             'MinimalWorkingExample',
@@ -42,7 +42,8 @@ describe('CorePlugins', function () {
             'MetaGMEParadigmImporter',
             'MultipleMainCallbackCalls',
             'InvalidActiveNode',
-            'ConstraintEvaluator'
+            'ConstraintEvaluator',
+            'ImportV1'
         ],
         projectNames = pluginNames.map(function (name) {
             return name + 'TestMain';

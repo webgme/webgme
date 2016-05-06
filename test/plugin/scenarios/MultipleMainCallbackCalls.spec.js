@@ -18,14 +18,13 @@ describe('MultipleMainCallbackCalls', function () {
         PluginCliManager = require('../../../src/plugin/climanager'),
         project,
         projectName = 'plugin_mmcc',
-        projectId = testFixture.projectName2Id(projectName),
         branchName = 'master',
         commitHash,
         gmeAuth;
 
     before(function (done) {
         var importParam = {
-            projectSeed: './test/plugin/scenarios/plugins/MultipleMainCallbackCalls/project.json',
+            projectSeed: 'seeds/EmptyProject.webgmex',
             projectName: projectName,
             branchName: branchName,
             logger: logger,

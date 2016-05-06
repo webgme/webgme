@@ -6,10 +6,10 @@
 
 var testFixture = require('../../../_globals');
 
-describe('Plugin ExportImport', function () {
+describe('Plugin ImportV1', function () {
     'use strict';
 
-    var pluginName = 'ExportImport',
+    var pluginName = 'ImportV1',
         PluginBase = testFixture.requirejs('plugin/PluginBase'),
         BlobFSBackend = require('../../../../src/server/middleware/blob/BlobFSBackend'),
         BlobRunPluginClient = require('../../../../src/server/middleware/blob/BlobRunPluginClient'),
@@ -20,7 +20,7 @@ describe('Plugin ExportImport', function () {
         Q = testFixture.Q,
         PluginCliManager = require('../../../../src/plugin/climanager'),
         project,
-        projectName = 'Plugin_ExportImport',
+        projectName = 'Plugin_ImportV1',
         commitHash,
         emptyProjectBlobHash,
         activePanelsBlobHash,
@@ -59,9 +59,9 @@ describe('Plugin ExportImport', function () {
             })
             .then(function () {
                 var blobBackend = new BlobFSBackend(gmeConfig, logger),
-                    filePath1 = testFixture.SEED_DIR + 'EmptyProject.json',
-                    filePath2 = testFixture.SEED_DIR + 'ActivePanels.json',
-                    filePath3 = './test/plugin/coreplugins/ExportImport/assets/ActivePanelModel_lib.json';
+                    filePath1 = './test/plugin/coreplugins/ImportV1/assets/EmptyProject.json',
+                    filePath2 = './test/plugin/coreplugins/ImportV1/assets/ActivePanels.json',
+                    filePath3 = './test/plugin/coreplugins/ImportV1/assets/ActivePanelModel_lib.json';
                 blobClient = new BlobRunPluginClient(blobBackend, logger.fork('Blob'));
 
                 return Q.allDone([
@@ -90,10 +90,10 @@ describe('Plugin ExportImport', function () {
         pluginManager.initializePlugin(pluginName)
             .then(function (plugin) {
                 expect(plugin instanceof PluginBase).to.equal(true);
-                expect(plugin.getName()).to.equal('Export, Import and Update Library');
+                expect(plugin.getName()).to.equal('Import from webgme v1');
                 expect(typeof plugin.getDescription ()).to.equal('string');
                 expect(plugin.getConfigStructure() instanceof Array).to.equal(true);
-                expect(plugin.getConfigStructure().length).to.equal(3);
+                expect(plugin.getConfigStructure().length).to.equal(2);
             })
             .nodeify(done);
     });
@@ -145,28 +145,6 @@ describe('Plugin ExportImport', function () {
             expect(result.success).to.equal(false);
             done();
         });
-    });
-
-    it('should export Active Panels', function (done) {
-        var pluginContext = {
-                commitHash: commitHash,
-                branchName: 'master'
-            },
-            pluginConfig = {
-                type: 'Export'
-            },
-            contentHash;
-
-        Q.ninvoke(pluginManager, 'executePlugin', pluginName, pluginConfig, pluginContext)
-            .then(function (result) {
-                expect(result.success).to.equal(true);
-                return Q.ninvoke(blobClient, 'getMetadata', result.artifacts[0]);
-            })
-            .then(function (metadata) {
-                contentHash = metadata.content['project.json'].content;
-                expect(typeof contentHash).to.equal('string');
-            })
-            .nodeify(done);
     });
 
     it('should ImportProject EmptyProject into Active Panels', function (done) {

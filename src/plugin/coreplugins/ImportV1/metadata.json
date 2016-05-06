@@ -1,0 +1,35 @@
+{
+  "id": "ImportV1",
+  "name": "Import from webgme v1",
+  "version": "2.0.0",
+  "description": "Imports projects from webgme version 1",
+  "icon": {
+    "src": "",
+    "class": "glyphicon glyphicon-refresh"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "writeAccessRequired": false,
+  "configStructure": [
+    {
+      "name": "type",
+      "displayName": "Type",
+      "description": "What action should be taken?",
+      "value": "ImportProject",
+      "valueType": "string",
+      "valueItems": [
+        "ImportProject",
+        "ImportLibrary",
+        "UpdateLibrary"
+      ]
+    },
+    {
+      "name": "file",
+      "displayName": "Import file(s)",
+      "description": "WebGME library file and optionally exported assets.",
+      "value": "",
+      "valueType": "asset",
+      "readOnly": false
+    }
+  ]
+}

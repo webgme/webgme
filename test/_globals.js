@@ -439,6 +439,7 @@ function importProject(storage, parameters, callback) {
 
     if (typeof parameters.projectSeed === 'string') {
         if (parameters.projectSeed.toLowerCase().indexOf('.zip') > -1) {
+            extractDeferred.reject(new Error('zip file:', parameters.projectSeed));
             BC = require('../src/server/middleware/blob/BlobClientWithFSBackend');
             WR = require('../src/server/worker/workerrequests');
             blobClient = new BC(parameters.gmeConfig, parameters.logger);
@@ -460,6 +461,8 @@ function importProject(storage, parameters, callback) {
                 })
                 .catch(extractDeferred.reject);
         } else {
+            extractDeferred.reject(new Error('json file:', parameters.projectSeed));
+            return;
             try {
                 extractDeferred.resolve(loadJsonFile(parameters.projectSeed));
             } catch (e) {
@@ -467,6 +470,7 @@ function importProject(storage, parameters, callback) {
             }
         }
     } else if (typeof parameters.projectSeed === 'object') {
+        extractDeferred.reject(new Error('json file:', parameters.projectSeed));
         extractDeferred.resolve(parameters.projectSeed);
     } else {
         extractDeferred.reject('parameters.projectSeed must be filePath or object!');

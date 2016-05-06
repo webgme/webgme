@@ -1,0 +1,123 @@
+{
+  "_metadata": {
+    "hasAssets": false,
+    "rootGuid": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+    "type": "project"
+  },
+  "bases": {},
+  "root": {
+    "path": "",
+    "guid": "03d36072-9e09-7866-cb4e-d0a36ff825f6"
+  },
+  "relids": {
+    "03d36072-9e09-7866-cb4e-d0a36ff825f6": null,
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": "1"
+  },
+  "containment": {
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {}
+  },
+  "nodes": {
+    "03d36072-9e09-7866-cb4e-d0a36ff825f6": {
+      "attributes": {
+        "name": "ROOT"
+      },
+      "base": null,
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "minItems": [
+            -1
+          ],
+          "maxItems": [
+            -1
+          ],
+          "items": [
+            "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045"
+          ]
+        }
+      },
+      "parent": null,
+      "pointers": {
+        "base": null
+      },
+      "registry": {
+        "MetaSheets": [
+          {
+            "SetID": "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d",
+            "order": 0,
+            "title": "META"
+          }
+        ],
+        "ProjectRegistry": {
+          "FCO_ID": "/1"
+        },
+        "usedAddOns": "",
+        "validPlugins": "",
+        "validDecorators": "ModelDecorator CircleDecorator MetaDecorator SVGDecorator UMLStateMachineDecorator DefaultDecorator",
+        "validVisualizers": "ModelEditor METAAspect"
+      },
+      "sets": {
+        "MetaAspectSet": [
+          {
+            "attributes": {},
+            "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "registry": {
+              "position": {
+                "x": 100,
+                "y": 100
+              }
+            }
+          }
+        ],
+        "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": [
+          {
+            "attributes": {},
+            "guid": "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045",
+            "registry": {
+              "position": {
+                "x": 100,
+                "y": 100
+              }
+            }
+          }
+        ]
+      }
+    },
+    "cd891e7b-e2ea-e929-f6cd-9faf4f1fc045": {
+      "attributes": {
+        "name": "FCO"
+      },
+      "base": null,
+      "meta": {
+        "attributes": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "parent": "03d36072-9e09-7866-cb4e-d0a36ff825f6",
+      "pointers": {
+        "base": null
+      },
+      "registry": {
+        "DisplayFormat": "$name",
+        "PortSVGIcon": "",
+        "SVGIcon": "",
+        "decorator": "",
+        "isAbstract": false,
+        "isPort": false,
+        "position": {
+          "x": 100,
+          "y": 100
+        },
+        "validVisualizers": "ModelEditor METAAspect SetEditor Crosscut GraphViz"
+      },
+      "sets": {}
+    }
+  },
+  "metaSheets": {}
+}

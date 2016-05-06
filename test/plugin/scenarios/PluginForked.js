@@ -43,7 +43,7 @@ describe('Run PluginForked', function () {
 
     beforeEach(function (done) {
         var importParam = {
-            projectSeed: './test/plugin/scenarios/plugins/MultipleMainCallbackCalls/project.json',
+            projectSeed: 'seeds/EmptyProject.webgmex',
             projectName: projectName,
             logger: logger,
             gmeConfig: gmeConfig
