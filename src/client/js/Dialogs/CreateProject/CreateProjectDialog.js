@@ -195,11 +195,15 @@ define(['js/Loader/LoaderCircles',
 
         this._btnCreateBlob.disable(true);
 
-        this.assetWidget.onFinishChange(function (hash) {
+        this.assetWidget.onFinishChange(function (data) {
             self._btnCreateBlob.disable(true);
 
-            // TODO: Support exported zip file too.
-            self.blobClient.getMetadata(hash)
+            if (!data.newValue) {
+                self._logger.error(new Error('New data does not have a value, ' + data));
+                return;
+            }
+
+            self.blobClient.getMetadata(data.newValue)
                 .then(function (metadata) {
                     if (metadata.name.toLowerCase().lastIndexOf('.webgmex') ===
                         metadata.name.length - '.webgmex'.length) {
