@@ -932,7 +932,7 @@ describe('corediff-merge', function () {
         });
     });
 
-    describe.only('collision', function () {
+    describe('collision', function () {
         var projectName = 'corediffMergeCollisionTests',
             projectId = testFixture.projectName2Id(projectName),
             project,
