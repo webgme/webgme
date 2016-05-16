@@ -136,7 +136,7 @@ define([
 
             function removeLibraryRelations(root, path) {
                 var overlay = self.getChild(root, CONSTANTS.OVERLAYS_PROPERTY),
-                    selfOverlays = JSON.parse(JSON.stringify(self.getProperty(overlay, path))),
+                    selfOverlays = JSON.parse(JSON.stringify(self.getProperty(overlay, path) || {})),
                     key, collKey, i;
 
                 for (key in selfOverlays) {
