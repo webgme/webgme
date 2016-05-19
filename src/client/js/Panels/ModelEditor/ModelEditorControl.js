@@ -1101,20 +1101,8 @@ define(['js/logger',
         this._toolbarItems = [];
 
         /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
-
-        /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
-        this.$btnModelHierarchyUp = toolBar.addButton({
-            title: 'Go to parent',
-            icon: 'glyphicon glyphicon-circle-arrow-up',
-            clickFn: function (/*data*/) {
-                self._onModelHierarchyUp();
-            }
-        });
-        this._toolbarItems.push(this.$btnModelHierarchyUp);
-
-        this.$btnModelHierarchyUp.hide();
-
         /************** REMOVE CONNECTION SEGMENTPOINTS BUTTON ****************/
+        //TODO: This btn should probably be moved to the ContextMenu
         this.$btnConnectionRemoveSegmentPoints = toolBar.addButton(
             {
                 title: 'Remove segment points',
@@ -1126,6 +1114,18 @@ define(['js/logger',
         this._toolbarItems.push(this.$btnConnectionRemoveSegmentPoints);
         this.$btnConnectionRemoveSegmentPoints.enabled(false);
 
+        /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
+        this.$btnModelHierarchyUp = toolBar.addButton({
+            title: 'Go to parent',
+            icon: 'glyphicon glyphicon-circle-arrow-up',
+            clickFn: function (/*data*/) {
+                self._onModelHierarchyUp();
+            }
+        });
+        this._toolbarItems.push(this.$btnModelHierarchyUp);
+
+        this.$btnModelHierarchyUp.enabled(false);
+
         this._toolbarInitialized = true;
     };
 
@@ -1135,9 +1135,9 @@ define(['js/logger',
 
     ModelEditorControl.prototype._refreshBtnModelHierarchyUp = function () {
         if (this.currentNodeInfo.id && this.currentNodeInfo.id !== this._topNode) {
-            this.$btnModelHierarchyUp.show();
+            this.$btnModelHierarchyUp.enabled(true);
         } else {
-            this.$btnModelHierarchyUp.hide();
+            this.$btnModelHierarchyUp.enabled(false);
         }
     };
 
