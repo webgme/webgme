@@ -110,26 +110,20 @@ define(['js/logger',
             }
         });
 
-        this._nodeEventHandling = function (/*events*/) {
-            var /*metaChange = false,
-             metaNodes = self._client.getAllMetaNodes() || [],
-             metaPaths = [],
-             i,*/
+        this._nodeEventHandling = function (events) {
+            var containerChanged = false,
+                i,
                 newShortMetaDescriptor = self._getShortMetaDescriptor();
 
-            // for (i = 0; i < metaNodes.length; i += 1) {
-            //     metaPaths.push(metaNodes[i].getId());
-            // }
-            // metaPaths.push(CONSTANTS.PROJECT_ROOT_ID);
+            for (i = 0; i < events.length; i += 1) {
+                if (events[i].eid === self._containerNodeId) {
+                    containerChanged = true;
+                    break;
+                }
+            }
 
-            // for (i = 0; i < events.length; i += 1) {
-            //     if (metaPaths.indexOf(events[i].eid) !== -1) {
-            //         metaChange = true;
-            //         break;
-            //     }
-            // }
-
-            if (JSON.stringify(self._shortMetaDescriptor) !== JSON.stringify(newShortMetaDescriptor)) {
+            if ((JSON.stringify(self._shortMetaDescriptor) !== JSON.stringify(newShortMetaDescriptor)) ||
+                containerChanged) {
                 self._shortMetaDescriptor = newShortMetaDescriptor;
                 self._updateLibrarySelector();
                 self._updateDescriptor(self._getPartDescriptorCollection());
@@ -169,7 +163,8 @@ define(['js/logger',
         for (i = 0; i < guids.length; i += 1) {
             result[guids[i]] = {
                 path: allMetaNodes[guidLookupTable[guids[i]]].getId(),
-                name: allMetaNodes[guidLookupTable[guids[i]]].getAttribute('name')
+                name: allMetaNodes[guidLookupTable[guids[i]]].getAttribute('name'),
+                meta: this._client.getChildrenMeta(guidLookupTable[guids[i]])
             };
         }
 
@@ -330,18 +325,6 @@ define(['js/logger',
 
         if (this._containerNodeId) {
             patterns[this._containerNodeId] = {children: 0};
-
-            keys = Object.keys(this._partInstances || {}).sort();
-            for (i = 0; i < keys.length; i += 1) {
-                if (this._partInstances[keys[i]]) {
-                    //console.log(this._partInstances[keys[i]].getTerritoryQuery());
-                    query = this._partInstances[keys[i]].getTerritoryQuery() || {};
-
-                    if (query[keys[i]]) {
-                        patterns[keys[i]] = query[keys[i]];
-                    }
-                }
-            }
         }
 
         return patterns;
