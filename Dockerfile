@@ -1,3 +1,24 @@
+# This dockerfile is intended to build a docker image on a clean copy of the webmge repository!
+#
+# Use the following steps to build and start-up your dockerized webgme:
+# (assuming that you have docker properly installed on your machine)
+# 1. go to the directory where this file exixst
+# 2. docker build -t webgme .
+# 3. docker run -d -p 8888:8888 --name=webgme webgme
+#
+# The result of your last command will be the hash id of your container. After successfull startup,
+# you should be able to connect to your dockerized webgme on the 8888 port of your docker daemon machine
+# (the default ip address of the daemon is 192.168.99.100).
+#
+# Here is a list of a few usefull command
+# checking the status of your docker containers: docker ps -a
+# restart your docker container: docker restart webgme
+# stop your container: docker stop webgme
+# removing your container: docker rm webgme
+# removing your image: docker rmi webgme
+
+
+
 FROM ubuntu:14.04.3
 MAINTAINER Tamas Kecskes <tamas.kecskes@vanderbilt.edu>
 
@@ -29,18 +50,7 @@ RUN echo smallfiles = true >> /etc/mongodb.conf
 WORKDIR /usr/app
 
 # copy app source
-# TODO we should take .dockerignore into use
-COPY seeds /usr/app/seeds/
-COPY src /usr/app/src/
-COPY config /usr/app/config/
-COPY utils /usr/app/utils/
-COPY teststorage /usr/app/teststorage/
-COPY package.json /usr/app
-COPY webgme.js /usr/app
-COPY .bowerrc /usr/app
-COPY jsdoc_conf.json /usr/app
-COPY jsdocdefs.js /usr/app
-COPY README.md /usr/app
+ADD . /usr/app/
 
 # Install app dependencies
 RUN npm install --unsafe-perm
@@ -54,11 +64,3 @@ RUN echo '/etc/init.d/mongodb start' >> /root/run.sh &&\
 EXPOSE 8888
 
 CMD ["bash", "-xe", "/root/run.sh"]
-
-# useful commands
-# docker build -t webgme .
-# docker kill webgme; docker rm webgme
-# docker run -p 8888:8888 --name=webgme webgme
-# docker logs -f webgme
-# docker ps
-# docker exec webgme mongorestore
