@@ -170,7 +170,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         logger.debug('socketId provided for plugin execution - notifications available.');
                         pluginManager.notificationHandlers = [function (data, callback) {
                             data.socketId = socketId;
-                            storage.webSocket.sendNotification(data, callback);
+                            storage.sendNotification(data, callback);
                         }];
                     } else {
                         logger.warn('No socketId provided for plugin execution - notifications NOT available.');

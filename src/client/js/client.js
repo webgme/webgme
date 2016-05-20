@@ -334,26 +334,21 @@ define([
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
                     storage.webSocket.addEventListener(CONSTANTS.STORAGE.NOTIFICATION,
                         function (emitter, eventData) {
-                            var notification = {
-                                severity: 'INFO',
-                                message: ''
-                            };
+                            logger.info('recieved notification', eventData);
                             if (eventData.type === CONSTANTS.STORAGE.BRANCH_ROOM_SOCKETS) {
-                                if (state.project && state.project.projectId === eventData.projectId &&
-                                    state.branchName === eventData.branchName) {
-                                    if (eventData.currNbrOfSockets > eventData.prevNbrOfSockets) {
-                                        notification.message = 'Another socket joined your branch [' +
-                                            eventData.currNbrOfSockets + ']';
-                                    } else {
-                                        notification.message = 'A socket disconnected from your branch [' +
-                                            eventData.currNbrOfSockets + ']';
-                                    }
-                                    self.dispatchEvent(CONSTANTS.NOTIFICATION, notification);
+                                self.dispatchConnectedUsersChanged(eventData);
+
+                                if (eventData.join === true) {
+                                    // A new socket joined our branch -> emit to the branch room letting
+                                    // any newly connected users know that we are in this branch too.
+                                    self.emitStateNotification();
                                 }
                             } else if (eventData.type === CONSTANTS.STORAGE.PLUGIN_NOTIFICATION) {
                                 self.dispatchPluginNotification(eventData);
                             } else if (eventData.type === CONSTANTS.STORAGE.ADD_ON_NOTIFICATION) {
                                 self.dispatchAddOnNotification(eventData);
+                            } else if (eventData.type === CONSTANTS.STORAGE.CLIENT_STATE_NOTIFICATION) {
+                                self.dispatchConnectedUsersChanged(eventData);
                             } else {
                                 logger.error('Unknown notification type', eventData.type, eventData);
                             }
@@ -2015,6 +2010,40 @@ define([
             } else {
                 callback(new Error('invalid parameters!'));
             }
+        };
+        
+        this.emitStateNotification = function () {
+            var data = {
+                type: CONSTANTS.STORAGE.CLIENT_STATE_NOTIFICATION,
+                state: null,
+                projectId: self.getActiveProjectId(),
+                branchName: self.getActiveBranchName()
+            };
+
+            if (!data.projectId || !data.branchName) {
+                // No need to send event if we're not a branch.
+                return;
+            }
+
+            if (typeof self.stateGetter === 'function') {
+                data.state = self.stateGetter();
+            }
+            logger.info('Sending state notification...');
+            storage.sendNotification(data, function (err) {
+                if (err) {
+                    logger.error('Sending state notification failed', data, err);
+                }
+
+                logger.info('Sending state notification succeeded');
+            });
+        };
+
+        this.dispatchConnectedUsersChanged = function (eventData) {
+            self.dispatchEvent(CONSTANTS.CONNECTED_USERS_CHANGED, eventData);
+        };
+
+        this.registerStateGetter = function (stateGetter) {
+            self.stateGetter = stateGetter;
         };
 
         this.gmeConfig = gmeConfig;

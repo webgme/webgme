@@ -33,6 +33,7 @@ define([
 
         // general notification event
         NOTIFICATION: 'NOTIFICATION',
+        CONNECTED_USERS_CHANGED: 'CONNECTED_USERS_CHANGED',
 
         // Constraint Checking
         META_RULES_RESULT: 'META_RULES_RESULT',

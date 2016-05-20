@@ -113,6 +113,10 @@ define([
                     }
                 );
 
+                client.registerStateGetter(function () {
+                    return WebGMEGlobal.State.toJSON();
+                });
+
                 document.title = config.pageTitle;
 
                 logger.info('init-phase true');

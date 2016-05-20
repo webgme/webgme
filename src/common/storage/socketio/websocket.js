@@ -315,14 +315,14 @@ define([
             self.socket.emit('simpleQuery', workerId, data, wrapError(callback));
         };
 
-        // Helper functions
-        this.getBranchUpdateEventName = function (projectId, branchName) {
-            return CONSTANTS.BRANCH_UPDATED + projectId + CONSTANTS.ROOM_DIVIDER + branchName;
-        };
-
         this.sendNotification = function (data, callback) {
             data.webgmeToken = ioClient.getToken();
             self.socket.emit('notification', data, wrapError(callback));
+        };
+
+        // Helper functions
+        this.getBranchUpdateEventName = function (projectId, branchName) {
+            return CONSTANTS.BRANCH_UPDATED + projectId + CONSTANTS.ROOM_DIVIDER + branchName;
         };
     }
 
