@@ -865,6 +865,9 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 getUserIdFromToken(socket, data.webgmeToken)
                     .then(function (userId) {
                         logger.debug('Incoming notification from', userId, {metadata: data});
+                        data.userId = userId;
+                        delete data.webgmeToken;
+
                         if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
                             if (data.socketId) {
                                 webSocket.to(data.socketId).emit(CONSTANTS.NOTIFICATION, data);
