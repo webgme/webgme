@@ -10,6 +10,7 @@ define([
     'js/PanelBase/PanelBase',
     'js/Widgets/ProjectTitle/ProjectTitleWidget',
     'js/Widgets/UserProfile/UserProfileWidget',
+    'js/Widgets/ConnectedUsers/ConnectedUsersWidget',
     'js/Toolbar/Toolbar',
     './ProjectNavigatorController',
     './DefaultToolbar',
@@ -18,6 +19,7 @@ define([
 ], function (PanelBase,
              ProjectTitleWidget,
              UserProfileWidget,
+             ConnectedUsersWidget,
              toolbar,
              ProjectNavigatorController,
              DefaultToolbar,
@@ -81,7 +83,7 @@ define([
         //main container
         var navBar = $('<div/>', {class: 'navbar navbar-inverse navbar-fixed-top'}),
             navBarInner = $('<div/>', {class: 'navbar-inner'}),
-            app, projectTitleEl, userProfileEl, toolBarEl;
+            app, projectTitleEl, userProfileEl, toolBarEl, connectedUsersEl;
 
         navBar.append(navBarInner);
         this.$el.append(navBar);
@@ -100,14 +102,19 @@ define([
         );
         //new ProjectTitleWidget(projectTitleEl, this._client);
         navBarInner.append(projectTitleEl);
+        navBarInner.append($('<div class="spacer pull-right"></div>'));
 
         //user info
         if (this._config.disableUserProfile === false) {
-            navBarInner.append($('<div class="spacer pull-right"></div>'));
             userProfileEl = $('<div/>', {class: 'inline pull-right', style: 'padding: 6px 0px;'});
             this.defaultUserProfileWidget = new UserProfileWidget(userProfileEl, this._client);
             navBarInner.append(userProfileEl);
         }
+
+        //connected users
+        connectedUsersEl = $('<div/>', {class: 'inline pull-right', style: 'padding: 6px 0px;'});
+        this.connectedUsersWidget = new ConnectedUsersWidget(connectedUsersEl, this._client);
+        navBarInner.append(connectedUsersEl);
 
         //toolbar
         toolBarEl = $('<div/>', {class: 'toolbar-container'});
