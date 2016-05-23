@@ -1,7 +1,27 @@
 # Change Log
 
-## [2.0.0](https://github.com/webgme/webgme/tree/2.0.0) (2016-05-06)
-[Full Changelog](https://github.com/webgme/webgme/compare/v1.7.2...2.0.0)
+## [v2.0.1](https://github.com/webgme/webgme/tree/v2.0.1) (2016-05-23)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.0.0...v2.0.1)
+
+**Implemented enhancements:**
+
+- Do not hide and show the nav btn \(use disable/enable\) [\#999](https://github.com/webgme/webgme/pull/999) ([pmeijer](https://github.com/pmeijer))
+- Remove left out only in test. [\#992](https://github.com/webgme/webgme/pull/992) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Containment cardinality check in PartBrowser is not refreshed on changes in Meta. [\#994](https://github.com/webgme/webgme/issues/994)
+- Library Update fails if there were a removal in the library [\#993](https://github.com/webgme/webgme/issues/993)
+- Delete webgme-token before emitting notification. [\#1000](https://github.com/webgme/webgme/pull/1000) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#994 Containment cardinality check in PartBrowser is not refreshed on changes in Meta. [\#996](https://github.com/webgme/webgme/pull/996) ([kecso](https://github.com/kecso))
+- Fixes \#993 Library Update fails if there were a removal in the library [\#995](https://github.com/webgme/webgme/pull/995) ([kecso](https://github.com/kecso))
+
+**Closed issues:**
+
+- Minor - Correcting link to API documentation in README [\#997](https://github.com/webgme/webgme/issues/997)
+
+## [v2.0.0](https://github.com/webgme/webgme/tree/v2.0.0) (2016-05-06)
+[Full Changelog](https://github.com/webgme/webgme/compare/v1.7.2...v2.0.0)
 
 **Implemented enhancements:**
 
@@ -13,6 +33,7 @@
 - Fixes \#970 Seeding from existing project loses library info [\#986](https://github.com/webgme/webgme/pull/986) ([kecso](https://github.com/kecso))
 - Implemented namespace selector and name-only type list in part-browser [\#985](https://github.com/webgme/webgme/pull/985) ([kecso](https://github.com/kecso))
 - Plugin execution [\#980](https://github.com/webgme/webgme/pull/980) ([pmeijer](https://github.com/pmeijer))
+- Client build cont [\#960](https://github.com/webgme/webgme/pull/960) ([pmeijer](https://github.com/pmeijer))
 
 **Fixed bugs:**
 
@@ -22,6 +43,7 @@
 - Closes \#969 redraw canvas on connection changes [\#990](https://github.com/webgme/webgme/pull/990) ([pmeijer](https://github.com/pmeijer))
 - Fixes \#963 Adding and removing library node to main meta sheet removes the node from the global meta. [\#987](https://github.com/webgme/webgme/pull/987) ([kecso](https://github.com/kecso))
 - Fixes \#982 Gathering collection information for a node inside a complex instantiation crashes the core [\#983](https://github.com/webgme/webgme/pull/983) ([kecso](https://github.com/kecso))
+- Fix for panels not being resizable when using distribution. [\#967](https://github.com/webgme/webgme/pull/967) ([pmeijer](https://github.com/pmeijer))
 
 **Closed issues:**
 
@@ -37,7 +59,6 @@
 
 **Implemented enhancements:**
 
-- Client build cont [\#960](https://github.com/webgme/webgme/pull/960) ([pmeijer](https://github.com/pmeijer))
 - ImportProject in testFixture supports webgmex seeds. [\#979](https://github.com/webgme/webgme/pull/979) ([pmeijer](https://github.com/pmeijer))
 - Enable webgmex usage in import/export bin scripts [\#977](https://github.com/webgme/webgme/pull/977) ([kecso](https://github.com/kecso))
 - Refactoring of export import functionality regarding new project package [\#974](https://github.com/webgme/webgme/pull/974) ([kecso](https://github.com/kecso))
@@ -51,7 +72,6 @@
 - Add Library Exception [\#961](https://github.com/webgme/webgme/issues/961)
 - Suppressing look up of visualizer from node should still update listed visualizers. [\#957](https://github.com/webgme/webgme/issues/957)
 - When checking project constraints the links to offending nodes are broken. [\#948](https://github.com/webgme/webgme/issues/948)
-- Fix for panels not being resizable when using distribution. [\#967](https://github.com/webgme/webgme/pull/967) ([pmeijer](https://github.com/pmeijer))
 - Refactoring of export import functionality regarding new project package [\#974](https://github.com/webgme/webgme/pull/974) ([kecso](https://github.com/kecso))
 - Closes \#948 Ensure node loaded when setting state [\#965](https://github.com/webgme/webgme/pull/965) ([pmeijer](https://github.com/pmeijer))
 - Fix base loading mechanism [\#962](https://github.com/webgme/webgme/pull/962) ([kecso](https://github.com/kecso))
