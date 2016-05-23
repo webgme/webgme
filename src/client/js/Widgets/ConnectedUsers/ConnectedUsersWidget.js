@@ -147,6 +147,7 @@ define([
             color: this.rooms[roomName].colors[colorInd],
             $el: $('<button/>', {
                 class: 'user-badge btn btn-xs',
+                title: eventData.userId,
                 text: eventData.userId[0].toUpperCase() // Display first letter of the user.
             }),
             state: {}
@@ -167,7 +168,7 @@ define([
         }
 
         this.rooms[roomName].users[eventData.userId] = userInfo;
-        this.$el.append(userInfo.$el);
+        this.$el.append(userInfo.$el).hide().fadeIn(3000);
     };
 
     ConnectedUsersWidget.prototype._userLeft = function (eventData) {

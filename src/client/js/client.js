@@ -337,12 +337,12 @@ define([
                             logger.info('recieved notification', eventData);
                             if (eventData.type === CONSTANTS.STORAGE.BRANCH_ROOM_SOCKETS) {
                                 self.dispatchConnectedUsersChanged(eventData);
+                                // If a new socket joined our branch -> emit to the branch room letting
+                                // any newly connected users know that we are in this branch too.
+                                // If a socket with the same userId as us disconnected -> emit to
+                                // make sure we're not deleted from the other users.
+                                self.emitStateNotification();
 
-                                if (eventData.join === true) {
-                                    // A new socket joined our branch -> emit to the branch room letting
-                                    // any newly connected users know that we are in this branch too.
-                                    self.emitStateNotification();
-                                }
                             } else if (eventData.type === CONSTANTS.STORAGE.PLUGIN_NOTIFICATION) {
                                 self.dispatchPluginNotification(eventData);
                             } else if (eventData.type === CONSTANTS.STORAGE.ADD_ON_NOTIFICATION) {
