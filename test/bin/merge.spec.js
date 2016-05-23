@@ -15,6 +15,7 @@ describe('merge CLI test', function () {
         Q = testFixture.Q,
         expect = testFixture.expect,
         rimraf = testFixture.rimraf,
+        __should = testFixture.should,
         database,
         gmeAuth,
         projectName = 'mergeCliTest',
