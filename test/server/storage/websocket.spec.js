@@ -2,6 +2,7 @@
 /*jshint node:true, newcap:false, mocha:true*/
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 var testFixture = require('../../_globals.js');
@@ -20,6 +21,7 @@ describe('WebSocket', function () {
         gmeAuth,
         projectName = 'WebSocketTestProject',
         projectNameUnauthorized = 'WebSocketTestUnauthorizedProject',
+        projectEmitNotification = 'guest+projectEmit',
 
         projects = [
             projectName,
@@ -43,11 +45,19 @@ describe('WebSocket', function () {
         agent,
         webgmeToken,//TODO: this is not a nice approach, but don't want change all openSocketIo
 
-        openSocketIo = function (token, callback) {
+        openSocketIo = function (token, returnToken, callback) {
             return testFixture.openSocketIo(server, agent, guestAccount, guestAccount, token)
                 .then(function (result) {
                     webgmeToken = result.webgmeToken;
-                    return result.socket;
+
+                    if (returnToken) {
+                        return {
+                            socket: result.socket,
+                            webgmeToken: webgmeToken
+                        };
+                    } else {
+                        return result.socket;
+                    }
                 })
                 .nodeify(callback);
         };
@@ -88,6 +98,12 @@ describe('WebSocket', function () {
                                     read: false,
                                     write: false,
                                     delete: false
+                                }),
+                            gmeAuth.authorizeByUserId(guestAccount, projectEmitNotification, 'create',
+                                {
+                                    read: true,
+                                    write: true,
+                                    delete: true
                                 })
                         ]);
                     })
@@ -139,6 +155,65 @@ describe('WebSocket', function () {
                         return;
                     }
                     throw new Error('should have failed to getConnectionInfo: ' + err);
+                })
+                .nodeify(done);
+        });
+
+        it('should not emit web-token when sending addon notification', function (done) {
+            var emitter,
+                receiver,
+                emitted = false,
+                received = false;
+
+            Q.allDone([
+                openSocketIo(null, true),
+                openSocketIo(null, true)
+            ])
+                .then(function (res) {
+                    emitter = res[0];
+                    receiver = res[1];
+
+                    return Q.allDone([
+                        Q.ninvoke(emitter.socket, 'emit', 'watchBranch', {
+                            webgmeToken: emitter.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                        Q.ninvoke(receiver.socket, 'emit', 'watchBranch', {
+                            webgmeToken: receiver.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                    ]);
+                })
+                .then(function () {
+                    var deferred = Q.defer();
+                    receiver.socket.on(CONSTANTS.NOTIFICATION, function (data) {
+                        received = true;
+                        expect(typeof data.webgmeToken).to.equal('undefined', 'webgmeToken transmitted!');
+
+                        if (emitted === true) {
+                            deferred.resolve();
+                        }
+                    });
+
+                    Q.ninvoke(emitter.socket, 'emit', 'notification', {
+                        type: CONSTANTS.ADD_ON_NOTIFICATION,
+                        webgmeToken: emitter.webgmeToken,
+                        projectId: projectEmitNotification,
+                        branchName: 'master'
+                    })
+                        .then(function () {
+                            emitted = true;
+                            if (received === true) {
+                                deferred.resolve();
+                            }
+                        })
+                        .catch(deferred.reject);
+
+                    return deferred.promise;
                 })
                 .nodeify(done);
         });
