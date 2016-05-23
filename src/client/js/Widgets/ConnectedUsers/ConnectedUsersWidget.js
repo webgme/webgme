@@ -8,25 +8,32 @@
 
 define([
     'js/logger',
+    'js/UIEvents',
     'css!./styles/ConnectedUsersWidget.css',
     'jquery'
-], function (Logger) {
+], function (Logger, UI_EVENTS) {
     'use strict';
 
     var COLORS = [
-        'aqua',
-        'aquamarine',
-        'blue',
-        'blueviolet',
-        'coral',
-        'chartreuse',
-        'orange',
-        'fuchsia',
-        'khaki',
-        'orangered',
-        'plum',
-        'yellow',
-        'red'
+        // 'aqua',
+        // 'aquamarine',
+        // 'blue',
+        // 'blueviolet',
+        // 'coral',
+        // 'chartreuse',
+        // 'orange',
+        // 'fuchsia',
+        // 'khaki',
+        // 'orangered',
+        // 'plum',
+        // 'yellow',
+        // 'red'
+        'default',
+        'primary',
+        'success',
+        'danger',
+        'info',
+        'warning'
     ];
 
     function ConnectedUsersWidget(containerEl, client) {
@@ -42,7 +49,12 @@ define([
 
         containerEl.append(this.$el);
 
-        this.users = {};
+        this.rooms = {
+            //<projectId>%<branchName>: {
+                    //users: {},
+                    //colors: {}
+                //}
+        };
 
         this.userId = WebGMEGlobal.userInfo._id;
 
@@ -50,7 +62,7 @@ define([
             self._userChanged(eventData);
         });
 
-        this.client.addEventListener(this.client.CONSTANTS.PROJECT_CLOSED, function (/*_client*/) {
+        this.client.addEventListener(this.client.CONSTANTS.PROJECT_OPENED, function (/*_client*/) {
             self._reinitialize();
         });
 
@@ -64,9 +76,30 @@ define([
     }
 
     ConnectedUsersWidget.prototype._reinitialize = function () {
-        this.$el.empty();
-        this.users = {};
-        this.colors = COLORS.slice();
+        var projectId = this.client.getActiveProjectId(),
+            branchName = this.client.getActiveBranchName(),
+            self = this,
+            roomName;
+
+        if (!projectId || !branchName) {
+            this.$el.empty();
+            this.rooms = {};
+        } else {
+            roomName = this._getBranchRoomName({projectId: projectId, branchName: branchName});
+            Object.keys(this.rooms).forEach(function (rName) {
+                if (rName !== roomName) {
+                    // The room data is not the current one.
+                    Object.keys(self.rooms[rName].users).forEach(function (uName) {
+                        // For each user clear event handlers ..
+                        self.rooms[rName].users[uName].$el.off('click');
+                        // and remove user element from the DOM..
+                        self.rooms[rName].users[uName].$el.remove();
+                    });
+                    // and delete the room.
+                    delete self.rooms[rName];
+                }
+            });
+        }
     };
 
     ConnectedUsersWidget.prototype._userChanged = function (eventData) {
@@ -87,10 +120,17 @@ define([
     };
 
     ConnectedUsersWidget.prototype._userJoined = function (eventData) {
-        var colorInd,
+        var roomName = this._getBranchRoomName(eventData),
+            self = this,
+            colorInd,
             userInfo;
 
-        if (this.users.hasOwnProperty(eventData.userId) === true) {
+        this.rooms[roomName] = this.rooms[roomName] || {
+                users: {},
+                colors: COLORS.slice()
+            };
+
+        if (this.rooms[roomName].users.hasOwnProperty(eventData.userId) === true) {
             this.logger.debug('New user was already added', eventData.userId);
             return;
         }
@@ -100,43 +140,54 @@ define([
             return;
         }
 
-        colorInd = Math.floor(Math.random() * this.colors.length);
+        colorInd = Math.floor(Math.random() * this.rooms[roomName].colors.length);
 
         userInfo = {
             userId: eventData.userId,
-            color: this.colors[colorInd],
-            $el: $('<div/>', {
-                class: 'user-badge',
+            color: this.rooms[roomName].colors[colorInd],
+            $el: $('<button/>', {
+                class: 'user-badge btn btn-xs',
                 text: eventData.userId[0].toUpperCase() // Display first letter of the user.
             }),
             state: {}
         };
 
-        userInfo.$el.css('background-color', userInfo.color);
+        // userInfo.$el.css('background-color', userInfo.color);
+        userInfo.$el.addClass('btn-' + userInfo.color);
 
-        this.colors.splice(colorInd, 1);
-        if (this.colors.length === 0) {
-            this.colors = COLORS.slice();
+        userInfo.$el.on('click', function () {
+            if (typeof userInfo.state.activeObject === 'string') {
+                self.client.dispatchEvent(UI_EVENTS.LOCATE_NODE, {nodeId: userInfo.state.activeObject});
+            }
+        });
+
+        this.rooms[roomName].colors.splice(colorInd, 1);
+        if (this.rooms[roomName].colors.length === 0) {
+            this.rooms[roomName].colors = COLORS.slice();
         }
 
-        this.users[eventData.userId] = userInfo;
+        this.rooms[roomName].users[eventData.userId] = userInfo;
         this.$el.append(userInfo.$el);
     };
 
     ConnectedUsersWidget.prototype._userLeft = function (eventData) {
-        var userInfo = this.users[eventData.userId];
+        var roomName = this._getBranchRoomName(eventData),
+            userInfo = this.rooms[roomName] && this.rooms[roomName].users[eventData.userId];
+
         if (!userInfo) {
             this.logger.debug('Leaving user was already removed', eventData.userId);
             return;
         }
 
         userInfo.$el.remove();
-        delete this.users[eventData.userId];
-        this.colors.push(userInfo.color);
+        delete this.rooms[roomName].users[eventData.userId];
+
+        this.rooms[roomName].colors.push(userInfo.color);
     };
 
     ConnectedUsersWidget.prototype._userUpdated = function (eventData) {
-        var userInfo;
+        var userInfo,
+            roomName = this._getBranchRoomName(eventData);
 
         if (eventData.userId === this.userId) {
             this.logger.debug('Updating user was you', eventData.userId);
@@ -146,16 +197,24 @@ define([
         // Ensure that the user is accounted for.
         this._userJoined(eventData);
 
-        userInfo = this.users[eventData.userId];
+        userInfo = this.rooms[roomName].users[eventData.userId];
 
         // Currently we only check the activeObject.
         if (eventData.state && userInfo.state.activeObject !== eventData.state.activeObject) {
             userInfo.state.activeObject = eventData.state.activeObject;
 
-            userInfo.$el.prop('title', userInfo.state.activeObject);
+            userInfo.$el.prop('title', userInfo.userId + '@' + userInfo.state.activeObject);
         }
     };
 
+    ConnectedUsersWidget.prototype._getBranchRoomName = function (eventData) {
+        if (eventData.hasOwnProperty('projectId') === false || eventData.hasOwnProperty('branchName') === false) {
+            this.logger.error(new Error('EventData did not contain branch room info "' + eventData.projectId + '", "' +
+                eventData.branchName + '"'));
+        } else {
+            return eventData.projectId + this.client.CONSTANTS.STORAGE.ROOM_DIVIDER + eventData.branchName;
+        }
+    };
 
     return ConnectedUsersWidget;
 });

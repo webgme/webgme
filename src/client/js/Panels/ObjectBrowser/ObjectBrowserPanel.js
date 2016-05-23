@@ -13,6 +13,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     './CrosscutBrowserControl',
     'js/Widgets/TreeBrowser/TreeBrowserWidget',
     'js/Utils/ComponentSettings',
+    'js/UIEvents',
     'css!./styles/ObjectBrowserPanel.css'
 ], function (PanelBaseWithHeader,
              CONSTANTS,
@@ -20,7 +21,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
              InheritanceBrowserControl,
              CrosscutBrowserControl,
              TreeBrowserWidget,
-             ComponentSettings) {
+             ComponentSettings,
+             UI_EVENTS) {
     'use strict';
 
     var ObjectBrowserPanel,
@@ -48,7 +50,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
     _.extend(ObjectBrowserPanel.prototype, __parent__.prototype);
 
     ObjectBrowserPanel.prototype._initialize = function () {
-        var toolbar,
+        var self = this,
+            toolbar,
             compositionTreeBrowserWidget,
             compositionTreeBrowserControl,
             inheritanceTreeBrowserWidget,
@@ -109,10 +112,11 @@ define(['js/PanelBase/PanelBaseWithHeader',
                 type: 'caseInsensitive' //caseSensitive, regex
             }
         });
+
         crosscutTreeBrowserControl = new CrosscutBrowserControl(this._client, crosscutTreeBrowserWidget);
 
+        // Add toolbar button that dispatches locate node
         toolbar = WebGMEGlobal.Toolbar;
-
         if (toolbar) {
             toolbar.addSeparator();
             toolbar.addButton({
@@ -122,17 +126,24 @@ define(['js/PanelBase/PanelBaseWithHeader',
                 clickFn: function (/*data*/) {
                     var nodeId = WebGMEGlobal.State.getActiveObject(),
                         selectedIds = WebGMEGlobal.State.getActiveSelection();
-
-                    // Active the composition tree.
-                    compositionEl.click();
                     if (selectedIds && selectedIds.length > 0) {
-                        compositionTreeBrowserControl.locateNode(selectedIds[0]);
-                    } else if (typeof nodeId === 'string') {
-                        compositionTreeBrowserControl.locateNode(nodeId);
+                        nodeId = selectedIds[0];
+                    }
+
+                    if (typeof nodeId === 'string') {
+                        self._client.dispatchEvent(UI_EVENTS.LOCATE_NODE, {nodeId: nodeId});
                     }
                 }
             });
         }
+
+        // Add event handler for locate node events.
+        this._client.addEventListener(UI_EVENTS.LOCATE_NODE, function (client, eventData) {
+            compositionEl.click();
+            if (typeof eventData.nodeId === 'string') {
+                compositionTreeBrowserControl.locateNode(eventData.nodeId);
+            }
+        });
     };
 
     return ObjectBrowserPanel;
