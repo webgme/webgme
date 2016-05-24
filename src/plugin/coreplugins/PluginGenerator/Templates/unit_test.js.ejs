@@ -28,7 +28,7 @@ describe('<%= pluginID %>', function () {
             })
             .then(function () {
                 var importParam = {
-                    projectSeed: testFixture.path.join(testFixture.SEED_DIR, 'EmptyProject.json'),
+                    projectSeed: testFixture.path.join(testFixture.SEED_DIR, 'EmptyProject.webgmex'),
                     projectName: projectName,
                     branchName: 'master',
                     logger: logger,
@@ -61,7 +61,7 @@ describe('<%= pluginID %>', function () {
                 project: project,
                 commitHash: commitHash,
                 branchName: 'test',
-                activeNode: '/960660211',
+                activeNode: '/1',
             };
 
         manager.executePlugin(pluginName, pluginConfig, context, function (err, pluginResult) {
