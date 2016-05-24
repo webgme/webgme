@@ -106,6 +106,7 @@ define([
                     version: 'n/a',
                     GitHubVersion: 'n/a'
                 },
+                uiState: null,
                 branchErrors: [],
                 browserInfo: {
                     appCodeName: window.navigator.appCodeName,
@@ -126,6 +127,12 @@ define([
             errData.webgme.GitHubVersion = WebGMEGlobal.GitHubVersion;
             errData.webgme.version = WebGMEGlobal.version;
             /* jshint +W117 */
+        }
+
+        if (typeof client.uiStateGetter === 'function') {
+            errData.uiState = client.uiStateGetter();
+        } else {
+            errData.uiState = 'Client did not have an attached uiStateGetter.';
         }
 
         if (state.project && state.branchName && state.project.branches[state.branchName]) {

@@ -111,7 +111,7 @@ define([
                     }
                 );
 
-                client.registerStateGetter(function () {
+                client.registerUIStateGetter(function () {
                     return WebGMEGlobal.State.toJSON();
                 });
 

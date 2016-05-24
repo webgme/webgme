@@ -2025,8 +2025,8 @@ define([
                 return;
             }
 
-            if (typeof self.stateGetter === 'function') {
-                data.state = self.stateGetter();
+            if (typeof self.uiStateGetter === 'function') {
+                data.state = self.uiStateGetter();
             }
             logger.info('Sending state notification...');
             storage.sendNotification(data, function (err) {
@@ -2042,8 +2042,8 @@ define([
             self.dispatchEvent(CONSTANTS.CONNECTED_USERS_CHANGED, eventData);
         };
 
-        this.registerStateGetter = function (stateGetter) {
-            self.stateGetter = stateGetter;
+        this.registerUIStateGetter = function (uiStateGetter) {
+            self.uiStateGetter = uiStateGetter;
         };
 
         this.gmeConfig = gmeConfig;

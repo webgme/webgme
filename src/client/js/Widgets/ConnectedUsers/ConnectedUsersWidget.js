@@ -168,7 +168,7 @@ define([
         }
 
         this.rooms[roomName].users[eventData.userId] = userInfo;
-        this.$el.append(userInfo.$el).hide().fadeIn(3000);
+        this.$el.append(userInfo.$el.hide().fadeIn(3000));
     };
 
     ConnectedUsersWidget.prototype._userLeft = function (eventData) {
