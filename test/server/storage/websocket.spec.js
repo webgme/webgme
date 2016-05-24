@@ -193,7 +193,7 @@ describe('WebSocket', function () {
                     receiver.socket.on(CONSTANTS.NOTIFICATION, function (data) {
                         received = true;
                         expect(typeof data.webgmeToken).to.equal('undefined', 'webgmeToken transmitted!');
-
+                        receiver.socket.removeAllListeners(CONSTANTS.NOTIFICATION);
                         if (emitted === true) {
                             deferred.resolve();
                         }
@@ -212,6 +212,274 @@ describe('WebSocket', function () {
                             }
                         })
                         .catch(deferred.reject);
+
+                    return deferred.promise;
+                })
+                .nodeify(done);
+        });
+
+        it('a socket joining/leaving a branch room should emit SOCKET_ROOM_CHANGE', function (done) {
+            var emitter,
+                receiver,
+                emitted = false,
+                received = false;
+
+            Q.allDone([
+                openSocketIo(null, true),
+                openSocketIo(null, true)
+            ])
+                .then(function (res) {
+                    emitter = res[0];
+                    receiver = res[1];
+
+                    return Q.allDone([
+                        Q.ninvoke(receiver.socket, 'emit', 'watchBranch', {
+                            webgmeToken: receiver.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                    ]);
+                })
+                .then(function () {
+                    var deferred = Q.defer();
+                    receiver.socket.on(CONSTANTS.NOTIFICATION, function (data) {
+                        received = true;
+                        expect(typeof data.webgmeToken).to.equal('undefined', 'webgmeToken transmitted!');
+                        expect(data).to.include.keys('userId', 'socketId', 'projectId', 'branchName', 'type');
+                        expect(data.type).to.equal(CONSTANTS.BRANCH_ROOM_SOCKETS);
+                        expect(data.join).to.equal(true);
+                        receiver.socket.removeAllListeners(CONSTANTS.NOTIFICATION);
+                        if (emitted === true) {
+                            deferred.resolve();
+                        }
+                    });
+
+                    Q.ninvoke(emitter.socket, 'emit', 'watchBranch', {
+                        webgmeToken: emitter.webgmeToken,
+                        join: true,
+                        projectId: projectEmitNotification,
+                        branchName: 'master'
+                    }).then(function () {
+                            emitted = true;
+                            if (received === true) {
+                                deferred.resolve();
+                            }
+                        })
+                        .catch(deferred.reject);
+
+                    return deferred.promise;
+                })
+                .then(function () {
+                    var deferred = Q.defer();
+                    receiver.socket.on(CONSTANTS.NOTIFICATION, function (data) {
+                        received = true;
+                        expect(typeof data.webgmeToken).to.equal('undefined', 'webgmeToken transmitted!');
+                        expect(data).to.include.keys('userId', 'socketId', 'projectId', 'branchName', 'type');
+                        expect(data.type).to.equal(CONSTANTS.BRANCH_ROOM_SOCKETS);
+                        expect(typeof data.join).to.equal('undefined');
+                        receiver.socket.removeAllListeners(CONSTANTS.NOTIFICATION);
+                        if (emitted === true) {
+                            deferred.resolve();
+                        }
+                    });
+
+                    Q.ninvoke(emitter.socket, 'emit', 'watchBranch', {
+                        webgmeToken: emitter.webgmeToken,
+                        join: false,
+                        projectId: projectEmitNotification,
+                        branchName: 'master'
+                    }).then(function () {
+                        emitted = true;
+                        if (received === true) {
+                            deferred.resolve();
+                        }
+                    })
+                        .catch(deferred.reject);
+
+                    return deferred.promise;
+                })
+                .nodeify(done);
+        });
+
+        it('a socket disconnecting from a branch room should emit SOCKET_ROOM_CHANGE', function (done) {
+            var emitter,
+                receiver;
+
+            Q.allDone([
+                openSocketIo(null, true),
+                openSocketIo(null, true)
+            ])
+                .then(function (res) {
+                    emitter = res[0];
+                    receiver = res[1];
+
+                    return Q.allDone([
+                        Q.ninvoke(emitter.socket, 'emit', 'watchBranch', {
+                            webgmeToken: emitter.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        })
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        Q.ninvoke(receiver.socket, 'emit', 'watchBranch', {
+                            webgmeToken: receiver.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        })
+                    ]);
+                })
+                .then(function () {
+                    var deferred = Q.defer();
+                    receiver.socket.on(CONSTANTS.NOTIFICATION, function (data) {
+                        console.log(data);
+                        expect(typeof data.webgmeToken).to.equal('undefined', 'webgmeToken transmitted!');
+                        expect(data).to.include.keys('userId', 'socketId', 'projectId', 'branchName', 'type');
+                        expect(data.type).to.equal(CONSTANTS.BRANCH_ROOM_SOCKETS);
+                        expect(typeof data.join).to.equal('undefined');
+                        receiver.socket.removeAllListeners(CONSTANTS.NOTIFICATION);
+                        deferred.resolve();
+                    });
+
+                    emitter.socket.disconnect();
+
+                    return deferred.promise;
+                })
+                .nodeify(done);
+        });
+
+        it('PLUGIN_NOTIFICATION should be broadcast to originalSocketId', function (done) {
+            var emitter,
+                receiver,
+                middle,
+                emitted = false,
+                received = false;
+
+            Q.allDone([
+                openSocketIo(null, true),
+                openSocketIo(null, true),
+                openSocketIo(null, true)
+            ])
+                .then(function (res) {
+                    emitter = res[0];
+                    receiver = res[1];
+                    middle = res[2];
+
+                    return Q.allDone([
+                        Q.ninvoke(emitter.socket, 'emit', 'watchBranch', {
+                            webgmeToken: emitter.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                        Q.ninvoke(receiver.socket, 'emit', 'watchBranch', {
+                            webgmeToken: receiver.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                        Q.ninvoke(middle.socket, 'emit', 'watchBranch', {
+                            webgmeToken: middle.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                    ]);
+                })
+                .then(function () {
+                    var deferred = Q.defer();
+                    middle.socket.on(CONSTANTS.NOTIFICATION, function (data) {
+                        //console.log('middle notification', data);
+                        if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
+                            deferred.reject(new Error('Middle got plugin notification!'));
+                        }
+                    });
+
+                    receiver.socket.on(CONSTANTS.NOTIFICATION, function (data) {
+                        if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
+                            received = true;
+                            expect(typeof data.webgmeToken).to.equal('undefined', 'webgmeToken transmitted!');
+                            receiver.socket.removeAllListeners(CONSTANTS.NOTIFICATION);
+                            if (emitted === true) {
+                                deferred.resolve();
+                            }
+                        }
+                    });
+
+                    Q.ninvoke(emitter.socket, 'emit', 'notification', {
+                        type: CONSTANTS.PLUGIN_NOTIFICATION,
+                        webgmeToken: emitter.webgmeToken,
+                        projectId: projectEmitNotification,
+                        branchName: 'master',
+                        originalSocketId: '/#' + receiver.socket.id
+                    })
+                        .then(function () {
+                            emitted = true;
+                            if (received === true) {
+                                deferred.resolve();
+                            }
+                        })
+                        .catch(deferred.reject);
+
+                    return deferred.promise;
+                })
+                .nodeify(done);
+        });
+
+        it('PLUGIN_NOTIFICATION should fail if no originalSocketId provided', function (done) {
+            var emitter,
+                receiver;
+
+            Q.allDone([
+                openSocketIo(null, true),
+                openSocketIo(null, true)
+            ])
+                .then(function (res) {
+                    emitter = res[0];
+                    receiver = res[1];
+
+                    return Q.allDone([
+                        Q.ninvoke(emitter.socket, 'emit', 'watchBranch', {
+                            webgmeToken: emitter.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                        Q.ninvoke(receiver.socket, 'emit', 'watchBranch', {
+                            webgmeToken: receiver.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                    ]);
+                })
+                .then(function () {
+                    var deferred = Q.defer();
+
+                    Q.ninvoke(emitter.socket, 'emit', 'notification', {
+                        type: CONSTANTS.PLUGIN_NOTIFICATION,
+                        webgmeToken: emitter.webgmeToken,
+                        projectId: projectEmitNotification,
+                        branchName: 'master'
+                    })
+                        .then(function () {
+                            throw new Error('Should have failed!');
+                        })
+                        .catch(function (err) {
+                            try {
+                                err = err instanceof Error ? err : new Error(err);
+                                expect(err.message).to.include('PLUGIN_NOTIFICATION ' +
+                                    'requires provided originalSocketId');
+                                deferred.resolve();
+                            } catch (e) {
+                                deferred.reject(e);
+                            }
+                        })
+                        .done();
 
                     return deferred.promise;
                 })
