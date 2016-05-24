@@ -169,7 +169,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     if (typeof socketId === 'string') {
                         logger.debug('socketId provided for plugin execution - notifications available.');
                         pluginManager.notificationHandlers = [function (data, callback) {
-                            data.socketId = socketId;
+                            data.originalSocketId = socketId;
                             storage.sendNotification(data, callback);
                         }];
                     } else {

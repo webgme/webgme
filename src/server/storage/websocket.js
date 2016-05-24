@@ -91,9 +91,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         var deferred = Q.defer(),
             roomName = projectId + CONSTANTS.ROOM_DIVIDER + branchName,
             eventData = {
-                userId: socket.userId,
                 projectId: projectId,
                 branchName: branchName,
+                userId: socket.userId,
+                socketId: socket.id,
                 join: true,
                 // These won't work with multiple servers
                 currNbrOfSockets: 0,
@@ -139,6 +140,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 projectId: projectId,
                 branchName: branchName,
                 userId: socket.userId,
+                socketId: socket.id,
                 // These won't work with multiple servers
                 currNbrOfSockets: 0,
                 prevNbrOfSockets: 0
@@ -885,13 +887,14 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     .then(function (userId) {
                         logger.debug('Incoming notification from', userId, {metadata: data});
                         data.userId = userId;
+                        data.socketId = socket.id;
                         delete data.webgmeToken;
 
                         if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
-                            if (data.socketId) {
-                                webSocket.to(data.socketId).emit(CONSTANTS.NOTIFICATION, data);
+                            if (data.originalSocketId) {
+                                webSocket.to(data.originalSocketId).emit(CONSTANTS.NOTIFICATION, data);
                             } else {
-                                throw new Error('PLUGIN_NOTIFICATION requires provided socketId to emit to.');
+                                throw new Error('PLUGIN_NOTIFICATION requires provided originalSocketId to emit to.');
                             }
                         } else if (data.type === CONSTANTS.ADD_ON_NOTIFICATION) {
                             socket.broadcast.to(data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName)
