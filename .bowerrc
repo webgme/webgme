@@ -1,3 +1,4 @@
 {
-  "directory": "src/client/bower_components"
+  "directory": "src/client/bower_components",
+  "allow_root": true
 }
