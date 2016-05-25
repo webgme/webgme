@@ -336,7 +336,6 @@ describe('WebSocket', function () {
                 .then(function () {
                     var deferred = Q.defer();
                     receiver.socket.on(CONSTANTS.NOTIFICATION, function (data) {
-                        console.log(data);
                         expect(typeof data.webgmeToken).to.equal('undefined', 'webgmeToken transmitted!');
                         expect(data).to.include.keys('userId', 'socketId', 'projectId', 'branchName', 'type');
                         expect(data.type).to.equal(CONSTANTS.BRANCH_ROOM_SOCKETS);
