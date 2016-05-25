@@ -1,21 +1,21 @@
-# This dockerfile is intended to build a docker image on a clean copy of the webmge repository!
+# This dockerfile is intended to build a docker image on a clean copy of the webgme repository.
 #
 # Use the following steps to build and start-up your dockerized webgme:
 # (assuming that you have docker properly installed on your machine)
-# 1. go to the directory where this file exixst
+# 1. go to the directory where this file exists
 # 2. docker build -t webgme .
 # 3. docker run -d -p 8888:8888 --name=webgme webgme
 #
-# The result of your last command will be the hash id of your container. After successfull startup,
+# The result of your last command will be the hash id of your container. After successful startup,
 # you should be able to connect to your dockerized webgme on the 8888 port of your docker daemon machine
 # (the default ip address of the daemon is 192.168.99.100).
 #
-# Here is a list of a few usefull command
-# checking the status of your docker containers: docker ps -a
-# restart your docker container: docker restart webgme
-# stop your container: docker stop webgme
-# removing your container: docker rm webgme
-# removing your image: docker rmi webgme
+# Useful commands
+# checking the status of your docker containers:    docker ps -a
+# restart your docker container:                    docker restart webgme
+# stop your container:                              docker stop webgme
+# removing your container:                          docker rm webgme
+# removing your image:                              docker rmi webgme
 
 
 
@@ -28,7 +28,7 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 # install necessary packages
 RUN apt-get -qq update --fix-missing
 RUN apt-get install -y -q curl
-RUN sudo apt-get install -y -q build-essential libssl-dev mongodb-server
+RUN sudo apt-get install -y -q build-essential libssl-dev mongodb-server git
 
 ENV NVM_DIR /usr/local/nvm
 ENV NODE_VERSION 4.4.4
