@@ -13,6 +13,7 @@ describe('corediff-merge', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('corediff.spec.merge'),
         expect = testFixture.expect,
+        __should = testFixture.should,
         Q = testFixture.Q,
         storage,
         gmeAuth,

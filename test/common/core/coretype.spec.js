@@ -12,6 +12,7 @@ describe('coretype', function () {
         logger = testFixture.logger.fork('coretype.spec'),
         storage,
         expect = testFixture.expect,
+        __should = testFixture.should,
         Type = testFixture.requirejs('common/core/coretype'),
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),

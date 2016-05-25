@@ -12,6 +12,7 @@ describe('corerel', function () {
         Q = testFixture.Q,
         storage,
         expect = testFixture.expect,
+        __should = testFixture.should,
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
         TASYNC = testFixture.requirejs('common/core/tasync'),

@@ -12,6 +12,7 @@ describe('diff CLI tests', function () {
         storage,
         gmeAuth,
         expect = testFixture.expect,
+        __should = testFixture.should,
         logger = testFixture.logger.fork('diff.spec'),
         diffCLI = require('../../src/bin/diff'),
         filename = require('path').normalize('src/bin/diff.js'),
