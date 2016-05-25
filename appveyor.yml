@@ -42,7 +42,7 @@ test_script:
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/blob
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/core
   #- node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/executor
-  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/storage
+  #- node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/storage
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/common/util
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/config
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/issue
