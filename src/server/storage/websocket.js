@@ -93,6 +93,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             eventData = {
                 projectId: projectId,
                 branchName: branchName,
+                userId: socket.userId,
+                socketId: socket.id,
+                join: true,
+                // These won't work with multiple servers
                 currNbrOfSockets: 0,
                 prevNbrOfSockets: 0
             };
@@ -110,7 +114,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         webgmeToken: token,
                         join: true
                     };
-                    logger.debug('socket joined room', socket.id, roomName);
+                    logger.debug('socket joined room', socket.id, eventData.userId, roomName);
                     eventData.currNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
                     eventData.prevNbrOfSockets = eventData.currNbrOfSockets - 1;
                     eventData.type = CONSTANTS.BRANCH_ROOM_SOCKETS;
@@ -129,34 +133,38 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         return deferred.promise;
     }
 
-    function leaveBranchRoom(socket, token, projectId, branchName/*, disconnected*/) {
+    function leaveBranchRoom(socket, projectId, branchName/*, disconnected*/) {
         var deferred = Q.defer(),
             roomName = projectId + CONSTANTS.ROOM_DIVIDER + branchName,
             eventData = {
                 projectId: projectId,
                 branchName: branchName,
+                userId: socket.userId,
+                socketId: socket.id,
+                // These won't work with multiple servers
                 currNbrOfSockets: 0,
                 prevNbrOfSockets: 0
             };
 
         if (socket.rooms.hasOwnProperty(roomName) === false) {
             // Socket was never in or had already left given room - no need to account for it.
+            logger.debug('socket already left room', socket.id, roomName);
             deferred.resolve();
         } else {
             eventData.prevNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
             eventData.currNbrOfSockets = eventData.prevNbrOfSockets - 1;
             eventData.type = CONSTANTS.BRANCH_ROOM_SOCKETS;
-
             socket.broadcast.to(roomName).emit(CONSTANTS.NOTIFICATION, eventData);
-
             Q.ninvoke(socket, 'leave', roomName)
                 .then(function () {
                     var workManagerParams = {
                         projectId: projectId,
                         branchName: branchName,
-                        webgmeToken: token,
+                        webgmeToken: null,
                         join: false
                     };
+
+                    logger.debug('socket left room', socket.id, eventData.userId, roomName);
 
                     return Q.ninvoke(workerManager, 'socketRoomChange', workManagerParams);
                 })
@@ -219,6 +227,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             getUserIdFromToken(socket, getTokenFromHandshake(socket))
                 .then(function (userId) {
                     logger.debug('User connected and authenticated', userId);
+                    socket.userId = userId;
                     next();
                 })
                 .catch(next);
@@ -241,8 +250,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                             logger.debug('Socket was in branchRoom', roomIds[i]);
                             projectIdBranchName = roomIds[i].split(CONSTANTS.ROOM_DIVIDER);
                             // We cannot wait for this since socket.onclose is synchronous.
-                            leaveBranchRoom(socket, projectIdBranchName[0], projectIdBranchName[1], true)
-                                .fail(logger.error);
+                            leaveBranchRoom(socket, projectIdBranchName[0], projectIdBranchName[1])
+                                .fail(function (err) {
+                                    logger.error(err);
+                                });
                         }
                     }
                 }
@@ -317,14 +328,18 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         if (data.join) {
                             if (access.read) {
                                 joinBranchRoom(socket, data.webgmeToken, data.projectId, data.branchName)
-                                    .fail(logger.error);
+                                    .fail(function(err) {
+                                        logger.error(err);
+                                    });
                             } else {
                                 logger.warn('socket not authorized to join room', data.projectId);
                                 throw new Error('No read access for ' + data.projectId);
                             }
                         } else {
-                            leaveBranchRoom(socket, data.webgmeToken, data.projectId, data.branchName)
-                                .fail(logger.error);
+                            leaveBranchRoom(socket, data.projectId, data.branchName)
+                                .fail(function(err) {
+                                    logger.error(err);
+                                });
                         }
                     })
                     .then(function () {
@@ -400,12 +415,15 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 getUserIdFromToken(socket, data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
+                        // This ensures read access.
                         return storage.getLatestCommitData(data);
                     })
                     .then(function (commitData) {
                         latestCommitData = commitData;
                         joinBranchRoom(socket, data.webgmeToken, data.projectId, data.branchName)
-                            .fail(logger.error);
+                            .fail(function(err) {
+                                logger.error(err);
+                            });
                     })
                     .then(function () {
                         callback(null, latestCommitData);
@@ -422,7 +440,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('closeBranch', function (data, callback) {
                 logger.debug('closeBranch', {metadata: data});
                 leaveBranchRoom(socket, data.projectId, data.branchName)
-                    .fail(logger.error);
+                    .fail(function (err) {
+                        logger.error(err);
+                    });
+
                 callback(null);
             });
 
@@ -866,15 +887,19 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     .then(function (userId) {
                         logger.debug('Incoming notification from', userId, {metadata: data});
                         data.userId = userId;
+                        data.socketId = socket.id;
                         delete data.webgmeToken;
 
                         if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
-                            if (data.socketId) {
-                                webSocket.to(data.socketId).emit(CONSTANTS.NOTIFICATION, data);
+                            if (data.originalSocketId) {
+                                webSocket.to(data.originalSocketId).emit(CONSTANTS.NOTIFICATION, data);
                             } else {
-                                throw new Error('PLUGIN_NOTIFICATION requires provided socketId to emit to.');
+                                throw new Error('PLUGIN_NOTIFICATION requires provided originalSocketId to emit to.');
                             }
                         } else if (data.type === CONSTANTS.ADD_ON_NOTIFICATION) {
+                            socket.broadcast.to(data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName)
+                                .emit(CONSTANTS.NOTIFICATION, data);
+                        } else if (data.type === CONSTANTS.CLIENT_STATE_NOTIFICATION) {
                             socket.broadcast.to(data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName)
                                 .emit(CONSTANTS.NOTIFICATION, data);
                         } else {

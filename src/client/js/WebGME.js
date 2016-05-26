@@ -9,7 +9,6 @@ define([
         'js/logger',
         'js/client',
         'js/Constants',
-        'js/client/constants',
         'js/Panels/MetaEditor/MetaEditorConstants',
         'js/Utils/GMEConcepts',
         'js/Utils/GMEVisualConcepts',
@@ -31,7 +30,6 @@ define([
     ], function (Logger,
                  Client,
                  CONSTANTS,
-                 CLIENT_CONSTANTS,
                  METACONSTANTS,
                  GMEConcepts,
                  GMEVisualConcepts,
@@ -113,6 +111,16 @@ define([
                     }
                 );
 
+                client.registerUIStateGetter(function () {
+                    return WebGMEGlobal.State.toJSON();
+                });
+
+                WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function () {
+                    // Currently we only emit events to other users when our active object changed,
+                    // this is up for debate. 
+                    client.emitStateNotification();
+                });
+
                 document.title = config.pageTitle;
 
                 logger.info('init-phase true');
@@ -124,7 +132,7 @@ define([
                 PreferencesHelper.initialize(client);
 
                 //hook up branch changed to set read-only mode on panels
-                client.addEventListener(CLIENT_CONSTANTS.BRANCH_CHANGED, function (__project, branchName) {
+                client.addEventListener(client.CONSTANTS.BRANCH_CHANGED, function (_client, branchName) {
                     layoutManager.setPanelReadOnly(client.isCommitReadOnly() || client.isProjectReadOnly());
                     if (branchName) {
                         WebGMEGlobal.State.registerActiveBranchName(branchName);
@@ -134,7 +142,7 @@ define([
                         WebGMEGlobal.State.registerActiveBranchName(null);
                     }
                 });
-                client.addEventListener(CLIENT_CONSTANTS.PROJECT_OPENED, function (__project, projectId) {
+                client.addEventListener(client.CONSTANTS.PROJECT_OPENED, function (_client, projectId) {
                     var projectName,
                         nodePath;
 
@@ -162,7 +170,7 @@ define([
                 });
 
                 //on project close clear the current state
-                client.addEventListener(CLIENT_CONSTANTS.PROJECT_CLOSED, function (/* __project, projectName */) {
+                client.addEventListener(client.CONSTANTS.PROJECT_CLOSED, function (/* __project, projectName */) {
                     document.title = config.pageTitle;
                     initialProject = false;
                     WebGMEGlobal.State.clear();

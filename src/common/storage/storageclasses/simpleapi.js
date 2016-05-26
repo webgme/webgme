@@ -261,5 +261,10 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         this.webSocket.simpleQuery(workerId, parameters, callback);
     };
 
+    StorageSimpleAPI.prototype.sendNotification = function (data, callback) {
+        this.logger.debug('invoking sendNotification; ', {metadata: data});
+        this.webSocket.sendNotification(data, callback);
+    };
+
     return StorageSimpleAPI;
 });
