@@ -15,6 +15,7 @@ describe('import CLI tests', function () {
         importPath = './test/bin/import/project.webgmex',
         projectName,
         projectId,
+        __should = testFixture.should,
         existingProjectName = 'importCliExisting',
         existingProjectId = testFixture.projectName2Id(existingProjectName),
         Q = testFixture.Q,

@@ -11,6 +11,7 @@ describe('constraint.core', function () {
         logger = testFixture.logger.fork('constraint.core:storage'),
         Q = testFixture.Q,
         storage,
+        __should = testFixture.should,
         TASYNC = testFixture.requirejs('common/core/tasync'),
         project,
         projectName = 'coreConstraintTesting',

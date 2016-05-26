@@ -13,6 +13,7 @@ describe('meta core', function () {
         logger = testFixture.logger.fork('metacore.spec'),
         storage,
         projectName = 'coreMetaTesting',
+        __should = testFixture.should,
         projectId = testFixture.projectName2Id(projectName),
         project,
         core,

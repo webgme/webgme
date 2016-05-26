@@ -12,6 +12,7 @@ describe('SafeStorage', function () {
         expect = testFixture.expect,
         logger,
         Q = testFixture.Q,
+        __should = testFixture.should,
         jsonPatcher = testFixture.requirejs('common/util/jsonPatcher'),
         CONSTANTS = testFixture.requirejs('common/storage/constants'),
         GENKEY = testFixture.requirejs('common/util/key'),

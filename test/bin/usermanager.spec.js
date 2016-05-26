@@ -14,6 +14,7 @@ describe('User manager command line interface (CLI)', function () {
         spawn = testFixture.childProcess.spawn,
         mongodb = testFixture.mongodb,
         Q = testFixture.Q,
+        __should = testFixture.should,
         userManager = require('../../src/bin/usermanager'),
         GMEAuth = testFixture.GMEAuth,
         filename = require('path').normalize('src/bin/usermanager.js'),

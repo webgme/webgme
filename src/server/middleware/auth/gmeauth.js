@@ -210,8 +210,11 @@ function GMEAuth(session, gmeConfig) {
     }
 
     function authenticateUser(userId, password, callback) {
+        var userData;
         return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
-            .then(function (userData) {
+            .then(function (userData_) {
+                userData = userData_;
+
                 if (!userData) {
                     throw new Error('no such user [' + userId + ']');
                 }
@@ -224,7 +227,7 @@ function GMEAuth(session, gmeConfig) {
             })
             .then(function (hashRes) {
                 if (hashRes) {
-                    return;
+                    return userData;
                 } else {
                     throw new Error('incorrect password');
                 }

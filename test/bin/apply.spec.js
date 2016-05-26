@@ -9,10 +9,12 @@ var testFixture = require('../_globals');
 describe('apply CLI tests', function () {
     'use strict';
 
+
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('apply.spec'),
         expect = testFixture.expect,
         storage,
+        __should = testFixture.should,
         gmeAuth,
         applyCLI = require('../../src/bin/apply'),
         Q = testFixture.Q,

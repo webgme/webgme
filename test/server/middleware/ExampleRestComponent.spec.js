@@ -8,6 +8,7 @@ describe('ExampleRestComponent', function () {
     'use strict';
 
     var webGME = testFixture.WebGME,
+        __should = testFixture.should,
         agent = testFixture.superagent.agent(),
         expect = testFixture.expect,
         server;

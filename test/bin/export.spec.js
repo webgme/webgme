@@ -13,6 +13,7 @@ describe('export CLI tests', function () {
         exportCli = require('../../src/bin/export'),
         filename = require('path').normalize('src/bin/export.js'),
         projectName = 'exportCliTest',
+        __should = testFixture.should,
         //projectId = testFixture.projectName2Id(projectName),
         outputPath = './test-tmp/exportCliTest.out',
         Q = testFixture.Q,
