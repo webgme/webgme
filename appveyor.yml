@@ -51,8 +51,11 @@ test_script:
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins/AddOnGenerator
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins/ConstraintEvaluator
   #- node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins/ExecutorPlugin
-  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins/ExportImport
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins/ImportV1
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins/LayoutGenerator
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins/MergeExample
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins/MetaGMEParadigmImporter
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins/PluginGenerator
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/coreplugins/VisualizerGenerator
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/plugin/scenarios
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/seeds
