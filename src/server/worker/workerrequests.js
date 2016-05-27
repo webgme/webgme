@@ -102,9 +102,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} context.managerConfig.project - id of project.
      * @param {string} context.managerConfig.activeNode - path to activeNode.
      * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
-     * @param {string} [context.managerConfig.commit] - commit hash to start the plugin from
+     * @param {string} [context.managerConfig.commitHash] - commit hash to start the plugin from
      * (if falsy will use HEAD of branchName)
-     * @param {string} context.managerConfig.branchName - branch which to save to.
+     * @param {string} [context.managerConfig.branchName] - branch which to save to.
+     * @param {string} [context.namespace=''] - used namespace during execution ('' represents all namespaces).
      * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
      * @param {function} callback
      */
@@ -145,7 +146,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
         logger.debug('executePlugin', pluginName, socketId);
 
         logger.debug('executePlugin context', {metadata: context});
-
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
@@ -158,13 +158,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
                     logger.debug('Opened project, got branches:', context.managerConfig.project, branches);
 
-                    pluginContext = {
-                        project: project,
-                        activeNode: context.managerConfig.activeNode,
-                        activeSelection: context.managerConfig.activeSelection,
-                        commitHash: context.managerConfig.commit,
-                        branchName: context.managerConfig.branchName
-                    };
+                    pluginContext = JSON.parse(JSON.stringify(context.managerConfig));
+                    pluginContext.project = project;
 
                     if (typeof socketId === 'string') {
                         logger.debug('socketId provided for plugin execution - notifications available.');

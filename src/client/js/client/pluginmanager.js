@@ -37,7 +37,7 @@ define([
                 managerConfig: {
                     project: client.getProjectObject(),
                     branchName: client.getActiveBranchName(),
-                    commit: client.getActiveCommitHash(),
+                    commitHash: client.getActiveCommitHash(),
                     activeNode: ROOT_PATH,
                     activeSelection: [],
                     namespace: ''
@@ -78,9 +78,9 @@ define([
          * @param {object} context
          * @param {object} context.managerConfig - where the plugin should execute.
          * @param {Project} context.managerConfig.project - project (e.g. client.getProjectObject()).
-         * @param {string} context.managerConfig.activeNode - path to activeNode.
+         * @param {string} [context.managerConfig.activeNode=''] - path to activeNode.
          * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
-         * @param {string} context.managerConfig.commit - commit hash to start the plugin from.
+         * @param {string} context.managerConfig.commitHash - commit hash to start the plugin from.
          * @param {string} [context.managerConfig.branchName] - branch which to save to.
          * @param {string} [context.managerConfig.namespace=''] - used namespace during execution ('' represents all namespaces).
          * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
@@ -108,9 +108,9 @@ define([
          * @param {object} context
          * @param {object} context.managerConfig - where the plugin should execute.
          * @param {Project|string} context.managerConfig.project - id of project.
-         * @param {string} context.managerConfig.activeNode - path to activeNode.
+         * @param {string} [context.managerConfig.activeNode=''] - path to activeNode.
          * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
-         * @param {string} context.managerConfig.commit - commit hash to start the plugin from.
+         * @param {string} context.managerConfig.commitHash - commit hash to start the plugin from.
          * @param {string} [context.managerConfig.branchName] - branch which to save to.
          * @param {string} [context.managerConfig.namespace=''] - used namespace during execution ('' represents all namespaces).
          * @param {object} [context.pluginConfig=%defaultForPlugin%] - specific configuration for the plugin.
