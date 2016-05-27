@@ -43,10 +43,10 @@ function SafeStorage(database, logger, gmeConfig, metadataStorage, authorizer) {
     if (metadataStorage instanceof OldGMEAuth) {
         this.logger.warn('Old GMEAuth module passed to storage, use metadatastorage and authorizer instead.');
         this.metadataStorage = metadataStorage.metadataStorage;
-        this.auhorizer = metadataStorage.authorizer;
+        this.authorizer = metadataStorage.authorizer;
     } else {
         this.metadataStorage = metadataStorage;
-        this.auhorizer = authorizer;
+        this.authorizer = authorizer;
     }
 }
 
@@ -68,11 +68,14 @@ SafeStorage.prototype.constructor = SafeStorage;
  * @param {boolean} [data.branches] - include a dictionary with all branches and their hash.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {function} [callback]
- * @returns {promise} //TODO: jsdocify this
+ * @returns {Promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.getProjects = function (data, callback) {
     var deferred = Q.defer(),
         self = this,
+        authParams = {
+            entityType: self.auhorizer.ENTITY_TYPES.PROJECT,
+        },
         rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
@@ -94,7 +97,8 @@ SafeStorage.prototype.getProjects = function (data, callback) {
             .then(function (allProjects) {
                 function getAuthorizedProjects(projectData) {
                     var projectDeferred = Q.defer();
-                    self.authorizer.getAccessRights(data.username, projectData._id, self.auhorizer.ACCESS_TYPES.PROJECT)
+
+                    self.authorizer.getAccessRights(data.username, projectData._id, authParams)
                         .then(function (accessRights) {
                             if (accessRights && accessRights.read === true) {
                                 if (data.rights === true) {
@@ -108,15 +112,7 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                                 projectDeferred.resolve();
                             }
                         })
-                        .catch(function (err) {
-                            if (err.message.indexOf('no such project') > -1) {
-                                self.logger.error('Inconsistency: project exists in user "' + data.username +
-                                    '" but not in _projects: ', projectId);
-                                projectDeferred.resolve();
-                            } else {
-                                projectDeferred.reject(err);
-                            }
-                        });
+                        .catch(projectDeferred.reject);
 
                     return projectDeferred.promise;
                 }
@@ -133,7 +129,6 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                         })
                         .catch(function (err) {
                             if (err.message.indexOf('Project does not exist') > -1) {
-                                //TODO: clean up in _projects and _users here too?
                                 self.logger.error('Inconsistency: project exists in user "' + data.username +
                                     '" and in _projects, but not as a collection on its own: ', project._id);
                                 branchesDeferred.resolve();
@@ -172,13 +167,16 @@ SafeStorage.prototype.getProjects = function (data, callback) {
  * @param {string} data.projectId - identifier for project.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {function} [callback]
- * @returns {promise} //TODO: jsdocify this
+ * @returns {Promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.deleteProject = function (data, callback) {
     var deferred = Q.defer(),
+        self = this,
+        authParams = {
+            entityType: self.auhorizer.ENTITY_TYPES.PROJECT,
+        },
         rejected = false,
-        didExist,
-        self = this;
+        didExist;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -191,19 +189,24 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        this.authorizer.getAccessRights(data.username, data.projectId, authParams)
             .then(function (projectAccess) {
-                if (projectAccess.delete) {
+                if (projectAccess && projectAccess.delete) {
                     return Storage.prototype.deleteProject.call(self, data);
                 } else {
-                    throw new Error('Not authorized: cannot delete project. ' + data.projectId);
+                    throw new Error('Not authorized to delete project [' + data.projectId + ']');
                 }
             })
             .then(function (didExist_) {
                 didExist = didExist_;
-                return self.gmeAuth.deleteProject(data.projectId);
+                return self.authorizer.setAccessRights(true, data.projectId,
+                    {read: false, write: false, delete: false}, authParams);
             })
             .then(function () {
+                return self.metadataStorage.deleteProject(data.projectId);
+            })
+            .then(function (didExist_) {
+                didExist = didExist && didExist_;
                 deferred.resolve(didExist);
             })
             .catch(function (err) {
@@ -229,8 +232,15 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
  */
 SafeStorage.prototype.createProject = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        userAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.USER
+        },
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
+
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
@@ -250,24 +260,8 @@ SafeStorage.prototype.createProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getUser(data.username)
-            .then(function (user) {
-                if (!user.canCreate) {
-                    throw new Error('Not authorized to create a new project.');
-                } else if (data.ownerId === data.username) {
-                    return data.ownerId;
-                } else {
-                    return self.gmeAuth.getAdminsInOrganization(data.ownerId)
-                        .then(function (admins) {
-                            if (admins.indexOf(data.username) > -1) {
-                                return data.ownerId;
-                            } else {
-                                throw new Error('Not authorized to create project in organization ' + data.ownerId);
-                            }
-                        });
-                }
-            })
-            .then(function (ownerId) {
+        this.authorizer.getAccessRights(data.username, data.ownerId, userAuthParams)
+            .then(function (ownerRights) {
                 var now = (new Date()).toISOString(),
                     info = {
                         createdAt: now,
@@ -278,15 +272,19 @@ SafeStorage.prototype.createProject = function (data, callback) {
                         modifier: data.username
                     };
 
-                return self.gmeAuth.addProject(ownerId, data.projectName, info);
+                if (ownerRights.write !== true) {
+                    throw new Error('Not authorized to create new project for [' + data.ownerId + ']');
+                }
+
+                return self.metadataStorage.addProject(data.ownerId, data.projectName, info);
             })
             .then(function (projectId) {
                 data.projectId = projectId;
-                return self.gmeAuth.authorizeByUserId(data.ownerId, projectId, 'create', {
+                return self.authorizer.setAccessRights(data.ownerId, projectId, {
                     read: true,
                     write: true,
                     delete: true
-                });
+                }, projectAuthParams);
             })
             .then(function () {
                 return Storage.prototype.createProject.call(self, data);
@@ -313,8 +311,14 @@ SafeStorage.prototype.createProject = function (data, callback) {
  */
 SafeStorage.prototype.transferProject = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        userAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.USER
+        },
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -328,34 +332,42 @@ SafeStorage.prototype.transferProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        self.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.delete) {
-                    return self.gmeAuth.getUserOrOrg(data.newOwnerId);
+                if (projectAccess && projectAccess.delete) {
+                    return self.authorizer.getAccessRights(data.username, data.newOwnerId, userAuthParams);
                 } else {
-                    throw new Error('Not authorized to delete project: ' + data.projectId);
+                    throw new Error('Not authorized to delete project [' + data.projectId + ']');
                 }
             })
-            .then(function (newOwner) {
-                if (newOwner._id === data.username) {
+            .then(function (ownerRights) {
+                if (ownerRights && ownerRights.write !== true) {
+                     throw new Error('Not authorized to transfer project to [' + data.newOwnerId + ']');
+                }
 
-                } else if (newOwner.type === self.gmeAuth.CONSTANTS.ORGANIZATION) {
-                    return self.gmeAuth.getAdminsInOrganization(newOwner._id)
-                        .then(function (admins) {
-                            if (admins.indexOf(data.username) === -1) {
-                                throw new Error('Not authorized to transfer project to organization ' + newOwner._id);
-                            }
-                        });
-                } else {
-                    throw new Error('Not authorized to transfer projects to other users ' + newOwner._id);
-                }
-            })
-            .then(function () {
-                return self.gmeAuth.transferProject(data.projectId, data.newOwnerId);
+                // Remove old and add new metadata for the project.
+                return self.metadataStorage.transferProject(data.projectId, data.newOwnerId);
             })
             .then(function (newProjectId) {
+                // Rename the project collection.
                 data.newProjectId = newProjectId;
                 return Storage.prototype.renameProject.call(self, data);
+            })
+            .then(function () {
+                // Remove all previous project access rights.
+                self.authorizer.setAccessRights(true, data.projectId, {
+                    read: false,
+                    write: false,
+                    delete: false
+                }, projectAuthParams);
+            })
+            .then(function () {
+                // Add full project access rights to the new owner.
+                return self.authorizer.setAccessRights(data.ownerId, data.newProjectId, {
+                    read: true,
+                    write: true,
+                    delete: true
+                }, projectAuthParams);
             })
             .then(function (newProjectId) {
                 deferred.resolve(newProjectId);
@@ -383,8 +395,14 @@ SafeStorage.prototype.transferProject = function (data, callback) {
  */
 SafeStorage.prototype.duplicateProject = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        userAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.USER
+        },
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -411,31 +429,15 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        self.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (!projectAccess.read) {
-                    throw new Error('Not authorized to read project: ' + data.projectId);
-                }
-
-                return self.gmeAuth.getUser(data.username);
-            })
-            .then(function (user) {
-                if (!user.canCreate) {
-                    throw new Error('Not authorized to create a new project.');
-                } else if (data.ownerId === data.username) {
-                    return data.ownerId;
+                if (projectAccess && projectAccess.read) {
+                    return self.authorizer.getAccessRights(data.username, data.ownerId, userAuthParams);
                 } else {
-                    return self.gmeAuth.getAdminsInOrganization(data.ownerId)
-                        .then(function (admins) {
-                            if (admins.indexOf(data.username) > -1) {
-                                return data.ownerId;
-                            } else {
-                                throw new Error('Not authorized to create project in organization ' + data.ownerId);
-                            }
-                        });
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
-            .then(function (ownerId) {
+            .then(function (ownerRights) {
                 var now = (new Date()).toISOString(),
                     info = {
                         createdAt: now,
@@ -446,15 +448,19 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
                         modifier: data.username
                     };
 
-                return self.gmeAuth.addProject(ownerId, data.projectName, info);
+                if (ownerRights && ownerRights.write !== true) {
+                    throw new Error('Not authorized to create project for [' + data.newOwnerId + ']');
+                }
+
+                return self.metadataStorage.addProject(data.ownerId, data.projectName, info);
             })
             .then(function (projectId) {
-                data.newProjectId = projectId;
-                return self.gmeAuth.authorizeByUserId(data.ownerId, projectId, 'create', {
+                data.projectId = projectId;
+                return self.authorizer.setAccessRights(data.ownerId, projectId, {
                     read: true,
                     write: true,
                     delete: true
-                });
+                }, projectAuthParams);
             })
             .then(function () {
                 return Storage.prototype.duplicateProject.call(self, data);

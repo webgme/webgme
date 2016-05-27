@@ -324,42 +324,6 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param userOrOrgId {string}
-     * @param projectId {string}
-     * @param type {string} 'create' or 'delete'
-     * @param rights {object} {read: true, write: true, delete: true}
-     * @param callback
-     * @returns {*}
-     */
-    function authorizeByUserOrOrgId(userOrOrgId, projectId, type, rights, callback) {
-        var update;
-        if (type === 'create' || type === 'set') {
-            update = {$set: {}};
-            update.$set['projects.' + projectId] = rights;
-            return collection.update({_id: userOrOrgId}, update)
-                .spread(function (numUpdated) {
-                    if (numUpdated !== 1) {
-                        return Q.reject(new Error('No such user or org [' + userOrOrgId + ']'));
-                    }
-                })
-                .nodeify(callback);
-        } else if (type === 'delete') {
-            update = {$unset: {}};
-            update.$unset['projects.' + projectId] = '';
-            return collection.update({_id: userOrOrgId}, update)
-                .spread(function (numUpdated) {
-                    // FIXME this is always true. Try findAndUpdate instead
-                    return numUpdated === 1;
-                })
-                .nodeify(callback);
-        } else {
-            return Q.reject(new Error('unknown type ' + type))
-                .nodeify(callback);
-        }
-    }
-
-    /**
-     *
      * @param userId {string}
      * @param projectName {string}
      * @param callback

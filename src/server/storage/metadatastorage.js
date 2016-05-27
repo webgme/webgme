@@ -7,39 +7,8 @@
 
 var PROJECTS_COLLECTION = '_projects';
 
-function MetadataStorage() {
+function MetadataStorage(mainLogger, gmeConfig) {
     var self = this;
-
-    /**
-     *
-     * @param orgOrUserId
-     * @param projectName
-     * @param info
-     * @param callback
-     * @returns {*}
-     */
-    function addProject(orgOrUserId, projectName, info, callback) {
-        var id = storageUtil.getProjectIdFromOwnerIdAndProjectName(orgOrUserId, projectName),
-            data = {
-                _id: id,
-                owner: orgOrUserId,
-                name: projectName,
-                info: info || {}
-            };
-
-        return projectCollection.insert(data)
-            .then(function () {
-                return id;
-            })
-            .catch(function (err) {
-                if (err.code === 11000) {
-                    throw new Error('Project already exists ' + id + ' in _projects collection');
-                } else {
-                    throw err;
-                }
-            })
-            .nodeify(callback);
-    }
 
     /**
      *
@@ -71,6 +40,69 @@ function MetadataStorage() {
                     return Q.reject(new Error('no such project [' + projectId + ']'));
                 }
                 return projectData;
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param ownerId
+     * @param projectName
+     * @param info
+     * @param callback
+     * @returns {*}
+     */
+    function addProject(ownerId, projectName, info, callback) {
+        var id = storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerId, projectName),
+            data = {
+                _id: id,
+                owner: ownerId,
+                name: projectName,
+                info: info || {}
+            };
+
+        return projectCollection.insert(data)
+            .then(function () {
+                return id;
+            })
+            .catch(function (err) {
+                if (err.code === 11000) {
+                    throw new Error('Project already exists ' + id + ' in _projects collection');
+                } else {
+                    throw err;
+                }
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param projectId
+     * @param callback
+     * @returns {*}
+     */
+    function deleteProject(projectId, callback) {
+        return projectCollection.remove({_id: projectId}).nodeify(callback);
+    }
+
+    function transferProject(projectId, newOwnerId, callback) {
+        var projectInfo,
+            projectName,
+            newProjectId;
+        logger.debug('transferProject: projectId, newOrgOrUserId', projectId, newOwnerId);
+
+        return getProject(projectId)
+            .then(function (projectData) {
+                projectInfo = projectData.info;
+                projectName = projectData.name;
+                return addProject(newOwnerId, projectName, projectInfo);
+            })
+            .then(function (newProjectId_) {
+                newProjectId = newProjectId_;
+                return deleteProject(projectId);
+            })
+            .then(function () {
+                return newProjectId;
             })
             .nodeify(callback);
     }
