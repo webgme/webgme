@@ -17,6 +17,7 @@ var Q = require('q'),
     ASSERT = requireJS('common/util/assert'),
     Storage = require('./storage'),
     filterArray = require('./storagehelpers').filterArray,
+    OldGMEAuth = require('../middleware/auth/gmeauth'),
     UserProject = require('./userproject');
 
 function check(cond, deferred, msg) {
@@ -37,10 +38,16 @@ function check(cond, deferred, msg) {
  * @param gmeAuth
  * @constructor
  */
-function SafeStorage(database, logger, gmeConfig, gmeAuth) {
-    ASSERT(gmeAuth !== null && typeof gmeAuth === 'object', 'gmeAuth is a mandatory parameter');
+function SafeStorage(database, logger, gmeConfig, metadataStorage, authorizer) {
     Storage.call(this, database, logger, gmeConfig);
-    this.gmeAuth = gmeAuth;
+    if (metadataStorage instanceof OldGMEAuth) {
+        this.logger.warn('Old GMEAuth module passed to storage, use metadatastorage and authorizer instead.');
+        this.metadataStorage = metadataStorage.metadataStorage;
+        this.auhorizer = metadataStorage.authorizer;
+    } else {
+        this.metadataStorage = metadataStorage;
+        this.auhorizer = authorizer;
+    }
 }
 
 // Inherit from Storage
@@ -83,23 +90,20 @@ SafeStorage.prototype.getProjects = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationListByUserId(data.username)
-            .then(function (authorizedProjects) {
-                var projectIds = Object.keys(authorizedProjects);
-                self.logger.debug('user has rights to', projectIds);
-
-                function getProjectAppendRights(projectId) {
+        this.metadataStorage.getProjects()
+            .then(function (allProjects) {
+                function getAuthorizedProjects(projectData) {
                     var projectDeferred = Q.defer();
-                    self.gmeAuth.getProject(projectId)
-                        .then(function (project) {
-                            if (authorizedProjects[projectId].read === true) {
+                    self.authorizer.getAccessRights(data.username, projectData._id, self.auhorizer.ACCESS_TYPES.PROJECT)
+                        .then(function (accessRights) {
+                            if (accessRights && accessRights.read === true) {
                                 if (data.rights === true) {
-                                    project.rights = authorizedProjects[projectId];
+                                    projectData.rights = accessRights;
                                 }
                                 if (!data.info) {
-                                    delete project.info;
+                                    delete projectData.info;
                                 }
-                                projectDeferred.resolve(project);
+                                projectDeferred.resolve(projectData);
                             } else {
                                 projectDeferred.resolve();
                             }
@@ -117,7 +121,7 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                     return projectDeferred.promise;
                 }
 
-                return Q.all(projectIds.map(getProjectAppendRights));
+                return Q.all(allProjects.map(getAuthorizedProjects));
             })
             .then(function (projects) {
                 function getBranches(project) {
