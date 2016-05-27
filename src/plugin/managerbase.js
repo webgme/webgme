@@ -301,7 +301,7 @@ define([
             var deferred = Q.defer(),
                 pluginContext = {
                     branchName: context.branchName,
-                    commitHash: context.commitHash,
+                    commitHash: context.commitHash || context.commit,
 
                     rootNode: null,
                     activeNode: null,
