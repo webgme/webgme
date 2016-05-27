@@ -676,7 +676,7 @@ describe('Simple worker', function () {
                 managerConfig: {
                     project: baseProjectContext.id,
                     activeNode: '/1',
-                    commit: baseProjectContext.commitHash,
+                    commitHash: baseProjectContext.commitHash,
                     branchName: baseProjectContext.branch,
                     activeSelection: []
                 }
@@ -738,6 +738,42 @@ describe('Simple worker', function () {
             })
             .catch(function (err) {
                 expect(err.message).to.include('Plugin requires write access to the project for execution');
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
+    it('should fail to execute a plugin with invalid namespace', function (done) {
+        var worker = getSimpleWorker(),
+            pluginContext = {
+                managerConfig: {
+                    project: baseProjectContext.id,
+                    activeNode: '/1',
+                    branchName: readOnlyProjectContext.branch,
+                    namespace: 'INVALID',
+                    activeSelection: []
+                }
+            };
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.executePlugin,
+                    name: 'MinimalWorkingExample',
+                    userId: 'myUser',
+                    webGMESessionId: webGMESessionId,
+                    context: pluginContext
+                });
+            })
+            .then(function (/*msg*/) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Given namespace does not exist');
                 done();
             })
             .finally(restoreProcessFunctions)
