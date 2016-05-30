@@ -8,7 +8,7 @@
 var Q = require('q'),
     ENTITY_TYPES = {
         PROJECT: 'PROJECT',
-        OWNER: 'OWNER'
+        USER: 'USER'
     };
 
 function AuthorizerBase(params, mainLogger, gmeConfig) {
@@ -55,7 +55,7 @@ AuthorizerBase.prototype.getAccessRights = function (userId, entityId, params, c
  * @param {string} entityId
  * @param {object} rights
  * @param {object} params
- * @param {ACCESS_TYPE} params.accessType - PROJECT_ACCESS OR OWNERSHIP
+ * @param {ENTITY_TYPE} params.entityType - PROJECT_ACCESS, USER
  * @param {function} [callback] - if provided no promise will be returned.
  *
  * @return {external:Promise}  On success the promise will be resolved with
