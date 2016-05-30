@@ -122,7 +122,7 @@ main = function (argv) {
 
                 // TODO: we may need to use a module like 'prompt' to get user password
                 if (username && password) {
-                    auth.getAllUserAuthInfo(username)
+                    auth.getUser(username)
                         .then(function (userObject) {
                             return auth.addUser(username,
                                 userObject.email,

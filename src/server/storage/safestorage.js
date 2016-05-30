@@ -14,10 +14,8 @@
 
 var Q = require('q'),
     REGEXP = requireJS('common/regexp'),
-    ASSERT = requireJS('common/util/assert'),
     Storage = require('./storage'),
     filterArray = require('./storagehelpers').filterArray,
-    OldGMEAuth = require('../middleware/auth/gmeauth'),
     UserProject = require('./userproject');
 
 function check(cond, deferred, msg) {
@@ -38,16 +36,10 @@ function check(cond, deferred, msg) {
  * @param gmeAuth
  * @constructor
  */
-function SafeStorage(database, logger, gmeConfig, metadataStorage, authorizer) {
+function SafeStorage(database, logger, gmeConfig, gmeAuth) {
     Storage.call(this, database, logger, gmeConfig);
-    if (metadataStorage instanceof OldGMEAuth) {
-        this.logger.warn('Old GMEAuth module passed to storage, use metadatastorage and authorizer instead.');
-        this.metadataStorage = metadataStorage.metadataStorage;
-        this.authorizer = metadataStorage.authorizer;
-    } else {
-        this.metadataStorage = metadataStorage;
-        this.authorizer = authorizer;
-    }
+    this.metadataStorage = gmeAuth.metadataStorage;
+    this.authorizer = gmeAuth.authorizer;
 }
 
 // Inherit from Storage

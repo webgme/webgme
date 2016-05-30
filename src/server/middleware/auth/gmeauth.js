@@ -12,8 +12,7 @@ var Mongodb = require('mongodb'),
     //bcrypt = require('bcrypt'), include bcrypt and uncomment this line for faster encryption/decryption.
     bcrypt = require('bcryptjs'),
     jwt = require('jsonwebtoken'),
-
-    storageUtil = requireJS('common/storage/util'),
+    MetadataStorage = require('../../storage/metadatastorage'),
     UTIL = requireJS('common/util/util'),
 
     Logger = require('../../logger'),
@@ -42,6 +41,8 @@ function GMEAuth(session, gmeConfig) {
         projectCollectionDeferred = Q.defer(),
         projectCollection = projectCollectionDeferred.promise,
 
+        metadataStorage = new MetadataStorage(logger, gmeConfig),
+        authorizer,
         // JWT Keys
         PRIVATE_KEY,
         PUBLIC_KEY,
@@ -181,6 +182,12 @@ function GMEAuth(session, gmeConfig) {
                 return Q.ninvoke(db, 'collection', _projectCollectionName);
             })
             .then(function (projectCollection_) {
+                metadataStorage.initialize(projectCollection_);
+                projectCollectionDeferred.resolve(projectCollection_);
+                return _prepareGuestAccount();
+            })
+            .then(function (projectCollection_) {
+                metadataStorage.initialize(projectCollection_);
                 projectCollectionDeferred.resolve(projectCollection_);
                 return _prepareGuestAccount();
             })
@@ -306,143 +313,6 @@ function GMEAuth(session, gmeConfig) {
                 return result;
             })
             .nodeify(callback);
-    }
-
-    /**
-     *
-     * @param userId
-     * @param projectId
-     * @param type
-     * @param rights
-     * @param callback
-     * @returns {*}
-     */
-    function authorizeByUserId(userId, projectId, type, rights, callback) {
-        return authorizeByUserOrOrgId(userId, projectId, type, rights)
-            .nodeify(callback);
-    }
-
-    /**
-     *
-     * @param userId {string}
-     * @param projectName {string}
-     * @param callback
-     * @returns {*}
-     */
-    function getAuthorizationInfoByUserId(userId, projectName, callback) {
-        var projection = {};
-        projection['projects.' + projectName] = 1;
-        return collection.findOne({_id: userId}, projection)
-            .then(function (userData) {
-                return userData.projects[projectName] || {read: false, write: false, delete: false};
-            })
-            .nodeify(callback);
-    }
-
-    /**
-     * This includes authorization from organizations userId is part of.
-     * @param userId {string}
-     * @param projectId {string}
-     * @param callback
-     * @returns {*}
-     */
-    function getProjectAuthorizationByUserId(userId, projectId, callback) {
-        var ops = ['read', 'write', 'delete'];
-        return collection.findOne({_id: userId}, _getProjection('orgs', 'projects.' + projectId))
-            .then(function (userData) {
-                if (!userData) {
-                    return Q.reject(new Error('No such user [' + userId + ']'));
-                }
-                userData.orgs = userData.orgs || [];
-                return [userData.projects[projectId] || {},
-                    Q.all(ops.map(function (op) {
-                        var query;
-                        if ((userData.projects[projectId] || {})[op]) {
-                            return 1;
-                        }
-                        query = {_id: {$in: userData.orgs}};
-                        query['projects.' + projectId + '.' + op] = true;
-                        return collection.findOne(query, {_id: 1});
-                    }))];
-            }).spread(function (user, rwd) {
-                var ret = {};
-                ops.forEach(function (op, i) {
-                    ret[op] = (user[op] || rwd[i]) ? true : false;
-                });
-                return ret;
-            })
-            .nodeify(callback);
-    }
-
-    /**
-     *
-     * @param userId {string}
-     * @param projectId {string}
-     * @param callback
-     * @returns {*}
-     */
-    function getProjectAuthorizationListByUserId(userId, callback) {
-        var res;
-        return collection.findOne({_id: userId}, _getProjection('orgs', 'projects'))
-            .then(function (userData) {
-                if (!userData) {
-                    return Q.reject(new Error('No such user [' + userId + ']'));
-                }
-                userData.orgs = userData.orgs || [];
-                res = userData.projects;
-                return Q.allSettled(userData.orgs.map(function (orgId) {
-                    return collection.findOne({_id: orgId}, _getProjection('projects'));
-                }));
-            })
-            .then(function (orgResults) {
-                orgResults.map(function (orgRes) {
-                    var orgProjects;
-                    if (orgRes.state === 'rejected') {
-                        logger.error(orgRes.reason);
-                    } else {
-                        orgProjects = orgRes.value.projects || {};
-                        Object.keys(orgProjects).forEach(function (projectId) {
-                            if (res.hasOwnProperty(projectId)) {
-                                res[projectId].read = res[projectId].read || orgProjects[projectId].read;
-                                res[projectId].write = res[projectId].write || orgProjects[projectId].write;
-                                res[projectId].delete = res[projectId].delete || orgProjects[projectId].delete;
-                            } else {
-                                res[projectId] = orgProjects[projectId];
-                            }
-                        });
-                    }
-                });
-                return res;
-            })
-            .nodeify(callback);
-    }
-
-    /**
-     *
-     * @param userId {string}
-     * @param callback
-     * @returns {*}
-     */
-    function getUserAuthInfo(userId, callback) {
-        return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
-            .then(function (userData) {
-                if (!userData) {
-                    return Q.reject(new Error('no such user [' + userId + ']'));
-                }
-                return userData.projects;
-            })
-            .nodeify(callback);
-    }
-
-    /**
-     *
-     * @param userId {string}
-     * @param callback
-     * @returns {*}
-     */
-    function getAllUserAuthInfo(userId, callback) {
-        logger.warn('getAllUserAuthInfo is deprecated use getUser');
-        return getUser(userId, callback);
     }
 
     /**
@@ -639,25 +509,6 @@ function GMEAuth(session, gmeConfig) {
     }
 
     /**
-     * TODO: This updates projects and users/orgs.
-     * @param projectId
-     * @param callback
-     * @returns {*}
-     */
-    function deleteProject(projectId, callback) {
-        var update = {$unset: {}};
-        update.$unset['projects.' + projectId] = '';
-        return collection.update({}, update, {multi: true})
-            .then(function () {
-                return projectCollection.remove({_id: projectId});
-            })
-            .then(function () {
-                return true;
-            })
-            .nodeify(callback);
-    }
-
-    /**
      *
      * @param userId
      * @param email
@@ -717,49 +568,6 @@ function GMEAuth(session, gmeConfig) {
         }
 
         return deferred.promise.nodeify(callback);
-    }
-
-    function _getProjectNames(callback) {
-        return Q.ninvoke(db, 'collectionNames').nodeify(callback);
-    }
-
-    /**
-     *
-     * All users previous access will be lost, new owner will get full access.
-     * TODO: This updates projects and users/orgs.
-     * @param orgOrUserId
-     * @param projectId
-     * @param newOrgOrUserId
-     * @param callback
-     * @returns {*}
-     */
-    function transferProject(projectId, newOrgOrUserId, callback) {
-        var projectInfo,
-            projectName,
-            newProjectId;
-        logger.debug('transferProject: projectId, newOrgOrUserId', projectId, newOrgOrUserId);
-
-        return getProject(projectId)
-            .then(function (projectData) {
-                projectInfo = projectData.info;
-                projectName = projectData.name;
-                return addProject(newOrgOrUserId, projectName, projectInfo);
-            })
-            .then(function (newProjectId_) {
-                newProjectId = newProjectId_;
-                return authorizeByUserOrOrgId(newOrgOrUserId, newProjectId, 'set', {
-                    read: true,
-                    write: true,
-                    delete: true
-                });
-            })
-            .then(function () {
-                return deleteProject(projectId);
-            })
-            .then(function () {
-                return newProjectId;
-            })
-            .nodeify(callback);
     }
 
     /**
@@ -985,18 +793,11 @@ function GMEAuth(session, gmeConfig) {
 
 
     return {
-        deleteProject: deleteProject,
-        getProjectAuthorizationByUserId: getProjectAuthorizationByUserId,
-        getProjectAuthorizationListByUserId: getProjectAuthorizationListByUserId,
-
         getUserAuthInfo: getUserAuthInfo,
         getAllUserAuthInfo: getAllUserAuthInfo,
-        authorizeByUserId: authorizeByUserId,
-        getAuthorizationInfoByUserId: getAuthorizationInfoByUserId,
 
         unload: unload,
         connect: connect,
-        _getProjectNames: _getProjectNames,
 
         // user managerment functions
         addUser: addUser,
@@ -1014,8 +815,6 @@ function GMEAuth(session, gmeConfig) {
 
         getUserOrOrg: getUserOrOrg,
 
-        authorizeByUserOrOrgId: authorizeByUserOrOrgId,
-
         removeOrganizationByOrgId: removeOrganizationByOrgId,
         addUserToOrganization: addUserToOrganization,
         removeUserFromOrganization: removeUserFromOrganization,
@@ -1024,18 +823,14 @@ function GMEAuth(session, gmeConfig) {
         setAdminForUserInOrganization: setAdminForUserInOrganization,
         getAdminsInOrganization: getAdminsInOrganization,
 
-        addProject: addProject,
-        getProject: getProject,
-        transferProject: transferProject,
-        updateProjectInfo: updateProjectInfo,
-
         authenticateUser: authenticateUser,
         generateJWToken: generateJWToken,
         generateJWTokenForAuthenticatedUser: generateJWTokenForAuthenticatedUser,
         regenerateJWToken: regenerateJWToken,
         verifyJWToken: verifyJWToken,
 
-
+        metadataStorage: metadataStorage,
+        authorizer: authorizer,
 
         CONSTANTS: CONSTANTS
     };

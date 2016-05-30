@@ -30,6 +30,8 @@ function createAPI(app, mountPath, middlewareOpts) {
 
         logger = middlewareOpts.logger.fork('api'),
         gmeAuth = middlewareOpts.gmeAuth,
+        metadataStorage = gmeAuth.metadataStorage,
+        authorizer = gmeAuth.authorizer,
         safeStorage = middlewareOpts.safeStorage,
         ensureAuthenticated = middlewareOpts.ensureAuthenticated,
         gmeConfig = middlewareOpts.gmeConfig,
@@ -984,7 +986,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         safeStorage.getBranches(data)
             .then(function (branches_) {
                 branches = branches_;
-                return gmeAuth.getProject(projectId);
+                return metadataStorage.getProject(projectId);
             })
             .then(function (projectData) {
                 projectData.branches = branches;
@@ -997,22 +999,22 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.patch('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
+            projectAuthParams = {
+                entityType: authorizer.authorizer.ENTITY_TYPES.PROJECT
+            },
             projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
 
-        gmeAuth.getProjectAuthorizationByUserId(userId, projectId)
-            .then(function (rights) {
-                if (rights.write !== true) {
-                    return gmeAuth.getUser(userId)
-                        .then(function (userData) {
-                            if (userData.siteAdmin !== true) {
-                                res.status(403);
-                                throw new Error('Not authorized to modify project');
-                            }
-                        });
+        authorizer.getAccessRights(userId, projectId, projectAuthParams)
+            .then(function (projectAccess) {
+                if (projectAccess || projectAccess.write) {
+                    return;
+                } else {
+                    res.status(403);
+                    throw new Error('Not authorized to modify project');
                 }
             })
             .then(function () {
-                return gmeAuth.updateProjectInfo(projectId, req.body);
+                return metadataStorage.updateProjectInfo(projectId, req.body);
             })
             .then(function (projectData) {
                 res.json(projectData);
@@ -1082,7 +1084,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     throw new Error('Not allowed to authorize users/organizations for project');
                 }
                 // ensure project exists
-                return gmeAuth.getProject(projectId);
+                return metadataStorage.getProject(projectId);
             })
             .then(function (/*projectData*/) {
                 var rights = {

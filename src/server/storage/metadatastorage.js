@@ -1,14 +1,23 @@
-/*globals*/
+/*globals requireJS*/
 /*jshint node:true*/
 
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
+'use strict';
 
-var PROJECTS_COLLECTION = '_projects';
+var Q = require('q'),
+    storageUtil = requireJS('common/storage/util');
 
 function MetadataStorage(mainLogger, gmeConfig) {
-    var self = this;
+    var self = this,
+        logger = mainLogger.fork('MetadataStorage');
+
+    self.projectCollection = null;
+
+    function initialize(projectCollection) {
+        self.projectCollection = projectCollection;
+    }
 
     /**
      *
@@ -17,13 +26,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
      * @returns {*}
      */
     function getProjects(callback) {
-        return projectCollection.findOne({_id: projectId})
-            .then(function (projectData) {
-                if (!projectData) {
-                    return Q.reject(new Error('no such project [' + projectId + ']'));
-                }
-                return projectData;
-            })
+        return self.projectCollection.findOne({})
             .nodeify(callback);
     }
 
@@ -34,7 +37,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
      * @returns {*}
      */
     function getProject(projectId, callback) {
-        return projectCollection.findOne({_id: projectId})
+        return self.projectCollection.findOne({_id: projectId})
             .then(function (projectData) {
                 if (!projectData) {
                     return Q.reject(new Error('no such project [' + projectId + ']'));
@@ -61,7 +64,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
                 info: info || {}
             };
 
-        return projectCollection.insert(data)
+        return self.projectCollection.insert(data)
             .then(function () {
                 return id;
             })
@@ -82,7 +85,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
      * @returns {*}
      */
     function deleteProject(projectId, callback) {
-        return projectCollection.remove({_id: projectId}).nodeify(callback);
+        return self.projectCollection.remove({_id: projectId}).nodeify(callback);
     }
 
     function transferProject(projectId, newOwnerId, callback) {
@@ -115,7 +118,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
      * @returns {*}
      */
     function updateProjectInfo(projectId, info, callback) {
-        return projectCollection.findOne({_id: projectId})
+        return self.projectCollection.findOne({_id: projectId})
             .then(function (projectData) {
                 if (!projectData) {
                     return Q.reject(new Error('no such project [' + projectId + ']'));
@@ -130,12 +133,23 @@ function MetadataStorage(mainLogger, gmeConfig) {
                 projectData.info.createdAt = info.createdAt || projectData.info.createdAt;
                 projectData.info.creator = info.creator || projectData.info.creator;
 
-                return projectCollection.update({_id: projectId}, projectData, {upsert: true});
+                return self.projectCollection.update({_id: projectId}, projectData, {upsert: true});
             })
             .then(function () {
                 return getProject(projectId);
             })
             .nodeify(callback);
     }
+
+    return {
+        initialize: initialize,
+        getProjects: getProjects,
+        getProject: getProject,
+        addProject: addProject,
+        deleteProject: deleteProject,
+        transferProject: transferProject,
+        updateProjectInfo: updateProjectInfo
+    };
 }
 
+module.exports = MetadataStorage;

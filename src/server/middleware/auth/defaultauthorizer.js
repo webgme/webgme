@@ -5,10 +5,12 @@
  */
 'use strict';
 
-var AuthorizerBase = require('./authorizerbase');
+var AuthorizerBase = require('./authorizerbase'),
+    Q = require('q');
 
 function DefaultAuthorizer(params, mainLogger, gmeConfig) {
     var self = this;
+
     AuthorizerBase.call(self, params, mainLogger, gmeConfig);
 
     function getProjectAuthorizationByUserId(userId, projectId, callback) {
