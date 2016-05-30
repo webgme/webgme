@@ -26,22 +26,27 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
 
     function getProjectAuthorizationByUserId(userId, projectId, callback) {
         var ops = ['read', 'write', 'delete'];
-        return self.collection.findOne({_id: userId}, _getProjection('orgs', 'projects.' + projectId))
+        return self.collection.findOne({_id: userId}, _getProjection('siteAdmin', 'orgs', 'projects.' + projectId))
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject(new Error('No such user [' + userId + ']'));
                 }
                 userData.orgs = userData.orgs || [];
-                return [userData.projects[projectId] || {},
-                    Q.all(ops.map(function (op) {
-                        var query;
-                        if ((userData.projects[projectId] || {})[op]) {
-                            return 1;
-                        }
-                        query = {_id: {$in: userData.orgs}};
-                        query['projects.' + projectId + '.' + op] = true;
-                        return self.collection.findOne(query, {_id: 1});
-                    }))];
+
+                if (userData.siteAdmin) {
+                    return [{}, [true, true, true]];
+                } else {
+                    return [userData.projects[projectId] || {},
+                        Q.all(ops.map(function (op) {
+                            var query;
+                            if ((userData.projects[projectId] || {})[op]) {
+                                return 1;
+                            }
+                            query = {_id: {$in: userData.orgs}};
+                            query['projects.' + projectId + '.' + op] = true;
+                            return self.collection.findOne(query, {_id: 1});
+                        }))];
+                }
             }).spread(function (user, rwd) {
                 var ret = {};
                 ops.forEach(function (op, i) {

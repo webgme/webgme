@@ -1000,13 +1000,13 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.patch('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
             projectAuthParams = {
-                entityType: authorizer.authorizer.ENTITY_TYPES.PROJECT
+                entityType: authorizer.ENTITY_TYPES.PROJECT
             },
             projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
 
         authorizer.getAccessRights(userId, projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess || projectAccess.write) {
+                if (projectAccess && projectAccess.write) {
                     return;
                 } else {
                     res.status(403);

@@ -45,69 +45,65 @@ describe('REST API', function () {
                 gmeConfig.authentication.enable = true;
                 gmeConfig.authentication.allowGuests = true;
 
-                server = WebGME.standaloneServer(gmeConfig);
-                server.start(function (err) {
-                    if (err) {
-                        done(new Error(err));
-                        return;
-                    }
-
-                    testFixture.clearDBAndGetGMEAuth(gmeConfig,
-                        [projectName, unauthorizedProjectName, toDeleteProjectName])
-                        .then(function (gmeAuth_) {
-                            gmeAuth = gmeAuth_;
-                            safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
-                            return safeStorage.openDatabase();
-                        })
-                        .then(function () {
-                            return Q.allDone([
-                                testFixture.importProject(safeStorage, {
-                                    projectSeed: 'seeds/EmptyProject.webgmex',
-                                    projectName: projectName,
-                                    gmeConfig: gmeConfig,
-                                    logger: logger
-                                }),
-                                testFixture.importProject(safeStorage, {
-                                    projectSeed: 'seeds/EmptyProject.webgmex',
-                                    projectName: unauthorizedProjectName,
-                                    gmeConfig: gmeConfig,
-                                    logger: logger
-                                }),
-                                testFixture.importProject(safeStorage, {
-                                    projectSeed: 'seeds/EmptyProject.webgmex',
-                                    projectName: toDeleteProjectName,
-                                    gmeConfig: gmeConfig,
-                                    logger: logger
-                                })
-                            ]);
-                        })
-                        .then(function (results) {
-                            importResult = results[0]; // projectName
-                            return Q.allDone([
-                                importResult.project.createTag('tag', importResult.commitHash),
-                                importResult.project.createTag('tagPatched', importResult.commitHash),
-                                gmeAuth.authorizeByUserId(guestAccount, projectName2Id(unauthorizedProjectName),
-                                    'create', {
-                                        read: true,
-                                        write: false,
-                                        delete: false
-                                    }
-                                ),
-                                gmeAuth.addOrganization('org', null),
-                                gmeAuth.addUser('userSiteAdmin', 'user@example.com', 'p', true, {
-                                    overwrite: true,
-                                    siteAdmin: true
-                                })
-                            ]);
-                        })
-                        .then(function () {
-                            return Q.allDone([
-                                gmeAuth.addUserToOrganization(guestAccount, 'org'),
-                                gmeAuth.setAdminForUserInOrganization(guestAccount, 'org', true)
-                            ]);
-                        })
-                        .nodeify(done);
-                });
+                testFixture.clearDBAndGetGMEAuth(gmeConfig,
+                    [projectName, unauthorizedProjectName, toDeleteProjectName])
+                    .then(function (gmeAuth_) {
+                        gmeAuth = gmeAuth_;
+                        safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                        return safeStorage.openDatabase();
+                    })
+                    .then(function () {
+                        return Q.allDone([
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.webgmex',
+                                projectName: projectName,
+                                gmeConfig: gmeConfig,
+                                logger: logger
+                            }),
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.webgmex',
+                                projectName: unauthorizedProjectName,
+                                gmeConfig: gmeConfig,
+                                logger: logger
+                            }),
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.webgmex',
+                                projectName: toDeleteProjectName,
+                                gmeConfig: gmeConfig,
+                                logger: logger
+                            })
+                        ]);
+                    })
+                    .then(function (results) {
+                        importResult = results[0]; // projectName
+                        return Q.allDone([
+                            importResult.project.createTag('tag', importResult.commitHash),
+                            importResult.project.createTag('tagPatched', importResult.commitHash),
+                            gmeAuth.authorizeByUserId(guestAccount, projectName2Id(unauthorizedProjectName),
+                                'create', {
+                                    read: true,
+                                    write: false,
+                                    delete: false
+                                }
+                            ),
+                            gmeAuth.addOrganization('org', null),
+                            gmeAuth.addUser('userSiteAdmin', 'user@example.com', 'p', true, {
+                                overwrite: true,
+                                siteAdmin: true
+                            })
+                        ]);
+                    })
+                    .then(function () {
+                        return Q.allDone([
+                            gmeAuth.addUserToOrganization(guestAccount, 'org'),
+                            gmeAuth.setAdminForUserInOrganization(guestAccount, 'org', true)
+                        ]);
+                    })
+                    .then(function () {
+                        server = WebGME.standaloneServer(gmeConfig);
+                        return Q.ninvoke(server, 'start');
+                    })
+                    .nodeify(done);
             });
 
             after(function (done) {
@@ -984,6 +980,7 @@ describe('REST API', function () {
             projectOwnedByOtherUser = 'projectOwnedByOtherUser',
             safeStorage,
             gmeAuth,
+            projectAuthParams,
             pr2Id = testFixture.projectName2Id,
             guestAccount = gmeConfig.authentication.guestAccount;
 
@@ -996,6 +993,9 @@ describe('REST API', function () {
             testFixture.clearDBAndGetGMEAuth(gmeConfig)
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
+                    projectAuthParams = {
+                        entityType: gmeAuth.authorizer.ENTITY_TYPES.PROJECT
+                    },
                     safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                     return safeStorage.openDatabase();
                 })
@@ -1149,9 +1149,9 @@ describe('REST API', function () {
                 .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                 .end(function (err, res) {
                     expect(res.status).equal(204, err);
-                    gmeAuth.getProjectAuthorizationByUserId('userTest1', pr2Id(projectOwnedByUser, 'user'))
-                        .then(function (auth) {
-                            expect(auth).to.deep.equal({
+                    gmeAuth.authorizer.getAccessRights('userTest1', pr2Id(projectOwnedByUser, 'user'), projectAuthParams)
+                        .then(function (rights) {
+                            expect(rights).to.deep.equal({
                                 read: true,
                                 write: false,
                                 delete: false
@@ -1166,7 +1166,7 @@ describe('REST API', function () {
                 .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                 .end(function (err, res) {
                     expect(res.status).equal(204, err);
-                    gmeAuth.getProjectAuthorizationByUserId('userTest2', pr2Id(projectOwnedByUser, 'user'))
+                    gmeAuth.authorizer.getAccessRights('userTest2', pr2Id(projectOwnedByUser, 'user'), projectAuthParams)
                         .then(function (auth) {
                             expect(auth).to.deep.equal({
                                 read: false,
@@ -1183,7 +1183,7 @@ describe('REST API', function () {
                 .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                 .end(function (err, res) {
                     expect(res.status).equal(204, err);
-                    gmeAuth.getProjectAuthorizationByUserId('userTest3', pr2Id(projectOwnedByUser, 'user'))
+                    gmeAuth.authorizer.getAccessRights('userTest3', pr2Id(projectOwnedByUser, 'user'), projectAuthParams)
                         .then(function (auth) {
                             expect(auth).to.deep.equal({
                                 read: true,
@@ -1209,7 +1209,7 @@ describe('REST API', function () {
                 .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                 .end(function (err, res) {
                     expect(res.status).equal(204, err);
-                    gmeAuth.getProjectAuthorizationByUserId('orgTest1', pr2Id(projectOwnedByUser, 'user'))
+                    gmeAuth.authorizer.getAccessRights('orgTest1', pr2Id(projectOwnedByUser, 'user'), projectAuthParams)
                         .then(function (auth) {
                             expect(auth).to.deep.equal({
                                 read: true,
@@ -1227,7 +1227,7 @@ describe('REST API', function () {
                     .set('Authorization', 'Basic ' + new Buffer('userOrgAdmin:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(204, err);
-                        gmeAuth.getProjectAuthorizationByUserId('userTest4', pr2Id(projectOwnedByOrg, 'org'))
+                        gmeAuth.authorizer.getAccessRights('userTest4', pr2Id(projectOwnedByOrg, 'org'), projectAuthParams)
                             .then(function (auth) {
                                 expect(auth).to.deep.equal({
                                     read: true,
@@ -1246,7 +1246,7 @@ describe('REST API', function () {
                     .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(204, err);
-                        gmeAuth.getProjectAuthorizationByUserId('userTest5', pr2Id(projectOwnedByOrg, 'org'))
+                        gmeAuth.authorizer.getAccessRights('userTest5', pr2Id(projectOwnedByOrg, 'org'), projectAuthParams)
                             .then(function (auth) {
                                 expect(auth).to.deep.equal({
                                     read: true,
@@ -1276,7 +1276,7 @@ describe('REST API', function () {
                     .set('Authorization', 'Basic ' + new Buffer('userOrgAdmin:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(403, err);
-                        gmeAuth.getProjectAuthorizationByUserId('userWithRights1', pr2Id(projectOwnedByUser, 'user'))
+                        gmeAuth.authorizer.getAccessRights('userWithRights1', pr2Id(projectOwnedByUser, 'user'), projectAuthParams)
                             .then(function (auth) {
                                 expect(auth).to.deep.equal({
                                     read: true,
@@ -1305,7 +1305,7 @@ describe('REST API', function () {
                     .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(204, err);
-                        gmeAuth.getProjectAuthorizationByUserId('userWithRights1', pr2Id(projectOwnedByUser, 'user'))
+                        gmeAuth.authorizer.getAccessRights('userWithRights1', pr2Id(projectOwnedByUser, 'user'), projectAuthParams)
                             .then(function (auth) {
                                 expect(auth).to.deep.equal({
                                     read: false,
@@ -1324,7 +1324,7 @@ describe('REST API', function () {
                     .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(204, err);
-                        gmeAuth.getProjectAuthorizationByUserId('userWithRights2', pr2Id(projectOwnedByUser, 'user'))
+                        gmeAuth.authorizer.getAccessRights('userWithRights2', pr2Id(projectOwnedByUser, 'user'), projectAuthParams)
                             .then(function (auth) {
                                 expect(auth).to.deep.equal({
                                     read: false,
@@ -1343,7 +1343,7 @@ describe('REST API', function () {
                     .set('Authorization', 'Basic ' + new Buffer('userOrgAdmin:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(204, err);
-                        gmeAuth.getProjectAuthorizationByUserId('userWithRights3', pr2Id(projectOwnedByOrg, 'org'))
+                        gmeAuth.authorizer.getAccessRights('userWithRights3', pr2Id(projectOwnedByOrg, 'org'), projectAuthParams)
                             .then(function (auth) {
                                 expect(auth).to.deep.equal({
                                     read: false,

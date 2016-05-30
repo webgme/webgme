@@ -739,7 +739,7 @@ function GMEAuth(session, gmeConfig) {
             entityType: authorizer.ENTITY_TYPES.PROJECT
         };
 
-        logger.warn('authorizeByUserId is deprecated use authorizer.setAccessRights instead!!');
+        logger.warn('authorizeByUserId/authorizeByUserOrOrgId are deprecated use authorizer.setAccessRights instead!');
 
         return authorizer.setAccessRights(userId, projectId, rights, projectAuthParams).nodeify(callback);
     }
@@ -779,7 +779,7 @@ function GMEAuth(session, gmeConfig) {
 
         // This is left in order to not break all tests.
         authorizeByUserId: authorizeByUserId,
-
+        authorizeByUserOrOrgId: authorizeByUserId,
         CONSTANTS: CONSTANTS
     };
 }
