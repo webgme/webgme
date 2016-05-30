@@ -281,7 +281,7 @@ describe('storage storageclasses simpleapi', function () {
                 throw new Error('Should have failed!');
             })
             .catch(function (err) {
-                expect(err.message).to.contain('Not authorized to delete project: doesNotExist');
+                expect(err.message).to.contain('Not authorized to delete project');
             })
             .nodeify(done);
     });

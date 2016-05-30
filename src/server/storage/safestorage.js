@@ -87,6 +87,7 @@ SafeStorage.prototype.getProjects = function (data, callback) {
     if (rejected === false) {
         this.metadataStorage.getProjects()
             .then(function (allProjects) {
+                console.log('allProjects', allProjects);
                 function getAuthorizedProjects(projectData) {
                     var projectDeferred = Q.defer();
 
@@ -197,8 +198,7 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
             .then(function () {
                 return self.metadataStorage.deleteProject(data.projectId);
             })
-            .then(function (didExist_) {
-                didExist = didExist && didExist_;
+            .then(function () {
                 deferred.resolve(didExist);
             })
             .catch(function (err) {
@@ -355,14 +355,14 @@ SafeStorage.prototype.transferProject = function (data, callback) {
             })
             .then(function () {
                 // Add full project access rights to the new owner.
-                return self.authorizer.setAccessRights(data.ownerId, data.newProjectId, {
+                return self.authorizer.setAccessRights(data.newOwnerId, data.newProjectId, {
                     read: true,
                     write: true,
                     delete: true
                 }, projectAuthParams);
             })
-            .then(function (newProjectId) {
-                deferred.resolve(newProjectId);
+            .then(function () {
+                deferred.resolve(data.newProjectId);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));

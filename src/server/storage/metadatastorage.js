@@ -35,7 +35,10 @@ function MetadataStorage(mainLogger, gmeConfig) {
      * @returns {*}
      */
     function getProjects(callback) {
-        return self.projectCollection.findOne({})
+        return self.projectCollection.find({})
+            .then(function (projects) {
+                return Q.ninvoke(projects, 'toArray');
+            })
             .nodeify(callback);
     }
 
