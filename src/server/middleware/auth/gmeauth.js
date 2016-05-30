@@ -741,7 +741,7 @@ function GMEAuth(session, gmeConfig) {
 
         logger.warn('authorizeByUserId is deprecated use authorizer.setAccessRights instead!!');
 
-        return authorizer.setAccessRights(userId, projectId, rights, projectAuthParams);
+        return authorizer.setAccessRights(userId, projectId, rights, projectAuthParams).nodeify(callback);
     }
 
     return {
