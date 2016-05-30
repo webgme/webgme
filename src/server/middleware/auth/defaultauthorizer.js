@@ -174,7 +174,8 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
                                 }
                             });
                     }
-                });
+                })
+                .nodeify(callback);
         }
     };
 
