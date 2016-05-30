@@ -777,7 +777,7 @@ function GMEAuth(session, gmeConfig) {
         metadataStorage: metadataStorage,
         authorizer: authorizer,
 
-        // This is left in order to not change all tests.
+        // This is left in order to not break all tests.
         authorizeByUserId: authorizeByUserId,
 
         CONSTANTS: CONSTANTS

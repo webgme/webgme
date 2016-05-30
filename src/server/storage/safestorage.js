@@ -65,8 +65,8 @@ SafeStorage.prototype.constructor = SafeStorage;
 SafeStorage.prototype.getProjects = function (data, callback) {
     var deferred = Q.defer(),
         self = this,
-        authParams = {
-            entityType: self.auhorizer.ENTITY_TYPES.PROJECT,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT,
         },
         rejected = false;
 
@@ -90,7 +90,7 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                 function getAuthorizedProjects(projectData) {
                     var projectDeferred = Q.defer();
 
-                    self.authorizer.getAccessRights(data.username, projectData._id, authParams)
+                    self.authorizer.getAccessRights(data.username, projectData._id, projectAuthParams)
                         .then(function (accessRights) {
                             if (accessRights && accessRights.read === true) {
                                 if (data.rights === true) {
@@ -164,8 +164,8 @@ SafeStorage.prototype.getProjects = function (data, callback) {
 SafeStorage.prototype.deleteProject = function (data, callback) {
     var deferred = Q.defer(),
         self = this,
-        authParams = {
-            entityType: self.auhorizer.ENTITY_TYPES.PROJECT,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT,
         },
         rejected = false,
         didExist;
@@ -181,7 +181,7 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.authorizer.getAccessRights(data.username, data.projectId, authParams)
+        this.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
                 if (projectAccess && projectAccess.delete) {
                     return Storage.prototype.deleteProject.call(self, data);
@@ -192,7 +192,7 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
             .then(function (didExist_) {
                 didExist = didExist_;
                 return self.authorizer.setAccessRights(true, data.projectId,
-                    {read: false, write: false, delete: false}, authParams);
+                    {read: false, write: false, delete: false}, projectAuthParams);
             })
             .then(function () {
                 return self.metadataStorage.deleteProject(data.projectId);
