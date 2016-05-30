@@ -11,14 +11,12 @@ var Q = require('q'),
         USER: 'USER'
     };
 
-function AuthorizerBase(params, mainLogger, gmeConfig) {
+function AuthorizerBase(mainLogger, gmeConfig) {
 
     /**
      * @type {{PROJECT: string, OWNER: string}}
      */
     this.ENTITY_TYPES = ENTITY_TYPES;
-
-    this.params = params;
 
     /**
      * @type {GmeConfig}
@@ -30,6 +28,18 @@ function AuthorizerBase(params, mainLogger, gmeConfig) {
      */
     this.gmeConfig = gmeConfig;
 }
+
+AuthorizerBase.prototype.start = function (params, callback) {
+    var deferred = Q.defer();
+    deferred.resolve();
+    return deferred.promise.nodeify(callback);
+};
+
+AuthorizerBase.prototype.stop = function (callback) {
+    var deferred = Q.defer();
+    deferred.resolve();
+    return deferred.promise.nodeify(callback);
+};
 
 /**
  *
@@ -46,7 +56,7 @@ function AuthorizerBase(params, mainLogger, gmeConfig) {
 AuthorizerBase.prototype.getAccessRights = function (userId, entityId, params, callback) {
     var deferred = Q.defer();
     deferred.reject(new Error('Not Implemented!'));
-    return deferred.promise;
+    return deferred.promise.nodeify(callback);
 };
 
 /**
@@ -65,7 +75,7 @@ AuthorizerBase.prototype.getAccessRights = function (userId, entityId, params, c
 AuthorizerBase.prototype.setAccessRights = function (userId, entityId, rights, params, callback) {
     var deferred = Q.defer();
     deferred.resolve();
-    return deferred.promise;
+    return deferred.promise.nodeify(callback);
 };
 
 module.exports = AuthorizerBase;

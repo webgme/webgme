@@ -9,7 +9,7 @@
 var Mongodb = require('mongodb'),
     Q = require('q'),
     fs = require('fs'),
-    //bcrypt = require('bcrypt'), include bcrypt and uncomment this line for faster encryption/decryption.
+//bcrypt = require('bcrypt'), include bcrypt and uncomment this line for faster encryption/decryption.
     bcrypt = require('bcryptjs'),
     jwt = require('jsonwebtoken'),
     MetadataStorage = require('../../storage/metadatastorage'),
@@ -26,7 +26,7 @@ var Mongodb = require('mongodb'),
  *
  * @param session
  * @param gmeConfig
- * @returns {{deleteProject: deleteProject, getProjectAuthorizationByUserId: getProjectAuthorizationByUserId, getProjectAuthorizationListByUserId: getProjectAuthorizationListByUserId, getUserAuthInfo: getUserAuthInfo, getAllUserAuthInfo: getAllUserAuthInfo, authorizeByUserId: authorizeByUserId, getAuthorizationInfoByUserId: getAuthorizationInfoByUserId, unload: unload, connect: connect, _getProjectNames: _getProjectNames, addUser: addUser, updateUser: updateUser, updateUserDataField: updateUserDataField, updateUserSettings: updateUserSettings, updateUserComponentSettings: updateUserComponentSettings, deleteUser: deleteUser, getUser: getUser, listUsers: listUsers, addOrganization: addOrganization, getOrganization: getOrganization, listOrganizations: listOrganizations, getUserOrOrg: getUserOrOrg, authorizeByUserOrOrgId: authorizeByUserOrOrgId, removeOrganizationByOrgId: removeOrganizationByOrgId, addUserToOrganization: addUserToOrganization, removeUserFromOrganization: removeUserFromOrganization, authorizeOrganization: authorizeOrganization, getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId, setAdminForUserInOrganization: setAdminForUserInOrganization, getAdminsInOrganization: getAdminsInOrganization, addProject: addProject, getProject: getProject, transferProject: transferProject, updateProjectInfo: updateProjectInfo, generateJWToken: generateJWToken, verifyJWToken: verifyJWToken, CONSTANTS: {USER: string, ORGANIZATION: string}}}
+ * @returns {{unload: unload, connect: connect, addUser: addUser, updateUser: updateUser, updateUserDataField: updateUserDataField, updateUserSettings: updateUserSettings, updateUserComponentSettings: updateUserComponentSettings, deleteUser: deleteUser, getUser: getUser, listUsers: listUsers, addOrganization: addOrganization, getOrganization: getOrganization, listOrganizations: listOrganizations, removeOrganizationByOrgId: removeOrganizationByOrgId, addUserToOrganization: addUserToOrganization, removeUserFromOrganization: removeUserFromOrganization, setAdminForUserInOrganization: setAdminForUserInOrganization, getAdminsInOrganization: getAdminsInOrganization, authenticateUser: authenticateUser, generateJWToken: generateJWToken, generateJWTokenForAuthenticatedUser: generateJWTokenForAuthenticatedUser, regenerateJWToken: regenerateJWToken, verifyJWToken: verifyJWToken, metadataStorage: MetadataStorage, authorizer: *, CONSTANTS: {USER: string, ORGANIZATION: string}}}
  * @constructor
  */
 function GMEAuth(session, gmeConfig) {
@@ -42,8 +42,9 @@ function GMEAuth(session, gmeConfig) {
         projectCollection = projectCollectionDeferred.promise,
 
         metadataStorage = new MetadataStorage(logger, gmeConfig),
-        authorizer,
-        // JWT Keys
+        Authorizer = require(gmeConfig.authentication.authorizer.path),
+        authorizer = new Authorizer({CONSTANTS: CONSTANTS}, logger, gmeConfig),
+    // JWT Keys
         PRIVATE_KEY,
         PUBLIC_KEY,
         jwtOptions = {
@@ -117,16 +118,6 @@ function GMEAuth(session, gmeConfig) {
     //addMongoOpsToPromize(organizationCollection);
     addMongoOpsToPromize(projectCollection);
 
-
-    function _getProjection(/*args*/) {
-        var ret = {},
-            i;
-        for (i = 0; i < arguments.length; i += 1) {
-            ret[arguments[i]] = 1;
-        }
-        return ret;
-    }
-
     function _prepareGuestAccount(callback) {
         var guestAcc = gmeConfig.authentication.guestAccount;
         return collection.findOne({_id: guestAcc})
@@ -182,14 +173,19 @@ function GMEAuth(session, gmeConfig) {
                 return Q.ninvoke(db, 'collection', _projectCollectionName);
             })
             .then(function (projectCollection_) {
-                metadataStorage.initialize(projectCollection_);
                 projectCollectionDeferred.resolve(projectCollection_);
                 return _prepareGuestAccount();
             })
             .then(function (projectCollection_) {
-                metadataStorage.initialize(projectCollection_);
+
                 projectCollectionDeferred.resolve(projectCollection_);
                 return _prepareGuestAccount();
+            })
+            .then(function () {
+                return Q.all([
+                    authorizer.start({collection: collection}),
+                    metadataStorage.start({projectCollection: projectCollection})
+                ]);
             })
             .then(function () {
                 return db;
@@ -209,7 +205,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function unload(callback) {
-        return Q.all([collection, projectCollection])
+        return Q.all([collection, projectCollection, authorizer.stop(), metadataStorage.stop()])
             .finally(function () {
                 return Q.ninvoke(db, 'close');
             })
@@ -436,6 +432,7 @@ function GMEAuth(session, gmeConfig) {
                 return getUser(userId);
             });
     }
+
     /**
      * Updates the provided fields in data (recursively) within userData.data.
      * @param {string} userId
@@ -736,66 +733,8 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-    /**
-     *
-     * @param orgId
-     * @param projectId
-     * @param type {string} 'create' 'delete' or 'read'
-     * @param rights {object} {read: true, write: true, delete: true}
-     * @param callback
-     * @returns {*}
-     */
-    function authorizeOrganization(orgId, projectId, type, rights, callback) {
-        return authorizeByUserOrOrgId(orgId, projectId, type, rights)
-            .nodeify(callback);
-    }
-
-    /**
-     *
-     * @param orgId
-     * @param projectId
-     * @param callback
-     * @returns {*}
-     */
-    function getAuthorizationInfoByOrgId(orgId, projectId, callback) {
-        var projection = {};
-        projection['projects.' + projectId] = 1;
-        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION}, projection)
-            .then(function (orgData) {
-                if (!orgData) {
-                    return Q.reject(new Error('No such organization [' + orgId + ']'));
-                }
-                return orgData.projects[projectId] || {};
-            })
-            .nodeify(callback);
-    }
-
-    /**
-     *
-     * @param userOrOrgId
-     * @param callback
-     * @returns {*}
-     */
-    function getUserOrOrg(userOrOrgId, callback) {
-        return collection.findOne({_id: userOrOrgId})
-            .then(function (userOrOrgData) {
-                if (!userOrOrgData) {
-                    return Q.reject(new Error('no such user or org [' + userOrOrgId + ']'));
-                }
-                if (!userOrOrgData.type || userOrOrgData.type === CONSTANTS.USER) {
-                    delete userOrOrgData.passwordHash;
-                    userOrOrgData.type = CONSTANTS.USER;
-                }
-                return userOrOrgData;
-            })
-            .nodeify(callback);
-    }
-
 
     return {
-        getUserAuthInfo: getUserAuthInfo,
-        getAllUserAuthInfo: getAllUserAuthInfo,
-
         unload: unload,
         connect: connect,
 
@@ -813,13 +752,9 @@ function GMEAuth(session, gmeConfig) {
         getOrganization: getOrganization,
         listOrganizations: listOrganizations,
 
-        getUserOrOrg: getUserOrOrg,
-
         removeOrganizationByOrgId: removeOrganizationByOrgId,
         addUserToOrganization: addUserToOrganization,
         removeUserFromOrganization: removeUserFromOrganization,
-        authorizeOrganization: authorizeOrganization,
-        getAuthorizationInfoByOrgId: getAuthorizationInfoByOrgId,
         setAdminForUserInOrganization: setAdminForUserInOrganization,
         getAdminsInOrganization: getAdminsInOrganization,
 

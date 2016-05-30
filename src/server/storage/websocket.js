@@ -19,7 +19,13 @@ PACKAGE_JSON = UTIL.getPackageJsonSync();
 
 function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     var logger = mainLogger.fork('WebSocket'),
+        metadataStorage = gmeAuth.metadataStorage,
+        authorizer = gmeAuth.authorizer,
+        projectAuthParams = {
+            entityType: authorizer.ENTITY_TYPES.PROJECT
+        },
         webSocket;
+
     logger.debug('ctor');
 
     function getTokenFromHandshake(socket) {
@@ -68,7 +74,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         var userId = userId;
         return getUserIdFromToken(socket, token)
             .then(function (userId) {
-                return gmeAuth.getProjectAuthorizationByUserId(userId, projectId);
+                return authorizer.getAccessRights(userId, projectId, projectAuthParams);
             })
             .nodeify(callback);
     }
@@ -371,7 +377,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     .then(function (access_) {
                         var username = data.username || this.gmeConfig.authentication.guestAccount;
                         access = access_;
-                        return gmeAuth.updateProjectInfo(data.projectId, {
+                        return metadataStorage.updateProjectInfo(data.projectId, {
                             viewedAt: (new Date()).toISOString(),
                             viewer: username
                         });
@@ -392,7 +398,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 logger.debug('closeProject', {metadata: data});
                 getUserIdFromToken(socket, data.webgmeToken)
                     .then(function (userId) {
-                        return gmeAuth.updateProjectInfo(data.projectId, {
+                        return metadataStorage.updateProjectInfo(data.projectId, {
                             viewedAt: (new Date()).toISOString(),
                             viewer: userId || this.gmeConfig.authentication.guestAccount
                         });
@@ -467,7 +473,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         var now = (new Date()).toISOString(),
                             username = data.username || this.gmeConfig.authentication.guestAccount;
                         commitStatus = status;
-                        return gmeAuth.updateProjectInfo(data.projectId, {
+                        return metadataStorage.updateProjectInfo(data.projectId, {
                             modifiedAt: now,
                             viewedAt: now,
                             viewer: username,
@@ -538,7 +544,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                             username = data.username || this.gmeConfig.authentication.guestAccount;
                         status = result;
 
-                        return gmeAuth.updateProjectInfo(data.projectId, {
+                        return metadataStorage.updateProjectInfo(data.projectId, {
                             modifiedAt: now,
                             viewedAt: now,
                             viewer: username,

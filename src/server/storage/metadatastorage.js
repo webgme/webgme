@@ -15,8 +15,17 @@ function MetadataStorage(mainLogger, gmeConfig) {
 
     self.projectCollection = null;
 
-    function initialize(projectCollection) {
-        self.projectCollection = projectCollection;
+    function start(params, callback) {
+        var deferred = Q.defer();
+        self.projectCollection = params.projectCollection;
+        deferred.resolve();
+        return deferred.promise.nodeify(callback);
+    }
+
+    function stop(callback) {
+        var deferred = Q.defer();
+        deferred.resolve();
+        return deferred.promise.nodeify(callback);
     }
 
     /**
@@ -142,7 +151,9 @@ function MetadataStorage(mainLogger, gmeConfig) {
     }
 
     return {
-        initialize: initialize,
+        start: start,
+        stop: stop,
+
         getProjects: getProjects,
         getProject: getProject,
         addProject: addProject,

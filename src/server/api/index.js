@@ -1075,7 +1075,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.put('/projects/:ownerId/:projectName/authorize/:userOrOrgId/:rights', function (req, res, next) {
-        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            projectAuthParams = {
+                entityType: authorizer.ENTITY_TYPES.PROJECT
+            };
 
         canUserAuthorizeProject(req)
             .then(function (isAuthorized) {
@@ -1093,7 +1096,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     delete: req.params.rights.indexOf('d') !== -1
                 };
 
-                return gmeAuth.authorizeByUserOrOrgId(req.params.userOrOrgId, projectId, 'set', rights);
+                return authorizer.setAccessRights(req.params.userOrOrgId, projectId, rights, projectAuthParams);
             })
             .then(function () {
                 res.sendStatus(204);
@@ -1107,7 +1110,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.delete('/projects/:ownerId/:projectName/authorize/:userOrOrgId', function (req, res, next) {
-        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            projectAuthParams = {
+                entityType: authorizer.ENTITY_TYPES.PROJECT
+            };
 
         canUserAuthorizeProject(req)
             .then(function (isAuthorized) {
@@ -1116,10 +1122,11 @@ function createAPI(app, mountPath, middlewareOpts) {
                     throw new Error('Not allowed to authorize users/organizations for project');
                 }
                 // ensure project exists
-                return gmeAuth.getProject(projectId);
+                return metadataStorage.getProject(projectId);
             })
             .then(function (/*projectData*/) {
-                return gmeAuth.authorizeByUserOrOrgId(req.params.userOrOrgId, projectId, 'delete');
+                return authorizer.setAccessRights(req.params.userOrOrgId, projectId,
+                    {read: false, write: false, delete: false}, projectAuthParams);
             })
             .then(function () {
                 res.sendStatus(204);

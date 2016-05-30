@@ -11,11 +11,22 @@ var AuthorizerBase = require('./authorizerbase'),
 function DefaultAuthorizer(params, mainLogger, gmeConfig) {
     var self = this;
 
-    AuthorizerBase.call(self, params, mainLogger, gmeConfig);
+    self.collection = null;
+
+    AuthorizerBase.call(self, mainLogger, gmeConfig);
+
+    function _getProjection(/*args*/) {
+        var ret = {},
+            i;
+        for (i = 0; i < arguments.length; i += 1) {
+            ret[arguments[i]] = 1;
+        }
+        return ret;
+    }
 
     function getProjectAuthorizationByUserId(userId, projectId, callback) {
         var ops = ['read', 'write', 'delete'];
-        return collection.findOne({_id: userId}, _getProjection('orgs', 'projects.' + projectId))
+        return self.collection.findOne({_id: userId}, _getProjection('orgs', 'projects.' + projectId))
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject(new Error('No such user [' + userId + ']'));
@@ -29,7 +40,7 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
                         }
                         query = {_id: {$in: userData.orgs}};
                         query['projects.' + projectId + '.' + op] = true;
-                        return collection.findOne(query, {_id: 1});
+                        return self.collection.findOne(query, {_id: 1});
                     }))];
             }).spread(function (user, rwd) {
                 var ret = {};
@@ -41,10 +52,10 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
             .nodeify(callback);
     }
 
-    function projectDeleted(projectId, callback) {
+    function removeProjectRightsForAll(projectId, callback) {
         var update = {$unset: {}};
         update.$unset['projects.' + projectId] = '';
-        return collection.update({}, update, {multi: true})
+        return self.collection.update({}, update, {multi: true})
             .nodeify(callback);
     }
 
@@ -55,7 +66,7 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
      * @returns {*}
      */
     function getUser(userId, callback) {
-        return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
+        return self.collection.findOne({_id: userId, type: {$ne: params.CONSTANTS.ORGANIZATION}})
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject(new Error('no such user [' + userId + ']'));
@@ -71,7 +82,7 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
     }
 
     function getAdminsInOrganization(orgId, callback) {
-        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION}, {admins: 1})
+        return self.collection.findOne({_id: orgId, type: params.CONSTANTS.ORGANIZATION}, {admins: 1})
             .then(function (org) {
                 if (!org) {
                     return Q.reject(new Error('No such organization [' + orgId + ']'));
@@ -95,7 +106,7 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
         if (type === 'set') {
             update = {$set: {}};
             update.$set['projects.' + projectId] = rights;
-            return collection.update({_id: userOrOrgId}, update)
+            return self.collection.update({_id: userOrOrgId}, update)
                 .spread(function (numUpdated) {
                     if (numUpdated !== 1) {
                         return Q.reject(new Error('No such user or org [' + userOrOrgId + ']'));
@@ -105,7 +116,7 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
         } else if (type === 'delete') {
             update = {$unset: {}};
             update.$unset['projects.' + projectId] = '';
-            return collection.update({_id: userOrOrgId}, update)
+            return self.collection.update({_id: userOrOrgId}, update)
                 .spread(function (numUpdated) {
                     // FIXME this is always true. Try findAndUpdate instead
                     return numUpdated === 1;
@@ -147,7 +158,7 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
                         rights.write = true;
                         return rights;
                     } else {
-                        return self.gmeAuth.getAdminsInOrganization(entityId)
+                        return getAdminsInOrganization(entityId)
                             .then(function (admins) {
                                 if (admins.indexOf(userId) > -1) {
                                     rights.write = true;
@@ -167,21 +178,31 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
             promise;
         if (params.entityType === self.ENTITY_TYPES.PROJECT) {
             if (userId === true) {
-                promise = projectDeleted(entityId);
+                promise = removeProjectRightsForAll(entityId);
             } else if (revoke) {
                 promise = authorizeByUserOrOrgId(userId, entityId, 'delete');
             } else {
                 promise = authorizeByUserOrOrgId(userId, entityId, 'set', rights);
             }
         } else {
-
+            throw new Error('Only ENTITY_TYPES.PROJECT allowed when setting access rights!');
         }
 
         return promise.nodeify(callback);
     };
+
+    this.start = function (params, callback) {
+        var deferred = Q.defer();
+
+        self.collection = params.collection;
+
+        deferred.resolve();
+
+        return deferred.promise.nodeify(callback);
+    };
 }
 
-AuthorizerBase.prototype = Object.create(AuthorizerBase.prototype);
-AuthorizerBase.prototype.constructor = DefaultAuthorizer;
+DefaultAuthorizer.prototype = Object.create(AuthorizerBase.prototype);
+DefaultAuthorizer.prototype.constructor = DefaultAuthorizer;
 
 module.exports = DefaultAuthorizer;
