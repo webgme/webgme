@@ -734,6 +734,16 @@ function GMEAuth(session, gmeConfig) {
     }
 
 
+    function authorizeByUserId(userId, projectId, type, rights, callback) {
+        var projectAuthParams = {
+            entityType: authorizer.ENTITY_TYPES.PROJECT
+        };
+
+        logger.warn('authorizeByUserId is deprecated use authorizer.setAccessRights instead!!');
+
+        return authorizer.setAccessRights(userId, projectId, rights, projectAuthParams);
+    }
+
     return {
         unload: unload,
         connect: connect,
@@ -766,6 +776,9 @@ function GMEAuth(session, gmeConfig) {
 
         metadataStorage: metadataStorage,
         authorizer: authorizer,
+
+        // This is left in order to not change all tests.
+        authorizeByUserId: authorizeByUserId,
 
         CONSTANTS: CONSTANTS
     };
