@@ -532,7 +532,7 @@ describe('GME client', function () {
 
         it('should fail to delete a nonexistent project', function (done) {
             client.deleteProject('unknown_project', function (err) {
-                expect(err.message).to.contain('Not authorized: cannot delete project. unknown_project');
+                expect(err.message).to.contain('Not authorized to delete project');
                 done();
             });
         });
