@@ -167,11 +167,9 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
                             .then(function (admins) {
                                 if (admins.indexOf(userId) > -1) {
                                     rights.write = true;
-
-                                    return rights;
-                                } else {
-                                    throw new Error('Not authorized to create project in organization ' + entityId);
                                 }
+
+                                return rights;
                             });
                     }
                 })

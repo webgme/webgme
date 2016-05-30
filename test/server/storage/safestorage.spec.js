@@ -1729,7 +1729,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('Not authorized to create a new project');
+                    expect(err.message).to.contain('Not authorized to create new project');
                     done();
                 })
                 .done();
@@ -1747,7 +1747,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('Not authorized to create a new project');
+                    expect(err.message).to.contain('Not authorized to create new project');
                     done();
                 })
                 .done();
@@ -1787,7 +1787,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('Not authorized to create project in organization theOrg');
+                    expect(err.message).to.contain('Not authorized to create new project for');
                     done();
                 })
                 .done();
@@ -1808,7 +1808,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('Not authorized to create project in organization theOrg');
+                    expect(err.message).to.contain('Not authorized to create new project for');
                     done();
                 })
                 .done();
@@ -1910,7 +1910,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('Not authorized to transfer project to organization theOrg');
+                    expect(err.message).to.contain('Not authorized to transfer project');
                     done();
                 })
                 .done();
@@ -1930,7 +1930,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('Error: Not authorized to delete project: doesNotExistTransfer');
+                    expect(err.message).to.contain('Not authorized to delete project');
                     done();
                 })
                 .done();
@@ -1959,7 +1959,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('Not authorized to transfer projects to other users');
+                    expect(err.message).to.contain('No such organization');
                     done();
                 })
                 .done();
@@ -1988,7 +1988,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('no such user or org [doesNotExist]');
+                    expect(err.message).to.contain('No such organization');
                     done();
                 })
                 .done();

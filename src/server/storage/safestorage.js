@@ -87,7 +87,6 @@ SafeStorage.prototype.getProjects = function (data, callback) {
     if (rejected === false) {
         this.metadataStorage.getProjects()
             .then(function (allProjects) {
-                console.log('allProjects', allProjects);
                 function getAuthorizedProjects(projectData) {
                     var projectDeferred = Q.defer();
 

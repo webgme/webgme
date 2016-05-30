@@ -548,7 +548,7 @@ describe('Connected worker', function () {
                 done(new Error('Missing error handling'));
             })
             .catch(function (err) {
-                expect(err.message).to.contain('Not authorized to read project: DoesNotExist');
+                expect(err.message).to.contain('Not authorized to read project');
 
                 done();
             })

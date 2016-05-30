@@ -128,7 +128,7 @@ describe('Mongo storage', function () {
                     delete: true
                 })
                 .then(function () {
-                    return gmeAuth.addProject(guestAccount, 'something1', null);
+                    return gmeAuth.metadataStorage.addProject(guestAccount, 'something1', null);
                 })
                 .then(function () {
                     return mongoStorage.getProjects({branches: true});
@@ -186,17 +186,17 @@ describe('Mongo storage', function () {
 
             mongoStorage.openDatabase()
                 .then(function () {
-                    return mongoStorage.getProjects({username: 'admin', branches: true});
+                    return mongoStorage.getProjects({username: 'guest', branches: true});
                 })
                 .then(function (projects) {
                     startProjects = projects;
                     return mongoStorage.createProject({
-                        username: guestAccount,
+                        username: 'admin',
                         projectName: projectDoesNotHaveAccessName
                     });
                 })
                 .then(function () {
-                    return mongoStorage.getProjects({username: 'admin', branches: true});
+                    return mongoStorage.getProjects({username: 'guest', branches: true});
                 })
                 .then(function (projects) {
                     expect(projects).deep.equal(startProjects);
@@ -311,7 +311,7 @@ describe('Mongo storage', function () {
                         });
                 })
                 .then(function () {
-                    return gmeAuth.addProject(guestAccount, 'project_does_not_exist', null);
+                    return gmeAuth.metadataStorage.addProject(guestAccount, 'project_does_not_exist', null);
                 })
                 .then(function () {
                     return mongoStorage.openProject({projectId: testFixture.projectName2Id('project_does_not_exist')});
