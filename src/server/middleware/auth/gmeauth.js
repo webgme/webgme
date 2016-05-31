@@ -17,10 +17,7 @@ var Mongodb = require('mongodb'),
 
     Logger = require('../../logger'),
 
-    CONSTANTS = {
-        USER: 'User',
-        ORGANIZATION: 'Organization'
-    };
+    CONSTANTS = require('./constants');
 
 /**
  *
@@ -43,7 +40,7 @@ function GMEAuth(session, gmeConfig) {
 
         metadataStorage = new MetadataStorage(logger, gmeConfig),
         Authorizer = require(gmeConfig.authentication.authorizer.path),
-        authorizer = new Authorizer({CONSTANTS: CONSTANTS}, logger, gmeConfig),
+        authorizer = new Authorizer(logger, gmeConfig),
     // JWT Keys
         PRIVATE_KEY,
         PUBLIC_KEY,

@@ -6,9 +6,10 @@
 'use strict';
 
 var AuthorizerBase = require('./authorizerbase'),
+    GME_AUTH_CONSTANTS = require('./constants'),
     Q = require('q');
 
-function DefaultAuthorizer(params, mainLogger, gmeConfig) {
+function DefaultAuthorizer(mainLogger, gmeConfig) {
     var self = this;
 
     self.collection = null;
@@ -24,7 +25,7 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
         return ret;
     }
 
-    function getProjectAuthorizationByUserId(userId, projectId, callback) {
+    function getProjectAuthorizationByUserOrOrgId(userId, projectId, callback) {
         var ops = ['read', 'write', 'delete'];
         return self.collection.findOne({_id: userId}, _getProjection('siteAdmin', 'orgs', 'projects.' + projectId))
             .then(function (userData) {
@@ -71,7 +72,7 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
      * @returns {*}
      */
     function getUser(userId, callback) {
-        return self.collection.findOne({_id: userId, type: {$ne: params.CONSTANTS.ORGANIZATION}})
+        return self.collection.findOne({_id: userId, type: {$ne: GME_AUTH_CONSTANTS.ORGANIZATION}})
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject(new Error('no such user [' + userId + ']'));
@@ -87,7 +88,7 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
     }
 
     function getAdminsInOrganization(orgId, callback) {
-        return self.collection.findOne({_id: orgId, type: params.CONSTANTS.ORGANIZATION}, {admins: 1})
+        return self.collection.findOne({_id: orgId, type: GME_AUTH_CONSTANTS.ORGANIZATION}, {admins: 1})
             .then(function (org) {
                 if (!org) {
                     return Q.reject(new Error('No such organization [' + orgId + ']'));
@@ -133,18 +134,11 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
         }
     }
 
-    /**
-     * 
-     * @param userId
-     * @param entityId
-     * @param params
-     * @param callback
-     */
     this.getAccessRights = function (userId, entityId, params, callback) {
-        if (params.entityType === self.ENTITY_TYPES.PROJECT) {
-            return getProjectAuthorizationByUserId(userId, entityId)
+        if (params.entityType === AuthorizerBase.ENTITY_TYPES.PROJECT) {
+            return getProjectAuthorizationByUserOrOrgId(userId, entityId)
                 .nodeify(callback);
-        } else if (params.entityType === self.ENTITY_TYPES.USER) {
+        } else if (params.entityType === AuthorizerBase.ENTITY_TYPES.USER) {
             return getUser(userId)
                 .then(function (user) {
                     var rights = {
@@ -177,19 +171,10 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
         }
     };
 
-    /**
-     * 
-     * @param userId
-     * @param entityId
-     * @param rights
-     * @param params
-     * @param callback
-     * @returns {Promise}
-     */
     this.setAccessRights = function (userId, entityId, rights, params, callback) {
         var revoke = rights.read === false && rights.write === false && rights.delete === false,
             promise;
-        if (params.entityType === self.ENTITY_TYPES.PROJECT) {
+        if (params.entityType === AuthorizerBase.ENTITY_TYPES.PROJECT) {
             if (userId === true) {
                 promise = removeProjectRightsForAll(entityId);
             } else if (revoke) {

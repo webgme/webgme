@@ -64,6 +64,7 @@
  *   patch: [{op: 'add', path: '/atr/new', value: 'value'}]
  * }
  */
+
 define([], function () {
     'use strict';
 

@@ -11,10 +11,31 @@ var Q = require('q'),
         USER: 'USER'
     };
 
+/**
+ * @typedef {object} AccessRights
+ * @prop {boolean} read
+ * @prop {boolean} write
+ * @prop {boolean} delete
+ *
+ * @example
+ * {
+ *   read: true,
+ *   write: true,
+ *   delete: false
+ * }
+ */
+
+
+/**
+ *
+ * @param {GmeLogger} mainLogger
+ * @param {GmeConfig} gmeConfig
+ * @constructor
+ */
 function AuthorizerBase(mainLogger, gmeConfig) {
 
     /**
-     * @type {{PROJECT: string, OWNER: string}}
+     * @type {{PROJECT: string, USER: string}}
      */
     this.ENTITY_TYPES = ENTITY_TYPES;
 
@@ -29,13 +50,21 @@ function AuthorizerBase(mainLogger, gmeConfig) {
     this.gmeConfig = gmeConfig;
 }
 
-AuthorizerBase.prototype.start = function (params, callback) {
-    var deferred = Q.defer();
-    deferred.resolve();
-    return deferred.promise.nodeify(callback);
-};
+/**
+ * @type {{PROJECT: string, USER: string}}
+ */
+AuthorizerBase.ENTITY_TYPES = ENTITY_TYPES;
 
-AuthorizerBase.prototype.stop = function (callback) {
+/**
+ *
+ * @param {object} params
+ * @param {object} params.collection - Mongo collection to default database.
+ * @param {function} [callback] - if provided no promise will be returned.
+ *
+ * @return {external:Promise}  On success the promise will be resolved.
+ * On error the promise will be rejected with {@link Error} <b>error</b>.
+ */
+AuthorizerBase.prototype.start = function (params, callback) {
     var deferred = Q.defer();
     deferred.resolve();
     return deferred.promise.nodeify(callback);
@@ -43,14 +72,27 @@ AuthorizerBase.prototype.stop = function (callback) {
 
 /**
  *
+ * @param {function} [callback] - if provided no promise will be returned.
+ *
+ * @return {external:Promise}  On success the promise will be resolved.
+ * On error the promise will be rejected with {@link Error} <b>error</b>.
+ */
+AuthorizerBase.prototype.stop = function (callback) {
+    var deferred = Q.defer();
+    deferred.resolve();
+    return deferred.promise.nodeify(callback);
+};
+
+/**
+ * Returns the access rights userId has for entityId.
  * @param {string} userId
  * @param {string} entityId
  * @param {object} params
- * @param {ENTITY_TYPE} params.entityType - PROJECT
+ * @param {AuthorizerBase.ENTITY_TYPES} params.entityType - PROJECT, USER
  * @param {function} [callback] - if provided no promise will be returned.
  *
  * @return {external:Promise}  On success the promise will be resolved with
- * {object} > <b>result</b>.<br>
+ * AccessRights > <b>result</b>.<br>
  * On error the promise will be rejected with {@link Error} <b>error</b>.
  */
 AuthorizerBase.prototype.getAccessRights = function (userId, entityId, params, callback) {
@@ -60,16 +102,15 @@ AuthorizerBase.prototype.getAccessRights = function (userId, entityId, params, c
 };
 
 /**
- *
+ * [Optionally sets the access rights for userId on entityId.]
  * @param {string} userId
  * @param {string} entityId
  * @param {object} rights
  * @param {object} params
- * @param {ENTITY_TYPE} params.entityType - PROJECT_ACCESS, USER
+ * @param {AuthorizerBase.ENTITY_TYPES} params.entityType - PROJECT_ACCESS, USER
  * @param {function} [callback] - if provided no promise will be returned.
  *
- * @return {external:Promise}  On success the promise will be resolved with
- * Object.<string, {@link module:Storage~CommitHash}> <b>result</b>.<br>
+ * @return {external:Promise}  On success the promise will be resolved.
  * On error the promise will be rejected with {@link Error} <b>error</b>.
  */
 AuthorizerBase.prototype.setAccessRights = function (userId, entityId, rights, params, callback) {
