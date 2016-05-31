@@ -7,7 +7,6 @@
 
 
 define([
-    'superagent',
     'js/logger',
     'js/Constants',
     'js/Loader/LoaderCircles',
@@ -19,7 +18,7 @@ define([
     'common/regexp',
     'text!./templates/ProjectsDialog.html',
     'css!./styles/ProjectsDialog.css'
-], function (superagent, Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, ConfirmDeleteDialog,
+], function (Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, ConfirmDeleteDialog,
              StorageUtil, clientUtil, REGEXP, projectsDialogTemplate) {
 
     'use strict';

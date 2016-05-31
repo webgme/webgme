@@ -177,6 +177,15 @@ function DefaultAuthorizer(params, mainLogger, gmeConfig) {
         }
     };
 
+    /**
+     * 
+     * @param userId
+     * @param entityId
+     * @param rights
+     * @param params
+     * @param callback
+     * @returns {Promise}
+     */
     this.setAccessRights = function (userId, entityId, rights, params, callback) {
         var revoke = rights.read === false && rights.write === false && rights.delete === false,
             promise;
