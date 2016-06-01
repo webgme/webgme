@@ -1649,6 +1649,17 @@ describe('SafeStorage', function () {
             inOrgCanCreateNotAdmin = 'inOrgCanCreateNotAdmin',
             inOrgCanCreateAdmin = 'inOrgCanCreateAdmin';
 
+        function getProjectData(projects, projectId) {
+            var res;
+            projects.forEach(function (projectData) {
+                if (projectData._id === projectId) {
+                    res = projectData;
+                }
+            });
+
+            return res;
+        }
+
         before(function (done) {
             Q.allDone([
                 gmeAuth.addUser(notInOrgCanNotCreate, '@', 'p', false, {}),
@@ -1767,7 +1778,8 @@ describe('SafeStorage', function () {
                     return safeStorage.getProjects(data);
                 })
                 .then(function (projects) {
-                    expect(projects.hasOwnProperty(projectId));
+                    var pData = getProjectData(projects, projectId);
+                    expect(pData.rights).to.deep.equal({read: true, write: true, delete: true});
                 })
                 .nodeify(done);
         });
@@ -1831,7 +1843,8 @@ describe('SafeStorage', function () {
                     return safeStorage.getProjects(data);
                 })
                 .then(function (projects) {
-                    expect(projects.hasOwnProperty(projectId));
+                    var pData = getProjectData(projects, projectId);
+                    expect(pData.rights).to.deep.equal({read: true, write: true, delete: true});
                 })
                 .nodeify(done);
         });
