@@ -1775,6 +1775,7 @@ describe('SafeStorage', function () {
             safeStorage.createProject(data)
                 .then(function (project) {
                     projectId = project.projectId;
+                    data.rights = true;
                     return safeStorage.getProjects(data);
                 })
                 .then(function (projects) {
@@ -1840,6 +1841,7 @@ describe('SafeStorage', function () {
                 .then(function (project) {
                     projectId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerId, projectName);
                     expect(project.projectId).to.equal(projectId);
+                    data.rights = true;
                     return safeStorage.getProjects(data);
                 })
                 .then(function (projects) {
