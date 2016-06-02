@@ -177,11 +177,41 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     }
 
+    /**
+     * Should be called when user is already authenticated but does not exist in the gmeAuth db.
+     * Used mainly to store the settings of the user.
+     * @param userId
+     * @param callback
+     * @returns {*}
+     */
+    function getOrAddUser(userId, callback) {
+        var deferred = Q.defer();
+        gmeAuth.getUser(userId)
+            .then(function (userData) {
+                deferred.resolve(userData);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user') === 0) {
+                    logger.info('Authenticated user did not exist in db, adding:', userId);
+                    gmeAuth.addUser(userId, 'em@il', 'wordpass', false, {overwrite: false})
+                        .then(function (userData) {
+                            return gmeAuth.getUser(userId);
+                        })
+                        .then(deferred.resolve)
+                        .catch(deferred.reject);
+                } else {
+                    deferred.reject(err);
+                }
+            });
+
+        return deferred.promise.nodeify(callback);
+    }
+
     // AUTHENTICATED
     router.get('/user', ensureAuthenticated, function (req, res) {
         var userId = getUserId(req);
 
-        gmeAuth.getUser(userId, function (err, data) {
+        getOrAddUser(userId, function (err, data) {
             if (err) {
                 res.status(404);
                 res.json({
@@ -363,7 +393,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.get('/user/settings', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.getUser(userId)
+        getOrAddUser(userId)
             .then(function (userData) {
                 res.json(userData.settings || {});
             })
@@ -373,7 +403,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.put('/user/settings', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUserSettings(userId, req.body, true)
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserSettings(userId, req.body, true);
+            })
             .then(function (settings) {
                 res.json(settings);
             })
@@ -383,7 +416,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.patch('/user/settings', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUserSettings(userId, req.body)
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserSettings(userId, req.body);
+            })
             .then(function (settings) {
                 res.json(settings);
             })
@@ -393,8 +429,11 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.delete('/user/settings', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUserSettings(userId, {}, true)
-            .then(function () {
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserSettings(userId, {}, true);
+            })
+            .then(function (settings) {
                 res.sendStatus(204);
             })
             .catch(next);
@@ -403,7 +442,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.get('/user/settings/:componentId', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.getUser(userId)
+        getOrAddUser(userId)
             .then(function (userData) {
                 res.json(userData.settings[req.params.componentId] || {});
             })
@@ -412,8 +451,10 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.put('/user/settings/:componentId', function (req, res, next) {
         var userId = getUserId(req);
-
-        gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body, true)
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body, true);
+            })
             .then(function (settings) {
                 res.json(settings);
             })
@@ -422,8 +463,10 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.patch('/user/settings/:componentId', function (req, res, next) {
         var userId = getUserId(req);
-
-        gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body)
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body);
+            })
             .then(function (settings) {
                 res.json(settings);
             })
@@ -432,9 +475,11 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.delete('/user/settings/:componentId', function (req, res, next) {
         var userId = getUserId(req);
-
-        gmeAuth.updateUserComponentSettings(userId, req.params.componentId, {}, true)
-            .then(function () {
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserComponentSettings(userId, req.params.componentId, {}, true);
+            })
+            .then(function (/*settings*/) {
                 res.sendStatus(204);
             })
             .catch(next);

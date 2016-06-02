@@ -558,7 +558,13 @@ function GMEAuth(session, gmeConfig) {
                     }
                 })
                 .then(deferred.resolve)
-                .catch(deferred.reject);
+                .catch(function (err) {
+                    if (err.code === 11000) {
+                        deferred.reject(new Error('user already exists [' + userId + ']'));
+                    } else {
+                        deferred.reject(err);
+                    }
+                });
         }
 
         return deferred.promise.nodeify(callback);

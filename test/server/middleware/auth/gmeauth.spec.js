@@ -84,6 +84,38 @@ describe('GME authentication', function () {
         auth.addUser('user_no_email', null, 'plaintext', true, {overwrite: true}, done);
     });
 
+    it('should fail to add user twice with overwrite=false', function (done) {
+        var userId = 'user_twiceAdded';
+
+        auth.addUser(userId, 'e@mail', 'pass', true, {overwrite: false})
+            .then(function () {
+                return auth.addUser(userId, 'e@mail2', 'pass', true, {overwrite: false});
+            })
+            .then(function () {
+                throw new Error('should fail');
+            })
+            .catch(function (err) {
+                expect(err.message.indexOf('user already exists')).to.equal(0);
+            })
+            .nodeify(done);
+    });
+
+    it('should update user if added twice and overwrite=true', function (done) {
+        var userId = 'user_twiceAddedOverwrite';
+
+        auth.addUser(userId, 'e1', 'pass', true, {overwrite: false})
+            .then(function () {
+                return auth.addUser(userId, 'e2', 'pass', true, {overwrite: true});
+            })
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (userData) {
+                expect(userData.email).to.equal('e2');
+            })
+            .nodeify(done);
+    });
+
     it('gets all user auth info', function (done) {
         auth.addUser('user_no_email', null, 'plaintext', true, {overwrite: true})
             .then(function () {
