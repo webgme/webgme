@@ -122,7 +122,7 @@ main = function (argv) {
 
                 // TODO: we may need to use a module like 'prompt' to get user password
                 if (username && password) {
-                    auth.getAllUserAuthInfo(username)
+                    auth.getUser(username)
                         .then(function (userObject) {
                             return auth.addUser(username,
                                 userObject.email,
@@ -215,24 +215,29 @@ main = function (argv) {
             console.log();
         });
 
-    var authUserOrGroup = function (id, projectname, options, fn) {
+    var authUserOrGroup = function (id, projectname, options) {
         var rights = {
             read: options.authorize.indexOf('r') !== -1,
             write: options.authorize.indexOf('w') !== -1,
             delete: options.authorize.indexOf('d') !== -1
-        },
-            type = 'create';
+        };
 
         setupGMEAuth(options.parent.db, function (/*err*/) {
+            var projectAuthParams = {
+                    entityType: auth.authorizer.ENTITY_TYPES.PROJECT,
+                };
 
             if (options.deauthorize) {
                 // deauthorize
-                rights = {};
-                type = 'delete';
+                rights = {
+                    read: false,
+                    write: false,
+                    delete: false
+                };
             }
 
             // authorize
-            auth[fn].call(this, id, projectname, type, rights)
+            auth.authorizer.setAccessRights(id, projectname, rights, projectAuthParams)
                 .then(mainDeferred.resolve)
                 .catch(mainDeferred.reject)
                 .finally(auth.unload);
@@ -246,7 +251,7 @@ main = function (argv) {
         .option('-d, --deauthorize', 'deauthorizes user', false)
         .action(function (username, projectname, options) {
             if (username && projectname) {
-                authUserOrGroup(username, projectname, options, 'authorizeByUserId');
+                authUserOrGroup(username, projectname, options);
             } else {
                 mainDeferred.reject(new SyntaxError('username and projectname parameter are missing'));
             }
@@ -270,7 +275,7 @@ main = function (argv) {
         .option('-d, --deauthorize', 'deauthorizes user', false)
         .action(function (orgname, projectname, options) {
             if (orgname && projectname) {
-                authUserOrGroup(orgname, projectname, options, 'authorizeOrganization');
+                authUserOrGroup(orgname, projectname, options);
             } else {
                 mainDeferred.reject(new SyntaxError('orgname and projectname parameter are missing'));
             }

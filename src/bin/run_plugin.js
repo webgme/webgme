@@ -117,9 +117,12 @@ main = function (argv, callback) {
         })
         .then(function (project_) {
             logger.info('Project is opened.');
+            var projectAuthParams = {
+                entityType: gmeAuth.authorizer.ENTITY_TYPES.PROJECT,
+            };
             project = project_;
 
-            return gmeAuth.getProjectAuthorizationByUserId(params.username, params.projectId);
+            return gmeAuth.authorizer.getAccessRights(params.username, params.projectId, projectAuthParams);
         })
         .then(function (access) {
             logger.info('User has the following rights to the project: ', access);

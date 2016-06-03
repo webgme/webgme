@@ -24,7 +24,6 @@ define([
         'js/Utils/InterpreterManager',
         'js/Utils/ComponentSettings',
         'common/storage/util',
-        'superagent',
         'q',
         'jquery'
     ], function (Logger,
@@ -45,7 +44,6 @@ define([
                  InterpreterManager,
                  ComponentSettings,
                  StorageUtil,
-                 superagent,
                  Q) {
 
         'use strict';

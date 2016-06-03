@@ -14,7 +14,6 @@
 
 var Q = require('q'),
     REGEXP = requireJS('common/regexp'),
-    ASSERT = requireJS('common/util/assert'),
     Storage = require('./storage'),
     filterArray = require('./storagehelpers').filterArray,
     UserProject = require('./userproject');
@@ -38,9 +37,9 @@ function check(cond, deferred, msg) {
  * @constructor
  */
 function SafeStorage(database, logger, gmeConfig, gmeAuth) {
-    ASSERT(gmeAuth !== null && typeof gmeAuth === 'object', 'gmeAuth is a mandatory parameter');
     Storage.call(this, database, logger, gmeConfig);
-    this.gmeAuth = gmeAuth;
+    this.metadataStorage = gmeAuth.metadataStorage;
+    this.authorizer = gmeAuth.authorizer;
 }
 
 // Inherit from Storage
@@ -61,11 +60,14 @@ SafeStorage.prototype.constructor = SafeStorage;
  * @param {boolean} [data.branches] - include a dictionary with all branches and their hash.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {function} [callback]
- * @returns {promise} //TODO: jsdocify this
+ * @returns {Promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.getProjects = function (data, callback) {
     var deferred = Q.defer(),
         self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT,
+        },
         rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
@@ -83,41 +85,31 @@ SafeStorage.prototype.getProjects = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationListByUserId(data.username)
-            .then(function (authorizedProjects) {
-                var projectIds = Object.keys(authorizedProjects);
-                self.logger.debug('user has rights to', projectIds);
-
-                function getProjectAppendRights(projectId) {
+        this.metadataStorage.getProjects()
+            .then(function (allProjects) {
+                function getAuthorizedProjects(projectData) {
                     var projectDeferred = Q.defer();
-                    self.gmeAuth.getProject(projectId)
-                        .then(function (project) {
-                            if (authorizedProjects[projectId].read === true) {
+
+                    self.authorizer.getAccessRights(data.username, projectData._id, projectAuthParams)
+                        .then(function (accessRights) {
+                            if (accessRights && accessRights.read === true) {
                                 if (data.rights === true) {
-                                    project.rights = authorizedProjects[projectId];
+                                    projectData.rights = accessRights;
                                 }
                                 if (!data.info) {
-                                    delete project.info;
+                                    delete projectData.info;
                                 }
-                                projectDeferred.resolve(project);
+                                projectDeferred.resolve(projectData);
                             } else {
                                 projectDeferred.resolve();
                             }
                         })
-                        .catch(function (err) {
-                            if (err.message.indexOf('no such project') > -1) {
-                                self.logger.error('Inconsistency: project exists in user "' + data.username +
-                                    '" but not in _projects: ', projectId);
-                                projectDeferred.resolve();
-                            } else {
-                                projectDeferred.reject(err);
-                            }
-                        });
+                        .catch(projectDeferred.reject);
 
                     return projectDeferred.promise;
                 }
 
-                return Q.all(projectIds.map(getProjectAppendRights));
+                return Q.all(allProjects.map(getAuthorizedProjects));
             })
             .then(function (projects) {
                 function getBranches(project) {
@@ -129,7 +121,6 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                         })
                         .catch(function (err) {
                             if (err.message.indexOf('Project does not exist') > -1) {
-                                //TODO: clean up in _projects and _users here too?
                                 self.logger.error('Inconsistency: project exists in user "' + data.username +
                                     '" and in _projects, but not as a collection on its own: ', project._id);
                                 branchesDeferred.resolve();
@@ -168,13 +159,16 @@ SafeStorage.prototype.getProjects = function (data, callback) {
  * @param {string} data.projectId - identifier for project.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {function} [callback]
- * @returns {promise} //TODO: jsdocify this
+ * @returns {Promise} //TODO: jsdocify this
  */
 SafeStorage.prototype.deleteProject = function (data, callback) {
     var deferred = Q.defer(),
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT,
+        },
         rejected = false,
-        didExist,
-        self = this;
+        didExist;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -187,17 +181,21 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        this.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.delete) {
+                if (projectAccess && projectAccess.delete) {
                     return Storage.prototype.deleteProject.call(self, data);
                 } else {
-                    throw new Error('Not authorized: cannot delete project. ' + data.projectId);
+                    throw new Error('Not authorized to delete project [' + data.projectId + ']');
                 }
             })
             .then(function (didExist_) {
                 didExist = didExist_;
-                return self.gmeAuth.deleteProject(data.projectId);
+                return self.authorizer.setAccessRights(true, data.projectId,
+                    {read: false, write: false, delete: false}, projectAuthParams);
+            })
+            .then(function () {
+                return self.metadataStorage.deleteProject(data.projectId);
             })
             .then(function () {
                 deferred.resolve(didExist);
@@ -225,8 +223,15 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
  */
 SafeStorage.prototype.createProject = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        userAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.USER
+        },
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
+
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
@@ -246,24 +251,8 @@ SafeStorage.prototype.createProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getUser(data.username)
-            .then(function (user) {
-                if (!user.canCreate) {
-                    throw new Error('Not authorized to create a new project.');
-                } else if (data.ownerId === data.username) {
-                    return data.ownerId;
-                } else {
-                    return self.gmeAuth.getAdminsInOrganization(data.ownerId)
-                        .then(function (admins) {
-                            if (admins.indexOf(data.username) > -1) {
-                                return data.ownerId;
-                            } else {
-                                throw new Error('Not authorized to create project in organization ' + data.ownerId);
-                            }
-                        });
-                }
-            })
-            .then(function (ownerId) {
+        this.authorizer.getAccessRights(data.username, data.ownerId, userAuthParams)
+            .then(function (ownerRights) {
                 var now = (new Date()).toISOString(),
                     info = {
                         createdAt: now,
@@ -274,15 +263,19 @@ SafeStorage.prototype.createProject = function (data, callback) {
                         modifier: data.username
                     };
 
-                return self.gmeAuth.addProject(ownerId, data.projectName, info);
+                if (ownerRights.write !== true) {
+                    throw new Error('Not authorized to create new project for [' + data.ownerId + ']');
+                }
+
+                return self.metadataStorage.addProject(data.ownerId, data.projectName, info);
             })
             .then(function (projectId) {
                 data.projectId = projectId;
-                return self.gmeAuth.authorizeByUserId(data.ownerId, projectId, 'create', {
+                return self.authorizer.setAccessRights(data.ownerId, projectId, {
                     read: true,
                     write: true,
                     delete: true
-                });
+                }, projectAuthParams);
             })
             .then(function () {
                 return Storage.prototype.createProject.call(self, data);
@@ -309,8 +302,14 @@ SafeStorage.prototype.createProject = function (data, callback) {
  */
 SafeStorage.prototype.transferProject = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        userAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.USER
+        },
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -324,37 +323,45 @@ SafeStorage.prototype.transferProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        self.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.delete) {
-                    return self.gmeAuth.getUserOrOrg(data.newOwnerId);
+                if (projectAccess && projectAccess.delete) {
+                    return self.authorizer.getAccessRights(data.username, data.newOwnerId, userAuthParams);
                 } else {
-                    throw new Error('Not authorized to delete project: ' + data.projectId);
+                    throw new Error('Not authorized to delete project [' + data.projectId + ']');
                 }
             })
-            .then(function (newOwner) {
-                if (newOwner._id === data.username) {
+            .then(function (ownerRights) {
+                if (ownerRights && ownerRights.write !== true) {
+                     throw new Error('Not authorized to transfer project to [' + data.newOwnerId + ']');
+                }
 
-                } else if (newOwner.type === self.gmeAuth.CONSTANTS.ORGANIZATION) {
-                    return self.gmeAuth.getAdminsInOrganization(newOwner._id)
-                        .then(function (admins) {
-                            if (admins.indexOf(data.username) === -1) {
-                                throw new Error('Not authorized to transfer project to organization ' + newOwner._id);
-                            }
-                        });
-                } else {
-                    throw new Error('Not authorized to transfer projects to other users ' + newOwner._id);
-                }
-            })
-            .then(function () {
-                return self.gmeAuth.transferProject(data.projectId, data.newOwnerId);
+                // Remove old and add new metadata for the project.
+                return self.metadataStorage.transferProject(data.projectId, data.newOwnerId);
             })
             .then(function (newProjectId) {
+                // Rename the project collection.
                 data.newProjectId = newProjectId;
                 return Storage.prototype.renameProject.call(self, data);
             })
-            .then(function (newProjectId) {
-                deferred.resolve(newProjectId);
+            .then(function () {
+                // Remove all previous project access rights.
+                self.authorizer.setAccessRights(true, data.projectId, {
+                    read: false,
+                    write: false,
+                    delete: false
+                }, projectAuthParams);
+            })
+            .then(function () {
+                // Add full project access rights to the new owner.
+                return self.authorizer.setAccessRights(data.newOwnerId, data.newProjectId, {
+                    read: true,
+                    write: true,
+                    delete: true
+                }, projectAuthParams);
+            })
+            .then(function () {
+                deferred.resolve(data.newProjectId);
             })
             .catch(function (err) {
                 deferred.reject(new Error(err));
@@ -379,8 +386,14 @@ SafeStorage.prototype.transferProject = function (data, callback) {
  */
 SafeStorage.prototype.duplicateProject = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        userAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.USER
+        },
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -407,31 +420,15 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        self.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (!projectAccess.read) {
-                    throw new Error('Not authorized to read project: ' + data.projectId);
-                }
-
-                return self.gmeAuth.getUser(data.username);
-            })
-            .then(function (user) {
-                if (!user.canCreate) {
-                    throw new Error('Not authorized to create a new project.');
-                } else if (data.ownerId === data.username) {
-                    return data.ownerId;
+                if (projectAccess && projectAccess.read) {
+                    return self.authorizer.getAccessRights(data.username, data.ownerId, userAuthParams);
                 } else {
-                    return self.gmeAuth.getAdminsInOrganization(data.ownerId)
-                        .then(function (admins) {
-                            if (admins.indexOf(data.username) > -1) {
-                                return data.ownerId;
-                            } else {
-                                throw new Error('Not authorized to create project in organization ' + data.ownerId);
-                            }
-                        });
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
-            .then(function (ownerId) {
+            .then(function (ownerRights) {
                 var now = (new Date()).toISOString(),
                     info = {
                         createdAt: now,
@@ -442,15 +439,19 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
                         modifier: data.username
                     };
 
-                return self.gmeAuth.addProject(ownerId, data.projectName, info);
+                if (ownerRights && ownerRights.write !== true) {
+                    throw new Error('Not authorized to create project for [' + data.newOwnerId + ']');
+                }
+
+                return self.metadataStorage.addProject(data.ownerId, data.projectName, info);
             })
             .then(function (projectId) {
-                data.newProjectId = projectId;
-                return self.gmeAuth.authorizeByUserId(data.ownerId, projectId, 'create', {
+                data.projectId = projectId;
+                return self.authorizer.setAccessRights(data.ownerId, projectId, {
                     read: true,
                     write: true,
                     delete: true
-                });
+                }, projectAuthParams);
             })
             .then(function () {
                 return Storage.prototype.duplicateProject.call(self, data);
@@ -485,8 +486,11 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
  */
 SafeStorage.prototype.getBranches = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -499,12 +503,12 @@ SafeStorage.prototype.getBranches = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.read) {
+                if (projectAccess && projectAccess.read) {
                     return Storage.prototype.getBranches.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project: ' + data.projectId);
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
             .then(function (result) {
@@ -534,10 +538,13 @@ SafeStorage.prototype.getBranches = function (data, callback) {
  */
 SafeStorage.prototype.getCommits = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
-    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+        rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
         check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
         check(typeof data.before === 'number' || typeof data.before === 'string', deferred,
@@ -556,12 +563,12 @@ SafeStorage.prototype.getCommits = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.read) {
+                if (projectAccess && projectAccess.read) {
                     return Storage.prototype.getCommits.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectId);
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
             .then(function (result) {
@@ -593,8 +600,11 @@ SafeStorage.prototype.getCommits = function (data, callback) {
  */
 SafeStorage.prototype.getHistory = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -611,12 +621,12 @@ SafeStorage.prototype.getHistory = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.read) {
+                if (projectAccess && projectAccess.read) {
                     return Storage.prototype.getHistory.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectId);
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
             .then(function (result) {
@@ -660,8 +670,11 @@ SafeStorage.prototype.getHistory = function (data, callback) {
  */
 SafeStorage.prototype.getLatestCommitData = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -676,12 +689,12 @@ SafeStorage.prototype.getLatestCommitData = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.read) {
+                if (projectAccess && projectAccess.read) {
                     return Storage.prototype.getLatestCommitData.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectId);
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
             .then(function (result) {
@@ -703,8 +716,11 @@ SafeStorage.prototype.getLatestCommitData = function (data, callback) {
  */
 SafeStorage.prototype.makeCommit = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
@@ -751,12 +767,12 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.write) {
+                if (projectAccess && projectAccess.write) {
                     return Storage.prototype.makeCommit.call(self, data);
                 } else {
-                    throw new Error('Not authorized to write project. ' + data.projectId);
+                    throw new Error('Not authorized to write project [' + data.projectId + ']');
                 }
             })
             .then(function (result) {
@@ -778,8 +794,11 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
  */
 SafeStorage.prototype.getBranchHash = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
@@ -796,12 +815,12 @@ SafeStorage.prototype.getBranchHash = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.read) {
+                if (projectAccess && projectAccess.read) {
                     return Storage.prototype.getBranchHash.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectId);
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
             .then(function (result) {
@@ -823,8 +842,11 @@ SafeStorage.prototype.getBranchHash = function (data, callback) {
  */
 SafeStorage.prototype.setBranchHash = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
@@ -848,12 +870,12 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.write) {
+                if (projectAccess && projectAccess.write) {
                     return Storage.prototype.setBranchHash.call(self, data);
                 } else {
-                    throw new Error('Not authorized to write project. ' + data.projectId);
+                    throw new Error('Not authorized to write project [' + data.projectId + ']');
                 }
             })
             .then(function (result) {
@@ -875,8 +897,11 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
  */
 SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
@@ -897,12 +922,12 @@ SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.read) {
+                if (projectAccess && projectAccess.read) {
                     return Storage.prototype.getCommonAncestorCommit.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectId);
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
             .then(function (commonHash) {
@@ -924,8 +949,11 @@ SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
  */
 SafeStorage.prototype.createBranch = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
@@ -949,12 +977,12 @@ SafeStorage.prototype.createBranch = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.write) {
+                if (projectAccess && projectAccess.write) {
                     return Storage.prototype.setBranchHash.call(self, data);
                 } else {
-                    throw new Error('Not authorized to write project. ' + data.projectId);
+                    throw new Error('Not authorized to write project [' + data.projectId + ']');
                 }
             })
             .then(function (result) {
@@ -976,8 +1004,11 @@ SafeStorage.prototype.createBranch = function (data, callback) {
  */
 SafeStorage.prototype.deleteBranch = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
@@ -995,12 +1026,12 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.write) {
+                if (projectAccess && projectAccess.write) {
                     return Storage.prototype.getBranchHash.call(self, data);
                 } else {
-                    throw new Error('Not authorized to write project. ' + data.projectId);
+                    throw new Error('Not authorized to write project [' + data.projectId + ']');
                 }
             })
             .then(function (branchHash) {
@@ -1027,8 +1058,11 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
  */
 SafeStorage.prototype.createTag = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
@@ -1050,12 +1084,12 @@ SafeStorage.prototype.createTag = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.write) {
+                if (projectAccess && projectAccess.write) {
                     return Storage.prototype.createTag.call(self, data);
                 } else {
-                    throw new Error('Not authorized to write project. ' + data.projectId);
+                    throw new Error('Not authorized to write project [' + data.projectId + ']');
                 }
             })
             .then(function () {
@@ -1077,8 +1111,11 @@ SafeStorage.prototype.createTag = function (data, callback) {
  */
 SafeStorage.prototype.deleteTag = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
 
@@ -1096,12 +1133,12 @@ SafeStorage.prototype.deleteTag = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.delete) {
+                if (projectAccess && projectAccess.delete) {
                     return Storage.prototype.deleteTag.call(self, data);
                 } else {
-                    throw new Error('Not authorized to delete from project. ' + data.projectId);
+                    throw new Error('Not authorized to delete from project [' + data.projectId + ']');
                 }
             })
             .then(function () {
@@ -1132,8 +1169,11 @@ SafeStorage.prototype.deleteTag = function (data, callback) {
  */
 SafeStorage.prototype.getTags = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -1146,12 +1186,12 @@ SafeStorage.prototype.getTags = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.read) {
+                if (projectAccess && projectAccess.read) {
                     return Storage.prototype.getTags.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project: ' + data.projectId);
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
             .then(function (result) {
@@ -1196,8 +1236,11 @@ SafeStorage.prototype.openProject = function (data, callback) {
  */
 SafeStorage.prototype._getProject = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -1210,12 +1253,12 @@ SafeStorage.prototype._getProject = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.read) {
+                if (projectAccess && projectAccess.read) {
                     return Storage.prototype.openProject.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read or write project: ' + data.projectId);
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
             .then(function (dbProject) {
@@ -1237,8 +1280,11 @@ SafeStorage.prototype._getProject = function (data, callback) {
  */
 SafeStorage.prototype.loadObjects = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -1253,12 +1299,12 @@ SafeStorage.prototype.loadObjects = function (data, callback) {
 
     self.logger.debug('loadObjects', {metadata: data});
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.read) {
+                if (projectAccess && projectAccess.read) {
                     return Storage.prototype.loadObjects.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectId);
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
             .then(function (project) {
@@ -1288,8 +1334,11 @@ SafeStorage.prototype.loadObjects = function (data, callback) {
  */
 SafeStorage.prototype.loadPaths = function (data, callback) {
     var deferred = Q.defer(),
-        rejected = false,
-        self = this;
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
@@ -1305,12 +1354,12 @@ SafeStorage.prototype.loadPaths = function (data, callback) {
 
     self.logger.debug('loadPaths', {metadata: data});
     if (rejected === false) {
-        this.gmeAuth.getProjectAuthorizationByUserId(data.username, data.projectId)
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
-                if (projectAccess.read) {
+                if (projectAccess && projectAccess.read) {
                     return Storage.prototype.loadPaths.call(self, data);
                 } else {
-                    throw new Error('Not authorized to read project. ' + data.projectId);
+                    throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
             .then(function (project) {

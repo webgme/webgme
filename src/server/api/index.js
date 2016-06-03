@@ -30,6 +30,8 @@ function createAPI(app, mountPath, middlewareOpts) {
 
         logger = middlewareOpts.logger.fork('api'),
         gmeAuth = middlewareOpts.gmeAuth,
+        metadataStorage = gmeAuth.metadataStorage,
+        authorizer = gmeAuth.authorizer,
         safeStorage = middlewareOpts.safeStorage,
         ensureAuthenticated = middlewareOpts.ensureAuthenticated,
         gmeConfig = middlewareOpts.gmeConfig,
@@ -175,11 +177,41 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     }
 
+    /**
+     * Should be called when user is already authenticated but does not exist in the gmeAuth db.
+     * Used mainly to store the settings of the user.
+     * @param userId
+     * @param callback
+     * @returns {*}
+     */
+    function getOrAddUser(userId, callback) {
+        var deferred = Q.defer();
+        gmeAuth.getUser(userId)
+            .then(function (userData) {
+                deferred.resolve(userData);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user') === 0) {
+                    logger.info('Authenticated user did not exist in db, adding:', userId);
+                    gmeAuth.addUser(userId, 'em@il', 'wordpass', false, {overwrite: false})
+                        .then(function (userData) {
+                            return gmeAuth.getUser(userId);
+                        })
+                        .then(deferred.resolve)
+                        .catch(deferred.reject);
+                } else {
+                    deferred.reject(err);
+                }
+            });
+
+        return deferred.promise.nodeify(callback);
+    }
+
     // AUTHENTICATED
     router.get('/user', ensureAuthenticated, function (req, res) {
         var userId = getUserId(req);
 
-        gmeAuth.getUser(userId, function (err, data) {
+        getOrAddUser(userId, function (err, data) {
             if (err) {
                 res.status(404);
                 res.json({
@@ -361,7 +393,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.get('/user/settings', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.getUser(userId)
+        getOrAddUser(userId)
             .then(function (userData) {
                 res.json(userData.settings || {});
             })
@@ -371,7 +403,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.put('/user/settings', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUserSettings(userId, req.body, true)
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserSettings(userId, req.body, true);
+            })
             .then(function (settings) {
                 res.json(settings);
             })
@@ -381,7 +416,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.patch('/user/settings', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUserSettings(userId, req.body)
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserSettings(userId, req.body);
+            })
             .then(function (settings) {
                 res.json(settings);
             })
@@ -391,8 +429,11 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.delete('/user/settings', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.updateUserSettings(userId, {}, true)
-            .then(function () {
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserSettings(userId, {}, true);
+            })
+            .then(function (settings) {
                 res.sendStatus(204);
             })
             .catch(next);
@@ -401,7 +442,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.get('/user/settings/:componentId', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.getUser(userId)
+        getOrAddUser(userId)
             .then(function (userData) {
                 res.json(userData.settings[req.params.componentId] || {});
             })
@@ -410,8 +451,10 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.put('/user/settings/:componentId', function (req, res, next) {
         var userId = getUserId(req);
-
-        gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body, true)
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body, true);
+            })
             .then(function (settings) {
                 res.json(settings);
             })
@@ -420,8 +463,10 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.patch('/user/settings/:componentId', function (req, res, next) {
         var userId = getUserId(req);
-
-        gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body)
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body);
+            })
             .then(function (settings) {
                 res.json(settings);
             })
@@ -430,9 +475,11 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.delete('/user/settings/:componentId', function (req, res, next) {
         var userId = getUserId(req);
-
-        gmeAuth.updateUserComponentSettings(userId, req.params.componentId, {}, true)
-            .then(function () {
+        getOrAddUser(userId)
+            .then(function (/*userData*/) {
+                return gmeAuth.updateUserComponentSettings(userId, req.params.componentId, {}, true);
+            })
+            .then(function (/*settings*/) {
                 res.sendStatus(204);
             })
             .catch(next);
@@ -984,7 +1031,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         safeStorage.getBranches(data)
             .then(function (branches_) {
                 branches = branches_;
-                return gmeAuth.getProject(projectId);
+                return metadataStorage.getProject(projectId);
             })
             .then(function (projectData) {
                 projectData.branches = branches;
@@ -997,22 +1044,22 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.patch('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
+            projectAuthParams = {
+                entityType: authorizer.ENTITY_TYPES.PROJECT
+            },
             projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
 
-        gmeAuth.getProjectAuthorizationByUserId(userId, projectId)
-            .then(function (rights) {
-                if (rights.write !== true) {
-                    return gmeAuth.getUser(userId)
-                        .then(function (userData) {
-                            if (userData.siteAdmin !== true) {
-                                res.status(403);
-                                throw new Error('Not authorized to modify project');
-                            }
-                        });
+        authorizer.getAccessRights(userId, projectId, projectAuthParams)
+            .then(function (projectAccess) {
+                if (projectAccess && projectAccess.write) {
+                    return;
+                } else {
+                    res.status(403);
+                    throw new Error('Not authorized to modify project');
                 }
             })
             .then(function () {
-                return gmeAuth.updateProjectInfo(projectId, req.body);
+                return metadataStorage.updateProjectInfo(projectId, req.body);
             })
             .then(function (projectData) {
                 res.json(projectData);
@@ -1073,7 +1120,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.put('/projects/:ownerId/:projectName/authorize/:userOrOrgId/:rights', function (req, res, next) {
-        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            projectAuthParams = {
+                entityType: authorizer.ENTITY_TYPES.PROJECT
+            };
 
         canUserAuthorizeProject(req)
             .then(function (isAuthorized) {
@@ -1082,7 +1132,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     throw new Error('Not allowed to authorize users/organizations for project');
                 }
                 // ensure project exists
-                return gmeAuth.getProject(projectId);
+                return metadataStorage.getProject(projectId);
             })
             .then(function (/*projectData*/) {
                 var rights = {
@@ -1091,7 +1141,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     delete: req.params.rights.indexOf('d') !== -1
                 };
 
-                return gmeAuth.authorizeByUserOrOrgId(req.params.userOrOrgId, projectId, 'set', rights);
+                return authorizer.setAccessRights(req.params.userOrOrgId, projectId, rights, projectAuthParams);
             })
             .then(function () {
                 res.sendStatus(204);
@@ -1105,7 +1155,10 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.delete('/projects/:ownerId/:projectName/authorize/:userOrOrgId', function (req, res, next) {
-        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName);
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            projectAuthParams = {
+                entityType: authorizer.ENTITY_TYPES.PROJECT
+            };
 
         canUserAuthorizeProject(req)
             .then(function (isAuthorized) {
@@ -1114,10 +1167,11 @@ function createAPI(app, mountPath, middlewareOpts) {
                     throw new Error('Not allowed to authorize users/organizations for project');
                 }
                 // ensure project exists
-                return gmeAuth.getProject(projectId);
+                return metadataStorage.getProject(projectId);
             })
             .then(function (/*projectData*/) {
-                return gmeAuth.authorizeByUserOrOrgId(req.params.userOrOrgId, projectId, 'delete');
+                return authorizer.setAccessRights(req.params.userOrOrgId, projectId,
+                    {read: false, write: false, delete: false}, projectAuthParams);
             })
             .then(function () {
                 res.sendStatus(204);

@@ -286,12 +286,12 @@ describe('Memory storage', function () {
                 .then(function (projects) {
                     expect(projects).deep.equal([]);
                     return memoryStorage.createProject({
-                        username: guestAccount,
+                        username: 'admin',
                         projectName: projectName + '_does_not_have_access'
                     });
                 })
                 .then(function () {
-                    return memoryStorage.getProjects({username: 'admin', branches: true});
+                    return memoryStorage.getProjects({username: guestAccount, branches: true});
                 })
                 .then(function (projects) {
                     expect(projects).deep.equal([]);

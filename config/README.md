@@ -57,6 +57,10 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Where clients are redirected after logout.
 - `config.authentication.salts = 10`
  - Strength of the salting of the users' passwords [bcrypt](https://github.com/dcodeIO/bcrypt.js).
+- `config.authentication.authorizer.path = './src/server/middleware/auth/defaultauthorizer'`
+ - Path (absolute) to module implementing `AuthorizerBase` (located next to `deafultauthorizer`) for getting and setting authorization regarding projects.
+- `config.authentication.authorizer.options = {}`
+ - Optional options passed to authorizer module at initialization (via gmeConfig).
 - `config.authentication.jwt.cookieId = 'access_token'`
  - Id of token used when placed inside of a cookie.
 - `config.authentication.jwt.expiresIn = 3600 * 24 * 7`

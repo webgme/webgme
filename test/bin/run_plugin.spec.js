@@ -147,7 +147,7 @@ describe('Run plugin CLI', function () {
             runPlugin.main(['node', filename, 'MinimalWorkingExample', 'not_authorized_project'],
                 function (err) {
                     if (err) {
-                        expect(err).to.match(/Not authorized to read or write project/);
+                        expect(err).to.match(/Not authorized to read project/);
                         return;
                     }
                     done(new Error('should have failed to run plugin'));

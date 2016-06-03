@@ -532,7 +532,7 @@ describe('GME client', function () {
 
         it('should fail to delete a nonexistent project', function (done) {
             client.deleteProject('unknown_project', function (err) {
-                expect(err.message).to.contain('Not authorized: cannot delete project. unknown_project');
+                expect(err.message).to.contain('Not authorized to delete project');
                 done();
             });
         });
@@ -606,7 +606,7 @@ describe('GME client', function () {
         it('should select the given branch of the opened project when specified in selectProject', function (done) {
             client.selectProject('reset', null, function (err) {
                 expect(client.getActiveProjectId()).to.equal(null);
-                expect(err.message).to.include('Not authorized to read project: reset');
+                expect(err.message).to.include('Not authorized to read project');
                 //TODO: FIXOTHERS: Reset all tests like this.
 
                 client.selectProject(projectId, 'master', function (err) {

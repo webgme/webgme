@@ -349,7 +349,7 @@ function getGMEAuth(gmeConfigParameter, callback) {
 function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) {
     var deferred = Q.defer(),
         gmeAuth,
-
+        projectAuthParams,
         clearDB = clearDatabase(gmeConfigParameter),
         guestAccount = gmeConfigParameter.authentication.guestAccount;
 
@@ -359,6 +359,10 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
         })
         .then(function (gmeAuth_) {
             gmeAuth = gmeAuth_;
+            projectAuthParams = {
+                entityType: gmeAuth.authorizer.ENTITY_TYPES.PROJECT
+            };
+
             return Q.allDone([
                 gmeAuth.addUser(guestAccount, guestAccount + '@example.com', guestAccount, true, {overwrite: true}),
                 gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {overwrite: true, siteAdmin: true})
@@ -374,21 +378,21 @@ function clearDBAndGetGMEAuth(gmeConfigParameter, projectNameOrNames, callback) 
                 projectName = projectNameOrNames;
                 projectId = guestAccount + exports.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectName;
                 projectsToAuthorize.push(
-                    gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
+                    gmeAuth.authorizer.setAccessRights(guestAccount, projectId, {
                         read: true,
                         write: true,
                         delete: true
-                    })
+                    }, projectAuthParams)
                 );
             } else if (projectNameOrNames instanceof Array) {
                 for (i = 0; i < projectNameOrNames.length; i += 1) {
                     projectId = guestAccount + exports.STORAGE_CONSTANTS.PROJECT_ID_SEP + projectNameOrNames[i];
                     projectsToAuthorize.push(
-                        gmeAuth.authorizeByUserId(guestAccount, projectId, 'create', {
+                        gmeAuth.authorizer.setAccessRights(guestAccount, projectId, {
                             read: true,
                             write: true,
                             delete: true
-                        })
+                        }, projectAuthParams)
                     );
                 }
             } else {

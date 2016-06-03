@@ -145,6 +145,10 @@ describe('REST API', function () {
                         gmeAuth.addUser('users_w_c_settings5', 'e@mail.com', 'plaintext', false, {
                             overwrite: true,
                             settings: {comp1: {a: 1, b: 1}, comp2: {a: 2, b: 2}}
+                        }),
+                        gmeAuth.addUser('user_not_in_db', 'e@mail.com', 'plaintext', false, {
+                            overwrite: true,
+                            settings: {comp1: {a: 1}}
                         })
                     ]);
                 })
@@ -625,6 +629,40 @@ describe('REST API', function () {
                         expect(res.status).equal(200, err);
                         expect(res.body.webgmeToken.split('.').length).equal(3, 'Returned token not correct format');
                         done();
+                    });
+            });
+
+            it('should create user when accessed in db and not existing for user and setting calls', function (done) {
+                var userId = 'user_not_in_db';
+
+                agent.get(server.getUrl() + '/api/v1/user/token')
+                    .set('Authorization', 'Basic ' + new Buffer('user_not_in_db:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        try {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.webgmeToken.split('.').length).equal(3, 'Returned token not correct format');
+                        } catch (e) {
+                            done(e);
+                            return;
+                        }
+
+                        gmeAuth.deleteUser(userId)
+                            .then(function () {
+                                agent.get(server.getUrl() + '/api/v1/user')
+                                    .set('Authorization', 'Bearer ' + res.body.webgmeToken)
+                                    .end(function (err, res) {
+                                        try {
+                                            expect(res.status).equal(200, err);
+                                            expect(res.body._id).equal(userId);
+                                            expect(res.body.settings).to.deep.equal({});
+                                        } catch (e) {
+                                            err = e;
+                                        }
+
+                                        done(err);
+                                    });
+                            })
+                            .catch(done);
                     });
             });
 

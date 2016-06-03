@@ -14,6 +14,11 @@ var path = require('path'),
 
         authentication: {
             enable: false,
+            authorizer: {
+                path: path.join(__dirname, '../src/server/middleware/auth/defaultauthorizer'),
+                options: {}
+            },
+
             allowGuests: true,
             guestAccount: 'guest',
             logOutUrl: '/',
