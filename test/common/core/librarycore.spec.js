@@ -950,6 +950,76 @@ describe('Library core ', function () {
             .nodeify(done);
     });
 
+    it('should update a library of an imported project', function (done) {
+        var core, rootHash, root, project,
+            buildLibrary = function () {
+                var deferred = Q.defer(),
+                    lRoot = core.createNode(),
+                    lFco = core.createNode({parent: lRoot, base: null, relid: 'FCO'}),
+                    lCont = core.createNode({parent: lRoot, base: lFco, relid: 'Cont'}),
+                    lRem = core.createNode({parent: lCont, base: lFco, relid: 'toRemove'}),
+                    lMov = core.createNode({parent: lRoot, base: lFco, relid: 'toMove'}),
+                    lNew;
+
+                core.setAttribute(lRoot, 'name', 'ROOT');
+                core.setAttribute(lFco, 'name', 'FCO');
+                core.setAttribute(lCont, 'name', 'container');
+                core.setAttribute(lRem, 'name', 'itemToremove');
+                core.setAttribute(lMov, 'name', 'itemToMove');
+
+                core.addMember(lRoot, 'MetaAspectSet', lFco);
+                core.addMember(lRoot, 'MetaAspectSet', lRem);
+                core.addMember(lRoot, 'MetaAspectSet', lMov);
+
+                core.persist(lRoot);
+                return core.getHash(lRoot);
+            };
+
+        testFixture.importProject(storage,
+            {
+                projectSeed: 'test/common/core/librarycore/project.webgmex',
+                projectName: 'importedLibrary',
+                branchName: 'master',
+                gmeConfig: gmeConfig,
+                logger: logger
+            })
+            .then(function (importResult) {
+                core = importResult.core;
+                rootHash = importResult.rootHash;
+                project = importResult.project;
+                root = importResult.rootNode;
+                return buildLibrary();
+            })
+            .then(function (hash) {
+                console.log(hash);
+                var nodes;
+
+                nodes = core.getAllMetaNodes(root);
+                expect(nodes).not.to.equal(null);
+                expect(nodes['/1']).not.to.equal(undefined);
+                expect(nodes['/a/q']).not.to.equal(undefined);
+                expect(core.getAttribute(nodes['/a/q'], 'name')).to.equal('element');
+
+                return core.updateLibrary(root, 'library', hash, {}, {});
+            })
+            .then(function () {
+                core.persist(root);
+
+                return core.loadRoot(core.getHash(root));
+            })
+            .then(function (root_) {
+                var nodes;
+
+                nodes = core.getAllMetaNodes(root_);
+                expect(nodes).not.to.equal(null);
+                expect(nodes['/1']).not.to.equal(undefined);
+                expect(nodes['/a/q']).to.equal(undefined);
+                expect(nodes['/a/toMove']).not.to.equal(undefined);
+                expect(core.getAttribute(nodes['/a/toMove'], 'name')).to.equal('itemToMove');
+            })
+            .nodeify(done);
+    });
+
     it('getNamespace should return empty string for non-library nodes', function () {
         expect(core.getNamespace(core.getFCO(root))).to.equal('');
     });
