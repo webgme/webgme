@@ -93,7 +93,40 @@ define([
                 return roots;
             }
 
-            function getLibraryInfo(libraryRootHash) {
+            function getLibraryInfo(libraryRootHashOrNode) {
+                var isNode = typeof libraryRootHashOrNode === 'object',
+                    libraryName = '',
+                    libraryNamePrefix = '',
+                    getPath = function (node) {
+                        if (isNode) {
+                            return self.getPath(node, libraryRootHashOrNode);
+                        } else {
+                            return self.getPath(node);
+                        }
+                    },
+                    getName = function (node) {
+                        return self.getFullyQualifiedName(node).substr(libraryNamePrefix.length);
+                    },
+                    getGuid = function (node) {
+                        if (isNode) {
+                            return self.getLibraryGuid(node, libraryName);
+                        } else {
+                            return self.getGuid(node);
+                        }
+                    },
+                    load = function () {
+                        if (isNode) {
+                            return self.loadSubTree(libraryRootHashOrNode);
+                        } else {
+                            return self.loadTree(libraryRootHashOrNode);
+                        }
+                    };
+
+                if (isNode) {
+                    libraryName = self.getAttribute(libraryRootHashOrNode, 'name');
+                    libraryNamePrefix = libraryName + '.';
+                }
+
                 return TASYNC.call(function (libraryNodes) {
                     var info = {},
                         infoItem,
@@ -101,16 +134,16 @@ define([
 
                     for (i = 1; i < libraryNodes.length; i += 1) {
                         infoItem = {
-                            path: self.getPath(libraryNodes[i]),
+                            path: getPath(libraryNodes[i]),
                             hash: self.getHash(libraryNodes[i]),
-                            fcn: self.getFullyQualifiedName(libraryNodes[i])
+                            fcn: getName(libraryNodes[i])
                         };
 
-                        info[self.getGuid(libraryNodes[i])] = infoItem;
+                        info[getGuid(libraryNodes[i])] = infoItem;
                     }
 
                     return info;
-                }, self.loadTree(libraryRootHash));
+                }, load());
                 //we use that the root of the library is always the first element
             }
 
@@ -658,15 +691,13 @@ define([
                     root = self.getRoot(node),
                     libraryRoot = getRootOfLibrary(root, name),
                     relid,
-                    FCO = self.getFCO(root),
-                    oldLibraryRootHash;
+                    FCO = self.getFCO(root);
 
                 if (!libraryRoot) { //do nothing if not valid library
                     return logs;
                 }
 
                 relid = self.getRelid(libraryRoot);
-                oldLibraryRootHash = self.getAttribute(libraryRoot, '_libraryInfo').hash;
 
                 return TASYNC.call(function (oldInfo, newInfo) {
                     var newNodePaths = [],
@@ -735,7 +766,7 @@ define([
                             return logs;
                         }, self.loadSubTree(newLibraryRoot));
                     }, self.loadChild(root, relid))
-                }, getLibraryInfo(oldLibraryRootHash), getLibraryInfo(updatedLibraryRootHash));
+                }, getLibraryInfo(libraryRoot), getLibraryInfo(updatedLibraryRootHash));
 
             };
 
