@@ -1,5 +1,31 @@
 # Change Log
 
+## [v2.1.0](https://github.com/webgme/webgme/tree/v2.1.0) (2016-06-06)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.0.1...v2.1.0)
+
+**Implemented enhancements:**
+
+- Error report should include the UI state if WebGMEGlobal is available. [\#1001](https://github.com/webgme/webgme/issues/1001)
+- Make project authorization \(read, write, delete, create\) a replaceable module. [\#1010](https://github.com/webgme/webgme/pull/1010) ([pmeijer](https://github.com/pmeijer))
+- Fix appveyor failures [\#1005](https://github.com/webgme/webgme/pull/1005) ([pmeijer](https://github.com/pmeijer))
+- Fixed dockerfile so it builds and runs the default configuration [\#998](https://github.com/webgme/webgme/pull/998) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- Running plugin on server ignores namespace [\#1008](https://github.com/webgme/webgme/issues/1008)
+- Library update fails with "object does not exist" [\#1007](https://github.com/webgme/webgme/issues/1007)
+- Fixes \#1007 Library update fails with "object does not exist". [\#1012](https://github.com/webgme/webgme/pull/1012) ([kecso](https://github.com/kecso))
+- Closes \#1008 bug plugin namespace server [\#1009](https://github.com/webgme/webgme/pull/1009) ([pmeijer](https://github.com/pmeijer))
+- Fixed seed ext and node id. Fixes \#1003 [\#1004](https://github.com/webgme/webgme/pull/1004) ([brollb](https://github.com/brollb))
+
+**Closed issues:**
+
+- Generated plugin tests failing [\#1003](https://github.com/webgme/webgme/issues/1003)
+
+**Merged pull requests:**
+
+- Feature display connected users [\#1002](https://github.com/webgme/webgme/pull/1002) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.0.1](https://github.com/webgme/webgme/tree/v2.0.1) (2016-05-23)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.0.0...v2.0.1)
 
@@ -585,6 +611,7 @@
 
 **Implemented enhancements:**
 
+- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 - Squashing commits [\#466](https://github.com/webgme/webgme/issues/466)
 - Object browser auto scroll, when navigating with the keyboard [\#408](https://github.com/webgme/webgme/issues/408)
 - No Bezier Curves with the AutoRouter [\#314](https://github.com/webgme/webgme/issues/314)
@@ -724,10 +751,6 @@
 
 ## [v0.14.1](https://github.com/webgme/webgme/tree/v0.14.1) (2015-09-07)
 [Full Changelog](https://github.com/webgme/webgme/compare/v0.14.0...v0.14.1)
-
-**Implemented enhancements:**
-
-- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 
 **Fixed bugs:**
 
@@ -1388,11 +1411,6 @@
 - Ctrl + mouse scroll causes Browser to zoom, distorts WebGME objects [\#33](https://github.com/webgme/webgme/issues/33)
 - Tree auto-expand on project open [\#18](https://github.com/webgme/webgme/issues/18)
 
-**Merged pull requests:**
-
-- corerel: optimize overlayInsert perf [\#101](https://github.com/webgme/webgme/pull/101) ([ksmyth](https://github.com/ksmyth))
-- Fix createEmptyProject and createProjectAsync [\#99](https://github.com/webgme/webgme/pull/99) ([ksmyth](https://github.com/ksmyth))
-
 ## [webgme_0.6.5](https://github.com/webgme/webgme/tree/webgme_0.6.5) (2014-06-30)
 [Full Changelog](https://github.com/webgme/webgme/compare/webgme_0.6.3...webgme_0.6.5)
 
@@ -1400,7 +1418,6 @@
 
 - webgme uses too much memory and crashes [\#66](https://github.com/webgme/webgme/issues/66)
 - Loading objects within a territory creates multiple events. [\#65](https://github.com/webgme/webgme/issues/65)
-- Failing to load a rextrast module should be a fatal error [\#59](https://github.com/webgme/webgme/pull/59) ([ksmyth](https://github.com/ksmyth))
 
 ## [webgme_0.6.3](https://github.com/webgme/webgme/tree/webgme_0.6.3) (2014-06-26)
 [Full Changelog](https://github.com/webgme/webgme/compare/webgme_0.5.12...webgme_0.6.3)
@@ -1435,7 +1452,6 @@
 - Requesting html template from client while WebGME is initializing crashes server [\#42](https://github.com/webgme/webgme/issues/42)
 - Status code logged is wrong for some requests [\#40](https://github.com/webgme/webgme/issues/40)
 - Tree-browser string handling [\#29](https://github.com/webgme/webgme/issues/29)
-- Fix status code logging of many successful requests, e.g. GET / [\#41](https://github.com/webgme/webgme/pull/41) ([ksmyth](https://github.com/ksmyth))
 
 **Closed issues:**
 
@@ -1443,10 +1459,6 @@
 - Sometimes the mongo object is null and it stops the webserver [\#14](https://github.com/webgme/webgme/issues/14)
 - Self containment issue [\#8](https://github.com/webgme/webgme/issues/8)
 - Create UI wireframes and mockups [\#1](https://github.com/webgme/webgme/issues/1)
-
-**Merged pull requests:**
-
-- Add jszip, filesaver, and PluginFSClient. [\#7](https://github.com/webgme/webgme/pull/7) ([lattmann](https://github.com/lattmann))
 
 ## [webgme_0.4.4](https://github.com/webgme/webgme/tree/webgme_0.4.4) (2014-02-05)
 **Closed issues:**
