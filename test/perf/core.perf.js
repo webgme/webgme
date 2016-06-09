@@ -62,9 +62,9 @@ describe.skip('Core Performance test', function () {
 
     after(function (done) {
         Q.allDone([
-                storage.closeDatabase(),
-                gmeAuth.unload()
-            ])
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
             .nodeify(done);
     });
 
@@ -193,6 +193,22 @@ describe.skip('Core Performance test', function () {
             .nodeify(done);
     });
 
+    it('should traverse the whole project without issue', function (done) {
+        this.timeout(120000);
+        var count = 0;
+        core.loadRoot(rootHash)
+            .then(function (root) {
+                return core.traverse(root, {}, function (node) {
+                    count += 1;
+                    console.log(core.getPath(node), ' - ', count, ' -');
+                });
+            })
+            .then(function () {
+                console.log('finished', count);
+            })
+            .nodeify(done);
+    });
+
     describe('on huge project', function () {
         var core,
             projectName = 'hugeProjectTest',
@@ -205,7 +221,7 @@ describe.skip('Core Performance test', function () {
             this.timeout(40000); //this should be only changed if the time increase is accepted due to some new feature
             testFixture.importProject(storage,
                 {
-                    projectSeed: 'test/perf/hugeProj.json',
+                    projectSeed: 'test/perf/hugeProj.webgmex',
                     projectName: projectName,
                     branchName: 'master',
                     gmeConfig: gmeConfig,
@@ -268,13 +284,71 @@ describe.skip('Core Performance test', function () {
         });
 
         it('should export quickly', function (done) {
-            this.timeout(60000);
+            this.timeout(120000);
             core.loadRoot(rootHash)
                 .then(function (root) {
-                    return Q.nfcall(serializer.export, core, root);
+                    // return Q.nfcall(serializer.export, core, root);
+                    return testFixture.storageUtil.getProjectJson(project, {commitHash: baseCommitHash});
                 })
                 .then(function (jsonProject) {
-                    expect(jsonProject.nodes['8e16e5dd-8137-66c3-1d08-3f331a686282']).not.to.equal(undefined);
+                    // expect(jsonProject.nodes['8e16e5dd-8137-66c3-1d08-3f331a686282']).not.to.equal(undefined);
+                    // console.log(jsonProject.objects.length);
+                    expect(jsonProject).not.to.eql({});
+                })
+                .nodeify(done);
+        });
+
+        it('should traverse the whole huge project without issue', function (done) {
+            this.timeout(120000000);
+            var count = 0;
+            console.time('traverse');
+            console.time('complete');
+            core.loadRoot(rootHash)
+                .then(function (root) {
+                    return core.traverse(root, {blockingVisit: false, maxParallelLoad: 400, speed: 2}, function (node) {
+                        count += 1;
+                        require('fs').appendFileSync('pref_test.res', count + ' : ' +
+                            core.getPath(node) + ' : ' + core.getGuid(node) + '\n');
+                        if (count % 1000 === 0) {
+                            console.log(count);
+                            console.timeEnd('traverse');
+                            console.time('traverse');
+                        }
+                    });
+                })
+                .then(function () {
+                    console.log('finished - ', count);
+                    console.timeEnd('complete');
+                })
+                .nodeify(done);
+        });
+
+        it('should load the whole huge project', function (done) {
+            this.timeout(1200000);
+            var count = 0;
+            console.time('load');
+            core.loadTree(rootHash)
+                .then(function (nodes) {
+                    console.timeEnd('load');
+                    console.log(nodes.length);
+                    for (var i = 0; i < nodes.length; i += 1) {
+                        expect(core.getAttribute(nodes[i], 'name')).not.to.equal('');
+                        expect(core.getBaseRoot(nodes[i])).not.to.eql(null);
+                    }
+                })
+                .nodeify(done);
+        });
+        it('should load the whole huge project without instances', function (done) {
+            this.timeout(1200000);
+            var count = 0;
+            console.time('load');
+            core.loadRoot(rootHash)
+                .then(function (root) {
+                    return core.loadOwnSubTree(root);
+                })
+                .then(function (nodes) {
+                    console.timeEnd('load');
+                    console.log(nodes.length);
                 })
                 .nodeify(done);
         });

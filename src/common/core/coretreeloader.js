@@ -49,6 +49,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                 }
             }, childLoading(root));
         }
+
         //</editor-fold>
 
         //<editor-fold=Added Methods>
@@ -63,6 +64,59 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         this.loadOwnSubTree = function (root) {
             return loadSubTree(root, true);
         };
+
+        function traverse(root, options, visitFn, callback) {
+            ASSERT(self.isValidNode(root) && typeof visitFn === 'function' && typeof callback === 'function');
+
+            var loadQueue = [],
+                ongoingLoads = 0,
+                ids,
+                blocked = false,
+                i,
+                error = null,
+                projectRoot = self.getRoot(root),
+                timerId,
+                loadByPath = TASYNC.unwrap(self.loadByPath);
+
+            options = options || {};
+            options.maxParallelLoad = options.maxParallelLoad || 10; //the amount of nodes we preload
+            options.excludeRoot = options.excludeRoot || false;
+            options.speed = options.speed || 10; //the frequency for check
+            options.blockingVisit =
+                options.blockingVisit === undefined || options.blockingVisit === null ? true : options.blockingVisit;
+
+            loadQueue = self.getChildrenPaths(root);
+
+            if (options.excludeRoot === false) {
+                loadQueue.unshift(self.getPath(root));
+            }
+
+            timerId = setInterval(function () {
+                if (!blocked && loadQueue.length === 0 && ongoingLoads === 0) {
+                    clearInterval(timerId);
+                    callback(error);
+                } else if (!blocked && loadQueue.length > 0 && ongoingLoads < options.maxParallelLoad) {
+                    ongoingLoads += 1;
+                    if (options.blockingVisit) {
+                        blocked = true;
+                    }
+
+                    loadByPath(projectRoot, loadQueue.shift(), function (err, node) {
+                        ongoingLoads -= 1;
+                        error = error || err;
+
+                        if (self.getPath(node) !== self.getPath(root)) {
+                            loadQueue = loadQueue.concat(self.getChildrenPaths(node));
+                        }
+                        visitFn(node); //calling the actual visit function
+                        blocked = false;
+                    });
+                }
+            }, options.speed);
+
+        }
+
+        this.traverse = TASYNC.wrap(traverse);
         //</editor-fold>
     };
 

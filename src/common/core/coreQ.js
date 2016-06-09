@@ -213,6 +213,19 @@ define(['common/core/core', 'q'], function (Core, Q) {
 
             return deferred.promise.nodeify(callback);
         }
+
+        var traverseOrg = this.traverse;
+        this.traverse = function (node, options, visitFn, callback) {
+            var deferred = Q.defer();
+            traverseOrg(node, options, visitFn, function (err, result) {
+                if (err) {
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(result);
+                }
+            });
+            return deferred.promise.nodeify(callback);
+        }
     }
 
     CoreQ.prototype = Object.create(Core.prototype);
