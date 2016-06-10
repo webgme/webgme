@@ -1,0 +1,22 @@
+{
+  "hookOne": {
+    "events": [
+      "commit"
+    ],
+    "description": "The first ever webhook for WebGME",
+    "url": "http://index.hu",
+    "active": false
+  },
+  "hookOther": {
+    "events": [
+      "commit",
+      "branchDeleted",
+      "branchUpdated"
+    ],
+    "description": "The second webhook for WebGME",
+    "url": "http://origo.hu",
+    "active": true,
+    "createdAt": "2016-06-10T18:58:55.080Z",
+    "updatedAt": "2016-06-10T18:58:55.080Z"
+  }
+}

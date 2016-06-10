@@ -153,6 +153,24 @@ function MetadataStorage(mainLogger, gmeConfig) {
             .nodeify(callback);
     }
 
+    function updateProjectHooks(projectId, hooks, callback) {
+        return self.projectCollection.findOne({_id: projectId})
+            .then(function (projectData) {
+                if (!projectData) {
+                    return Q.reject(new Error('no such project [' + projectId + ']'));
+                }
+
+                // always update webhook information as a whole to allow remove and create and update as well
+                projectData.hooks = hooks;
+
+                return self.projectCollection.update({_id: projectId}, projectData, {upsert: true});
+            })
+            .then(function () {
+                return getProject(projectId);
+            })
+            .nodeify(callback);
+    }
+
     return {
         start: start,
         stop: stop,
@@ -162,7 +180,8 @@ function MetadataStorage(mainLogger, gmeConfig) {
         addProject: addProject,
         deleteProject: deleteProject,
         transferProject: transferProject,
-        updateProjectInfo: updateProjectInfo
+        updateProjectInfo: updateProjectInfo,
+        updateProjectHooks: updateProjectHooks
     };
 }
 
