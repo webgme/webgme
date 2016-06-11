@@ -45,23 +45,24 @@ define(['js/PanelBase/PanelBase',
         //main container
         var navBar = $('<div/>', {class: 'navbar navbar-inverse navbar-fixed-bottom'}),
             navBarInner = $('<div/>', {class: 'navbar-inner'}),
-            separator = $('<div class="spacer pull-right"></div>'),
-            widgetPlaceHolder = $('<div class="pull-right"></div>'),
-            pullLeft,
-            version,
-            keyBoardManagerEl,
-            k,
-            networkStatusEl,
-            n,
-            branchStatusEl,
-            b,
-            notificationEl;
+            separator = $('<div class="spacer pull-right"></div>');
 
         navBar.append(navBarInner);
         this.$el.append(navBar);
 
         //add ISIS link
-        pullLeft = $('<div class="pull-left inline"></div>');
+        this.createCredits(navBarInner);
+
+        //padding from screen right edge
+        navBarInner.append(separator.clone());
+
+	this.createWidgets(navBarInner);
+    };
+
+    FooterControlsPanel.prototype.createCredits = function (navBarInner) {
+        var pullLeft = $('<div class="pull-left inline"></div>'),
+            version;
+
         pullLeft.append($('<div class="navbar-text"><div class="webgme-copyright">&copy; 2016 <a href="http://www.isis.vanderbilt.edu/" title="Vanderbilt University" target="_blank">Vanderbilt University</a></div></div>'));
         navBarInner.append(pullLeft);
 
@@ -83,19 +84,25 @@ define(['js/PanelBase/PanelBase',
                               WebGMEGlobal.GitHubVersion + '">' + WebGMEGlobal.GitHubVersion + '</a></div></div>'));
             navBarInner.append(pullLeft);
         }
+    };
 
-        //padding from screen right edge
-        navBarInner.append(separator.clone());
+    FooterControlsPanel.prototype.createWidgets = function (navBarInner) {
+        var widgetPlaceHolder = $('<div class="pull-right"></div>'),
+            separator = $('<div class="spacer pull-right"></div>'),
+            branchStatusEl,
+            notificationEl,
+            networkStatusEl,
+            keyBoardManagerEl;
 
         //keyboard enable/disbale widget (NOTE: only on non touch device)
         if (WebGMEGlobal.SUPPORTS_TOUCH !== true) {
             keyBoardManagerEl = widgetPlaceHolder.clone();
-            k = new KeyboardManagerWidget(keyBoardManagerEl);
+            new KeyboardManagerWidget(keyBoardManagerEl);
             navBarInner.append(keyBoardManagerEl).append(separator.clone());
         }
 
         networkStatusEl = widgetPlaceHolder.clone();
-        n = new NetworkStatusWidget(networkStatusEl, this._client);
+        new NetworkStatusWidget(networkStatusEl, this._client);
         navBarInner.append(networkStatusEl).append(separator.clone());
 
         notificationEl = widgetPlaceHolder.clone();
@@ -103,7 +110,7 @@ define(['js/PanelBase/PanelBase',
         navBarInner.append(notificationEl).append(separator.clone());
 
         branchStatusEl = widgetPlaceHolder.clone();
-        b = new BranchStatusWidget(branchStatusEl, this._client);
+        new BranchStatusWidget(branchStatusEl, this._client);
         navBarInner.append(branchStatusEl).append(separator.clone());
     };
 
