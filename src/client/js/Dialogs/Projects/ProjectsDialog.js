@@ -1,4 +1,4 @@
-/*globals define, angular, $, WebGMEGlobal*/
+/*globals define, $, WebGMEGlobal*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -117,6 +117,9 @@ define([
         }
 
         function deleteProject(projectId) {
+            var projectDisplayedName = WebGMEGlobal.gmeConfig.authentication.enable ?
+                StorageUtil.getProjectDisplayedNameFromProjectId(projectId) :
+                StorageUtil.getProjectNameFromProjectId(projectId);
 
             var refreshList = function () {
                     //self._refreshProjectList.call(self);
@@ -152,7 +155,7 @@ define([
                 };
 
                 deleteProjectModal.show({
-                        deleteItem: StorageUtil.getProjectDisplayedNameFromProjectId(projectId),
+                        deleteItem: projectDisplayedName,
                         enableDontAskAgain: true
                     },
                     function (dontAskAgain) {

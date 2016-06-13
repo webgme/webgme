@@ -452,6 +452,10 @@ define([
                 write: true
             };
 
+        projectDisplayedName = WebGMEGlobal.gmeConfig.authentication.enable ?
+            StorageUtil.getProjectDisplayedNameFromProjectId(projectId) :
+            StorageUtil.getProjectNameFromProjectId(projectId);
+
         if (self.gmeClient) {
 
             updateProjectList = function () {
@@ -464,7 +468,7 @@ define([
 
             deleteProject = function (data) {
                 var deleteProjectModal = new ConfirmDeleteDialog();
-                deleteProjectModal.show({deleteItem: data.projectId}, function () {
+                deleteProjectModal.show({deleteItem: projectDisplayedName}, function () {
                     self.gmeClient.deleteProject(data.projectId, function (err) {
                         if (err) {
                             self.logger.error('Failed deleting project', err);
@@ -520,8 +524,6 @@ define([
         selectProject = function (data) {
             self.selectProject(data);
         };
-
-        projectDisplayedName = StorageUtil.getProjectDisplayedNameFromProjectId(projectId);
 
         // create a new project object
         self.projects[projectId] = {
