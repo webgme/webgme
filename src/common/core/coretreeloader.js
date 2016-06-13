@@ -69,21 +69,45 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
             ASSERT(self.isValidNode(root) && typeof visitFn === 'function' && typeof callback === 'function');
 
             var loadQueue = [],
-                ongoingLoads = 0,
-                ids,
+                ongoingVisits = 0,
                 blocked = false,
-                i,
                 error = null,
                 projectRoot = self.getRoot(root),
                 timerId,
-                loadByPath = TASYNC.unwrap(self.loadByPath);
+                addToQueue,
+                loadByPath = TASYNC.unwrap(self.loadByPath),
+                extendLoadQueue = function (node) {
+                    var keys = self.getChildrenPaths(node),
+                        i;
+
+                    if (self.getPath(node) !== self.getPath(root)) {
+                        for (i = 0; i < keys.length; i += 1) {
+                            addToQueue.call(loadQueue, keys[i]);
+                        }
+                    }
+
+                },
+                visitNext = function (err) {
+                    error = error || err;
+                    blocked = false;
+                    ongoingVisits -= 1;
+                    if (error && options.stopOnError) {
+                        loadQueue = [];
+                    }
+                };
 
             options = options || {};
             options.maxParallelLoad = options.maxParallelLoad || 10; //the amount of nodes we preload
             options.excludeRoot = options.excludeRoot || false;
-            options.speed = options.speed || 10; //the frequency for check
-            options.blockingVisit =
-                options.blockingVisit === undefined || options.blockingVisit === null ? true : options.blockingVisit;
+            options.speed = options.speed || 5; //the frequency for check
+            options.blockingVisit = options.blockingVisit === true || options.order === 'DFS' ? true : false;
+            options.stopOnError = options.stopOnError === false ? false : true;
+
+            if (options.order === 'DFS') {
+                addToQueue = loadQueue.unshift;
+            } else {
+                addToQueue = loadQueue.push;
+            }
 
             loadQueue = self.getChildrenPaths(root);
 
@@ -92,24 +116,22 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
             }
 
             timerId = setInterval(function () {
-                if (!blocked && loadQueue.length === 0 && ongoingLoads === 0) {
+                if (!blocked && loadQueue.length === 0 && ongoingVisits === 0) {
                     clearInterval(timerId);
                     callback(error);
-                } else if (!blocked && loadQueue.length > 0 && ongoingLoads < options.maxParallelLoad) {
-                    ongoingLoads += 1;
+                } else if (!blocked && loadQueue.length > 0 && ongoingVisits < options.maxParallelLoad &&
+                    (!error || options.stopOnError === false)) {
+                    ongoingVisits += 1;
                     if (options.blockingVisit) {
                         blocked = true;
                     }
 
                     loadByPath(projectRoot, loadQueue.shift(), function (err, node) {
-                        ongoingLoads -= 1;
                         error = error || err;
-
-                        if (self.getPath(node) !== self.getPath(root)) {
-                            loadQueue = loadQueue.concat(self.getChildrenPaths(node));
+                        if (!err && node) {
+                            extendLoadQueue(node);
                         }
-                        visitFn(node); //calling the actual visit function
-                        blocked = false;
+                        visitFn(node, visitNext);
                     });
                 }
             }, options.speed);

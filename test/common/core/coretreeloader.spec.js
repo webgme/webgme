@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.only('tree loading functions', function () {
+describe('tree loading functions', function () {
     'user strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -75,8 +75,9 @@ describe.only('tree loading functions', function () {
 
     it('should traverse with default configuration', function (done) {
         var checkArray = [];
-        core.traverse(rootNode, null, function (node) {
+        core.traverse(rootNode, null, function (node, next) {
             checkArray.push(core.getPath(node));
+            next();
         })
             .then(function () {
                 expect(checkArray).to.have.length(118);
@@ -88,8 +89,9 @@ describe.only('tree loading functions', function () {
 
     it('should traverse without blocking visit', function (done) {
         var checkArray = [];
-        core.traverse(rootNode, {blockingVisit: false}, function (node) {
+        core.traverse(rootNode, {blockingVisit: false}, function (node, next) {
             checkArray.push(core.getPath(node));
+            next();
         })
             .then(function () {
                 expect(checkArray).to.have.length(118);
@@ -100,8 +102,9 @@ describe.only('tree loading functions', function () {
     });
     it('should traverse and exclude the root', function (done) {
         var checkArray = [];
-        core.traverse(rootNode, {excludeRoot: true}, function (node) {
+        core.traverse(rootNode, {excludeRoot: true}, function (node, next) {
             checkArray.push(core.getPath(node));
+            next();
         })
             .then(function () {
                 expect(checkArray).to.have.length(117);
@@ -112,10 +115,10 @@ describe.only('tree loading functions', function () {
     });
 
     it('should traverse with minimal settings', function (done) {
-        this.timeout(20000);
         var checkArray = [];
-        core.traverse(rootNode, {maxParallelLoad: 1, speed: 100, blockingVisit: true}, function (node) {
+        core.traverse(rootNode, {maxParallelLoad: 1, speed: 10, blockingVisit: true}, function (node, next) {
             checkArray.push(core.getPath(node));
+            next();
         })
             .then(function () {
                 expect(checkArray).to.have.length(118);
@@ -124,4 +127,56 @@ describe.only('tree loading functions', function () {
             })
             .nodeify(done);
     });
+
+    it('should stop traverse on error', function (done) {
+        var checkArray = [];
+        core.traverse(rootNode, null, function (node, next) {
+            checkArray.push(core.getPath(node));
+            next(new Error('just one node can make it'));
+        })
+            .then(function () {
+                throw new Error('should have provide error!');
+            })
+            .catch(function () {
+                expect(checkArray).to.have.length(1);
+            })
+            .nodeify(done);
+    });
+
+    it('should traverse despite of error', function (done) {
+        var checkArray = [];
+        core.traverse(rootNode, {stopOnError: false}, function (node, next) {
+            checkArray.push(core.getPath(node));
+            next(new Error('all node can make it'));
+        })
+            .then(function () {
+                throw new Error('should have provide error!');
+            })
+            .catch(function () {
+                expect(checkArray).to.have.length(118);
+            })
+            .nodeify(done);
+    });
+
+    it('should respect order of traverse', function (done) {
+        var arrayBFS = [],
+            arrayDFS = [];
+        core.traverse(rootNode, {order: 'BFS'}, function (node, next) {
+            arrayBFS.push(core.getPath(node));
+            next();
+        })
+            .then(function () {
+                expect(arrayBFS).to.have.length(118);
+                return core.traverse(rootNode, {order: 'DFS'}, function (node, next) {
+                    arrayDFS.push(core.getPath(node));
+                    next();
+                });
+            })
+            .then(function () {
+                expect(arrayDFS).to.have.length(118);
+                expect(arrayBFS[50]).not.to.equal(arrayDFS[50]);
+            })
+            .nodeify(done);
+    });
+
 });
