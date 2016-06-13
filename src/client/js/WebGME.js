@@ -144,7 +144,10 @@ define([
                     var projectName,
                         nodePath;
 
-                    document.title = StorageUtil.getProjectFullNameFromProjectId(projectId);
+                    document.title = WebGMEGlobal.gmeConfig.authentication.enable ?
+                        StorageUtil.getProjectDisplayedNameFromProjectId(projectId) :
+                        StorageUtil.getProjectNameFromProjectId(projectId);
+
                     layoutManager.setPanelReadOnly(client.isProjectReadOnly());
                     WebGMEGlobal.State.registerActiveProjectName(projectId);
 
