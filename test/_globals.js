@@ -575,10 +575,11 @@ function logIn(server, agent, userName, password) {
     var serverBaseUrl = server.getUrl(),
         deferred = Q.defer();
 
-    agent.post(serverBaseUrl + '/login?redirect=%2F')
-        .type('form')
-        .send({username: userName})
-        .send({password: password})
+    agent.post(serverBaseUrl + '/login')
+        .send({
+            userId: userName,
+            password: password
+        })
         .end(function (err, res) {
             if (err) {
                 deferred.reject(new Error(err));
@@ -596,11 +597,18 @@ function openSocketIo(server, agent, userName, password, token) {
     var io = require('socket.io-client'),
         serverBaseUrl = server.getUrl(),
         deferred = Q.defer(),
+        loginPromise,
         socket,
         socketReq = {url: serverBaseUrl},
         webgmeToken;
 
-    logIn(server, agent, userName, password)
+    if (server.getGmeConfig().authentication.enable === true) {
+        loginPromise = logIn(server, agent, userName, password);
+    } else {
+        loginPromise = new Q();
+    }
+
+    loginPromise
         .then(function (/*res*/) {
             var split,
                 options = {

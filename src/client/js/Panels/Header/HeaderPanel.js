@@ -105,7 +105,7 @@ define([
         navBarInner.append($('<div class="spacer pull-right"></div>'));
 
         //user info
-        if (this._config.disableUserProfile === false) {
+        if (this._config.disableUserProfile === false && WebGMEGlobal.gmeConfig.authentication.enable === true) {
             userProfileEl = $('<div/>', {class: 'inline pull-right', style: 'padding: 6px 0px;'});
             this.defaultUserProfileWidget = new UserProfileWidget(userProfileEl, this._client);
             navBarInner.append(userProfileEl);

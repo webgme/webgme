@@ -159,9 +159,9 @@ describe('standalone server', function () {
         port: 9001,
         requests: [
             {code: 200, url: '/'},
-            {code: 200, url: '/login'},
+            {code: 404, url: '/login'},
             //{code: 200, url: '/login/google/return', redirectUrl: '/'},
-            {code: 200, url: '/logout', redirectUrl: '/login'},
+            {code: 404, url: '/logout'},
             {code: 200, url: '/bin/getconfig.js'},
             {code: 200, url: '/gmeConfig.json'},
             {code: 200, url: '/package.json'},
@@ -245,6 +245,7 @@ describe('standalone server', function () {
             {code: 200, url: '/common/storage/browserstorage.js'},
             {code: 200, url: '/common/storage/constants.js'},
             {code: 200, url: '/common/blob/BlobClient.js'},
+            {code: 200, url: '/gmeConfig.json'},
 
             {code: 401, url: '/api/plugins'},
             {code: 401, url: '/api/decorators'},

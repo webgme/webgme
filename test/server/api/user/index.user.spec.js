@@ -537,10 +537,24 @@ describe('REST API', function () {
                         });
                 });
 
+            it('should return 404 when posting /api/v1/register', function (done) {
+                var newUser = {
+                    userId: 'new_user404',
+                    email: 'new_email_address404',
+                    password: 'new_user_pass',
+                    canCreate: true
+                };
 
+                agent.post(server.getUrl() + '/api/v1/register')
+                    .send(newUser)
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            });
         });
 
-        describe('auth enabled, allowGuests false', function () {
+        describe('auth enabled, allowGuests false, allowUserRegistration=true', function () {
             var server,
                 agent;
 
@@ -548,6 +562,7 @@ describe('REST API', function () {
                 var gmeConfig = testFixture.getGmeConfig();
                 gmeConfig.authentication.enable = true;
                 gmeConfig.authentication.allowGuests = false;
+                gmeConfig.authentication.allowUserRegistration = true;
 
                 server = WebGME.standaloneServer(gmeConfig);
                 server.start(done);
@@ -919,9 +934,61 @@ describe('REST API', function () {
                     });
             });
 
+            it('should add user when posting /api/v1/register', function (done) {
+                var newUser = {
+                    userId: 'reg_user',
+                    email: 'em@il',
+                    password: 'pass'
+                };
+
+                agent.post(server.getUrl() + '/api/v1/register')
+                    .send(newUser)
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+
+                        agent.get(server.getUrl() + '/api/v1/user')
+                            .set('Authorization', 'Basic ' + new Buffer('reg_user:pass').toString('base64'))
+                            .end(function (err, res) {
+                                expect(res.status).equal(200, err);
+                                expect(res.body._id).to.equal('reg_user');
+                                done();
+                            });
+                    });
+            });
+
+            it('should fail with 400 to add user twice when posting /api/v1/register', function (done) {
+                var newUser = {
+                    userId: 'reg_user_twice',
+                    email: 'orgEmail',
+                    password: 'pass'
+                };
+
+                agent.post(server.getUrl() + '/api/v1/register')
+                    .send(newUser)
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+
+                        newUser.email = 'updateEmail';
+                        agent.post(server.getUrl() + '/api/v1/register')
+                            .send(newUser)
+                            .end(function (err, res) {
+                                expect(res.status).equal(400, err);
+
+                                agent.get(server.getUrl() + '/api/v1/user')
+                                    .set('Authorization', 'Basic ' + new Buffer('reg_user_twice:pass').toString('base64'))
+                                    .end(function (err, res) {
+                                        expect(res.status).equal(200, err);
+                                        expect(res.body._id).to.equal('reg_user_twice');
+                                        expect(res.body.email).to.equal('orgEmail');
+                                        done();
+                                    });
+                            });
+                    });
+            });
+
         });
 
-        describe('auth enabled, allowGuests true', function () {
+        describe('auth enabled, allowGuests true, allowUserRegistration=false', function () {
             var server,
                 agent,
                 guestAccount = 'guest';
@@ -931,6 +998,7 @@ describe('REST API', function () {
                 gmeConfig.authentication.enable = true;
                 gmeConfig.authentication.allowGuests = true;
                 gmeConfig.authentication.guestAccount = guestAccount;
+                gmeConfig.authentication.allowUserRegistration = false;
 
                 server = WebGME.standaloneServer(gmeConfig);
                 server.start(done);
@@ -1639,6 +1707,22 @@ describe('REST API', function () {
                     .set('Authorization', 'Basic ' + new Buffer('').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(401, err);
+                        done();
+                    });
+            });
+
+            it('should return 404 when posting /api/v1/register', function (done) {
+                var newUser = {
+                    userId: 'new_user404',
+                    email: 'new_email_address404',
+                    password: 'new_user_pass',
+                    canCreate: true
+                };
+
+                agent.post(server.getUrl() + '/api/v1/register')
+                    .send(newUser)
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
                         done();
                     });
             });

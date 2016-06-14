@@ -19,7 +19,6 @@ var Path = require('path'),
     methodOverride = require('method-override'),
     multipart = require('connect-multiparty'),
     Http = require('http'),
-    URL = require('url'),
     ejs = requireJS('common/util/ejs'),
 
     MongoAdapter = require('./storage/mongo'),
@@ -180,7 +179,7 @@ function StandAloneServer(gmeConfig) {
         __httpServer.on('connection', handleNewConnection);
         __httpServer.on('secureConnection', handleNewConnection);
 
-        __httpServer.on('clientError', function (err, socket) {
+        __httpServer.on('clientError', function (err/*, socket*/) {
             logger.debug('clientError', err);
         });
 
@@ -313,15 +312,6 @@ function StandAloneServer(gmeConfig) {
     this.stop = stop;
 
     //internal functions
-    function redirectUrl(req, res) {
-        if (req.query.redirect) {
-            //res.redirect(URL.removeSpecialChars(req.query.redirect));
-            res.redirect(decodeURIComponent(req.query.redirect));
-        } else {
-            res.redirect('/');
-        }
-    }
-
     function getUserId(req) {
         return req.userData.userId;
     }
@@ -394,11 +384,11 @@ function StandAloneServer(gmeConfig) {
                 })
                 .catch(function (err) {
                     if (err.name === 'TokenExpiredError') {
-                        if (res.getHeader('X-WebGME-Media-Type')) {
+                        if (res.getHeader('X-WebGME-Media-Type') || !gmeConfig.authentication.logInUrl) {
                             res.status(401);
                             next(err);
                         } else {
-                            res.redirect('/login');
+                            res.redirect(gmeConfig.authentication.logInUrl);
                         }
                     } else {
                         logger.debug('Cookie verification failed', {metadata: err});
@@ -436,11 +426,11 @@ function StandAloneServer(gmeConfig) {
                 .catch(function (err) {
                     if (err.name === 'TokenExpiredError') {
                         res.clearCookie(gmeConfig.authentication.jwt.cookieId);
-                        if (res.getHeader('X-WebGME-Media-Type')) {
+                        if (res.getHeader('X-WebGME-Media-Type') || !gmeConfig.authentication.logInUrl) {
                             res.status(401);
                             next(err);
                         } else {
-                            res.redirect('/login');
+                            res.redirect(gmeConfig.authentication.logInUrl);
                         }
                     } else {
                         logger.debug('Cookie verification failed', err);
@@ -462,12 +452,12 @@ function StandAloneServer(gmeConfig) {
                     next();
                 })
                 .catch(next);
-        } else if (res.getHeader('X-WebGME-Media-Type')) {
-            // do not redirect with direct api access
+        } else if (res.getHeader('X-WebGME-Media-Type') || !gmeConfig.authentication.logInUrl) {
+            // do not redirect with direct api access or if no login url is specified
             res.status(401);
             return next(new Error());
         } else {
-            res.redirect('/login' + webgmeUtils.getRedirectUrlParameter(req));
+            res.redirect(gmeConfig.authentication.logInUrl + webgmeUtils.getRedirectUrlParameter(req));
         }
     }
 
@@ -492,6 +482,12 @@ function StandAloneServer(gmeConfig) {
                 throw new Error('Loading rest component ' + gmeConfig.rest.components[keys[i]] + ' failed.');
             }
         }
+    }
+
+    function mountUserManagementPage() {
+        var userComponent = require('user-management-page');
+        userComponent.initialize(middlewareOpts);
+        __app.use('/profile', userComponent.router);
     }
 
     //here starts the main part
@@ -607,6 +603,10 @@ function StandAloneServer(gmeConfig) {
         logger.debug('Executor not enabled. Add \'executor.enable: true\' to configuration to activate.');
     }
 
+    if (gmeConfig.authentication.enable === true) {
+        mountUserManagementPage();
+    }
+
     setupExternalRestModules();
 
     __app.get(['', '/', '/index.html'], ensureAuthenticated, function (req, res) {
@@ -635,50 +635,32 @@ function StandAloneServer(gmeConfig) {
     });
 
     logger.debug('creating login routing rules for the static server');
-    //__app.get('/', ensureAuthenticated, Express.static(__clientBaseDir));
+
     __app.get('/logout', function (req, res) {
-        res.clearCookie(gmeConfig.authentication.jwt.cookieId);
-        res.redirect(__logoutUrl);
+        if (gmeConfig.authentication.enable === false) {
+            res.sendStatus(404);
+        } else {
+            res.clearCookie(gmeConfig.authentication.jwt.cookieId);
+            res.redirect(__logoutUrl);
+        }
     });
 
-    __app.get('/login', Express.static(__clientBaseDir, {extensions: ['html'], index: false}));
-
-    __app.post('/login', function (req, res, next) {
-            var queryParams = [],
-                url = URL.parse(req.url, true);
-            if (req.body && req.body.username) {
-                queryParams.push('username=' + encodeURIComponent(req.body.username));
-            }
-            if (url && url.query && url.query.redirect) {
-                queryParams.push('redirect=' + encodeURIComponent(req.query.redirect));
-            }
-            req.__gmeAuthFailUrl__ = '/login';
-            if (queryParams.length) {
-                req.__gmeAuthFailUrl__ += '?' + queryParams.join('&');
-            }
-            req.__gmeAuthFailUrl__ += '#failed';
-            next();
-        },
-        function (req, res, next) {
-            var userId = req.body.username,
+    __app.post('/login', function (req, res) {
+            var userId = req.body.userId,
                 password = req.body.password;
+
             if (gmeConfig.authentication.enable) {
                 __gmeAuth.generateJWToken(userId, password)
                     .then(function (token) {
                         res.cookie(gmeConfig.authentication.jwt.cookieId, token);
-                        redirectUrl(req, res);
+                        res.sendStatus(200);
                     })
                     .catch(function (err) {
-                        if (res.getHeader('X-WebGME-Media-Type')) {
-                            // do not redirect for api requests
-                            res.status(401);
-                            return next(new Error(err));
-                        } else {
-                            res.redirect(req.__gmeAuthFailUrl__);
-                        }
+                        logger.error('Failed login', err);
+                        res.sendStatus(401);
                     });
             } else {
-                redirectUrl(req, res);
+                res.sendStatus(404);
             }
         });
 
@@ -698,7 +680,7 @@ function StandAloneServer(gmeConfig) {
     });
 
     logger.debug('creating gmeConfig.json specific routing rules');
-    __app.get('/gmeConfig.json', ensureAuthenticated, function (req, res) {
+    __app.get('/gmeConfig.json', function (req, res) {
         res.status(200);
         res.setHeader('Content-type', 'application/json');
         res.end(JSON.stringify(clientConfig));
@@ -832,6 +814,9 @@ function StandAloneServer(gmeConfig) {
 
     return {
         getUrl: getUrl,
+        getGmeConfig: function () {
+            return gmeConfig;
+        },
         start: start,
         stop: stop
     };

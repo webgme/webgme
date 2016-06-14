@@ -98,6 +98,48 @@ function createAPI(app, mountPath, middlewareOpts) {
         next();
     });
 
+    router.post('/register', function (req, res) {
+        var receivedData = req.body;
+        if (gmeConfig.authentication.enable === false) {
+            res.sendStatus(404);
+            return;
+        }
+
+        if (gmeConfig.authentication.allowUserRegistration === false) {
+            res.sendStatus(404);
+            return;
+        }
+
+        // TODO: Add regex for userId and check other data too.
+        if (typeof receivedData.password !== 'string' || receivedData.password.length === 0 ||
+            typeof receivedData.userId !== 'string' || receivedData.userId.length === 0) {
+            res.status(400);
+            res.json({message: 'allowUserRegistration is set to false'});
+            return;
+        }
+
+        gmeAuth.addUser(receivedData.userId,
+            receivedData.email,
+            receivedData.password,
+            true,
+            {overwrite: false},
+            function (err/*, updateData*/) {
+                if (err) {
+                    res.sendStatus(400);
+                    return;
+                }
+
+                gmeAuth.getUser(receivedData.userId, function (err, data) {
+                    if (err) {
+                        res.sendStatus(500);
+                        return;
+                    }
+
+                    res.json(data);
+                });
+            });
+    });
+
     // modifications are allowed only if the user is authenticated
     // all get rules by default do NOT require authentication, if the get rule has to be protected add inline
     // the ensureAuthenticated function middleware

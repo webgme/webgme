@@ -45,6 +45,7 @@ describe('standalone http server with authentication turned on', function () {
         logger = testFixture.logger.fork('standalone.auth.spec');
         gmeConfig.authentication.enable = true;
         gmeConfig.authentication.allowGuests = false;
+        gmeConfig.authentication.logInUrl = '/login';
 
         testFixture.clearDBAndGetGMEAuth(gmeConfig)
             .then(function (gmeAuth_) {
@@ -117,25 +118,19 @@ describe('standalone http server with authentication turned on', function () {
     //it('should sign the user out', function(done) {
     //});
 
-    it('should return 200 POST /login', function (done) {
-        agent.post(serverBaseUrl + '/login').send({username: 'test'}).end(function (err, res) {
-            if (err) {
-                done(err);
-                return;
-            }
-            logger.debug(res);
-            should.equal(res.status, 200);
+    it('should return 401 POST /login with non-existing user', function (done) {
+        agent.post(serverBaseUrl + '/login').send({userId: 'test'}).end(function (err, res) {
+            should.equal(res.status, 401);
             done();
         });
     });
 
 
     it('should log in', function (done) {
-        logIn(function (err, res) {
+        logIn(function (err) {
             if (err) {
                 return done(err);
             }
-            res.redirects.should.deep.equal([serverBaseUrl + '/']);
 
             agent.get(serverBaseUrl + '/api/user')
                 .end(function (err, res) {
@@ -149,16 +144,10 @@ describe('standalone http server with authentication turned on', function () {
     it('should not log in with incorrect password', function (done) {
         agent.post(serverBaseUrl + '/login?redirect=%2F')
             .type('form')
-            .send({username: 'user'})
+            .send({userId: 'user'})
             .send({password: 'thisiswrong'})
             .end(function (err, res) {
-                if (err) {
-                    return done(err);
-                }
-                should.equal(res.status, 200);
-                res.redirects.should.deep.equal([
-                    'http://127.0.0.1:9001/login?username=user&redirect=%2F#failed'
-                ]);
+                should.equal(res.status, 401);
                 done();
             });
     });
@@ -173,11 +162,14 @@ describe('standalone http server with authentication turned on', function () {
                     .finally(function () {
                         socket.disconnect();
                     });
-            }).then(function () {
-            return authorizer.getAccessRights('user', projectId, projectAuthParams);
-        }).then(function (authorized) {
-            authorized.should.deep.equal({read: true, write: true, delete: false});
-        }).nodeify(done);
+            })
+            .then(function () {
+                return authorizer.getAccessRights('user', projectId, projectAuthParams);
+            })
+            .then(function (authorized) {
+                authorized.should.deep.equal({read: true, write: true, delete: false});
+            })
+            .nodeify(done);
     });
 
     it('should not be able to open an unauthorized project', function (done) {
