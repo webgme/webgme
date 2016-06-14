@@ -905,6 +905,12 @@ describe('GME authentication', function () {
             auth.addOrganization(otherOrgName)
         ])
             .then(function () {
+                'adminUser2'
+                return Q.allDone([
+                    auth.addUserToOrganization('user', orgName)
+                ]);
+            })
+            .then(function () {
                 return auth.listOrganizations({});
             }).then(function (organizations) {
                 expect(organizations).to.include({
@@ -912,14 +918,16 @@ describe('GME authentication', function () {
                         info: {},
                         projects: {},
                         type: auth.CONSTANTS.ORGANIZATION,
-                        admins: []
+                        admins: [],
+                        users: ['user']
                     },
                     {
                         _id: otherOrgName,
                         info: {},
                         projects: {},
                         type: auth.CONSTANTS.ORGANIZATION,
-                        admins: []
+                        admins: [],
+                        users: []
                     });
             }).nodeify(done);
     });

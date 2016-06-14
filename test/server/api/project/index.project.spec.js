@@ -130,23 +130,8 @@ describe('REST API', function () {
                 agent.get(server.getUrl() + '/api/projects').end(function (err, res) {
                     expect(res.status).equal(200, err);
                     expect(res.body.length).to.equal(3);
-                    expect(res.body).to.contain({
-                        _id: 'guest+unauthorized_project',
-                        //fullName: 'guest/unauthorized_project',
-                        name: 'unauthorized_project',
-                        owner: 'guest'
-                    });
-                    expect(res.body).to.contain({
-                        _id: 'guest+project_to_delete',
-                        //fullName: 'guest/project_to_delete',
-                        name: 'project_to_delete',
-                        owner: 'guest'
-                    });
-                    expect(res.body).to.contain({
-                        _id: 'guest+project',
-                        //fullName: 'guest/project',
-                        name: 'project',
-                        owner: 'guest'
+                    res.body.forEach(function (projectData) {
+                        expect(projectData).to.have.keys('_id', 'info', 'owner', 'name');
                     });
                     done();
                 });
@@ -161,12 +146,16 @@ describe('REST API', function () {
 
                         agent.get(server.getUrl() + '/api/projects')
                             .end(function (err, res) {
+                                var wasIncluded = false;
                                 expect(res.status).to.equal(200);
-                                expect(res.body).to.contain({
-                                    _id: testFixture.projectName2Id(toBeCreatedProjectName),
-                                    name: toBeCreatedProjectName,
-                                    owner: 'guest'
+                                res.body.forEach(function (projectData) {
+                                    if (projectData._id === testFixture.projectName2Id(toBeCreatedProjectName)) {
+                                        expect(projectData.name).to.equal(toBeCreatedProjectName);
+                                        expect(projectData.owner).to.equal('guest');
+                                        wasIncluded = true;
+                                    }
                                 });
+                                expect(wasIncluded).to.equal(true);
                                 done();
                             });
                     });
@@ -181,12 +170,16 @@ describe('REST API', function () {
 
                         agent.get(server.getUrl() + '/api/projects')
                             .end(function (err, res) {
+                                var wasIncluded = false;
                                 expect(res.status).to.equal(200);
-                                expect(res.body).to.contain({
-                                    _id: testFixture.projectName2Id(toBeCreatedProjectName),
-                                    name: toBeCreatedProjectName,
-                                    owner: 'guest'
+                                res.body.forEach(function (projectData) {
+                                    if (projectData._id === testFixture.projectName2Id(toBeCreatedProjectName)) {
+                                        expect(projectData.name).to.equal(toBeCreatedProjectName);
+                                        expect(projectData.owner).to.equal('guest');
+                                        wasIncluded = true;
+                                    }
                                 });
+                                expect(wasIncluded).to.equal(true);
                                 done();
                             });
                     });
@@ -201,12 +194,16 @@ describe('REST API', function () {
 
                         agent.get(server.getUrl() + '/api/projects')
                             .end(function (err, res) {
+                                var wasIncluded = false;
                                 expect(res.status).to.equal(200);
-                                expect(res.body).to.contain({
-                                    _id: testFixture.projectName2Id(toBeCreatedProjectName, 'org'),
-                                    name: toBeCreatedProjectName,
-                                    owner: 'org'
+                                res.body.forEach(function (projectData) {
+                                    if (projectData._id === testFixture.projectName2Id(toBeCreatedProjectName, 'org')) {
+                                        expect(projectData.name).to.equal(toBeCreatedProjectName);
+                                        expect(projectData.owner).to.equal('org');
+                                        wasIncluded = true;
+                                    }
                                 });
+                                expect(wasIncluded).to.equal(true);
                                 done();
                             });
                     });
@@ -692,9 +689,9 @@ describe('REST API', function () {
                                         '/branches')
                                         .end(function (err, res) {
                                             var commitObject = importResult.project.createCommitObject([hash],
-                                                    importResult.rootHash,
-                                                    'tester',
-                                                    '15'),
+                                                importResult.rootHash,
+                                                'tester',
+                                                '15'),
                                                 commitData = {
                                                     projectId: projectName2Id(projectName),
                                                     commitObject: commitObject,

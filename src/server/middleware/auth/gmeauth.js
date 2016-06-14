@@ -627,8 +627,20 @@ function GMEAuth(session, gmeConfig) {
                 return Q.ninvoke(orgs, 'toArray');
             })
             .then(function (organizationArray) {
-                // FIXME: any data manipulations here??
-                return organizationArray;
+                //TODO: See if there is a smarter query here (this sends one for each org).
+                return Q.all(organizationArray.map(function (org) {
+                    return collection.find({orgs: org._id, type: {$ne: CONSTANTS.ORGANIZATION}}, {_id: 1})
+                        .then(function (users) {
+                            return Q.ninvoke(users, 'toArray');
+                        })
+                        .then(function (users) {
+                            org.users = users.map(function (user) {
+                                return user._id;
+                            });
+
+                            return org;
+                        });
+                }));
             })
             .nodeify(callback);
     }
