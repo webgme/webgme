@@ -1971,12 +1971,9 @@ define([
          * @param {bool} [options.excludeRoot = false] - controls whether the root should be excluded from visit.
          * @param {'BFS'|'DFS'} [options.order = 'BFS'] - controls if the traversal order should be breadth first
          * or depth first.
-         * @param {integer} [options.maxParallelLoad = 10]- the maximum number of parallel loads allowed.
-         * @param {bool} [options.blockingVisit = false] - controls if the loading should wait for the visit
-         * function to return.
-         * @param {integer} [options.speed = 5] - the frequency in milliseconds
-         * to check for the next task in the traverse.
-         * @param {function()} visitFn - the visitation function that will be called for
+         * @param {integer} [options.maxParallelLoad = 100]- the maximum number of parallel loads allowed.
+         * @param {bool} [options.stopOnError = true]- controls if the traverse should stop in case of error.
+         * @param {function(module:Core~Node,function)} visitFn - the visitation function that will be called for
          * every node in the sub-tree, the second parameter of the function is a callback that should be called to
          * note to the traversal function that the visitation for a given node finished.
          * @param {function()} callback

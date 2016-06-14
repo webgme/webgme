@@ -194,13 +194,13 @@ describe.skip('Core Performance test', function () {
     });
 
     it('should traverse the whole project without issue', function (done) {
-        this.timeout(120000);
         var count = 0;
         core.loadRoot(rootHash)
             .then(function (root) {
-                return core.traverse(root, {}, function (node) {
+                return core.traverse(root, {}, function (node,next) {
                     count += 1;
                     console.log(core.getPath(node), ' - ', count, ' -');
+                    next();
                 });
             })
             .then(function () {
@@ -305,16 +305,19 @@ describe.skip('Core Performance test', function () {
             console.time('complete');
             core.loadRoot(rootHash)
                 .then(function (root) {
-                    return core.traverse(root, {blockingVisit: false, maxParallelLoad: 400, speed: 2}, function (node) {
-                        count += 1;
-                        require('fs').appendFileSync('pref_test.res', count + ' : ' +
-                            core.getPath(node) + ' : ' + core.getGuid(node) + '\n');
-                        if (count % 1000 === 0) {
-                            console.log(count);
-                            console.timeEnd('traverse');
-                            console.time('traverse');
+                    return core.traverse(root, {blockingVisit: false, maxParallelLoad: 400, speed: 2},
+                        function (node, next) {
+                            count += 1;
+                            require('fs').appendFileSync('pref_test.res', count + ' : ' +
+                                core.getPath(node) + ' : ' + core.getGuid(node) + '\n');
+                            if (count % 1000 === 0) {
+                                console.log(count);
+                                console.timeEnd('traverse');
+                                console.time('traverse');
+                            }
+                            next();
                         }
-                    });
+                    );
                 })
                 .then(function () {
                     console.log('finished - ', count);

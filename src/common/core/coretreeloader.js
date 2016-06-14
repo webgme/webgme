@@ -70,7 +70,6 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
 
             var loadQueue = [],
                 ongoingVisits = 0,
-                blocked = false,
                 error = null,
                 projectRoot = self.getRoot(root),
                 timerId,
@@ -87,9 +86,15 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                     }
 
                 },
+                nodeLoaded = function (err, node) {
+                    error = error || err;
+                    if (!err && node) {
+                        extendLoadQueue(node);
+                    }
+                    visitFn(node, visitNext);
+                },
                 visitNext = function (err) {
                     error = error || err;
-                    blocked = false;
                     ongoingVisits -= 1;
                     if (error && options.stopOnError) {
                         loadQueue = [];
@@ -97,16 +102,18 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
                 };
 
             options = options || {};
-            options.maxParallelLoad = options.maxParallelLoad || 10; //the amount of nodes we preload
-            options.excludeRoot = options.excludeRoot || false;
-            options.speed = options.speed || 5; //the frequency for check
-            options.blockingVisit = options.blockingVisit === true || options.order === 'DFS' ? true : false;
+            options.maxParallelLoad = options.maxParallelLoad || 100; //the amount of nodes we preload
+            options.excludeRoot = options.excludeRoot === true || false;
             options.stopOnError = options.stopOnError === false ? false : true;
 
             if (options.order === 'DFS') {
                 addToQueue = loadQueue.unshift;
             } else {
                 addToQueue = loadQueue.push;
+            }
+
+            if (options.maxParallelLoad < 1 || options.order === 'DFS') {
+                options.maxParallelLoad = 1;
             }
 
             loadQueue = self.getChildrenPaths(root);
@@ -116,25 +123,15 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
             }
 
             timerId = setInterval(function () {
-                if (!blocked && loadQueue.length === 0 && ongoingVisits === 0) {
+                if (loadQueue.length === 0 && ongoingVisits === 0) {
                     clearInterval(timerId);
                     callback(error);
-                } else if (!blocked && loadQueue.length > 0 && ongoingVisits < options.maxParallelLoad &&
+                } else if (loadQueue.length > 0 && ongoingVisits < options.maxParallelLoad &&
                     (!error || options.stopOnError === false)) {
                     ongoingVisits += 1;
-                    if (options.blockingVisit) {
-                        blocked = true;
-                    }
-
-                    loadByPath(projectRoot, loadQueue.shift(), function (err, node) {
-                        error = error || err;
-                        if (!err && node) {
-                            extendLoadQueue(node);
-                        }
-                        visitFn(node, visitNext);
-                    });
+                    loadByPath(projectRoot, loadQueue.shift(), nodeLoaded);
                 }
-            }, options.speed);
+            }, 0);
 
         }
 
