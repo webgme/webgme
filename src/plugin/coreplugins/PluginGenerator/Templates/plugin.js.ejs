@@ -126,7 +126,7 @@ if (templateType) {%>
             })
             .catch(function (err) {
                 // Result success is false at invocation.
-                callback(null, self.result);
+                callback(err, self.result);
             });
 <%}%>
     };
