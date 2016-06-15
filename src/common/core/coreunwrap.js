@@ -72,6 +72,7 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         core.loadSubTree = TASYNC.unwrap(innercore.loadSubTree);
         core.loadOwnSubTree = TASYNC.unwrap(innercore.loadOwnSubTree);
         core.loadTree = TASYNC.unwrap(innercore.loadTree);
+        core.traverse = TASYNC.unwrap(innercore.traverse);
 
         core.setGuid = TASYNC.unwrap(innercore.setGuid);
 
@@ -87,9 +88,9 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         if (typeof innercore.applyTreeDiff === 'function') {
             core.applyTreeDiff = TASYNC.unwrap(innercore.applyTreeDiff);
         }
-        
+
         //library functions
-        
+
         core.addLibrary = TASYNC.unwrap(innercore.addLibrary);
         core.updateLibrary = TASYNC.unwrap(innercore.updateLibrary);
 
