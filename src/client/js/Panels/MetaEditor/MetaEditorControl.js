@@ -1823,7 +1823,9 @@ define(['js/logger',
             if (oldPositions && newPositions) {
                 for (var oldItemId in oldPositions) {
                     if (oldPositions.hasOwnProperty(oldItemId) && newPositions.hasOwnProperty(oldItemId)) {
-                        if (oldPositions[oldItemId].x !== newPositions[oldItemId].x ||
+                        if (!oldPositions[oldItemId]) {
+                            positionUpdated.push(oldItemId);
+                        } else if (oldPositions[oldItemId].x !== newPositions[oldItemId].x ||
                             oldPositions[oldItemId].y !== newPositions[oldItemId].y) {
                             positionUpdated.push(oldItemId);
                         }
