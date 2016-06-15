@@ -87,19 +87,6 @@ describe('tree loading functions', function () {
             .nodeify(done);
     });
 
-    it('should traverse without blocking visit', function (done) {
-        var checkArray = [];
-        core.traverse(rootNode, {blockingVisit: false}, function (node, next) {
-            checkArray.push(core.getPath(node));
-            next();
-        })
-            .then(function () {
-                expect(checkArray).to.have.length(118);
-                expect(checkArray.indexOf('/-1')).not.to.equal(-1);
-                expect(checkArray.indexOf('')).not.to.equal(-1);
-            })
-            .nodeify(done);
-    });
     it('should traverse and exclude the root', function (done) {
         var checkArray = [];
         core.traverse(rootNode, {excludeRoot: true}, function (node, next) {
@@ -116,7 +103,7 @@ describe('tree loading functions', function () {
 
     it('should traverse with minimal settings', function (done) {
         var checkArray = [];
-        core.traverse(rootNode, {maxParallelLoad: 1, speed: 10, blockingVisit: true}, function (node, next) {
+        core.traverse(rootNode, {maxParallelLoad: 1}, function (node, next) {
             checkArray.push(core.getPath(node));
             next();
         })
