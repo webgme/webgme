@@ -9,7 +9,6 @@
 
 var testFixture = require('../../../_globals.js');
 
-
 describe('REST API', function () {
     'use strict';
 
@@ -698,12 +697,10 @@ describe('REST API', function () {
                                                     coreObjects: []
                                                 };
 
-
                                             expect(res.status).equal(200, err);
                                             expect(res.body).to.have.property('master');
                                             expect(res.body).to.have.property('newBranchToPatch');
                                             expect(res.body.newBranchToPatch).to.equal(hash);
-
 
                                             // we have to create a new commit to change the branch hash
                                             safeStorage.makeCommit(commitData)
@@ -966,6 +963,182 @@ describe('REST API', function () {
                         done();
                     });
             });
+
+            it('should list webhooks of project', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks').end(function (err, res) {
+                    expect(res.status).equal(200, err);
+                    expect(res.body).to.eql({});
+                    done();
+                });
+            });
+
+            it('should 403 on list webhooks of unknown project', function (done) {
+                agent.get(server.getUrl() + '/api/projects/guest/unknown/hooks').end(function (err, res) {
+                    expect(res.status).equal(403, err);
+                    done();
+                });
+            });
+
+            it('should create, list, and remove webhook', function (done) {
+                var hookData = {
+                    events: 'all',
+                    url: 'http://any.address.at.all'
+                };
+
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.eql({});
+                        agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks/one')
+                            .send(hookData)
+                            .end(function (err, res) {
+                                expect(res.status).equal(200, err);
+
+                                agent.get(server.getUrl() + '/api/projects/' +
+                                    projectName2APIPath(projectName) + '/hooks/one')
+                                    .end(function (err, res) {
+                                        expect(res.status).equal(200, err);
+                                        expect(res.body.events).to.equal(hookData.events);
+                                        expect(res.body.url).to.equal(hookData.url);
+
+                                        agent.get(server.getUrl() + '/api/projects/' +
+                                            projectName2APIPath(projectName) + '/hooks')
+                                            .end(function (err, res) {
+                                                expect(res.status).equal(200, err);
+                                                expect(res.body.one.events).to.equal(hookData.events);
+                                                expect(res.body.one.url).to.equal(hookData.url);
+
+                                                agent.delete(server.getUrl() + '/api/projects/' +
+                                                    projectName2APIPath(projectName) + '/hooks/one')
+                                                    .end(function (err, res) {
+                                                        expect(res.status).equal(200, err);
+
+                                                        agent.get(server.getUrl() + '/api/projects/' +
+                                                            projectName2APIPath(projectName) + '/hooks')
+                                                            .end(function (err, res) {
+                                                                expect(res.status).equal(200, err);
+                                                                expect(res.body).to.eql({});
+
+                                                                done();
+                                                            });
+                                                    });
+                                            });
+                                    });
+                            });
+                    });
+            });
+
+            it('should create, then 403 on re-creating a webhook', function (done) {
+                var hookData = {
+                    events: 'all',
+                    url: 'http://any.address.at.all'
+                };
+
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.eql({});
+                        agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks/one')
+                            .send(hookData)
+                            .end(function (err, res) {
+                                expect(res.status).equal(200, err);
+
+                                agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks/one')
+                                    .send(hookData)
+                                    .end(function (err, res) {
+                                        expect(res.status).equal(403, err);
+
+                                        agent.delete(server.getUrl() + '/api/projects/' +
+                                            projectName2APIPath(projectName) + '/hooks/one')
+                                            .end(function (err, res) {
+                                                expect(res.status).equal(200, err);
+
+                                                done();
+                                            });
+                                    });
+                            });
+                    });
+            });
+
+            it('should 403 on create a webhook for unauthorized project', function (done) {
+                var hookData = {
+                    events: 'all',
+                    url: 'http://any.address.at.all'
+                };
+
+                agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(unauthorizedProjectName) + '/hooks/one')
+                    .send(hookData)
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+
+                        done();
+                    });
+            });
+
+            it('should 403 on updating a webhook for unauthorized project', function (done) {
+                var hookData = {
+                    events: 'all',
+                    url: 'http://any.address.at.all'
+                };
+
+                agent.patch(server.getUrl() + '/api/projects/' + projectName2APIPath(unauthorizedProjectName) + '/hooks/one')
+                    .send(hookData)
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+
+                        done();
+                    });
+            });
+
+            it('should create, update, and delete a webhook', function (done) {
+                var hookData = {
+                        events: 'all',
+                        url: 'http://any.address.at.all'
+                    },
+                    newUrl = 'http://other.than.before.com';
+
+                agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks/one')
+                    .send(hookData)
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+
+                        agent.patch(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks/one')
+                            .send({url: newUrl, active:false})
+                            .end(function (err, res) {
+                                expect(res.status).equal(200, err);
+
+                                expect(res.body.one.url).to.equal(newUrl);
+                                agent.delete(server.getUrl() + '/api/projects/' +
+                                    projectName2APIPath(projectName) + '/hooks/one')
+                                    .end(function (err, res) {
+                                        expect(res.status).equal(200, err);
+
+                                        done();
+                                    });
+                            });
+                    });
+            });
+
+            it('should 404 on listing unknown webhook', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' +
+                    projectName2APIPath(projectName) + '/hooks/one')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+
+                        done();
+                    });
+            });
+
+            it('should 404 on update unknown webhook', function (done) {
+                agent.patch(server.getUrl() + '/api/projects/' +
+                    projectName2APIPath(projectName) + '/hooks/one')
+                    .send({})
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+
+                        done();
+                    });
+            });
         });
     });
 
@@ -993,7 +1166,7 @@ describe('REST API', function () {
                     projectAuthParams = {
                         entityType: gmeAuth.authorizer.ENTITY_TYPES.PROJECT
                     },
-                    safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                        safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                     return safeStorage.openDatabase();
                 })
                 .then(function () {
