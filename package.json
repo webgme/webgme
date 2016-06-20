@@ -63,6 +63,7 @@
     "superagent": "1.7.2",
     "underscore": "1.8.3",
     "unzip": "0.1.11",
+    "webhook-manager": "webgme/webhook-manager#master",
     "winston": "2.2.0"
   },
   "devDependencies": {

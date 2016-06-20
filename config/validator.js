@@ -239,6 +239,14 @@ function validateConfig(configOrFileName) {
     assertString('config.visualization.layout.default', config.visualization.layout.default);
     assertArray('config.visualization.layout.basePaths', config.visualization.layout.basePaths);
 
+    //webhooks
+    expectedKeys.push('webhooks');
+    assertBoolean('config.webhooks.enable', config.webhooks.enable);
+    assertEnum('config.webhooks.manager', config.webhooks.manager.toLowerCase(), 'memory', 'redis');
+    if (config.webhooks.manager.toLowerCase() === 'redis' && config.socketIO.adapter.type.toLowerCase() !== 'redis') {
+        throw new Error('config.webhooks.manager can only be ' +
+            '\'redis\' if config.socketIO.adapter.type is \'redis\' as well');
+    }
 
     if (Object.keys(config).length !== expectedKeys.length) {
         errMsg = 'Configuration had unexpected key(s):';
