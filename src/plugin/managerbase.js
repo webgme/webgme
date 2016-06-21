@@ -350,67 +350,6 @@ define([
 
             return deferred.promise;
         };
-
-        this.loadNodeByPath = function (pluginContext, path) {
-            var deferred = Q.defer();
-            pluginContext.core.loadByPath(pluginContext.rootNode, path, function (err, node) {
-                if (err) {
-                    deferred.reject(err);
-                } else {
-                    deferred.resolve(node);
-                }
-            });
-            return deferred.promise;
-        };
-
-        this.loadNodesByPath = function (pluginContext, nodePaths, returnNameMap) {
-            var deferred = Q.defer(),
-                len = nodePaths.length,
-                error = '',
-                nodes = [];
-
-            var allNodesLoadedHandler = function () {
-                var nameToNode = {};
-
-                if (error) {
-                    deferred.reject(error);
-                    return;
-                }
-
-                if (returnNameMap) {
-                    nodes.map(function (node) {
-                        if (nameToNode[pluginContext.core.getFullyQualifiedName(node)]) {
-                            self.logger.error('Meta-nodes share the same full name. Will still proceed..',
-                                pluginContext.core.getFullyQualifiedName(node));
-                        }
-                        nameToNode[pluginContext.core.getFullyQualifiedName(node)] = node;
-                    });
-                    deferred.resolve(nameToNode);
-                } else {
-                    deferred.resolve(nodes);
-                }
-            };
-
-            var loadedNodeHandler = function (err, nodeObj) {
-                if (err) {
-                    error += err;
-                }
-                nodes.push(nodeObj);
-
-                if (nodes.length === nodePaths.length) {
-                    allNodesLoadedHandler();
-                }
-            };
-
-            if (len === 0) {
-                allNodesLoadedHandler();
-            }
-            while (len--) {
-                pluginContext.core.loadByPath(pluginContext.rootNode, nodePaths[len], loadedNodeHandler);
-            }
-
-            return deferred.promise;
-        };
     }
 
     return PluginManagerBase;
