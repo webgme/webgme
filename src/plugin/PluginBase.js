@@ -14,8 +14,10 @@ define([
     'plugin/PluginResult',
     'plugin/PluginMessage',
     'plugin/PluginNodeDescription',
+    'plugin/util',
     'common/storage/constants',
-], function (PluginConfig, PluginResult, PluginMessage, PluginNodeDescription, STORAGE_CONSTANTS) {
+    'q'
+], function (PluginConfig, PluginResult, PluginMessage, PluginNodeDescription, pluginUtil, STORAGE_CONSTANTS, Q) {
     'use strict';
 
     /**
@@ -493,6 +495,28 @@ define([
             .nodeify(callback);
     };
 
+    PluginBase.prototype.fastForward = function (callback) {
+        var self = this,
+            options;
+
+        return this.project.getBranchHash(this.branchName)
+            .then(function (branchHash) {
+                options = {
+                    activeNode: this.core.getPath(this.activeNode),
+                    activeSelection: this.activeSelection.forEach(function (node) {
+                        return self.core.getPath(node);
+                    }),
+                    namespace: this.namespace
+                };
+                
+                
+            })
+            .then(function () {
+                
+            })
+            .nodeify(callback);
+    };
+
     /**
      * Adds the commit to the results. N.B. if you're using your own save method - make sure to update
      * this.currentHash and this.branchName accordingly before adding the commit.
@@ -505,6 +529,7 @@ define([
             branchName: this.branchName,
             status: status
         };
+
         this.result.addCommit(newCommit);
         this.logger.debug('newCommit added', newCommit);
     };
@@ -540,10 +565,12 @@ define([
         } else {
             this.logger = console;
         }
+
         if (!gmeConfig) {
             // TODO: Remove this check at some point
             throw new Error('gmeConfig was not provided to Plugin.initialize!');
         }
+
         this.blobClient = blobClient;
         this.gmeConfig = gmeConfig;
 
@@ -595,9 +622,8 @@ define([
      * @returns {PluginConfig}
      */
     PluginBase.prototype.getDefaultConfig = function () {
-        var configStructure = this.getConfigStructure();
-
-        var defaultConfig = new PluginConfig();
+        var configStructure = this.getConfigStructure(),
+            defaultConfig = new PluginConfig();
 
         for (var i = 0; i < configStructure.length; i += 1) {
             defaultConfig[configStructure[i].name] = configStructure[i].value;
