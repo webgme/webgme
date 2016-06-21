@@ -1,4 +1,4 @@
-/*globals define, angular, WebGMEGlobal*/
+/*globals define, angular, WebGMEGlobal, $*/
 /*jshint browser: true*/
 /**
  * @author nabana / https://github.com/nabana
@@ -671,112 +671,95 @@ define([
             return;
         }
 
-        if (self.gmeClient) {
-            exportBranch = function (data) {
-                // By default the export contains assets.
-                self.gmeClient.exportProjectToFile(self.gmeClient.getActiveProjectId(),
-                    self.gmeClient.getActiveBranchName(),
-                    self.gmeClient.getActiveCommitHash(), true, function (err, result) {
+        exportBranch = function (data) {
+            var commitHash = data.projectId === self.gmeClient.getActiveProjectId() &&
+                data.branchId === self.gmeClient.getActiveBranchName() ?
+                self.gmeClient.getActiveCommitHash() : data.commitHash;
+
+                //notify = $.notify('Exporting ' +  + '...', { allow_dismiss: false });
+
+            self.gmeClient.exportProjectToFile(
+                data.projectId,
+                data.branchId,
+                commitHash,
+                true,
+                function (err, result) {
+                    if (err) {
+                        self.logger.error('unable to save project', err);
+                    } else {
+                        saveToDisk.saveUrlToDisk(result.downloadUrl);
+                    }
+                }
+            );
+        };
+
+        showBranchHistory = createBranch = function (data) {
+            self.showHistory(data);
+        };
+
+        deleteBranch = function (data) {
+            var deleteBranchModal = new ConfirmDeleteDialog(),
+                deleteItem = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId) +
+                    '  ::  ' + data.branchId;
+            deleteBranchModal.show({deleteItem: deleteItem}, function () {
+                self.gmeClient.deleteBranch(data.projectId,
+                    data.branchId,
+                    data.branchInfo.branchHash,
+                    function (err) {
                         if (err) {
-                            self.logger.error('unable to save project', err);
+                            self.logger.error('Failed deleting branch of project.',
+                                data.projectId, data.branchId, err);
                         } else {
-                            saveToDisk.saveUrlToDisk(result.downloadUrl);
+                            self.removeBranch(data.projectId, data.branchId);
                         }
                     }
                 );
-            };
+            });
 
-            showBranchHistory = createBranch = function (data) {
-                self.showHistory(data);
-            };
+        };
 
-            deleteBranch = function (data) {
-                var deleteBranchModal = new ConfirmDeleteDialog(),
-                    deleteItem = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId) +
-                        '  ::  ' + data.branchId;
-                deleteBranchModal.show({deleteItem: deleteItem}, function () {
-                    self.gmeClient.deleteBranch(data.projectId,
-                        data.branchId,
-                        data.branchInfo.branchHash,
-                        function (err) {
-                            if (err) {
-                                self.logger.error('Failed deleting branch of project.',
-                                    data.projectId, data.branchId, err);
-                            } else {
-                                self.removeBranch(data.projectId, data.branchId);
-                            }
+        mergeBranch = function (data) {
+            if (data.projectId !== self.gmeClient.getActiveProjectId()) {
+                // TODO: Should we use some notification here?
+                // TODO: e.g. notification-footer or maybe the $.notify..
+                self.logger.error(new Error('Cannot merge branch from a different project..'));
+            } else {
+                self.gmeClient.autoMerge(data.projectId,
+                    data.branchId, self.$scope.navigator.items[self.navIdBranch].id,
+                    function (err, result) {
+                        var mergeDialog = new MergeDialog(self.gmeClient);
+                        if (err) {
+                            self.logger.error('merge of branch failed', err);
+                            mergeDialog.show(err);
+                            return;
                         }
-                    );
-                });
 
-            };
-
-            mergeBranch = function (data) {
-                if (data.projectId !== self.gmeClient.getActiveProjectId()) {
-                    // TODO: Should we use some notification here?
-                    // TODO: e.g. notification-footer or maybe the $.notify..
-                    self.logger.error(new Error('Cannot merge branch from a different project..'));
-                } else {
-                    self.gmeClient.autoMerge(data.projectId,
-                        data.branchId, self.$scope.navigator.items[self.navIdBranch].id,
-                        function (err, result) {
-                            var mergeDialog = new MergeDialog(self.gmeClient);
-                            if (err) {
-                                self.logger.error('merge of branch failed', err);
-                                mergeDialog.show(err);
-                                return;
-                            }
-
-                            if (result && result.conflict && result.conflict.items.length > 0) {
-                                //TODO create some user-friendly way to show this type of result
-                                self.logger.error('merge ended in conflicts', result);
-                                mergeDialog.show('merge ended in conflicts', result);
-                            } else {
-                                self.logger.debug('successful merge');
-                                mergeDialog.show(null, result);
-                            }
+                        if (result && result.conflict && result.conflict.items.length > 0) {
+                            //TODO create some user-friendly way to show this type of result
+                            self.logger.error('merge ended in conflicts', result);
+                            mergeDialog.show('merge ended in conflicts', result);
+                        } else {
+                            self.logger.debug('successful merge');
+                            mergeDialog.show(null, result);
                         }
-                    );
-                }
-            };
-
-            createCommitMessage = function (data) {
-                self.selectBranch(data, function (err) {
-                    var cd;
-
-                    if (err) {
-                        // TODO: log error
-                        return;
                     }
+                );
+            }
+        };
 
-                    cd = new CommitDialog(self.gmeClient);
-                    cd.show();
-                });
-            };
-        } else {
-            // test version
-            exportBranch = function (data) {
-                self.logger.debug('exportBranch: ', data);
-            };
+        createCommitMessage = function (data) {
+            self.selectBranch(data, function (err) {
+                var cd;
 
-            createBranch = function (data) {
-                self.addBranch(data.projectId, data.branchId + ' _copy');
-                self.selectProject({projectId: data.projectId, branchId: data.branchId + '_copy'});
-            };
+                if (err) {
+                    // TODO: log error
+                    return;
+                }
 
-            deleteBranch = function (data) {
-                var deleteBranchModal = new ConfirmDeleteDialog(),
-                    deleteItem = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId) +
-                        '  -  ' + data.branchId;
-
-                deleteBranchModal.show({deleteItem: deleteItem}, function () {
-                });
-            };
-
-            createCommitMessage = function (data) {
-                self.logger.debug('createCommitMessage: ', data);
-            };
-        }
+                cd = new CommitDialog(self.gmeClient);
+                cd.show();
+            });
+        };
 
         selectBranch = function (data) {
             self.selectBranch(data);
@@ -1325,6 +1308,16 @@ define([
             projectMenuClass: '',
             branchMenuClass: ''
         };
+    };
+
+    ProjectNavigatorController.prototype.notifyError = function(msg) {
+        $.notify({
+            message: msg
+        }, {
+            type: 'error',
+            delay: 200,
+            'z_index': 1100
+        });
     };
 
     return ProjectNavigatorController;
