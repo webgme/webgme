@@ -91,6 +91,7 @@
     "karma-requirejs": "0.2.5",
     "karma-safari-launcher": "0.1.1",
     "mocha": "2.4.5",
+    "msgpack-js": "^0.3.0",
     "node-neo4j": "2.0.3",
     "nodemon": "1.9.1",
     "pkginfo": "0.3.1",
