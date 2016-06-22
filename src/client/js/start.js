@@ -7,6 +7,7 @@ require(
         'jquery-ui-iPad',
         'js/jquery.WebGME',
         'bootstrap',
+        'bootstrap-notify',
         'underscore',
         'backbone',
         'js/WebGME',
@@ -23,7 +24,7 @@ require(
         'isis-ui-components',
         'isis-ui-components-templates'
     ],
-    function (jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, bootstrap, underscore,
+    function (jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, bootstrap, bootstrapNotify, underscore,
               backbone, webGME, util, gmeConfigJson, packageJson, Logger, superagent, Q) {
 
         'use strict';
