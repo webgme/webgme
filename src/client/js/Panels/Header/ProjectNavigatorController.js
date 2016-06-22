@@ -1230,8 +1230,11 @@ define([
                 progress += 5;
             } else if (progress < 70) {
                 progress += 2;
-            } else if (progress < 95) {
+            } else if (progress < 98) {
                 progress += 1;
+            } else {
+                progress = 10;
+                note.update('type', 'warning');
             }
 
             note.update('progress', progress);
