@@ -90,11 +90,17 @@ if (typeof define !== 'undefined') {
 if (nodeRequire.main === module) {
     var fs = nodeRequire('fs'),
         path = nodeRequire('path'),
-        cas = nodeRequire('ssl-root-cas'),
         superagent = nodeRequire('superagent'),
         configFileName = 'config.json',
-        workingDirectory = 'executor-temp';
+        workingDirectory = 'executor-temp',
+        cas;
     //https = nodeRequire('https'); FIXME take into use or remove it
+
+    if (process.env.LATEST_CERTS) {
+        cas = nodeRequire('ssl-root-cas/latest');
+    } else {
+        cas = nodeRequire('ssl-root-cas');
+    }
 
     // This is used for tests
     if (process.argv.length > 2) {
@@ -113,6 +119,7 @@ if (nodeRequire.main === module) {
             cas.addFile(filename);
         }
     });
+
     superagent.Request.prototype._ca = (require('https').globalAgent.options.ca);
     var requirejs = require('./node_worker.classes.build.js').requirejs;
 

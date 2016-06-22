@@ -1,5 +1,5 @@
 //TODO: This file must be revised
-/*globals require, process, __dirname, GLOBAL, console*/
+/*globals require, process, __dirname, GLOBAL, console, global*/
 /**
  * @module Executor:AddLabelJob
  * @author lattmann / https://github.com/lattmann
