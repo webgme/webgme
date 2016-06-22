@@ -674,9 +674,27 @@ define([
         exportBranch = function (data) {
             var commitHash = data.projectId === self.gmeClient.getActiveProjectId() &&
                 data.branchId === self.gmeClient.getActiveBranchName() ?
-                self.gmeClient.getActiveCommitHash() : data.commitHash;
+                self.gmeClient.getActiveCommitHash() : data.commitHash,
+                progress = 15,
+                progId;
 
-                //notify = $.notify('Exporting ' +  + '...', { allow_dismiss: false });
+            var note = $.notify('<strong>Exporting</strong> ' + data.projectId + '...', {
+                showProgressbar: true,
+                allow_dissmiss: false,
+                delay: 0
+            });
+
+            note.update({ type: 'info', message: '<strong>Exporting</strong> ' + data.projectId  + '...', progress: progress});
+            progId = setInterval(function() {
+                if (progress < 50) {
+                    progress += 5;
+                } else if (progress < 70) {
+                    progress += 2;
+                } else if (progress < 95) {
+                    progress += 1;
+                }
+                note.update({ type: 'info', message: '<strong>Exporting</strong> ' + data.projectId  + '...', progress: progress});
+            }, 2000);
 
             self.gmeClient.exportProjectToFile(
                 data.projectId,
@@ -684,9 +702,22 @@ define([
                 commitHash,
                 true,
                 function (err, result) {
+                    clearInterval(progId);
                     if (err) {
                         self.logger.error('unable to save project', err);
+                        note.update({ type: 'error', message: 'Failed to export ' + data.projectId}, {
+                            allow_dissmiss: true,
+                            showProgressbar: false
+                        });
                     } else {
+                        note.update({
+                            type: 'success',
+                            message: 'Exported ' + data.projectId + ' (click me if not downloaded).',
+                            url: result.downloadUrl,
+                            target: '_blank',
+                            progress: 100
+                        }, {allow_dissmiss: true, showProgressbar: false});
+
                         saveToDisk.saveUrlToDisk(result.downloadUrl);
                     }
                 }
