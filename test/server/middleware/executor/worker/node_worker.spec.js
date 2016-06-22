@@ -222,6 +222,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
@@ -322,6 +323,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
@@ -370,6 +372,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
@@ -398,6 +401,7 @@ describe('NodeWorker', function () {
                     intervalId = setInterval(function () {
                         executorClient.getInfo(jobInfo.hash, function (err, res) {
                             if (err) {
+                                clearInterval(intervalId);
                                 done(err);
                                 return;
                             }
@@ -438,6 +442,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
@@ -485,6 +490,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
@@ -531,6 +537,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
@@ -677,6 +684,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
@@ -725,6 +733,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
@@ -753,6 +762,7 @@ describe('NodeWorker', function () {
                     intervalId = setInterval(function () {
                         executorClient.getInfo(jobInfo.hash, function (err, res) {
                             if (err) {
+                                clearInterval(intervalId);
                                 done(err);
                                 return;
                             }
@@ -793,6 +803,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
@@ -840,6 +851,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
@@ -886,6 +898,7 @@ describe('NodeWorker', function () {
                             intervalId = setInterval(function () {
                                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                                     if (err) {
+                                        clearInterval(intervalId);
                                         done(err);
                                         return;
                                     }
