@@ -90,7 +90,7 @@ if (typeof define !== 'undefined') {
 if (nodeRequire.main === module) {
     var fs = nodeRequire('fs'),
         path = nodeRequire('path'),
-        cas = nodeRequire('ssl-root-cas/latest'),
+        cas = nodeRequire('ssl-root-cas'),
         superagent = nodeRequire('superagent'),
         configFileName = 'config.json',
         workingDirectory = 'executor-temp';
@@ -132,7 +132,7 @@ if (nodeRequire.main === module) {
             requirejs.s.contexts._.defined[name] = nodeRequire(name);
         });
 
-    GLOBAL.WebGMEGlobal = {
+    global.WebGMEGlobal = {
         getConfig: function () {
             'use strict';
             return {};

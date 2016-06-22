@@ -43,7 +43,7 @@ var url = require('url');
 var path = require('path');
 var fs = require('fs');
 var webGMEPort = url.parse(webGMEUrl).port || (url.parse(webGMEUrl).protocol === 'https:' ? 443 : 80);
-GLOBAL.WebGMEGlobal = {
+global.WebGMEGlobal = {
     getConfig: function () {
         'use strict';
         return {
