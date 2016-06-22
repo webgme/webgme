@@ -565,7 +565,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         } else {
                             deferred.resolve({
                                 downloadUrl: blobClient.getRelativeDownloadURL(hash),
-                                hash: hash
+                                hash: hash,
+                                // FIXME: Now this needs to be insync with the name in blobUtil..
+                                fileName: output.projectId + '_' + (output.branchName || output.commitHash) + '.webgmex'
                             });
                         }
                     }
