@@ -51,6 +51,7 @@ function ExecutorServer(options) {
     self.jobList = null;
     self.workerList = null;
     self.outputList = null;
+    self.running = false;
     self.timerId = 0;
     self.clearOutputsTimers = {
         // <timerId>: {
@@ -105,7 +106,7 @@ function ExecutorServer(options) {
         }
 
         self.workerList.find(query).toArray(function (err, docs) {
-            if (self.workerList === null || self.jobList === null) {
+            if (!self.running) {
                 self.logger.debug('ExecutorServer had been stopped.');
                 return;
             }
@@ -437,7 +438,10 @@ function ExecutorServer(options) {
                 labels: clientRequest.labels
             }
         }, {upsert: true}, function () {
-            if (clientRequest.availableProcesses) {
+            if (!self.running) {
+                self.logger.debug('ExecutorServer had been stopped.');
+                res.sendStatus(404);
+            } else if (clientRequest.availableProcesses) {
                 self.jobList.find({
                     status: 'CREATED',
                     labels: {
@@ -513,6 +517,7 @@ function ExecutorServer(options) {
             .then(function () {
                 watchLabelJobs();
                 workerTimeoutIntervalId = setInterval(workerTimeout, 10 * 1000);
+                self.running = true;
                 return Q.ninvoke(self.jobList, 'ensureIndex', {hash: 1}, {unique: true});
             })
             .nodeify(callback);
@@ -536,6 +541,7 @@ function ExecutorServer(options) {
         self.jobList = null;
         self.workerList = null;
         self.outputList = null;
+        self.running = false;
         self.logger.debug('Executor was stopped');
     };
 }
