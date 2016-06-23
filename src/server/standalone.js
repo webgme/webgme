@@ -27,6 +27,7 @@ var Path = require('path'),
     MemoryAdapter = require('./storage/memory'),
     Storage = require('./storage/safestorage'),
     WebSocket = require('./storage/websocket'),
+    WebhookManager = require('./util/WebhookManager'),
 
 // Middleware
     BlobServer = require('./middleware/blob/BlobServer'),
@@ -44,7 +45,6 @@ var Path = require('path'),
     servers = [],
 
     mainLogger;
-
 
 process.on('SIGINT', function () {
     var i,
@@ -135,7 +135,8 @@ function StandAloneServer(gmeConfig) {
             storageDeferred = Q.defer(),
             svgDeferred = Q.defer(),
             gmeAuthDeferred = Q.defer(),
-            executorDeferred = Q.defer();
+            executorDeferred = Q.defer(),
+            webhookDeferred = Q.defer();
 
         if (typeof callback !== 'function') {
             callback = function () {
@@ -155,7 +156,6 @@ function StandAloneServer(gmeConfig) {
         }
 
         sockets = {};
-
 
         __httpServer = Http.createServer(__app);
 
@@ -184,7 +184,6 @@ function StandAloneServer(gmeConfig) {
             logger.debug('clientError', err);
         });
 
-
         __httpServer.on('error', function (err) {
             if (err.code === 'EADDRINUSE') {
                 logger.error('Failed to start server', {metadata: {port: gmeConfig.server.port, error: err}});
@@ -206,6 +205,14 @@ function StandAloneServer(gmeConfig) {
             } else {
                 __webSocket.start(__httpServer);
                 storageDeferred.resolve();
+            }
+        });
+
+        __webhookManager.start(function (err) {
+            if (err) {
+                webhookDeferred.reject(err);
+            } else {
+                webhookDeferred.resolve();
             }
         });
 
@@ -237,6 +244,7 @@ function StandAloneServer(gmeConfig) {
             serverDeferred.promise,
             storageDeferred.promise,
             gmeAuthDeferred.promise,
+            webhookDeferred.promise,
             apiReady,
             executorDeferred.promise
         ])
@@ -261,6 +269,9 @@ function StandAloneServer(gmeConfig) {
             if (__executorServer) {
                 __executorServer.stop();
             }
+
+            __webhookManager.stop();
+
             // FIXME: is this call synchronous?
             __webSocket.stop();
             //kill all remaining workers
@@ -300,7 +311,6 @@ function StandAloneServer(gmeConfig) {
 
     this.start = start;
     this.stop = stop;
-
 
     //internal functions
     function redirectUrl(req, res) {
@@ -490,6 +500,7 @@ function StandAloneServer(gmeConfig) {
         __storage = null,
         __database = null,
         __webSocket = null,
+        __webhookManager = null,
         __gmeAuth = null,
         apiReady,
         __app = null,
@@ -542,6 +553,18 @@ function StandAloneServer(gmeConfig) {
 
     __storage = new Storage(__database, logger, gmeConfig, __gmeAuth);
     __webSocket = new WebSocket(__storage, logger, gmeConfig, __gmeAuth, __workerManager);
+
+    if (gmeConfig.webhooks.enable) {
+        __webhookManager = new WebhookManager(__storage, logger, gmeConfig);
+    } else {
+        __webhookManager = {
+            start: function (cb) {
+                cb(null);
+            },
+            stop: function () {
+            }
+        };
+    }
 
     middlewareOpts = {  //TODO: Pass this to every middleware They must not modify the options!
         gmeConfig: gmeConfig,
@@ -766,7 +789,6 @@ function StandAloneServer(gmeConfig) {
 
     //client contents - js/html/css
     __app.get(/^\/.*\.(css|ico|ttf|woff|woff2|js|cur)$/, Express.static(__clientBaseDir));
-
 
     __app.get('/package.json', ensureAuthenticated, Express.static(Path.join(__baseDir, '..')));
     __app.get(/^\/.*\.(_js|html|gif|png|bmp|svg|json|map)$/, ensureAuthenticated, Express.static(__clientBaseDir));

@@ -1522,6 +1522,197 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    // webHooks
+    router.get('/projects/:ownerId/:projectName/hooks', ensureAuthenticated, function (req, res, next) {
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            userId = getUserId(req),
+            projectAuthParams = {
+                entityType: authorizer.ENTITY_TYPES.PROJECT
+            };
+
+        authorizer.getAccessRights(userId, projectId, projectAuthParams)
+            .then(function (projectAccess) {
+
+                if (projectAccess && projectAccess.read) {
+                    return metadataStorage.getProject(projectId);
+                }
+
+                res.status(403);
+                throw new Error('Not authorized to read project [' + projectId + ']');
+            })
+            .then(function (projectData) {
+                res.json(projectData.hooks || {});
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.get('/projects/:ownerId/:projectName/hooks/:hookId', ensureAuthenticated, function (req, res, next) {
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            userId = getUserId(req),
+            projectAuthParams = {
+                entityType: authorizer.ENTITY_TYPES.PROJECT
+            };
+
+        authorizer.getAccessRights(userId, projectId, projectAuthParams)
+            .then(function (projectAccess) {
+
+                if (projectAccess && projectAccess.read) {
+                    return metadataStorage.getProject(projectId);
+                }
+
+                res.status(403);
+                throw new Error('Not authorized to read project [' + projectId + ']');
+            })
+            .then(function (projectData) {
+                if (projectData.hooks && projectData.hooks[req.params.hookId]) {
+                    res.json(projectData.hooks[req.params.hookId]);
+                } else {
+                    res.sendStatus(404);
+                }
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.put('/projects/:ownerId/:projectName/hooks/:hookId', ensureAuthenticated, function (req, res, next) {
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            projectData,
+            userId = getUserId(req),
+            projectAuthParams = {
+                entityType: authorizer.ENTITY_TYPES.PROJECT
+            };
+
+        authorizer.getAccessRights(userId, projectId, projectAuthParams)
+            .then(function (projectAccess) {
+
+                if (projectAccess && projectAccess.write) {
+                    return metadataStorage.getProject(projectId);
+                }
+
+                res.status(403);
+                throw new Error('Not authorized to modify project [' + projectId + ']');
+            })
+            .then(function (projectData_) {
+                var now = (new Date()).toISOString();
+
+                projectData = projectData_;
+                if (projectData.hooks && projectData.hooks[req.params.hookId]) {
+                    res.status(403);
+                    throw new Error('Hook \'' + req.params.hookId + '\' already exists for this project!');
+                } else {
+                    projectData.hooks = projectData.hooks || {};
+
+                    //fill out default information:
+                    // TODO do we need some checking for a minimal syntax???
+                    if (req.body.active !== false) {
+                        req.body.active = true;
+                    }
+                    req.body.createdAt = now;
+                    req.body.updatedAt = now;
+                    projectData.hooks[req.params.hookId] = req.body;
+
+                    return metadataStorage.updateProjectHooks(projectId, projectData.hooks);
+                }
+            })
+            .then(function () {
+                res.json(projectData.hooks[req.params.hookId]);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.patch('/projects/:ownerId/:projectName/hooks/:hookId', ensureAuthenticated, function (req, res, next) {
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            projectData,
+            userId = getUserId(req),
+            projectAuthParams = {
+                entityType: authorizer.ENTITY_TYPES.PROJECT
+            };
+
+        authorizer.getAccessRights(userId, projectId, projectAuthParams)
+            .then(function (projectAccess) {
+
+                if (projectAccess && projectAccess.write) {
+                    return metadataStorage.getProject(projectId);
+                }
+
+                res.status(403);
+                throw new Error('Not authorized to modify project [' + projectId + ']');
+            })
+            .then(function (projectData_) {
+                var now = (new Date()).toISOString(),
+                    hook;
+
+                projectData = projectData_;
+                if (projectData.hooks && projectData.hooks[req.params.hookId]) {
+                    hook = projectData.hooks[req.params.hookId];
+
+                    hook.events = req.body.events || hook.events;
+                    hook.description = req.body.description || hook.description;
+                    hook.url = req.body.url || hook.url;
+                    if (req.body.active === true || req.body.active === false) {
+                        hook.active = req.body.active;
+                    }
+                    req.body.updatedAt = now;
+
+                    return metadataStorage.updateProjectHooks(projectId, projectData.hooks);
+                } else {
+                    res.status(404);
+                    throw new Error('Cannot updated unknown [' + req.params.hookId + '] hook!');
+                }
+            })
+            .then(function () {
+                res.json(projectData.hooks[req.params.hookId]);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
+    router.delete('/projects/:ownerId/:projectName/hooks/:hookId', ensureAuthenticated, function (req, res, next) {
+        var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            projectData,
+            userId = getUserId(req),
+            projectAuthParams = {
+                entityType: authorizer.ENTITY_TYPES.PROJECT
+            };
+
+        authorizer.getAccessRights(userId, projectId, projectAuthParams)
+            .then(function (projectAccess) {
+
+                if (projectAccess && projectAccess.write) {
+                    return metadataStorage.getProject(projectId);
+                }
+
+                res.status(403);
+                throw new Error('Not authorized to modify project [' + projectId + ']');
+            })
+            .then(function (projectData_) {
+                var now = (new Date()).toISOString(),
+                    hook;
+
+                projectData = projectData_;
+                if (projectData.hooks && projectData.hooks[req.params.hookId]) {
+                    delete projectData.hooks[req.params.hookId];
+
+                    return metadataStorage.updateProjectHooks(projectId, projectData.hooks);
+                } else {
+                    res.status(404);
+                    throw new Error('Cannot delete unknown [' + req.params.hookId + '] hook!');
+                }
+            })
+            .then(function () {
+                res.json(projectData.hooks);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
     logger.debug('creating list asset rules');
 
     router.get('/decorators', ensureAuthenticated, function (req, res) {

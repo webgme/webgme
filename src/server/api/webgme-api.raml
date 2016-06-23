@@ -384,7 +384,33 @@ resourceTypes:
             putDesc: Requires <b>write</b> access for project.
             patchDesc: Requires <b>delete</b> access for project.
             deleteDesc: Requires <b>delete</b> access for project.
-
+    /hooks:
+      description: Returns with the list of webHooks.
+      type:
+        collection:
+          exampleCollection: !include webgme-api-branches.json
+          desc: Requires <b>read</b> access for project.
+      /{hookId}:
+        description: Returns with the webHook information.
+        uriParameters:
+          hookId:
+            example: myHook
+        type:
+          collection-item:
+            exampleItem: !include webgme-api-commit-retrieve.json
+            putBody: "{
+              \"events\": [\"commit\",\"branchCreated\"],
+              \"description\": \"Information about the hook\",
+              \"url\": \"http://address/to/the/hook\"
+            }"
+            patchBody: "{
+              \"active\": false
+            }"
+            getDesc: Requires <b>read</b> access for project.
+            putDesc: Requires <b>write</b> access for project.
+            patchDesc: Requires <b>write</b> access for project.
+            deleteDesc: Requires <b>write</b> access for project.
+            
 /decorators:
   get:
     description: Returns with all available decorators

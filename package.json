@@ -55,7 +55,7 @@
     "process": "0.11.2",
     "q": "1.4.1",
     "raml2html": "2.2.0",
-    "redis": "2.4.2",
+    "redis": "2.6.2",
     "requirejs": "2.1.20",
     "socket.io": "1.4.5",
     "socket.io-client": "1.4.5",
@@ -63,6 +63,7 @@
     "superagent": "1.7.2",
     "underscore": "1.8.3",
     "unzip": "0.1.11",
+    "webhook-manager": "webgme/webhook-manager#master",
     "winston": "2.2.0"
   },
   "devDependencies": {
@@ -90,6 +91,7 @@
     "karma-requirejs": "0.2.5",
     "karma-safari-launcher": "0.1.1",
     "mocha": "2.4.5",
+    "msgpack-js": "^0.3.0",
     "node-neo4j": "2.0.3",
     "nodemon": "1.9.1",
     "pkginfo": "0.3.1",

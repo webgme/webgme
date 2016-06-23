@@ -203,6 +203,11 @@ var path = require('path'),
                 default: 'DefaultLayout',
                 basePaths: [path.join(__dirname, '../src/client/js/Layouts')]
             }
+        },
+
+        webhooks: {
+            enable: false,
+            manager: 'memory' // memory, redis
         }
     };
 
