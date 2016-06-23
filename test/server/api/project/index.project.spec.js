@@ -1107,7 +1107,7 @@ describe('REST API', function () {
                             .end(function (err, res) {
                                 expect(res.status).equal(200, err);
 
-                                expect(res.body.one.url).to.equal(newUrl);
+                                expect(res.body.url).to.equal(newUrl);
                                 agent.delete(server.getUrl() + '/api/projects/' +
                                     projectName2APIPath(projectName) + '/hooks/one')
                                     .end(function (err, res) {

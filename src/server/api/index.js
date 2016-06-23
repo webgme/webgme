@@ -1618,7 +1618,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 }
             })
             .then(function () {
-                res.json(projectData.hooks);
+                res.json(projectData.hooks[req.params.hookId]);
             })
             .catch(function (err) {
                 next(err);
@@ -1666,7 +1666,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 }
             })
             .then(function () {
-                res.json(projectData.hooks);
+                res.json(projectData.hooks[req.params.hookId]);
             })
             .catch(function (err) {
                 next(err);

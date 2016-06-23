@@ -109,7 +109,7 @@ describe('Webhook Manager', function () {
             })
             .then(function (result) {
                 projectId = result.projectId;
-                return Q.nfcall(metadataStorage.updateProjectHooks, projectId,
+                return metadataStorage.updateProjectHooks(projectId,
                     {
                         hookOne: {
                             events: 'all',
@@ -164,22 +164,18 @@ describe('Webhook Manager', function () {
         before(function (done) {
             manager.start(done);
         });
-        after(function () {
-            manager.stop();
+        after(function (done) {
+            manager.stop(done);
         });
 
         it('should forward TAG_CREATED event', function (done) {
             var hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.TAG_CREATED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             storage.send(CONSTANTS.TAG_CREATED, eventData);
         });
@@ -188,14 +184,10 @@ describe('Webhook Manager', function () {
             var hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.TAG_DELETED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             storage.send(CONSTANTS.TAG_DELETED, eventData);
         });
@@ -204,14 +196,10 @@ describe('Webhook Manager', function () {
             var hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.BRANCH_CREATED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             storage.send(CONSTANTS.BRANCH_CREATED, eventData);
         });
@@ -220,14 +208,10 @@ describe('Webhook Manager', function () {
             var hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.BRANCH_HASH_UPDATED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             storage.send(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
         });
@@ -236,14 +220,10 @@ describe('Webhook Manager', function () {
             var hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.BRANCH_DELETED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             storage.send(CONSTANTS.BRANCH_DELETED, eventData);
         });
@@ -252,14 +232,10 @@ describe('Webhook Manager', function () {
             var hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.PROJECT_DELETED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             storage.send(CONSTANTS.PROJECT_DELETED, eventData);
         });
@@ -268,11 +244,11 @@ describe('Webhook Manager', function () {
             var hookListener = getHookListener(function (req, res) {
                     throw new Error('BRANCH_UPDATED event should be filtered out by default');
                 }),
-                eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                hookListener.close();
-                done();
-            }, 100);
+                eventData = {projectId: projectId, anything: 'really'},
+                timerId = setTimeout(function () {
+                    hookListener.close();
+                    done();
+                }, 100);
 
             storage.send(CONSTANTS.BRANCH_UPDATED, eventData);
         });
@@ -281,11 +257,11 @@ describe('Webhook Manager', function () {
             var hookListener = getHookListener(function (req, res) {
                     throw new Error('arbitrary event should be filtered out by default');
                 }),
-                eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                hookListener.close();
-                done();
-            }, 100);
+                eventData = {projectId: projectId, anything: 'really'},
+                timerId = setTimeout(function () {
+                    hookListener.close();
+                    done();
+                }, 100);
 
             storage.send('arbitrary', eventData);
         });
@@ -294,16 +270,16 @@ describe('Webhook Manager', function () {
 
     describe('in redis mode', function () {
         var storage = new StorageMock(),
-            manager = new WebhookManager(storage, logger, {
-                mongo: {uri: gmeConfig.mongo.uri},
-                webhooks: {enable: true, manager: 'redis'}
-            });
+            gmeConfig = testFixture.getGmeConfig(),
+            manager;
 
         before(function (done) {
+            gmeConfig.webhooks = {enable: true, manager: 'redis'};
+            manager = new WebhookManager(storage, logger, gmeConfig);
             manager.start(done);
         });
-        after(function () {
-            manager.stop();
+        after(function (done) {
+            manager.stop(done);
         });
 
         it('should forward TAG_CREATED event', function (done) {
@@ -311,15 +287,11 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.TAG_CREATED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     eventGenerator.stop();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             eventGenerator.send(CONSTANTS.TAG_CREATED, eventData);
         });
@@ -329,15 +301,11 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.TAG_DELETED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     eventGenerator.stop();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             eventGenerator.send(CONSTANTS.TAG_DELETED, eventData);
         });
@@ -347,15 +315,11 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.BRANCH_CREATED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     eventGenerator.stop();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             eventGenerator.send(CONSTANTS.BRANCH_CREATED, eventData);
         });
@@ -365,15 +329,11 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.BRANCH_HASH_UPDATED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     eventGenerator.stop();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             eventGenerator.send(CONSTANTS.BRANCH_HASH_UPDATED, eventData);
         });
@@ -383,15 +343,11 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.BRANCH_DELETED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     eventGenerator.stop();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             eventGenerator.send(CONSTANTS.BRANCH_DELETED, eventData);
         });
@@ -401,15 +357,11 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal(CONSTANTS.PROJECT_DELETED);
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     eventGenerator.stop();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             eventGenerator.send(CONSTANTS.PROJECT_DELETED, eventData);
         });
@@ -419,15 +371,11 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req, res) {
                     expect(req.body.event).to.equal('arbitrary');
                     expect(req.body.data).to.eql(eventData);
-                    clearTimeout(timerId);
                     hookListener.close();
                     eventGenerator.stop();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                throw new Error('message was not receieved');
-            }, 100);
 
             eventGenerator.send('arbitrary', eventData);
         });
@@ -437,12 +385,12 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req, res) {
                     throw new Error('BRANCH_UPDATED event should be filtered out by default');
                 }),
-                eventData = {projectId: projectId, anything: 'really'};
-            timerId = setTimeout(function () {
-                hookListener.close();
-                eventGenerator.stop();
-                done();
-            }, 100);
+                eventData = {projectId: projectId, anything: 'really'},
+                timerId = setTimeout(function () {
+                    hookListener.close();
+                    eventGenerator.stop();
+                    done();
+                }, 100);
 
             eventGenerator.send(CONSTANTS.BRANCH_UPDATED, eventData);
         });
