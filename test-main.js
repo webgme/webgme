@@ -64,7 +64,7 @@ require.config({
     callback: testServerConnection
 });
 
-function done(err, res) {
+function done(err) {
   if (err) {
     console.error(err);
   }
@@ -82,7 +82,7 @@ function testServerConnection () {
         console.log('Trying to get gmeConfig.json ... ', i, i * timeout / 1000);
         superagent.get('/base/gmeConfig.json')
             .end(function (err, res) {
-                if (res.status === 200) {
+                if (res && res.status === 200) {
                   console.log('Got gmeConfig.json');
                   done();
                 } else {
