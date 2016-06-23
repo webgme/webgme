@@ -217,7 +217,9 @@ describe('storage-connection', function () {
                 return deferred.promise;
             })
             .nodeify(function (err) {
-                socket.disconnect();
+                if (socket) {
+                    socket.disconnect();
+                }
                 Q.ninvoke(storage, 'close')
                     .finally(function (err2) {
                         Q.ninvoke(server, 'stop')
