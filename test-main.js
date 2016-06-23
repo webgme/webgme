@@ -74,9 +74,9 @@ function done(err) {
 function testServerConnection () {
   requirejs(['superagent'], function (superagent) {
 
-      var maxTries = 50,
+      var maxTries = 20,
           i = 0,
-          timeout = 100;
+          timeout = 300;
 
       function tryToGetGmeConfig() {
         console.log('Trying to get gmeConfig.json ... ', i, i * timeout / 1000);
