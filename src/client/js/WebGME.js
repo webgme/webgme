@@ -119,6 +119,8 @@ define([
                     client.emitStateNotification();
                 });
 
+                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad);
+
                 document.title = config.pageTitle;
 
                 logger.info('init-phase true');

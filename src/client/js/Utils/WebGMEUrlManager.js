@@ -71,6 +71,11 @@ define([
             if (WebGMEGlobal.State.getActiveTab() !== null && WebGMEGlobal.State.getActiveTab() !== undefined) {
                 searchQuery += '&tab=' + WebGMEGlobal.State.getActiveTab();
             }
+
+            if (WebGMEGlobal.State.getLayout() !== null && WebGMEGlobal.State.getLayout() !== undefined) {
+                searchQuery += '&layout=' + WebGMEGlobal.State.getLayout();
+            }
+
             // leave this last, url may exceeds the max url limit
             if (WebGMEGlobal.State.getActiveSelection()) {
                 searchQuery += '&selection=' + WebGMEGlobal.State.getActiveSelection().join(',');
