@@ -1655,6 +1655,11 @@ describe('GME client', function () {
             expect(original).to.equal(relidPool.length);
             expect(copy).to.equal(relidPool.length);
         });
+
+        it('should allow access to META nodes even if they are not part of the territory',function(){
+            var metaNode = client.getNode('/1');
+            expect(metaNode).not.to.eql(null);
+        });
     });
 
     describe('basic territory tests', function () {
