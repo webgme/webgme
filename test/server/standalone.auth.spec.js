@@ -38,9 +38,7 @@ describe('standalone http server with authentication turned on', function () {
 
     before(function (done) {
         // we have to set the config here
-        var dbConn,
-            serverReady = Q.defer(),
-            project = 'project',
+        var project = 'project',
             unauthorizedProject = 'unauthorized_project',
             gmeConfig = testFixture.getGmeConfig();
 
@@ -48,16 +46,16 @@ describe('standalone http server with authentication turned on', function () {
         gmeConfig.authentication.enable = true;
         gmeConfig.authentication.allowGuests = false;
 
-        dbConn = testFixture.clearDBAndGetGMEAuth(gmeConfig)
+        testFixture.clearDBAndGetGMEAuth(gmeConfig)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;
                 authorizer = gmeAuth.authorizer;
                 projectAuthParams = {
                     entityType: authorizer.ENTITY_TYPES.PROJECT,
                 };
+
                 safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                 return safeStorage.openDatabase();
-
             })
             .then(function () {
                 return Q.allDone([
@@ -74,13 +72,7 @@ describe('standalone http server with authentication turned on', function () {
                         logger: logger
                     })
                 ]);
-            });
-
-        server = WebGME.standaloneServer(gmeConfig);
-        serverBaseUrl = server.getUrl();
-        server.start(serverReady.makeNodeResolver());
-
-        Q.allDone([serverReady, dbConn])
+            })
             .then(function () {
                 return gmeAuth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
             })
@@ -101,6 +93,12 @@ describe('standalone http server with authentication turned on', function () {
                         delete: false
                     }
                 );
+            })
+            .then(function () {
+                server = WebGME.standaloneServer(gmeConfig);
+                serverBaseUrl = server.getUrl();
+
+                return Q.ninvoke(server, 'start');
             })
             .nodeify(done);
     });
