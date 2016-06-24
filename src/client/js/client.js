@@ -1691,6 +1691,7 @@ define([
             //console.timeEnd('getModifiedNodes');
             state.nodes = state.loadNodes;
             state.loadNodes = {};
+            self.getAllMetaNodes(); //This ensures that all language elements can be accessed with getNode
 
             state.inLoading = false;
             state.rootHash = state.loading.rootHash;

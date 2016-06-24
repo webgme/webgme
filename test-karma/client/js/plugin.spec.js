@@ -95,7 +95,7 @@ describe('Plugin', function () {
     });
 
     it('filterPlugins - should read from root-node when given nodePath not loaded.', function () {
-        var filtered = client.filterPlugins(allPlugins, '/1');
+        var filtered = client.filterPlugins(allPlugins, '/i');
         expect(filtered.length).to.equal(2);
         expect(filtered).to.include('MinimalWorkingExample', 'PluginGenerator');
     });
