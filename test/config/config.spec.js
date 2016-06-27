@@ -7,6 +7,7 @@ describe('configuration', function () {
     'use strict';
 
     var should = require('chai').should(),
+        expect = require('chai').expect,
         oldNodeEnv = process.env.NODE_ENV || '',
         path = require('path'),
         getClientConfig = require('../../config/getclientconfig'),
@@ -125,14 +126,14 @@ describe('configuration', function () {
         should.equal(clientConfig.executor.hasOwnProperty('nonce'), false);
     });
 
-    it('clientconfig should not expose server', function () {
+    it('clientconfig should only expose the port of the server', function () {
         var config,
             clientConfig;
         process.env.NODE_ENV = '';
         config = require('../../config');
         clientConfig = getClientConfig(config);
 
-        should.equal(clientConfig.hasOwnProperty('server'), false);
+        expect(clientConfig.server).to.deep.equal({port: config.server.port});
     });
 
     it('clientconfig should not expose authentication.jwt.private/publicKey', function () {
