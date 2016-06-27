@@ -510,17 +510,19 @@ define([
 
         return self.project.getBranchHash(self.branchName)
             .then(function (branchHash) {
-                options = {
-                    activeNode: self.core.getPath(self.activeNode),
-                    activeSelection: self.activeSelection.forEach(function (node) {
-                        return self.core.getPath(node);
-                    }),
-                    namespace: self.namespace
-                };
-
-                if (branchHash === self.currentHash) {
+                if (branchHash === '') {
+                    throw new Error('Branch does not exist [' + self.branchName + ']');
+                } else if (branchHash === self.currentHash) {
                     return false;
                 } else {
+                    options = {
+                        activeNode: self.core.getPath(self.activeNode),
+                        activeSelection: self.activeSelection.forEach(function (node) {
+                            return self.core.getPath(node);
+                        }),
+                        namespace: self.namespace
+                    };
+
                     return pluginUtil.loadNodesAtCommitHash(
                         self.project,
                         self.core,

@@ -1,0 +1,13 @@
+{
+  "id": "FastForward",
+  "name": "Fast Forward",
+  "version": "2.2.0",
+  "description": "",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cogs"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "configStructure": []
+}

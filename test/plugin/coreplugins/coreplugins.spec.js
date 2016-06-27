@@ -33,7 +33,8 @@ describe('CorePlugins', function () {
             'MultipleMainCallbackCalls',
             'PluginForked',
             'InvalidActiveNode',
-            'ConstraintEvaluator'
+            'ConstraintEvaluator',
+            'FastForward'
         ],
 
         pluginsShouldFail = [
