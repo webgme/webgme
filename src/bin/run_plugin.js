@@ -27,7 +27,9 @@ main = function (argv, callback) {
         project,
         projectName,
         pluginName,
-        pluginConfig;
+        pluginConfig,
+        err,
+        pluginResult;
 
     function list(val) {
         return val.split(',');
@@ -137,12 +139,29 @@ main = function (argv, callback) {
                     branchName: program.branchName,
                     commitHash: commitHash,
                     namespace: program.namespace
-                };
+                },
+                executeDeferred = Q.defer();
 
             pluginManager.projectAccess = projectAccess;
 
             pluginManager.executePlugin(pluginName, pluginConfig, context,
-                function (err, pluginResult) {
+                function (err_, pluginResult_) {
+                    err = err_;
+                    pluginResult = pluginResult_;
+                    executeDeferred.resolve();
+                }
+            );
+
+            return executeDeferred.promise;
+        })
+        .catch(function (err_) {
+            err = err_;
+        })
+        .finally(function () {
+            logger.debug('Closing database connections...');
+            return Q.allSettled([storage.closeDatabase(), gmeAuth.unload()])
+                .finally(function () {
+                    logger.debug('Closed.');
                     if (pluginResult) {
                         // The caller of this will have to check the result.success..
                         deferred.resolve(pluginResult);
@@ -151,10 +170,8 @@ main = function (argv, callback) {
                     } else {
                         deferred.reject(new Error('No error nor any plugin result was returned!?'));
                     }
-                }
-            );
-        })
-        .catch(deferred.reject);
+                });
+        });
 
     return deferred.promise.nodeify(callback);
 };
