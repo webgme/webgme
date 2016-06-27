@@ -75,19 +75,9 @@ describe('Run plugin CLI', function () {
     });
 
     describe('as a library', function () {
-        var runPlugin = require('../../src/bin/run_plugin'),
-            oldProcessExit = process.exit;
-
-        afterEach(function () {
-            process.exit = oldProcessExit;
-        });
+        var runPlugin = require('../../src/bin/run_plugin');
 
         it('should run the Minimal Working Example plugin', function (done) {
-            process.exit = function (code) {
-                expect(code).to.equal(0);
-                done();
-            };
-
             runPlugin.main(['node', filename, 'MinimalWorkingExample', projectName],
                 function (err, result) {
                     if (err) {
@@ -96,35 +86,32 @@ describe('Run plugin CLI', function () {
                     }
                     expect(result.success).to.equal(true);
                     expect(result.error).to.equal(null);
+                    done();
                 }
             );
         });
 
-        it('should run the Minimal Working Example plugin and fail with configuration file', function (done) {
-            process.exit = function (code) {
-                expect(code).to.equal(1);
-                done();
-            };
-
+        it('should run the Minimal Working Example plugin and return with error in plugin-result', function (done) {
             runPlugin.main(['node', filename, 'MinimalWorkingExample', projectName,
                     '-j', './test/bin/run_plugin/MinimalWorkingExample.config.json'],
-                function (err) {
+                function (err, pluginResult) {
                     if (err) {
-                        expect(err).to.match(/Failed on purpose./);
+                        done(err);
                         return;
                     }
-                    done(new Error('should have failed to run plugin'));
+
+                    if (pluginResult.success === true) {
+                        done(new Error('should have failed to run plugin'));
+                    } else {
+                        expect(pluginResult.error).to.include('Failed on purpose');
+                        done();
+                    }
                 }
             );
         });
 
 
         it('should run the Minimal Working Example plugin if owner is specified', function (done) {
-            process.exit = function (code) {
-                expect(code).to.equal(0);
-                done();
-            };
-
             runPlugin.main(['node', filename, 'MinimalWorkingExample', projectName,
                     '-o', gmeConfig.authentication.guestAccount],
                 function (err, result) {
@@ -134,20 +121,17 @@ describe('Run plugin CLI', function () {
                     }
                     expect(result.success).to.equal(true);
                     expect(result.error).to.equal(null);
+                    done();
                 }
             );
         });
 
         it('should fail to run the Minimal Working Example plugin if does not have access to project', function (done) {
-            process.exit = function (code) {
-                expect(code).to.equal(1);
-                done();
-            };
-
             runPlugin.main(['node', filename, 'MinimalWorkingExample', 'not_authorized_project'],
                 function (err) {
                     if (err) {
                         expect(err).to.match(/Not authorized to read project/);
+                        done();
                         return;
                     }
                     done(new Error('should have failed to run plugin'));

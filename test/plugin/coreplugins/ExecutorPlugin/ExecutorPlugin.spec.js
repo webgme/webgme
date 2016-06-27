@@ -33,8 +33,7 @@ describe('Executor Plugin', function () {
 
         path = require('path'),
         runPlugin = require('../../../../src/bin/run_plugin'),
-        filename = path.normalize('../../../../src/bin/run_plugin.js'),
-        oldProcessExit = process.exit;
+        filename = path.normalize('../../../../src/bin/run_plugin.js');
 
 
     // COPY PASTED CODE STARTS FROM test/server/middleware/executor/worker/node_worker.spec.js
@@ -170,10 +169,6 @@ describe('Executor Plugin', function () {
 
         // COPY PASTED CODE ENDS FROM test/server/middleware/executor/worker/node_worker.spec.js
 
-        afterEach(function () {
-            process.exit = oldProcessExit;
-        });
-
         it('should run ExecutorPlugin and update the model', function (done) {
             var configFileName = './test/plugin/coreplugins/ExecutorPlugin/config.' + platform + '.json',
                 args = [
@@ -189,11 +184,6 @@ describe('Executor Plugin', function () {
                     'b1'];
 
             this.timeout(10000);
-
-            process.exit = function (code) {
-                expect(code).to.equal(0);
-            };
-
 
             Q.ninvoke(runPlugin, 'main', args)
                 .then(function (result) {
@@ -238,11 +228,6 @@ describe('Executor Plugin', function () {
 
             this.timeout(10000);
 
-            process.exit = function (code) {
-                expect(code).to.equal(0);
-            };
-
-
             Q.ninvoke(runPlugin, 'main', args)
                 .then(function (result) {
                     expect(result.success).to.equal(true);
@@ -262,16 +247,15 @@ describe('Executor Plugin', function () {
 
             this.timeout(10000);
 
-            process.exit = function (code) {
-                expect(code).to.equal(1);
-                //done();
-            };
-
-
             runPlugin.main(['node', filename, 'ExecutorPlugin', projectName, '-j', configFileName],
                 function (err, result) {
-                    expect(err).to.equal('No activeNode specified or rootNode. Execute on any other node.');
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+
                     expect(result.success).to.equal(false);
+                    expect(result.error).to.equal('No activeNode specified or rootNode. Execute on any other node.');
                     done();
                 });
         });
@@ -281,15 +265,11 @@ describe('Executor Plugin', function () {
 
             this.timeout(10000);
 
-            process.exit = function (code) {
-                expect(code).to.equal(1);
-            };
-
-
             runPlugin.main(['node', filename, 'ExecutorPlugin', projectName, '-s', '/1', '-j', configFileName],
                 function (err, result) {
                     try {
-                        expect(err.message).to.include('Job execution failed');
+                        expect(err).to.equal(null);
+                        expect(result.error).to.include('Job execution failed');
                         expect(result.success).to.equal(false);
                         expect(result.artifacts instanceof Array).to.equal(true);
                         expect(result.artifacts.length).to.equal(4);

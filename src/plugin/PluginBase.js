@@ -14,8 +14,9 @@ define([
     'plugin/PluginResult',
     'plugin/PluginMessage',
     'plugin/PluginNodeDescription',
-    'common/storage/constants',
-], function (PluginConfig, PluginResult, PluginMessage, PluginNodeDescription, STORAGE_CONSTANTS) {
+    'plugin/util',
+    'common/storage/constants'
+], function (PluginConfig, PluginResult, PluginMessage, PluginNodeDescription, pluginUtil, STORAGE_CONSTANTS) {
     'use strict';
 
     /**
@@ -494,6 +495,63 @@ define([
     };
 
     /**
+     * If plugin is started from a branch - it will reload the instance's nodes and update the currentHash to
+     * the current hash of the branch.
+     *
+     * N.B. Use this with caution, for instance manually referenced nodes in a plugin will still be part of the
+     * previous commit. Additionally if the namespaces have changed between commits - the this.META might end up
+     * being empty.
+     *
+     * @param {function(Error, boolean)} callback - Resolved with true if branch had moved forward.
+     */
+    PluginBase.prototype.fastForward = function (callback) {
+        var self = this,
+            options;
+
+        return self.project.getBranchHash(self.branchName)
+            .then(function (branchHash) {
+                if (branchHash === '') {
+                    throw new Error('Branch does not exist [' + self.branchName + ']');
+                } else if (branchHash === self.currentHash) {
+                    return false;
+                } else {
+                    options = {
+                        activeNode: self.core.getPath(self.activeNode),
+                        activeSelection: self.activeSelection.forEach(function (node) {
+                            return self.core.getPath(node);
+                        }),
+                        namespace: self.namespace
+                    };
+
+                    return pluginUtil.loadNodesAtCommitHash(
+                        self.project,
+                        self.core,
+                        branchHash,
+                        self.logger,
+                        options
+                    );
+                }
+            })
+            .then(function (result) {
+                var didUpdate;
+
+                if (result === false) {
+                    didUpdate = false;
+                } else {
+                    self.currentHash = result.commitHash;
+                    self.rootNode = result.rootNode;
+                    self.activeNode = result.activeNode;
+                    self.activeSelection = result.activeSelection;
+                    self.META = result.META;
+                    didUpdate = true;
+                }
+
+                return didUpdate;
+            })
+            .nodeify(callback);
+    };
+
+    /**
      * Adds the commit to the results. N.B. if you're using your own save method - make sure to update
      * this.currentHash and this.branchName accordingly before adding the commit.
      *
@@ -505,6 +563,7 @@ define([
             branchName: this.branchName,
             status: status
         };
+
         this.result.addCommit(newCommit);
         this.logger.debug('newCommit added', newCommit);
     };
@@ -516,7 +575,7 @@ define([
      * @returns {Error} - returns undefined if valid and an Error if not.
      */
     PluginBase.prototype.isInvalidActiveNode = function (pluginId) {
-        var validPlugins = this.core.getRegistry(this.activeNode,  'validPlugins') || '';
+        var validPlugins = this.core.getRegistry(this.activeNode, 'validPlugins') || '';
         this.logger.debug('validPlugins for activeNode', validPlugins);
 
         if (validPlugins.split(' ').indexOf(pluginId) === -1) {
@@ -540,10 +599,12 @@ define([
         } else {
             this.logger = console;
         }
+
         if (!gmeConfig) {
             // TODO: Remove this check at some point
             throw new Error('gmeConfig was not provided to Plugin.initialize!');
         }
+
         this.blobClient = blobClient;
         this.gmeConfig = gmeConfig;
 
@@ -595,9 +656,8 @@ define([
      * @returns {PluginConfig}
      */
     PluginBase.prototype.getDefaultConfig = function () {
-        var configStructure = this.getConfigStructure();
-
-        var defaultConfig = new PluginConfig();
+        var configStructure = this.getConfigStructure(),
+            defaultConfig = new PluginConfig();
 
         for (var i = 0; i < configStructure.length; i += 1) {
             defaultConfig[configStructure[i].name] = configStructure[i].value;
