@@ -6,9 +6,11 @@
 
 function getClientConfig(gmeConfig) {
     'use strict';
-    var clientConfig = JSON.parse(JSON.stringify(gmeConfig));
+    var clientConfig = JSON.parse(JSON.stringify(gmeConfig)),
+        serverPort = clientConfig.server.port; // This is only needed for the karma tests.
 
     delete clientConfig.server;
+    clientConfig.server = {port: serverPort};
 
     delete clientConfig.authentication.jwt.expiresIn;
     delete clientConfig.authentication.jwt.renewBeforeExpires;
