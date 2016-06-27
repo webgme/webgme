@@ -66,11 +66,12 @@ define(['js/logger',
         if (typeof options.start === 'string') {
             options.historyType = 'branch';
             this._selectedValue = options.start;
-        } else if (typeof options.start === 'object' && options.start instanceof Array) {
+        } else if (typeof options.start === 'object' && options.start instanceof Array && options.start.length > 0) {
             options.historyType = 'branches';
             this._selectedValue = '$allBranches';
         } else {
             options.historyType = 'commits';
+            options.start = null;
             this._selectedValue = '$commits';
         }
 

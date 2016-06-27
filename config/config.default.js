@@ -20,8 +20,10 @@ var path = require('path'),
             },
 
             allowGuests: true,
+            allowUserRegistration: true,
             guestAccount: 'guest',
-            logOutUrl: '/',
+            logOutUrl: '/profile/login',
+            logInUrl: '/profile/login',
             salts: 10,
             jwt: {
                 expiresIn: 3600 * 24 * 7,

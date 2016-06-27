@@ -88,7 +88,7 @@
 
         <div class="row">
             <div class="col-md-12">
-                <input id="username_input" name="username" type="text" autocomplete="off" class="input-block-level"
+                <input id="username_input" name="userId" type="text" autocomplete="off" class="input-block-level"
                        placeholder="Username">
             </div>
             <div class="col-md-12">
@@ -144,7 +144,7 @@
     } else {
         $('#username_input').focus();
     }
-    var username = getParameterByName('username');
+    var username = getParameterByName('userId');
     if (username) {
         document.getElementById('username_input').value = username;
     }

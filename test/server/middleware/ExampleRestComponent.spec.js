@@ -33,11 +33,12 @@ describe('ExampleRestComponent', function () {
             });
         });
 
-        it('/rest/external/ExampleRestComponent should return 302 with auth and no guests', function (done) {
+        it('/rest/external/ExampleRestComponent should return redirect with auth and no guests', function (done) {
             var gmeConfig = testFixture.getGmeConfig();
             server = null;
             gmeConfig.authentication.enable = true;
             gmeConfig.authentication.allowGuests = false;
+
             gmeConfig.rest.components.ExampleRestComponent = './middleware/ExampleRestComponent';
             server = webGME.standaloneServer(gmeConfig);
             server.start(function () {
@@ -46,8 +47,27 @@ describe('ExampleRestComponent', function () {
                     expect(err).equal(null);
                     expect(res.status).equal(200);
                     res.redirects.should.deep.equal([
-                        'http://127.0.0.1:9001/login?redirect=%2Frest%2Fexternal%2FExampleRestComponent%2F'
+                        'http://127.0.0.1:9001' + gmeConfig.authentication.logInUrl +
+                        '?redirect=%2Frest%2Fexternal%2FExampleRestComponent%2F'
                     ]);
+                    done();
+                });
+            });
+        });
+
+        it('/rest/external/ExampleRestComponent should 401 with auth, no guests and no logInUrl', function (done) {
+            var gmeConfig = testFixture.getGmeConfig();
+            server = null;
+            gmeConfig.authentication.enable = true;
+            gmeConfig.authentication.allowGuests = false;
+            gmeConfig.authentication.logInUrl = '';
+
+            gmeConfig.rest.components.ExampleRestComponent = './middleware/ExampleRestComponent';
+            server = webGME.standaloneServer(gmeConfig);
+            server.start(function () {
+                var serverBaseUrl = server.getUrl();
+                agent.get(serverBaseUrl + '/rest/external/ExampleRestComponent/').end(function (err, res) {
+                    expect(res.status).equal(401);
                     done();
                 });
             });

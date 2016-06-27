@@ -7,6 +7,7 @@ describe('configuration', function () {
     'use strict';
 
     var should = require('chai').should(),
+        expect = require('chai').expect,
         oldNodeEnv = process.env.NODE_ENV || '',
         path = require('path'),
         getClientConfig = require('../../config/getclientconfig'),
@@ -125,13 +126,45 @@ describe('configuration', function () {
         should.equal(clientConfig.executor.hasOwnProperty('nonce'), false);
     });
 
-    it('clientconfig should not expose server.sessionCookieSecret', function () {
+    it('clientconfig should only expose the port of the server', function () {
         var config,
             clientConfig;
         process.env.NODE_ENV = '';
         config = require('../../config');
         clientConfig = getClientConfig(config);
 
-        should.equal(clientConfig.server.hasOwnProperty('sessionCookieSecret'), false);
+        expect(clientConfig.server).to.deep.equal({port: config.server.port});
+    });
+
+    it('clientconfig should not expose authentication.jwt.private/publicKey', function () {
+        var config,
+            clientConfig;
+        process.env.NODE_ENV = '';
+        config = require('../../config');
+        clientConfig = getClientConfig(config);
+
+        should.equal(clientConfig.authentication.jwt.hasOwnProperty('privateKey'), false);
+        should.equal(clientConfig.authentication.jwt.hasOwnProperty('publicKey'), false);
+    });
+
+    it('clientconfig should not expose storage.database', function () {
+        var config,
+            clientConfig;
+        process.env.NODE_ENV = '';
+        config = require('../../config');
+        clientConfig = getClientConfig(config);
+
+        should.equal(clientConfig.storage.hasOwnProperty('database'), false);
+    });
+
+    it('clientconfig should not expose socketIO.serverOptions nor socketIO.adapter', function () {
+        var config,
+            clientConfig;
+        process.env.NODE_ENV = '';
+        config = require('../../config');
+        clientConfig = getClientConfig(config);
+
+        should.equal(clientConfig.socketIO.hasOwnProperty('serverOptions'), false);
+        should.equal(clientConfig.socketIO.hasOwnProperty('adapter'), false);
     });
 });
