@@ -4,11 +4,10 @@
  * @author lattmann / https://github.com/lattmann
  * @author pmeijer / https://github.com/pmeijer
  */
-
+'use strict';
 var main;
 
 main = function (argv, callback) {
-    'use strict';
     var path = require('path'),
         configDir = path.join(process.cwd(), 'config'),
         gmeConfig = require(configDir),
@@ -16,6 +15,7 @@ main = function (argv, callback) {
         MongoURI = require('mongo-uri'),
         Command = require('commander').Command,
         logger = webgme.Logger.create('gme:bin:runplugin', gmeConfig.bin.log),
+        Q = require('q'),
         program = new Command(),
         params,
         storage,
@@ -23,13 +23,11 @@ main = function (argv, callback) {
         gmeAuth,
         STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
         PluginCliManager = webgme.PluginCliManager,
+        deferred = Q.defer(),
         project,
         projectName,
         pluginName,
         pluginConfig;
-
-    callback = callback || function () {
-        };
 
     function list(val) {
         return val.split(',');
@@ -73,9 +71,9 @@ main = function (argv, callback) {
         .parse(argv);
 
     if (program.args.length < 2) {
-        callback('A project and pluginName must be specified.');
         program.help();
-        return;
+        deferred.reject(new Error('A project and pluginName must be specified.'));
+        return deferred.promise.nodeify(callback);
     }
 
     // this line throws a TypeError for invalid databaseConnectionString
@@ -145,23 +143,20 @@ main = function (argv, callback) {
 
             pluginManager.executePlugin(pluginName, pluginConfig, context,
                 function (err, pluginResult) {
-                    if (err) {
-                        logger.error('execution stopped:', err, pluginResult);
-                        callback(err, pluginResult);
-                        process.exit(1);
+                    if (pluginResult) {
+                        // The caller of this will have to check the result.success..
+                        deferred.resolve(pluginResult);
+                    } else if (err) {
+                        deferred.reject(err instanceof Error ? err : new Error(err));
                     } else {
-                        logger.info('execution was successful:', err, pluginResult);
-                        callback(err, pluginResult);
-                        process.exit(0);
+                        deferred.reject(new Error('No error nor any plugin result was returned!?'));
                     }
                 }
             );
         })
-        .catch(function (err) {
-            logger.error('Could not open the project or branch', err.message);
-            callback(err);
-            process.exit(1);
-        });
+        .catch(deferred.reject);
+
+    return deferred.promise.nodeify(callback);
 };
 
 module.exports = {
@@ -169,5 +164,18 @@ module.exports = {
 };
 
 if (require.main === module) {
-    main(process.argv);
+    main(process.argv)
+        .then(function (pluginResult) {
+            if (pluginResult.success === true) {
+                console.info('execution was successful:', JSON.stringify(pluginResult, null, 2));
+                process.exit(0);
+            } else {
+                console.error('execution failed:', JSON.stringify(pluginResult, null, 2));
+                process.exit(1);
+            }
+        })
+        .catch(function (err) {
+            console.error('Could not open the project or branch', err);
+            process.exit(1);
+        });
 }
