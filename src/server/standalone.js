@@ -20,6 +20,7 @@ var Path = require('path'),
     multipart = require('connect-multiparty'),
     Http = require('http'),
     URL = require('url'),
+    systemdSocket = require('systemd-socket'),
     ejs = requireJS('common/util/ejs'),
 
     MongoAdapter = require('./storage/mongo'),
@@ -193,9 +194,19 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
-        __httpServer.listen(gmeConfig.server.port, function () {
+        // something link
+        // https://github.com/rubenv/node-autoquit
+        // should be considered to shut the service down if it
+        // is not getting much use.
+
+        // https://github.com/herzi/systemd-socket
+        // https://nodejs.org/api/http.html#http_server_listen_handle_callback
+        __httpServer.listen(systemdSocket(0) || gmeConfig.server.port, function () {
             // Note: the listening function does not return with an error, errors are handled by the error event
-            logger.debug('Http server is listening on ', {metadata: {port: gmeConfig.server.port}});
+            logger.debug('Http server is listening on ',
+                          {metadata: {fd: systemdSocket,
+                                      port: gmeConfig.server.port,
+                                      systemd: process.env.LISTEN_FDS}});
             serverDeferred.resolve();
         });
 
