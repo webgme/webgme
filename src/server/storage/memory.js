@@ -458,7 +458,7 @@ function Memory(mainLogger, gmeConfig) {
                     storage.removeItem(oldProjectKey);
                 }
 
-                deferred.resolve();
+                deferred.resolve(new MemoryProject(newProjectId));
             }
         } else {
             deferred.reject(new Error('Database is not open.'));

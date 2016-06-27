@@ -440,14 +440,14 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
                     };
 
                 if (ownerRights && ownerRights.write !== true) {
-                    throw new Error('Not authorized to create project for [' + data.newOwnerId + ']');
+                    throw new Error('Not authorized to create project for [' + data.ownerId + ']');
                 }
 
                 return self.metadataStorage.addProject(data.ownerId, data.projectName, info);
             })
-            .then(function (projectId) {
-                data.projectId = projectId;
-                return self.authorizer.setAccessRights(data.ownerId, projectId, {
+            .then(function (newProjectId) {
+                data.newProjectId = newProjectId;
+                return self.authorizer.setAccessRights(data.ownerId, newProjectId, {
                     read: true,
                     write: true,
                     delete: true

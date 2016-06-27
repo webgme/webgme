@@ -1647,7 +1647,9 @@ describe('SafeStorage', function () {
             notInOrgCanNotCreate = 'notInOrgCanNotCreate',
             notInOrgCanCreate = 'notInOrgCanCreate',
             inOrgCanCreateNotAdmin = 'inOrgCanCreateNotAdmin',
-            inOrgCanCreateAdmin = 'inOrgCanCreateAdmin';
+            inOrgCanCreateAdmin = 'inOrgCanCreateAdmin',
+            pName = 'project_creation_transfer',
+            pId;
 
         function getProjectData(projects, projectId) {
             var res;
@@ -1678,6 +1680,24 @@ describe('SafeStorage', function () {
                 .then(function () {
                     safeStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
                     return safeStorage.openDatabase();
+                })
+                .then(function () {
+                    return testFixture.importProject(safeStorage, {
+                        projectSeed: 'seeds/EmptyProject.webgmex',
+                        projectName: pName,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (res) {
+                    pId = res.project.projectId;
+                    return gmeAuth.authorizer.setAccessRights(notInOrgCanNotCreate, pId, {
+                        read: true,
+                        write: true,
+                        delete: true
+                    }, {
+                        entityType: gmeAuth.authorizer.ENTITY_TYPES.PROJECT
+                    });
                 })
                 .nodeify(done);
         });
@@ -2036,6 +2056,108 @@ describe('SafeStorage', function () {
                 })
                 .done();
         });
+
+        it('should make a duplicate of a project', function (done) {
+            var data = {
+                projectName: 'dup',
+                projectId: pId
+            };
+
+            safeStorage.duplicateProject(data)
+                .then(function (project) {
+                    expect(project.projectId).to.equal('guest+' + data.projectName);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to make a duplicate of a project if ownerId not string', function (done) {
+            var data = {
+                ownerId: {a: 10},
+                projectName: 'dup',
+                projectId: pId
+            };
+
+            safeStorage.duplicateProject(data)
+                .then(function () {
+                    throw new Error('Should have failed');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.include('Invalid argument, data.ownerId is not a string');
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to make a duplicate of a project if already exists', function (done) {
+            var data = {
+                username: 'guest',
+                projectName: pName,
+                projectId: pId
+            };
+
+            safeStorage.duplicateProject(data)
+                .then(function () {
+                    throw new Error('Should have failed');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.include('Project already exists');
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to make a duplicate of a project that does not exist', function (done) {
+            var data = {
+                username: 'guest',
+                projectName: 'willNotBeCreated',
+                projectId: 'guest+DoesNotExist'
+            };
+
+            safeStorage.duplicateProject(data)
+                .then(function () {
+                    throw new Error('Should have failed');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.include('Not authorized to read project');
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to make a duplicate of a project when it is disabled', function (done) {
+            var data = {
+                username: 'guest',
+                projectName: 'willNotBeCreated',
+                projectId: pId
+            };
+
+            safeStorage.gmeConfig.seedProjects.allowDuplication = false;
+
+            safeStorage.duplicateProject(data)
+                .then(function () {
+                    throw new Error('Should have failed');
+                })
+                .catch(function (err) {
+                    safeStorage.gmeConfig.seedProjects.allowDuplication = true;
+                    expect(err.message).to.include('gmeConfig.seedProjects.allowDuplication is set to false');
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to make a duplicate if not allowed to create', function (done) {
+            var data = {
+                username: notInOrgCanNotCreate,
+                projectName: 'willNotBeCreated',
+                projectId: pId
+            };
+
+            safeStorage.duplicateProject(data)
+                .then(function () {
+                    throw new Error('Should have failed');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.include('Not authorized to create project for [' + notInOrgCanNotCreate);
+                })
+                .nodeify(done);
+        });
+
     });
 
     describe('CommonAncestorCommit', function () {

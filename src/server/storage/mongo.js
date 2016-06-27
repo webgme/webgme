@@ -503,7 +503,8 @@ function Mongo(mainLogger, gmeConfig) {
             })
             .then(function () {
                 return newProject;
-            });
+            })
+            .nodeify(callback);
     }
 
     this.openDatabase = openDatabase;
