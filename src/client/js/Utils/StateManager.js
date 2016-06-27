@@ -104,8 +104,19 @@ define([
 
             getSuppressVisualizerFromNode: function () {
                 return this.get(CONSTANTS.STATE_SUPPRESS_VISUALIZER_FROM_NODE);
-            }
+            },
 
+            /**
+             * For this to take action the page needs to be refreshed.
+             * @param {string} layout - Name of layout
+             */
+            registerLayout: function (layout) {
+                this.set(CONSTANTS.STATE_LAYOUT, layout);
+            },
+
+            getLayout: function () {
+                return this.get(CONSTANTS.STATE_LAYOUT);
+            }
         }),
         _initialize = function () {
             //if already initialized, just return

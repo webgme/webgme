@@ -86,6 +86,8 @@ define([
         STATE_ACTIVE_TAB: 'activeTab',
         STATE_SUPPRESS_VISUALIZER_FROM_NODE: 'suppressVisualizerFromNode',
 
+        STATE_LAYOUT: 'layout',
+
         /* ASPECTS */
         ASPECT_ALL: 'All',
 
