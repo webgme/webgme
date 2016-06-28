@@ -261,7 +261,7 @@ describe('Webhook Manager', function () {
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
 
-            storage.send(CONSTANTS.PROJECT_DELETED, eventData);
+            storage.send(CONSTANTS.COMMIT, eventData);
         });
 
         it('should not forward BRANCH_UPDATED event', function (done) {

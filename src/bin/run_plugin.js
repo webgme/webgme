@@ -38,7 +38,7 @@ main = function (argv, callback) {
     webgme.addToRequireJsPaths(gmeConfig);
 
     program
-        .version('0.14.0')
+        .version('2.1.0')
         .arguments('<pluginName> <projectName>')
         .option('-b, --branchName [string]', 'Name of the branch to load and save to.', 'master')
         .option('-c, --commitHash [string]', 'Commit hash to run from, if set branch will only be used for update.')
