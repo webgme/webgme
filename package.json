@@ -63,7 +63,9 @@
     "superagent": "1.7.2",
     "underscore": "1.8.3",
     "unzip": "0.1.11",
-    "user-management-page": "webgme/user-management-page#master",    "webhook-manager": "webgme/webhook-manager#master",    "winston": "2.2.0"
+    "user-management-page": "webgme/user-management-page#master",
+    "webhook-manager": "webgme/webhook-manager",
+    "winston": "2.2.0"
   },
   "devDependencies": {
     "chai": "3.5.0",
