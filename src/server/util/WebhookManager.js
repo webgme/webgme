@@ -1,45 +1,80 @@
+/*globals requireJS*/
+/*jshint node: true*/
+
 /**
  * @author kecso / https://github.com/kecso
  */
-var MessageSender = require('webhook-manager/src/hookMessager'),
+
+'use strict';
+
+var HookMessenger = require('webhook-manager/src/hookMessenger'),
     CONSTANTS = requireJS('common/storage/constants'),
     fork = require('child_process').fork,
-    path = require('path'),
     Q = require('q');
 
-function memoryManager(storage, logger, gmeConfig) {
-    var messageHandler = new MessageSender({
+function MemoryManager(storage, mainLogger, gmeConfig) {
+    var hookMessenger = new HookMessenger({
         uri: gmeConfig.mongo.uri,
-        collection: '_projects'
+        collection: '_projects',
+        logger: mainLogger.fork('hookMessenger')
     });
 
+    /**
+     * Since the web-socket portion temporarily appends a socket to the eventData
+     * (to know if it should broadcast or not) we need to ensure that we don't send that data here.
+     *
+     * @param {object} data - event data from storage.
+     * @returns {object} data if it does not have socket, otherwise a shallow copy without the socket.
+     */
+    function ensureNoSocket(data) {
+        var cleanData,
+            key;
+
+        if (data.hasOwnProperty('socket')) {
+            cleanData = {};
+            for (key in data) {
+                if (key !== 'socket') {
+                    cleanData[key] = data[key];
+                }
+            }
+        } else {
+            cleanData = data;
+        }
+
+        return cleanData;
+    }
+
     function projectDeleted(_s, data) {
-        messageHandler.send(CONSTANTS.PROJECT_DELETED, data);
+        hookMessenger.send(CONSTANTS.PROJECT_DELETED, ensureNoSocket(data));
     }
 
     function branchDeleted(_s, data) {
-        messageHandler.send(CONSTANTS.BRANCH_DELETED, data);
+        hookMessenger.send(CONSTANTS.BRANCH_DELETED, ensureNoSocket(data));
     }
 
     function branchCreated(_s, data) {
-        messageHandler.send(CONSTANTS.BRANCH_CREATED, data);
+        hookMessenger.send(CONSTANTS.BRANCH_CREATED, ensureNoSocket(data));
     }
 
     function branchUpdated(_s, data) {
-        messageHandler.send(CONSTANTS.BRANCH_HASH_UPDATED, data);
+        hookMessenger.send(CONSTANTS.BRANCH_HASH_UPDATED, ensureNoSocket(data));
     }
 
     function tagCreated(_s, data) {
-        messageHandler.send(CONSTANTS.TAG_CREATED, data);
+        hookMessenger.send(CONSTANTS.TAG_CREATED, ensureNoSocket(data));
     }
 
     function tagDeleted(_s, data) {
-        messageHandler.send(CONSTANTS.TAG_DELETED, data);
+        hookMessenger.send(CONSTANTS.TAG_DELETED, ensureNoSocket(data));
+    }
+
+    function commit(_s, data) {
+        hookMessenger.send(CONSTANTS.COMMIT, ensureNoSocket(data));
     }
 
     function start(callback) {
         var deferred = Q.defer();
-        messageHandler.start(function (err) {
+        hookMessenger.start(function (err) {
             if (err) {
                 deferred.reject(err);
             } else {
@@ -49,6 +84,7 @@ function memoryManager(storage, logger, gmeConfig) {
                 storage.addEventListener(CONSTANTS.BRANCH_HASH_UPDATED, branchUpdated);
                 storage.addEventListener(CONSTANTS.TAG_CREATED, tagCreated);
                 storage.addEventListener(CONSTANTS.TAG_DELETED, tagDeleted);
+                storage.addEventListener(CONSTANTS.COMMIT, commit);
                 deferred.resolve();
             }
         });
@@ -64,7 +100,8 @@ function memoryManager(storage, logger, gmeConfig) {
         storage.removeEventListener(branchUpdated);
         storage.removeEventListener(tagCreated);
         storage.removeEventListener(tagDeleted);
-        messageHandler.stop(function (err) {
+        storage.removeEventListener(commit);
+        hookMessenger.stop(function (err) {
             if (err) {
                 deferred.reject(err);
             } else {
@@ -80,8 +117,9 @@ function memoryManager(storage, logger, gmeConfig) {
     };
 }
 
-function redisManager(logger, gmeConfig) {
+function RedisManager(mainLogger, gmeConfig) {
     var managerProcess = null,
+        logger = mainLogger.fork('RedisManager'),
         initialized = false;
 
     function start(callback) {
@@ -105,7 +143,7 @@ function redisManager(logger, gmeConfig) {
                 }
             });
 
-            managerProcess.stdout.on('data', function (data) {
+            managerProcess.stdout.on('data', function (/*data*/) {
                 if (!initialized) {
                     initialized = true;
                     deferred.resolve();
@@ -137,15 +175,15 @@ function redisManager(logger, gmeConfig) {
     };
 }
 
-function WebhookManager(storage, logger, gmeConfig) {
+function WebhookManager(storage, mainLogger, gmeConfig) {
 
     switch (gmeConfig.webhooks.manager) {
         case 'memory':
-            return new memoryManager(storage, logger.fork('memoryWebhookManager'), gmeConfig);
+            return new MemoryManager(storage, mainLogger, gmeConfig);
         case 'redis':
-            return new redisManager(logger.fork('redisWebhookManager'), gmeConfig);
+            return new RedisManager(mainLogger, gmeConfig);
         default:
-            logger.error('invalid configuration for webhooks', gmeConfig);
+            mainLogger.error('invalid configuration for webhooks', gmeConfig);
     }
 }
 

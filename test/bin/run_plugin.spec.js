@@ -17,6 +17,7 @@ describe('Run plugin CLI', function () {
         filename = require('path').normalize('src/bin/run_plugin.js'),
         projectName = 'runPluginCLI',
         gmeAuth,
+        commitHash,
         Q = testFixture.Q;
 
     before(function (done) {
@@ -35,6 +36,10 @@ describe('Run plugin CLI', function () {
                     gmeConfig: gmeConfig,
                     logger: logger
                 });
+            })
+            .then(function (ir) {
+                commitHash = ir.commitHash;
+                return ir.project.createBranch('b1', commitHash);
             })
             .nodeify(done);
     });
@@ -79,6 +84,20 @@ describe('Run plugin CLI', function () {
 
         it('should run the Minimal Working Example plugin', function (done) {
             runPlugin.main(['node', filename, 'MinimalWorkingExample', projectName],
+                function (err, result) {
+                    if (err) {
+                        done(new Error(err));
+                        return;
+                    }
+                    expect(result.success).to.equal(true);
+                    expect(result.error).to.equal(null);
+                    done();
+                }
+            );
+        });
+
+        it('should run the Minimal Working Example plugin from commitHash', function (done) {
+            runPlugin.main(['node', filename, 'MinimalWorkingExample', projectName, '-c', commitHash, '-b', 'b1'],
                 function (err, result) {
                     if (err) {
                         done(new Error(err));

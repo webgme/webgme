@@ -222,7 +222,7 @@ describe('Mongo storage', function () {
                 })
                 .catch(function (err) {
                     expect(err instanceof Error).to.equal(true);
-                    expect(err.message).to.include('Error: Project already exists ' + projectId);
+                    expect(err.message).to.include('Project already exists ' + projectId);
                     done();
                 })
                 .done();

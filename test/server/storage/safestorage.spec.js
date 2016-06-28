@@ -202,7 +202,7 @@ describe('SafeStorage', function () {
                     throw new Error('should getLatestCommitData should fail when project does not exist');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.include('Error: Branch "hurdyGurdy" does not exist in project');
+                    expect(err.message).to.include('Branch "hurdyGurdy" does not exist in project');
                 })
                 .nodeify(done);
         });
@@ -260,7 +260,7 @@ describe('SafeStorage', function () {
                         throw new Error('setBranchHash should have failed');
                     })
                     .catch(function (err) {
-                        expect(err.message).to.contain('Error: Tried to setBranchHash to invalid or non-existing' +
+                        expect(err.message).to.contain('Tried to setBranchHash to invalid or non-existing' +
                             ' commit, err: object does not exist #Does_not_exist');
                         return importResult.project.getBranchHash('setFail');
                     })
@@ -850,7 +850,8 @@ describe('SafeStorage', function () {
                         expect(eventData).to.deep.equal({
                             tagName: tagName,
                             commitHash: commitHash,
-                            projectId: projectId
+                            projectId: projectId,
+                            userId: 'guest'
                         });
                         done();
                     } catch (err) {
@@ -870,7 +871,8 @@ describe('SafeStorage', function () {
                     try {
                         expect(eventData).to.deep.equal({
                             projectId: projectId,
-                            tagName: tagName
+                            tagName: tagName,
+                            userId: 'guest'
                         });
                         done();
                     } catch (err) {
@@ -1051,6 +1053,32 @@ describe('SafeStorage', function () {
                 importResult.rootHash,
                 {},
                 'branchUpdatedCommitWithOutNodes'
+            )
+                .catch(done);
+        });
+
+        it('should emit COMMIT when makeCommit', function (done) {
+            var eventHandler = function (_storage, eventData) {
+                try {
+                    expect(eventData.projectId).to.equal(project.projectId);
+                    expect(eventData.userId).to.equal(project.userName);
+                    expect(typeof eventData.commitHash).to.equal('string');
+                    expect(eventData.commitHash[0]).to.equal('#');
+                    safeStorage.clearAllEvents();
+                    done();
+                } catch (err) {
+                    done(err);
+                }
+            };
+
+            safeStorage.addEventListener(project.CONSTANTS.COMMIT, eventHandler);
+
+            project.makeCommit(
+                null,
+                [importResult.commitHash],
+                importResult.rootHash,
+                {},
+                'COMMIT EVENT COMMIT'
             )
                 .catch(done);
         });
