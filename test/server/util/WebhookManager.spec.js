@@ -422,7 +422,7 @@ describe('Webhook Manager', function () {
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
 
-            eventGenerator.send(CONSTANTS.PROJECT_DELETED, eventData);
+            eventGenerator.send(CONSTANTS.COMMIT, eventData);
         });
 
         it('should forward arbitrary event', function (done) {

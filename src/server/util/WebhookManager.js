@@ -12,10 +12,11 @@ var MessageSender = require('webhook-manager/src/hookMessager'),
     fork = require('child_process').fork,
     Q = require('q');
 
-function memoryManager(storage, logger, gmeConfig) {
+function MemoryManager(storage, mainLogger, gmeConfig) {
     var messageHandler = new MessageSender({
         uri: gmeConfig.mongo.uri,
-        collection: '_projects'
+        collection: '_projects',
+        logger: mainLogger.fork('messageHandler')
     });
 
     /**
@@ -116,8 +117,9 @@ function memoryManager(storage, logger, gmeConfig) {
     };
 }
 
-function redisManager(logger, gmeConfig) {
+function RedisManager(mainLogger, gmeConfig) {
     var managerProcess = null,
+        logger = mainLogger.fork('RedisManager'),
         initialized = false;
 
     function start(callback) {
@@ -173,13 +175,13 @@ function redisManager(logger, gmeConfig) {
     };
 }
 
-function WebhookManager(storage, logger, gmeConfig) {
+function WebhookManager(storage, mainLogger, gmeConfig) {
 
     switch (gmeConfig.webhooks.manager) {
         case 'memory':
-            return new memoryManager(storage, logger.fork('memoryWebhookManager'), gmeConfig);
+            return new MemoryManager(storage, mainLogger, gmeConfig);
         case 'redis':
-            return new redisManager(logger.fork('redisWebhookManager'), gmeConfig);
+            return new RedisManager(mainLogger, gmeConfig);
         default:
             logger.error('invalid configuration for webhooks', gmeConfig);
     }
