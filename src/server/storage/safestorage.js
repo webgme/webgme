@@ -142,7 +142,7 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                 deferred.resolve(filterArray(projectsAndBranches));
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -201,7 +201,7 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
                 deferred.resolve(didExist);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -286,7 +286,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
             })
             .catch(function (err) {
                 // TODO: Clean up appropriately when failure to add to model, user or projects database.
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -364,7 +364,7 @@ SafeStorage.prototype.transferProject = function (data, callback) {
                 deferred.resolve(data.newProjectId);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -462,7 +462,7 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
             })
             .catch(function (err) {
                 // TODO: Clean up appropriately when failure to add to model, user or projects database.
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -515,7 +515,7 @@ SafeStorage.prototype.getBranches = function (data, callback) {
                 deferred.resolve(result);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -575,7 +575,7 @@ SafeStorage.prototype.getCommits = function (data, callback) {
                 deferred.resolve(result);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -633,7 +633,7 @@ SafeStorage.prototype.getHistory = function (data, callback) {
                 deferred.resolve(result);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -701,7 +701,7 @@ SafeStorage.prototype.getLatestCommitData = function (data, callback) {
                 deferred.resolve(result);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -779,7 +779,7 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
                 deferred.resolve(result);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -827,7 +827,7 @@ SafeStorage.prototype.getBranchHash = function (data, callback) {
                 deferred.resolve(result);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -882,7 +882,7 @@ SafeStorage.prototype.setBranchHash = function (data, callback) {
                 deferred.resolve(result);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -934,7 +934,7 @@ SafeStorage.prototype.getCommonAncestorCommit = function (data, callback) {
                 deferred.resolve(commonHash);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -989,7 +989,7 @@ SafeStorage.prototype.createBranch = function (data, callback) {
                 deferred.resolve(result);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -1043,7 +1043,7 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
                 deferred.resolve(result);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -1096,7 +1096,7 @@ SafeStorage.prototype.createTag = function (data, callback) {
                 deferred.resolve();
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -1145,7 +1145,7 @@ SafeStorage.prototype.deleteTag = function (data, callback) {
                 deferred.resolve();
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -1198,7 +1198,7 @@ SafeStorage.prototype.getTags = function (data, callback) {
                 deferred.resolve(result);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -1222,7 +1222,7 @@ SafeStorage.prototype.openProject = function (data, callback) {
             deferred.resolve(userProject);
         })
         .catch(function (err) {
-            deferred.reject(new Error(err));
+            deferred.reject(err);
         });
 
     return deferred.promise.nodeify(callback);
@@ -1265,7 +1265,7 @@ SafeStorage.prototype._getProject = function (data, callback) {
                 deferred.resolve(dbProject);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -1311,7 +1311,7 @@ SafeStorage.prototype.loadObjects = function (data, callback) {
                 deferred.resolve(project);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
@@ -1366,7 +1366,7 @@ SafeStorage.prototype.loadPaths = function (data, callback) {
                 deferred.resolve(project);
             })
             .catch(function (err) {
-                deferred.reject(new Error(err));
+                deferred.reject(err);
             });
     }
 
