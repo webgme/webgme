@@ -41,6 +41,7 @@ main = function (argv, callback) {
         .version('0.14.0')
         .arguments('<pluginName> <projectName>')
         .option('-b, --branchName [string]', 'Name of the branch to load and save to.', 'master')
+        .option('-c, --commitHash [string]', 'Commit hash to run from, if set branch will only be used for update.')
         .option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '')
         .option('-a, --activeSelection <webGMEIDs>', 'IDs of selected components (comma separated with no spaces).',
         list)
@@ -61,8 +62,11 @@ main = function (argv, callback) {
             console.log();
             console.log('    $ node run_plugin.js PluginGenerator TestProject');
             console.log('    $ node run_plugin.js PluginGenerator TestProject -b branch1 -j pluginConfig.json');
-            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -s /11231234/123458374');
-            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -a /1,/1/123458374,/11231234');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -s /1/b');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -a /1,/1/c,/d');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -c #123..');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -b b1 -c ' +
+                '#def8861ca16237e6756ee22d27678d979bd2fcde');
             console.log();
             console.log('  Plugin paths using ' + configDir + path.sep + 'config.' + env + '.js :');
             console.log();
@@ -137,7 +141,7 @@ main = function (argv, callback) {
                     activeNode: program.selectedObjID,
                     activeSelection: program.activeSelection || [],
                     branchName: program.branchName,
-                    commitHash: commitHash,
+                    commitHash: program.commitHash || commitHash,
                     namespace: program.namespace
                 },
                 executeDeferred = Q.defer();
