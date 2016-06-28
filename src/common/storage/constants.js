@@ -111,6 +111,7 @@ define([], function () {
         BRANCH_HASH_UPDATED: 'BRANCH_HASH_UPDATED',
         TAG_DELETED: 'TAG_DELETED',
         TAG_CREATED: 'TAG_CREATED',
+        COMMIT: 'COMMIT',
 
         BRANCH_UPDATED: 'BRANCH_UPDATED',
 

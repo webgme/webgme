@@ -850,7 +850,8 @@ describe('SafeStorage', function () {
                         expect(eventData).to.deep.equal({
                             tagName: tagName,
                             commitHash: commitHash,
-                            projectId: projectId
+                            projectId: projectId,
+                            userId: 'guest'
                         });
                         done();
                     } catch (err) {
@@ -870,7 +871,8 @@ describe('SafeStorage', function () {
                     try {
                         expect(eventData).to.deep.equal({
                             projectId: projectId,
-                            tagName: tagName
+                            tagName: tagName,
+                            userId: 'guest'
                         });
                         done();
                     } catch (err) {
