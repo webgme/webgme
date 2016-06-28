@@ -203,6 +203,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         getEmitter(data).to(data.projectId).emit(CONSTANTS.BRANCH_HASH_UPDATED, data);
     });
 
+    storage.addEventListener(CONSTANTS.COMMIT, function (_s, data) {
+        getEmitter(data).to(data.projectId).emit(CONSTANTS.COMMIT, data);
+    });
+
     storage.addEventListener(CONSTANTS.TAG_CREATED, function (_s, data) {
         getEmitter(data).to(data.projectId).emit(CONSTANTS.TAG_CREATED, data);
     });

@@ -252,6 +252,18 @@ describe('Webhook Manager', function () {
             storage.send(CONSTANTS.PROJECT_DELETED, eventData);
         });
 
+        it('should forward COMMIT event', function (done) {
+            var hookListener = getHookListener(function (req) {
+                    expect(req.body.event).to.equal(CONSTANTS.COMMIT);
+                    expect(req.body.data).to.eql(eventData);
+                    hookListener.close();
+                    done();
+                }),
+                eventData = {projectId: projectId, anything: 'really'};
+
+            storage.send(CONSTANTS.PROJECT_DELETED, eventData);
+        });
+
         it('should not forward BRANCH_UPDATED event', function (done) {
             var hookListener = getHookListener(function () {
                     throw new Error('BRANCH_UPDATED event should be filtered out by default');
@@ -389,6 +401,20 @@ describe('Webhook Manager', function () {
             var eventGenerator = new EventGenerator(),
                 hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal(CONSTANTS.PROJECT_DELETED);
+                    expect(req.body.data).to.eql(eventData);
+                    hookListener.close();
+                    eventGenerator.stop();
+                    done();
+                }),
+                eventData = {projectId: projectId, anything: 'really'};
+
+            eventGenerator.send(CONSTANTS.PROJECT_DELETED, eventData);
+        });
+
+        it('should forward COMMIT event', function (done) {
+            var eventGenerator = new EventGenerator(),
+                hookListener = getHookListener(function (req) {
+                    expect(req.body.event).to.equal(CONSTANTS.COMMIT);
                     expect(req.body.data).to.eql(eventData);
                     hookListener.close();
                     eventGenerator.stop();

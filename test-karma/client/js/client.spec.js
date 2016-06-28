@@ -622,7 +622,7 @@ describe('GME client', function () {
                 expect(err).to.equal(null);
 
                 client.selectBranch('does_not_exist', null, function (err) {
-                    expect(err.message).to.contain('Error: Branch "does_not_exist" does not ' +
+                    expect(err.message).to.contain('Branch "does_not_exist" does not ' +
                         'exist in project "');
                     done();
                 });
