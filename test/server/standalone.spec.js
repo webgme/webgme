@@ -34,7 +34,8 @@ describe('standalone server', function () {
     it('should start and stop and start and stop', function (done) {
         this.timeout(5000);
         // we have to set the config here
-        var gmeConfig = testFixture.getGmeConfig();
+        var gmeConfig = testFixture.getGmeConfig(),
+            server;
 
         server = WebGME.standaloneServer(gmeConfig);
         server.start(function () {
@@ -73,7 +74,8 @@ describe('standalone server', function () {
         this.timeout(5000);
         // we have to set the config here
         var gmeConfig = testFixture.getGmeConfig(),
-            httpServer = http.createServer();
+            httpServer = http.createServer(),
+            server;
 
         gmeConfig.server.port = gmeConfig.server.port + 1;
 
