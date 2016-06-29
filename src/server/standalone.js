@@ -223,6 +223,10 @@ function StandAloneServer(gmeConfig) {
             })
             .nodeify(function (err) {
                 self.isRunning = true;
+                if (err) {
+                    logger.error('Error at server start', err);
+                }
+
                 callback(err);
             });
     }
@@ -279,6 +283,10 @@ function StandAloneServer(gmeConfig) {
                 return __gmeAuth.unload();
             })
             .nodeify(function (err) {
+                if (err) {
+                    logger.error('Error at server stop', err);
+                }
+
                 callback(err);
             });
 

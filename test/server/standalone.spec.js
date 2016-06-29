@@ -22,7 +22,6 @@ describe('standalone server', function () {
         http = require('http'),
         fs = require('fs'),
 
-        server,
         serverBaseUrl,
 
         scenarios,
@@ -38,36 +37,48 @@ describe('standalone server', function () {
             server;
 
         server = WebGME.standaloneServer(gmeConfig);
-        server.start(function () {
-            server.stop(function () {
-                server.start(function () {
+        server.start(function (err) {
+            if (err) {
+                done(err);
+                return;
+            }
+            server.stop(function (err) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+                server.start(function (err) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
                     server.stop(done);
                 });
             });
         });
     });
 
-    it.skip('should start and start and stop', function (done) {
-        this.timeout(5000);
-        // we have to set the config here
-        var gmeConfig = testFixture.getGmeConfig();
-
-        server = WebGME.standaloneServer(gmeConfig);
-        server.start(function () {
-            server.start(function () {
-                server.stop(done);
-            });
-        });
-    });
-
-    it.skip('should stop if not started', function (done) {
-        this.timeout(5000);
-        // we have to set the config here
-        var gmeConfig = testFixture.getGmeConfig();
-
-        server = WebGME.standaloneServer(gmeConfig);
-        server.stop(done);
-    });
+    // it.skip('should start and start and stop', function (done) {
+    //     this.timeout(5000);
+    //     // we have to set the config here
+    //     var gmeConfig = testFixture.getGmeConfig();
+    //
+    //     server = WebGME.standaloneServer(gmeConfig);
+    //     server.start(function () {
+    //         server.start(function () {
+    //             server.stop(done);
+    //         });
+    //     });
+    // });
+    //
+    // it.skip('should stop if not started', function (done) {
+    //     this.timeout(5000);
+    //     // we have to set the config here
+    //     var gmeConfig = testFixture.getGmeConfig();
+    //
+    //     server = WebGME.standaloneServer(gmeConfig);
+    //     server.stop(done);
+    // });
 
 
     it('should fail to start http server if port is in use', function (done) {
@@ -112,6 +123,7 @@ describe('standalone server', function () {
                 httpProxy = require('http-proxy'),
                 path = require('path'),
                 proxyServerPort = gmeConfig.server.port - 1,
+                server,
                 proxy;
 
             server = WebGME.standaloneServer(gmeConfig);
@@ -260,13 +272,16 @@ describe('standalone server', function () {
         ]
     }];
 
-    addTest = function (requestTest) {
+    addTest = function (requestTest, server) {
         var url = requestTest.url || '/',
             redirectText = requestTest.redirectUrl ? ' redirects to ' + requestTest.redirectUrl : ' ';
 
         it('returns ' + requestTest.code + ' for ' + url + redirectText, function (done) {
             // TODO: add POST/DELETE etc support
-            agent.get(server.getUrl() + url).end(function (err, res) {
+            agent.get(server.serverUrl + url).end(function (err, res) {
+                if (requestTest.code < 399) {
+                    should.equal(err, null);
+                }
 
                 should.equal(res.status, requestTest.code, err);
 
@@ -299,9 +314,12 @@ describe('standalone server', function () {
 
     addScenario = function (scenario) {
 
+        var serverHolder = {};
+
         describe(scenario.type + ' server ' + (scenario.authentication ? 'with' : 'without') + ' auth', function () {
             var nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED,
                 gmeauth = require('../../src/server/middleware/auth/gmeauth'),
+                server,
                 db;
 
             before(function (done) {
@@ -353,7 +371,9 @@ describe('standalone server', function () {
                 auth = gmeauth(null /* session */, gmeConfig);
 
                 server = WebGME.standaloneServer(gmeConfig);
+
                 serverBaseUrl = server.getUrl();
+                serverHolder.serverUrl = serverBaseUrl;
                 server.start(serverReady.makeNodeResolver());
 
                 Q.allDone([serverReady, dbConn])
@@ -405,7 +425,7 @@ describe('standalone server', function () {
 
             // add all tests for this scenario
             for (j = 0; j < scenario.requests.length; j += 1) {
-                addTest(scenario.requests[j]);
+                addTest(scenario.requests[j], serverHolder);
             }
 
         });
@@ -418,6 +438,7 @@ describe('standalone server', function () {
 
 
     describe('http server without decorators', function () {
+        var server;
 
         before(function (done) {
             // we have to set the config here
