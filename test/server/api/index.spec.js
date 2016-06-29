@@ -14,13 +14,10 @@ describe('REST API', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
-        logger = testFixture.logger.fork('index.spec'),
         WebGME = testFixture.WebGME,
         expect = testFixture.expect,
         Q = testFixture.Q,
-
-        superagent = testFixture.superagent,
-        projectName2Id = testFixture.projectName2Id;
+        superagent = require('superagent');
 
     describe('ORGANIZATION SPECIFIC API', function () {
         var gmeAuth;
@@ -168,6 +165,35 @@ describe('REST API', function () {
                 }
             );
 
+            it('should 400 when creating a new organization when org/user exists PUT /api/v1/orgs/userCanCreate',
+                function (done) {
+                    var orgId = 'userCanCreate',
+                        newOrg = {
+                            info: {
+                                info: 'new'
+                            }
+                        };
+
+                    agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
+                        .end(function (err, res) {
+                            expect(res.status).equal(404);
+
+                            agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
+                                .set('Authorization', 'Basic ' + new Buffer('userCanCreate:plaintext')
+                                        .toString('base64'))
+                                .send(newOrg)
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(400);
+                                    agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
+                                        .end(function (err, res3) {
+                                            expect(res3.status).equal(404);
+                                            done();
+                                        });
+                                });
+                        });
+                }
+            );
+
             it('should 403 when create a new organization when can not create with valid data PUT /api/v1/orgs/someOrg',
                 function (done) {
                     var orgId = 'someOrg',
@@ -193,7 +219,7 @@ describe('REST API', function () {
                 }
             );
 
-            it('should 500 when create a new organization when already exists with valid data PUT /api/v1/orgs/orgInit',
+            it('should 400 when create a new organization when already exists with valid data PUT /api/v1/orgs/orgInit',
                 function (done) {
                     var orgId = 'orgInit',
                         newOrg = {
@@ -210,7 +236,7 @@ describe('REST API', function () {
                                 .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                 .send(newOrg)
                                 .end(function (err, res2) {
-                                    expect(res2.status).equal(500, err);
+                                    expect(res2.status).equal(400, err);
 
                                     done();
                                 });

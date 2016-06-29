@@ -577,7 +577,6 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function addOrganization(orgId, info, callback) {
-        // TODO: check user/orgId collision
         return collection.insert({
                 _id: orgId,
                 projects: {},
@@ -586,6 +585,13 @@ function GMEAuth(session, gmeConfig) {
                 info: info || {}
             }
         )
+            .catch(function (err) {
+                if (err.code === 11000) {
+                    throw new Error('user or org already exists [' + orgId + ']');
+                } else {
+                    throw err;
+                }
+            })
             .nodeify(callback);
     }
 

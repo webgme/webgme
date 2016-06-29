@@ -886,6 +886,10 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(orgData);
             })
             .catch(function (err) {
+                if (err.message.indexOf('user or org already exists') > -1) {
+                    res.status(400);
+                }
+
                 next(err);
             });
     });
