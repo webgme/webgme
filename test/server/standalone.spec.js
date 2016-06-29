@@ -46,7 +46,7 @@ describe('standalone server', function () {
         });
     });
 
-    it('should start and start and stop', function (done) {
+    it.skip('should start and start and stop', function (done) {
         this.timeout(5000);
         // we have to set the config here
         var gmeConfig = testFixture.getGmeConfig();
@@ -59,7 +59,7 @@ describe('standalone server', function () {
         });
     });
 
-    it('should stop if not started', function (done) {
+    it.skip('should stop if not started', function (done) {
         this.timeout(5000);
         // we have to set the config here
         var gmeConfig = testFixture.getGmeConfig();
