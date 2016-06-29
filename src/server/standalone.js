@@ -131,6 +131,8 @@ function StandAloneServer(gmeConfig) {
 
     //public functions
     function start(callback) {
+        var serverDeferred = Q.defer();
+
         if (typeof callback !== 'function') {
             callback = function () {
             };
@@ -212,7 +214,12 @@ function StandAloneServer(gmeConfig) {
             })
             .then(function () {
                 // Finally start listening to the server port.
-                return Q.ninvoke(__httpServer, 'listen', gmeConfig.server.port);
+                __httpServer.listen(gmeConfig.server.port, function () {
+                    logger.info('Server is listening ...');
+                    serverDeferred.resolve();
+                });
+
+                return serverDeferred.promise;
             })
             .nodeify(function (err) {
                 self.isRunning = true;
@@ -221,7 +228,8 @@ function StandAloneServer(gmeConfig) {
     }
 
     function stop(callback) {
-        var key;
+        var serverDeferred = Q.defer(),
+            key;
 
         if (self.isRunning === false) {
             // FIXME: should this be an error?
@@ -232,7 +240,20 @@ function StandAloneServer(gmeConfig) {
         self.isRunning = false;
 
         // request server close - do not accept any new connections.
-        Q.ninvoke(__httpServer, 'close')
+        __httpServer.close(function (err) {
+            if (err) {
+                if (err.message.indexOf('Not running') > -1) {
+                    // It's not running which is what we want.
+                    serverDeferred.resolve();
+                } else {
+                    serverDeferred.reject(err);
+                }
+            } else {
+                serverDeferred.resolve();
+            }
+        });
+
+        serverDeferred.promise
             .then(function () {
                 var promises = [];
 
