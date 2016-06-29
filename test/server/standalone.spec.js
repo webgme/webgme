@@ -5,7 +5,7 @@
 
 var testFixture = require('../_globals.js');
 
-describe.only('standalone server', function () {
+describe('standalone server', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
@@ -83,7 +83,12 @@ describe.only('standalone server', function () {
             server = WebGME.standaloneServer(gmeConfig);
             server.start(function (err) {
                 expect(err.code).to.equal('EADDRINUSE');
-                httpServer.close(done);
+                httpServer.close(function(err1) {
+                    server.isRunning = true; //This ensures stopping modules.
+                    server.stop(function (err2) {
+                        done(err1 || err2 || null);
+                    });
+                });
             });
         });
     });
