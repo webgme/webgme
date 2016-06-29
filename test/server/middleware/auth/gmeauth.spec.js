@@ -942,7 +942,7 @@ describe('GME authentication', function () {
                 done(new Error('should have been rejected'));
             })
             .catch(function (err) {
-                expect(err.message).to.include('duplicate key error');
+                expect(err.message).to.include('user or org already exists');
                 done();
             })
             .done();
