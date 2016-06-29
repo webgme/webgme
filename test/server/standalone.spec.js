@@ -5,7 +5,7 @@
 
 var testFixture = require('../_globals.js');
 
-describe('standalone server', function () {
+describe.only('standalone server', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
