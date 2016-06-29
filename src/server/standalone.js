@@ -232,24 +232,11 @@ function StandAloneServer(gmeConfig) {
         self.isRunning = false;
 
         // request server close - do not accept any new connections.
-        // first we have to request the close then we can destroy the sockets.
         Q.ninvoke(__httpServer, 'close')
             .then(function () {
-                var numDestroyedSockets = 0,
-                    promises = [];
+                var promises = [];
 
                 __webSocket.stop();
-                // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
-                for (key in sockets) {
-                    if (sockets.hasOwnProperty(key)) {
-                        sockets[key].destroy();
-                        delete sockets[key];
-                        logger.debug('destroyed open socket ' + key);
-                        numDestroyedSockets += 1;
-                    }
-                }
-
-                logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
 
                 if (__executorServer) {
                     __executorServer.stop();
@@ -273,6 +260,20 @@ function StandAloneServer(gmeConfig) {
             .nodeify(function (err) {
                 callback(err);
             });
+
+        // first we have to request the close then we can destroy the sockets.
+        var numDestroyedSockets = 0;
+        // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
+        for (key in sockets) {
+            if (sockets.hasOwnProperty(key)) {
+                sockets[key].destroy();
+                delete sockets[key];
+                logger.debug('destroyed open socket ' + key);
+                numDestroyedSockets += 1;
+            }
+        }
+
+        logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
     }
 
     this.start = start;
