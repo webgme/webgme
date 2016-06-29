@@ -34,7 +34,8 @@ describe('CorePlugins', function () {
             'PluginForked',
             'InvalidActiveNode',
             'ConstraintEvaluator',
-            'FastForward'
+            'FastForward',
+            'RestRouterGenerator'
         ],
 
         pluginsShouldFail = [

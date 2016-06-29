@@ -1,5 +1,7 @@
 /*jshint node:true*/
 /**
+ * This is deprecated, use ExampleRestRouter instead.
+ * TODO: Remove this class.
  * @author kecso / https://github.com/kecso
  */
 

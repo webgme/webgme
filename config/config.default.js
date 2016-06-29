@@ -107,7 +107,9 @@ var path = require('path'),
         requirejsPaths: {},
 
         rest: {
-            components: {}
+            components: {
+                //'path/subPath': './middleware/ExampleRestRouter'
+            }
         },
 
         seedProjects: {
