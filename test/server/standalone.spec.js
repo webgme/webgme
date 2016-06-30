@@ -175,7 +175,7 @@ describe('standalone server', function () {
     scenarios = [{
         type: 'http',
         authentication: false,
-        port: 9001,
+        port: 9008,
         requests: [
             {code: 200, url: '/'},
             {code: 404, url: '/login'},
@@ -244,7 +244,7 @@ describe('standalone server', function () {
     }, {
         type: 'http',
         authentication: true,
-        port: 9001,
+        port: 9009,
         requests: [
             // should not allow access without auth
             {code: 200, url: '/', redirectUrl: '/login'},
