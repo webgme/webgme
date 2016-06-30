@@ -422,9 +422,9 @@ describe('standalone server', function () {
                         done(err);
                         return;
                     }
-                    server.stop(function () {
+                    server.stop(function (err) {
                         logger.debug('server stopped');
-                        done();
+                        done(err);
                     });
                 });
             });
