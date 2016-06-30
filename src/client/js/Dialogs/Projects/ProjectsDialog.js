@@ -41,6 +41,7 @@ define([
         this._createType = createType || 'seed';
         this._logger.debug('Created');
         this._dontAskOnDelete = false;
+        this._openingProject = false;
     };
 
     ProjectsDialog.prototype.show = function () {
@@ -84,8 +85,11 @@ define([
             selectedId;
 
         function openProject(projectId) {
-            if (self._projectList[projectId].rights.read === true) {
+            self._logger.debug('openProject requested, already opening?', self._openingProject);
+            if (self._projectList[projectId].rights.read === true && self._openingProject === false) {
+                self._openingProject = true;
                 self._client.selectProject(projectId, null, function (err) {
+                    self._openingProject = false;
                     if (err) {
                         self._logger.error(err);
                     } else {
