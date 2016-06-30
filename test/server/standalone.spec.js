@@ -280,7 +280,7 @@ describe('standalone server', function () {
             // TODO: add POST/DELETE etc support
             agent.get(server.serverUrl + url).end(function (err, res) {
                 if (err && err.message.indexOf('connect ECONNREFUSED') > -1) {
-                    console.log('Is server running?', server.isRunning);
+                    console.log('Is server running?', server.server.isRunning);
                     done(err);
                     return;
                 }
