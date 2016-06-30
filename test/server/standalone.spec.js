@@ -279,8 +279,10 @@ describe('standalone server', function () {
         it('returns ' + requestTest.code + ' for ' + url + redirectText, function (done) {
             // TODO: add POST/DELETE etc support
             agent.get(server.serverUrl + url).end(function (err, res) {
-                if (requestTest.code < 399) {
-                    should.equal(err, null);
+                if (err && err.message.indexOf('connect ECONNREFUSED') > -1) {
+                    console.log('Is server running?', server.isRunning);
+                    done(err);
+                    return;
                 }
 
                 should.equal(res.status, requestTest.code, err);
@@ -314,7 +316,10 @@ describe('standalone server', function () {
 
     addScenario = function (scenario) {
 
-        var serverHolder = {};
+        var serverHolder = {
+            server: null,
+            serverUrl: null
+        };
 
         describe(scenario.type + ' server ' + (scenario.authentication ? 'with' : 'without') + ' auth', function () {
             var nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED,
@@ -374,6 +379,7 @@ describe('standalone server', function () {
 
                 serverBaseUrl = server.getUrl();
                 serverHolder.serverUrl = serverBaseUrl;
+                serverHolder.server = server;
                 server.start(serverReady.makeNodeResolver());
 
                 Q.allDone([serverReady, dbConn])
