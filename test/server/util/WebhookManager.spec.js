@@ -5,7 +5,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('Webhook Manager', function () {
+describe.skip('Webhook Manager', function () {
     'use strict';
     var StorageMock = function () {
             var listeners = {};
