@@ -258,6 +258,20 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
+        // first we have to request the close then we can destroy the sockets.
+        var numDestroyedSockets = 0;
+        // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
+        for (key in sockets) {
+            if (sockets.hasOwnProperty(key)) {
+                sockets[key].destroy();
+                delete sockets[key];
+                logger.debug('destroyed open socket ' + key);
+                numDestroyedSockets += 1;
+            }
+        }
+
+        logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
+
         serverDeferred.promise
             .then(function () {
                 var promises = [];
@@ -292,20 +306,6 @@ function StandAloneServer(gmeConfig) {
 
                 callback(err);
             });
-
-        // first we have to request the close then we can destroy the sockets.
-        var numDestroyedSockets = 0;
-        // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
-        for (key in sockets) {
-            if (sockets.hasOwnProperty(key)) {
-                sockets[key].destroy();
-                delete sockets[key];
-                logger.debug('destroyed open socket ' + key);
-                numDestroyedSockets += 1;
-            }
-        }
-
-        logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
     }
 
     this.start = start;
@@ -814,7 +814,13 @@ function StandAloneServer(gmeConfig) {
             return gmeConfig;
         },
         start: start,
-        stop: stop
+        stop: stop,
+        _setIsRunning: function (value) {
+            self.isRunning = value;
+        },
+        isRunning: function () {
+            return self.isRunning;
+        }
     };
 }
 

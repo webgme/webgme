@@ -97,7 +97,7 @@ describe('standalone server', function () {
             server.start(function (err) {
                 expect(err.code).to.equal('EADDRINUSE');
                 httpServer.close(function(err1) {
-                    server.isRunning = true; //This ensures stopping modules.
+                    server._setIsRunning(true); //This ensures stopping modules.
                     server.stop(function (err2) {
                         done(err1 || err2 || null);
                     });
@@ -272,15 +272,14 @@ describe('standalone server', function () {
         ]
     }];
 
-    addTest = function (requestTest, server) {
+    addTest = function (requestTest, serverHolder) {
         var url = requestTest.url || '/',
             redirectText = requestTest.redirectUrl ? ' redirects to ' + requestTest.redirectUrl : ' ';
-
         it('returns ' + requestTest.code + ' for ' + url + redirectText, function (done) {
             // TODO: add POST/DELETE etc support
-            agent.get(server.serverUrl + url).end(function (err, res) {
+            agent.get(serverHolder.serverUrl + url).end(function (err, res) {
                 if (err && err.message.indexOf('connect ECONNREFUSED') > -1) {
-                    console.log('Is server running?', server.server.isRunning);
+                    console.log('Is server running?', serverHolder.server.isRunning());
                     done(err);
                     return;
                 }
@@ -325,20 +324,23 @@ describe('standalone server', function () {
             var nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED,
                 gmeauth = require('../../src/server/middleware/auth/gmeauth'),
                 server,
+                gmeConfig = testFixture.getGmeConfig(),
                 db;
+
+            gmeConfig.server.port = scenario.port;
+            gmeConfig.authentication.enable = scenario.authentication;
+            gmeConfig.authentication.allowGuests = false;
+            gmeConfig.authentication.guestAccount = 'guestUserName';
+            server = WebGME.standaloneServer(gmeConfig);
+
+            serverHolder.server = server;
 
             before(function (done) {
                 // we have to set the config here
                 var dbConn,
                     userReady,
                     auth,
-                    serverReady = Q.defer(),
-                    gmeConfig = testFixture.getGmeConfig();
-
-                gmeConfig.server.port = scenario.port;
-                gmeConfig.authentication.enable = scenario.authentication;
-                gmeConfig.authentication.allowGuests = false;
-                gmeConfig.authentication.guestAccount = 'guestUserName';
+                    serverReady = Q.defer();
 
                 dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
                     .then(function (db_) {
@@ -375,11 +377,10 @@ describe('standalone server', function () {
 
                 auth = gmeauth(null /* session */, gmeConfig);
 
-                server = WebGME.standaloneServer(gmeConfig);
+
 
                 serverBaseUrl = server.getUrl();
                 serverHolder.serverUrl = serverBaseUrl;
-                serverHolder.server = server;
                 server.start(serverReady.makeNodeResolver());
 
                 Q.allDone([serverReady, dbConn])
