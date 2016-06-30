@@ -9,7 +9,7 @@
 
 var testFixture = require('../../../_globals.js');
 
-describe('REST API', function () {
+describe('PROJECT REST API', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),

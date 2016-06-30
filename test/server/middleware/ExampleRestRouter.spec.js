@@ -10,12 +10,16 @@ describe('ExampleRestRouter', function () {
 
     var webGME = testFixture.WebGME,
         agent = testFixture.superagent.agent(),
-        expect = testFixture.expect,
-        server;
+        expect = testFixture.expect;
 
     describe('uses server', function () {
+        var server;
         afterEach(function (done) {
-            server.stop(done);
+            if (server) {
+                server.stop(done);
+            } else {
+                done();
+            }
         });
 
         it('/ExampleRestRouter/getExample should return 200', function (done) {
@@ -28,7 +32,10 @@ describe('ExampleRestRouter', function () {
                 agent.get(serverBaseUrl + '/ExampleRestRouter/getExample').end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(200);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -45,7 +52,10 @@ describe('ExampleRestRouter', function () {
                 agent.get(serverBaseUrl + '/ExampleRestRouter/getExample').end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(401);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -62,7 +72,10 @@ describe('ExampleRestRouter', function () {
                 agent.get(serverBaseUrl + '/ExampleRestRouter/getExample').end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(200);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -78,7 +91,10 @@ describe('ExampleRestRouter', function () {
                 agent.patch(serverBaseUrl + '/ExampleRestRouter/patchExample').end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(200);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -95,7 +111,10 @@ describe('ExampleRestRouter', function () {
                     .end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(201);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -110,7 +129,10 @@ describe('ExampleRestRouter', function () {
                 agent.del(serverBaseUrl + '/ExampleRestRouter/deleteExample').end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(204);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -124,7 +146,10 @@ describe('ExampleRestRouter', function () {
                 var serverBaseUrl = server.getUrl();
                 agent.get(serverBaseUrl + '/ExampleRestRouter/error').end(function (err, res) {
                     expect(res.status).equal(500);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });

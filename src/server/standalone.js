@@ -226,6 +226,7 @@ function StandAloneServer(gmeConfig) {
                 if (err) {
                     logger.error('Error at server start', err);
                 }
+                console.log('###START###');
 
                 callback(err);
             });
@@ -286,6 +287,8 @@ function StandAloneServer(gmeConfig) {
                 if (err) {
                     logger.error('Error at server stop', err);
                 }
+
+                console.log('###STOP###');
 
                 callback(err);
             });

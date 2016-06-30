@@ -10,7 +10,7 @@
 var testFixture = require('../../../_globals.js');
 
 
-describe('REST API', function () {
+describe('ADDON REST API', function () {
     'use strict';
 
     var WebGME = testFixture.WebGME,
