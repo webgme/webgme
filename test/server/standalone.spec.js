@@ -14,7 +14,6 @@ describe('standalone server', function () {
         should = testFixture.should,
         expect = testFixture.expect,
         superagent = testFixture.superagent,
-        mongodb = testFixture.mongodb,
         Q = testFixture.Q,
 
         agent = superagent.agent(),
@@ -25,8 +24,6 @@ describe('standalone server', function () {
         serverBaseUrl,
 
         scenarios,
-        addScenario,
-        addTest,
         i,
         j;
 
@@ -187,7 +184,6 @@ describe('standalone server', function () {
             {code: 200, url: '/index.html'},
             {code: 200, url: '/docs/tutorial.html'},
             {code: 200, url: '/plugin/PluginBase.js'},
-            {code: 200, url: '/plugin/PluginBase.js'},
             {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/PluginGenerator'},
             {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/PluginGenerator.js'},
             {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/Templates/plugin.js.ejs'},
@@ -272,142 +268,50 @@ describe('standalone server', function () {
         ]
     }];
 
-    addTest = function (requestTest, serverHolder) {
-        var url = requestTest.url || '/',
-            redirectText = requestTest.redirectUrl ? ' redirects to ' + requestTest.redirectUrl : ' ';
-        it('returns ' + requestTest.code + ' for ' + url + redirectText, function (done) {
-            // TODO: add POST/DELETE etc support
-            agent.get(serverHolder.serverUrl + url).end(function (err, res) {
-                if (err && err.message.indexOf('connect ECONNREFUSED') > -1) {
-                    console.log('Is server running?', serverHolder.server.isRunning());
-                    done(err);
-                    return;
-                }
-
-                should.equal(res.status, requestTest.code, err);
-
-                if (requestTest.redirectUrl) {
-                    // redirected
-                    should.equal(res.status, 200);
-                    if (res.headers.location) {
-                        should.equal(res.headers.location, requestTest.redirectUrl);
-                    }
-                    should.not.equal(res.headers.location, url);
-                    logger.debug(res.headers.location, url, requestTest.redirectUrl);
-                    should.equal(res.redirects.length, 1);
-                } else {
-                    // was not redirected
-                    //should.equal(res.res.url, url); // FIXME: should server response set the url?
-                    if (res.headers.location) {
-                        should.equal(res.headers.location, url);
-                    }
-                    if (res.res.url) {
-                        should.equal(res.res.url, url);
-                    }
-
-                    should.equal(res.redirects.length, 0);
-                }
-
-                done();
-            });
-        });
-    };
-
-    addScenario = function (scenario) {
-
-        var serverHolder = {
-            server: null,
-            serverUrl: null
-        };
+     function addScenario(scenario) {
 
         describe(scenario.type + ' server ' + (scenario.authentication ? 'with' : 'without') + ' auth', function () {
-            var nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED,
-                gmeauth = require('../../src/server/middleware/auth/gmeauth'),
+            var gmeAuth,
                 server,
-                gmeConfig = testFixture.getGmeConfig(),
-                db;
-
-            gmeConfig.server.port = scenario.port;
-            gmeConfig.authentication.enable = scenario.authentication;
-            gmeConfig.authentication.allowGuests = false;
-            gmeConfig.authentication.guestAccount = 'guestUserName';
-            server = WebGME.standaloneServer(gmeConfig);
-
-            serverHolder.server = server;
+                gmeConfig = testFixture.getGmeConfig();
 
             before(function (done) {
-                // we have to set the config here
-                var dbConn,
-                    userReady,
-                    auth,
-                    serverReady = Q.defer();
-
-                dbConn = Q.ninvoke(mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
-                    .then(function (db_) {
-                        db = db_;
-                        return Q.allDone([
-                            Q.ninvoke(db, 'collection', '_users')
-                                .then(function (collection_) {
-                                    return Q.ninvoke(collection_, 'remove');
-                                }),
-                            //Q.ninvoke(db, 'collection', '_organizations')
-                            //    .then(function (orgs_) {
-                            //        return Q.ninvoke(orgs_, 'remove');
-                            //    }),
-                            Q.ninvoke(db, 'collection', 'ClientCreateProject')
-                                .then(function (createdProject) {
-                                    return Q.ninvoke(createdProject, 'remove');
-                                }),
-                            Q.ninvoke(db, 'collection', 'project')
-                                .then(function (project) {
-                                    return Q.ninvoke(project, 'remove')
-                                        .then(function () {
-                                            return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
-                                        });
-                                }),
-                            Q.ninvoke(db, 'collection', 'unauthorized_project')
-                                .then(function (project) {
-                                    return Q.ninvoke(project, 'remove')
-                                        .then(function () {
-                                            return Q.ninvoke(project, 'insert', {_id: '*info', dummy: true});
-                                        });
-                                })
-                        ]);
-                    });
-
-                auth = gmeauth(null /* session */, gmeConfig);
-
-
-
+                gmeConfig.server.port = scenario.port;
+                gmeConfig.authentication.enable = scenario.authentication;
+                gmeConfig.authentication.allowGuests = false;
+                gmeConfig.authentication.guestAccount = 'guestUserName';
+                server = WebGME.standaloneServer(gmeConfig);
                 serverBaseUrl = server.getUrl();
-                serverHolder.serverUrl = serverBaseUrl;
-                server.start(serverReady.makeNodeResolver());
 
-                Q.allDone([serverReady, dbConn])
-                    .then(function () {
-                        return auth.connect();
-                    })
-                    .then(function (gmeauth_) {
+                testFixture.clearDBAndGetGMEAuth(gmeConfig)
+                    .then(function (gmeAuth_) {
+                        gmeAuth = gmeAuth_;
                         var account = gmeConfig.authentication.guestAccount;
-                        gmeauth = auth;
-                        return gmeauth.addUser(account, account + '@example.com', account, true, {overwrite: true});
+
+                        return Q.allDone([
+                            gmeAuth.addUser(account, account + '@example.com', account, true, {overwrite: true}),
+                            gmeAuth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true})
+                            ]);
                     })
                     .then(function () {
-                        return gmeauth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true});
-                    })
-                    .then(function () {
-                        return gmeauth.authorizeByUserId('user', 'project', 'create', {
+                        return gmeAuth.authorizeByUserId('user', 'project', 'create', {
                             read: true,
                             write: true,
                             delete: false
                         });
                     })
                     .then(function () {
-                        return gmeauth.authorizeByUserId('user', 'unauthorized_project', 'create', {
+                        return gmeAuth.authorizeByUserId('user', 'unauthorized_project', 'create', {
                             read: false,
                             write: false,
                             delete: false
                         });
+                    })
+                    .then(function () {
+                        return gmeAuth.unload();
+                    })
+                    .then(function () {
+                        return Q.ninvoke(server, 'start');
                     })
                     .nodeify(done);
             });
@@ -417,26 +321,57 @@ describe('standalone server', function () {
             });
 
             after(function (done) {
-                process.env.NODE_TLS_REJECT_UNAUTHORIZED = nodeTLSRejectUnauthorized;
-                db.close(true, function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    server.stop(function (err) {
-                        logger.debug('server stopped');
-                        done(err);
+                server.stop(done);
+            });
+
+            function addTest(requestTest) {
+                var url = requestTest.url || '/',
+                    redirectText = requestTest.redirectUrl ? ' redirects to ' + requestTest.redirectUrl : ' ';
+                it('returns ' + requestTest.code + ' for ' + url + redirectText, function (done) {
+                    // TODO: add POST/DELETE etc support
+                    agent.get(serverBaseUrl + url).end(function (err, res) {
+                        if (err && err.message.indexOf('connect ECONNREFUSED') > -1) {
+                            console.log('Is server running?', server.isRunning());
+                            done(err);
+                            return;
+                        }
+
+                        should.equal(res.status, requestTest.code, err);
+
+                        if (requestTest.redirectUrl) {
+                            // redirected
+                            should.equal(res.status, 200);
+                            if (res.headers.location) {
+                                should.equal(res.headers.location, requestTest.redirectUrl);
+                            }
+                            should.not.equal(res.headers.location, url);
+                            logger.debug(res.headers.location, url, requestTest.redirectUrl);
+                            should.equal(res.redirects.length, 1);
+                        } else {
+                            // was not redirected
+                            //should.equal(res.res.url, url); // FIXME: should server response set the url?
+                            if (res.headers.location) {
+                                should.equal(res.headers.location, url);
+                            }
+                            if (res.res.url) {
+                                should.equal(res.res.url, url);
+                            }
+
+                            should.equal(res.redirects.length, 0);
+                        }
+
+                        done();
                     });
                 });
-            });
+            }
 
             // add all tests for this scenario
             for (j = 0; j < scenario.requests.length; j += 1) {
-                addTest(scenario.requests[j], serverHolder);
+                addTest(scenario.requests[j]);
             }
 
         });
-    };
+    }
 
     // create all scenarios
     for (i = 0; i < scenarios.length; i += 1) {
