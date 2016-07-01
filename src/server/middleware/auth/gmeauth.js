@@ -33,11 +33,8 @@ function GMEAuth(session, gmeConfig) {
         _collectionName = '_users',
         _projectCollectionName = '_projects',
         db,
-        collectionDeferred = Q.defer(),
-        collection = collectionDeferred.promise,
-        projectCollectionDeferred = Q.defer(),
-        projectCollection = projectCollectionDeferred.promise,
-
+        collection,
+        projectCollection,
         metadataStorage = new MetadataStorage(logger, gmeConfig),
         Authorizer = require(gmeConfig.authentication.authorizer.path),
         authorizer = new Authorizer(logger, gmeConfig),
@@ -111,10 +108,6 @@ function GMEAuth(session, gmeConfig) {
         };
     }
 
-    addMongoOpsToPromize(collection);
-    //addMongoOpsToPromize(organizationCollection);
-    addMongoOpsToPromize(projectCollection);
-
     function _prepareGuestAccount(callback) {
         var guestAcc = gmeConfig.authentication.guestAccount;
         return collection.findOne({_id: guestAcc})
@@ -158,7 +151,15 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function connect(callback) {
-        var self = this;
+        var collectionDeferred = Q.defer(),
+            projectCollectionDeferred = Q.defer();
+
+        projectCollection = projectCollectionDeferred.promise;
+        collection = collectionDeferred.promise;
+
+        addMongoOpsToPromize(collection);
+        addMongoOpsToPromize(projectCollection);
+
         logger.info('connecting', gmeConfig.mongo.uri, JSON.stringify(gmeConfig.mongo.options));
         return Q.ninvoke(Mongodb.MongoClient, 'connect', gmeConfig.mongo.uri, gmeConfig.mongo.options)
             .then(function (db_) {

@@ -28,9 +28,11 @@ describe('ExecutorServer', function () {
     });
 
     afterEach(function (done) {
-        server.stop(function (err) {
-            done(err);
-        });
+        if (server) {
+            server.stop(done);
+        } else {
+            done();
+        }
     });
 
     it('should return 200 at rest/executor/worker/ with enableExecutor=true', function (done) {
@@ -40,7 +42,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/worker/').end(function (err, res) {
                 should.equal(res.status, 200, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -52,7 +57,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/worker/').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -65,7 +73,10 @@ describe('ExecutorServer', function () {
             agent.get(serverBaseUrl + '/rest/executor?status=SUCCESS').end(function (err, res) {
                 should.equal(res.status, 200, err);
                 expect(res.body).to.deep.equal({});
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -77,7 +88,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/cancel').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -89,7 +103,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.post(serverBaseUrl + '/rest/executor/cancel').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -101,7 +118,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.post(serverBaseUrl + '/rest/executor/cancel/some_hash').end(function (err, res) {
                 should.equal(res.status, 500, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -114,7 +134,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.post(serverBaseUrl + '/rest/executor/info').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -126,7 +149,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/info/').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -138,7 +164,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/info/does_not_exist').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -151,7 +180,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.get(serverBaseUrl + '/rest/executor/unknown_command').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -164,7 +196,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.put(serverBaseUrl + '/rest/executor/worker').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -176,7 +211,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.put(serverBaseUrl + '/rest/executor/update').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -188,7 +226,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.post(serverBaseUrl + '/rest/executor/update/does_not_exist').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -200,7 +241,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.put(serverBaseUrl + '/rest/executor/create').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -212,7 +256,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.post(serverBaseUrl + '/rest/executor/create').end(function (err, res) {
                 should.equal(res.status, 404, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -224,7 +271,10 @@ describe('ExecutorServer', function () {
             var serverBaseUrl = server.getUrl();
             agent.post(serverBaseUrl + '/rest/executor/create/new_element').end(function (err, res) {
                 should.equal(res.status, 200, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });

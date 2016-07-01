@@ -94,6 +94,7 @@ function StandAloneServer(gmeConfig) {
     var self = this,
         clientConfig = getClientConfig(gmeConfig),
         excludeRegExs = [],
+        routeComponents = [],
         sockets = [];
 
     self.id = Math.random().toString(36).slice(2, 11);
@@ -130,12 +131,7 @@ function StandAloneServer(gmeConfig) {
 
     //public functions
     function start(callback) {
-        var serverDeferred = Q.defer(),
-            storageDeferred = Q.defer(),
-            svgDeferred = Q.defer(),
-            gmeAuthDeferred = Q.defer(),
-            executorDeferred = Q.defer(),
-            webhookDeferred = Q.defer();
+        var serverDeferred = Q.defer();
 
         if (typeof callback !== 'function') {
             callback = function () {
@@ -146,12 +142,6 @@ function StandAloneServer(gmeConfig) {
             // FIXME: should this be an error?
             callback();
             return;
-        }
-
-        if (gmeConfig.visualization.svgDirs.length > 0) {
-            svgDeferred = webgmeUtils.copySvgDirsAndRegenerateSVGList(gmeConfig, logger);
-        } else {
-            svgDeferred.resolve();
         }
 
         sockets = {};
@@ -192,69 +182,58 @@ function StandAloneServer(gmeConfig) {
             }
         });
 
-        __httpServer.listen(gmeConfig.server.port, function () {
-            // Note: the listening function does not return with an error, errors are handled by the error event
-            logger.debug('Http server is listening on ', {metadata: {port: gmeConfig.server.port}});
-            serverDeferred.resolve();
-        });
+        __gmeAuth.connect()
+            .then(function (db) {
+                var promises = [];
 
-        __storage.openDatabase(function (err) {
-            if (err) {
-                storageDeferred.reject(err);
-            } else {
-                __webSocket.start(__httpServer);
-                storageDeferred.resolve();
-            }
-        });
+                __workerManager.start();
+                promises.push(__storage.openDatabase());
 
-        __webhookManager.start(function (err) {
-            if (err) {
-                webhookDeferred.reject(err);
-            } else {
-                webhookDeferred.resolve();
-            }
-        });
-
-        __gmeAuth.connect(function (err, db) {
-            if (err) {
-                logger.error(err);
-                gmeAuthDeferred.reject(err);
-            } else {
-                logger.debug('gmeAuth is ready');
-                gmeAuthDeferred.resolve();
                 if (__executorServer) {
-                    __executorServer.start({mongoClient: db}, function (err) {
-                        if (err) {
-                            executorDeferred.reject(err);
-                        } else {
-                            executorDeferred.resolve();
-                        }
-                    });
-                } else {
-                    executorDeferred.resolve();
+                    promises.push(__executorServer.start({mongoClient: db}));
                 }
-            }
-        });
 
-        __workerManager.start();
+                if (gmeConfig.visualization.svgDirs.length > 0) {
+                    promises.push(webgmeUtils.copySvgDirsAndRegenerateSVGList(gmeConfig, logger));
+                }
 
-        Q.all([
-            svgDeferred.promise,
-            serverDeferred.promise,
-            storageDeferred.promise,
-            gmeAuthDeferred.promise,
-            webhookDeferred.promise,
-            apiReady,
-            executorDeferred.promise
-        ])
+                return Q.all(promises);
+            })
+            .then(function () {
+                var promises = [];
+
+                __webSocket.start(__httpServer);
+
+                promises.push(apiReady);
+
+                routeComponents.forEach(function (component) {
+                    promises.push(Q.ninvoke(component, 'start'));
+                });
+
+                return Q.all(promises);
+            })
+            .then(function () {
+                // Finally start listening to the server port.
+                __httpServer.listen(gmeConfig.server.port, function () {
+                    logger.info('Server is listening ...');
+                    serverDeferred.resolve();
+                });
+
+                return serverDeferred.promise;
+            })
             .nodeify(function (err) {
                 self.isRunning = true;
+                if (err) {
+                    logger.error('Error at server start', err);
+                }
+
                 callback(err);
             });
     }
 
     function stop(callback) {
-        var key;
+        var serverDeferred = Q.defer(),
+            key;
 
         if (self.isRunning === false) {
             // FIXME: should this be an error?
@@ -264,48 +243,66 @@ function StandAloneServer(gmeConfig) {
 
         self.isRunning = false;
 
-        try {
-            if (__executorServer) {
-                __executorServer.stop();
+        // request server close - do not accept any new connections.
+        __httpServer.close(function (err) {
+            if (err) {
+                if (err.message.indexOf('Not running') > -1) {
+                    // It's not running which is what we want.
+                    serverDeferred.resolve();
+                } else {
+                    serverDeferred.reject(err);
+                }
+            } else {
+                serverDeferred.resolve();
             }
+        });
 
-            __webhookManager.stop();
-
-            // FIXME: is this call synchronous?
-            __webSocket.stop();
-            //kill all remaining workers
-            __workerManager.stop(function (err) {
-                var numDestroyedSockets = 0;
-                // close storage
-                __storage.closeDatabase(function (err1) {
-                    __gmeAuth.unload(function (err2) {
-                        logger.debug('gmeAuth unloaded');
-                        // request server close - do not accept any new connections.
-                        // first we have to request the close then we can destroy the sockets.
-                        __httpServer.close(function (err3) {
-                            logger.info('http server closed');
-                            logger.debug('http server closed');
-                            callback(err || err1 || err2 || err3 || null);
-                        });
-
-                        // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
-                        for (key in sockets) {
-                            if (sockets.hasOwnProperty(key)) {
-                                sockets[key].destroy();
-                                delete sockets[key];
-                                logger.debug('destroyed open socket ' + key);
-                                numDestroyedSockets += 1;
-                            }
-                        }
-
-                        logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
-                    });
-                });
-            });
-        } catch (e) {
-            //ignore errors
-            callback(e);
+        // first we have to request the close then we can destroy the sockets.
+        var numDestroyedSockets = 0;
+        // destroy all open sockets i.e. keep-alive and socket-io connections, etc.
+        for (key in sockets) {
+            if (sockets.hasOwnProperty(key)) {
+                sockets[key].destroy();
+                delete sockets[key];
+                logger.debug('destroyed open socket ' + key);
+                numDestroyedSockets += 1;
+            }
         }
+
+        logger.debug('destroyed # of sockets: ' + numDestroyedSockets);
+
+        serverDeferred.promise
+            .then(function () {
+                var promises = [];
+
+                __webSocket.stop();
+
+                if (__executorServer) {
+                    __executorServer.stop();
+                }
+
+                routeComponents.forEach(function (component) {
+                    promises.push(Q.ninvoke(component, 'stop'));
+                });
+
+                return Q.all(promises);
+            })
+            .then(function () {
+                return Q.all([
+                    __storage.closeDatabase(),
+                    Q.ninvoke(__workerManager, 'stop')
+                ]);
+            })
+            .then(function () {
+                return __gmeAuth.unload();
+            })
+            .nodeify(function (err) {
+                if (err) {
+                    logger.error('Error at server stop', err);
+                }
+
+                callback(err);
+            });
     }
 
     this.start = start;
@@ -470,13 +467,18 @@ function StandAloneServer(gmeConfig) {
             restComponent = require(gmeConfig.rest.components[keys[i]]);
             if (restComponent) {
                 logger.debug('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
-                    ' - /rest/external/' + keys[i]);
+                    ' - /' + keys[i]);
                 if (restComponent.hasOwnProperty('initialize') && restComponent.hasOwnProperty('router')) {
-                    // FIXME: initialize may return with a promise
                     restComponent.initialize(middlewareOpts);
-                    __app.use('/rest/external/' + keys[i], restComponent.router);
+                    __app.use('/' + keys[i], restComponent.router);
+                    if (restComponent.hasOwnProperty('start') && restComponent.hasOwnProperty('stop')) {
+                        routeComponents.push(restComponent);
+                    } else {
+                        logger.warn('Deprecated restRouter, [', keys[i], '] does not have start/stop methods.');
+                    }
                 } else {
-                    __app.use('/rest/external/' + keys[i], restComponent(gmeConfig, ensureAuthenticated, logger));
+                    logger.warn('Deprecated restComponent [', keys[i], '], use the RestRouter instead.');
+                    __app.use('/' + keys[i], restComponent(gmeConfig, ensureAuthenticated, logger));
                 }
             } else {
                 throw new Error('Loading rest component ' + gmeConfig.rest.components[keys[i]] + ' failed.');
@@ -496,13 +498,11 @@ function StandAloneServer(gmeConfig) {
         __storage = null,
         __database = null,
         __webSocket = null,
-        __webhookManager = null,
         __gmeAuth = null,
         apiReady,
         __app = null,
         __workerManager,
         __httpServer = null,
-        __logoutUrl = gmeConfig.authentication.logOutUrl || '/',
         __baseDir = requireJS.s.contexts._.config.baseUrl,// TODO: this is ugly
         __clientBaseDir = Path.resolve(gmeConfig.client.appDir),
         __requestCounter = 0,
@@ -551,15 +551,7 @@ function StandAloneServer(gmeConfig) {
     __webSocket = new WebSocket(__storage, logger, gmeConfig, __gmeAuth, __workerManager);
 
     if (gmeConfig.webhooks.enable) {
-        __webhookManager = new WebhookManager(__storage, logger, gmeConfig);
-    } else {
-        __webhookManager = {
-            start: function (cb) {
-                cb(null);
-            },
-            stop: function () {
-            }
-        };
+        routeComponents.push(new WebhookManager(__storage, logger, gmeConfig));
     }
 
     middlewareOpts = {  //TODO: Pass this to every middleware They must not modify the options!
@@ -641,28 +633,28 @@ function StandAloneServer(gmeConfig) {
             res.sendStatus(404);
         } else {
             res.clearCookie(gmeConfig.authentication.jwt.cookieId);
-            res.redirect(__logoutUrl);
+            res.redirect(gmeConfig.authentication.logOutUrl || '/');
         }
     });
 
     __app.post('/login', function (req, res) {
-            var userId = req.body.userId,
-                password = req.body.password;
+        var userId = req.body.userId,
+            password = req.body.password;
 
-            if (gmeConfig.authentication.enable) {
-                __gmeAuth.generateJWToken(userId, password)
-                    .then(function (token) {
-                        res.cookie(gmeConfig.authentication.jwt.cookieId, token);
-                        res.sendStatus(200);
-                    })
-                    .catch(function (err) {
-                        logger.error('Failed login', err);
-                        res.sendStatus(401);
-                    });
-            } else {
-                res.sendStatus(404);
-            }
-        });
+        if (gmeConfig.authentication.enable) {
+            __gmeAuth.generateJWToken(userId, password)
+                .then(function (token) {
+                    res.cookie(gmeConfig.authentication.jwt.cookieId, token);
+                    res.sendStatus(200);
+                })
+                .catch(function (err) {
+                    logger.error('Failed login', err);
+                    res.sendStatus(401);
+                });
+        } else {
+            res.sendStatus(404);
+        }
+    });
 
     // TODO: review/revisit this part when google authentication is used.
     //__app.get('/login/google', checkGoogleAuthentication, Passport.authenticate('google'));
@@ -804,6 +796,7 @@ function StandAloneServer(gmeConfig) {
                 addresses = addresses + '  ' + address;
             }
         };
+
     for (var dev in networkIfs) {
         networkIfs[dev].forEach(forEveryNetIf);
     }
@@ -818,7 +811,13 @@ function StandAloneServer(gmeConfig) {
             return gmeConfig;
         },
         start: start,
-        stop: stop
+        stop: stop,
+        _setIsRunning: function (value) {
+            self.isRunning = value;
+        },
+        isRunning: function () {
+            return self.isRunning;
+        }
     };
 }
 

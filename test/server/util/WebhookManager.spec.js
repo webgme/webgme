@@ -184,6 +184,7 @@ describe('Webhook Manager', function () {
             var hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal(CONSTANTS.TAG_CREATED);
                     expect(req.body.data).to.eql(eventData);
+                console.log('In cb');
                     hookListener.close();
                     done();
                 }),
@@ -332,8 +333,8 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal(CONSTANTS.TAG_CREATED);
                     expect(req.body.data).to.eql(eventData);
-                    hookListener.close();
                     eventGenerator.stop();
+                    hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
@@ -346,8 +347,8 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal(CONSTANTS.TAG_DELETED);
                     expect(req.body.data).to.eql(eventData);
-                    hookListener.close();
                     eventGenerator.stop();
+                    hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
@@ -360,8 +361,8 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal(CONSTANTS.BRANCH_CREATED);
                     expect(req.body.data).to.eql(eventData);
-                    hookListener.close();
                     eventGenerator.stop();
+                    hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
@@ -374,8 +375,8 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal(CONSTANTS.BRANCH_HASH_UPDATED);
                     expect(req.body.data).to.eql(eventData);
-                    hookListener.close();
                     eventGenerator.stop();
+                    hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
@@ -388,8 +389,8 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal(CONSTANTS.BRANCH_DELETED);
                     expect(req.body.data).to.eql(eventData);
-                    hookListener.close();
                     eventGenerator.stop();
+                    hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
@@ -402,8 +403,8 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal(CONSTANTS.PROJECT_DELETED);
                     expect(req.body.data).to.eql(eventData);
-                    hookListener.close();
                     eventGenerator.stop();
+                    hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
@@ -416,8 +417,8 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal(CONSTANTS.COMMIT);
                     expect(req.body.data).to.eql(eventData);
-                    hookListener.close();
                     eventGenerator.stop();
+                    hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
@@ -430,8 +431,8 @@ describe('Webhook Manager', function () {
                 hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal('arbitrary');
                     expect(req.body.data).to.eql(eventData);
-                    hookListener.close();
                     eventGenerator.stop();
+                    hookListener.close();
                     done();
                 }),
                 eventData = {projectId: projectId, anything: 'really'};
@@ -447,8 +448,8 @@ describe('Webhook Manager', function () {
                 eventData = {projectId: projectId, anything: 'really'};
 
             setTimeout(function () {
-                hookListener.close();
                 eventGenerator.stop();
+                hookListener.close();
                 done();
             }, 100);
 

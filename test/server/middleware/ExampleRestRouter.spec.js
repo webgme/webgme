@@ -10,30 +10,37 @@ describe('ExampleRestRouter', function () {
 
     var webGME = testFixture.WebGME,
         agent = testFixture.superagent.agent(),
-        expect = testFixture.expect,
-        server;
+        expect = testFixture.expect;
 
     describe('uses server', function () {
+        var server;
         afterEach(function (done) {
-            server.stop(done);
+            if (server) {
+                server.stop(done);
+            } else {
+                done();
+            }
         });
 
-        it('/rest/external/ExampleRestRouter/getExample should return 200', function (done) {
+        it('/ExampleRestRouter/getExample should return 200', function (done) {
             var gmeConfig = testFixture.getGmeConfig();
             server = null;
             gmeConfig.rest.components.ExampleRestRouter = './middleware/ExampleRestRouter';
             server = webGME.standaloneServer(gmeConfig);
             server.start(function () {
                 var serverBaseUrl = server.getUrl();
-                agent.get(serverBaseUrl + '/rest/external/ExampleRestRouter/getExample').end(function (err, res) {
+                agent.get(serverBaseUrl + '/ExampleRestRouter/getExample').end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(200);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
 
-        it.skip('/rest/external/ExampleRestRouter/getExample should return 302 with auth and no guests', function (done) {
+        it.skip('/ExampleRestRouter/getExample should return 302 with auth and no guests', function (done) {
             var gmeConfig = testFixture.getGmeConfig();
             server = null;
             gmeConfig.authentication.enable = true;
@@ -42,15 +49,18 @@ describe('ExampleRestRouter', function () {
             server = webGME.standaloneServer(gmeConfig);
             server.start(function () {
                 var serverBaseUrl = server.getUrl();
-                agent.get(serverBaseUrl + '/rest/external/ExampleRestRouter/getExample').end(function (err, res) {
+                agent.get(serverBaseUrl + '/ExampleRestRouter/getExample').end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(401);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
 
-        it('/rest/external/ExampleRestRouter should return 200 with auth and guests', function (done) {
+        it('/ExampleRestRouter should return 200 with auth and guests', function (done) {
             var gmeConfig = testFixture.getGmeConfig();
             server = null;
             gmeConfig.authentication.enable = true;
@@ -59,72 +69,87 @@ describe('ExampleRestRouter', function () {
             server = webGME.standaloneServer(gmeConfig);
             server.start(function () {
                 var serverBaseUrl = server.getUrl();
-                agent.get(serverBaseUrl + '/rest/external/ExampleRestRouter/getExample').end(function (err, res) {
+                agent.get(serverBaseUrl + '/ExampleRestRouter/getExample').end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(200);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
 
 
-        it('PATCH /rest/external/ExampleRestRouter/patchExample should return 200', function (done) {
+        it('PATCH /ExampleRestRouter/patchExample should return 200', function (done) {
             var gmeConfig = testFixture.getGmeConfig();
             server = null;
             gmeConfig.rest.components.ExampleRestRouter = './middleware/ExampleRestRouter';
             server = webGME.standaloneServer(gmeConfig);
             server.start(function () {
                 var serverBaseUrl = server.getUrl();
-                agent.patch(serverBaseUrl + '/rest/external/ExampleRestRouter/patchExample').end(function (err, res) {
+                agent.patch(serverBaseUrl + '/ExampleRestRouter/patchExample').end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(200);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
 
-        it('POST /rest/external/ExampleRestRouter/postExample should return 204', function (done) {
+        it('POST /ExampleRestRouter/postExample should return 204', function (done) {
             var gmeConfig = testFixture.getGmeConfig();
             server = null;
             gmeConfig.rest.components.ExampleRestRouter = './middleware/ExampleRestRouter';
             server = webGME.standaloneServer(gmeConfig);
             server.start(function () {
                 var serverBaseUrl = server.getUrl();
-                agent.post(serverBaseUrl + '/rest/external/ExampleRestRouter/postExample')
+                agent.post(serverBaseUrl + '/ExampleRestRouter/postExample')
                     .send({data: 42})
                     .end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(201);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
 
-        it('DELETE /rest/external/ExampleRestRouter/deleteExample should return 200', function (done) {
+        it('DELETE /ExampleRestRouter/deleteExample should return 200', function (done) {
             var gmeConfig = testFixture.getGmeConfig();
             server = null;
             gmeConfig.rest.components.ExampleRestRouter = './middleware/ExampleRestRouter';
             server = webGME.standaloneServer(gmeConfig);
             server.start(function () {
                 var serverBaseUrl = server.getUrl();
-                agent.del(serverBaseUrl + '/rest/external/ExampleRestRouter/deleteExample').end(function (err, res) {
+                agent.del(serverBaseUrl + '/ExampleRestRouter/deleteExample').end(function (err, res) {
                     expect(err).equal(null);
                     expect(res.status).equal(204);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
 
-        it('should return 500 /rest/external/ExampleRestRouter/error', function (done) {
+        it('should return 500 /ExampleRestRouter/error', function (done) {
             var gmeConfig = testFixture.getGmeConfig();
             server = null;
             gmeConfig.rest.components.ExampleRestRouter = './middleware/ExampleRestRouter';
             server = webGME.standaloneServer(gmeConfig);
             server.start(function () {
                 var serverBaseUrl = server.getUrl();
-                agent.get(serverBaseUrl + '/rest/external/ExampleRestRouter/error').end(function (err, res) {
+                agent.get(serverBaseUrl + '/ExampleRestRouter/error').end(function (err, res) {
                     expect(res.status).equal(500);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });

@@ -1,0 +1,25 @@
+{
+  "id": "RestRouterGenerator",
+  "name": "Rest Router Generator",
+  "version": "2.2.0",
+  "description": "Generates a rest router component.",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cogs"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "writeAccessRequired": false,
+  "configStructure": [
+    {
+      "name": "restRouterName",
+      "displayName": "Name of the rest-router",
+      "regex": "^(?!(?:do|if|in|for|let|new|try|var|case|else|enum|eval|false|null|this|true|void|with|break|catch|class|const|super|throw|while|yield|delete|export|import|public|return|static|switch|typeof|default|extends|finally|package|private|continue|debugger|function|arguments|interface|protected|implements|instanceof)$)[a-zA-Z_$][0-9a-zA-Z_$]+",
+      "regexMessage": "No spaces and special characters allowed. This value is used as the file name of the rest router.",
+      "description": "The file name of the generated rest-router",
+      "value": "NewRestRouter",
+      "valueType": "string",
+      "readOnly": false
+    }
+  ]
+}

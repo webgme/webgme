@@ -101,8 +101,14 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
                     });
                 } else {
                     logger.error(new Error('Connection problems' + networkStatus));
-                    initDeferred.reject(new Error('Problems connecting to the webgme server, network status: ' +
-                        networkStatus));
+                    self.storage.close(function (err) {
+                        if (err) {
+                            logger.error(err);
+                        }
+
+                        initDeferred.reject(new Error('Problems connecting to the webgme server, network status: ' +
+                            networkStatus));
+                    });
                 }
             });
         }

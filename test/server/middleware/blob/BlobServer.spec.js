@@ -42,13 +42,20 @@ describe('BlobServer', function () {
     });
 
     afterEach(function (done) {
-        server.stop(done);
+        if (server) {
+            server.stop(done);
+        } else {
+            done();
+        }
     });
 
     it('should return 200 at /rest/blob/metadata', function (done) {
         agent.get(serverBaseUrl + '/rest/blob/metadata').end(function (err, res) {
             should.equal(res.status, 200, err);
-            done();
+            server.stop(function (err) {
+                server = null;
+                done(err);
+            });
         });
     });
 
@@ -58,28 +65,40 @@ describe('BlobServer', function () {
             .send('hello')
             .end(function (err, res) {
                 should.equal(res.status, 500, err);
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
     });
 
     it('should return 404 at /rest/blob/metadata/non-existing-hash', function (done) {
         agent.get(serverBaseUrl + '/rest/blob/metadata/non-existing-hash').end(function (err, res) {
             should.equal(res.status, 404, err);
-            done();
+            server.stop(function (err) {
+                server = null;
+                done(err);
+            });
         });
     });
 
     it('should return 404 at /rest/blob/download/non-existing-hash', function (done) {
         agent.get(serverBaseUrl + '/rest/blob/download/non-existing-hash').end(function (err, res) {
             should.equal(res.status, 404, err);
-            done();
+            server.stop(function (err) {
+                server = null;
+                done(err);
+            });
         });
     });
 
     it('should return 404 at /rest/blob/view/non-existing-hash', function (done) {
         agent.get(serverBaseUrl + '/rest/blob/view/non-existing-hash').end(function (err, res) {
             should.equal(res.status, 404, err);
-            done();
+            server.stop(function (err) {
+                server = null;
+                done(err);
+            });
         });
     });
 
@@ -97,7 +116,10 @@ describe('BlobServer', function () {
                 agent.get(serverBaseUrl + '/rest/blob/metadata').end(function (err, res) {
                     should.equal(res.status, 200, err);
                     should.equal(Object.keys(res.body).length, 0);
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -124,7 +146,10 @@ describe('BlobServer', function () {
                 agent.get(serverBaseUrl + '/rest/blob/metadata').end(function (err, res) {
                     should.equal(res.status, 200, err);
                     should.equal(res.body[hash].name, 'public.zip');
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -150,7 +175,10 @@ describe('BlobServer', function () {
                     should.equal(res.status, 200, err);
                     expect(checkContentDisposition).to.not.throw(TypeError);
                     should.equal(checkContentDisposition().parameters.filename, 'notPublic.zip');
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -176,7 +204,10 @@ describe('BlobServer', function () {
                     should.equal(res.status, 200, err);
                     expect(checkContentDisposition).to.not.throw(TypeError);
                     should.equal(checkContentDisposition().parameters.filename, 'Case (1).zip');
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -197,7 +228,10 @@ describe('BlobServer', function () {
                 should.equal(res.status, 200, err);
                 expect(checkContentDisposition).to.not.throw(TypeError);
                 should.equal(checkContentDisposition().parameters.filename, 'notPublic.zip');
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
@@ -222,7 +256,10 @@ describe('BlobServer', function () {
                     should.equal(res.status, 200, err);
                     expect(checkContentDisposition).to.not.throw(TypeError);
                     should.equal(checkContentDisposition().parameters.filename, 'notPublic.zip');
-                    done();
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
                 });
             });
         });
@@ -243,7 +280,10 @@ describe('BlobServer', function () {
                 should.equal(res.status, 200, err);
                 expect(checkContentDisposition).to.not.throw(TypeError);
                 should.equal(checkContentDisposition().parameters.filename, 'notPublic.zip');
-                done();
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
             });
         });
     });
