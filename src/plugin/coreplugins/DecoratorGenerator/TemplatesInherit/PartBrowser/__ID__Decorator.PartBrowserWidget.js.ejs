@@ -42,7 +42,7 @@ define([
     };
 
     <%=id%>DecoratorPartBrowserWidget.prototype.update = function () {
-        ModelDecoratorPartBrowserWidget.prototype.afterAppend.apply(this, arguments);
+        ModelDecoratorPartBrowserWidget.prototype.update.apply(this, arguments);
     };
 
     return <%=id%>DecoratorPartBrowserWidget;
