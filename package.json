@@ -64,7 +64,7 @@
     "underscore": "1.8.3",
     "unzip": "0.1.11",
     "webgme-user-management-page": "0.1.0",
-    "webhook-manager": "webgme/webhook-manager",
+    "webgme-webhook-manager": "0.1.0",
     "winston": "2.2.0"
   },
   "devDependencies": {
