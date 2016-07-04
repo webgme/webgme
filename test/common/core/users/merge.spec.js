@@ -160,7 +160,7 @@ describe('merge - library', function () {
             .catch(done);
     });
 
-    it.only('should return the conflict object if there are conflicting changes and resolve them', function (done) {
+    it('should return the conflict object if there are conflicting changes and resolve them', function (done) {
         var masterBranch = 'resolveMaster',
             otherBranch = 'resolveOther',
             masterContext,

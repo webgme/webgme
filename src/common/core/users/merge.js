@@ -143,12 +143,12 @@ define([
                 branchName,
                 result.finalCommitHash,
                 result.theirCommitHash)
-                .then(function (result) {
-                    if (result.status !== 'FORKED') {
+                .then(function (commitResult) {
+                    if (commitResult.status !== 'FORKED') {
                         // Branch was updated
                         result.updatedBranch = branchName;
                     } else {
-                        parameters.logger.debug('merged commit forked', result);
+                        parameters.logger.debug('merged commit forked', commitResult);
                     }
                 });
         }
@@ -219,13 +219,13 @@ define([
                     });
                 })
                 .then(function (applyResult) {
-                    if (noApply) {
-                        return;
-                    }
-                    //we made the commit, but now we also have try to update the branch of necessary
-                    result.finalCommitHash = applyResult.hash;
-                    if (branchName && applyResult.status !== 'FORKED') {
-                        result.updatedBranch = branchName;
+                    if (!noApply) {
+                        // The result was applied in a new commit ..
+                        result.finalCommitHash = applyResult.hash;
+                        if (branchName && applyResult.status !== 'FORKED') {
+                            // and a branch was updated successfully.
+                            result.updatedBranch = branchName;
+                        }
                     }
 
                     mergeDeferred.resolve();
