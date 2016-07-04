@@ -53,7 +53,9 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Generate a guest account for non-authenticated connections.
 - `config.authentication.guestAccount = 'guest'`
  - User account which non-authenticated connections will access the storage.
-- `config.authentication.logOutUrl = '/'`
+- `config.authentication.logInUrl = '/profile/login'`
+ - Where clients are redirected if not authenticated.
+- `config.authentication.logOutUrl = '/profile/login'`
  - Where clients are redirected after logout.
 - `config.authentication.salts = 10`
  - Strength of the salting of the users' passwords [bcrypt](https://github.com/dcodeIO/bcrypt.js).
@@ -147,7 +149,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 
 ##### rest
 - `config.rest.components = {}`
- -  Routing path (keys) from `/rest/external/` and file-path (values) to custom REST components.
+ - Routing path (keys) from `origin` and file-path (values) to custom REST components. Use the `RestRouterGenerator` plugin to generate a template router (see the generated file for more info).
 
 ##### seedProjects
 - `config.seedProjects.enable = true`
@@ -214,3 +216,10 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Specifies which layout to use (directory name must be present in any of the provided base-paths).
 - `config.visualization.layout.basePaths = ['../src/client/js/Layouts']`
  - Array of base paths for the layouts.
+
+##### webhooks
+- `config.webhooks.enable = true`
+ - If true will start a webhook-manager from the server.
+- `config.webhooks.manager = 'memory'`
+ - Type of webhook-manager for detecting events, can be `'memory'`, `'redis'`. Memory runs in the server process, whereas redis
+ is running in a sub-process. Redis requires the socket.io adapter to be of type redis. (It is also possible to run the redis manager separately from the webgme server.)
