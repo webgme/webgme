@@ -62,9 +62,9 @@ define([
             });
 
         Q.all([
-                getRoot({project: parameters.project, core: core, id: parameters.branchOrCommitA}),
-                getRoot({project: parameters.project, core: core, id: parameters.branchOrCommitB})
-            ])
+            getRoot({project: parameters.project, core: core, id: parameters.branchOrCommitA}),
+            getRoot({project: parameters.project, core: core, id: parameters.branchOrCommitB})
+        ])
             .then(function (results) {
                 core.generateTreeDiff(results[0].root, results[1].root, function (err, diff) {
                     if (err) {
@@ -79,13 +79,25 @@ define([
         return deferred.promise.nodeify(callback);
     }
 
+    /**
+     *
+     * @param {object} parameters
+     * @param {object} parameters.gmeConfig
+     * @param {object} parameters.logger
+     * @param {object} parameters.project
+     * @param {string} parameters.branchOrCommit
+     * @param {string} [parameters.branchName]
+     * @param {boolean} [parameters.noUpdate=false]
+     * @param callback
+     * @returns {*}
+     */
     function apply(parameters, callback) {
         var core = new Core(parameters.project, {
                 globConf: parameters.gmeConfig,
                 logger: parameters.logger.fork('core')
             }),
             applyDeferred = Q.defer(),
-            branchName = null;
+            branchName = parameters.branchName;
 
         getRoot({project: parameters.project, core: core, id: parameters.branchOrCommit})
             .then(function (result) {
@@ -126,6 +138,12 @@ define([
         return applyDeferred.promise.nodeify(callback);
     }
 
+    /**
+     *
+     * @param parameters
+     * @param callback
+     * @returns {*}
+     */
     function merge(parameters, callback) {
         var deferred = Q.defer(),
             result = {},
@@ -135,109 +153,112 @@ define([
                 globConf: parameters.gmeConfig,
                 logger: parameters.logger.fork('core')
             }),
-            branchName = REGEXP.HASH.test(parameters.theirBranchOrCommit) ? null : parameters.theirBranchOrCommit,
-            updateBranch = function () {
-                var branchDeferred = Q.defer();
+            branchName;
 
-                parameters.project.setBranchHash(
-                    branchName,
-                    result.finalCommitHash,
-                    result.theirCommitHash,
-                    function (err) {
-                        if (!err) {
-                            result.updatedBranch = branchName;
-                        }
-                        branchDeferred.resolve();
+        // Allow to tie down commit and still update branch.
+        branchName = parameters.branchName ||
+        REGEXP.HASH.test(parameters.theirBranchOrCommit) ? null : parameters.theirBranchOrCommit;
+
+        function updateBranch() {
+            return parameters.project.setBranchHash(
+                branchName,
+                result.finalCommitHash,
+                result.theirCommitHash)
+                .then(function (result) {
+                    if (result.status !== 'FORKED') {
+                        // Branch was updated
+                        result.updatedBranch = branchName;
+                    } else {
+                        parameters.logger.debug('merged commit forked', result);
                     }
-                );
+                });
+        }
 
-                return branchDeferred.promise;
-            },
-            doMerge = function () {
-                var mergeDeferred = Q.defer(),
-                    noApply = false;
+        function doMerge() {
+            var mergeDeferred = Q.defer(),
+                noApply = false;
 
-                Q.allSettled([
-                        diff({
-                            gmeConfig: parameters.gmeConfig,
-                            logger: parameters.logger,
-                            project: parameters.project,
-                            branchOrCommitA: result.baseCommitHash,
-                            branchOrCommitB: parameters.myBranchOrCommit
-                        }),
-                        diff({
-                            gmeConfig: parameters.gmeConfig,
-                            logger: parameters.logger,
-                            project: parameters.project,
-                            branchOrCommitA: result.baseCommitHash,
-                            branchOrCommitB: parameters.theirBranchOrCommit
-                        })
-                    ])
-                    .then(function (diffs) {
-                        if (diffs[0].state === 'rejected') {
-                            parameters.logger.error('Initial diff generation failed (base->mine)', diffs[0].reason);
-                            throw diffs[0].reason;
-                        }
-                        if (diffs[1].state === 'rejected') {
-                            parameters.logger.error('Initial diff generation failed (base->theirs)', diffs[1].reason);
-                            throw diffs[1].reason;
-                        }
-                        result.diff = {
-                            mine: diffs[0].value,
-                            theirs: diffs[1].value
-                        };
+            Q.allSettled([
+                diff({
+                    gmeConfig: parameters.gmeConfig,
+                    logger: parameters.logger,
+                    project: parameters.project,
+                    branchOrCommitA: result.baseCommitHash,
+                    branchOrCommitB: parameters.myBranchOrCommit
+                }),
+                diff({
+                    gmeConfig: parameters.gmeConfig,
+                    logger: parameters.logger,
+                    project: parameters.project,
+                    branchOrCommitA: result.baseCommitHash,
+                    branchOrCommitB: parameters.theirBranchOrCommit
+                })
+            ])
+                .then(function (diffs) {
+                    if (diffs[0].state === 'rejected') {
+                        parameters.logger.error('Initial diff generation failed (base->mine)', diffs[0].reason);
+                        throw diffs[0].reason;
+                    }
+                    if (diffs[1].state === 'rejected') {
+                        parameters.logger.error('Initial diff generation failed (base->theirs)', diffs[1].reason);
+                        throw diffs[1].reason;
+                    }
+                    result.diff = {
+                        mine: diffs[0].value,
+                        theirs: diffs[1].value
+                    };
 
-                        result.conflict = core.tryToConcatChanges(result.diff.mine, result.diff.theirs);
-                        if (!parameters.auto) {
-                            noApply = true;
-                            return;
-                        }
+                    result.conflict = core.tryToConcatChanges(result.diff.mine, result.diff.theirs);
+                    if (!parameters.auto) {
+                        noApply = true;
+                        return;
+                    }
 
-                        if (!result.conflict) {
-                            parameters.logger.error('Initial diff concatenation failed');
-                            throw new Error('error during merged patch calculation');
-                        }
+                    if (!result.conflict) {
+                        parameters.logger.error('Initial diff concatenation failed');
+                        throw new Error('error during merged patch calculation');
+                    }
 
-                        if (result.conflict.items.length > 0) {
-                            //the user will find out that there were no update done
-                            if (branchName) {
-                                result.targetBranchName = branchName;
-                            }
-                            result.projectId = parameters.project.projectId;
-                            noApply = true;
-                            return;
-                        }
-
-                        return apply({
-                            gmeConfig: parameters.gmeConfig,
-                            logger: parameters.logger,
-                            project: parameters.project,
-                            branchOrCommit: result.baseCommitHash,
-                            noUpdate: true,
-                            patch: result.conflict.merge,
-                            parents: [result.theirCommitHash, result.myCommitHash]
-                        });
-                    })
-                    .then(function (applyResult) {
-                        if (noApply) {
-                            return;
-                        }
-                        //we made the commit, but now we also have try to update the branch of necessary
-                        result.finalCommitHash = applyResult.hash;
+                    if (result.conflict.items.length > 0) {
+                        //the user will find out that there were no update done
                         if (branchName) {
-                            return updateBranch();
+                            result.targetBranchName = branchName;
                         }
-                    })
-                    .then(mergeDeferred.resolve)
-                    .catch(mergeDeferred.reject);
+                        result.projectId = parameters.project.projectId;
+                        noApply = true;
+                        return;
+                    }
 
-                return mergeDeferred.promise;
-            };
+                    return apply({
+                        gmeConfig: parameters.gmeConfig,
+                        logger: parameters.logger,
+                        project: parameters.project,
+                        branchOrCommit: result.baseCommitHash,
+                        branchName: branchName,
+                        patch: result.conflict.merge,
+                        parents: [result.theirCommitHash, result.myCommitHash]
+                    });
+                })
+                .then(function (applyResult) {
+                    if (noApply) {
+                        return;
+                    }
+                    //we made the commit, but now we also have try to update the branch of necessary
+                    result.finalCommitHash = applyResult.hash;
+                    if (branchName) {
+                        return updateBranch();
+                    }
+                })
+                .then(mergeDeferred.resolve)
+                .catch(mergeDeferred.reject);
+
+            return mergeDeferred.promise;
+        }
 
         Q.allSettled([
-                getRoot({project: parameters.project, core: core, id: parameters.myBranchOrCommit}),
-                getRoot({project: parameters.project, core: core, id: parameters.theirBranchOrCommit})
-            ])
+            getRoot({project: parameters.project, core: core, id: parameters.myBranchOrCommit}),
+            getRoot({project: parameters.project, core: core, id: parameters.theirBranchOrCommit})
+        ])
             .then(function (results) {
                 myRoot = results[0].value.root;
                 theirRoot = results[1].value.root;

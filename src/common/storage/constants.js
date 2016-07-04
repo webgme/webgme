@@ -89,7 +89,7 @@ define([], function () {
         SYNCED: 'SYNCED', // The commitData was inserted in the database and the branchHash updated.
         FORKED: 'FORKED', // The commitData was inserted in the database, but the branchHash NOT updated.
         CANCELED: 'CANCELED', // The commitData was never inserted to the database.
-        MERGED: 'MERGED', // This is currently not used
+        MERGED: 'MERGED', // The commit was initially forked, but successfully merged.
 
         BRANCH_STATUS: {
             SYNC: 'SYNC',

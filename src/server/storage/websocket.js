@@ -485,7 +485,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         });
                     })
                     .then(function () {
-                        callback(null, commitStatus);
+                        if (commitStatus.status === 'FORKED' && gmeConfig.storage.autoMerge.enable) {
+                            workerManager.request(data, callback);
+                        } else {
+                            callback(null, commitStatus);
+                        }
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {
