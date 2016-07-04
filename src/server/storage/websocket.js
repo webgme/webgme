@@ -485,8 +485,34 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         });
                     })
                     .then(function () {
-                        if (commitStatus.status === 'FORKED' && gmeConfig.storage.autoMerge.enable) {
-                            workerManager.request(data, callback);
+                        var workerParameters;
+                        if (commitStatus.status === storage.CONSTANTS.FORKED && gmeConfig.storage.autoMerge.enable) {
+                            workerParameters = {
+                                projectId: data.projectId,
+                                mine: commitStatus.hash,
+                                their: data.branchName,
+                                webgmeToken: data.webgmeToken // TODO: we should generate a new one
+                            };
+
+                            workerManager.request(workerParameters, function (err, result) {
+                                if (err) {
+                                    callback(err);
+                                } else {
+                                    if (result.conflict) {
+                                        // The auto-merge resulted in conflicts, return 'FORKED'.
+                                        callback(null, commitStatus);
+                                    } else if (result.branchName) {
+                                        // The auto-merge updated the branch.
+                                        callback(null, {
+                                            status: storage.CONSTANTS.MERGED,
+                                            hash: commitStatus.hash,
+                                            mergeHash: result.finalCommitHash
+                                        });
+                                    } else {
+                                        // This should be an option - otherwise all workers could be locked!
+                                    }
+                                }
+                            });
                         } else {
                             callback(null, commitStatus);
                         }

@@ -144,7 +144,7 @@ define([
                 result.finalCommitHash,
                 result.theirCommitHash)
                 .then(function (commitResult) {
-                    if (commitResult.status !== 'FORKED') {
+                    if (commitResult.status !== CONSTANTS.FORKED) {
                         // Branch was updated
                         result.updatedBranch = branchName;
                     } else {

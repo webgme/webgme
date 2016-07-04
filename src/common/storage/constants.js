@@ -96,6 +96,7 @@ define([], function () {
             AHEAD_SYNC: 'AHEAD_SYNC',
             AHEAD_NOT_SYNC: 'AHEAD_NOT_SYNC',
             PULLING: 'PULLING',
+            MERGING: 'MERGING',
             ERROR: 'ERROR'
         },
 
