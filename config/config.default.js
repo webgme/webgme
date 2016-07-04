@@ -186,7 +186,7 @@ var path = require('path'),
             loadBucketTimer: 10,
             clientCacheSize: 2000, // overwrites cache on client
             autoMerge: {
-                enable: true
+                enable: false
             },
             keyType: 'plainSHA1', // 'rand160Bits', 'ZSSHA', 'plainSHA1',
             database: {

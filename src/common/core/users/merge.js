@@ -19,39 +19,33 @@ define([
     'use strict';
 
     function save(parameters, callback) {
-        var deferred = Q.defer(),
-            persisted = parameters.core.persist(parameters.root),
+        var persisted = parameters.core.persist(parameters.root),
             newRootHash;
 
         if (persisted.hasOwnProperty('objects') === false || Object.keys(persisted.objects).length === 0) {
             parameters.logger.warn('empty patch was inserted - not making commit');
-            deferred.resolve({
+            return Q({
                 hash: parameters.parents[0], //if there is no change, we return the first parent!!!
                 branchName: parameters.branchName
-            });
-            return deferred.promise.nodeify(callback);
+            })
+                .nodeify(callback);
         }
 
         newRootHash = parameters.core.getHash(parameters.root);
 
         //must use ASYNC version of makeCommit to allow usability from different project sources
-        parameters.project.makeCommit(
+        return parameters.project.makeCommit(
             parameters.branchName || null,
             parameters.parents,
             newRootHash,
             persisted.objects,
-            parameters.msg, function (err, saveResult) {
-                if (err) {
-                    deferred.reject(err);
-                    return;
-                }
+            parameters.msg)
+            .then(function (saveResult) {
                 saveResult.root = parameters.root;
                 saveResult.rootHash = newRootHash;
 
-                deferred.resolve(saveResult);
+                return saveResult;
             });
-
-        return deferred.promise.nodeify(callback);
     }
 
     function diff(parameters, callback) {
@@ -96,46 +90,31 @@ define([
                 globConf: parameters.gmeConfig,
                 logger: parameters.logger.fork('core')
             }),
-            applyDeferred = Q.defer(),
+            rootsResult,
             branchName = parameters.branchName;
 
-        getRoot({project: parameters.project, core: core, id: parameters.branchOrCommit})
+        return getRoot({project: parameters.project, core: core, id: parameters.branchOrCommit})
             .then(function (result) {
-                var deferred = Q.defer();
+                rootsResult = result;
 
-                core.applyTreeDiff(result.root, parameters.patch, function (err) {
-                    if (err) {
-                        deferred.reject(err);
-                        return;
-                    }
+                return core.applyTreeDiff(rootsResult.root, parameters.patch);
+            })
+            .then(function () {
+                if (rootsResult.branchName && !parameters.noUpdate) {
+                    branchName = branchName || rootsResult.branchName;
+                }
 
-                    if (result.branchName && !parameters.noUpdate) {
-                        branchName = result.branchName;
-                    }
-
-                    save({
-                        project: parameters.project,
-                        logger: parameters.logger,
-                        core: core,
-                        root: result.root,
-                        parents: parameters.parents || [result.commitHash],
-                        branchName: branchName,
-                        msg: parameters.msg || 'applying patch'
-                    })
-                        .then(function (saveResult) {
-                            deferred.resolve(saveResult);
-                        })
-                        .catch(deferred.reject);
+                return save({
+                    project: parameters.project,
+                    logger: parameters.logger,
+                    core: core,
+                    root: rootsResult.root,
+                    parents: parameters.parents || [rootsResult.commitHash],
+                    branchName: branchName,
+                    msg: parameters.msg || 'applying patch'
                 });
-
-                return deferred.promise;
             })
-            .then(function (saveResult) {
-                applyDeferred.resolve(saveResult);
-            })
-            .catch(applyDeferred.reject);
-
-        return applyDeferred.promise.nodeify(callback);
+            .nodeify(callback);
     }
 
     /**
@@ -245,11 +224,12 @@ define([
                     }
                     //we made the commit, but now we also have try to update the branch of necessary
                     result.finalCommitHash = applyResult.hash;
-                    if (branchName) {
-                        return updateBranch();
+                    if (branchName && applyResult.status !== 'FORKED') {
+                        result.updatedBranch = branchName;
                     }
+
+                    mergeDeferred.resolve();
                 })
-                .then(mergeDeferred.resolve)
                 .catch(mergeDeferred.reject);
 
             return mergeDeferred.promise;
@@ -342,6 +322,7 @@ define([
                 );
             })
             .catch(deferred.reject);
+
         return deferred.promise.nodeify(callback);
     }
 
