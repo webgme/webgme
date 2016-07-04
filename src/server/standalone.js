@@ -487,7 +487,7 @@ function StandAloneServer(gmeConfig) {
     }
 
     function mountUserManagementPage() {
-        var userComponent = require('user-management-page');
+        var userComponent = require('webgme-user-management-page');
         userComponent.initialize(middlewareOpts);
         __app.use('/profile', userComponent.router);
     }
