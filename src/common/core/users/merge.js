@@ -222,7 +222,7 @@ define([
                     if (!noApply) {
                         // The result was applied in a new commit ..
                         result.finalCommitHash = applyResult.hash;
-                        if (branchName && applyResult.status !== 'FORKED') {
+                        if (branchName && applyResult.status !== CONSTANTS.FORKED) {
                             // and a branch was updated successfully.
                             result.updatedBranch = branchName;
                         }

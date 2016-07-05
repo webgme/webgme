@@ -486,7 +486,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     })
                     .then(function () {
                         var workerParameters;
-                        if (commitStatus.status === storage.CONSTANTS.FORKED && gmeConfig.storage.autoMerge.enable) {
+                        if (commitStatus.status === CONSTANTS.FORKED && gmeConfig.storage.autoMerge.enable) {
                             workerParameters = {
                                 projectId: data.projectId,
                                 mine: commitStatus.hash,
@@ -504,8 +504,9 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                                     } else if (result.branchName) {
                                         // The auto-merge updated the branch.
                                         callback(null, {
-                                            status: storage.CONSTANTS.MERGED,
+                                            status: CONSTANTS.MERGED,
                                             hash: commitStatus.hash,
+                                            theirHash: result.theirCommitHash,
                                             mergeHash: result.finalCommitHash
                                         });
                                     } else {
