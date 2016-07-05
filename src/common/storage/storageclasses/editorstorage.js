@@ -584,15 +584,9 @@ define([
                             branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.MERGING);
                             branch.updateHashes(null, result.mergeHash);
 
-                            // Finds the MERGED commit-data and the commit that made us merge.
-                            // These are removed from the update queue.
-                            mergeCommitData = branch.getMergedCommit(result.hash, result.mergeHash);
-
-                            if (!mergeCommitData) {
-                                console.log(JSON.stringify(branch.getUpdateQueue(), null, 2));
-                            }
-
                             if (branch.getCommitQueue().length === 1) {
+                                // Finds the MERGED commit-data and clears the update-queue.
+                                mergeCommitData = branch.getMergedCommit(result.mergeHash);
                                 branch.dispatchHashUpdate({commitData: mergeCommitData, local: false},
                                     function (err, proceed) {
                                         branch.getFirstCommit(true);
