@@ -44,16 +44,16 @@ main = function (argv, callback) {
         .option('-c, --commitHash [string]', 'Commit hash to run from, if set branch will only be used for update.')
         .option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '')
         .option('-a, --activeSelection <webGMEIDs>', 'IDs of selected components (comma separated with no spaces).',
-        list)
+            list)
         .option('-n, --namespace',
-        'Namespace the plugin should run under.', '')
+            'Namespace the plugin should run under.', '')
         .option('-m, --mongo-database-uri [url]',
-        'URI of the MongoDB [default from the configuration file]', gmeConfig.mongo.uri)
+            'URI of the MongoDB [default from the configuration file]', gmeConfig.mongo.uri)
         .option('-u, --user [string]', 'the user of the command [if not given we use the default user]',
-        gmeConfig.authentication.guestAccount)
+            gmeConfig.authentication.guestAccount)
         .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
         .option('-j, --pluginConfigPath [string]',
-        'Path to json file with plugin options that should be overwritten.', '')
+            'Path to json file with plugin options that should be overwritten.', '')
 
         .on('--help', function () {
             var i,
@@ -126,6 +126,9 @@ main = function (argv, callback) {
             };
             project = project_;
 
+            if (program.user) {
+                project.setUser(program.user);
+            }
             return gmeAuth.authorizer.getAccessRights(params.username, params.projectId, projectAuthParams);
         })
         .then(function (access) {

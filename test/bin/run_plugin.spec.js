@@ -49,7 +49,7 @@ describe('Run plugin CLI', function () {
             storage.closeDatabase(),
             gmeAuth.unload()
         ])
-        .nodeify(done);
+            .nodeify(done);
     });
 
     describe('as a child process', function () {
@@ -129,7 +129,6 @@ describe('Run plugin CLI', function () {
             );
         });
 
-
         it('should run the Minimal Working Example plugin if owner is specified', function (done) {
             runPlugin.main(['node', filename, 'MinimalWorkingExample', projectName,
                     '-o', gmeConfig.authentication.guestAccount],
@@ -189,5 +188,26 @@ describe('Run plugin CLI', function () {
                 }
             );
         });
+
+        it('should run Minimal Working Example on a project where only the user has access', function (done) {
+            gmeAuth.addUser('specialUser', 'special@access.com', 'specialUser', true, {overwrite: true})
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: './test/bin/run_plugin/project.webgmex',
+                        projectName: 'specialProject',
+                        branchName: 'master',
+                        gmeConfig: gmeConfig,
+                        username: 'specialUser',
+                        logger: logger
+                    });
+                })
+                .then(function () {
+                    return Q.nfcall(runPlugin.main, ['node', filename,
+                        'MinimalWorkingExample', 'specialProject',
+                        '-u', 'specialUser']);
+                })
+                .nodeify(done);
+        });
+
     });
 });
