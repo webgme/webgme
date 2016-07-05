@@ -497,6 +497,9 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
                             workerManager.request(workerParameters, function (err, result) {
                                 if (err) {
+                                    logger.error('Merging failed', err);
+                                    // TODO: This should return FORKED and not mess up the user.
+                                    // TODO: Keeping it to detect these issues.
                                     callback(err);
                                 } else {
                                     if (result.conflict && result.conflict.items.length > 0) {
@@ -506,16 +509,14 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                                     } else if (result.updatedBranch) {
                                         logger.info('Merge successful', commitStatus);
                                         // The auto-merge updated the branch.
-                                        process.nextTick(function () {
-                                            callback(null, {
-                                                status: CONSTANTS.MERGED,
-                                                hash: commitStatus.hash,
-                                                theirHash: result.theirCommitHash,
-                                                mergeHash: result.finalCommitHash
-                                            });
+                                        callback(null, {
+                                            status: CONSTANTS.MERGED,
+                                            hash: commitStatus.hash,
+                                            theirHash: result.theirCommitHash,
+                                            mergeHash: result.finalCommitHash
                                         });
                                     } else {
-                                        logger.info('This should be an option - otherwise all workers could be locked!');
+                                        logger.error('No conflict nor an updateBranch, something went wrong...');
                                     }
                                 }
                             });

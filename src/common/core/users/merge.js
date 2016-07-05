@@ -213,23 +213,22 @@ define([
                         logger: parameters.logger,
                         project: parameters.project,
                         branchOrCommit: result.baseCommitHash,
-                        branchName: branchName,
                         patch: result.conflict.merge,
                         parents: [result.theirCommitHash, result.myCommitHash]
                     });
                 })
                 .then(function (applyResult) {
-                    if (!noApply) {
-                        // The result was applied in a new commit ..
-                        result.finalCommitHash = applyResult.hash;
-                        if (branchName && applyResult.status !== CONSTANTS.FORKED) {
-                            // and a branch was updated successfully.
-                            result.updatedBranch = branchName;
-                        }
+                    if (noApply) {
+                        return;
                     }
-
-                    mergeDeferred.resolve();
+                    //we made the commit, but now we also have try to update the branch of necessary
+                    result.finalCommitHash = applyResult.hash;
+                    if (branchName) {
+                        result.targetBranchName = branchName;
+                        return updateBranch();
+                    }
                 })
+                .then(mergeDeferred.resolve)
                 .catch(mergeDeferred.reject);
 
             return mergeDeferred.promise;
