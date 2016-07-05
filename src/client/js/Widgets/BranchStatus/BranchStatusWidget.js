@@ -182,6 +182,9 @@ define([
             case CONSTANTS.CLIENT.BRANCH_STATUS.AHEAD_SYNC:
                 this._branchAhead(eventData);
                 break;
+            case CONSTANTS.CLIENT.BRANCH_STATUS.MERGING:
+                this._branchMerging(eventData);
+                break;
             case CONSTANTS.CLIENT.BRANCH_STATUS.PULLING:
                 this._branchPulling(eventData);
                 break;
@@ -243,6 +246,12 @@ define([
         });
         this._ddBranchStatus.setTitle('AHEAD[' + eventData.commitQueue.length + ']');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.LIGHT_BLUE);
+    };
+
+    BranchStatusWidget.prototype._branchMerging = function (eventData) {
+        this._ddBranchStatus.clear();
+        this._ddBranchStatus.setTitle('MERGING[' + eventData.commitQueue.length + ']');
+        this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.BLUE);
     };
 
     BranchStatusWidget.prototype._branchPulling = function (eventData) {

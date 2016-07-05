@@ -488,9 +488,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         var workerParameters;
                         if (commitStatus.status === CONSTANTS.FORKED && gmeConfig.storage.autoMerge.enable) {
                             workerParameters = {
+                                command: 'autoMerge',
                                 projectId: data.projectId,
                                 mine: commitStatus.hash,
-                                their: data.branchName,
+                                theirs: data.branchName,
                                 webgmeToken: data.webgmeToken // TODO: we should generate a new one
                             };
 
@@ -498,19 +499,23 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                                 if (err) {
                                     callback(err);
                                 } else {
-                                    if (result.conflict) {
+                                    if (result.conflict && result.conflict.items.length > 0) {
+                                        logger.info('Merge resulted in conflict', commitStatus);
                                         // The auto-merge resulted in conflicts, return 'FORKED'.
                                         callback(null, commitStatus);
-                                    } else if (result.branchName) {
+                                    } else if (result.updatedBranch) {
+                                        logger.info('Merge successful', commitStatus);
                                         // The auto-merge updated the branch.
-                                        callback(null, {
-                                            status: CONSTANTS.MERGED,
-                                            hash: commitStatus.hash,
-                                            theirHash: result.theirCommitHash,
-                                            mergeHash: result.finalCommitHash
+                                        process.nextTick(function () {
+                                            callback(null, {
+                                                status: CONSTANTS.MERGED,
+                                                hash: commitStatus.hash,
+                                                theirHash: result.theirCommitHash,
+                                                mergeHash: result.finalCommitHash
+                                            });
                                         });
                                     } else {
-                                        // This should be an option - otherwise all workers could be locked!
+                                        logger.info('This should be an option - otherwise all workers could be locked!');
                                     }
                                 }
                             });
