@@ -485,41 +485,54 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         });
                     })
                     .then(function () {
-                        var workerParameters;
+                        var tokenPromise;
                         if (commitStatus.status === CONSTANTS.FORKED && gmeConfig.storage.autoMerge.enable) {
-                            workerParameters = {
-                                command: 'autoMerge',
-                                projectId: data.projectId,
-                                mine: commitStatus.hash,
-                                theirs: data.branchName,
-                                webgmeToken: data.webgmeToken // TODO: we should generate a new one
-                            };
+                            // Commit was forked and auto-merge is enabled. First get a new token for the worker.
+                            if (gmeConfig.authentication.enable === true) {
+                                tokenPromise = gmeAuth.regenerateJWToken(data.webgmeToken);
+                            } else {
+                                tokenPromise = Q();
+                            }
 
-                            workerManager.request(workerParameters, function (err, result) {
-                                if (err) {
-                                    logger.error('Merging failed', err);
-                                    // TODO: This should return FORKED and not mess up the user.
-                                    // TODO: Keeping it to detect these issues.
-                                    callback(err);
-                                } else {
-                                    if (result.conflict && result.conflict.items.length > 0) {
-                                        logger.info('Merge resulted in conflict', commitStatus);
-                                        // The auto-merge resulted in conflicts, return 'FORKED'.
-                                        callback(null, commitStatus);
-                                    } else if (result.updatedBranch) {
-                                        logger.info('Merge successful', commitStatus);
-                                        // The auto-merge updated the branch.
-                                        callback(null, {
-                                            status: CONSTANTS.MERGED,
-                                            hash: commitStatus.hash,
-                                            theirHash: result.theirCommitHash,
-                                            mergeHash: result.finalCommitHash
-                                        });
-                                    } else {
-                                        logger.error('No conflict nor an updateBranch, something went wrong...');
-                                    }
-                                }
-                            });
+                            tokenPromise
+                                .then(function (token) {
+                                    var workerParameters = {
+                                        command: 'autoMerge',
+                                        projectId: data.projectId,
+                                        mine: commitStatus.hash,
+                                        theirs: data.branchName,
+                                        webgmeToken: token
+                                    };
+
+                                    workerManager.request(workerParameters, function (err, result) {
+                                        if (err) {
+                                            logger.error('Merging failed', err);
+                                            // TODO: This should return FORKED and not mess up the user.
+                                            // TODO: Keeping it to detect these issues.
+                                            callback(err);
+                                        } else {
+                                            if (result.conflict && result.conflict.items.length > 0) {
+                                                logger.info('Merge resulted in conflict', commitStatus);
+                                                // The auto-merge resulted in conflicts, return 'FORKED'.
+                                                callback(null, commitStatus);
+                                            } else if (result.updatedBranch) {
+                                                logger.info('Merge successful', commitStatus);
+                                                // The auto-merge updated the branch.
+                                                callback(null, {
+                                                    status: CONSTANTS.MERGED,
+                                                    hash: commitStatus.hash,
+                                                    theirHash: result.theirCommitHash,
+                                                    mergeHash: result.finalCommitHash
+                                                });
+                                            } else {
+                                                logger.error('No conflict nor an updateBranch, something went wrong...');
+                                            }
+                                        }
+                                    });
+                                })
+                                .catch(function (err) {
+                                    callback(err.message);
+                                });
                         } else {
                             callback(null, commitStatus);
                         }
