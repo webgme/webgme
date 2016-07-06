@@ -581,12 +581,12 @@ define([
                             }
                         } else if (result.status === CONSTANTS.MERGED) {
                             branch.inSync = true;
-                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.MERGING);
                             branch.updateHashes(null, result.mergeHash);
 
                             if (branch.getCommitQueue().length === 1) {
                                 // Finds the MERGED commit-data and clears the update-queue.
                                 mergeCommitData = branch.getMergedCommit(result.mergeHash);
+                                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.MERGING);
                                 branch.dispatchHashUpdate({commitData: mergeCommitData, local: false},
                                     function (err, proceed) {
                                         branch.getFirstCommit(true);
@@ -608,6 +608,7 @@ define([
                                 );
                             } else {
                                 branch.getFirstCommit(true);
+                                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.MERGING);
                                 self._pushNextQueuedCommit(projectId, branchName);
                             }
                         } else if (result.status === CONSTANTS.FORKED) {

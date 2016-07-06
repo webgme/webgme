@@ -132,6 +132,7 @@ define([
                 globConf: parameters.gmeConfig,
                 logger: parameters.logger.fork('core')
             }),
+            startTime = Date.now(),
             branchName;
 
         // Allow to tie down commit and still update branch.
@@ -271,6 +272,10 @@ define([
                 return doMerge();
             })
             .then(function () {
+                var ms = Date.now() - startTime,
+                    min = Math.floor(ms/1000/60),
+                    sec = (ms/1000) % 60;
+                console.log('Merge exec time', min, 'min', sec, 'sec');
                 deferred.resolve(result);
             })
             .catch(deferred.reject);

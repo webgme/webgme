@@ -430,11 +430,11 @@ describe('WebSocket', function () {
                         projectId: projectEmitNotification,
                         branchName: 'master'
                     }).then(function () {
-                            emitted = true;
-                            if (received === true) {
-                                deferred.resolve();
-                            }
-                        })
+                        emitted = true;
+                        if (received === true) {
+                            deferred.resolve();
+                        }
+                    })
                         .catch(deferred.reject);
 
                     return deferred.promise;
@@ -656,6 +656,8 @@ describe('WebSocket', function () {
     });
 
     describe('with valid token as a guest user', function () {
+        var ir;
+
         before(function (done) {
             server = WebGME.standaloneServer(gmeConfig);
             serverBaseUrl = server.getUrl();
@@ -720,15 +722,20 @@ describe('WebSocket', function () {
                             })
                         ]);
                     })
-                    .then(function () {
+                    .then(function (result) {
+                        ir = result[4];
                         return Q.allDone([
                             gmeAuth.authorizeByUserId(guestAccount, projectName2Id(projectNameUnauthorized), 'create',
                                 {
                                     read: false,
                                     write: false,
                                     delete: false
-                                })
+                                }),
+                            ir.project.makeCommit(null, [ir.commitHash], ir.rootHash, {}, 'init')
                         ]);
+                    })
+                    .then(function (result) {
+                        ir.commitHash2 = result[1].hash;
                     })
                     .nodeify(done);
             });
@@ -916,24 +923,6 @@ describe('WebSocket', function () {
                 .catch(function (err) {
                     done(new Error(err));
                 });
-        });
-
-        // With auth turned of the tokens are never validated..
-        it.skip('should fail to getConnectionInfo with malformed token', function (done) {
-            openSocketIo('malformed_token')
-                .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo');
-                })
-                .then(function () {
-                    throw new Error('should have failed to getConnectionInfo');
-                })
-                .catch(function (err) {
-                    if (typeof err === 'string' && err.indexOf('User was not found') > -1) {
-                        return;
-                    }
-                    throw new Error('should have failed to getConnectionInfo: ' + err);
-                })
-                .nodeify(done);
         });
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1436,46 +1425,89 @@ describe('WebSocket', function () {
                 .nodeify(done);
         });
 
-        it.skip('should get BRANCH_HASH_UPDATED event with watchProject', function (done) {
-            var socket,
+        it('should get BRANCH_HASH_UPDATED event with watchProject', function (done) {
+            var socketListen,
+                branchName = 'b1',
                 data = {
                     projectId: projectName2Id('WebSocketTest_BRANCH_HASH_UPDATED'),
-                    branchName: 'master',
+                    branchName: branchName,
                     join: true
                 },
-                deferred = Q.defer(),
                 newBranchHash,
                 eventHandler = function (resultData) {
                     expect(resultData.projectId).to.equal(data.projectId);
                     expect(resultData.branchName).to.equal(data.branchName);
                     expect(resultData.newHash).to.equal(newBranchHash);
-
                     data.join = false;
-                    Q.ninvoke(socket, 'emit', 'watchBranch', data)
-                        .then(function () {
-                            deferred.resolve(resultData);
-                        })
-                        .catch(deferred.reject);
+                    Q.ninvoke(socketListen, 'emit', 'watchProject', data)
+                        .finally(done);
                 };
 
-            openSocketIo()
-                .then(function (socket_) {
-                    socket = socket_;
-                    socket.on(CONSTANTS.BRANCH_HASH_UPDATED, eventHandler);
-                    return Q.ninvoke(socket, 'emit', 'watchBranch', data);
+            ir.project.createBranch(branchName, ir.commitHash)
+                .then(function () {
+                    return openSocketIo();
+                })
+                .then(function (socket) {
+                    socketListen = socket;
+                    socketListen.on(CONSTANTS.BRANCH_HASH_UPDATED, eventHandler);
+                    return Q.ninvoke(socketListen, 'emit', 'watchProject', data);
                 })
                 .then(function () {
-                    return Q.ninvoke(socket, 'emit', 'getBranches', data);
+                    return Q.ninvoke(socketListen, 'emit', 'getBranches', data);
                 })
                 .then(function (result) {
-                    expect(result).to.have.property('master');
-                    data.oldHash = result.master;
-                    data.newHash = '#_________dummyHash';
+                    expect(result).to.have.property(branchName);
+                    data.oldHash = result[branchName];
+                    data.newHash = ir.commitHash2;
                     newBranchHash = data.newHash;
-                    return Q.ninvoke(socket, 'emit', 'setBranchHash', data);
+                    return Q.ninvoke(socketListen, 'emit', 'setBranchHash', data);
+                })
+                .catch(done);
+        });
+
+        it('should get BRANCH_UPDATED event with watchBranch', function (done) {
+            var socketListen,
+                socketSend,
+                branchName = 'b2',
+                data = {
+                    projectId: projectName2Id('WebSocketTest_BRANCH_HASH_UPDATED'),
+                    branchName: branchName,
+                    join: true
+                },
+                newBranchHash,
+                eventHandler = function (resultData) {
+                    console.log('eHandle');
+                    expect(resultData.projectId).to.equal(data.projectId);
+                    expect(resultData.branchName).to.equal(data.branchName);
+                    expect(resultData.newHash).to.equal(newBranchHash);
+
+                    data.join = false;
+                    Q.ninvoke(socketListen, 'emit', 'watchBranch', data)
+                        .finally(done);
+                };
+
+            ir.project.createBranch(branchName, ir.commitHash)
+                .then(function () {
+                    return Q.allDone([
+                        openSocketIo(),
+                        openSocketIo()
+                    ]);
+                })
+                .then(function (sockets) {
+                    socketListen = sockets[0];
+                    socketSend = sockets[1];
+                    socketListen.on(CONSTANTS.BRANCH_HASH_UPDATED, eventHandler);
+                    return Q.ninvoke(socketListen, 'emit', 'watchBranch', data);
                 })
                 .then(function () {
-                    return deferred.promise;
+                    return Q.ninvoke(socketListen, 'emit', 'getBranches', data);
+                })
+                .then(function (result) {
+                    expect(result).to.have.property(branchName);
+                    data.oldHash = result[branchName];
+                    data.newHash = ir.commitHash2;
+                    newBranchHash = data.newHash;
+                    return Q.ninvoke(socketSend, 'emit', 'setBranchHash', data);
                 })
                 .nodeify(done);
         });
@@ -1590,6 +1622,169 @@ describe('WebSocket', function () {
                     done();
                 })
                 .done();
+        });
+    });
+
+    describe('makeCommit and auto-merge', function () {
+        var ir,
+            user;
+
+        before(function (done) {
+            var gmeConfigWithAutoMerge = JSON.parse(JSON.stringify(gmeConfig));
+            gmeConfigWithAutoMerge.storage.autoMerge.enable = true;
+            user = gmeConfigWithAutoMerge.authentication.guestAccount;
+            server = WebGME.standaloneServer(gmeConfigWithAutoMerge);
+            serverBaseUrl = server.getUrl();
+            server.start(function (err) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+
+                testFixture.clearDBAndGetGMEAuth(gmeConfigWithAutoMerge, projects)
+                    .then(function (gmeAuth_) {
+                        gmeAuth = gmeAuth_;
+                        safeStorage = testFixture.getMongoStorage(logger, gmeConfigWithAutoMerge, gmeAuth);
+
+                        return safeStorage.openDatabase();
+                    })
+                    .then(function () {
+                        return Q.allDone([
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'seeds/EmptyProject.webgmex',
+                                projectName: projectName,
+                                gmeConfig: gmeConfigWithAutoMerge,
+                                logger: logger
+                            })
+                        ]);
+                    })
+                    .then(function (result) {
+                        ir = result[0];
+                        return Q.allDone([
+                            ir.project.makeCommit(null, [ir.commitHash], ir.rootHash, {}, 'empty commit')
+                        ]);
+                    })
+                    .then(function (result) {
+                        ir.commitHash2 = result[0].hash;
+
+                        return ir.core.loadRoot(ir.rootHash);
+                    })
+                    .then(function (rootNode) {
+                        var persisted;
+
+                        ir.core.setAttribute(rootNode, 'name', 'newName');
+                        persisted = ir.core.persist(rootNode);
+                        return ir.project.makeCommit(null, [ir.commitHash], persisted.rootHash, persisted.objects,
+                            'root change');
+                    })
+                    .then(function (result) {
+                        ir.commitHash3 = result.hash;
+                    })
+                    .nodeify(done);
+            });
+        });
+
+        after(function (done) {
+            server.stop(function (err) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+
+                Q.allDone([
+                    gmeAuth.unload(),
+                    safeStorage.closeDatabase()
+                ])
+                    .nodeify(done);
+            });
+        });
+
+        beforeEach(function () {
+            agent = superagent.agent();
+        });
+
+        it('should return MERGED when makeCommit with old commitHash of branch and can merge', function (done) {
+            var socketSend,
+                branchName = 'b1',
+                data = {
+                    projectId: projectName2Id(projectName),
+                    branchName: branchName,
+                    rootHash: null,
+                    commitObject: null,
+                    coreObjects: {}
+                };
+
+            // The branch we're committing to is pointing to changed one.
+            ir.project.createBranch(branchName, ir.commitHash3)
+                .then(function () {
+                    return ir.core.loadRoot(ir.rootHash);
+                })
+                .then(function (rootNode) {
+                    var persisted,
+                        commitObj;
+
+                    ir.core.setAttribute(rootNode, 'dummy', 'DummyVal');
+                    persisted = ir.core.persist(rootNode);
+                    commitObj = ir.project.createCommitObject([ir.commitHash], persisted.rootHash, user, 'rootChange');
+                    data.rootHash = persisted.rootHash;
+                    data.commitObject = commitObj;
+                    data.coreObjects[data.rootHash] = persisted.objects[data.rootHash].newData;
+
+                    return Q.allDone([
+                        openSocketIo()
+                    ]);
+                })
+                .then(function (sockets) {
+                    socketSend = sockets[0];
+                    return Q.ninvoke(socketSend, 'emit', 'makeCommit', data);
+                })
+                .then(function (commitResult) {
+                    expect(commitResult.status).to.equal(CONSTANTS.MERGED);
+                    expect(commitResult.hash).to.equal(data.commitObject._id);
+                    expect(commitResult.theirHash).to.equal(ir.commitHash3);
+                })
+                .nodeify(done);
+        });
+
+        it('should return FORKED when makeCommit with old commitHash of branch when cannot merge', function (done) {
+            var socketSend,
+                branchName = 'b2',
+                data = {
+                    projectId: projectName2Id(projectName),
+                    branchName: branchName,
+                    rootHash: null,
+                    commitObject: null,
+                    coreObjects: {}
+                };
+
+            ir.project.createBranch(branchName, ir.commitHash3)
+                .then(function () {
+                    return ir.core.loadRoot(ir.rootHash);
+                })
+                .then(function (rootNode) {
+                    var persisted,
+                        commitObj;
+
+                    ir.core.setAttribute(rootNode, 'name', 'conflictName');
+                    persisted = ir.core.persist(rootNode);
+                    commitObj = ir.project.createCommitObject([ir.commitHash], persisted.rootHash, user, 'rootChange');
+                    data.rootHash = persisted.rootHash;
+                    data.commitObject = commitObj;
+                    data.coreObjects[data.rootHash] = persisted.objects[data.rootHash].newData;
+
+                    return Q.allDone([
+                        openSocketIo()
+                    ]);
+                })
+                .then(function (sockets) {
+                    socketSend = sockets[0];
+                    return Q.ninvoke(socketSend, 'emit', 'makeCommit', data);
+                })
+                .then(function (commitResult) {
+                    expect(commitResult.status).to.equal(CONSTANTS.FORKED);
+                    expect(commitResult.hash).to.equal(data.commitObject._id);
+                })
+                .nodeify(done);
         });
     });
 });

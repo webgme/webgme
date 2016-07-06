@@ -10,7 +10,7 @@ var io = require('socket.io'),
     redis = require('socket.io-redis'),
     Q = require('q'),
     UTIL = require('../../utils'),
-    //COOKIE = require('cookie-parser'),
+//COOKIE = require('cookie-parser'),
     URL = requireJS('common/util/url'),
     CONSTANTS = requireJS('common/storage/constants'),
     PACKAGE_JSON;
@@ -58,7 +58,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 .catch(function (err) {
                     if (err.name === 'TokenExpiredError') {
                         logger.debug('JWT_EXPIRED for socket', socket.id);
-                        socket.emit(CONSTANTS.JWT_EXPIRED, { });
+                        socket.emit(CONSTANTS.JWT_EXPIRED, {});
                         throw new Error('TokenExpired');
                     } else {
                         throw err;
@@ -286,8 +286,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         info.userId = userId;
                         callback(null, info);
                     }).catch(function (err) {
-                        callback(err.message);
-                    });
+                    callback(err.message);
+                });
             });
 
             // watcher functions
@@ -339,7 +339,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         if (data.join) {
                             if (access.read) {
                                 joinBranchRoom(socket, data.webgmeToken, data.projectId, data.branchName)
-                                    .fail(function(err) {
+                                    .fail(function (err) {
                                         logger.error(err);
                                     });
                             } else {
@@ -348,7 +348,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                             }
                         } else {
                             leaveBranchRoom(socket, data.projectId, data.branchName)
-                                .fail(function(err) {
+                                .fail(function (err) {
                                     logger.error(err);
                                 });
                         }
@@ -432,7 +432,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     .then(function (commitData) {
                         latestCommitData = commitData;
                         joinBranchRoom(socket, data.webgmeToken, data.projectId, data.branchName)
-                            .fail(function(err) {
+                            .fail(function (err) {
                                 logger.error(err);
                             });
                     })
@@ -476,14 +476,14 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         return storage.makeCommit(data);
                     })
                     .then(function (status) {
-                        var now = (new Date()).toISOString(),
-                            username = data.username || this.gmeConfig.authentication.guestAccount;
+                        var now = (new Date()).toISOString();
+
                         commitStatus = status;
                         return metadataStorage.updateProjectInfo(data.projectId, {
                             modifiedAt: now,
                             viewedAt: now,
-                            viewer: username,
-                            modifier: username
+                            viewer: data.username,
+                            modifier: data.username
                         });
                     })
                     .then(function () {
@@ -509,27 +509,24 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                                     workerManager.request(workerParameters, function (err, result) {
                                         if (err) {
                                             logger.error('Merging failed', err);
-                                            // TODO: This should return FORKED and not mess up the user.
-                                            // TODO: Keeping it to detect these issues.
-                                            callback(err);
+                                        } else if (result.conflict && result.conflict.items.length > 0) {
+                                            logger.info('Merge resulted in conflict', commitStatus);
+                                        } else if (result.updatedBranch) {
+                                            logger.info('Merge successful', commitStatus);
+                                            callback(null, {
+                                                status: CONSTANTS.MERGED,
+                                                hash: commitStatus.hash,
+                                                theirHash: result.theirCommitHash,
+                                                mergeHash: result.finalCommitHash
+                                            });
+                                            return;
                                         } else {
-                                            if (result.conflict && result.conflict.items.length > 0) {
-                                                logger.info('Merge resulted in conflict', commitStatus);
-                                                // The auto-merge resulted in conflicts, return 'FORKED'.
-                                                callback(null, commitStatus);
-                                            } else if (result.updatedBranch) {
-                                                logger.info('Merge successful', commitStatus);
-                                                // The auto-merge updated the branch.
-                                                callback(null, {
-                                                    status: CONSTANTS.MERGED,
-                                                    hash: commitStatus.hash,
-                                                    theirHash: result.theirCommitHash,
-                                                    mergeHash: result.finalCommitHash
-                                                });
-                                            } else {
-                                                logger.error('No conflict nor an updateBranch, something went wrong...');
-                                            }
+                                            logger.error('No conflict nor an updateBranch, this should not happen.');
                                         }
+
+                                        // In the cases where the merged failed or resulted in conflicts we just return
+                                        // the original FORKED commit-status.
+                                        callback(null, commitStatus);
                                     });
                                 })
                                 .catch(function (err) {
