@@ -75,7 +75,6 @@ describe('core diff', function () {
         //        .nodeify(done);
         //});
 
-
         it('should generate diff if an object is deleted', function (done) {
             var patch = {
                 175547009: {
@@ -122,7 +121,17 @@ describe('core diff', function () {
                         'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                     }
                 },
-                1303043463: {guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42', removed: true},
+                1303043463: {
+                    guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                    removed: true,
+                    oGuids: {
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                    }
+                },
                 childrenListChanged: true,
                 guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
                 oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
@@ -140,6 +149,8 @@ describe('core diff', function () {
                         return done(err);
                     }
 
+                    console.log(JSON.stringify(diff, null, 2));
+                    console.log(JSON.stringify(patch, null, 2));
                     expect(diff).to.deep.equal(patch);
                     done();
                 });
@@ -526,7 +537,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             result = core.tryToConcatChanges(diff1, diff2);
 
             expect(result).not.to.equal(null);
@@ -684,7 +694,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             result = core.tryToConcatChanges(diff1, diff2);
 
             expect(result).not.to.equal(null);
@@ -778,7 +787,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             result = core.tryToConcatChanges(diff1, diff2);
 
             expect(result).not.to.equal(null);
@@ -830,7 +838,6 @@ describe('core diff', function () {
                     guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
-
 
             result = core.tryToConcatChanges(diff1, diff2);
 
@@ -886,7 +893,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             result = core.tryToConcatChanges(diff2, diff1);
 
             expect(result.items).to.have.length(1);
@@ -940,7 +946,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             result = core.tryToConcatChanges(diff1, diff2);
 
             expect(result.items).to.have.length(3);
@@ -984,7 +989,6 @@ describe('core diff', function () {
                     guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
-
 
             result = core.tryToConcatChanges(diff1, diff2);
 
@@ -1328,7 +1332,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultConflict.items[0].selected = 'theirs';
             resultPatch = core.applyResolution(resultConflict);
@@ -1564,7 +1567,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
 
@@ -1623,7 +1625,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
 
@@ -1680,7 +1681,6 @@ describe('core diff', function () {
                     guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
-
 
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
@@ -1739,7 +1739,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
 
@@ -1787,7 +1786,6 @@ describe('core diff', function () {
                     guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
-
 
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
@@ -1837,7 +1835,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
 
@@ -1884,7 +1881,6 @@ describe('core diff', function () {
                     guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
-
 
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
@@ -1955,7 +1951,6 @@ describe('core diff', function () {
                     guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
-
 
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
@@ -2039,7 +2034,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
 
@@ -2110,7 +2104,6 @@ describe('core diff', function () {
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
 
-
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
 
@@ -2123,7 +2116,6 @@ describe('core diff', function () {
                 })
                 .nodeify(done);
         });
-
 
         it('should apply: pointer spec change in meta all pointers were deleted', function (done) {
             var resultPatch,
@@ -2168,7 +2160,6 @@ describe('core diff', function () {
                     guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
                     oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
                 };
-
 
             resultConflict = core.tryToConcatChanges(diff1, diff2);
             resultPatch = core.applyResolution(resultConflict);
