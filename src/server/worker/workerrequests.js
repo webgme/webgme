@@ -404,7 +404,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                             auto: true
                         })
                             .then(function (result) {
-                                if (result.conflict && result.conflict.items > 0) {
+                                if (result.conflict && result.conflict.items.length > 0) {
                                     return result;
                                 } else if (result.targetBranchName && !result.updateBranch) {
                                     return mergeTillSyncOrConflict(result.finalCommitHash);
