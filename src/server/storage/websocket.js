@@ -369,7 +369,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                 var branches,
                     access;
                 logger.debug('openProject', {metadata: data});
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getBranches(data);

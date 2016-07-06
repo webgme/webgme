@@ -62,6 +62,40 @@ describe('WebSocket', function () {
                 .nodeify(callback);
         };
 
+
+    function emitRangeWithData(socket, data) {
+        return Q.allSettled([
+            Q.ninvoke(socket, 'emit', 'getConnectionInfo', data),
+            Q.ninvoke(socket, 'emit', 'watchDatabase', data),
+            Q.ninvoke(socket, 'emit', 'watchProject', data),
+            Q.ninvoke(socket, 'emit', 'watchBranch', data),
+            Q.ninvoke(socket, 'emit', 'openProject', data),
+            Q.ninvoke(socket, 'emit', 'closeProject', data),
+            Q.ninvoke(socket, 'emit', 'openBranch', data),
+            Q.ninvoke(socket, 'emit', 'closeBranch', data),
+            Q.ninvoke(socket, 'emit', 'makeCommit', data),
+            Q.ninvoke(socket, 'emit', 'loadObjects', data),
+            Q.ninvoke(socket, 'emit', 'loadPaths', data),
+            Q.ninvoke(socket, 'emit', 'setBranchHash', data),
+            Q.ninvoke(socket, 'emit', 'getBranchHash', data),
+            Q.ninvoke(socket, 'emit', 'getProjects', data),
+            Q.ninvoke(socket, 'emit', 'deleteProject', data),
+            Q.ninvoke(socket, 'emit', 'createProject', data),
+            Q.ninvoke(socket, 'emit', 'transferProject', data),
+            Q.ninvoke(socket, 'emit', 'duplicateProject', data),
+            Q.ninvoke(socket, 'emit', 'getBranches', data),
+            Q.ninvoke(socket, 'emit', 'createTag', data),
+            Q.ninvoke(socket, 'emit', 'deleteTag', data),
+            Q.ninvoke(socket, 'emit', 'getTags', data),
+            Q.ninvoke(socket, 'emit', 'getCommits', data),
+            Q.ninvoke(socket, 'emit', 'getHistory', data),
+            Q.ninvoke(socket, 'emit', 'getLatestCommitData', data),
+            Q.ninvoke(socket, 'emit', 'getCommonAncestorCommit', data),
+            Q.ninvoke(socket, 'emit', 'simpleRequest', data),
+            Q.ninvoke(socket, 'emit', 'notification', data)
+        ]);
+    }
+
     describe('with valid token as a guest user, auth turned on', function () {
         before(function (done) {
             var gmeConfigWithAuth = testFixture.getGmeConfig();
@@ -128,6 +162,141 @@ describe('WebSocket', function () {
 
         beforeEach(function () {
             agent = superagent.agent();
+        });
+
+        it('should fail and not crash server when sending string data', function (done) {
+            var socket;
+
+            openSocketIo()
+                .then(function (socket_) {
+                    var data = 'five';
+                    socket = socket_;
+                    return emitRangeWithData(socket, data);
+                })
+                .then(function (result) {
+                    result.forEach(function (res, i) {
+                        if (i === 1 || i === 7) {
+                            expect(res.state).to.equal('fulfilled', i);
+                        } else {
+                            expect(res.state).to.equal('rejected', i);
+                        }
+                    });
+
+                    // Check that we can still e.g. openProject.
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                })
+                .then(function (result) {
+                    expect(result.userId).to.equal(gmeConfig.authentication.guestAccount);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail and not crash server when sending boolean data', function (done) {
+            var socket;
+
+            openSocketIo()
+                .then(function (socket_) {
+                    var data = true;
+                    socket = socket_;
+                    return emitRangeWithData(socket, data);
+                })
+                .then(function (result) {
+                    result.forEach(function (res, i) {
+                        if (i === 1 || i === 7) {
+                            expect(res.state).to.equal('fulfilled', i);
+                        } else {
+                            expect(res.state).to.equal('rejected', i);
+                        }
+                    });
+
+                    // Check that we can still e.g. openProject.
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                })
+                .then(function (result) {
+                    expect(result.userId).to.equal(gmeConfig.authentication.guestAccount);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail and not crash server when sending number data', function (done) {
+            var socket;
+
+            openSocketIo()
+                .then(function (socket_) {
+                    var data = 5;
+                    socket = socket_;
+                    return emitRangeWithData(socket, data);
+                })
+                .then(function (result) {
+                    result.forEach(function (res, i) {
+                        if (i === 1 || i === 7) {
+                            expect(res.state).to.equal('fulfilled', i);
+                        } else {
+                            expect(res.state).to.equal('rejected', i);
+                        }
+                    });
+
+                    // Check that we can still e.g. openProject.
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                })
+                .then(function (result) {
+                    expect(result.userId).to.equal(gmeConfig.authentication.guestAccount);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail and not crash server when sending null data', function (done) {
+            var socket;
+
+            openSocketIo()
+                .then(function (socket_) {
+                    var data = null;
+                    socket = socket_;
+                    return emitRangeWithData(socket, data);
+                })
+                .then(function (result) {
+                    result.forEach(function (res, i) {
+                        if (i === 1 || i === 7) {
+                            expect(res.state).to.equal('fulfilled', i);
+                        } else {
+                            expect(res.state).to.equal('rejected', i);
+                        }
+                    });
+
+                    // Check that we can still e.g. openProject.
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                })
+                .then(function (result) {
+                    expect(result.userId).to.equal(gmeConfig.authentication.guestAccount);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail and not crash server when sending undefined data', function (done) {
+            var socket;
+
+            openSocketIo()
+                .then(function (socket_) {
+                    var data;
+                    socket = socket_;
+                    return emitRangeWithData(socket, data);
+                })
+                .then(function (result) {
+                    result.forEach(function (res, i) {
+                        if (i === 1 || i === 7) {
+                            expect(res.state).to.equal('fulfilled', i);
+                        } else {
+                            expect(res.state).to.equal('rejected', i);
+                        }
+                    });
+
+                    // Check that we can still e.g. openProject.
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                })
+                .then(function (result) {
+                    expect(result.userId).to.equal(gmeConfig.authentication.guestAccount);
+                })
+                .nodeify(done);
         });
 
         it('should getConnectionInfo', function (done) {
@@ -739,25 +908,6 @@ describe('WebSocket', function () {
                 .catch(function (err) {
                     done(new Error(err));
                 });
-        });
-
-        it.skip('should fail to open an existing project if data is not an object', function (done) {
-            openSocketIo()
-                .then(function (socket) {
-                    var data = projectName;
-
-                    return Q.ninvoke(socket, 'emit', 'openProject', data);
-                })
-                .then(function () {
-                    throw new Error('should have failed to openProject');
-                })
-                .catch(function (err) {
-                    if (typeof err === 'string' && err.indexOf('Invalid argument') > -1) {
-                        return;
-                    }
-                    throw new Error('should have failed to openProject: ' + err);
-                })
-                .nodeify(done);
         });
 
         it('should fail to open a non-existent project', function (done) {
