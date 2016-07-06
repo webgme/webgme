@@ -753,6 +753,156 @@ describe('WebSocket', function () {
             agent = superagent.agent();
         });
 
+        it('should fail and not crash server when sending string data', function (done) {
+            var socket;
+
+            openSocketIo()
+                .then(function (socket_) {
+                    var data = 'five';
+                    socket = socket_;
+                    return emitRangeWithData(socket, data);
+                })
+                .then(function (result) {
+                    result.forEach(function (res, i) {
+                        var shouldSucceed = [
+                            0, 1, 2, 3, 7
+                        ];
+                        if (shouldSucceed.indexOf(i) > -1) {
+                            expect(res.state).to.equal('fulfilled', i);
+                        } else {
+                            expect(res.state).to.equal('rejected', i);
+                        }
+                    });
+
+                    // Check that we can still e.g. openProject.
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                })
+                .then(function (result) {
+                    expect(result.userId).to.equal(gmeConfig.authentication.guestAccount);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail and not crash server when sending boolean data', function (done) {
+            var socket;
+
+            openSocketIo()
+                .then(function (socket_) {
+                    var data = true;
+                    socket = socket_;
+                    return emitRangeWithData(socket, data);
+                })
+                .then(function (result) {
+                    result.forEach(function (res, i) {
+                        var shouldSucceed = [
+                            0, 1, 2, 3, 7
+                        ];
+                        if (shouldSucceed.indexOf(i) > -1) {
+                            expect(res.state).to.equal('fulfilled', i);
+                        } else {
+                            expect(res.state).to.equal('rejected', i);
+                        }
+                    });
+
+                    // Check that we can still e.g. openProject.
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                })
+                .then(function (result) {
+                    expect(result.userId).to.equal(gmeConfig.authentication.guestAccount);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail and not crash server when sending number data', function (done) {
+            var socket;
+
+            openSocketIo()
+                .then(function (socket_) {
+                    var data = 5;
+                    socket = socket_;
+                    return emitRangeWithData(socket, data);
+                })
+                .then(function (result) {
+                    result.forEach(function (res, i) {
+                        var shouldSucceed = [
+                            0, 1, 2, 3, 7
+                        ];
+                        if (shouldSucceed.indexOf(i) > -1) {
+                            expect(res.state).to.equal('fulfilled', i);
+                        } else {
+                            expect(res.state).to.equal('rejected', i);
+                        }
+                    });
+
+                    // Check that we can still e.g. openProject.
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                })
+                .then(function (result) {
+                    expect(result.userId).to.equal(gmeConfig.authentication.guestAccount);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail and not crash server when sending null data', function (done) {
+            var socket;
+
+            openSocketIo()
+                .then(function (socket_) {
+                    var data = null;
+                    socket = socket_;
+                    return emitRangeWithData(socket, data);
+                })
+                .then(function (result) {
+                    result.forEach(function (res, i) {
+                        var shouldSucceed = [
+                            0, 1, 2, 3, 7
+                        ];
+                        if (shouldSucceed.indexOf(i) > -1) {
+                            expect(res.state).to.equal('fulfilled', i);
+                        } else {
+                            expect(res.state).to.equal('rejected', i);
+                        }
+                    });
+
+                    // Check that we can still e.g. openProject.
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                })
+                .then(function (result) {
+                    expect(result.userId).to.equal(gmeConfig.authentication.guestAccount);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail and not crash server when sending undefined data', function (done) {
+            var socket;
+
+            openSocketIo()
+                .then(function (socket_) {
+                    var data;
+                    socket = socket_;
+                    return emitRangeWithData(socket, data);
+                })
+                .then(function (result) {
+                    result.forEach(function (res, i) {
+                        var shouldSucceed = [
+                            0, 1, 2, 3, 7
+                        ];
+                        if (shouldSucceed.indexOf(i) > -1) {
+                            expect(res.state).to.equal('fulfilled', i);
+                        } else {
+                            expect(res.state).to.equal('rejected', i);
+                        }
+                    });
+
+                    // Check that we can still e.g. openProject.
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                })
+                .then(function (result) {
+                    expect(result.userId).to.equal(gmeConfig.authentication.guestAccount);
+                })
+                .nodeify(done);
+        });
+
         it('should getConnectionInfo', function (done) {
             openSocketIo()
                 .then(function (socket) {

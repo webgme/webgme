@@ -281,7 +281,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     userId: null,
                     serverVersion: PACKAGE_JSON.version
                 };
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         info.userId = userId;
                         callback(null, info);
@@ -293,7 +293,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             // watcher functions
             socket.on('watchDatabase', function (data, callback) {
                 logger.debug('watchDatabase', {metadata: data});
-                if (data.join) {
+                if (data && data.join) {
                     socket.join(CONSTANTS.DATABASE_ROOM);
                 } else {
                     socket.leave(CONSTANTS.DATABASE_ROOM);
@@ -303,7 +303,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('watchProject', function (data, callback) {
                 logger.debug('watchProject', {metadata: data});
-
+                data = data || {};
                 projectAccess(socket, data.webgmeToken, data.projectId)
                     .then(function (access) {
                         if (data.join) {
@@ -333,6 +333,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('watchBranch', function (data, callback) {
                 // This is emitted from clients that got disconnected while having branches open.
                 logger.debug('watchBranch', {metadata: data});
+                data = data || {};
                 projectAccess(socket, data.webgmeToken, data.projectId)
                     .then(function (access) {
                         if (data.join) {
@@ -400,7 +401,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('closeProject', function (data, callback) {
                 logger.debug('closeProject', {metadata: data});
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         return metadataStorage.updateProjectInfo(data.projectId, {
                             viewedAt: (new Date()).toISOString(),
@@ -422,7 +423,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             socket.on('openBranch', function (data, callback) {
                 var latestCommitData;
                 logger.debug('openBranch', {metadata: data});
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         // This ensures read access.
@@ -449,6 +450,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('closeBranch', function (data, callback) {
                 logger.debug('closeBranch', {metadata: data});
+                data = data || {};
                 leaveBranchRoom(socket, data.projectId, data.branchName)
                     .fail(function (err) {
                         logger.error(err);
@@ -459,7 +461,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('makeCommit', function (data, callback) {
                 var commitStatus;
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         var roomName;
                         if (data.branchName) {
@@ -547,7 +549,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('loadObjects', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.loadObjects(data);
@@ -565,7 +567,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('loadPaths', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.loadPaths(data);
@@ -584,7 +586,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             socket.on('setBranchHash', function (data, callback) {
                 var status;
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         if (socket.rooms.hasOwnProperty(data.projectId)) {
                             data.socket = socket;
@@ -618,7 +620,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('getBranchHash', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getBranchHash(data);
@@ -636,7 +638,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('getProjects', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getProjects(data);
@@ -654,7 +656,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('deleteProject', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         if (socket.rooms.hasOwnProperty(CONSTANTS.DATABASE_ROOM)) {
                             data.socket = socket;
@@ -676,7 +678,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('createProject', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         if (socket.rooms.hasOwnProperty(CONSTANTS.DATABASE_ROOM)) {
                             data.socket = socket;
@@ -698,7 +700,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('transferProject', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         if (socket.rooms.hasOwnProperty(CONSTANTS.DATABASE_ROOM)) {
                             data.socket = socket;
@@ -720,7 +722,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('duplicateProject', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         if (socket.rooms.hasOwnProperty(CONSTANTS.DATABASE_ROOM)) {
                             data.socket = socket;
@@ -742,7 +744,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('getBranches', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getBranches(data);
@@ -760,7 +762,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('createTag', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.createTag(data);
@@ -778,7 +780,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('deleteTag', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.deleteTag(data);
@@ -796,7 +798,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('getTags', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getTags(data);
@@ -814,7 +816,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('getCommits', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getCommits(data);
@@ -832,7 +834,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('getHistory', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getHistory(data);
@@ -850,7 +852,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('getLatestCommitData', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getLatestCommitData(data);
@@ -868,7 +870,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('getCommonAncestorCommit', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.username = userId;
                         return storage.getCommonAncestorCommit(data);
@@ -887,7 +889,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
             //worker commands
             socket.on('simpleRequest', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         data.userId = userId;
                         data.socketId = socket.id;
@@ -943,7 +945,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('notification', function (data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
+                getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
                         logger.debug('Incoming notification from', userId, {metadata: data});
                         data.userId = userId;
