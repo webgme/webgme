@@ -997,6 +997,51 @@ describe('core diff', function () {
             expect(result.items[0].mine.path).to.equal('/175547009/meta');
         });
 
+        it('should generate all conflict when a base is deleted and a property is changed', function () {
+            var diff1 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-2312-5e3a-7eb9b96b2ae7',
+                        removed: true,
+                        oGuids: {
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                diff2 = {
+                    childrenListChanged: true,
+                    O: {
+                        reg: {
+                            position: {
+                                x: 379,
+                                y: 210
+                            }
+                        },
+                        guid: '57a34d02-1535-5f98-4864-78022e614bc2',
+                        oGuids: {
+                            '57a34d02-1535-5f98-4864-78022e614bc2': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                result = core.tryToConcatChanges(diff1, diff2);
+
+            expect(result.items).to.have.length(1);
+            expect(result.items[0].mine.path).to.equal('/D/removed');
+        });
+
     });
 
     describe('resolve', function () {

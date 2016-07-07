@@ -138,29 +138,29 @@ define(['common/util/canon',
             return diff;
         }
 
-        // function childrenDiff(source, target) {
-        //     var sRelids = self.getChildrenRelids(source),
-        //         tRelids = self.getChildrenRelids(target),
-        //         tHashes = self.getChildrenHashes(target),
-        //         sHashes = self.getChildrenHashes(source),
-        //         i,
-        //         diff = {added: [], removed: []};
-        //
-        //     for (i = 0; i < sRelids.length; i++) {
-        //         if (tRelids.indexOf(sRelids[i]) === -1) {
-        //             diff.removed.push({relid: sRelids[i], hash: sHashes[sRelids[i]]});
-        //         }
-        //     }
-        //
-        //     for (i = 0; i < tRelids.length; i++) {
-        //         if (sRelids.indexOf(tRelids[i]) === -1) {
-        //             diff.added.push({relid: tRelids[i], hash: tHashes[tRelids[i]]});
-        //         }
-        //     }
-        //
-        //     return diff;
-        //
-        // }
+        function childrenDiff(source, target) {
+            var sRelids = self.getChildrenRelids(source),
+                tRelids = self.getChildrenRelids(target),
+                tHashes = self.getChildrenHashes(target),
+                sHashes = self.getChildrenHashes(source),
+                i,
+                diff = {added: [], removed: []};
+
+            for (i = 0; i < sRelids.length; i++) {
+                if (tRelids.indexOf(sRelids[i]) === -1) {
+                    diff.removed.push({relid: sRelids[i], hash: sHashes[sRelids[i]]});
+                }
+            }
+
+            for (i = 0; i < tRelids.length; i++) {
+                if (sRelids.indexOf(tRelids[i]) === -1) {
+                    diff.added.push({relid: tRelids[i], hash: tHashes[tRelids[i]]});
+                }
+            }
+
+            return diff;
+
+        }
 
         function pointerDiff(source, target) {
             var getPointerData = function (node) {
@@ -234,7 +234,6 @@ define(['common/util/canon',
                                     data[paths[i]][names[j]] = null;
                                 } else if (names[j].slice(-4) !== '-inv' && names[j].indexOf('_') === -1 &&
                                     ovr[paths[i]][names[j]].indexOf('_') === -1) {
-
                                     data[paths[i]][names[j]] = self.joinPaths(base, ovr[paths[i]][names[j]]);
                                 }
                             }
@@ -398,12 +397,25 @@ define(['common/util/canon',
         }
 
         function extendDiffWithOvr(diff, oDiff) {
-            var i, paths, names, j, tDiff;
+            var i, paths, names, j, tDiff,
+                onlyBaseRemoved = function (path) {
+                    var sCopy = JSON.parse(JSON.stringify(oDiff.source[path] || {})),
+                        tCopy = JSON.parse(JSON.stringify(oDiff.target[path] || {}));
+
+                    if (tCopy['base']) {
+                        return false;
+                    }
+
+                    delete sCopy['base'];
+
+                    return CANON.stringify(sCopy) === CANON.stringify(tCopy);
+                };
+
             //first extend sources
             paths = Object.keys(oDiff.source || {});
             for (i = 0; i < paths.length; i++) {
                 tDiff = getPathOfDiff(diff, paths[i]);
-                if (tDiff.removed !== true) {
+                if (tDiff.removed !== true && !onlyBaseRemoved(paths[i])) {
                     tDiff.pointer = tDiff.pointer || {source: {}, target: {}};
                     tDiff.pointer.source = tDiff.pointer.source || {};
                     tDiff.pointer.target = tDiff.pointer.target || {};
@@ -417,7 +429,7 @@ define(['common/util/canon',
             paths = Object.keys(oDiff.target || {});
             for (i = 0; i < paths.length; i++) {
                 tDiff = getPathOfDiff(diff, paths[i]);
-                if (tDiff.removed !== true) {
+                if (tDiff.removed !== true && !onlyBaseRemoved(paths[i])) {
                     tDiff.pointer = tDiff.pointer || {source: {}, target: {}};
                     names = Object.keys(oDiff.target[paths[i]]);
                     for (j = 0; j < names.length; j++) {
@@ -447,59 +459,27 @@ define(['common/util/canon',
                         return null;
                     };
 
-                // tDiff = diff.children ? diff.children.removed || [] : [];
-                // for (i = 0; i < tDiff.length; i++) {
-                //     diff.childrenListChanged = true;
-                //     child = getChild(sChildren, tDiff[i].relid);
-                //     if (child) {
-                //         guid = self.getGuid(child);
-                //         diff[tDiff[i].relid] = {guid: guid, removed: true, hash: self.getHash(child)};
-                //         _yetToCompute[guid] = _yetToCompute[guid] || {};
-                //         _yetToCompute[guid].from = child;
-                //         _yetToCompute[guid].fromExpanded = false;
-                //     }
-                // }
-
-                // looking for removed children
-                for (i = 0; i < sChildren.length; i += 1) {
-                    if (!getChild(tChildren, self.getRelid(sChildren[i]))) {
-                        diff.childrenListChanged = true;
-                        child = sChildren[i];
+                tDiff = diff.children ? diff.children.removed || [] : [];
+                for (i = 0; i < tDiff.length; i++) {
+                    diff.childrenListChanged = true;
+                    child = getChild(sChildren, tDiff[i].relid);
+                    if (child) {
                         guid = self.getGuid(child);
-                        diff[self.getRelid(child)] = {guid: guid, removed: true, hash: self.getHash(child)};
+                        diff[tDiff[i].relid] = {guid: guid, removed: true, hash: self.getHash(child)};
                         _yetToCompute[guid] = _yetToCompute[guid] || {};
                         _yetToCompute[guid].from = child;
                         _yetToCompute[guid].fromExpanded = false;
                     }
                 }
 
-                // tDiff = diff.children ? diff.children.added || [] : [];
-                // for (i = 0; i < tDiff.length; i++) {
-                //     diff.childrenListChanged = true;
-                //     child = getChild(tChildren, tDiff[i].relid);
-                //     if (child) {
-                //         guid = self.getGuid(child);
-                //         base = self.getBase(child);
-                //         diff[tDiff[i].relid] = {
-                //             guid: guid,
-                //             removed: false,
-                //             hash: self.getHash(child),
-                //             pointer: {source: {}, target: {base: base === null ? null : self.getPath(base)}}
-                //         };
-                //         _yetToCompute[guid] = _yetToCompute[guid] || {};
-                //         _yetToCompute[guid].to = child;
-                //         _yetToCompute[guid].toExpanded = false;
-                //     }
-                // }
-
-                //looking for the added children
-                for (i = 0; i < tChildren.length; i += 1) {
-                    if (!getChild(sChildren, self.getRelid(tChildren[i]))) {
-                        diff.childrenListChanged = true;
-                        child = tChildren[i];
+                tDiff = diff.children ? diff.children.added || [] : [];
+                for (i = 0; i < tDiff.length; i++) {
+                    diff.childrenListChanged = true;
+                    child = getChild(tChildren, tDiff[i].relid);
+                    if (child) {
                         guid = self.getGuid(child);
                         base = self.getBase(child);
-                        diff[self.getRelid(child)] = {
+                        diff[tDiff[i].relid] = {
                             guid: guid,
                             removed: false,
                             hash: self.getHash(child),
@@ -2382,7 +2362,7 @@ define(['common/util/canon',
         //<editor-fold=Added Methods>
         this.nodeDiff = function (source, target) {
             var diff = {
-                // children: childrenDiff(source, target),
+                children: childrenDiff(source, target),
                 attr: attrDiff(source, target),
                 reg: regDiff(source, target),
                 pointer: pointerDiff(source, target),
