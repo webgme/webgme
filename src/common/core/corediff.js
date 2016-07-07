@@ -836,7 +836,8 @@ define(['common/util/canon',
                 relidObj = {},
                 parent;
 
-            if (diffBase.guid !== diffExtension.guid) {
+            if (diffBase.guid !== diffExtension.guid &&
+                (typeof diffBase.guid === 'string' && typeof diffExtension.guid === 'string')) {
                 if (diffBase.movedFrom && diffExtension.movedFrom) {
                     //relocate the extension
                     globalDiff = _concatExtension;

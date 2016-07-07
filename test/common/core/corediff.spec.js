@@ -1042,6 +1042,33 @@ describe('core diff', function () {
             expect(result.items[0].mine.path).to.equal('/D/removed');
         });
 
+        it('should not fail to generate conflict result if one of the diffs are empty', function () {
+            var diff1 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-2312-5e3a-7eb9b96b2ae7',
+                        removed: true,
+                        oGuids: {
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                diff2 = {},
+                result = core.tryToConcatChanges(diff1, diff2);
+
+            expect(result.items).to.have.length(0);
+
+            result = core.tryToConcatChanges(diff2, diff1);
+
+            expect(result.items).to.have.length(0);
+        });
+
     });
 
     describe('resolve', function () {
