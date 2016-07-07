@@ -24,6 +24,7 @@ function getStats(options) {
         gmeAuth,
         params = {},
         err,
+        startTime = Date.now(),
         mongoConn,
         storage;
 
@@ -109,12 +110,17 @@ function getStats(options) {
                             });
                             core.loadRoot(commits[0].root)
                                 .then(function (rootNode) {
+                                    function visitorFn(node, done) {
+                                        result.nodeCnt += 1;
+                                        done();
+                                    }
+
                                     result.metaNodeCnt = Object.keys(core.getAllMetaNodes(rootNode)).length;
                                     if (params.fullNodeStat === true) {
-                                        logger.info('Load project-tree for', result.projectId);
-                                        core.loadSubTree(rootNode)
-                                            .then(function (nodes) {
-                                                result.nodeCnt = nodes.length;
+                                        logger.info('Traversing', result.projectId);
+                                        result.nodeCnt = 0;
+                                        core.traverse(rootNode, {stopOnError: true}, visitorFn)
+                                            .then(function () {
                                                 coreDeferred.resolve(result);
                                             })
                                             .catch(function (err) {
@@ -217,7 +223,12 @@ function getStats(options) {
             return writeDeferred.promise;
         })
         .then(function () {
+            var ms = Date.now() - startTime,
+                min = Math.floor(ms/1000/60),
+                sec = (ms/1000) % 60;
+
             logger.info('Script finished' + (params.outputFile ? ', wrote to "' + params.outputFile + '".' : '.'));
+            logger.info('Exec-time:', min, 'min', sec, 'sec');
         })
         .catch(function (err_) {
             err = err_;
