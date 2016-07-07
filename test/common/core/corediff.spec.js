@@ -148,9 +148,7 @@ describe('core diff', function () {
                     if (err) {
                         return done(err);
                     }
-
-                    console.log(JSON.stringify(diff, null, 2));
-                    console.log(JSON.stringify(patch, null, 2));
+                    
                     expect(diff).to.deep.equal(patch);
                     done();
                 });
