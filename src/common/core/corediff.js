@@ -234,7 +234,6 @@ define(['common/util/canon',
                                     data[paths[i]][names[j]] = null;
                                 } else if (names[j].slice(-4) !== '-inv' && names[j].indexOf('_') === -1 &&
                                     ovr[paths[i]][names[j]].indexOf('_') === -1) {
-
                                     data[paths[i]][names[j]] = self.joinPaths(base, ovr[paths[i]][names[j]]);
                                 }
                             }
@@ -398,12 +397,25 @@ define(['common/util/canon',
         }
 
         function extendDiffWithOvr(diff, oDiff) {
-            var i, paths, names, j, tDiff;
+            var i, paths, names, j, tDiff,
+                onlyBaseRemoved = function (path) {
+                    var sCopy = JSON.parse(JSON.stringify(oDiff.source[path] || {})),
+                        tCopy = JSON.parse(JSON.stringify(oDiff.target[path] || {}));
+
+                    if (tCopy['base']) {
+                        return false;
+                    }
+
+                    delete sCopy['base'];
+
+                    return CANON.stringify(sCopy) === CANON.stringify(tCopy);
+                };
+
             //first extend sources
             paths = Object.keys(oDiff.source || {});
             for (i = 0; i < paths.length; i++) {
                 tDiff = getPathOfDiff(diff, paths[i]);
-                if (tDiff.removed !== true) {
+                if (tDiff.removed !== true && !onlyBaseRemoved(paths[i])) {
                     tDiff.pointer = tDiff.pointer || {source: {}, target: {}};
                     tDiff.pointer.source = tDiff.pointer.source || {};
                     tDiff.pointer.target = tDiff.pointer.target || {};
@@ -417,7 +429,7 @@ define(['common/util/canon',
             paths = Object.keys(oDiff.target || {});
             for (i = 0; i < paths.length; i++) {
                 tDiff = getPathOfDiff(diff, paths[i]);
-                if (tDiff.removed !== true) {
+                if (tDiff.removed !== true && !onlyBaseRemoved(paths[i])) {
                     tDiff.pointer = tDiff.pointer || {source: {}, target: {}};
                     names = Object.keys(oDiff.target[paths[i]]);
                     for (j = 0; j < names.length; j++) {
@@ -489,14 +501,16 @@ define(['common/util/canon',
                 return TASYNC.call(function () {
                     delete diff.children;
                     extendDiffWithOvr(diff, oDiff);
+
                     normalize(diff);
+
                     if (Object.keys(diff).length > 0) {
                         diff.guid = self.getGuid(targetRoot);
                         diff.hash = self.getHash(targetRoot);
                         diff.oGuids = gatherObstructiveGuids(targetRoot);
                         return TASYNC.call(function (finalDiff) {
                             return finalDiff;
-                        }, fillMissingGuid(targetRoot, '', diff));
+                        }, fillMissingGuid(targetRoot, sourceRoot, '', diff));
                     } else {
                         return diff;
                     }
@@ -520,7 +534,7 @@ define(['common/util/canon',
             return result;
         }
 
-        function fillMissingGuid(root, path, diff) {
+        function fillMissingGuid(root, sRoot, path, diff) {
             var relids = getDiffChildrenRelids(diff),
                 i,
                 done,
@@ -531,20 +545,29 @@ define(['common/util/canon',
 
             for (i = 0; i < relids.length; i++) {
                 done = TASYNC.call(subComputationFinished,
-                    fillMissingGuid(root, path + '/' + relids[i], diff[relids[i]]), relids[i]);
+                    fillMissingGuid(root, sRoot, path + '/' + relids[i], diff[relids[i]]), relids[i]);
             }
 
             return TASYNC.call(function () {
-                if (diff.guid) {
+                // if (diff.guid) {
+                //     return diff;
+                // } else {
+                //     return TASYNC.call(function (child) {
+                //         diff.guid = self.getGuid(child);
+                //         diff.hash = self.getHash(child);
+                //         diff.oGuids = gatherObstructiveGuids(child);
+                //         return diff;
+                //     }, self.loadByPath(root, path));
+                // }
+                return TASYNC.call(function (child, sChild) {
+                    if (!child) {
+                        child = sChild;
+                    }
+                    diff.guid = self.getGuid(child);
+                    diff.hash = self.getHash(child);
+                    diff.oGuids = gatherObstructiveGuids(child);
                     return diff;
-                } else {
-                    return TASYNC.call(function (child) {
-                        diff.guid = self.getGuid(child);
-                        diff.hash = self.getHash(child);
-                        diff.oGuids = gatherObstructiveGuids(child);
-                        return diff;
-                    }, self.loadByPath(root, path));
-                }
+                }, self.loadByPath(root, path), self.loadByPath(sRoot, path));
             }, done);
         }
 
@@ -813,7 +836,8 @@ define(['common/util/canon',
                 relidObj = {},
                 parent;
 
-            if (diffBase.guid !== diffExtension.guid) {
+            if (diffBase.guid !== diffExtension.guid &&
+                (typeof diffBase.guid === 'string' && typeof diffExtension.guid === 'string')) {
                 if (diffBase.movedFrom && diffExtension.movedFrom) {
                     //relocate the extension
                     globalDiff = _concatExtension;
@@ -2333,6 +2357,7 @@ define(['common/util/canon',
                 }
             }
         }
+
         //</editor-fold>
 
         //<editor-fold=Added Methods>
