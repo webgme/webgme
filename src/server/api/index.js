@@ -1590,6 +1590,10 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(projectData.hooks || {});
             })
             .catch(function (err) {
+                if (err.message.indexOf('no such project') > -1) {
+                    res.status(404);
+                }
+
                 next(err);
             });
     });
@@ -1619,6 +1623,10 @@ function createAPI(app, mountPath, middlewareOpts) {
                 }
             })
             .catch(function (err) {
+                if (err.message.indexOf('no such project') > -1) {
+                    res.status(404);
+                }
+
                 next(err);
             });
     });
@@ -1633,7 +1641,6 @@ function createAPI(app, mountPath, middlewareOpts) {
 
         authorizer.getAccessRights(userId, projectId, projectAuthParams)
             .then(function (projectAccess) {
-
                 if (projectAccess && projectAccess.write) {
                     return metadataStorage.getProject(projectId);
                 }
@@ -1667,6 +1674,9 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(projectData.hooks[req.params.hookId]);
             })
             .catch(function (err) {
+                if (err.message.indexOf('no such project') > -1) {
+                    res.status(404);
+                }
                 next(err);
             });
     });
@@ -1715,6 +1725,9 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(projectData.hooks[req.params.hookId]);
             })
             .catch(function (err) {
+                if (err.message.indexOf('no such project') > -1) {
+                    res.status(404);
+                }
                 next(err);
             });
     });
@@ -1738,9 +1751,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                 throw new Error('Not authorized to modify project [' + projectId + ']');
             })
             .then(function (projectData_) {
-                var now = (new Date()).toISOString(),
-                    hook;
-
                 projectData = projectData_;
                 if (projectData.hooks && projectData.hooks[req.params.hookId]) {
                     delete projectData.hooks[req.params.hookId];
@@ -1755,6 +1765,9 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(projectData.hooks);
             })
             .catch(function (err) {
+                if (err.message.indexOf('no such project') > -1) {
+                    res.status(404);
+                }
                 next(err);
             });
     });

@@ -36,15 +36,14 @@ main = function (argv, callback) {
     }
 
     webgme.addToRequireJsPaths(gmeConfig);
-
+    console.log(argv);
     program
         .version('2.2.0')
         .arguments('<pluginName> <projectName>')
         .option('-b, --branchName [string]', 'Name of the branch to load and save to.', 'master')
         .option('-c, --commitHash [string]', 'Commit hash to run from, if set branch will only be used for update.')
-        .option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '')
-        .option('-a, --activeSelection <webGMEIDs>', 'IDs of selected components (comma separated with no spaces).',
-            list)
+        .option('-a, --activeNode', 'ID/Path to active node.', '')
+        .option('-s, --activeSelection', 'IDs/Paths of selected nodes (comma separated with no spaces).', list)
         .option('-n, --namespace',
             'Namespace the plugin should run under.', '')
         .option('-m, --mongo-database-uri [url]',
@@ -138,10 +137,9 @@ main = function (argv, callback) {
             return project.getBranchHash(program.branchName);
         })
         .then(function (commitHash) {
-            logger.info('CommitHash obtained ', commitHash);
             var pluginManager = new PluginCliManager(project, logger, gmeConfig),
                 context = {
-                    activeNode: program.selectedObjID,
+                    activeNode: program.activeNode,
                     activeSelection: program.activeSelection || [],
                     branchName: program.branchName,
                     commitHash: program.commitHash || commitHash,
