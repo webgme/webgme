@@ -5,7 +5,7 @@
  */
 'use strict';
 
-describe.only('plugin_hook', function () {
+describe('plugin_hook', function () {
     var testFixture = require('../_globals.js'),
         gmeConfig = testFixture.getGmeConfig(),
         WebGME = testFixture.WebGME,
