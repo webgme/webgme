@@ -176,7 +176,7 @@ describe('Executor Plugin', function () {
                     filename,
                     'ExecutorPlugin',
                     projectName,
-                    '-s',
+                    '-a',
                     '/1',
                     '-j',
                     configFileName,
@@ -219,7 +219,7 @@ describe('Executor Plugin', function () {
                     filename,
                     'ExecutorPlugin',
                     projectName,
-                    '-s',
+                    '-a',
                     '/1',
                     '-j',
                     configFileName,
@@ -265,7 +265,7 @@ describe('Executor Plugin', function () {
 
             this.timeout(10000);
 
-            runPlugin.main(['node', filename, 'ExecutorPlugin', projectName, '-s', '/1', '-j', configFileName],
+            runPlugin.main(['node', filename, 'ExecutorPlugin', projectName, '-a', '/1', '-j', configFileName],
                 function (err, result) {
                     try {
                         expect(err).to.equal(null);
