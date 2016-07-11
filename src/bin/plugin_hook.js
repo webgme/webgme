@@ -111,6 +111,9 @@ function PluginHandler(options) {
                     if (err) {
                         if (res && res.status === 404) {
                             hookDeferred.reject(new Error('Project does not exist [' + projectId + ']'));
+                        } else if (res && res.status === 403) {
+                            hookDeferred.reject(new Error('Project does not exist [' + projectId + '] or user has no' +
+                                ' read access.'));
                         }
                         logger.error('Error getting hooks', err);
                         hookDeferred.reject(err);
@@ -184,6 +187,8 @@ function PluginHandler(options) {
                         deferred.resolve();
                     }
                 });
+        } else {
+            deferred.resolve();
         }
 
         server.close();

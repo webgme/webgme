@@ -69,6 +69,38 @@ describe('plugin_hook', function () {
         });
     });
 
+    it('should start and stop with no project', function (done) {
+        var pluginId = 'DummyPlugin',
+            handlerPort = 9999,
+            handlerUrl = 'http://127.0.0.1:' + handlerPort,
+            ph = new PluginHandler({pluginId: pluginId, handlerPort: handlerPort});
+
+        ph.start()
+            .then(function () {
+                var stopDef = Q.defer();
+                superagent.get(handlerUrl + '/result')
+                    .end(function (err, res) {
+                        console.log('got');
+                        if (err) {
+                            stopDef.reject(err);
+                            return;
+                        }
+
+                        try {
+                            expect(res.body).to.deep.equal([]);
+                            ph.stop()
+                                .then(stopDef.resolve)
+                                .catch(stopDef.reject);
+                        } catch (e) {
+                            stopDef.reject(e);
+                        }
+                    });
+
+                return stopDef.promise;
+            })
+            .nodeify(done);
+    });
+
     it('should add a webhook at start and remove it at stop', function (done) {
         var pluginId = 'DummyPlugin',
             handlerPort = 9999,
@@ -119,6 +151,87 @@ describe('plugin_hook', function () {
                     });
 
                 return checkDef.promise;
+            })
+            .nodeify(done);
+    });
+
+    it('should add a webhook at start and leave it at stop', function (done) {
+        var pluginId = 'DummyPlugin',
+            handlerPort = 9999,
+            getUrl = server.getUrl() + '/api/projects/' + gmeConfig.authentication.guestAccount + '/' +
+                projectName + '/hooks',
+            ph = new PluginHandler({
+                pluginId: pluginId,
+                projectName: projectName,
+                handlerPort: handlerPort,
+                leaveHook: true
+            });
+
+        ph.start()
+            .then(function () {
+                var stopDef = Q.defer();
+                superagent.get(getUrl)
+                    .end(function (err, res) {
+                        if (err) {
+                            stopDef.reject(err);
+                            return;
+                        }
+
+                        try {
+                            expect(Object.keys(res.body)).to.deep.equal(['pluginDebugHook']);
+                            expect(res.body.pluginDebugHook.events).to.deep.equal(['COMMIT']);
+                            expect(res.body.pluginDebugHook.url)
+                                .to.equal('http://127.0.0.1:' + handlerPort + '/pluginDebugHook');
+                            ph.stop()
+                                .then(stopDef.resolve)
+                                .catch(stopDef.reject);
+                        } catch (e) {
+                            stopDef.reject(e);
+                        }
+                    });
+
+                return stopDef.promise;
+            })
+            .then(function () {
+                var checkDef = Q.defer();
+                superagent.get(getUrl)
+                    .end(function (err, res) {
+                        if (err) {
+                            checkDef.reject(err);
+                            return;
+                        }
+
+                        try {
+                            expect(Object.keys(res.body)).to.deep.equal(['pluginDebugHook']);
+                            expect(res.body.pluginDebugHook.events).to.deep.equal(['COMMIT']);
+                            expect(res.body.pluginDebugHook.url)
+                                .to.equal('http://127.0.0.1:' + handlerPort + '/pluginDebugHook');
+                            checkDef.resolve();
+                        } catch (e) {
+                            checkDef.reject(e);
+                        }
+                    });
+
+                return checkDef.promise;
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to start if project does not exist', function (done) {
+        var pluginId = 'DummyPlugin',
+            handlerPort = 9999,
+            ph = new PluginHandler({
+                pluginId: pluginId,
+                projectName: 'Does_not_exist',
+                handlerPort: handlerPort
+            });
+
+        ph.start()
+            .then(function () {
+                throw new Error('Should have failed to start');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Project does not exist');
             })
             .nodeify(done);
     });
