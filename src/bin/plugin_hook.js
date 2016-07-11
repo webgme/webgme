@@ -32,7 +32,7 @@ webgme.addToRequireJsPaths(gmeConfig);
  * @param {string} [options.activeNode] - Path/id to active node.
  * @param {string} [options.activeSelection] - Comma separated list of Paths/ids to active selection.
  * @param {string} [options.namespace] - Namespace plugin should run under.
- * @param {string} [options.pluginConfigPath] - Path to plugin configuration to be used.
+ * @param {string} [options.pluginConfigPath] - Path to plugin configuration to be used..
  * @constructor
  */
 function PluginHandler(options) {
@@ -191,6 +191,8 @@ function PluginHandler(options) {
         return deferred.promise.nodeify(callback);
     };
 }
+
+module.exports = PluginHandler;
 
 if (require.main === module) {
     var Command = require('commander').Command,
