@@ -61,8 +61,8 @@ main = function (argv, callback) {
             console.log();
             console.log('    $ node run_plugin.js PluginGenerator TestProject');
             console.log('    $ node run_plugin.js PluginGenerator TestProject -b branch1 -j pluginConfig.json');
-            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -s /1/b');
-            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -a /1,/1/c,/d');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -a /1/b');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -s /1,/1/c,/d');
             console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -c #123..');
             console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -b b1 -c ' +
                 '#def8861ca16237e6756ee22d27678d979bd2fcde');

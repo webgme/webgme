@@ -21,6 +21,20 @@ var webgme = require('../../webgme'),
 
 webgme.addToRequireJsPaths(gmeConfig);
 
+/**
+ *
+ * @param {object} options
+ * @param {string} options.pluginId - Plugin that should be executed.
+ * @param {string} [options.projectName] - Name of project to add webhook too.
+ * @param {string} [options.owner=guestAccount] - Owner of project to add webhook too.
+ * @param {boolean} [options.leaveHook=false] - If project given, will leave the created hook after termination.
+ * @param {string} [options.handlerPort] - Port hook handler should listen too (gmeConfig.server.port + 1).
+ * @param {string} [options.activeNode] - Path/id to active node.
+ * @param {string} [options.activeSelection] - Comma separated list of Paths/ids to active selection.
+ * @param {string} [options.namespace] - Namespace plugin should run under.
+ * @param {string} [options.pluginConfigPath] - Path to plugin configuration to be used.
+ * @constructor
+ */
 function PluginHandler(options) {
     var app = new Express(),
         results = [],
@@ -28,12 +42,11 @@ function PluginHandler(options) {
         webgmeUrl,
         server;
 
-    console.log(typeof options.activeNode);
     options.handlerPort = options.handlerPort || gmeConfig.server.port + 1;
     options.owner = options.owner || gmeConfig.authentication.guestAccount;
 
     function runPlugin(payload) {
-        var args = ['node', 'run_plugin.js', options.args[0], payload.projectName],
+        var args = ['node', 'run_plugin.js', options.pluginId, payload.projectName],
             result = {
                 payload: payload,
                 pluginResult: null,
@@ -190,11 +203,11 @@ if (require.main === module) {
         .description('Starts a webhook handler server that executes the specified plugin on commits made to the ' +
             'supplied project. The webgme server needs to be running and gmeConfig.webhooks.enable must be set ' +
             'to true. At start up the script will add a webhook to the project that will be removed when stopped.')
+        .option('-p, --projectName [string]', 'Name of project to add the webhook to under "' + HOOK_ID + '".', '')
+        .option('-o, --owner [string]', 'the owner of the project ]', gmeConfig.authentication.guestAccount)
         .option('-l, --leaveHook', 'Do not remove the webhook from the project after stop.', false)
         .option('-h, --handlerPort [number]', 'Port the webhook-handler should listen at ' +
             '[gmeConfig.server.port + 1]')
-        .option('-p, --projectName [string]', 'Name of project to add the webhook to under "' + HOOK_ID + '".', '')
-        .option('-o, --owner [string]', 'the owner of the project ]', gmeConfig.authentication.guestAccount)
         .option('-a, --activeNode', 'ID/Path to active node.', '')
         .option('-s, --activeSelection', 'IDs/Paths of selected nodes (comma separated with no spaces).')
         .option('-n, --namespace', 'Namespace the plugin should run under.', '')
@@ -209,8 +222,8 @@ if (require.main === module) {
             console.log('    $ node run_plugin.js MinimalWorkingExample');
             console.log('    $ node run_plugin.js MinimalWorkingExample -p 8080');
             console.log('    $ node run_plugin.js PluginGenerator -j pluginConfig.json');
-            console.log('    $ node run_plugin.js MinimalWorkingExample -s /1/b');
-            console.log('    $ node run_plugin.js MinimalWorkingExample -a /1,/1/c,/d');
+            console.log('    $ node run_plugin.js MinimalWorkingExample -a /1/b');
+            console.log('    $ node run_plugin.js MinimalWorkingExample -s /1,/1/c,/d');
             console.log();
             console.log('  Plugin paths using ' + configDir + path.sep + 'config.' + env + '.js :');
             console.log();
@@ -225,6 +238,7 @@ if (require.main === module) {
     } else if (gmeConfig.webhooks.enable !== true) {
         logger.error('gmeConfig.webhooks.enable must be true in order to dispatch events from the webgme server!');
     } else {
+        program.pluginId = program.args[0];
         handler = new PluginHandler(program);
 
         handler.start(function(err) {

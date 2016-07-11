@@ -116,7 +116,7 @@
     "import": "node ./src/bin/import.js",
     "merge": "node ./src/bin/merge.js",
     "plugin": "node ./src/bin/run_plugin.js",
-    "pluginHook": "node ./src/bin/webhook.js",
+    "pluginHook": "node ./src/bin/plugin_hook.js",
     "users": "node ./src/bin/usermanager.js",
     "clean_up": "node ./src/bin/clean_up.js",
     "stats": "node ./src/bin/storage_stats.js"
