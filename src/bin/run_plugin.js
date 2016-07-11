@@ -32,19 +32,18 @@ main = function (argv, callback) {
         pluginResult;
 
     function list(val) {
-        return val.split(',');
+        return val ? val.split(',') : [];
     }
 
     webgme.addToRequireJsPaths(gmeConfig);
-    console.log(argv);
     program
         .version('2.2.0')
         .arguments('<pluginName> <projectName>')
         .option('-b, --branchName [string]', 'Name of the branch to load and save to.', 'master')
         .option('-c, --commitHash [string]', 'Commit hash to run from, if set branch will only be used for update.')
-        .option('-a, --activeNode', 'ID/Path to active node.', '')
-        .option('-s, --activeSelection', 'IDs/Paths of selected nodes (comma separated with no spaces).', list)
-        .option('-n, --namespace',
+        .option('-a, --activeNode [string]', 'ID/Path to active node.', '')
+        .option('-s, --activeSelection [string]', 'IDs/Paths of selected nodes (comma separated with no spaces).', list)
+        .option('-n, --namespace [string]',
             'Namespace the plugin should run under.', '')
         .option('-m, --mongo-database-uri [url]',
             'URI of the MongoDB [default from the configuration file]', gmeConfig.mongo.uri)

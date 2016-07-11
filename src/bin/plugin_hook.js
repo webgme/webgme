@@ -210,9 +210,9 @@ if (require.main === module) {
         .option('-l, --leaveHook', 'Do not remove the webhook from the project after stop.', false)
         .option('-h, --handlerPort [number]', 'Port the webhook-handler should listen at ' +
             '[gmeConfig.server.port + 1]')
-        .option('-a, --activeNode', 'ID/Path to active node.', '')
-        .option('-s, --activeSelection', 'IDs/Paths of selected nodes (comma separated with no spaces).')
-        .option('-n, --namespace', 'Namespace the plugin should run under.', '')
+        .option('-a, --activeNode [string]', 'ID/Path to active node.', '')
+        .option('-s, --activeSelection [string]', 'IDs/Paths of selected nodes (comma separated with no spaces).')
+        .option('-n, --namespace [string]', 'Namespace the plugin should run under.', '')
         .option('-j, --pluginConfigPath [string]',
             'Path to json file with plugin options that should be overwritten.', '')
 
