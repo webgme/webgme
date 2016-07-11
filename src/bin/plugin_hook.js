@@ -233,11 +233,11 @@ if (require.main === module) {
                 env = process.env.NODE_ENV || 'default';
             console.log('  Examples:');
             console.log();
-            console.log('    $ node run_plugin.js MinimalWorkingExample');
-            console.log('    $ node run_plugin.js MinimalWorkingExample -p 8080');
-            console.log('    $ node run_plugin.js PluginGenerator -j pluginConfig.json');
-            console.log('    $ node run_plugin.js MinimalWorkingExample -a /1/b');
-            console.log('    $ node run_plugin.js MinimalWorkingExample -s /1,/1/c,/d');
+            console.log('    $ node plugin_hook.js MinimalWorkingExample');
+            console.log('    $ node plugin_hook.js MinimalWorkingExample -p 8080');
+            console.log('    $ node plugin_hook.js PluginGenerator -j pluginConfig.json');
+            console.log('    $ node plugin_hook.js MinimalWorkingExample -a /1/b');
+            console.log('    $ node plugin_hook.js MinimalWorkingExample -s /1,/1/c,/d');
             console.log();
             console.log('  Plugin paths using ' + configDir + path.sep + 'config.' + env + '.js :');
             console.log();
