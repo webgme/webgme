@@ -91,7 +91,12 @@ main = function (argv, callback) {
         program.branchName + '.');
 
     if (program.pluginConfigPath) {
-        pluginConfig = require(path.resolve(program.pluginConfigPath));
+        try {
+            pluginConfig = require(path.resolve(program.pluginConfigPath));
+        } catch (e) {
+            deferred.reject(e);
+            return deferred.promise.nodeify(callback);
+        }
     } else {
         pluginConfig = {};
     }

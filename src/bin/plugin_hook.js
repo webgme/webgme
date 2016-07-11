@@ -54,7 +54,6 @@ function PluginHandler(options) {
             };
 
         results.unshift(result);
-        console.log(payload);
         args = args.concat([
             '-o', payload.owner,
             '-u', payload.data.userId,
@@ -67,6 +66,14 @@ function PluginHandler(options) {
 
         if (options.activeSelection) {
             args.push('-s', options.activeSelection);
+        }
+
+        if (options.namespace) {
+            args.push('-n', options.namespace);
+        }
+
+        if (options.pluginConfigPath) {
+            args.push('-j', options.pluginConfigPath);
         }
 
         return binRunPlugin.main(args)
@@ -159,7 +166,7 @@ function PluginHandler(options) {
                     var payload = req.body;
                     runPlugin(payload)
                         .finally(function () {
-                            console.log('done');
+                            logger.info('done');
                         });
 
                     res.sendStatus(200);
