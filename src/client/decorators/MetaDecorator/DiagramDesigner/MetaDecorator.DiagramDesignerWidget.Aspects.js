@@ -240,7 +240,7 @@ define([
         }
 
         //set meta aspect first
-        client.setMetaAspect(objID, cDesc.name, cDesc);
+        client.setMetaAspect(objID, cDesc.name, cDesc.items || []);
         client.createSet(objID, cDesc.name);
 
         client.completeTransaction();
