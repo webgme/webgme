@@ -1467,6 +1467,29 @@ define(['common/util/canon',
             }
         }
 
+        function completeConcatBase(baseDiff, extensionDiff) {
+            var recursiveComplete = function (base, extension, newItem) {
+                var i, keys;
+                if (newItem === true) {
+                    base.guid = extension.guid;
+                    base.oGuids = extension.oGuids;
+                    base.ooGuids = extension.ooGuids;
+                }
+
+                keys = getDiffChildrenRelids(extension);
+                for (i = 0; i < keys.length; i += 1) {
+                    if (base[keys[i]] === undefined) {
+                        base[keys[i]] = {};
+                        recursiveComplete(base[keys[i]], extension[keys[i]], true);
+                    } else {
+                        recursiveComplete(base[keys[i]], extension[keys[i]], false);
+                    }
+                }
+            };
+
+            recursiveComplete(baseDiff, extensionDiff, Object.keys(baseDiff).length === 0);
+        }
+
         function getObstructiveGuids(diffNode) {
             var result = [],
                 keys, i;
@@ -2411,6 +2434,7 @@ define(['common/util/canon',
                 getExtensionDestinationFromSource: {}
             };
 
+            completeConcatBase(base, extension);
             getMoveSources(base,
                 '', _concatMoves.getBaseSourceFromDestination, _concatMoves.getBaseDestinationFromSource);
             getMoveSources(extension,
