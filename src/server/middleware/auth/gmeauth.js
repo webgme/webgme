@@ -496,7 +496,8 @@ function GMEAuth(session, gmeConfig) {
                 var i;
                 for (i = 0; i < userDataArray.length; i += 1) {
                     delete userDataArray[i].passwordHash;
-                    // TODO: Consider removing settings and data here.
+                    userDataArray[i].data = userDataArray[i].data || {};
+                    userDataArray[i].settings = userDataArray[i].settings || {};
                 }
                 return userDataArray;
             })
