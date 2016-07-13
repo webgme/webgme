@@ -98,7 +98,10 @@ define([
         PROPERTY_GROUP_POINTERS: 'Pointers',
 
         /* Visualizer */
-        DEFAULT_VISUALIZER: 'ModelEditor'
+        DEFAULT_VISUALIZER: 'ModelEditor',
+
+        /* SPECIAL Pointers */
+        CONSTRAINED_BY: 'constrainedby'
     });
 
     clientConstants.CLIENT = CLIENT_CONSTANTS;
