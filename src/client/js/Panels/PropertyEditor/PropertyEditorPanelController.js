@@ -30,6 +30,7 @@ define(['js/logger',
         META_REGISTRY_KEYS = [
             REGISTRY_KEYS.IS_PORT,
             REGISTRY_KEYS.IS_ABSTRACT,
+            REGISTRY_KEYS.IS_TEMPLATE,
             REGISTRY_KEYS.VALID_PLUGINS,
             REGISTRY_KEYS.USED_ADDONS,
             REGISTRY_KEYS.VALID_VISUALIZERS,
@@ -226,7 +227,7 @@ define(['js/logger',
                         isCommon: true,
                         readOnly: true
                     };
-                };
+                }
 
                 metaTypeId = cNode.getMetaTypeId();
                 if (metaTypeId) {
@@ -297,6 +298,7 @@ define(['js/logger',
                                                                          isAttribute, isRegistry, isPointer) {
         var onlyRootSelected = selectedObjIDs.length === 1 && selectedObjIDs[0] === CONSTANTS.PROJECT_ROOT_ID,
             keys = Object.keys(src),
+            canBeTemplate,
             key,
             range,
             i,
@@ -419,6 +421,15 @@ define(['js/logger',
                                 '' : dst[extKey].value;
                             dst[extKey].valueItems = WebGMEGlobal.allAddOns;
                             dst[extKey].widget = PROPERTY_GRID_WIDGETS.MULTI_SELECT_WIDGET;
+                        }
+                    } else if (key === REGISTRY_KEYS.IS_TEMPLATE && onlyRootSelected === false) {
+                        canBeTemplate = this._canBeTemplate(selectedObjIDs);
+                        dst[extKey].value = (!dst[extKey].value || canBeTemplate === false) ? false : true;
+                        dst[extKey].valueType = 'boolean';
+                        if (canBeTemplate === false) {
+                            dst[extKey].readOnly = true;
+                            dst[extKey].alwaysReadOnly = true;
+                            dst[extKey].title = 'Inherited children cannot be templates';
                         }
                     }
                 }
@@ -632,6 +643,44 @@ define(['js/logger',
                     return false;
                 }
 
+            }
+        }
+
+        return true;
+    };
+
+    PropertyEditorController.prototype._canBeTemplate = function (selectedObjIDs) {
+        var i = selectedObjIDs.length,
+            node,
+            relId,
+            parentNode,
+            parentBaseNode;
+
+        while (i--) {
+            node = this._client.getNode(selectedObjIDs[i]);
+
+            if (node) {
+                parentNode = this._client.getNode(node.getParentId());
+                if (!parentNode) {
+                    // Root node cannot be a template.
+                    return false;
+                }
+
+                parentBaseNode = this._client.getNode(parentNode.getBaseId());
+                if (!parentBaseNode) {
+                    // FCO cannot be a template.
+                    return false;
+                }
+
+                relId = node.getRelid();
+
+                if (parentBaseNode.getChildrenRelids().indexOf(relId) > -1) {
+                    // The base node of the parent also has this node as a child,
+                    // meaning this is an 'instance-child' and it cannot be a template.
+                    return false;
+                }
+            } else {
+                return false;
             }
         }
 

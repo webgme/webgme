@@ -23,6 +23,7 @@ define(['jquery'], function () {
         this.valueType = propertyDesc.valueType || typeof propertyDesc.value;
 
         this._isReadOnly = false;
+        this._alwaysReadOnly = propertyDesc.alwaysReadOnly;
 
         //The function to be called on change.
         this.__onChange = undefined;
@@ -86,7 +87,11 @@ define(['jquery'], function () {
     };
 
     WidgetBase.prototype.setReadOnly = function (isReadOnly) {
-        this._isReadOnly = isReadOnly;
+        if (this._alwaysReadOnly) {
+            this._isReadOnly = true;
+        } else {
+            this._isReadOnly = isReadOnly;
+        }
     };
 
     WidgetBase.prototype.destroy = function () {

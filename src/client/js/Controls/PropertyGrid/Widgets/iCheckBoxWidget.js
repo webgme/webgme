@@ -44,8 +44,7 @@ define([
 
     iCheckBoxWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
-
-        this.__checkbox.setEnabled(!isReadOnly);
+        this.__checkbox.setEnabled(!this._isReadOnly);
     };
 
     return iCheckBoxWidget;

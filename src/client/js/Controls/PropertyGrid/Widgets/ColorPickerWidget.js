@@ -62,7 +62,7 @@ define([
 
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
-        this._enabled = !isReadOnly;
+        this._enabled = !this._isReadOnly;
     };
 
     return ColorPickerWidget;
