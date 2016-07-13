@@ -73,23 +73,31 @@ define([
             if (err) {
                 self.logger.error('Failed sending notification');
             }
+            self.sendNotification({
+                message: 'This will go to everybody watching the branch "' + self.branchName + '"' +
+                ' if running on the server.',
+                toBranch: true
+            }, function (err) {
+                if (err) {
+                    self.logger.error('Failed sending notification');
+                }
+                artifact.addFiles(filesToAdd)
+                    .then(function (hashes) {
+                        self.logger.info('Files (metadata) have hashes: ' + hashes.toString());
 
-            artifact.addFiles(filesToAdd)
-                .then(function (hashes) {
-                    self.logger.info('Files (metadata) have hashes: ' + hashes.toString());
-
-                    return artifact.save();
-                })
-                .then(function (artifactHash) {
-                    self.logger.info('Artifact (metadata) has hash: ' + artifactHash);
-                    self.result.setSuccess(true);
-                    self.result.addArtifact(artifactHash);
-                    callback(null, self.result);
-                })
-                .catch(function (err) {
-                    self.result.setSuccess(false);
-                    callback(err, self.result);
-                });
+                        return artifact.save();
+                    })
+                    .then(function (artifactHash) {
+                        self.logger.info('Artifact (metadata) has hash: ' + artifactHash);
+                        self.result.setSuccess(true);
+                        self.result.addArtifact(artifactHash);
+                        callback(null, self.result);
+                    })
+                    .catch(function (err) {
+                        self.result.setSuccess(false);
+                        callback(err, self.result);
+                    });
+            });
         });
     };
 

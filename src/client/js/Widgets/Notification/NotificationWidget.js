@@ -99,7 +99,11 @@ define([
 
         if (this._ddNotification._el.hasClass('open') === false) {
             // Don't show popover when dropdown list is open
-            self._popoverBox.show(eventData.message, alertLevel, 5000);
+            if (eventData.severity.toLowerCase() === 'error') {
+                self._popoverBox.show(eventData.message, alertLevel, 5000);
+            } else {
+                self._popoverBox.show('New message', alertLevel, 500);
+            }
         }
         //self._ddNotification.addItem({
         //    text: 'Text',
