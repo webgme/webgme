@@ -414,11 +414,100 @@ describe('WebSocket', function () {
                         webgmeToken: emitter.webgmeToken,
                         projectId: projectEmitNotification,
                         branchName: 'master',
-                        originalSocketId: '/#' + receiver.socket.id
+                        originalSocketId: '/#' + receiver.socket.id,
+                        notification: {
+                            message: 'hej'
+                        }
                     })
                         .then(function () {
                             emitted = true;
                             if (received === true) {
+                                deferred.resolve();
+                            }
+                        })
+                        .catch(deferred.reject);
+
+                    return deferred.promise;
+                })
+                .nodeify(done);
+        });
+
+        it('PLUGIN_NOTIFICATION should be broadcast to branch-room if toBranch=true', function (done) {
+            var emitter,
+                receiver,
+                middle,
+                emitted = false,
+                received = 0;
+
+            Q.allDone([
+                openSocketIo(null, true),
+                openSocketIo(null, true),
+                openSocketIo(null, true)
+            ])
+                .then(function (res) {
+                    emitter = res[0];
+                    receiver = res[1];
+                    middle = res[2];
+
+                    return Q.allDone([
+                        Q.ninvoke(emitter.socket, 'emit', 'watchBranch', {
+                            webgmeToken: emitter.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                        Q.ninvoke(receiver.socket, 'emit', 'watchBranch', {
+                            webgmeToken: receiver.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                        Q.ninvoke(middle.socket, 'emit', 'watchBranch', {
+                            webgmeToken: middle.webgmeToken,
+                            join: true,
+                            projectId: projectEmitNotification,
+                            branchName: 'master'
+                        }),
+                    ]);
+                })
+                .then(function () {
+                    var deferred = Q.defer();
+                    middle.socket.on(CONSTANTS.NOTIFICATION, function (data) {
+                        if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
+                            received += 1;
+                            expect(typeof data.webgmeToken).to.equal('undefined', 'webgmeToken transmitted!');
+                            middle.socket.removeAllListeners(CONSTANTS.NOTIFICATION);
+                            if (emitted === true && received === 2) {
+                                deferred.resolve();
+                            }
+                        }
+                    });
+
+                    receiver.socket.on(CONSTANTS.NOTIFICATION, function (data) {
+                        if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
+                            received += 1;
+                            expect(typeof data.webgmeToken).to.equal('undefined', 'webgmeToken transmitted!');
+                            receiver.socket.removeAllListeners(CONSTANTS.NOTIFICATION);
+                            if (emitted === true && received === 2) {
+                                deferred.resolve();
+                            }
+                        }
+                    });
+
+                    Q.ninvoke(emitter.socket, 'emit', 'notification', {
+                        type: CONSTANTS.PLUGIN_NOTIFICATION,
+                        webgmeToken: emitter.webgmeToken,
+                        projectId: projectEmitNotification,
+                        branchName: 'master',
+                        originalSocketId: '/#' + receiver.socket.id,
+                        notification: {
+                            message: 'hej',
+                            toBranch: true
+                        }
+                    })
+                        .then(function () {
+                            emitted = true;
+                            if (received === 2) {
                                 deferred.resolve();
                             }
                         })
@@ -463,7 +552,10 @@ describe('WebSocket', function () {
                         type: CONSTANTS.PLUGIN_NOTIFICATION,
                         webgmeToken: emitter.webgmeToken,
                         projectId: projectEmitNotification,
-                        branchName: 'master'
+                        branchName: 'master',
+                        notification: {
+                            message: 'hej'
+                        }
                     })
                         .then(function () {
                             throw new Error('Should have failed!');
