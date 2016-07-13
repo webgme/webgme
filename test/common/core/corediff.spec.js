@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.only('core diff', function () {
+describe('core diff', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         projectName = 'coreDiff',

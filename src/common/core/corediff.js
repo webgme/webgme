@@ -1471,16 +1471,24 @@ define(['common/util/canon',
             var recursiveComplete = function (base, extension, newItem) {
                 var i, keys;
                 if (newItem === true) {
-                    base.guid = extension.guid;
-                    base.oGuids = extension.oGuids;
-                    base.ooGuids = extension.ooGuids;
+                    if (extension.guid) {
+                        base.guid = extension.guid;
+                    }
+                    if (extension.oGuids) {
+                        base.oGuids = extension.oGuids;
+                    }
+                    if (extension.ooGuids) {
+                        base.ooGuids = extension.ooGuids;
+                    }
                 }
 
                 keys = getDiffChildrenRelids(extension);
                 for (i = 0; i < keys.length; i += 1) {
                     if (base[keys[i]] === undefined) {
-                        base[keys[i]] = {};
-                        recursiveComplete(base[keys[i]], extension[keys[i]], true);
+                        if (typeof extension[keys[i]].movedFrom !== 'string') {
+                            base[keys[i]] = {};
+                            recursiveComplete(base[keys[i]], extension[keys[i]], true);
+                        }
                     } else {
                         recursiveComplete(base[keys[i]], extension[keys[i]], false);
                     }
