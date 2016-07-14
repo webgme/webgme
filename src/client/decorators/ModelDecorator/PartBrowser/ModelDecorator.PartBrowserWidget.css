@@ -1,136 +1,69 @@
-/**
- * @author rkereskenyi / https://github.com/rkereskenyi
- */
-/**
- * @author rkereskenyi / https://github.com/rkereskenyi
- */
-/**
- * @author rkereskenyi / https://github.com/rkereskenyi
- */
-.model-decorator {
-  min-width: 65px;
-  min-height: 40px;
-  border: 1px solid black;
-  background-color: #ececec;
-  padding: 3px;
-  text-align: center;
-  position: relative;
-  -webkit-box-shadow: inset 0px 0px 7px 0px rgba(0, 0, 0, 0.15);
-  -moz-box-shadow: inset 0px 0px 7px 0px rgba(0, 0, 0, 0.15);
-  box-shadow: inset 0px 0px 7px 0px rgba(0, 0, 0, 0.15); }
-  .model-decorator .name {
-    white-space: nowrap;
-    font-size: 11px;
-    font-weight: bold;
-    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 121px;
-    border-bottom: none;
-    height: 16px;
-    line-height: 16px; }
-  .model-decorator div.conn-type {
-    font-size: 9px;
-    line-height: 12px;
-    color: #aaaaaa; }
-  .model-decorator .ports {
-    font-size: 10px;
-    min-height: 1px;
-    width: 121px;
-    position: relative; }
-    .model-decorator .ports .left {
-      display: inline-block;
-      vertical-align: top;
-      width: 50px;
-      min-height: 1px; }
-    .model-decorator .ports .center {
-      display: inline-block;
-      vertical-align: top;
-      width: 15px;
-      height: 1px; }
-    .model-decorator .ports .right {
-      display: inline-block;
-      vertical-align: top;
-      width: 50px;
-      min-height: 1px; }
-    .model-decorator .ports .port {
-      white-space: nowrap;
-      position: relative;
-      height: 15px;
-      line-height: 15px; }
-      .model-decorator .ports .port:hover {
-        cursor: pointer; }
-      .model-decorator .ports .port .title-wrapper {
-        display: inline-block;
-        width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis; }
-      .model-decorator .ports .port img.svg-icon {
-        height: 11px;
-        width: 5px;
-        position: absolute;
-        display: inline-block;
-        top: 2px; }
-      .model-decorator .ports .port span.dot {
-        position: absolute;
-        display: inline-block;
-        background: #666666;
-        border: 1px solid #666666;
-        width: 3px;
-        height: 7px;
-        top: 4px; }
-      .model-decorator .ports .port.w-icon span.dot {
-        display: none; }
-    .model-decorator .ports .left .port .title-wrapper {
-      text-align: left; }
-    .model-decorator .ports .left .port img.svg-icon {
-      left: -8px; }
-    .model-decorator .ports .left .port span.dot {
-      left: -6px;
-      border-top-left-radius: 5px;
-      border-bottom-left-radius: 5px; }
-    .model-decorator .ports .right .port .title-wrapper {
-      text-align: right; }
-    .model-decorator .ports .right .port img.svg-icon {
-      right: -8px;
-      -webkit-transform: scaleX(-1);
-      -moz-transform: scaleX(-1);
-      -ms-transform: scaleX(-1);
-      -o-transform: scaleX(-1);
-      transform: scaleX(-1); }
-    .model-decorator .ports .right .port span.dot {
-      left: 54px;
-      border-top-right-radius: 5px;
-      border-bottom-right-radius: 5px; }
-  .model-decorator .progress-bar .loader-progressbar {
-    position: relative;
-    left: 50%;
-    margin-left: -8px; }
-  .model-decorator .ptr {
-    position: absolute;
-    top: 0;
-    right: 2px;
-    height: 15px;
-    width: 15px;
-    margin-top: 2px;
-    border-radius: 5px; }
-    .model-decorator .ptr.ptr-nonset {
-      opacity: 0.4; }
-    .model-decorator .ptr.inverse-on-hover:hover {
-      background-color: rgba(82, 168, 236, 0.8);
-      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
-      .model-decorator .ptr.inverse-on-hover:hover [class^="icon-"]:not(.icon-white),
-      .model-decorator .ptr.inverse-on-hover:hover [class*=" icon-"]:not(.icon-white) {
-        background-image: url("../../../img/glyphicons-halflings-white.png"); }
-    .model-decorator .ptr [class^="icon-"],
-    .model-decorator .ptr [class*=" icon-"] {
-      margin-top: -2px; }
-  .model-decorator.abstract .name {
-    font-style: italic;
-    color: #aaaaaa; }
-  .model-decorator img.embeddedsvg {
-    width: 40px;
-    position: relative; }
+/*
+Error: Invalid flag "!importan".
+        on line 20 of ../Core/_ModelDecorator.scss
+        from line 5 of ModelDecorator.PartBrowserWidget.scss
+
+15: $left-ports-background-color: rgba(255, 255, 0, 0.5);
+16: $right-ports-background-color: rgba(0, 0, 255, 0.5);
+17: $center-ports-background-color: rgba(0, 255, 0, 0.5);
+18: $ports-width: 50px;
+19: $ports-separator-width: 15px;
+20: $accept-droppable-background-color: #00FF00 !importan;
+21: $ptr-hover-background-color: rgba(82, 168, 236, 0.8);
+22: $ptr-hover-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+23: $model-name-height: 16px;
+24: $abstract-class-name-color: #AAAAAA;
+25: 
+
+Backtrace:
+../Core/_ModelDecorator.scss:20
+ModelDecorator.PartBrowserWidget.scss:5
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/scss/parser.rb:611:in `variable'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/scss/parser.rb:656:in `block_child'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/scss/parser.rb:649:in `block_contents'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/scss/parser.rb:117:in `stylesheet'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/scss/parser.rb:42:in `parse'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/engine.rb:403:in `_to_tree'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/engine.rb:309:in `to_tree'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/perform.rb:324:in `block in visit_import'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/stack.rb:88:in `block in with_import'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/stack.rb:115:in `with_frame'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/stack.rb:88:in `with_import'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/perform.rb:323:in `visit_import'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/base.rb:36:in `visit'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/perform.rb:158:in `block in visit'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/stack.rb:79:in `block in with_base'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/stack.rb:115:in `with_frame'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/stack.rb:79:in `with_base'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/perform.rb:158:in `visit'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/base.rb:52:in `block in visit_children'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/base.rb:52:in `map'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/base.rb:52:in `visit_children'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/perform.rb:167:in `block in visit_children'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/perform.rb:179:in `with_environment'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/perform.rb:166:in `visit_children'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/base.rb:36:in `block in visit'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/perform.rb:186:in `visit_root'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/base.rb:36:in `visit'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/perform.rb:157:in `visit'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/visitors/perform.rb:8:in `visit'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/root_node.rb:36:in `css_tree'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/tree/root_node.rb:20:in `render'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/engine.rb:278:in `render'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/plugin/compiler.rb:492:in `update_stylesheet'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/plugin/compiler.rb:215:in `block in update_stylesheets'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/plugin/compiler.rb:209:in `each'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/plugin/compiler.rb:209:in `update_stylesheets'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/plugin.rb:82:in `update_stylesheets'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/exec/sass_scss.rb:361:in `watch_or_update'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/exec/sass_scss.rb:51:in `process_result'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/exec/base.rb:52:in `parse'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/lib/sass/exec/base.rb:19:in `parse!'
+C:/Ruby21-x64/lib/ruby/gems/2.1.0/gems/sass-3.4.19/bin/scss:13:in `<top (required)>'
+C:/Ruby21-x64/bin/scss:23:in `load'
+C:/Ruby21-x64/bin/scss:23:in `<main>'
+*/
+body:before {
+  white-space: pre;
+  font-family: monospace;
+  content: "Error: Invalid flag \"!importan\".\A         on line 20 of ../Core/_ModelDecorator.scss\A         from line 5 of ModelDecorator.PartBrowserWidget.scss\A \A 15: $left-ports-background-color: rgba(255, 255, 0, 0.5);\A 16: $right-ports-background-color: rgba(0, 0, 255, 0.5);\A 17: $center-ports-background-color: rgba(0, 255, 0, 0.5);\A 18: $ports-width: 50px;\A 19: $ports-separator-width: 15px;\A 20: $accept-droppable-background-color: #00FF00 !importan;\A 21: $ptr-hover-background-color: rgba(82, 168, 236, 0.8);\A 22: $ptr-hover-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);\A 23: $model-name-height: 16px;\A 24: $abstract-class-name-color: #AAAAAA;\A 25: "; }

@@ -55,7 +55,6 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         } else {
             return null;
         }
-
     };
 
     GMENode.prototype.getInheritorIds = function () {

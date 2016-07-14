@@ -17,7 +17,7 @@ $right-ports-background-color: rgba(0, 0, 255, 0.5);
 $center-ports-background-color: rgba(0, 255, 0, 0.5);
 $ports-width: 50px;
 $ports-separator-width: 15px;
-$accept-droppable-background-color: #00FF00;
+$accept-droppable-background-color: #00FF00 !important;
 $ptr-hover-background-color: rgba(82, 168, 236, 0.8);
 $ptr-hover-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
 $model-name-height: 16px;

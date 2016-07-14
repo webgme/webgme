@@ -804,7 +804,9 @@ define([
             var oldBase = self.getBase(node);
 
             //TODO this restriction should be removed after clarification of the different scenarios and outcomes
-            //changing base from or to a node which has children is not allowed currently
+            //TODO changing base from or to a node which has children is not allowed currently
+
+            // Proposed rules: https://docs.google.com/drawings/d/1dGHaJCuq0q7eHXL2dwC6_oTXw5J7g3T3DlIFPwWT6TA/edit
             ASSERT((base === null || oldBase === null) ||
                 (self.getChildrenRelids(base).length === 0 && self.getChildrenRelids(oldBase).length === 0));
 

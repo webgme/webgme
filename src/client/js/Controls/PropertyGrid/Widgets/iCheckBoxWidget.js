@@ -22,6 +22,7 @@ define([
         this.__checkbox = new ICheckBox({
             checkedText: 'TRUE',
             uncheckedText: 'FALSE',
+            title: propertyDesc.title,
             checkChangedFn: function (data, isChecked) {
                 self.setValue(isChecked);
                 self.fireFinishChange();

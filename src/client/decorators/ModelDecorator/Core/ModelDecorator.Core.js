@@ -60,7 +60,8 @@ define([
             $portsContainerRight: undefined,
             $portsContainerCenter: undefined,
             $ptr: undefined,
-            $imgSVG: undefined
+            $imgSVG: undefined,
+            $replaceable: undefined
         };
 
         this._displayConnectors = false;
@@ -108,6 +109,7 @@ define([
         this._updateAbstract();
         this._updateSVG();
         this._updateConnectionType();
+        this._updateIsReplaceable();
     };
 
     ModelDecoratorCore.prototype._updateColors = function () {
@@ -360,6 +362,10 @@ define([
     ModelDecoratorCore.prototype._ptrUIDOMBase =
         $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '"><i class="glyphicon glyphicon-share"></i></div>');
 
+    ModelDecoratorCore.prototype._replaceableUIDOMBase =
+        $('<div class="' + ModelDecoratorConstants.REPLACEABLE_CLASS +'">' +
+            '<i class="glyphicon glyphicon-transfer" title="This instance is replaceable"></i></div>');
+
     ModelDecoratorCore.prototype._updatePointers = function () {
         var ptrTo;
 
@@ -591,6 +597,26 @@ define([
                 sel[0] === this.hostDesignerItem.id) {
                 this.hostDesignerItem.canvas.selectNone();
                 this.hostDesignerItem.canvas.select([this.hostDesignerItem.id]);
+            }
+        }
+    };
+
+    /***** UPDATE THE REPLACEABLE ICON *****/
+    ModelDecoratorCore.prototype._isReplaceable = function () {
+        return GMEConcepts.isReplaceable(this._metaInfo[CONSTANTS.GME_ID]);
+    };
+
+    ModelDecoratorCore.prototype._updateIsReplaceable = function () {
+        if (this._isReplaceable()) {
+            this.skinParts.$replaceable = this.$el.find('.' + ModelDecoratorConstants.REPLACEABLE_CLASS);
+            if (this.skinParts.$replaceable.length === 0) {
+                this.skinParts.$replaceable = this._replaceableUIDOMBase.clone();
+                this.$el.append(this.skinParts.$replaceable);
+            }
+        } else {
+            if (this.skinParts.$replaceable) {
+                this.skinParts.$replaceable.remove();
+                this.skinParts.$replaceable = undefined;
             }
         }
     };

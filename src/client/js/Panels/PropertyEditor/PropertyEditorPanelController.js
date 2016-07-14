@@ -11,6 +11,7 @@ define(['js/logger',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Constants',
+    'js/Utils/GMEConcepts',
     'js/Utils/DisplayFormat',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
     'js/Controls/PropertyGrid/PropertyGridWidgets'
@@ -19,6 +20,7 @@ define(['js/logger',
              nodePropertyNames,
              REGISTRY_KEYS,
              CONSTANTS,
+             GMEConcepts,
              displayFormat,
              DecoratorSVGExplorerDialog,
              PROPERTY_GRID_WIDGETS) {
@@ -429,7 +431,7 @@ define(['js/logger',
                         if (canBeReplaceable === false) {
                             dst[extKey].readOnly = true;
                             dst[extKey].alwaysReadOnly = true;
-                            dst[extKey].title = 'Inherited children cannot be templates';
+                            dst[extKey].title = 'Meta nodes or inherited children cannot be templates.';
                         }
                     }
                 }
@@ -651,35 +653,11 @@ define(['js/logger',
     };
 
     PropertyEditorController.prototype._canBeReplaceable = function (selectedObjIDs) {
-        var i = selectedObjIDs.length,
-            node,
-            relId,
-            parentNode,
-            parentBaseNode;
+        var i = selectedObjIDs.length;
 
         while (i--) {
-            node = this._client.getNode(selectedObjIDs[i]);
-
-            if (node) {
-                parentNode = this._client.getNode(node.getParentId());
-                if (!parentNode) {
-                    // Root node cannot be a template.
-                    return false;
-                }
-
-                parentBaseNode = this._client.getNode(parentNode.getBaseId());
-                if (!parentBaseNode) {
-                    // FCO cannot be a template.
-                    return false;
-                }
-
-                relId = node.getRelid();
-
-                if (parentBaseNode.getChildrenRelids().indexOf(relId) > -1) {
-                    // The base node of the parent also has this node as a child,
-                    // meaning this is an 'instance-child' and it cannot be a template.
-                    return false;
-                }
+            if (GMEConcepts.canBeReplaceable(selectedObjIDs[i])) {
+                // continue
             } else {
                 return false;
             }

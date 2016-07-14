@@ -768,6 +768,59 @@ define(['jquery',
         return true;
     }
 
+    // Replaceable and constrainedby
+    function canBeReplaceable(nodeOrId) {
+        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
+            result = true,
+            parentNode,
+            parentBaseNode;
+
+        if (!node.getBaseId() || node.getMetaTypeId() === node.getId()) {
+            // Root-node and FCO cannot be replaceable, nor can meta-nodes.
+            result = false;
+        } else {
+            parentNode = client.getNode(node.getParentId());
+            parentBaseNode = client.getNode(parentNode.getBaseId());
+            if (parentBaseNode && parentBaseNode.getChildrenRelids().indexOf(node.getRelid()) > -1) {
+                // The base node of the parent also has this node as a child
+                // meaning this is an 'instance-child' and it cannot be a template.
+                result = false;
+            } else {
+                // These are children of either the root-node or FCO
+            }
+        }
+
+        return result;
+    }
+    
+    function isReplaceable(nodeOrId) {
+        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId;
+
+        return canBeReplaceable(node) && node.getRegistry(REGISTRY_KEYS.REPLACEABLE);
+    }
+    
+    function getConstrainedBy(nodeOrId) {
+        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
+            constrainedById = node.getPointerId(CONSTANTS.CONSTRAINED_BY);
+
+        if (typeof constrainedById === 'string') {
+            return constrainedById;
+        } else {
+            return node.getMetaTypeId(node);
+        }
+    }
+
+    function isValidReplaceableTarget(nodeOrId, targetNodeOrId) {
+        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
+            result = true;
+
+        if (isReplaceable(node) === false) {
+            result = false;
+        } else {
+
+        }
+    }
+
     //return utility functions
     return {
         initialize: initialize,
@@ -795,6 +848,11 @@ define(['jquery',
         getCrosscuts: getCrosscuts,
         getSets: getSets,
         getFCOId: getFCOId,
-        canMoveNodeHere: canMoveNodeHere
+        canMoveNodeHere: canMoveNodeHere,
+
+        // Replaceables
+        canBeReplaceable: canBeReplaceable,
+        isReplaceable: isReplaceable,
+        getConstrainedBy: getConstrainedBy
     };
 });
