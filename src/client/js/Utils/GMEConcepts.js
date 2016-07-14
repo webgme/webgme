@@ -796,10 +796,10 @@ define(['jquery',
     function isReplaceable(nodeOrId) {
         var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId;
 
-        return canBeReplaceable(node) && node.getRegistry(REGISTRY_KEYS.REPLACEABLE);
+        return canBeReplaceable(node) && !!node.getRegistry(REGISTRY_KEYS.REPLACEABLE);
     }
     
-    function getConstrainedBy(nodeOrId) {
+    function getConstrainedById(nodeOrId) {
         var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
             constrainedById = node.getPointerId(CONSTANTS.CONSTRAINED_BY);
 
@@ -810,15 +810,135 @@ define(['jquery',
         }
     }
 
+    function isInstanceOf(nodeOrId, baseNodeOrId) {
+        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
+            nodeId = node.getId(),
+            prospectBaseNodeId = typeof baseNodeOrId === 'string' ? baseNodeOrId: baseNodeOrId.getId();
+
+        while (node) {
+            if (nodeId === prospectBaseNodeId) {
+                return true;
+            }
+
+            nodeId = node.getBaseId();
+            if (!nodeId) {
+                return false;
+            }
+
+            node = client.getNode(nodeId);
+        }
+    }
+
+    function isChildOf(nodeOrId, parentNodeOrId) {
+        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
+            nodeId = node.getId(),
+            prospectParentNodeId = typeof parentNodeOrId === 'string' ? parentNodeOrId: parentNodeOrId.getId();
+
+        while (node) {
+            if (nodeId === prospectParentNodeId) {
+                return true;
+            }
+
+            nodeId = node.getParentId();
+            if (!nodeId) {
+                return false;
+            }
+
+            node = client.getNode(nodeId);
+        }
+    }
+
+    function isChildOrInstanceRec(nodeOrId, targetNodeOrId, visited, traverseContainment) {
+        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
+            nodeId = node.getId(),
+            targetNode = typeof targetNodeOrId === 'string' ? client.getNode(targetNodeOrId) : targetNodeOrId,
+            baseNode,
+            baseId;
+
+        baseNode = targetNode;
+        baseId = targetNode.getId();
+
+        if (traverseContainment) {
+            if (visited.containment[baseId]) {
+                console.log('breaking recursion', traverseContainment, baseId);
+                return false;
+            }
+
+            visited.containment[baseId] = true;
+            baseId = baseNode.getParentId();
+        } else {
+            if (visited.inheritance[baseId]) {
+                console.log('breaking recursion', traverseContainment, baseId);
+                return false;
+            }
+
+            visited.inheritance[baseId] = true;
+            baseId = baseNode.getBaseId();
+        }
+
+        while (baseNode) {
+            console.log('comparing with node', traverseContainment, baseId);
+            if (baseId === nodeId) {
+                console.log('Found one!');
+                return true;
+            }
+
+            if (traverseContainment) {
+                baseId = baseNode.getParentId();
+            } else {
+                baseId = baseNode.getBaseId();
+            }
+
+            if (!baseId) {
+                break;
+            }
+
+            baseNode = client.getNode(baseId);
+            if (isChildOrInstanceRec(nodeOrId, baseNode, visited, !traverseContainment)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function isValidBase(nodeOrId, targetNodeOrId) {
+        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
+            result = true,
+            visited = {
+                containment: {},
+                inheritance: {}
+            };
+
+        // Check that new base is not a parent of the node.
+        result = !isChildOf(node, targetNodeOrId);
+
+        if (result) {
+            result = !isChildOrInstanceRec(node, targetNodeOrId, visited, true);
+        }
+
+        console.log('starting from inheritance');
+        if (result) {
+            result = !isChildOrInstanceRec(node, targetNodeOrId, visited, false);
+        }
+
+        return result;
+    }
+
     function isValidReplaceableTarget(nodeOrId, targetNodeOrId) {
         var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
             result = true;
 
-        if (isReplaceable(node) === false) {
-            result = false;
-        } else {
-
+        result = isReplaceable(node);
+        if (result) {
+            result = isInstanceOf(targetNodeOrId, getConstrainedById(node));
         }
+
+        if (result) {
+            result = isValidBase(nodeOrId, targetNodeOrId);
+        }
+
+        return result;
     }
 
     //return utility functions
@@ -853,6 +973,7 @@ define(['jquery',
         // Replaceables
         canBeReplaceable: canBeReplaceable,
         isReplaceable: isReplaceable,
-        getConstrainedBy: getConstrainedBy
+        getConstrainedById: getConstrainedById,
+        isValidReplaceableTarget: isValidReplaceableTarget
     };
 });

@@ -427,12 +427,16 @@ define([
             dragItems = DragHelper.getDragItems(dragInfo),
             dragEffects = DragHelper.getDragEffects(dragInfo),
             doAccept = false;
+        
+        if (dragItems.length === 1) {
+            console.info('Is node valid target??', this._isValidReplaceableTarget(dragItems[0]));
+        }
 
         //check if there is only one item being dragged, it is not self,
         //and that element can be a valid target of at least one pointer of this guy
-        if (dragItems.length === 1 &&
-            dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
+        if (dragItems.length === 1 && dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
             dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) !== -1) {
+            
             doAccept = this._getValidPointersForTarget(dragItems[0]).length > 0;
         }
 

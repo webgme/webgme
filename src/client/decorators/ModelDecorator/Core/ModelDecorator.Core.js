@@ -621,5 +621,9 @@ define([
         }
     };
 
+    ModelDecoratorCore.prototype._isValidReplaceableTarget = function (targetId) {
+        return GMEConcepts.isValidReplaceableTarget(this._metaInfo[CONSTANTS.GME_ID], targetId);
+    };
+
     return ModelDecoratorCore;
 });
