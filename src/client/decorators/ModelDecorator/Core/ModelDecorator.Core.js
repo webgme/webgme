@@ -531,7 +531,7 @@ define([
                     logger.debug('_selectPointerForTarget: ' + key);
                     self._setPointer(key, targetID);
                 } else {
-                    alert('Would set template for ' + targetID);
+                    self._replaceWithTarget(targetID);
                 }
             }
         });
@@ -636,6 +636,10 @@ define([
 
     ModelDecoratorCore.prototype._isValidReplaceableTarget = function (targetId) {
         return GMEConcepts.isValidReplaceableTarget(this._metaInfo[CONSTANTS.GME_ID], targetId);
+    };
+
+    ModelDecoratorCore.prototype._replaceWithTarget = function (targetId) {
+        this._control._client.setBase(this._metaInfo[CONSTANTS.GME_ID], targetId);
     };
 
     return ModelDecoratorCore;

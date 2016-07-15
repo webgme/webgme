@@ -96,12 +96,15 @@ define([
             event.stopPropagation();
             event.preventDefault();
         });
+
+        this._updateDropArea();
     };
     //jshint camelcase: true
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     ModelDecoratorDiagramDesignerWidget.prototype.update = function () {
         this._update();
+        this._updateDropArea();
     };
 
 
@@ -335,19 +338,18 @@ define([
         ModelDecoratorCore.prototype.removePort.call(this, portId);
     };
 
-
-    /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorDiagramDesignerWidget.prototype._updatePointers = function () {
+    ModelDecoratorDiagramDesignerWidget.prototype._updateDropArea = function () {
         var inverseClass = 'inverse-on-hover',
             self = this;
 
-        ModelDecoratorCore.prototype._updatePointers.call(this);
+        if (this.skinParts.$ptr || this.skinParts.$replaceable) {
 
-        if (this.skinParts.$ptr) {
-            if (this.skinParts.$ptr.hasClass(ModelDecoratorConstants.POINTER_CLASS_NON_SET)) {
-                this.skinParts.$ptr.removeClass(inverseClass);
-            } else {
-                this.skinParts.$ptr.addClass(inverseClass);
+            if (this.skinParts.$ptr) {
+                if (this.skinParts.$ptr.hasClass(ModelDecoratorConstants.POINTER_CLASS_NON_SET)) {
+                    this.skinParts.$ptr.removeClass(inverseClass);
+                } else {
+                    this.skinParts.$ptr.addClass(inverseClass);
+                }
             }
 
             //edit droppable mode
