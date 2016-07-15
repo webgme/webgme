@@ -1480,6 +1480,18 @@ define(['common/util/canon',
                     if (extension.ooGuids) {
                         base.ooGuids = extension.ooGuids;
                     }
+
+                    if (extension.removed !== undefined) {
+                        base.removed = extension.removed;
+                    }
+
+                    if (extension.hash) {
+                        base.hash = extension.hash;
+                    }
+
+                    if (extension.childrenListChanged) {
+                        base.childrenListChanged = true;
+                    }
                 }
 
                 keys = getDiffChildrenRelids(extension);

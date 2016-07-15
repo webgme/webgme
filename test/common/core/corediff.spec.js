@@ -1116,6 +1116,62 @@ describe('core diff', function () {
             }
             expect(result1.mine).to.eql(result2.theirs);
         });
+
+        it('should handle node addition symmetrically', function () {
+            var diff1 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-2312-5e3a-7eb9b96b2ae7',
+                        removed: false,
+                        hash: '#e341ba304b75ad76642dcf11dd920ca4a403be60',
+                        pointer: {
+                            base: '/1'
+                        },
+                        oGuids: {
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                diff2 = {},
+                result1 = core.tryToConcatChanges(diff1, diff2),
+                result2 = core.tryToConcatChanges(diff2, diff1);
+
+            expect(result1.items).to.have.length(result2.items.length);
+            expect(result1.items).to.have.length(0);
+            expect(result1.merge).to.eql(result2.merge);
+        });
+
+        it('should handle node removal symmetrically', function () {
+            var diff1 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-2312-5e3a-7eb9b96b2ae7',
+                        removed: true,
+                        oGuids: {
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                diff2 = {},
+                result1 = core.tryToConcatChanges(diff1, diff2),
+                result2 = core.tryToConcatChanges(diff2, diff1);
+
+            expect(result1.items).to.have.length(result2.items.length);
+            expect(result1.items).to.have.length(0);
+            expect(result1.merge).to.eql(result2.merge);
+        });
     });
 
     describe('resolve', function () {
