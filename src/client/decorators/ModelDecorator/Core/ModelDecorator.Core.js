@@ -34,7 +34,8 @@ define([
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         EMBEDDED_SVG_CLASS = 'embeddedsvg',
         CONNECTION_TYPE_CLASS = 'conn-type',
-        EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET],
+        EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE,
+            CONSTANTS.POINTER_TARGET, CONSTANTS.POINTER_CONSTRAINED_BY],
         CONN_TYPE_BASE = $('<div/>', {class: CONNECTION_TYPE_CLASS}),
         EMBEDDED_SVG_IMG_BASE = $('<img>', {class: EMBEDDED_SVG_CLASS});
 
@@ -448,7 +449,7 @@ define([
             ptrTo;
 
         if (nodeObj) {
-            ptrNames = _.difference(nodeObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
+            ptrNames = this._getPointerNames();
             len = ptrNames.length;
             while (len--) {
                 ptrTo = nodeObj.getPointer(ptrNames[len]);

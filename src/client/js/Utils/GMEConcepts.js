@@ -801,7 +801,7 @@ define(['jquery',
     
     function getConstrainedById(nodeOrId) {
         var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
-            constrainedById = node.getPointerId(CONSTANTS.CONSTRAINED_BY);
+            constrainedById = node.getPointerId(CONSTANTS.POINTER_CONSTRAINED_BY);
 
         if (typeof constrainedById === 'string') {
             return constrainedById;

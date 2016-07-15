@@ -41,9 +41,11 @@ define(['common/core/constants'], function (CoreConstants) {
         /*
          * Dedicated POINTER names
          */
-        POINTER_SOURCE: 'src',     //dedicated connection source pointer name
-        POINTER_TARGET: 'dst',     //dedicated connection target pointer name
-        POINTER_BASE: 'base',  //dedicated inheritance pointer name
+        POINTER_SOURCE: 'src',      //dedicated connection source pointer name
+        POINTER_TARGET: 'dst',      //dedicated connection target pointer name
+        POINTER_BASE: 'base',       //dedicated inheritance pointer name
+        POINTER_CONSTRAINED_BY: 'constrainedby', //dedicated replaceable/constrainedBy pointer name
+
         /*
          * Dedicated RELATION names
          */
