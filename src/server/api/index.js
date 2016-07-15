@@ -1230,6 +1230,33 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    router.post('/projects/:ownerId/:projectName/transfer/:userOrOrgId', function (req, res, next) {
+        var newOwnerId = req.params.userOrOrgId,
+            projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
+            userId = getUserId(req),
+            data = {
+                newOwnerId: newOwnerId,
+                projectId: projectId,
+                username: userId
+            };
+
+        safeStorage.transferProject(data)
+            .then(function (newProjectId) {
+                return metadataStorage.getProject(newProjectId);
+            })
+            .then(function (projectData) {
+                res.json(projectData);
+            })
+            .catch(function (err) {
+                if (err.message.toLowerCase().indexOf('no such') > -1) {
+                    res.status(404);
+                } else if (err.message.toLowerCase().indexOf('not authorized') > -1) {
+                    res.status(403);
+                }
+                next(err);
+            });
+    });
+
     router.get('/projects/:ownerId/:projectName/commits', ensureAuthenticated, function (req, res, next) {
         var userId = getUserId(req),
             data = {

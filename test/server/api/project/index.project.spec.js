@@ -1165,8 +1165,8 @@ describe('PROJECT REST API', function () {
                     gmeAuth = gmeAuth_;
                     projectAuthParams = {
                         entityType: gmeAuth.authorizer.ENTITY_TYPES.PROJECT
-                    },
-                        safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                    };
+                    safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
                     return safeStorage.openDatabase();
                 })
                 .then(function () {
@@ -1563,6 +1563,172 @@ describe('PROJECT REST API', function () {
             function (done) {
                 agent.del(server.getUrl() + '/api/v1/projects/org/projectOwnedByOrg/authorize/orgTest3')
                     .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+                        done();
+                    });
+            }
+        );
+    });
+
+    describe('Transferring projects', function () {
+        var server,
+            agent,
+            projectOwnedByUserOnlyWithAccess = 'projectOwnedByUserOnlyWithAccess',
+            projectOwnedByOrgOnlyWithAccess = 'projectOwnedByOrgOnlyWithAccess',
+            safeStorage,
+            gmeAuth,
+            projectAuthParams,
+            pr2Id = testFixture.projectName2Id,
+            guestAccount = gmeConfig.authentication.guestAccount;
+
+        before(function (done) {
+            var gmeConfig = testFixture.getGmeConfig();
+            gmeConfig.authentication.enable = true;
+
+            server = WebGME.standaloneServer(gmeConfig);
+
+            testFixture.clearDBAndGetGMEAuth(gmeConfig)
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    projectAuthParams = {
+                        entityType: gmeAuth.authorizer.ENTITY_TYPES.PROJECT
+                    };
+                    safeStorage = testFixture.getMongoStorage(logger, gmeConfig, gmeAuth);
+                    return safeStorage.openDatabase();
+                })
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.addUser('userOnlyWithAccess', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userWithoutRights', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userOrgAdmin', 'user@example.com', 'p', true, {overwrite: true}),
+                        gmeAuth.addUser('userSiteAdmin', 'user@example.com', 'p', true, {
+                            overwrite: true, siteAdmin: true
+                        }),
+
+                        gmeAuth.addOrganization('orgOnlyWithAccess', null),
+                        gmeAuth.addOrganization('orgWithoutRights', null),
+                        gmeAuth.addOrganization('orgReceiveProjectTransfers', null)
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.addUserToOrganization('userOrgAdmin', 'orgOnlyWithAccess'),
+                        gmeAuth.addUserToOrganization('userOnlyWithAccess', 'orgReceiveProjectTransfers'),
+                        gmeAuth.setAdminForUserInOrganization('userOrgAdmin', 'orgOnlyWithAccess', true),
+                        gmeAuth.setAdminForUserInOrganization('userOnlyWithAccess', 'orgReceiveProjectTransfers', true)
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        testFixture.importProject(safeStorage, {
+                            projectSeed: 'seeds/EmptyProject.webgmex',
+                            projectName: projectOwnedByUserOnlyWithAccess,
+                            gmeConfig: gmeConfig,
+                            username: 'userOnlyWithAccess',
+                            logger: logger
+                        }),
+                        testFixture.importProject(safeStorage, {
+                            projectSeed: 'seeds/EmptyProject.webgmex',
+                            projectName: projectOwnedByOrgOnlyWithAccess,
+                            gmeConfig: gmeConfig,
+                            username: 'userOrgAdmin',
+                            logger: logger
+                        })
+                    ]);
+                })
+                .then(function () {
+                    return Q.allDone([
+                        gmeAuth.authorizeByUserOrOrgId(
+                            'userOnlyWithAccess',
+                            pr2Id(projectOwnedByUserOnlyWithAccess, 'userOnlyWithAccess'),
+                            'create',
+                            {
+                                read: true,
+                                write: true,
+                                delete: true
+                            }
+                        ),
+                        gmeAuth.authorizeByUserOrOrgId(
+                            'userOrgAdmin',
+                            pr2Id(projectOwnedByOrgOnlyWithAccess, 'userOrgAdmin'),
+                            'create',
+                            {
+                                read: true,
+                                write: true,
+                                delete: true
+                            }
+                        ),
+                        safeStorage.transferProject({
+                            projectId: pr2Id(projectOwnedByOrgOnlyWithAccess, 'userOrgAdmin'),
+                            newOwnerId: 'orgOnlyWithAccess',
+                            username: 'userOrgAdmin'
+                        })
+                    ]);
+                })
+                .then(function () {
+                    return Q.ninvoke(server, 'start');
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            server.stop(function (err) {
+                if (err) {
+                    done(new Error(err));
+                    return;
+                }
+
+                Q.allDone([
+                    gmeAuth.unload(),
+                    safeStorage.closeDatabase()
+                ])
+                    .nodeify(done);
+            });
+        });
+
+        beforeEach(function () {
+            agent = superagent.agent();
+        });
+
+        it('403 user not authorized (user to org) /projects/userOnlyWithAccess/projectOwnedByUserOnlyWithAccess/transfer/userWithoutRights',
+            function (done) {
+                agent.post(server.getUrl() + '/api/v1/projects/userOnlyWithAccess/projectOwnedByUserOnlyWithAccess/transfer/userWithoutRights')
+                    .set('Authorization', 'Basic ' + new Buffer('userWithoutRights:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+                        done();
+                    });
+            }
+        );
+
+        it('200 should transfer to org /projects/userOnlyWithAccess/projectOwnedByUserOnlyWithAccess/transfer/orgReceiveProjectTransfers',
+            function (done) {
+                agent.post(server.getUrl() + '/api/v1/projects/userOnlyWithAccess/projectOwnedByUserOnlyWithAccess/transfer/orgReceiveProjectTransfers')
+                    .set('Authorization', 'Basic ' + new Buffer('userOnlyWithAccess:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body.owner).equal('orgReceiveProjectTransfers');
+                        done();
+                    });
+            }
+        );
+
+        it('404 nonexistent project /projects/fakeOwnerId/fakeProjectName/transfer/orgReceiveProjectTransfers',
+            function (done) {
+                agent.post(server.getUrl() + '/api/v1/projects/fakeOwnerId/fakeProjectName/transfer/orgReceiveProjectTransfers')
+                    .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
+            }
+        );
+
+        it('403 user not authorized (org to org) /projects/orgOnlyWithAccess/projectOwnedByOrgOnlyWithAccess/transfer/orgWithoutRights',
+            function (done) {
+                agent.post(server.getUrl() + '/api/v1/projects/orgOnlyWithAccess/projectOwnedByOrgOnlyWithAccess/transfer/orgWithoutRights')
+                    .set('Authorization', 'Basic ' + new Buffer('userWithoutRights:p').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(403, err);
                         done();
