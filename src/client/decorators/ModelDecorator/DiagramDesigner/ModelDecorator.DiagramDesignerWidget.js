@@ -63,7 +63,7 @@ define([
     ModelDecoratorDiagramDesignerWidget.prototype.$DOMBase = $(modelDecoratorTemplate);
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //jshint camelcase: false
+    //jshint camelcase: false
     ModelDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         var self = this;
 
@@ -226,14 +226,14 @@ define([
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //called when the designer item's subcomponent should be updated
+    //called when the designer item's subcomponent should be updated
     ModelDecoratorDiagramDesignerWidget.prototype.updateSubcomponent = function (portId) {
         this._updatePort(portId);
     };
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //Shows the 'connectors' - appends them to the DOM
+    //Shows the 'connectors' - appends them to the DOM
     ModelDecoratorDiagramDesignerWidget.prototype.showSourceConnectors = function (params) {
         var connectors,
             i;
@@ -264,7 +264,7 @@ define([
     };
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //Hides the 'connectors' - detaches them from the DOM
+    //Hides the 'connectors' - detaches them from the DOM
     ModelDecoratorDiagramDesignerWidget.prototype.hideSourceConnectors = function () {
         var i;
 
@@ -280,14 +280,14 @@ define([
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //should highlight the connectors for the given elements
+    //should highlight the connectors for the given elements
     ModelDecoratorDiagramDesignerWidget.prototype.showEndConnectors = function (params) {
         this.showSourceConnectors(params);
     };
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //Hides the 'connectors' - detaches them from the DOM
+    //Hides the 'connectors' - detaches them from the DOM
     ModelDecoratorDiagramDesignerWidget.prototype.hideEndConnectors = function () {
         this.hideSourceConnectors();
     };
@@ -398,6 +398,12 @@ define([
         }
     };
 
+    ModelDecoratorDiagramDesignerWidget.prototype._isPotentialDropItem = function (dragItems, dragEffects) {
+        return dragItems.length === 1 && dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
+            (dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) !== -1 ||
+            dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_SET_REPLACEABLE) !== -1);
+    };
+
     ModelDecoratorDiagramDesignerWidget.prototype.__onBackgroundDroppableOver = function (helper) {
         if (this.__onBackgroundDroppableAccept(helper) === true) {
             this.__doAcceptDroppable(true);
@@ -414,7 +420,7 @@ define([
             dragEffects = DragHelper.getDragEffects(dragInfo);
 
         if (this.__acceptDroppable === true) {
-            if (dragItems.length === 1 && dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) !== -1) {
+            if (this._isPotentialDropItem(dragItems, dragEffects)) {
                 this._setPointerTarget(dragItems[0], helper.offset());
             }
         }
@@ -427,17 +433,12 @@ define([
             dragItems = DragHelper.getDragItems(dragInfo),
             dragEffects = DragHelper.getDragEffects(dragInfo),
             doAccept = false;
-        
-        if (dragItems.length === 1) {
-            console.info('Is node valid target??', this._isValidReplaceableTarget(dragItems[0]));
-        }
 
         //check if there is only one item being dragged, it is not self,
-        //and that element can be a valid target of at least one pointer of this guy
-        if (dragItems.length === 1 && dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
-            dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) !== -1) {
-            
-            doAccept = this._getValidPointersForTarget(dragItems[0]).length > 0;
+        //and that element can be a valid target of at least one pointer of this guy or replaceable.
+        if (this._isPotentialDropItem(dragItems, dragEffects)) {
+            doAccept = this._getValidPointersForTarget(dragItems[0]).length > 0 ||
+                this._isValidReplaceableTarget(dragItems[0]);
         }
 
         return doAccept;

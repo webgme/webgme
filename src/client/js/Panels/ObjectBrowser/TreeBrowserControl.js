@@ -584,12 +584,16 @@ define(['js/logger',
             } else if (hasLibraryElement) {
                 return [treeBrowser.DRAG_EFFECTS.DRAG_COPY,
                     treeBrowser.DRAG_EFFECTS.DRAG_CREATE_POINTER,
-                    treeBrowser.DRAG_EFFECTS.DRAG_CREATE_INSTANCE];
+                    treeBrowser.DRAG_EFFECTS.DRAG_CREATE_INSTANCE,
+                    treeBrowser.DRAG_EFFECTS.DRAG_SET_REPLACEABLE
+                ];
             }
             return [treeBrowser.DRAG_EFFECTS.DRAG_COPY,
                 treeBrowser.DRAG_EFFECTS.DRAG_MOVE,
                 treeBrowser.DRAG_EFFECTS.DRAG_CREATE_POINTER,
-                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_INSTANCE];
+                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_INSTANCE,
+                treeBrowser.DRAG_EFFECTS.DRAG_SET_REPLACEABLE,
+            ];
         };
 
         treeBrowser.getDragItems = function (/*el*/) {

@@ -477,16 +477,17 @@ define([
     };
 
     ModelDecoratorCore.prototype._setPointerTarget = function (targetID, mousePos) {
-        var ptrNames = this._getValidPointersForTarget(targetID);
+        var ptrNames = this._getValidPointersForTarget(targetID),
+            validReplaceable = this._isValidReplaceableTarget(targetID);
 
-        if (ptrNames.length > 0) {
+        if (ptrNames.length > 0 || validReplaceable) {
             //check to see if there is more than one potential pointer to set
-            if (ptrNames.length === 1) {
+            if (ptrNames.length === 1 && !validReplaceable) {
                 this._setPointer(ptrNames[0], targetID);
             } else {
                 //there is multiple pointer names that are valid for this target
                 //let the user pick one
-                this._selectPointerForTarget(ptrNames, targetID, mousePos);
+                this._selectPointerForTarget(ptrNames, targetID, mousePos, validReplaceable);
             }
         }
     };
@@ -502,7 +503,7 @@ define([
         }
     };
 
-    ModelDecoratorCore.prototype._selectPointerForTarget = function (ptrNames, targetID, mousePos) {
+    ModelDecoratorCore.prototype._selectPointerForTarget = function (ptrNames, targetID, mousePos, validReplaceable) {
         var logger = this.logger,
             menu,
             self = this,
@@ -511,15 +512,27 @@ define([
 
         for (i = 0; i < ptrNames.length; i += 1) {
             menuItems[ptrNames[i]] = {
+                icon: 'glyphicon glyphicon-share',
                 name: 'Set pointer "' + ptrNames[i] + '"'
+            };
+        }
+
+        if (validReplaceable) {
+            menuItems[''] = {
+                icon: 'glyphicon glyphicon-transfer',
+                name: 'Replace instance with dropped node'
             };
         }
 
         menu = new ContextMenu({
             items: menuItems,
             callback: function (key) {
-                logger.debug('_selectPointerForTarget: ' + key);
-                self._setPointer(key, targetID);
+                if (key) {
+                    logger.debug('_selectPointerForTarget: ' + key);
+                    self._setPointer(key, targetID);
+                } else {
+                    alert('Would set template for ' + targetID);
+                }
             }
         });
 
