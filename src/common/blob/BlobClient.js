@@ -178,9 +178,9 @@ define([
         if (this.webgmeToken) {
             req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
-        if (typeof data !== 'string' && !(data instanceof String)) {
-            req.set('Content-Length', contentLength);
-        }
+        // if (typeof data !== 'string' && !(data instanceof String)) {
+        //     req.set('Content-Length', contentLength);
+        // }
         req.set('Content-Type', 'application/octet-stream')
             .send(data)
             .end(function (err, res) {
@@ -225,7 +225,7 @@ define([
         }
 
         req.set('Content-Type', 'application/octet-stream')
-            .set('Content-Length', contentLength)
+            //.set('Content-Length', contentLength)
             .send(blob)
             .end(function (err, res) {
                 if (err || res.status > 399) {
