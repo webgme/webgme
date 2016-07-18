@@ -17,6 +17,7 @@ define(['jquery', 'css!./styles/ContextMenu.css'], function () {
         body = $('body'),
         LI_BASE = $('<li><a tabindex="-1" href="#"></a></li>'),
         DATA_KEY = 'key',
+        DO_NOT_HIDE = 'doNotHide',
         minWidth = 200,
         minHeight = 100;
 
@@ -67,10 +68,14 @@ define(['jquery', 'css!./styles/ContextMenu.css'], function () {
         if (callback) {
             this._menuUL.off('click');
             this._menuUL.on('click', 'li', function (event) {
-                var key = $(this).data(DATA_KEY);
+                var el = $(this),
+                    key = el.data(DATA_KEY);
                 event.stopPropagation();
                 event.preventDefault();
-                self.hide();
+                if (el.attr(DO_NOT_HIDE) !== 'true') {
+                    self.hide();
+                }
+
                 callback(key);
             });
         }
@@ -103,6 +108,11 @@ define(['jquery', 'css!./styles/ContextMenu.css'], function () {
                         li.find('a').prepend($(items[i].icon));
                     }
                 }
+
+                if (items[i].doNotHide) {
+                    li.attr(DO_NOT_HIDE, 'true');
+                }
+
                 this._menuUL.append(li);
             }
         }
