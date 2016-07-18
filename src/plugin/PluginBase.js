@@ -366,6 +366,8 @@ define([
      * @param {string} message.message - If object it must contain a message.
      * @param {number} [message.progress] - Approximate progress (in %) of the plugin at time of sending.
      * @param {string} [message.severity='info'] - Severity level ('success', 'info', 'warn', 'error')
+     * @param {boolean} [message.toBranch=false] - If true, and the plugin is running on the server on a branch -
+     * will broadcast to all sockets in the branch room.
      * @param {string} [callback] - optional callback invoked when message has been emitted from server.
      */
     PluginBase.prototype.sendNotification = function (message, callback) {

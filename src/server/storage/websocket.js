@@ -901,7 +901,11 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         delete data.webgmeToken;
 
                         if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
-                            if (data.originalSocketId) {
+                            if (data.notification.toBranch &&
+                                typeof data.projectId === 'string' && typeof data.branchName === 'string') {
+                                webSocket.to(data.projectId + CONSTANTS.ROOM_DIVIDER + data.branchName)
+                                    .emit(CONSTANTS.NOTIFICATION, data);
+                            } else if (data.originalSocketId) {
                                 webSocket.to(data.originalSocketId).emit(CONSTANTS.NOTIFICATION, data);
                             } else {
                                 throw new Error('PLUGIN_NOTIFICATION requires provided originalSocketId to emit to.');
