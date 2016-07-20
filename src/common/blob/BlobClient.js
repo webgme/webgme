@@ -513,7 +513,7 @@ define([
         this.logger.debug('getArtifact', metadataHash);
         this.getMetadata(metadataHash, function (err, info) {
             if (err) {
-                callback(err);
+                deferred.reject(err);
                 return;
             }
 
