@@ -184,7 +184,6 @@ describe('Webhook Manager', function () {
             var hookListener = getHookListener(function (req) {
                     expect(req.body.event).to.equal(CONSTANTS.TAG_CREATED);
                     expect(req.body.data).to.eql(eventData);
-                console.log('In cb');
                     hookListener.close();
                     done();
                 }),

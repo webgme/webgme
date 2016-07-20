@@ -29,6 +29,7 @@ src/bin/*.xme
 
 /report
 /coverage
+/profiles
 # ignore file system blob storage files
 blob-local-storage
 

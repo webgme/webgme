@@ -32,20 +32,18 @@ main = function (argv, callback) {
         pluginResult;
 
     function list(val) {
-        return val.split(',');
+        return val ? val.split(',') : [];
     }
 
     webgme.addToRequireJsPaths(gmeConfig);
-
     program
         .version('2.2.0')
         .arguments('<pluginName> <projectName>')
         .option('-b, --branchName [string]', 'Name of the branch to load and save to.', 'master')
         .option('-c, --commitHash [string]', 'Commit hash to run from, if set branch will only be used for update.')
-        .option('-s, --selectedObjID <webGMEID>', 'ID to selected component.', '')
-        .option('-a, --activeSelection <webGMEIDs>', 'IDs of selected components (comma separated with no spaces).',
-            list)
-        .option('-n, --namespace',
+        .option('-a, --activeNode [string]', 'ID/Path to active node.', '')
+        .option('-s, --activeSelection [string]', 'IDs/Paths of selected nodes (comma separated with no spaces).', list)
+        .option('-n, --namespace [string]',
             'Namespace the plugin should run under.', '')
         .option('-m, --mongo-database-uri [url]',
             'URI of the MongoDB [default from the configuration file]', gmeConfig.mongo.uri)
@@ -62,8 +60,8 @@ main = function (argv, callback) {
             console.log();
             console.log('    $ node run_plugin.js PluginGenerator TestProject');
             console.log('    $ node run_plugin.js PluginGenerator TestProject -b branch1 -j pluginConfig.json');
-            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -s /1/b');
-            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -a /1,/1/c,/d');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -a /1/b');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -s /1,/1/c,/d');
             console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -c #123..');
             console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -b b1 -c ' +
                 '#def8861ca16237e6756ee22d27678d979bd2fcde');
@@ -93,7 +91,12 @@ main = function (argv, callback) {
         program.branchName + '.');
 
     if (program.pluginConfigPath) {
-        pluginConfig = require(path.resolve(program.pluginConfigPath));
+        try {
+            pluginConfig = require(path.resolve(program.pluginConfigPath));
+        } catch (e) {
+            deferred.reject(e);
+            return deferred.promise.nodeify(callback);
+        }
     } else {
         pluginConfig = {};
     }
@@ -138,10 +141,9 @@ main = function (argv, callback) {
             return project.getBranchHash(program.branchName);
         })
         .then(function (commitHash) {
-            logger.info('CommitHash obtained ', commitHash);
             var pluginManager = new PluginCliManager(project, logger, gmeConfig),
                 context = {
-                    activeNode: program.selectedObjID,
+                    activeNode: program.activeNode,
                     activeSelection: program.activeSelection || [],
                     branchName: program.branchName,
                     commitHash: program.commitHash || commitHash,
