@@ -454,6 +454,12 @@ define([
                             self.currentHash = commitResult.hash; // This is needed in case hash is randomly generated.
                             return self._createFork();
                         });
+                } else if (commitResult.status === STORAGE_CONSTANTS.MERGED) {
+                    self.currentHash = commitResult.mergeHash;
+                    self.addCommitToResult(STORAGE_CONSTANTS.MERGED);
+                    // N.B. If the plugin makes multiple saves, it should fast-forward after a merged commit.
+                    // Otherwise each new commit will have to be merge as well.
+                    return commitResult;
                 } else if (!self.branchName) {
                     self.currentHash = commitResult.hash;
                     self.addCommitToResult(null);
