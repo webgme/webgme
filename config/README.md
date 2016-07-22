@@ -52,7 +52,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.authentication.allowGuests = true`
  - Generate a guest account for non-authenticated connections.
 - `config.authentication.allowUserRegistration = true`
- - Generate a guest account for non-authenticated connections.
+ - Allow clients to create new users via the REST api.
 - `config.authentication.guestAccount = 'guest'`
  - User account which non-authenticated connections will access the storage.
 - `config.authentication.logInUrl = '/profile/login'`
