@@ -49,6 +49,7 @@ define(['superagent', 'q'], function (superagent, Q) {
         if (this.isNodeJS) {
             this.logger.debug('Running under node');
             this.server = '127.0.0.1';
+            this.httpsecure = false;
         }
 
         this.server = parameters.server || this.server;
