@@ -51,6 +51,8 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - If true certain parts will require that users are authenticated.
 - `config.authentication.allowGuests = true`
  - Generate a guest account for non-authenticated connections.
+- `config.authentication.allowUserRegistration = true`
+ - Allow clients to create new users via the REST api.
 - `config.authentication.guestAccount = 'guest'`
  - User account which non-authenticated connections will access the storage.
 - `config.authentication.logInUrl = '/profile/login'`
@@ -144,7 +146,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 ##### requirejsPaths
 - `config.requirejsPaths = {}`
  - Custom paths that will be added to the `paths` of [requirejs configuration](http://requirejs.org/docs/api.html#config).
- Paths added here will also be served under the given key, i.e. `{myPath: './aPath/aSubPath/'}` will expose files at `<host>/myPath/someFile.js`.
+ Paths added here will also be served under the given key, i.e. `{myPath: './aPath/aSubPath/'}` will expose files via `<host>/myPath/someFile.js`.
 
 
 ##### rest

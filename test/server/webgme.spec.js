@@ -1,4 +1,4 @@
-/*globals require*/
+/*globals require, requireJS*/
 /*jshint node:true, mocha:true, expr:true*/
 
 /**
@@ -55,6 +55,39 @@ describe('webgme', function () {
         }
 
         expect(fn).to.throw(Error, /ENOENT[,:] no such file or directory/);
+    });
+
+    it('addToRequireJsPaths should add a path using requirejsPaths', function () {
+        var webGME = testFixture.WebGME,
+            gmeConfig = testFixture.getGmeConfig();
+
+        gmeConfig.requirejsPaths.mySingleBlob = './src/blob';
+
+        webGME.addToRequireJsPaths(gmeConfig);
+        expect(requireJS.s.contexts._.config.paths.mySingleBlob).to.equal('blob');
+    });
+
+    it('addToRequireJsPaths should add an array of paths using requirejsPaths', function () {
+        var webGME = testFixture.WebGME,
+            gmeConfig = testFixture.getGmeConfig();
+
+        gmeConfig.requirejsPaths.myDoubleBlob = ['./src/plugin', './src/blob'];
+        webGME.addToRequireJsPaths(gmeConfig);
+        expect(requireJS.s.contexts._.config.paths.myDoubleBlob).to.contain('blob', 'plugin');
+    });
+
+    it('addToRequireJsPaths should throw a readable exception if requirejsPaths is not an array or string', function () {
+        var webGME = testFixture.WebGME,
+            gmeConfig = testFixture.getGmeConfig();
+
+        gmeConfig.requirejsPaths.myDoubleBlob = {a: 'b'};
+
+        try {
+            webGME.addToRequireJsPaths(gmeConfig);
+            throw new Error('Should have failed!');
+        } catch (e) {
+            expect(e.message).to.include('Given requirejsPaths value is not a string nor array');
+        }
     });
 
     it('should getGmeAuth', function (done) {
