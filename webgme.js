@@ -96,10 +96,20 @@ function addToRequireJsPaths(gmeConfig) {
     function addFromRequireJsPath(requireJsPaths) {
         var configPaths = {},
             keys = Object.keys(requireJsPaths),
+            j,
             i;
-
         for (i = 0; i < keys.length; i += 1) {
-            configPaths[keys[i]] = path.relative(requireJsBase, path.resolve(requireJsPaths[keys[i]]));
+            if (typeof requireJsPaths[keys[i]] === 'string') {
+                configPaths[keys[i]] = path.relative(requireJsBase, path.resolve(requireJsPaths[keys[i]]));
+            } else if (requireJsPaths[keys[i]] instanceof Array) {
+                configPaths[keys[i]] = [];
+                for (j = 0; j < requireJsPaths[keys[i]].length; j += 1) {
+                    configPaths[keys[i]].push(path.relative(requireJsBase, path.resolve(requireJsPaths[keys[i]][j])));
+                }
+            } else {
+                throw new Error('Given requirejsPaths value is not a string nor array "' + keys[i] + '": ' +
+                '"' + requireJsPaths[keys[i]] + '"');
+            }
         }
 
         requirejs.config({
