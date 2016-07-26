@@ -275,7 +275,7 @@ define([
                 var ms = Date.now() - startTime,
                     min = Math.floor(ms/1000/60),
                     sec = (ms/1000) % 60;
-                console.log('Merge exec time', min, 'min', sec, 'sec');
+                parameters.logger.debug('Merge exec time', min, 'min', sec, 'sec');
                 deferred.resolve(result);
             })
             .catch(deferred.reject);

@@ -561,7 +561,6 @@ describe('WebSocket', function () {
                 .then(function () {
                     var deferred = Q.defer();
                     middle.socket.on(CONSTANTS.NOTIFICATION, function (data) {
-                        //console.log('middle notification', data);
                         if (data.type === CONSTANTS.PLUGIN_NOTIFICATION) {
                             deferred.reject(new Error('Middle got plugin notification!'));
                         }
@@ -1476,7 +1475,6 @@ describe('WebSocket', function () {
                 },
                 newBranchHash,
                 eventHandler = function (resultData) {
-                    console.log('eHandle');
                     expect(resultData.projectId).to.equal(data.projectId);
                     expect(resultData.branchName).to.equal(data.branchName);
                     expect(resultData.newHash).to.equal(newBranchHash);
