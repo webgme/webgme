@@ -121,6 +121,8 @@ define(['js/util',
                     message = 'started from';
                 } else if (commits[c].status === storageUtil.CONSTANTS.SYNCED) {
                     message = 'updated';
+                } else if (commits[c].status === storageUtil.CONSTANTS.MERGED) {
+                    message = 'merged into';
                 } else if (!commits[c].status) {
                     // When null or undefined there was no branch target for the commit..
                     message = 'made commit';

@@ -388,19 +388,33 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 storage = storage_;
 
                 storage.openProject(projectId, function (err, project /*, branches*/) {
+                    var mergeLogger = logger.fork('merge');
                     if (err) {
                         finish(err);
                         return;
                     }
 
-                    merger.merge({
+                    function mergeTillSyncOrConflict(currentMine) {
+                        return merger.merge({
                             project: project,
                             gmeConfig: gmeConfig,
-                            logger: logger.fork('merge'),
-                            myBranchOrCommit: mine,
+                            logger: mergeLogger,
+                            myBranchOrCommit: currentMine,
                             theirBranchOrCommit: theirs,
                             auto: true
                         })
+                            .then(function (result) {
+                                if (result.conflict && result.conflict.items.length > 0) {
+                                    return result;
+                                } else if (result.targetBranchName && !result.updatedBranch) {
+                                    return mergeTillSyncOrConflict(result.finalCommitHash);
+                                } else {
+                                    return result;
+                                }
+                            });
+                    }
+
+                    mergeTillSyncOrConflict(mine)
                         .nodeify(finish);
                 });
             })

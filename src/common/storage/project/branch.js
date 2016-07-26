@@ -94,6 +94,27 @@ define(['common/storage/constants'], function (CONSTANTS) {
             return commitData;
         };
 
+        this.getMergedCommit = function (mergeHash) {
+            var mergeCommit,
+                i = updateQueue.length;
+
+            while (i) {
+                i -= 1;
+                if (updateQueue[i].commitObject[CONSTANTS.MONGO_ID] === mergeHash) {
+                    mergeCommit = updateQueue[i];
+                    break;
+                }
+            }
+
+            if (!mergeCommit) {
+                logger.error('mergeCommit not available in updateQueue', mergeHash, JSON.stringify(updateQueue, null, 2));
+            }
+
+            updateQueue = [];
+
+            return mergeCommit;
+        };
+
         this.getCommitQueue = function () {
             return commitQueue;
         };

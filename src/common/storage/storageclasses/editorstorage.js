@@ -561,6 +561,7 @@ define([
                 commitData.commitObject.parents[0], commitData.commitObject._id);
 
             webSocket.makeCommit(commitData, function (err, result) {
+                var mergeCommitData;
                 if (err) {
                     logger.error('makeCommit failed', err);
                 }
@@ -576,6 +577,38 @@ define([
                                 branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
                             } else {
                                 branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
+                                self._pushNextQueuedCommit(projectId, branchName);
+                            }
+                        } else if (result.status === CONSTANTS.MERGED) {
+                            branch.inSync = true;
+                            branch.updateHashes(null, result.mergeHash);
+
+                            if (branch.getCommitQueue().length === 1) {
+                                // Finds the MERGED commit-data and clears the update-queue.
+                                mergeCommitData = branch.getMergedCommit(result.mergeHash);
+                                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.MERGING);
+                                branch.dispatchHashUpdate({commitData: mergeCommitData, local: false},
+                                    function (err, proceed) {
+                                        branch.getFirstCommit(true);
+                                        if (err) {
+                                            logger.error('Loading of merged commit failed with error', err,
+                                                {metadata: mergeCommitData});
+                                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.ERROR, err);
+                                        } else if (proceed === true) {
+                                            logger.debug('Merged commit was successfully loaded, updating localHash.');
+                                            branch.updateHashes(result.mergeHash, null);
+                                            // TODO: What if a commit is made during the hashUpdate?
+                                            branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.SYNC);
+                                            return;
+                                        } else {
+                                            logger.warn('Loading of update commit was aborted',
+                                                {metadata: result.mergeHash});
+                                        }
+                                    }
+                                );
+                            } else {
+                                branch.getFirstCommit(true);
+                                branch.dispatchBranchStatus(CONSTANTS.BRANCH_STATUS.MERGING);
                                 self._pushNextQueuedCommit(projectId, branchName);
                             }
                         } else if (result.status === CONSTANTS.FORKED) {
