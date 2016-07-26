@@ -245,7 +245,7 @@ define([
                                     // normally self.saveJobResults(jobInfo, jobDir, executorConfig);
                                 };
 
-                                this.runningJobs[jobInfo.hash] = {
+                                self.runningJobs[jobInfo.hash] = {
                                     process: child,
                                     terminated: false
                                 };
@@ -475,7 +475,7 @@ define([
         var self = this;
         if (JobInfo.isFinishedStatus(jobInfo.status)) {
             this.availableProcessesContainer.availableProcesses += 1;
-            delete this.runningJobs[jobInfo.status];
+            delete this.runningJobs[jobInfo.hash];
         }
 
         this.executorClient.updateJob(jobInfo)

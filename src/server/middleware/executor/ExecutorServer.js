@@ -301,12 +301,14 @@ function ExecutorServer(options) {
                 self.logger.error(err);
                 res.sendStatus(500);
             } else if (!doc) {
-                self.jobList.update({hash: req.params.hash}, jobInfo, {upsert: true}, function (err) {
+                self.jobList.insert(jobInfo, function (err, insertedDoc) {
                     self.logger.info(err);
                     if (err) {
+                        // TODO: Deal with error when it already existed.
                         self.logger.error(err);
                         res.sendStatus(500);
                     } else {
+                        jobInfo.secret = insertedDoc[0]._id;
                         delete jobInfo._id;
                         res.send(jobInfo);
                     }
@@ -367,7 +369,7 @@ function ExecutorServer(options) {
                 self.logger.error(err);
                 res.sendStatus(500);
             } else if (jobInfo) {
-                if (res.body.secret !== jobInfo._id) {
+                if (req.body.secret !== jobInfo._id.toString()) {
                     res.sendStatus(403);
                 } else if (JobInfo.isFinishedStatus(jobInfo.status) === false) {
                     // Only bother to update the cancelRequested if job hasn't finished.
@@ -510,10 +512,11 @@ function ExecutorServer(options) {
         serverResponse.labelJobs = self.labelJobs;
 
         function checkForCanceledJobs() {
+            console.log('clientRequest', JSON.stringify(clientRequest, null, 2));
             getCanceledJobs(Object.keys(clientRequest.runningJobs))
                 .then(function (jobsToCancel) {
                     serverResponse.jobsToCancel = jobsToCancel;
-                    console.log(JSON.stringify(serverResponse, null, 2));
+                    console.log('serverResponse', JSON.stringify(serverResponse, null, 2));
                     res.send(JSON.stringify(serverResponse));
                 })
                 .catch(function (err) {

@@ -240,6 +240,8 @@ describe('NodeWorker', function () {
                     });
                 });
             });
+
+
         });
 
         describe('[nonce match]', function () {
