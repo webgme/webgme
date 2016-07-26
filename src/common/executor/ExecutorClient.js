@@ -154,6 +154,28 @@ define(['superagent', 'q'], function (superagent, Q) {
         return deferred.promise.nodeify(callback);
     };
 
+    ExecutorClient.prototype.cancelJob = function (jobInfoOrHash, secret, callback) {
+        var deferred = Q.defer(),
+            hash = typeof jobInfoOrHash === 'string' ? jobInfoOrHash : jobInfoOrHash.hash,
+
+            self = this;
+
+        this.logger.debug('cancel', hash);
+        this.sendHttpRequestWithData('POST', this.executorUrl + 'cancel/' + hash, {secret: secret},
+            function (err, response) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+
+                self.logger.debug('cancel - result', response);
+                deferred.resolve(response);
+            }
+        );
+
+        return deferred.promise.nodeify(callback);
+    };
+
     ExecutorClient.prototype.updateJob = function (jobInfo, callback) {
         var deferred = Q.defer(),
             self = this;

@@ -59,7 +59,6 @@ function ExecutorServer(options) {
         //   jobInfo: <JobInfo>
         // }
     };
-    self.jobsToCancel = {};
 
     self.router = router;
 
@@ -151,6 +150,83 @@ function ExecutorServer(options) {
                 }
             }
         });
+    }
+
+    function startClearOutputTimer(jobInfo) {
+        var timerId = self.timerId,
+            timeoutObj;
+
+        self.timerId += 1;
+        timeoutObj = setTimeout(function () {
+            var query = {
+                _id: {
+                    $regex: '^' + jobInfo.hash
+                }
+            };
+
+            delete self.clearOutputsTimers[timerId];
+            if (self.running === false) {
+                return;
+            }
+
+            self.jobList.update({hash: jobInfo.hash}, {
+                $set: {
+                    outputNumber: null
+                }
+            }, function (err) {
+                if (err) {
+                    self.logger.error('Error clearing outputNumber in job', err);
+                }
+
+                if (self.running === false) {
+                    return;
+                }
+
+                self.outputList.remove(query, function (err, num) {
+                    if (err) {
+                        self.logger.error('Failed to remove output for job', err);
+                    }
+                    if (num !== jobInfo.outputNumber + 1) {
+                        self.logger.warn('Did not remove all output for job', num,
+                            {metadata: jobInfo});
+                    }
+
+                    self.logger.debug('Cleared output for job', num, jobInfo.hash);
+                });
+            });
+        }, self.gmeConfig.executor.clearOutputTimeout);
+
+        self.clearOutputsTimers[timerId] = {
+            jobInfo: jobInfo,
+            timeoutObj: timeoutObj
+        };
+
+        self.logger.debug('Timeout ' + self.gmeConfig.executor.clearOutputTimeout +
+            ' [ms] to clear output for job set (id)', jobInfo.hash, timerId);
+    }
+
+    function getCanceledJobs(hashes, callback) {
+        var deferred = Q.defer(),
+            query = {
+                $in: hashes,
+                cancelRequested: true
+            };
+
+        if (hashes.length === 0) {
+            deferred.resolve([]);
+        } else {
+            self.jobList.find(query).toArray(function (err, docs) {
+                if (err) {
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(docs.map(function (jobInfo) {
+                        return jobInfo.hash;
+                    }));
+                }
+            });
+        }
+
+        return deferred.promise.nodeify(callback);
     }
 
     // ensure authenticated can be used only after this rule
@@ -263,62 +339,20 @@ function ExecutorServer(options) {
                     }
                 }
                 self.jobList.update({hash: req.params.hash}, jobInfo, function (err, numReplaced) {
-                    var timeoutObj,
-                        timerId;
                     if (err) {
                         self.logger.error(err);
                         res.sendStatus(500);
                     } else if (numReplaced !== 1) {
                         res.sendStatus(404);
                     } else {
+                        if (JobInfo.isFinishedStatus(jobInfo.status)) {
+                            if (jobInfo.outputNumber !== null && self.gmeConfig.executor.clearOutputTimeout > -1) {
+                                // The job has finished and there is stored output - set timeout to clear it.
+                                startClearOutputTimer(jobInfo);
+                            }
+                        }
+
                         res.sendStatus(200);
-                        if (jobInfo.status === 'CANCELED') {
-                            delete self.jobsToCancel[jobInfo.hash];
-                        }
-                        if (JobInfo.isFinishedStatus(jobInfo.status) && jobInfo.outputNumber !== null &&
-                            self.gmeConfig.executor.clearOutputTimeout > -1) {
-                            // The job has finished and there is stored output - set timeout to clear it.
-                            timerId = self.timerId;
-                            self.timerId += 1;
-                            timeoutObj = setTimeout(function () {
-                                var query = {
-                                    _id: {
-                                        $regex: '^' + jobInfo.hash
-                                    }
-                                };
-
-                                delete self.clearOutputsTimers[timerId];
-                                self.jobList.update({hash: jobInfo.hash}, {
-                                    $set: {
-                                        outputNumber: null
-                                    }
-                                }, function (err) {
-                                    if (err) {
-                                        self.logger.error('Error clearing outputNumber in job', err);
-                                    }
-
-                                    self.outputList.remove(query, function (err, num) {
-                                        if (err) {
-                                            self.logger.error('Failed to remove output for job', err);
-                                        }
-                                        if (num !== jobInfo.outputNumber + 1) {
-                                            self.logger.warn('Did not remove all output for job', num,
-                                                {metadata: jobInfo});
-                                        }
-
-                                        self.logger.debug('Cleared output for job', num, jobInfo.hash);
-                                    });
-                                });
-                            }, self.gmeConfig.executor.clearOutputTimeout);
-
-                            self.clearOutputsTimers[timerId] = {
-                                jobInfo: jobInfo,
-                                timeoutObj: timeoutObj
-                            };
-
-                            self.logger.debug('Timeout ' + self.gmeConfig.executor.clearOutputTimeout +
-                                ' [ms] to clear output for job set (id)', jobInfo.hash, timerId);
-                        }
                     }
                 });
             } else {
@@ -333,11 +367,27 @@ function ExecutorServer(options) {
                 self.logger.error(err);
                 res.sendStatus(500);
             } else if (jobInfo) {
-                delete jobInfo._id;
-                if (JobInfo.isFinishedStatus(jobInfo.status) === false) {
-                    self.jobsToCancel[jobInfo.hash] = true;
+                if (res.body.secret !== jobInfo._id) {
+                    res.sendStatus(403);
+                } else if (JobInfo.isFinishedStatus(jobInfo.status) === false) {
+                    // Only bother to update the cancelRequested if job hasn't finished.
+                    self.jobList.update({hash: req.params.hash}, {
+                        $set: {
+                            cancelRequested: true
+                        }
+                    }, function (err) {
+                        if (err) {
+                            self.logger.error(err);
+                            res.sendStatus(500);
+                        } else {
+                            delete jobInfo._id;
+                            res.send(jobInfo);
+                        }
+                    });
+                } else {
+                    delete jobInfo._id;
+                    res.send(jobInfo);
                 }
-                res.send(jobInfo);
             } else {
                 res.sendStatus(404);
             }
@@ -460,13 +510,16 @@ function ExecutorServer(options) {
         serverResponse.labelJobs = self.labelJobs;
 
         function checkForCanceledJobs() {
-            clientRequest.runningJobs.forEach(function (jHash) {
-                if (self.jobsToCancel[jHash]) {
-                    serverResponse.jobsToCancel.push(jHash);
-                }
-            });
-
-            res.send(JSON.stringify(serverResponse));
+            getCanceledJobs(Object.keys(clientRequest.runningJobs))
+                .then(function (jobsToCancel) {
+                    serverResponse.jobsToCancel = jobsToCancel;
+                    console.log(JSON.stringify(serverResponse, null, 2));
+                    res.send(JSON.stringify(serverResponse));
+                })
+                .catch(function (err) {
+                    self.logger.error(err);
+                    res.send(JSON.stringify(serverResponse));
+                });
         }
 
         self.workerList.update({clientId: clientRequest.clientId}, {
