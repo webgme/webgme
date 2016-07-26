@@ -5233,7 +5233,7 @@ define('executor/ExecutorWorker',[
                     } else {
                         var response = JSON.parse(res.text);
                         //console.log(res.text)
-                        self.response.jobsToCancel.forEach(self.cancelJob);
+                        response.jobsToCancel.forEach(self.cancelJob);
                         var jobsToStart = response.jobsToStart;
                         for (var i = 0; i < jobsToStart.length; i++) {
                             self.executorClient.getInfo(jobsToStart[i], function (err, info) {
