@@ -208,10 +208,11 @@ function ExecutorServer(options) {
     function getCanceledJobs(hashes, callback) {
         var deferred = Q.defer(),
             query = {
-                $in: hashes,
+                hash: {
+                    $in: hashes
+                },
                 cancelRequested: true
             };
-
         if (hashes.length === 0) {
             deferred.resolve([]);
         } else {
@@ -382,13 +383,11 @@ function ExecutorServer(options) {
                             self.logger.error(err);
                             res.sendStatus(500);
                         } else {
-                            delete jobInfo._id;
-                            res.send(jobInfo);
+                            res.sendStatus(200);
                         }
                     });
                 } else {
-                    delete jobInfo._id;
-                    res.send(jobInfo);
+                    res.sendStatus(200);
                 }
             } else {
                 res.sendStatus(404);
@@ -512,11 +511,9 @@ function ExecutorServer(options) {
         serverResponse.labelJobs = self.labelJobs;
 
         function checkForCanceledJobs() {
-            console.log('clientRequest', JSON.stringify(clientRequest, null, 2));
-            getCanceledJobs(Object.keys(clientRequest.runningJobs))
+            getCanceledJobs(clientRequest.runningJobs)
                 .then(function (jobsToCancel) {
                     serverResponse.jobsToCancel = jobsToCancel;
-                    console.log('serverResponse', JSON.stringify(serverResponse, null, 2));
                     res.send(JSON.stringify(serverResponse));
                 })
                 .catch(function (err) {

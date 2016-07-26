@@ -321,7 +321,6 @@ describe('ExecutorServer', function () {
                         agent.get(serverBaseUrl + '/rest/executor/info/existingHash')
                             .end(function (err, res) {
                                 should.equal(res.status, 200, err);
-                                should.equal(res.body.cancelRequested, true, res.body);
                                 server.stop(function (err) {
                                     server = null;
                                     done(err);

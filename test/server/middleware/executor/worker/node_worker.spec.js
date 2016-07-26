@@ -116,6 +116,7 @@ describe('NodeWorker', function () {
                         {cwd: 'src/server/middleware/executor/worker'});
                     nodeWorkerProcess.stderr.on('data', function (data) {
                         stderr += data.toString();
+                        //console.log(stderr);
                     });
                     nodeWorkerProcess.stdout.on('data', function (data) {
                         var str = data.toString();
@@ -131,6 +132,14 @@ describe('NodeWorker', function () {
                             deferred.resolve({connected: false, stdout: stdout, stderr: stderr});
                         }
                     });
+
+                    // nodeWorkerProcess.on('close', function (code, signal) {
+                    //     console.log('close', code, signal);
+                    // });
+                    // nodeWorkerProcess.on('error', function (err) {
+                    //     console.log('error', err);
+                    // });
+
                     return deferred.promise;
                 })
                 .catch(function (err) {
@@ -156,7 +165,7 @@ describe('NodeWorker', function () {
                         done();
                     } else {
                         done(new Error('Worker did not attach, stdout: ' + result.stdout + ', stderr: ' +
-                                       result.stderr));
+                            result.stderr));
                     }
                 });
             });
@@ -203,45 +212,195 @@ describe('NodeWorker', function () {
                     filesToAdd = {
                         'executor_config.json': JSON.stringify(executorConfig)
                     };
-                artifact.addFiles(filesToAdd, function (err/*, hashes*/) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    artifact.save(function (err, hash) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        executorClient.createJob({hash: hash}, function (err, jobInfo) {
-                            var intervalId;
-                            if (err) {
-                                done(new Error(err));
-                                return;
-                            }
-                            intervalId = setInterval(function () {
-                                executorClient.getInfo(jobInfo.hash, function (err, res) {
-                                    if (err) {
-                                        clearInterval(intervalId);
-                                        done(err);
-                                        return;
-                                    }
 
+                artifact.addFiles(filesToAdd)
+                    .then(function () {
+                        return artifact.save();
+                    })
+                    .then(function (hash) {
+                        return executorClient.createJob({hash: hash});
+                    })
+                    .then(function (jobInfo) {
+                        var intervalId = setInterval(function () {
+                            executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                if (err) {
+                                    clearInterval(intervalId);
+                                    done(err);
+                                    return;
+                                }
+
+                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                    // The job is still running..
+                                    return;
+                                }
+                                clearInterval(intervalId);
+                                should.equal(res.status, 'SUCCESS');
+                                done();
+                            });
+                        }, 100);
+                    })
+                    .catch(done);
+            });
+
+            it('createJob and cancelJob when it is running and return with status CANCELED', function (done) {
+                this.timeout(20000);
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['longRunning.js'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig),
+                        'longRunning.js': 'setTimeout(function (){ process.exit(1); }, 10000);'
+                    };
+
+                artifact.addFiles(filesToAdd)
+                    .then(function () {
+                        return artifact.save();
+                    })
+                    .then(function (hash) {
+                        return executorClient.createJob({hash: hash});
+                    })
+                    .then(function (jobInfo) {
+                        var secret = jobInfo.secret,
+                            cancelSent = false,
+                            intervalId;
+
+                        intervalId = setInterval(function () {
+                            executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                if (err) {
+                                    clearInterval(intervalId);
+                                    done(err);
+                                    return;
+                                }
+
+                                if (res.status === 'CREATED') {
+                                    // The job was created..
+                                    return;
+                                } else if (res.status === 'RUNNING') {
+                                    if (cancelSent === false) {
+                                        cancelSent = true;
+                                        executorClient.cancelJob(jobInfo, secret, function (err) {
+                                            if (err) {
+                                                clearInterval(intervalId);
+                                                done(err);
+                                            }
+                                        });
+                                    }
+                                    return;
+                                }
+
+                                clearInterval(intervalId);
+                                should.equal(res.status, 'CANCELED');
+                                done();
+                            });
+                        }, 100);
+                    })
+                    .catch(done);
+            });
+
+            it('createJob and cancelJob right away and return with status CANCELED', function (done) {
+                this.timeout(20000);
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['longRunning2.js'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig),
+                        'longRunning2.js': 'setTimeout(function (){ process.exit(1); }, 10000);'
+                    };
+
+                artifact.addFiles(filesToAdd)
+                    .then(function () {
+                        return artifact.save();
+                    })
+                    .then(function (hash) {
+                        return executorClient.createJob({hash: hash});
+                    })
+                    .then(function (jobInfo) {
+                        var secret = jobInfo.secret;
+                        var intervalId = setInterval(function () {
+                            executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                if (err) {
+                                    clearInterval(intervalId);
+                                    done(err);
+                                    return;
+                                }
+
+                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                    // The job was created or is running..
+                                    return;
+                                }
+
+                                clearInterval(intervalId);
+                                should.equal(res.status, 'CANCELED');
+                                done();
+                            });
+                        }, 100);
+
+                        return executorClient.cancelJob(jobInfo, secret);
+                    })
+                    .catch(done);
+            });
+
+            it('createJob and cancelJob after SUCCESS should not do anything', function (done) {
+                this.timeout(20000);
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['--help'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig)
+                    };
+
+                artifact.addFiles(filesToAdd)
+                    .then(function () {
+                        return artifact.save();
+                    })
+                    .then(function (hash) {
+                        return executorClient.createJob({hash: hash});
+                    })
+                    .then(function (jobInfo) {
+                        var intervalId,
+                            secret = jobInfo.secret,
+                            deferred = Q.defer();
+
+                        intervalId = setInterval(function () {
+                            executorClient.getInfo(jobInfo.hash)
+                                .then(function (res) {
                                     if (res.status === 'CREATED' || res.status === 'RUNNING') {
                                         // The job is still running..
                                         return;
                                     }
+
                                     clearInterval(intervalId);
                                     should.equal(res.status, 'SUCCESS');
-                                    done();
+
+                                    executorClient.cancelJob(jobInfo, secret)
+                                        .then(function () {
+                                            return executorClient.getInfo(jobInfo.hash);
+                                        })
+                                        .then(function (info) {
+                                            should.equal(info.status, 'SUCCESS');
+                                            deferred.resolve();
+                                        })
+                                        .catch(deferred.reject);
+                                })
+                                .catch(function (err) {
+                                    clearInterval(intervalId);
+                                    deferred.reject(err);
                                 });
-                            }, 100);
-                        });
-                    });
-                });
+                        }, 100);
+
+                        return deferred.promise;
+                    })
+                    .nodeify(done);
             });
-
-
         });
 
         describe('[nonce match]', function () {

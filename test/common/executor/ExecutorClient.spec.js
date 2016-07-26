@@ -298,4 +298,80 @@ describe('ExecutorClient', function () {
             })
             .nodeify(done);
     });
+
+    it('createJob should return a "secret"', function (done) {
+        var jobInfo = {
+            hash: 'someHash'
+        };
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+            })
+            .nodeify(done);
+    });
+
+    it('createJob twice should only return a "secret" once', function (done) {
+        var jobInfo = {
+            hash: 'someHash1'
+        };
+
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+                return executorClient.createJob(jobInfo);
+            })
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('undefined');
+            })
+            .nodeify(done);
+    });
+
+    it('cancelJob with correct secret should succeed ', function (done) {
+        var jobInfo = {
+            hash: 'someHash2'
+        };
+
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+                return executorClient.cancelJob(jobInfo, res.secret);
+            })
+            .then(function (res) {
+                // The worker will be notified about the job to cancel,
+                // kill the process and update the status to CANCELED.
+                expect(res).to.equal('OK');
+            })
+            .nodeify(done);
+
+    });
+
+    it('cancelJob with wrong secret should return Forbidden', function (done) {
+        var jobInfo = {
+            hash: 'someHash3'
+        };
+
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+                return executorClient.cancelJob(jobInfo, 'wrongSecret4sure');
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Forbidden');
+            })
+            .nodeify(done);
+    });
+
+    it('cancelJob with non existing hash should return Not Found', function (done) {
+        executorClient.cancelJob('cancelJobTakesAHashToo', 'theSecret')
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Not Found');
+            })
+            .nodeify(done);
+    });
 });
