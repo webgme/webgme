@@ -3581,9 +3581,11 @@ define('blob/BlobClient',[
         if (this.webgmeToken) {
             req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
-        if (typeof data !== 'string' && !(data instanceof String)) {
+
+        if (typeof data !== 'string' && !(data instanceof String) && typeof window === 'undefined') {
             req.set('Content-Length', contentLength);
         }
+
         req.set('Content-Type', 'application/octet-stream')
             .send(data)
             .end(function (err, res) {
@@ -3625,10 +3627,10 @@ define('blob/BlobClient',[
 
         if (typeof window === 'undefined') {
             req.agent(this.keepaliveAgent);
+            req.set('Content-Length', contentLength);
         }
 
         req.set('Content-Type', 'application/octet-stream')
-            .set('Content-Length', contentLength)
             .send(blob)
             .end(function (err, res) {
                 if (err || res.status > 399) {
