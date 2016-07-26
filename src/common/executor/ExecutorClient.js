@@ -294,7 +294,7 @@ define(['superagent', 'q'], function (superagent, Q) {
         var deferred = Q.defer(),
             url = this.executorUrl + 'output/' + outputInfo.hash;
 
-        this.logger.debug('sendOuput', outputInfo._id);
+        this.logger.debug('sendOutput', outputInfo._id);
 
         this.sendHttpRequestWithData('POST', url, outputInfo, function (err) {
             if (err) {

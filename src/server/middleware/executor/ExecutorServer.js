@@ -59,6 +59,7 @@ function ExecutorServer(options) {
         //   jobInfo: <JobInfo>
         // }
     };
+    self.jobsToCancel = {};
 
     self.router = router;
 
@@ -271,6 +272,9 @@ function ExecutorServer(options) {
                         res.sendStatus(404);
                     } else {
                         res.sendStatus(200);
+                        if (jobInfo.status === 'CANCELED') {
+                            delete self.jobsToCancel[jobInfo.hash];
+                        }
                         if (JobInfo.isFinishedStatus(jobInfo.status) && jobInfo.outputNumber !== null &&
                             self.gmeConfig.executor.clearOutputTimeout > -1) {
                             // The job has finished and there is stored output - set timeout to clear it.
@@ -284,16 +288,26 @@ function ExecutorServer(options) {
                                 };
 
                                 delete self.clearOutputsTimers[timerId];
-
-                                self.outputList.remove(query, function (err, num) {
+                                self.jobList.update({hash: jobInfo.hash}, {
+                                    $set: {
+                                        outputNumber: null
+                                    }
+                                }, function (err) {
                                     if (err) {
-                                        self.logger.error('Failed to remove output for job', {metadata: jobInfo});
-                                    }
-                                    if (num !== jobInfo.outputNumber + 1) {
-                                        self.logger.warn('Did not remove all output for job', num, {metadata: jobInfo});
+                                        self.logger.error('Error clearing outputNumber in job', err);
                                     }
 
-                                    self.logger.debug('Cleared output for job', num, jobInfo.hash);
+                                    self.outputList.remove(query, function (err, num) {
+                                        if (err) {
+                                            self.logger.error('Failed to remove output for job', err);
+                                        }
+                                        if (num !== jobInfo.outputNumber + 1) {
+                                            self.logger.warn('Did not remove all output for job', num,
+                                                {metadata: jobInfo});
+                                        }
+
+                                        self.logger.debug('Cleared output for job', num, jobInfo.hash);
+                                    });
                                 });
                             }, self.gmeConfig.executor.clearOutputTimeout);
 
@@ -307,6 +321,23 @@ function ExecutorServer(options) {
                         }
                     }
                 });
+            } else {
+                res.sendStatus(404);
+            }
+        });
+    });
+
+    router.post('/cancel/:hash', function (req, res/*, next*/) {
+        self.jobList.findOne({hash: req.params.hash}, function (err, jobInfo) {
+            if (err) {
+                self.logger.error(err);
+                res.sendStatus(500);
+            } else if (jobInfo) {
+                delete jobInfo._id;
+                if (JobInfo.isFinishedStatus(jobInfo.status) === false) {
+                    self.jobsToCancel[jobInfo.hash] = true;
+                }
+                res.send(jobInfo);
             } else {
                 res.sendStatus(404);
             }
@@ -393,10 +424,6 @@ function ExecutorServer(options) {
         });
     });
 
-    router.post('/cancel/:hash', function (req, res, next) {
-        next(new Error('Not implemented yet.'));
-    });
-
     // worker API
     router.get('/worker', function (req, res/*, next*/) {
         var response = {};
@@ -432,6 +459,16 @@ function ExecutorServer(options) {
 
         serverResponse.labelJobs = self.labelJobs;
 
+        function checkForCanceledJobs() {
+            clientRequest.runningJobs.forEach(function (jHash) {
+                if (self.jobsToCancel[jHash]) {
+                    serverResponse.jobsToCancel.push(jHash);
+                }
+            });
+
+            res.send(JSON.stringify(serverResponse));
+        }
+
         self.workerList.update({clientId: clientRequest.clientId}, {
             $set: {
                 lastSeen: (new Date()).getTime() / 1000,
@@ -460,7 +497,7 @@ function ExecutorServer(options) {
 
                     var callback = function (i) {
                         if (i === docs.length) {
-                            res.send(JSON.stringify(serverResponse));
+                            checkForCanceledJobs();
                             return;
                         }
                         self.jobList.update({_id: docs[i]._id, status: 'CREATED'}, {
@@ -482,7 +519,7 @@ function ExecutorServer(options) {
                     callback(0);
                 });
             } else {
-                res.send(JSON.stringify(serverResponse));
+                checkForCanceledJobs();
             }
         });
     });

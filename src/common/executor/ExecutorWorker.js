@@ -108,6 +108,7 @@ define([
             this.executorClient.executorNonce = parameters.executorNonce;
         }
         this.jobList = {};
+        this.runningJobs = {};
 
         this.sourceFilename = 'source.zip';
         this.resultFilename = 'execution_results';
@@ -207,6 +208,7 @@ define([
                                         ' is missing or wrong type for cmd and/or resultArtifacts.');
                                     return;
                                 }
+
                                 var cmd = executorConfig.cmd;
                                 var args = executorConfig.args || [];
                                 self.logger.debug('working directory: ' + jobDir + ' executing: ' + cmd +
@@ -217,13 +219,17 @@ define([
                                 var child = childProcess.spawn(cmd, args, {
                                     cwd: jobDir,
                                     stdio: ['ignore', 'pipe', 'pipe']
-                                }), childExit = function (err) {
+                                });
+                                var childExit = function (err, signal) {
 
                                     childExit = function () {
                                     }; // "Note that the exit-event may or may not fire after an error has occurred"
+
                                     jobInfo.finishTime = new Date().toISOString();
 
-                                    if (err) {
+                                    if (signal === 'SIGINT') {
+                                        jobInfo.status = 'CANCELED';
+                                    } else if (err) {
                                         self.logger.error(jobInfo.hash + ' exec error: ' + util.inspect(err));
                                         jobInfo.status = 'FAILED_TO_EXECUTE';
                                     }
@@ -238,8 +244,13 @@ define([
                                     }
                                     // normally self.saveJobResults(jobInfo, jobDir, executorConfig);
                                 };
-                                var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
 
+                                this.runningJobs[jobInfo.hash] = {
+                                    process: child,
+                                    terminated: false
+                                };
+
+                                var outlog = fs.createWriteStream(path.join(jobDir, 'job_stdout.txt'));
                                 child.stdout.pipe(outlog);
                                 child.stdout.pipe(fs.createWriteStream(path.join(self.workingDirectory,
                                     jobInfo.hash.substr(0, 6) + '_stdout.txt')));
@@ -282,6 +293,7 @@ define([
             archiveFile,
             afterAllFilesArchived,
             addObjectHashesAndSaveArtifact;
+
         jobInfo.resultHashes = {};
 
         for (i = 0; i < executorConfig.resultArtifacts.length; i += 1) {
@@ -463,17 +475,22 @@ define([
         var self = this;
         if (JobInfo.isFinishedStatus(jobInfo.status)) {
             this.availableProcessesContainer.availableProcesses += 1;
+            delete this.runningJobs[jobInfo.status];
         }
-        this.executorClient.updateJob(jobInfo, function (err) {
-            if (err) {
+
+        this.executorClient.updateJob(jobInfo)
+            .catch(function (err) {
                 self.logger.error(err); // TODO
-            }
-        });
+            });
+
         this.emit('jobUpdate', jobInfo);
     };
 
-    ExecutorWorker.prototype.cancelJob = function () {
-
+    ExecutorWorker.prototype.cancelJob = function (hash) {
+        if (this.runningJobs[hash] && this.runningJobs[hash].terminated === false) {
+            this.runningJobs[hash].terminated = true;
+            this.runningJobs[hash].process.kill('SIGINT');
+        }
     };
 
     ExecutorWorker.prototype.checkForUnzipExe = function () {
@@ -493,10 +510,12 @@ define([
 
         var _queryWorkerAPI = function () {
 
-            this.clientRequest.availableProcesses = Math.max(0, this.availableProcessesContainer.availableProcesses);
+            self.clientRequest.availableProcesses = Math.max(0, self.availableProcessesContainer.availableProcesses);
+            self.clientRequest.runningJobs = Object.keys(self.runningJobs);
+
             var req = superagent.post(self.executorClient.executorUrl + 'worker');
-            if (this.executorClient.executorNonce) {
-                req.set('x-executor-nonce', this.executorClient.executorNonce);
+            if (self.executorClient.executorNonce) {
+                req.set('x-executor-nonce', self.executorClient.executorNonce);
             }
             req
                 //.set('Content-Type', 'application/json')
@@ -513,6 +532,7 @@ define([
                     } else {
                         var response = JSON.parse(res.text);
                         //console.log(res.text)
+                        self.response.jobsToCancel.forEach(self.cancelJob);
                         var jobsToStart = response.jobsToStart;
                         for (var i = 0; i < jobsToStart.length; i++) {
                             self.executorClient.getInfo(jobsToStart[i], function (err, info) {

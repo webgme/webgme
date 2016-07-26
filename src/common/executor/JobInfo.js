@@ -89,6 +89,7 @@ define([], function () {
      */
     JobInfo.finishedStatuses = [
         'SUCCESS',
+        'CANCELED',
         'FAILED_TO_EXECUTE',
         'FAILED_TO_GET_SOURCE_METADATA',
         'FAILED_SOURCE_COULD_NOT_BE_OBTAINED',
