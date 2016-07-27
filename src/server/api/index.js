@@ -1123,6 +1123,8 @@ function createAPI(app, mountPath, middlewareOpts) {
      *          db - projectId
      *          seed - name of the seed-file (no extension - matches json file)
      * @param {string} [req.body.seedBranch='master'] - for 'db' optional branch name to seed from.
+     * @param {string} [req.body.seedCommit] - for 'db' optional commit-hash to seed from
+     * (if given seedBranch is not used).
      *
      * @example {type:'file', seedName:'EmptyProject'}
      * @example {type:'db', seedName:'me+myOldProject', seedBranch:'release'}
