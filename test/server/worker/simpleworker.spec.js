@@ -28,6 +28,7 @@ describe('Simple worker', function () {
 
         usedProjectNames = [
             'workerSeedFromDB',
+            'workerSeedFromDB2',
             'WorkerProject',
             'LibraryEmptyBase'
         ],
@@ -338,6 +339,51 @@ describe('Simple worker', function () {
                     webGMESessionId: webGMESessionId,
                     type: 'db',
                     seedName: baseProjectContext.id,
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.result).not.equal(null);
+                expect(msg.result).to.include.keys('projectId');
+                expect(msg.result.projectId).to.equal(projectId);
+                return storage.getProjects({branches: true});
+            })
+            .then(function (projects) {
+                var i,
+                    hadProject = false;
+                for (i = 0; i < projects.length; i += 1) {
+                    if (projects[i]._id === projectId) {
+                        hadProject = true;
+                        break;
+                    }
+                }
+                expect(hadProject).to.equal(true,
+                    'getProjects did not return the seeded project' + projectId);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should seedProject from an existing project using commitHash', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'workerSeedFromDB2',
+            projectId = testFixture.projectName2Id(projectName);
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.seedProject,
+                    projectName: projectName,
+                    ownerId: gmeConfig.authentication.guestAccount,
+                    webGMESessionId: webGMESessionId,
+                    type: 'db',
+                    seedName: baseProjectContext.id,
+                    seedCommit: baseProjectContext.commitHash,
+                    seedBranch: 'DoesNotExist' // Since seedCommit is given it should neglect the seedBranch
                 });
             })
             .then(function (msg) {

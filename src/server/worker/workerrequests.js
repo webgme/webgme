@@ -274,22 +274,29 @@ function WorkerRequests(mainLogger, gmeConfig) {
             });
     }
 
-    function _getSeedFromProject(storage, projectId, branchName, callback) {
-        var deferred = Q.defer();
+    function _getSeedFromProject(storage, projectId, branchName, commitHash, callback) {
+        var deferred = Q.defer(),
+            options = {};
 
-        branchName = branchName || 'master';
         storage.openProject(projectId, function (err, project, branches/*, access*/) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
 
-            if (!branches[branchName]) {
-                deferred.reject(new Error('unknown branch: ' + branchName));
-                return;
+            if (commitHash) {
+                options.commitHash = commitHash;
+            } else {
+                branchName = branchName || 'master';
+                if (!branches[branchName]) {
+                    deferred.reject(new Error('unknown branch: ' + branchName));
+                    return;
+                }
+
+                options.branchName = branchName;
             }
 
-            storageUtils.getProjectJson(project, {branchName: branchName})
+            storageUtils.getProjectJson(project, options)
                 .then(function (rawJson) {
                     deferred.resolve({seed: rawJson, isLegacy: false});
                 })
@@ -308,6 +315,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} parameters.seedName - Name of seed, file or projectId.
      * @param {string} parameters.type - 'db' or 'file'
      * @param {string} [parameters.seedBranch='master'] - If db - optional name of branch.
+     * @param {string} [parameters.seedCommit] - If db - optional commit-hash to seed from (if given branchName will not
+     * be used).
      * @param [function} callback
      */
     function seedProject(webgmeToken, projectName, ownerId, parameters, callback) {
@@ -345,7 +354,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     return _getSeedFromFile(parameters.seedName, webgmeToken);
                 } else if (parameters.type === 'db') {
                     logger.debug('seedProject - seeding from existing project:', parameters.seedName);
-                    return _getSeedFromProject(storage, parameters.seedName, parameters.seedBranch);
+                    return _getSeedFromProject(storage, parameters.seedName, parameters.seedBranch,
+                        parameters.seedCommit);
                 //} else if (parameters.type === 'blob') {
                 //    return _getSeedFromBlob(parameters.seedName, webgmeToken);
                 } else {
