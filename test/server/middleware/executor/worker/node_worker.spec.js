@@ -350,7 +350,7 @@ describe('NodeWorker', function () {
                 this.timeout(20000);
                 var executorConfig = {
                         cmd: 'node',
-                        args: ['--help'],
+                        args: ['--version'],
                         resultArtifacts: [{name: 'all', resultPatterns: []}]
                     },
                     artifact = blobClient.createArtifact('execFiles'),
@@ -396,6 +396,90 @@ describe('NodeWorker', function () {
                                     deferred.reject(err);
                                 });
                         }, 100);
+
+                        return deferred.promise;
+                    })
+                    .nodeify(done);
+            });
+
+            it('createJob and cancelJob and createJob and cancelJob', function (done) {
+                this.timeout(20000);
+                var executorConfig = {
+                        cmd: 'node',
+                        args: ['longRunning3.js'],
+                        resultArtifacts: [{name: 'all', resultPatterns: []}]
+                    },
+                    artifact = blobClient.createArtifact('execFiles'),
+                    filesToAdd = {
+                        'executor_config.json': JSON.stringify(executorConfig),
+                        'longRunning3.js': 'setTimeout(function (){ process.exit(1); }, 10000);'
+                    };
+
+                artifact.addFiles(filesToAdd)
+                    .then(function () {
+                        return artifact.save();
+                    })
+                    .then(function (hash) {
+                        return executorClient.createJob({hash: hash});
+                    })
+                    .then(function (jobInfo) {
+                        var deferred = Q.defer(),
+                            intervalId;
+
+                        console.log(jobInfo);
+
+                        intervalId = setInterval(function () {
+                            executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                if (err) {
+                                    clearInterval(intervalId);
+                                    deferred.reject(err);
+                                    return;
+                                }
+
+                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                    // The job was created or is running..
+                                    return;
+                                }
+
+                                clearInterval(intervalId);
+                                should.equal(res.status, 'CANCELED');
+                                deferred.resolve(jobInfo);
+                            });
+                        }, 100);
+
+                        executorClient.cancelJob(jobInfo, jobInfo.secret);
+
+                        return deferred.promise;
+                    })
+                    .then(function (jobInfo) {
+                        return executorClient.createJob({hash: jobInfo.hash});
+                    })
+                    .then(function (jobInfo) {
+                        var deferred = Q.defer(),
+                            intervalId;
+
+                        console.log(jobInfo);
+
+                        intervalId = setInterval(function () {
+                            executorClient.getInfo(jobInfo.hash, function (err, res) {
+                                if (err) {
+                                    clearInterval(intervalId);
+                                    deferred.reject(err);
+                                    return;
+                                }
+
+                                if (res.status === 'CREATED' || res.status === 'RUNNING') {
+                                    // The job was created or is running..
+                                    return;
+                                }
+
+                                clearInterval(intervalId);
+                                should.equal(res.status, 'CANCELED');
+                                deferred.resolve(jobInfo);
+                            });
+                        }, 100);
+
+                        executorClient.cancelJob(jobInfo, jobInfo.secret);
 
                         return deferred.promise;
                     })
