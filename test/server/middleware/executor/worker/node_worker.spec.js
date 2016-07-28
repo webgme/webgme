@@ -116,7 +116,6 @@ describe('NodeWorker', function () {
                         {cwd: 'src/server/middleware/executor/worker'});
                     nodeWorkerProcess.stderr.on('data', function (data) {
                         stderr += data.toString();
-                        //console.log(stderr);
                     });
                     nodeWorkerProcess.stdout.on('data', function (data) {
                         var str = data.toString();
@@ -426,8 +425,6 @@ describe('NodeWorker', function () {
                         var deferred = Q.defer(),
                             intervalId;
 
-                        console.log(jobInfo);
-
                         intervalId = setInterval(function () {
                             executorClient.getInfo(jobInfo.hash, function (err, res) {
                                 if (err) {
@@ -457,8 +454,6 @@ describe('NodeWorker', function () {
                     .then(function (jobInfo) {
                         var deferred = Q.defer(),
                             intervalId;
-
-                        console.log(jobInfo);
 
                         intervalId = setInterval(function () {
                             executorClient.getInfo(jobInfo.hash, function (err, res) {
