@@ -143,16 +143,14 @@ describe('ExecutorClient', function () {
         });
     });
 
-    it('getAllInfo should return 404', function (done) {
-        executorClient.getAllInfo(function (err, res) {
-            if (err) {
-                should.equal(err.message, 'Not Found');
-                done();
-                return;
-            }
-            logger.debug(res);
-            done(new Error('should have failed with 404'));
-        });
+    it('getAllInfo should return and object with jobs', function (done) {
+        executorClient.getAllInfo()
+            .then(function(jobs) {
+                expect(typeof jobs).to.equal('object');
+                expect(jobs).to.not.equal(null);
+                expect(jobs instanceof Array).to.equal(false);
+            })
+            .nodeify(done);
     });
 
     it('updateJob with SUCCESS followed by getInfo should return SUCCESS in jobInfo', function (done) {
@@ -295,6 +293,121 @@ describe('ExecutorClient', function () {
 
                 expect(res[4].length).to.equal(1);
                 expect(res[4][0]).to.deep.equal(outputInfo2);
+            })
+            .nodeify(done);
+    });
+
+    it('createJob should return a "secret"', function (done) {
+        var jobInfo = {
+            hash: 'someHash'
+        };
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+            })
+            .nodeify(done);
+    });
+
+    it('createJob twice should only return a "secret" once', function (done) {
+        var jobInfo = {
+            hash: 'someHash1'
+        };
+
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+                expect(typeof res._id).to.equal('undefined');
+                return executorClient.createJob(jobInfo);
+            })
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('undefined');
+            })
+            .nodeify(done);
+    });
+
+    it('getInfo should not return the "secret" nor _id', function (done) {
+        var jobInfo = {
+            hash: 'someHash11'
+        };
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+                return executorClient.getInfo(jobInfo.hash);
+            })
+            .then(function (res) {
+                expect(typeof res.hash).to.equal('string');
+                expect(typeof res.secret).to.equal('undefined');
+                expect(typeof res._id).to.equal('undefined');
+            })
+            .nodeify(done);
+    });
+
+    it('getAllInfo should not return the "secret"', function (done) {
+        var jobInfo = {
+            hash: 'someHash111'
+        };
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+                return executorClient.getAllInfo();
+            })
+            .then(function (res) {
+                var hashes = Object.keys(res);
+                expect(hashes.length > 0).to.equal(true);
+                hashes.forEach(function (hash) {
+                    expect(typeof res[hash].hash).to.equal('string');
+                    expect(typeof res[hash].secret).to.equal('undefined');
+                    expect(typeof res[hash]._id).to.equal('undefined');
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('cancelJob with correct secret should succeed ', function (done) {
+        var jobInfo = {
+            hash: 'someHash2'
+        };
+
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+                return executorClient.cancelJob(jobInfo, res.secret);
+            })
+            .then(function (res) {
+                // The worker will be notified about the job to cancel,
+                // kill the process and update the status to CANCELED.
+                expect(res).to.equal('OK');
+            })
+            .nodeify(done);
+
+    });
+
+    it('cancelJob with wrong secret should return Forbidden', function (done) {
+        var jobInfo = {
+            hash: 'someHash3'
+        };
+
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+                return executorClient.cancelJob(jobInfo, 'wrongSecret4sure');
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Forbidden');
+            })
+            .nodeify(done);
+    });
+
+    it('cancelJob with non existing hash should return Not Found', function (done) {
+        executorClient.cancelJob('cancelJobTakesAHashToo', 'theSecret')
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('Not Found');
             })
             .nodeify(done);
     });

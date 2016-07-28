@@ -154,6 +154,28 @@ define(['superagent', 'q'], function (superagent, Q) {
         return deferred.promise.nodeify(callback);
     };
 
+    ExecutorClient.prototype.cancelJob = function (jobInfoOrHash, secret, callback) {
+        var deferred = Q.defer(),
+            hash = typeof jobInfoOrHash === 'string' ? jobInfoOrHash : jobInfoOrHash.hash,
+
+            self = this;
+
+        this.logger.debug('cancel', hash);
+        this.sendHttpRequestWithData('POST', this.executorUrl + 'cancel/' + hash, {secret: secret},
+            function (err, response) {
+                if (err) {
+                    deferred.reject(err);
+                    return;
+                }
+
+                self.logger.debug('cancel - result', response);
+                deferred.resolve(response);
+            }
+        );
+
+        return deferred.promise.nodeify(callback);
+    };
+
     ExecutorClient.prototype.updateJob = function (jobInfo, callback) {
         var deferred = Q.defer(),
             self = this;
@@ -202,7 +224,7 @@ define(['superagent', 'q'], function (superagent, Q) {
         var deferred = Q.defer(),
             self = this;
         this.logger.debug('getAllInfo');
-        this.sendHttpRequest('GET', this.getInfoURL(), function (err, response) {
+        this.sendHttpRequest('GET', this.executorUrl, function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;
@@ -294,7 +316,7 @@ define(['superagent', 'q'], function (superagent, Q) {
         var deferred = Q.defer(),
             url = this.executorUrl + 'output/' + outputInfo.hash;
 
-        this.logger.debug('sendOuput', outputInfo._id);
+        this.logger.debug('sendOutput', outputInfo._id);
 
         this.sendHttpRequestWithData('POST', url, outputInfo, function (err) {
             if (err) {

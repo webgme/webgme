@@ -81,52 +81,6 @@ describe('ExecutorServer', function () {
         });
     });
 
-    it('should return 404 GET rest/executor/cancel', function (done) {
-        gmeConfig.executor.enable = true;
-        server = testFixture.WebGME.standaloneServer(gmeConfig);
-        server.start(function () {
-            var serverBaseUrl = server.getUrl();
-            agent.get(serverBaseUrl + '/rest/executor/cancel').end(function (err, res) {
-                should.equal(res.status, 404, err);
-                server.stop(function (err) {
-                    server = null;
-                    done(err);
-                });
-            });
-        });
-    });
-
-    it('should return 404 POST rest/executor/cancel', function (done) {
-        gmeConfig.executor.enable = true;
-        server = testFixture.WebGME.standaloneServer(gmeConfig);
-        server.start(function () {
-            var serverBaseUrl = server.getUrl();
-            agent.post(serverBaseUrl + '/rest/executor/cancel').end(function (err, res) {
-                should.equal(res.status, 404, err);
-                server.stop(function (err) {
-                    server = null;
-                    done(err);
-                });
-            });
-        });
-    });
-
-    it('should return 500 POST rest/executor/cancel/some_hash', function (done) {
-        gmeConfig.executor.enable = true;
-        server = testFixture.WebGME.standaloneServer(gmeConfig);
-        server.start(function () {
-            var serverBaseUrl = server.getUrl();
-            agent.post(serverBaseUrl + '/rest/executor/cancel/some_hash').end(function (err, res) {
-                should.equal(res.status, 500, err);
-                server.stop(function (err) {
-                    server = null;
-                    done(err);
-                });
-            });
-        });
-    });
-
-
     it('should return 404 POST rest/executor/info', function (done) {
         gmeConfig.executor.enable = true;
         server = testFixture.WebGME.standaloneServer(gmeConfig);
@@ -264,17 +218,115 @@ describe('ExecutorServer', function () {
         });
     });
 
-    it('should return 200 POST rest/executor/create/new_element', function (done) {
+    it('should return 200 POST rest/executor/create/some_hash', function (done) {
         gmeConfig.executor.enable = true;
         server = testFixture.WebGME.standaloneServer(gmeConfig);
         server.start(function () {
             var serverBaseUrl = server.getUrl();
-            agent.post(serverBaseUrl + '/rest/executor/create/new_element').end(function (err, res) {
+            agent.post(serverBaseUrl + '/rest/executor/create/some_hash').end(function (err, res) {
                 should.equal(res.status, 200, err);
+                should.equal(typeof res.body.secret, 'string', res.body);
                 server.stop(function (err) {
                     server = null;
                     done(err);
                 });
+            });
+        });
+    });
+
+    it('should return 200 POST rest/executor/create/some_hash but no secret on second create', function (done) {
+        gmeConfig.executor.enable = true;
+        server = testFixture.WebGME.standaloneServer(gmeConfig);
+        server.start(function () {
+            var serverBaseUrl = server.getUrl();
+            agent.post(serverBaseUrl + '/rest/executor/create/some_hash').end(function (err, res) {
+                should.equal(res.status, 200, err);
+                should.equal(typeof res.body.secret, 'string', res.body);
+                agent.post(serverBaseUrl + '/rest/executor/create/some_hash').end(function (err, res) {
+                    should.equal(res.status, 200, err);
+                    should.equal(typeof res.body.secret, 'undefined', res.body.secret);
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
+                });
+            });
+        });
+    });
+
+    it('should return 404 POST rest/executor/cancel/hashDoesNotExist', function (done) {
+        gmeConfig.executor.enable = true;
+        server = testFixture.WebGME.standaloneServer(gmeConfig);
+        server.start(function () {
+            var serverBaseUrl = server.getUrl();
+            agent.post(serverBaseUrl + '/rest/executor/cancel/hashDoesNotExist').end(function (err, res) {
+                should.equal(res.status, 404, err);
+                server.stop(function (err) {
+                    server = null;
+                    done(err);
+                });
+            });
+        });
+    });
+
+    it('should return 403 POST rest/executor/cancel/existingHash with no body', function (done) {
+        gmeConfig.executor.enable = true;
+        server = testFixture.WebGME.standaloneServer(gmeConfig);
+        server.start(function () {
+            var serverBaseUrl = server.getUrl();
+            agent.post(serverBaseUrl + '/rest/executor/create/existingHash').end(function (err, res) {
+                should.equal(res.status, 200, err);
+                agent.post(serverBaseUrl + '/rest/executor/cancel/existingHash').end(function (err, res) {
+                    should.equal(res.status, 403, err);
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
+                });
+            });
+        });
+    });
+
+    it('should return 403 POST rest/executor/cancel/existingHash with wrong secret', function (done) {
+        gmeConfig.executor.enable = true;
+        server = testFixture.WebGME.standaloneServer(gmeConfig);
+        server.start(function () {
+            var serverBaseUrl = server.getUrl();
+            agent.post(serverBaseUrl + '/rest/executor/create/existingHash').end(function (err, res) {
+                should.equal(res.status, 200, err);
+                agent.post(serverBaseUrl + '/rest/executor/cancel/existingHash')
+                    .send({secret: 'bla_bla'})
+                    .end(function (err, res) {
+                    should.equal(res.status, 403, err);
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
+                });
+            });
+        });
+    });
+
+    it('should return 200 POST rest/executor/cancel/existingHash with correct secret', function (done) {
+        gmeConfig.executor.enable = true;
+        server = testFixture.WebGME.standaloneServer(gmeConfig);
+        server.start(function () {
+            var serverBaseUrl = server.getUrl();
+            agent.post(serverBaseUrl + '/rest/executor/create/existingHash').end(function (err, res) {
+                should.equal(res.status, 200, err);
+                agent.post(serverBaseUrl + '/rest/executor/cancel/existingHash')
+                    .send({secret: res.body.secret})
+                    .end(function (err, res) {
+                        should.equal(res.status, 200, err);
+                        agent.get(serverBaseUrl + '/rest/executor/info/existingHash')
+                            .end(function (err, res) {
+                                should.equal(res.status, 200, err);
+                                server.stop(function (err) {
+                                    server = null;
+                                    done(err);
+                                });
+                            });
+                    });
             });
         });
     });

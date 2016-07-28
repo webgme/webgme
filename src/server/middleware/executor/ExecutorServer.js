@@ -17,6 +17,7 @@
 
 var express = require('express'),
     Q = require('q'),
+    Chance = requireJS('common/util/chance.min'),
 // Mongo collections
     JOB_LIST = '_executorJobList',
     WORKER_LIST = '_executorWorkerList',
@@ -36,6 +37,7 @@ function ExecutorServer(options) {
         fs = require('fs'),
         bufferEqual = require('buffer-equal-constant-time'),
         router = express.Router(),
+        chance = new Chance(),
         JobInfo = requireJS('common/executor/JobInfo'),
         WorkerInfo = requireJS('common/executor/WorkerInfo'),
         OutputInfo = requireJS('common/executor/OutputInfo'),
@@ -52,9 +54,8 @@ function ExecutorServer(options) {
     self.workerList = null;
     self.outputList = null;
     self.running = false;
-    self.timerId = 0;
     self.clearOutputsTimers = {
-        // <timerId>: {
+        // <jobHash>: {
         //   timeoutObj: <timeoutObject>
         //   jobInfo: <JobInfo>
         // }
@@ -152,6 +153,131 @@ function ExecutorServer(options) {
         });
     }
 
+    function clearOutput(jobInfo, callback) {
+        var deferred = Q.defer(),
+            query = {
+                $set: {
+                    outputNumber: null
+                }
+            };
+
+        if (self.running === true) {
+
+            self.jobList.update({hash: jobInfo.hash}, query, function (err) {
+                if (err) {
+                    self.logger.error('Error clearing outputNumber in job', err);
+                    deferred.reject(err);
+                    return;
+                }
+
+                if (self.running === false) {
+                    deferred.resolve();
+                    return;
+                }
+
+                query = {
+                    _id: {
+                        $regex: '^' + jobInfo.hash
+                    }
+                };
+
+                self.outputList.remove(query, function (err, num) {
+                    if (err) {
+                        deferred.reject(err);
+                        self.logger.error('Failed to remove output for job', err);
+                        return;
+                    }
+
+                    if (num !== jobInfo.outputNumber + 1) {
+                        self.logger.warn('Did not remove all output for job', num,
+                            {metadata: jobInfo});
+                    }
+
+                    self.logger.debug('Cleared output for job', num, jobInfo.hash);
+                    deferred.resolve();
+                });
+            });
+        } else {
+            deferred.resolve();
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function startClearOutputTimer(jobInfo) {
+        var timeoutObj;
+
+        timeoutObj = setTimeout(function () {
+
+            delete self.clearOutputsTimers[jobInfo.hash];
+
+            clearOutput(jobInfo);
+
+        }, self.gmeConfig.executor.clearOutputTimeout);
+
+        self.clearOutputsTimers[jobInfo.hash] = {
+            jobInfo: jobInfo,
+            timeoutObj: timeoutObj
+        };
+
+        self.logger.debug('Timeout', self.gmeConfig.executor.clearOutputTimeout,
+            '[ms] to clear output for job set (id)', jobInfo.hash);
+    }
+
+    function getCanceledJobs(hashes, callback) {
+        var deferred = Q.defer(),
+            query = {
+                hash: {
+                    $in: hashes
+                },
+                cancelRequested: true
+            };
+        if (hashes.length === 0) {
+            deferred.resolve([]);
+        } else {
+            self.jobList.find(query).toArray(function (err, docs) {
+                if (err) {
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(docs.map(function (jobInfo) {
+                        return jobInfo.hash;
+                    }));
+                }
+            });
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function restartCanceledJob(oldJobInfo, newInfo, callback) {
+        function insertNewInfo() {
+            var deferred = Q.defer();
+
+            self.jobList.update({hash: oldJobInfo.hash}, newInfo, {upsert: true}, function (err) {
+                if (err) {
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(newInfo);
+                }
+            });
+
+            return deferred.promise;
+        }
+
+        if (self.clearOutputsTimers[oldJobInfo.hash]) {
+            delete self.clearOutputsTimers[oldJobInfo.hash];
+
+            return clearOutput(oldJobInfo)
+                .then(function () {
+                    return insertNewInfo();
+                })
+                .nodeify(callback);
+        } else {
+            return insertNewInfo().nodeify(callback);
+        }
+
+    }
+
     // ensure authenticated can be used only after this rule
     router.use('*', function (req, res, next) {
         // TODO: set all headers, check rate limit, etc.
@@ -179,19 +305,11 @@ function ExecutorServer(options) {
             for (var i = 0; i < docs.length; i += 1) {
                 jobList[docs[i].hash] = docs[i];
                 delete docs[i]._id;
+                delete docs[i].secret;
             }
             self.logger.debug('Found number of jobs matching status', docs.length, query.status);
             res.send(jobList);
         });
-
-        // TODO: send status
-        // FIXME: this path will not be safe
-        //res.sendfile(path.join('src', 'rest', 'executor', 'index2.html'), function (err) {
-        //    if (err) {
-        //        logger.error(err);
-        //        res.sendStatus(500);
-        //    }
-        //});
     });
 
     router.get('/info/:hash', function (req, res/*, next*/) {
@@ -201,6 +319,7 @@ function ExecutorServer(options) {
                 res.sendStatus(500);
             } else if (jobInfo) {
                 delete jobInfo._id;
+                delete jobInfo.secret;
                 res.send(jobInfo);
             } else {
                 res.sendStatus(404);
@@ -217,16 +336,17 @@ function ExecutorServer(options) {
         info.status = info.status || 'CREATED'; // TODO: define a constant for this
 
         jobInfo = new JobInfo(info);
-        // TODO: check if hash ok
+        jobInfo.secret = chance.guid();
+
         self.logger.debug('job creation info:', {metadata: info});
         self.jobList.findOne({hash: req.params.hash}, function (err, doc) {
             if (err) {
                 self.logger.error(err);
                 res.sendStatus(500);
             } else if (!doc) {
-                self.jobList.update({hash: req.params.hash}, jobInfo, {upsert: true}, function (err) {
-                    self.logger.info(err);
+                self.jobList.insert(jobInfo, function (err) {
                     if (err) {
+                        // TODO: Deal with error when it already existed.
                         self.logger.error(err);
                         res.sendStatus(500);
                     } else {
@@ -234,8 +354,18 @@ function ExecutorServer(options) {
                         res.send(jobInfo);
                     }
                 });
+            } else if (doc.status === 'CANCELED') {
+                restartCanceledJob(doc, jobInfo)
+                    .then(function (newInfo) {
+                        res.send(newInfo);
+                    })
+                    .catch(function (err) {
+                        self.logger.error(err);
+                        res.sendStatus(500);
+                    });
             } else {
                 delete doc._id;
+                delete doc.secret;
                 res.send(doc);
             }
         });
@@ -261,52 +391,56 @@ function ExecutorServer(options) {
                         jobInfo[i] = jobInfoUpdate[i];
                     }
                 }
+
+                jobInfo.secret = doc.secret;
                 self.jobList.update({hash: req.params.hash}, jobInfo, function (err, numReplaced) {
-                    var timeoutObj,
-                        timerId;
                     if (err) {
                         self.logger.error(err);
                         res.sendStatus(500);
                     } else if (numReplaced !== 1) {
                         res.sendStatus(404);
                     } else {
-                        res.sendStatus(200);
-                        if (JobInfo.isFinishedStatus(jobInfo.status) && jobInfo.outputNumber !== null &&
-                            self.gmeConfig.executor.clearOutputTimeout > -1) {
-                            // The job has finished and there is stored output - set timeout to clear it.
-                            timerId = self.timerId;
-                            self.timerId += 1;
-                            timeoutObj = setTimeout(function () {
-                                var query = {
-                                    _id: {
-                                        $regex: '^' + jobInfo.hash
-                                    }
-                                };
-
-                                delete self.clearOutputsTimers[timerId];
-
-                                self.outputList.remove(query, function (err, num) {
-                                    if (err) {
-                                        self.logger.error('Failed to remove output for job', {metadata: jobInfo});
-                                    }
-                                    if (num !== jobInfo.outputNumber + 1) {
-                                        self.logger.warn('Did not remove all output for job', num, {metadata: jobInfo});
-                                    }
-
-                                    self.logger.debug('Cleared output for job', num, jobInfo.hash);
-                                });
-                            }, self.gmeConfig.executor.clearOutputTimeout);
-
-                            self.clearOutputsTimers[timerId] = {
-                                jobInfo: jobInfo,
-                                timeoutObj: timeoutObj
-                            };
-
-                            self.logger.debug('Timeout ' + self.gmeConfig.executor.clearOutputTimeout +
-                                ' [ms] to clear output for job set (id)', jobInfo.hash, timerId);
+                        if (JobInfo.isFinishedStatus(jobInfo.status)) {
+                            if (jobInfo.outputNumber !== null && self.gmeConfig.executor.clearOutputTimeout > -1) {
+                                // The job has finished and there is stored output - set timeout to clear it.
+                                startClearOutputTimer(jobInfo);
+                            }
                         }
+
+                        res.sendStatus(200);
                     }
                 });
+            } else {
+                res.sendStatus(404);
+            }
+        });
+    });
+
+    router.post('/cancel/:hash', function (req, res/*, next*/) {
+        self.jobList.findOne({hash: req.params.hash}, function (err, doc) {
+            if (err) {
+                self.logger.error(err);
+                res.sendStatus(500);
+            } else if (doc) {
+                if (req.body.secret !== doc.secret) {
+                    res.sendStatus(403);
+                } else if (JobInfo.isFinishedStatus(doc.status) === false) {
+                    // Only bother to update the cancelRequested if job hasn't finished.
+                    self.jobList.update({hash: req.params.hash}, {
+                        $set: {
+                            cancelRequested: true
+                        }
+                    }, function (err) {
+                        if (err) {
+                            self.logger.error(err);
+                            res.sendStatus(500);
+                        } else {
+                            res.sendStatus(200);
+                        }
+                    });
+                } else {
+                    res.sendStatus(200);
+                }
             } else {
                 res.sendStatus(404);
             }
@@ -393,10 +527,6 @@ function ExecutorServer(options) {
         });
     });
 
-    router.post('/cancel/:hash', function (req, res, next) {
-        next(new Error('Not implemented yet.'));
-    });
-
     // worker API
     router.get('/worker', function (req, res/*, next*/) {
         var response = {};
@@ -414,6 +544,7 @@ function ExecutorServer(options) {
                     // FIXME: index self.jobList on status?
                     for (var j = 0; j < jobs.length; j += 1) {
                         delete jobs[j]._id;
+                        delete jobs[j].secret;
                     }
                     delete worker._id;
                     response[worker.clientId] = worker;
@@ -431,6 +562,18 @@ function ExecutorServer(options) {
             serverResponse = new WorkerInfo.ServerResponse({refreshPeriod: workerRefreshInterval});
 
         serverResponse.labelJobs = self.labelJobs;
+
+        function checkForCanceledJobs() {
+            getCanceledJobs(clientRequest.runningJobs)
+                .then(function (jobsToCancel) {
+                    serverResponse.jobsToCancel = jobsToCancel;
+                    res.send(JSON.stringify(serverResponse));
+                })
+                .catch(function (err) {
+                    self.logger.error(err);
+                    res.send(JSON.stringify(serverResponse));
+                });
+        }
 
         self.workerList.update({clientId: clientRequest.clientId}, {
             $set: {
@@ -460,7 +603,7 @@ function ExecutorServer(options) {
 
                     var callback = function (i) {
                         if (i === docs.length) {
-                            res.send(JSON.stringify(serverResponse));
+                            checkForCanceledJobs();
                             return;
                         }
                         self.jobList.update({_id: docs[i]._id, status: 'CREATED'}, {
@@ -482,7 +625,7 @@ function ExecutorServer(options) {
                     callback(0);
                 });
             } else {
-                res.send(JSON.stringify(serverResponse));
+                checkForCanceledJobs();
             }
         });
     });
@@ -531,7 +674,7 @@ function ExecutorServer(options) {
         var timerIds = Object.keys(self.clearOutputsTimers);
         timerIds.forEach(function (timerId) {
             clearTimeout(self.clearOutputsTimers[timerId].timeoutObj);
-            self.logger.warn('Outputs will not be cleared for job', self.clearOutputsTimers[timerId].jobInfo.hash,
+            self.logger.warn('Outputs will not be cleared for job', timerId,
                 self.clearOutputsTimers[timerId].jobInfo.outputNumber);
         });
 
