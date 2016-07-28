@@ -305,6 +305,7 @@ function ExecutorServer(options) {
             for (var i = 0; i < docs.length; i += 1) {
                 jobList[docs[i].hash] = docs[i];
                 delete docs[i]._id;
+                delete docs[i].secret;
             }
             self.logger.debug('Found number of jobs matching status', docs.length, query.status);
             res.send(jobList);

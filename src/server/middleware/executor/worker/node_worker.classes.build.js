@@ -4208,7 +4208,7 @@ define('executor/ExecutorClient',['superagent', 'q'], function (superagent, Q) {
         var deferred = Q.defer(),
             self = this;
         this.logger.debug('getAllInfo');
-        this.sendHttpRequest('GET', this.getInfoURL(), function (err, response) {
+        this.sendHttpRequest('GET', this.executorUrl, function (err, response) {
             if (err) {
                 deferred.reject(err);
                 return;

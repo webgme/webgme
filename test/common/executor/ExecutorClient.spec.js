@@ -143,16 +143,14 @@ describe('ExecutorClient', function () {
         });
     });
 
-    it('getAllInfo should return 404', function (done) {
-        executorClient.getAllInfo(function (err, res) {
-            if (err) {
-                should.equal(err.message, 'Not Found');
-                done();
-                return;
-            }
-            logger.debug(res);
-            done(new Error('should have failed with 404'));
-        });
+    it('getAllInfo should return and object with jobs', function (done) {
+        executorClient.getAllInfo()
+            .then(function(jobs) {
+                expect(typeof jobs).to.equal('object');
+                expect(jobs).to.not.equal(null);
+                expect(jobs instanceof Array).to.equal(false);
+            })
+            .nodeify(done);
     });
 
     it('updateJob with SUCCESS followed by getInfo should return SUCCESS in jobInfo', function (done) {
@@ -318,10 +316,49 @@ describe('ExecutorClient', function () {
         executorClient.createJob(jobInfo)
             .then(function (res) {
                 expect(typeof res.secret).to.equal('string');
+                expect(typeof res._id).to.equal('undefined');
                 return executorClient.createJob(jobInfo);
             })
             .then(function (res) {
                 expect(typeof res.secret).to.equal('undefined');
+            })
+            .nodeify(done);
+    });
+
+    it('getInfo should not return the "secret" nor _id', function (done) {
+        var jobInfo = {
+            hash: 'someHash11'
+        };
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+                return executorClient.getInfo(jobInfo.hash);
+            })
+            .then(function (res) {
+                expect(typeof res.hash).to.equal('string');
+                expect(typeof res.secret).to.equal('undefined');
+                expect(typeof res._id).to.equal('undefined');
+            })
+            .nodeify(done);
+    });
+
+    it('getAllInfo should not return the "secret"', function (done) {
+        var jobInfo = {
+            hash: 'someHash111'
+        };
+        executorClient.createJob(jobInfo)
+            .then(function (res) {
+                expect(typeof res.secret).to.equal('string');
+                return executorClient.getAllInfo();
+            })
+            .then(function (res) {
+                var hashes = Object.keys(res);
+                expect(hashes.length > 0).to.equal(true);
+                hashes.forEach(function (hash) {
+                    expect(typeof res[hash].hash).to.equal('string');
+                    expect(typeof res[hash].secret).to.equal('undefined');
+                    expect(typeof res[hash]._id).to.equal('undefined');
+                });
             })
             .nodeify(done);
     });
