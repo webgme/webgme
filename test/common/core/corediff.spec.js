@@ -148,7 +148,7 @@ describe('core diff', function () {
                     if (err) {
                         return done(err);
                     }
-                    
+
                     expect(diff).to.deep.equal(patch);
                     done();
                 });
@@ -1067,6 +1067,111 @@ describe('core diff', function () {
             expect(result.items).to.have.length(0);
         });
 
+        it('should generate the same conflict no matter the order of parameters', function () {
+            var diff1 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-2312-5e3a-7eb9b96b2ae7',
+                        removed: true,
+                        oGuids: {
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                diff2 = {
+                    childrenListChanged: true,
+                    O: {
+                        reg: {
+                            position: {
+                                x: 379,
+                                y: 210
+                            }
+                        },
+                        guid: '57a34d02-1535-5f98-4864-78022e614bc2',
+                        oGuids: {
+                            '57a34d02-1535-5f98-4864-78022e614bc2': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                result1 = core.tryToConcatChanges(diff1, diff2),
+                result2 = core.tryToConcatChanges(diff2, diff1),
+                i;
+
+            expect(result1.items).to.have.length(result2.items.length);
+            for (i = 0; i < result1.items.length; i += 1) {
+                expect(result1.items[i].mine).to.eql(result2.items[i].theirs);
+            }
+            expect(result1.mine).to.eql(result2.theirs);
+        });
+
+        it('should handle node addition symmetrically', function () {
+            var diff1 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-2312-5e3a-7eb9b96b2ae7',
+                        removed: false,
+                        hash: '#e341ba304b75ad76642dcf11dd920ca4a403be60',
+                        pointer: {
+                            base: '/1'
+                        },
+                        oGuids: {
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                diff2 = {},
+                result1 = core.tryToConcatChanges(diff1, diff2),
+                result2 = core.tryToConcatChanges(diff2, diff1);
+
+            expect(result1.items).to.have.length(result2.items.length);
+            expect(result1.items).to.have.length(0);
+            expect(result1.merge).to.eql(result2.merge);
+        });
+
+        it('should handle node removal symmetrically', function () {
+            var diff1 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-2312-5e3a-7eb9b96b2ae7',
+                        removed: true,
+                        oGuids: {
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                diff2 = {},
+                result1 = core.tryToConcatChanges(diff1, diff2),
+                result2 = core.tryToConcatChanges(diff2, diff1);
+
+            expect(result1.items).to.have.length(result2.items.length);
+            expect(result1.items).to.have.length(0);
+            expect(result1.merge).to.eql(result2.merge);
+        });
     });
 
     describe('resolve', function () {

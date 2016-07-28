@@ -768,6 +768,29 @@ define(['common/util/canon',
             return TASYNC.call(checkRound, done);
         }
 
+        function hasRealChange(diffNode) {
+            var keys = Object.keys(diffNode || {}),
+                searchedKeywords = {
+                    hash: true,
+                    attr: true,
+                    reg: true,
+                    pointer: true,
+                    set: true,
+                    meta: true,
+                    movedFrom: true,
+                    removed: true
+                },
+                i;
+
+            for (i = 0; i < keys.length; i += 1) {
+                if (searchedKeywords[keys[i]]) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         function getDiffChildrenRelids(diff) {
             var keys = Object.keys(diff || {}),
                 i,
@@ -1467,6 +1490,49 @@ define(['common/util/canon',
             }
         }
 
+        function completeConcatBase(baseDiff, extensionDiff) {
+            var recursiveComplete = function (base, extension, newItem) {
+                var i, keys;
+                if (newItem === true) {
+                    if (extension.guid) {
+                        base.guid = extension.guid;
+                    }
+                    if (extension.oGuids) {
+                        base.oGuids = extension.oGuids;
+                    }
+                    if (extension.ooGuids) {
+                        base.ooGuids = extension.ooGuids;
+                    }
+
+                    if (typeof extension.removed === 'boolean' && !extension.removed) {
+                        base.removed = extension.removed;
+                    }
+
+                    if (extension.hash) {
+                        base.hash = extension.hash;
+                    }
+
+                    if (extension.childrenListChanged) {
+                        base.childrenListChanged = true;
+                    }
+                }
+
+                keys = getDiffChildrenRelids(extension);
+                for (i = 0; i < keys.length; i += 1) {
+                    if (base[keys[i]] === undefined) {
+                        if (typeof extension[keys[i]].movedFrom !== 'string') {
+                            base[keys[i]] = {};
+                            recursiveComplete(base[keys[i]], extension[keys[i]], true);
+                        }
+                    } else {
+                        recursiveComplete(base[keys[i]], extension[keys[i]], false);
+                    }
+                }
+            };
+
+            recursiveComplete(baseDiff, extensionDiff, Object.keys(baseDiff).length === 0);
+        }
+
         function getObstructiveGuids(diffNode) {
             var result = [],
                 keys, i;
@@ -2148,11 +2214,12 @@ define(['common/util/canon',
                 oGuids = getObstructiveGuids(extNode),
                 baseNode = getNodeByGuid(_concatBase, guid),
                 basePath = getPathByGuid(_concatBase, guid, ''),
+                realBaseNode = baseNode,
                 i, tPath,
                 relids = getDiffChildrenRelids(extNode);
 
             if (extNode.removed === true) {
-                if (baseNode && baseNode.removed !== true) {
+                if (baseNode && baseNode.removed !== true && hasRealChange(baseNode)) {
                     tPath = basePath + '/removed';
                     _conflictTheirs[tPath] = _conflictTheirs[tPath] || {value: true, conflictingPaths: {}};
                     oGuids = getWhomIObstructGuids(guid);
@@ -2171,11 +2238,19 @@ define(['common/util/canon',
                     for (i = 0; i < oGuids.length; i++) {
                         baseNode = getNodeByGuid(_concatBase, oGuids[i]);
                         basePath = getPathByGuid(_concatBase, oGuids[i], '');
-                        _conflictMine[basePath + '/removed'] = _conflictMine[basePath + '/removed'] || {
-                                value: true,
-                                conflictingPaths: {}
-                            };
-                        gatherFullNodeConflicts(extNode, false, path, basePath + '/removed');
+                        if (hasRealChange(extNode)) {
+                            _conflictMine[basePath + '/removed'] = _conflictMine[basePath + '/removed'] || {
+                                    value: true,
+                                    conflictingPaths: {}
+                                };
+                            gatherFullNodeConflicts(extNode, false, path, basePath + '/removed');
+                        } else {
+                            _conflictTheirs[basePath + '/removed'] = _conflictTheirs[basePath + '/removed'] || {
+                                    value: true,
+                                    conflictingPaths: {}
+                                };
+                            gatherFullNodeConflicts(realBaseNode, true, path, basePath + '/removed');
+                        }
                     }
                 } else if (baseNode) {
                     //here we are able to check the sub-node conflicts
@@ -2411,11 +2486,13 @@ define(['common/util/canon',
                 getExtensionDestinationFromSource: {}
             };
 
+            completeConcatBase(base, extension);
             getMoveSources(base,
                 '', _concatMoves.getBaseSourceFromDestination, _concatMoves.getBaseDestinationFromSource);
             getMoveSources(extension,
                 '', _concatMoves.getExtensionSourceFromDestination, _concatMoves.getExtensionDestinationFromSource);
             getConcatBaseRemovals(base);
+            getConcatBaseRemovals(extension);
 
             fixCollision('', null, _concatBase, _concatExtension);
             tryToConcatNodeChange(_concatExtension, '');

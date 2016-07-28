@@ -146,7 +146,6 @@ define([
 
         conflictsE = diff.find('.conflicts');
 
-
         if (mergeResult.hasOwnProperty('conflict') &&
             mergeResult.conflict.hasOwnProperty('items')) {
 
@@ -180,13 +179,13 @@ define([
 
                 linkTheirs = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
                     '&commit=' + encodeURIComponent(mergeResult.theirCommitHash) +
-                        // FIXME: regexp parses out the path
+                    // FIXME: regexp parses out the path
                     '&node=' + encodeURIComponent(getParentPath(pathRegExp.exec(conflictItem.theirs.path)[0])) +
                     '&selection=' + encodeURIComponent(pathRegExp.exec(conflictItem.theirs.path)[0]);
 
                 valueTheirsE = $('<div>' +
                     '<a class="glyphicon glyphicon-link" href="' + linkTheirs + '" target="_blank" tooltip="Open"></a>' +
-                    '<span>' + JSON.stringify(conflictItem.theirs.value) + '</span>' +
+                    '<span><xmp style="word-wrap: break-word; white-space: normal">' + JSON.stringify(conflictItem.theirs.value) + '</xmp></span>' +
                     '</div>');
 
                 conflictItemE.find('.value-theirs').append(valueTheirsE);
@@ -199,13 +198,13 @@ define([
 
                 linkMine = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
                     '&commit=' + encodeURIComponent(mergeResult.myCommitHash) +
-                        // FIXME: regexp parses out the path
+                    // FIXME: regexp parses out the path
                     '&node=' + encodeURIComponent(getParentPath(pathRegExp.exec(conflictItem.mine.path)[0])) +
                     '&selection=' + encodeURIComponent(pathRegExp.exec(conflictItem.mine.path)[0]);
                 valueMineE = $('<div>' +
-                        // FIXME: should we use fa-link instead ???
+                    // FIXME: should we use fa-link instead ???
                     '<a class="glyphicon glyphicon-link" href="' + linkMine + '"  target="_blank" tooltip="Open"></a>' +
-                    '<span>' + mineText + '</span>' +
+                    '<span><xmp style="word-wrap: break-word; white-space: normal">' + mineText + '</xmp></span>' +
                     '</div>');
 
                 conflictItemE.find('.value-mine').append(valueMineE);
