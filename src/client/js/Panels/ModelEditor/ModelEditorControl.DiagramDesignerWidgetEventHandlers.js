@@ -14,7 +14,8 @@ define(['js/logger',
     'js/RegistryKeys',
     'js/Utils/GMEConcepts',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'js/DragDrop/DragHelper'
+    'js/DragDrop/DragHelper',
+    'js/Dialogs/ReplaceInstance/ReplaceInstanceDialog'
 ], function (Logger,
              util,
              CONSTANTS,
@@ -23,7 +24,8 @@ define(['js/logger',
              REGISTRY_KEYS,
              GMEConcepts,
              DiagramDesignerWidgetConstants,
-             DragHelper) {
+             DragHelper,
+             ReplaceInstanceDialog) {
 
     'use strict';
 
@@ -1272,12 +1274,20 @@ define(['js/logger',
                         nodeId: self._ComponentID2GmeID[selectedIds[0]]
                     });
                 } else if (key === MENU_EDIT_REPLACEABLE) {
-                    alert('TODO');
+                    self._replaceInstanceDialog(self._ComponentID2GmeID[selectedIds[0]]);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
                 mousePos.mY)
         );
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._replaceInstanceDialog = function (selectedId) {
+        var dialog;
+        if (typeof selectedId === 'string' && this._client.getNode(selectedId)) {
+            dialog = new ReplaceInstanceDialog();
+            dialog.show({client: this._client, nodeId: selectedId});
+        }
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionAlignMenu = function (selectedIds,

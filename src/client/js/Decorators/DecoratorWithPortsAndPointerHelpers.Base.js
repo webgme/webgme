@@ -153,7 +153,7 @@ define([
         if (validReplaceable) {
             menuItems[''] = {
                 icon: 'glyphicon glyphicon-transfer',
-                name: 'Replace instance with dropped node'
+                name: 'Replace instance'
             };
         }
 
