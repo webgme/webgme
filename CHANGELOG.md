@@ -1,5 +1,67 @@
 # Change Log
 
+## [v2.3.0](https://github.com/webgme/webgme/tree/v2.3.0) (2016-08-01)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.2.1...v2.3.0)
+
+**Implemented enhancements:**
+
+- detect originating webgme url from executor script [\#1085](https://github.com/webgme/webgme/issues/1085)
+- ExecutorClient should default httpsecure to false on node [\#1069](https://github.com/webgme/webgme/issues/1069)
+- Generated Viz `selectedObjChange` refactor [\#1011](https://github.com/webgme/webgme/issues/1011)
+- SVG Decorator should support the drop action for pointer setting like the default decorator does. [\#954](https://github.com/webgme/webgme/issues/954)
+- Added ORIGIN\_URL env on ExecutorWorker creation. Fixes \#1085 [\#1086](https://github.com/webgme/webgme/pull/1086) ([brollb](https://github.com/brollb))
+- User-management-page v0.2.0 [\#1083](https://github.com/webgme/webgme/pull/1083) ([pmeijer](https://github.com/pmeijer))
+- Remove hound config [\#1078](https://github.com/webgme/webgme/pull/1078) ([pmeijer](https://github.com/pmeijer))
+- Fixed viz template code style issues. [\#1072](https://github.com/webgme/webgme/pull/1072) ([brollb](https://github.com/brollb))
+- Added default value for httpsecure in executor client. Fixes \#1069 [\#1070](https://github.com/webgme/webgme/pull/1070) ([brollb](https://github.com/brollb))
+- Add option of sending plugin notifications to the branch-room. [\#1060](https://github.com/webgme/webgme/pull/1060) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Seed Project from Branch always copies "master" branch [\#1076](https://github.com/webgme/webgme/issues/1076)
+- cached executor job gives incorrect outputNumber/stdout [\#1073](https://github.com/webgme/webgme/issues/1073)
+- BlobClient getArtifact promise "callback is not a function" [\#1067](https://github.com/webgme/webgme/issues/1067)
+- Error on artifact.save\(\) [\#1064](https://github.com/webgme/webgme/issues/1064)
+- Issue/merge [\#1080](https://github.com/webgme/webgme/pull/1080) ([kecso](https://github.com/kecso))
+- Respect the seedCommit parameter in seedProject [\#1079](https://github.com/webgme/webgme/pull/1079) ([pmeijer](https://github.com/pmeijer))
+- Make sure to handle arrays in config.requirejsPaths [\#1074](https://github.com/webgme/webgme/pull/1074) ([pmeijer](https://github.com/pmeijer))
+- Fixed getArtifact promise error handling. Fixes \#1067 [\#1068](https://github.com/webgme/webgme/pull/1068) ([brollb](https://github.com/brollb))
+- Closes \#1064 do not set the Content-Length from blob client when running in the browser [\#1065](https://github.com/webgme/webgme/pull/1065) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- postinstall fails [\#1081](https://github.com/webgme/webgme/issues/1081)
+- Stop executor jobs [\#1071](https://github.com/webgme/webgme/issues/1071)
+- executor worker should use streaming unzip [\#1066](https://github.com/webgme/webgme/issues/1066)
+- Failed branch export fails silently [\#1039](https://github.com/webgme/webgme/issues/1039)
+- Provide TypeScript Description Files for Core API [\#1016](https://github.com/webgme/webgme/issues/1016)
+- Extend containment concept [\#940](https://github.com/webgme/webgme/issues/940)
+
+**Merged pull requests:**
+
+- Model templates [\#1084](https://github.com/webgme/webgme/pull/1084) ([pmeijer](https://github.com/pmeijer))
+- Executor cancel implemented Closes \#1071 and \#1073 [\#1077](https://github.com/webgme/webgme/pull/1077) ([pmeijer](https://github.com/pmeijer))
+- Auto merge when making commits [\#1075](https://github.com/webgme/webgme/pull/1075) ([pmeijer](https://github.com/pmeijer))
+- Bin script for executing plugins on commits to models [\#1057](https://github.com/webgme/webgme/pull/1057) ([pmeijer](https://github.com/pmeijer))
+
+## [v2.2.1](https://github.com/webgme/webgme/tree/v2.2.1) (2016-07-18)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.2.0...v2.2.1)
+
+**Implemented enhancements:**
+
+- Add missing rest api call for transfer projects [\#1062](https://github.com/webgme/webgme/pull/1062) ([patrickkerrypei](https://github.com/patrickkerrypei))
+- Use core.traverse in bin storage\_stats.js [\#1055](https://github.com/webgme/webgme/pull/1055) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Aspects are not saved properly in meta editor. [\#1056](https://github.com/webgme/webgme/issues/1056)
+- Run plugin doesn't respects user parameter [\#1051](https://github.com/webgme/webgme/issues/1051)
+- Error when merging branches - GUID Mismatch  [\#1033](https://github.com/webgme/webgme/issues/1033)
+- Get api/users should return same user structure as /user and /users/:username. [\#1059](https://github.com/webgme/webgme/pull/1059) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1056 pass correct params when saving spects in MetaDecorator [\#1058](https://github.com/webgme/webgme/pull/1058) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1033 Error when merging branches - GUID Mismatch [\#1054](https://github.com/webgme/webgme/pull/1054) ([kecso](https://github.com/kecso))
+- Fixes \#1051 Run plugin doesn't respects user parameter [\#1052](https://github.com/webgme/webgme/pull/1052) ([kecso](https://github.com/kecso))
+
 ## [v2.2.0](https://github.com/webgme/webgme/tree/v2.2.0) (2016-07-04)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.1.0...v2.2.0)
 
@@ -10,6 +72,7 @@
 - Footer viz refactor [\#1020](https://github.com/webgme/webgme/issues/1020)
 - Visual feedback on merge [\#1017](https://github.com/webgme/webgme/issues/1017)
 - Setting 'layout' in url params is lost on page load [\#1006](https://github.com/webgme/webgme/issues/1006)
+- Config and CHANGELOG documentation for v2.2.0 [\#1050](https://github.com/webgme/webgme/pull/1050) ([pmeijer](https://github.com/pmeijer))
 - Generator for rest router [\#1047](https://github.com/webgme/webgme/pull/1047) ([pmeijer](https://github.com/pmeijer))
 - Webhook events [\#1045](https://github.com/webgme/webgme/pull/1045) ([pmeijer](https://github.com/pmeijer))
 - Plugin fast forward [\#1044](https://github.com/webgme/webgme/pull/1044) ([pmeijer](https://github.com/pmeijer))
@@ -27,6 +90,7 @@
 - mixin node from library not loaded [\#1028](https://github.com/webgme/webgme/issues/1028)
 - Double click to open project throws errors [\#1015](https://github.com/webgme/webgme/issues/1015)
 - typo in generated plugin code [\#1013](https://github.com/webgme/webgme/issues/1013)
+- Generated plugin tests failing [\#1003](https://github.com/webgme/webgme/issues/1003)
 - Moving programmatically created meta nodes causes error [\#973](https://github.com/webgme/webgme/issues/973)
 - Call correct ModelDecoratorPartBrowserWidget method in generated decorator. [\#1049](https://github.com/webgme/webgme/pull/1049) ([pmeijer](https://github.com/pmeijer))
 - Fixes \#1015 Prohibit multiple openings of a project. [\#1048](https://github.com/webgme/webgme/pull/1048) ([pmeijer](https://github.com/pmeijer))
@@ -62,7 +126,6 @@
 
 **Fixed bugs:**
 
-- Generated plugin tests failing [\#1003](https://github.com/webgme/webgme/issues/1003)
 - Running plugin on server ignores namespace [\#1008](https://github.com/webgme/webgme/issues/1008)
 - Library update fails with "object does not exist" [\#1007](https://github.com/webgme/webgme/issues/1007)
 - Fixes \#1007 Library update fails with "object does not exist". [\#1012](https://github.com/webgme/webgme/pull/1012) ([kecso](https://github.com/kecso))
@@ -658,6 +721,7 @@
 
 **Implemented enhancements:**
 
+- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 - Squashing commits [\#466](https://github.com/webgme/webgme/issues/466)
 - Object browser auto scroll, when navigating with the keyboard [\#408](https://github.com/webgme/webgme/issues/408)
 - No Bezier Curves with the AutoRouter [\#314](https://github.com/webgme/webgme/issues/314)
@@ -797,10 +861,6 @@
 
 ## [v0.14.1](https://github.com/webgme/webgme/tree/v0.14.1) (2015-09-07)
 [Full Changelog](https://github.com/webgme/webgme/compare/v0.14.0...v0.14.1)
-
-**Implemented enhancements:**
-
-- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 
 **Fixed bugs:**
 
@@ -1130,7 +1190,6 @@
 - Color picker should show the selected color [\#39](https://github.com/webgme/webgme/issues/39)
 - Update page url by adding user state as user navigates in model [\#10](https://github.com/webgme/webgme/issues/10)
 - When meta sheet is deleted, prompt the user what they like to do [\#9](https://github.com/webgme/webgme/issues/9)
-- Closes \#9 deletes all meta rules, if the object is not in any meta aspect [\#281](https://github.com/webgme/webgme/pull/281) ([lattmann](https://github.com/lattmann))
 - Registry name fix: validPanels -\> validVisualizers [\#321](https://github.com/webgme/webgme/pull/321) ([pmeijer](https://github.com/pmeijer))
 - Closes \#316 storage and core logging [\#320](https://github.com/webgme/webgme/pull/320) ([pmeijer](https://github.com/pmeijer))
 - Fix/resize panel [\#315](https://github.com/webgme/webgme/pull/315) ([pmeijer](https://github.com/pmeijer))
@@ -1195,8 +1254,6 @@
 
 **Merged pull requests:**
 
-- Issue/288 custom path points double click bug [\#295](https://github.com/webgme/webgme/pull/295) ([brollb](https://github.com/brollb))
-- Fixes \#268 and removed excess functions [\#270](https://github.com/webgme/webgme/pull/270) ([brollb](https://github.com/brollb))
 - First version of user management api [\#322](https://github.com/webgme/webgme/pull/322) ([lattmann](https://github.com/lattmann))
 - Issue/47 seed project branches [\#319](https://github.com/webgme/webgme/pull/319) ([kecso](https://github.com/kecso))
 - Autorouter tests cleanup [\#311](https://github.com/webgme/webgme/pull/311) ([brollb](https://github.com/brollb))
@@ -1309,17 +1366,12 @@
 
 **Implemented enhancements:**
 
-- Improve test stability and coverage. \#171 [\#218](https://github.com/webgme/webgme/pull/218) ([lattmann](https://github.com/lattmann))
 - Create 'script' for exporting old 0.7.x user database into json [\#215](https://github.com/webgme/webgme/pull/215) ([kecso](https://github.com/kecso))
 
 **Closed issues:**
 
 - Use one blobClient [\#213](https://github.com/webgme/webgme/issues/213)
 - Autorouter: section\_HasBlockedEdge assert failure [\#169](https://github.com/webgme/webgme/issues/169)
-
-**Merged pull requests:**
-
-- clean-up outdated and unused files from the project [\#202](https://github.com/webgme/webgme/pull/202) ([kecso](https://github.com/kecso))
 
 ## [v0.7.1](https://github.com/webgme/webgme/tree/v0.7.1) (2015-02-25)
 [Full Changelog](https://github.com/webgme/webgme/compare/v0.7.0...v0.7.1)
@@ -1461,11 +1513,6 @@
 - Ctrl + mouse scroll causes Browser to zoom, distorts WebGME objects [\#33](https://github.com/webgme/webgme/issues/33)
 - Tree auto-expand on project open [\#18](https://github.com/webgme/webgme/issues/18)
 
-**Merged pull requests:**
-
-- corerel: optimize overlayInsert perf [\#101](https://github.com/webgme/webgme/pull/101) ([ksmyth](https://github.com/ksmyth))
-- Fix createEmptyProject and createProjectAsync [\#99](https://github.com/webgme/webgme/pull/99) ([ksmyth](https://github.com/ksmyth))
-
 ## [webgme_0.6.5](https://github.com/webgme/webgme/tree/webgme_0.6.5) (2014-06-30)
 [Full Changelog](https://github.com/webgme/webgme/compare/webgme_0.6.3...webgme_0.6.5)
 
@@ -1473,7 +1520,6 @@
 
 - webgme uses too much memory and crashes [\#66](https://github.com/webgme/webgme/issues/66)
 - Loading objects within a territory creates multiple events. [\#65](https://github.com/webgme/webgme/issues/65)
-- Failing to load a rextrast module should be a fatal error [\#59](https://github.com/webgme/webgme/pull/59) ([ksmyth](https://github.com/ksmyth))
 
 ## [webgme_0.6.3](https://github.com/webgme/webgme/tree/webgme_0.6.3) (2014-06-26)
 [Full Changelog](https://github.com/webgme/webgme/compare/webgme_0.5.12...webgme_0.6.3)
@@ -1508,7 +1554,6 @@
 - Requesting html template from client while WebGME is initializing crashes server [\#42](https://github.com/webgme/webgme/issues/42)
 - Status code logged is wrong for some requests [\#40](https://github.com/webgme/webgme/issues/40)
 - Tree-browser string handling [\#29](https://github.com/webgme/webgme/issues/29)
-- Fix status code logging of many successful requests, e.g. GET / [\#41](https://github.com/webgme/webgme/pull/41) ([ksmyth](https://github.com/ksmyth))
 
 **Closed issues:**
 
@@ -1516,10 +1561,6 @@
 - Sometimes the mongo object is null and it stops the webserver [\#14](https://github.com/webgme/webgme/issues/14)
 - Self containment issue [\#8](https://github.com/webgme/webgme/issues/8)
 - Create UI wireframes and mockups [\#1](https://github.com/webgme/webgme/issues/1)
-
-**Merged pull requests:**
-
-- Add jszip, filesaver, and PluginFSClient. [\#7](https://github.com/webgme/webgme/pull/7) ([lattmann](https://github.com/lattmann))
 
 ## [webgme_0.4.4](https://github.com/webgme/webgme/tree/webgme_0.4.4) (2014-02-05)
 **Closed issues:**
