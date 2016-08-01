@@ -1,0 +1,28 @@
+<div class="replace-base-dialog modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <i class="glyphicon glyphicon-transfer header-icon"></i><span>Replace Base</span>
+            </div>
+            <div class="modal-body">
+                <h5>Select new base
+                    <i class="glyphicon glyphicon-info-sign toggle-info-btn"/>
+                </h5>
+                    <span class="info-message hidden">Select a node in the inheritance tree that should replace the
+                        base of the replaceable node. The root of the tree is the either the meta-type of the
+                        replaceable node or, if defined, the target of the "constrainedby" pointer. All displayed nodes
+                        may not be a valid new base. To validate on demand double-click the node in the tree.
+                     </span>
+                <span>
+                </span>
+                <div class="tree-container"></div>
+                <div class="alert alert-info message-badge hidden" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-ok">OK</button>
+                <button class="btn btn-default btn-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

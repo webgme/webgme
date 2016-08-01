@@ -361,7 +361,7 @@ define([
 
     ModelDecoratorCore.prototype._replaceableUIDOMBase =
         $('<div class="' + ModelDecoratorConstants.REPLACEABLE_CLASS +'">' +
-            '<i class="glyphicon glyphicon-transfer" title="This instance is replaceable"></i></div>');
+            '<i class="glyphicon glyphicon-transfer" title="This node is replaceable"></i></div>');
 
     ModelDecoratorCore.prototype._updatePointers = function () {
         var ptrTo;

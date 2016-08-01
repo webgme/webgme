@@ -15,7 +15,7 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'js/DragDrop/DragHelper',
-    'js/Dialogs/ReplaceInstance/ReplaceInstanceDialog'
+    'js/Dialogs/ReplaceBase/ReplaceBaseDialog'
 ], function (Logger,
              util,
              CONSTANTS,
@@ -25,7 +25,7 @@ define(['js/logger',
              GMEConcepts,
              DiagramDesignerWidgetConstants,
              DragHelper,
-             ReplaceInstanceDialog) {
+             ReplaceBaseDialog) {
 
     'use strict';
 
@@ -1216,7 +1216,7 @@ define(['js/logger',
 
             if (GMEConcepts.isReplaceable(self._ComponentID2GmeID[selectedIds[0]])) {
                 menuItems[MENU_EDIT_REPLACEABLE] = {
-                    name: 'Replace instance ...',
+                    name: 'Replace base ...',
                     icon: 'glyphicon glyphicon-transfer'
                 };
             }
@@ -1274,7 +1274,7 @@ define(['js/logger',
                         nodeId: self._ComponentID2GmeID[selectedIds[0]]
                     });
                 } else if (key === MENU_EDIT_REPLACEABLE) {
-                    self._replaceInstanceDialog(self._ComponentID2GmeID[selectedIds[0]]);
+                    self._replaceBaseDialog(self._ComponentID2GmeID[selectedIds[0]]);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
@@ -1282,10 +1282,10 @@ define(['js/logger',
         );
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._replaceInstanceDialog = function (selectedId) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._replaceBaseDialog = function (selectedId) {
         var dialog;
         if (typeof selectedId === 'string' && this._client.getNode(selectedId)) {
-            dialog = new ReplaceInstanceDialog();
+            dialog = new ReplaceBaseDialog();
             dialog.show({client: this._client, nodeId: selectedId});
         }
     };

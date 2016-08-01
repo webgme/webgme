@@ -333,7 +333,7 @@ define([
             this.$replaceable = this.$el.find('.replaceable');
             if (this.$replaceable.length === 0) {
                 this.$replaceable = $('<div class="replaceable">' +
-                    '<i class="glyphicon glyphicon-transfer" title="This instance is replaceable"></i></div>');
+                    '<i class="glyphicon glyphicon-transfer" title="This node is replaceable"></i></div>');
                 this.$el.append(this.$replaceable);
             }
         } else {

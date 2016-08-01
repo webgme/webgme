@@ -860,7 +860,7 @@ define(['jquery',
 
         if (traverseContainment) {
             if (visited.containment[baseId]) {
-                console.log('breaking recursion', traverseContainment, baseId);
+                //console.log('breaking recursion', traverseContainment, baseId);
                 return false;
             }
 
@@ -868,7 +868,7 @@ define(['jquery',
             baseId = baseNode.getParentId();
         } else {
             if (visited.inheritance[baseId]) {
-                console.log('breaking recursion', traverseContainment, baseId);
+                //console.log('breaking recursion', traverseContainment, baseId);
                 return false;
             }
 
@@ -877,9 +877,9 @@ define(['jquery',
         }
 
         while (baseNode) {
-            console.log('comparing with node', traverseContainment, baseId);
+            //console.log('comparing with node', traverseContainment, baseId);
             if (baseId === nodeId) {
-                console.log('Found one!');
+                //console.log('Found one!');
                 return true;
             }
 
@@ -917,7 +917,7 @@ define(['jquery',
             result = !isChildOrInstanceRec(node, targetNodeOrId, visited, true);
         }
 
-        console.log('starting from inheritance');
+        //console.log('starting from inheritance');
         if (result) {
             result = !isChildOrInstanceRec(node, targetNodeOrId, visited, false);
         }
