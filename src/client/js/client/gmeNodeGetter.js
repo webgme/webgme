@@ -57,9 +57,9 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         }
     };
 
-    GMENode.prototype.isValidBase = function () {
-        
-    };
+    // GMENode.prototype.isValidBase = function () {
+    //
+    // };
 
     GMENode.prototype.getInheritorIds = function () {
         return [];

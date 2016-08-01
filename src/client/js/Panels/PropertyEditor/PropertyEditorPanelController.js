@@ -753,10 +753,6 @@ define(['js/logger',
         }
     };
 
-    PropertyEditorController.prototype._handleReplaceable = function () {
-
-    };
-
     PropertyEditorController.prototype._getHintMessage = function (name) {
         var msg = '',
             available = WebGMEGlobal['all' + name],
