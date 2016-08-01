@@ -19,6 +19,7 @@ define([], function () {
         DECORATOR: 'decorator', //custom decorator name of the item
         IS_PORT: 'isPort',  //if the item is port in its parent or not
         IS_ABSTRACT: 'isAbstract',  //whether the item is abstract or not !!! (attribute???)
+        REPLACEABLE: 'replaceable',  //whether the item is replaceable or not (not necessarily inherited).
         LINE_STYLE: 'lineStyle',    //the style of the line (solid, dot, dash-dot)
         LINE_TYPE: 'lineType',      //the type of the line (straight, bezier, ...)
         LINE_WIDTH: 'lineWidth',     //width of the line

@@ -134,7 +134,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
     PointerWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
         this._destroyDroppable();
-        if (isReadOnly !== true) {
+        if (this._isReadOnly !== true) {
             this._makeDroppable();
         }
     };

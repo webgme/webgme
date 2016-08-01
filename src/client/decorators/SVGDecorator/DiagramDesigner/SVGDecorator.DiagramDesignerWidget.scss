@@ -33,6 +33,10 @@
       margin-left: $connector-size / -2;
       margin-top: $connector-size / -2;
     }
+    &.accept-droppable {
+      background-color: #00FF00 !important;
+      cursor: alias;
+    }
   }
 
   &.selected {

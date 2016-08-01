@@ -1,0 +1,28 @@
+/*
+ * @author pmeijer / https://github.com/pmeijer
+ */
+div.replace-base-dialog div.modal-header .header-icon {
+  font-size: 20px;
+  margin-right: 1ex;
+  display: inline-block;
+  color: #333; }
+div.replace-base-dialog div.modal-header span {
+  font-size: 24px; }
+div.replace-base-dialog .modal-content .toggle-info-btn {
+  font-size: 65%;
+  vertical-align: top;
+  cursor: pointer;
+  color: #333; }
+  div.replace-base-dialog .modal-content .toggle-info-btn:hover {
+    color: #2a6496; }
+div.replace-base-dialog .modal-content .info-message {
+  display: inline-block;
+  width: 95%;
+  margin-bottom: 2ex;
+  margin-left: 0.5ex;
+  opacity: 0.90; }
+  div.replace-base-dialog .modal-content .info-message.hidden {
+    display: none; }
+div.replace-base-dialog .modal-content .message-badge {
+  margin-bottom: 0;
+  margin-top: 12px; }

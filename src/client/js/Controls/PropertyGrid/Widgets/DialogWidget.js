@@ -55,7 +55,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         if (this.__btnDialogOpen) {
-            if (isReadOnly === true) {
+            if (this._isReadOnly === true) {
                 this.__btnDialogOpen.disable(true);
             } else {
                 this.__btnDialogOpen.disable(false);

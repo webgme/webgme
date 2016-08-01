@@ -17,7 +17,7 @@ define([
     'use strict';
 
     var MetaEditorPointerNamesDialog,
-        POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET];
+        POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET, CONSTANTS.POINTER_CONSTRAINED_BY];
 
     MetaEditorPointerNamesDialog = function () {
 

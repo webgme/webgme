@@ -69,7 +69,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
     OptionWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
-        if (isReadOnly === true) {
+        if (this._isReadOnly === true) {
             this.__select.attr('disabled', 'disabled');
         } else {
             this.__select.removeAttr('disabled');

@@ -8,13 +8,11 @@
 define([
     'js/Constants',
     'js/NodePropertyNames',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBaseWithDragPointerHelpers',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!../Core/ModelDecorator.html',
     '../Core/ModelDecorator.Core',
     '../Core/ModelDecorator.Constants',
-    'js/DragDrop/DragConstants',
-    'js/DragDrop/DragHelper',
     'js/Controls/ContextMenu',
     'css!./ModelDecorator.DiagramDesignerWidget.css'
 ], function (CONSTANTS,
@@ -24,17 +22,13 @@ define([
              modelDecoratorTemplate,
              ModelDecoratorCore,
              ModelDecoratorConstants,
-             DragConstants,
-             DragHelper,
              ContextMenu) {
 
     'use strict';
 
     var ModelDecoratorDiagramDesignerWidget,
         DECORATOR_ID = 'ModelDecoratorDiagramDesignerWidget',
-        PORT_CONTAINER_OFFSET_Y = 15,
-        ACCEPT_DROPPABLE_CLASS = 'accept-droppable',
-        DRAGGABLE_MOUSE = 'DRAGGABLE';
+        PORT_CONTAINER_OFFSET_Y = 15;
 
     ModelDecoratorDiagramDesignerWidget = function (options) {
         var opts = _.extend({}, options);
@@ -63,7 +57,7 @@ define([
     ModelDecoratorDiagramDesignerWidget.prototype.$DOMBase = $(modelDecoratorTemplate);
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //jshint camelcase: false
+    //jshint camelcase: false
     ModelDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         var self = this;
 
@@ -96,12 +90,15 @@ define([
             event.stopPropagation();
             event.preventDefault();
         });
+
+        this._updateDropArea();
     };
     //jshint camelcase: true
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     ModelDecoratorDiagramDesignerWidget.prototype.update = function () {
         this._update();
+        this._updateDropArea();
     };
 
 
@@ -226,14 +223,14 @@ define([
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //called when the designer item's subcomponent should be updated
+    //called when the designer item's subcomponent should be updated
     ModelDecoratorDiagramDesignerWidget.prototype.updateSubcomponent = function (portId) {
         this._updatePort(portId);
     };
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //Shows the 'connectors' - appends them to the DOM
+    //Shows the 'connectors' - appends them to the DOM
     ModelDecoratorDiagramDesignerWidget.prototype.showSourceConnectors = function (params) {
         var connectors,
             i;
@@ -264,7 +261,7 @@ define([
     };
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //Hides the 'connectors' - detaches them from the DOM
+    //Hides the 'connectors' - detaches them from the DOM
     ModelDecoratorDiagramDesignerWidget.prototype.hideSourceConnectors = function () {
         var i;
 
@@ -280,14 +277,14 @@ define([
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //should highlight the connectors for the given elements
+    //should highlight the connectors for the given elements
     ModelDecoratorDiagramDesignerWidget.prototype.showEndConnectors = function (params) {
         this.showSourceConnectors(params);
     };
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //Hides the 'connectors' - detaches them from the DOM
+    //Hides the 'connectors' - detaches them from the DOM
     ModelDecoratorDiagramDesignerWidget.prototype.hideEndConnectors = function () {
         this.hideSourceConnectors();
     };
@@ -301,9 +298,7 @@ define([
         }
         this._checkTerritoryReady();
     };
-
-
-    /**** Override from ModelDecoratorCore ****/
+    
     ModelDecoratorDiagramDesignerWidget.prototype._portPositionChanged = function (portId) {
         this.onRenderGetLayoutInfo();
         this.hostDesignerItem.canvas.dispatchEvent(
@@ -315,16 +310,12 @@ define([
         );
     };
 
-
-    /**** Override from ModelDecoratorCore ****/
     ModelDecoratorDiagramDesignerWidget.prototype.renderPort = function (portId) {
         this.__registerAsSubcomponent(portId);
 
         return ModelDecoratorCore.prototype.renderPort.call(this, portId);
     };
-
-
-    /**** Override from ModelDecoratorCore ****/
+    
     ModelDecoratorDiagramDesignerWidget.prototype.removePort = function (portId) {
         var idx = this.portIDs.indexOf(portId);
 
@@ -335,156 +326,25 @@ define([
         ModelDecoratorCore.prototype.removePort.call(this, portId);
     };
 
+    ModelDecoratorDiagramDesignerWidget.prototype._updateDropArea = function () {
+        var inverseClass = 'inverse-on-hover';
 
-    /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorDiagramDesignerWidget.prototype._updatePointers = function () {
-        var inverseClass = 'inverse-on-hover',
-            self = this;
+        if (this.skinParts.$ptr || this.skinParts.$replaceable) {
 
-        ModelDecoratorCore.prototype._updatePointers.call(this);
-
-        if (this.skinParts.$ptr) {
-            if (this.skinParts.$ptr.hasClass(ModelDecoratorConstants.POINTER_CLASS_NON_SET)) {
-                this.skinParts.$ptr.removeClass(inverseClass);
-            } else {
-                this.skinParts.$ptr.addClass(inverseClass);
+            if (this.skinParts.$ptr) {
+                if (this.skinParts.$ptr.hasClass(ModelDecoratorConstants.POINTER_CLASS_NON_SET)) {
+                    this.skinParts.$ptr.removeClass(inverseClass);
+                } else {
+                    this.skinParts.$ptr.addClass(inverseClass);
+                }
             }
-
-            //edit droppable mode
-            this.$el.on('mouseenter.' + DRAGGABLE_MOUSE, null, function (event) {
-                self.__onMouseEnter(event);
-            })
-                .on('mouseleave.' + DRAGGABLE_MOUSE, null, function (event) {
-                    self.__onMouseLeave(event);
-                })
-                .on('mouseup.' + DRAGGABLE_MOUSE, null, function (event) {
-                    self.__onMouseUp(event);
-                });
+            this._enableDragEvents();
         } else {
-            this.$el.off('mouseenter.' + DRAGGABLE_MOUSE)
-                .off('mouseleave.' + DRAGGABLE_MOUSE)
-                .off('mouseup.' + DRAGGABLE_MOUSE);
+            this._disableDragEvents();
         }
 
         this._setPointerTerritory(this._getPointerTargets());
     };
-
-
-    /**** Override from ModelDecoratorCore ****/
-    ModelDecoratorDiagramDesignerWidget.prototype._setPointerTerritory = function (pointerTargets) {
-        var logger = this.logger,
-            len = pointerTargets.length;
-
-        this._selfPatterns = {};
-
-        if (len > 0) {
-            if (!this._territoryId) {
-                this._territoryId = this._control._client.addUI(this, function (events) {
-                    //don't really care here, just want to make sure that the reference object is loaded in the client
-                    logger.debug('onEvent: ' + JSON.stringify(events));
-                });
-            }
-            while (len--) {
-                this._selfPatterns[pointerTargets[len][1]] = {children: 0};
-            }
-        }
-
-        if (this._selfPatterns && !_.isEmpty(this._selfPatterns)) {
-            this._control._client.updateTerritory(this._territoryId, this._selfPatterns);
-        } else {
-            if (this._territoryId) {
-                this._control._client.removeUI(this._territoryId);
-            }
-        }
-    };
-
-    ModelDecoratorDiagramDesignerWidget.prototype.__onBackgroundDroppableOver = function (helper) {
-        if (this.__onBackgroundDroppableAccept(helper) === true) {
-            this.__doAcceptDroppable(true);
-        }
-    };
-
-    ModelDecoratorDiagramDesignerWidget.prototype.__onBackgroundDroppableOut = function () {
-        this.__doAcceptDroppable(false);
-    };
-
-    ModelDecoratorDiagramDesignerWidget.prototype.__onBackgroundDrop = function (helper) {
-        var dragInfo = helper.data(DragConstants.DRAG_INFO),
-            dragItems = DragHelper.getDragItems(dragInfo),
-            dragEffects = DragHelper.getDragEffects(dragInfo);
-
-        if (this.__acceptDroppable === true) {
-            if (dragItems.length === 1 && dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) !== -1) {
-                this._setPointerTarget(dragItems[0], helper.offset());
-            }
-        }
-
-        this.__doAcceptDroppable(false);
-    };
-
-    ModelDecoratorDiagramDesignerWidget.prototype.__onBackgroundDroppableAccept = function (helper) {
-        var dragInfo = helper.data(DragConstants.DRAG_INFO),
-            dragItems = DragHelper.getDragItems(dragInfo),
-            dragEffects = DragHelper.getDragEffects(dragInfo),
-            doAccept = false;
-
-        //check if there is only one item being dragged, it is not self,
-        //and that element can be a valid target of at least one pointer of this guy
-        if (dragItems.length === 1 &&
-            dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
-            dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) !== -1) {
-            doAccept = this._getValidPointersForTarget(dragItems[0]).length > 0;
-        }
-
-        return doAccept;
-    };
-
-    ModelDecoratorDiagramDesignerWidget.prototype.__doAcceptDroppable = function (accept) {
-        if (accept === true) {
-            this.__acceptDroppable = true;
-            this.$el.addClass(ACCEPT_DROPPABLE_CLASS);
-        } else {
-            this.__acceptDroppable = false;
-            this.$el.removeClass(ACCEPT_DROPPABLE_CLASS);
-        }
-
-        this.hostDesignerItem.canvas._enableDroppable(!accept);
-    };
-
-
-    ModelDecoratorDiagramDesignerWidget.prototype.__onMouseEnter = function (event) {
-        if (this.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-            //check if it's dragging anything with jQueryUI
-            if ($.ui.ddmanager.current && $.ui.ddmanager.current.helper) {
-                this.__onDragOver = true;
-                this.__onBackgroundDroppableOver($.ui.ddmanager.current.helper);
-                event.stopPropagation();
-                event.preventDefault();
-            }
-        }
-    };
-
-    ModelDecoratorDiagramDesignerWidget.prototype.__onMouseLeave = function (event) {
-        if (this.__onDragOver) {
-            this.__onBackgroundDroppableOut();
-            this.__onDragOver = false;
-            event.stopPropagation();
-            event.preventDefault();
-        }
-    };
-
-    ModelDecoratorDiagramDesignerWidget.prototype.__onMouseUp = function (event) {
-        if (this.__onDragOver) {
-            // TODO: this is still questionable if we should hack the jQeuryUI 's
-            // TODO: draggable&droppable and use half of it only
-            this.__onBackgroundDrop($.ui.ddmanager.current.helper);
-            this.__onDragOver = false;
-
-            // Temporarily suppress the drop action (i.e. the drop select menu) of the canvas.
-            this.hostDesignerItem.canvas.acceptDropTempDisabled = true;
-        }
-    };
-
 
     ModelDecoratorDiagramDesignerWidget.prototype.__registerAsSubcomponent = function (portId) {
         if (this.hostDesignerItem) {
@@ -498,13 +358,11 @@ define([
         }
     };
 
-
     ModelDecoratorDiagramDesignerWidget.prototype.__onNodeTitleChanged = function (oldValue, newValue) {
         var client = this._control._client;
 
         client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], nodePropertyNames.Attributes.name, newValue);
     };
-
 
     ModelDecoratorDiagramDesignerWidget.prototype.__onPointerDblClick = function (mousePos) {
         var pointerTargets = this._getPointerTargets(),
@@ -552,7 +410,6 @@ define([
             }
         }
     };
-
 
     return ModelDecoratorDiagramDesignerWidget;
 });

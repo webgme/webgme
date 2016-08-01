@@ -69,6 +69,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.propertyGrids.push(propertyGrid);
         this.$el.find('div#attributes').html(propertyGrid.$el);
 
+        // FIXME: This approach of multiple controllers can be very inefficient when selecting many nodes.
+
         //attach control to the PropertyGrid for PROPERTY_GROUP_ATTRIBUTES
         p = new PropertyEditorPanelController(this._client, propertyGrid, CONSTANTS.PROPERTY_GROUP_ATTRIBUTES);
         p.setReadOnly = function (isReadOnly) {

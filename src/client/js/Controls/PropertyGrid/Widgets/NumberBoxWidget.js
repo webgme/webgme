@@ -84,7 +84,7 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
     NumberBoxWidget.prototype.setReadOnly = function (isReadOnly) {
         NumberWidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
-        if (isReadOnly === true) {
+        if (this._isReadOnly === true) {
             this.__input.attr('disabled', 'disabled');
         } else {
             this.__input.removeAttr('disabled');

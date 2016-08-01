@@ -10,8 +10,8 @@
 .model-decorator {
   min-width: 65px;
   min-height: 40px;
-  border: 1px solid black;
-  background-color: #ececec;
+  border: 1px solid #000000;
+  background-color: #ECECEC;
   padding: 3px;
   text-align: center;
   position: relative;
@@ -33,7 +33,7 @@
   .model-decorator div.conn-type {
     font-size: 9px;
     line-height: 12px;
-    color: #aaaaaa; }
+    color: #AAAAAA; }
   .model-decorator .ports {
     font-size: 10px;
     min-height: 1px;
@@ -130,7 +130,7 @@
       margin-top: -2px; }
   .model-decorator.abstract .name {
     font-style: italic;
-    color: #aaaaaa; }
+    color: #AAAAAA; }
   .model-decorator img.embeddedsvg {
     width: 40px;
     position: relative; }

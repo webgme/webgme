@@ -798,15 +798,18 @@ define([
 
         this.setBase = function (node, base) {
             ASSERT(self.isValidNode(node) && (base === undefined || base === null || self.isValidNode(base)));
+            // FIXME: These assertion are far from complete.
             ASSERT(!base || self.getPath(self.getParent(node)) !== self.getPath(base));
             ASSERT(!base || self.getPath(node) !== self.getPath(base));
 
             var oldBase = self.getBase(node);
 
             //TODO this restriction should be removed after clarification of the different scenarios and outcomes
-            //changing base from or to a node which has children is not allowed currently
-            ASSERT((base === null || oldBase === null) ||
-                (self.getChildrenRelids(base).length === 0 && self.getChildrenRelids(oldBase).length === 0));
+            //TODO changing base from or to a node which has children is not allowed currently
+
+            // Proposed rules: https://docs.google.com/drawings/d/1dGHaJCuq0q7eHXL2dwC6_oTXw5J7g3T3DlIFPwWT6TA/edit
+            // ASSERT((base === null || oldBase === null) ||
+            //     (self.getChildrenRelids(base).length === 0 && self.getChildrenRelids(oldBase).length === 0));
 
             if (!!base) {
                 //TODO maybe this is not the best way, needs to be double checked

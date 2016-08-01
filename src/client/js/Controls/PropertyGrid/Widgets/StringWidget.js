@@ -62,7 +62,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
     StringWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
-        if (isReadOnly === true) {
+        if (this._isReadOnly === true) {
             this.__input.attr('disabled', 'disabled');
         } else {
             this.__input.removeAttr('disabled');

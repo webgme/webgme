@@ -12,20 +12,18 @@ define([
     'js/Loader/LoaderProgressBar',
     './Port',
     './ModelDecorator.Constants',
-    'js/Decorators/DecoratorWithPorts.Base',
+    'js/Decorators/DecoratorWithPortsAndPointerHelpers.Base',
     'js/Utils/DisplayFormat',
     'js/Utils/GMEConcepts',
-    'js/Controls/ContextMenu'
 ], function (CONSTANTS,
              nodePropertyNames,
              REGISTRY_KEYS,
              LoaderProgressBar,
              Port,
              ModelDecoratorConstants,
-             DecoratorWithPortsBase,
+             DecoratorWithPortsAndPointerHelpers,
              displayFormat,
-             GMEConcepts,
-             ContextMenu) {
+             GMEConcepts) {
 
     'use strict';
 
@@ -34,19 +32,18 @@ define([
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         EMBEDDED_SVG_CLASS = 'embeddedsvg',
         CONNECTION_TYPE_CLASS = 'conn-type',
-        EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE, CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET],
         CONN_TYPE_BASE = $('<div/>', {class: CONNECTION_TYPE_CLASS}),
         EMBEDDED_SVG_IMG_BASE = $('<img>', {class: EMBEDDED_SVG_CLASS});
 
     ModelDecoratorCore = function (params) {
-        DecoratorWithPortsBase.apply(this, []);
+        DecoratorWithPortsAndPointerHelpers.apply(this, []);
 
         if (params && params.aspect) {
             this._aspect = params.aspect;
         }
     };
 
-    _.extend(ModelDecoratorCore.prototype, DecoratorWithPortsBase.prototype);
+    _.extend(ModelDecoratorCore.prototype, DecoratorWithPortsAndPointerHelpers.prototype);
 
     ModelDecoratorCore.prototype._initializeVariables = function (params) {
         this.name = '';
@@ -60,7 +57,8 @@ define([
             $portsContainerRight: undefined,
             $portsContainerCenter: undefined,
             $ptr: undefined,
-            $imgSVG: undefined
+            $imgSVG: undefined,
+            $replaceable: undefined
         };
 
         this._displayConnectors = false;
@@ -108,6 +106,7 @@ define([
         this._updateAbstract();
         this._updateSVG();
         this._updateConnectionType();
+        this._updateIsReplaceable();
     };
 
     ModelDecoratorCore.prototype._updateColors = function () {
@@ -360,6 +359,10 @@ define([
     ModelDecoratorCore.prototype._ptrUIDOMBase =
         $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '"><i class="glyphicon glyphicon-share"></i></div>');
 
+    ModelDecoratorCore.prototype._replaceableUIDOMBase =
+        $('<div class="' + ModelDecoratorConstants.REPLACEABLE_CLASS +'">' +
+            '<i class="glyphicon glyphicon-transfer" title="This node is replaceable"></i></div>');
+
     ModelDecoratorCore.prototype._updatePointers = function () {
         var ptrTo;
 
@@ -383,141 +386,6 @@ define([
                 this.skinParts.$ptr = undefined;
             }
         }
-    };
-
-    //return all the pointer names (set or unset for this item other than the excluded ones)
-    ModelDecoratorCore.prototype._getPointerNames = function () {
-        var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            ptrNames = [];
-
-        if (nodeObj) {
-            ptrNames = _.difference(nodeObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
-        }
-
-        return ptrNames;
-    };
-
-    //return all the pointer names that are valid pointers for the given target
-    ModelDecoratorCore.prototype._getValidPointersForTarget = function (targetId) {
-        var client = this._control._client,
-            gmeID = this._metaInfo[CONSTANTS.GME_ID],
-            ptrNames = this._getPointerNames(),
-            len = ptrNames.length,
-            validPtrNames = [],
-            p;
-
-        while (len--) {
-            p = ptrNames[len];
-            if (client.isValidTarget(gmeID, p, targetId)) {
-                validPtrNames.push(p);
-            }
-        }
-
-        if (validPtrNames.length > 0) {
-            validPtrNames.sort(function (a, b) {
-                var ptrA = a.toLowerCase(),
-                    ptrB = b.toLowerCase();
-                if (ptrA < ptrB) {
-                    return -1;
-                } else if (ptrA > ptrB) {
-                    return 1;
-                }
-
-                //must be equal
-                return 0;
-            });
-        }
-
-        return validPtrNames;
-    };
-
-    //return all the set pointer names and targets
-    ModelDecoratorCore.prototype._getPointerTargets = function () {
-        var pointerTargets = [],
-            client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            ptrNames,
-            len,
-            ptrTo;
-
-        if (nodeObj) {
-            ptrNames = _.difference(nodeObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
-            len = ptrNames.length;
-            while (len--) {
-                ptrTo = nodeObj.getPointer(ptrNames[len]);
-                if (ptrTo && ptrTo.to !== undefined && ptrTo.to !== null) {
-                    pointerTargets.push([ptrNames[len], ptrTo.to]);
-                }
-            }
-
-            if (pointerTargets.length > 0) {
-                pointerTargets.sort(function (a, b) {
-                    var ptrA = a[0].toLowerCase(),
-                        ptrB = b[0].toLowerCase();
-                    if (ptrA < ptrB) {
-                        return -1;
-                    } else if (ptrA > ptrB) {
-                        return 1;
-                    }
-
-                    //must be equal
-                    return 0;
-                });
-            }
-        }
-
-        return pointerTargets;
-    };
-
-    ModelDecoratorCore.prototype._setPointerTarget = function (targetID, mousePos) {
-        var ptrNames = this._getValidPointersForTarget(targetID);
-
-        if (ptrNames.length > 0) {
-            //check to see if there is more than one potential pointer to set
-            if (ptrNames.length === 1) {
-                this._setPointer(ptrNames[0], targetID);
-            } else {
-                //there is multiple pointer names that are valid for this target
-                //let the user pick one
-                this._selectPointerForTarget(ptrNames, targetID, mousePos);
-            }
-        }
-    };
-
-    ModelDecoratorCore.prototype._setPointer = function (ptrName, targetID) {
-        var client = this._control._client,
-            gmeID = this._metaInfo[CONSTANTS.GME_ID],
-            nodeObj = client.getNode(gmeID),
-            ptrVal = nodeObj.getPointer(ptrName);
-
-        if (ptrVal !== targetID) {
-            client.makePointer(gmeID, ptrName, targetID);
-        }
-    };
-
-    ModelDecoratorCore.prototype._selectPointerForTarget = function (ptrNames, targetID, mousePos) {
-        var logger = this.logger,
-            menu,
-            self = this,
-            menuItems = {},
-            i;
-
-        for (i = 0; i < ptrNames.length; i += 1) {
-            menuItems[ptrNames[i]] = {
-                name: 'Set pointer "' + ptrNames[i] + '"'
-            };
-        }
-
-        menu = new ContextMenu({
-            items: menuItems,
-            callback: function (key) {
-                logger.debug('_selectPointerForTarget: ' + key);
-                self._setPointer(key, targetID);
-            }
-        });
-
-        menu.show({x: mousePos.left, y: mousePos.top});
     };
 
     ModelDecoratorCore.prototype._updateAbstract = function () {
@@ -591,6 +459,23 @@ define([
                 sel[0] === this.hostDesignerItem.id) {
                 this.hostDesignerItem.canvas.selectNone();
                 this.hostDesignerItem.canvas.select([this.hostDesignerItem.id]);
+            }
+        }
+    };
+
+    /***** UPDATE THE REPLACEABLE ICON *****/
+
+    ModelDecoratorCore.prototype._updateIsReplaceable = function () {
+        if (this._isReplaceable()) {
+            this.skinParts.$replaceable = this.$el.find('.' + ModelDecoratorConstants.REPLACEABLE_CLASS);
+            if (this.skinParts.$replaceable.length === 0) {
+                this.skinParts.$replaceable = this._replaceableUIDOMBase.clone();
+                this.$el.append(this.skinParts.$replaceable);
+            }
+        } else {
+            if (this.skinParts.$replaceable) {
+                this.skinParts.$replaceable.remove();
+                this.skinParts.$replaceable = undefined;
             }
         }
     };

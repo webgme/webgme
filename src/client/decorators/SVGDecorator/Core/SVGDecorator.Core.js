@@ -1,4 +1,4 @@
-/*globals define, $, _, WebGMEGlobal*/
+/*globals define, $, _*/
 /*jshint browser: true*/
 
 /**
@@ -10,7 +10,7 @@ define([
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/DisplayFormat',
-    'js/Decorators/DecoratorWithPorts.Base',
+    'js/Decorators/DecoratorWithPortsAndPointerHelpers.Base',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./default.svg',
     'common/regexp'
@@ -18,7 +18,7 @@ define([
              nodePropertyNames,
              REGISTRY_KEYS,
              displayFormat,
-             DecoratorBase,
+             DecoratorWithPortsAndPointerHelpers,
              DiagramDesignerWidgetConstants,
              DefaultSvgTemplate,
              REGEXP) {
@@ -47,16 +47,17 @@ define([
     var defaultSVG = $(DefaultSvgTemplate);
 
     SVGDecoratorCore = function () {
-        DecoratorBase.apply(this, []);
+        DecoratorWithPortsAndPointerHelpers.apply(this, []);
         this.svgCache = SVG_CACHE;
     };
 
-    _.extend(SVGDecoratorCore.prototype, DecoratorBase.prototype);
+    _.extend(SVGDecoratorCore.prototype, DecoratorWithPortsAndPointerHelpers.prototype);
 
     SVGDecoratorCore.prototype._initializeVariables = function (params) {
         this.name = '';
         this.formattedName = '';
         this.$name = undefined;
+        this.$replaceable = undefined;
 
         //Get custom data from svg
         if (params.data) {
@@ -99,6 +100,7 @@ define([
         this._updateName();
         this._updateAbstract();
         this._updatePorts();//Will be overridden by ports class if extended
+        this._updateIsReplaceable();
     };
 
     SVGDecoratorCore.prototype._updateColors = function () {
@@ -324,6 +326,22 @@ define([
     //Overridden in SVGDecorator.Connection.js 
     SVGDecoratorCore.prototype._generateConnectors = function () {
         //If no connections in model, does nothing
+    };
+
+    SVGDecoratorCore.prototype._updateIsReplaceable = function () {
+        if (this._isReplaceable()) {
+            this.$replaceable = this.$el.find('.replaceable');
+            if (this.$replaceable.length === 0) {
+                this.$replaceable = $('<div class="replaceable">' +
+                    '<i class="glyphicon glyphicon-transfer" title="This node is replaceable"></i></div>');
+                this.$el.append(this.$replaceable);
+            }
+        } else {
+            if (this.$replaceable) {
+                this.$replaceable.remove();
+                this.$replaceable = undefined;
+            }
+        }
     };
 
     return SVGDecoratorCore;

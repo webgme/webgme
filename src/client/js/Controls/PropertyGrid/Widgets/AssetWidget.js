@@ -137,7 +137,7 @@ define([
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         if (this.__btnAttach) {
-            if (isReadOnly === true) {
+            if (this._isReadOnly === true) {
                 this.__btnAttach.disable(true);
             } else {
                 this.__btnAttach.disable(false);
@@ -145,7 +145,7 @@ define([
         }
 
         this._detachFileDropHandlers();
-        if (isReadOnly !== true) {
+        if (this._isReadOnly !== true) {
             this._attachFileDropHandlers();
         }
     };

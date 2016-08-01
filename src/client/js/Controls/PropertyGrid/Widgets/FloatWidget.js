@@ -90,7 +90,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
     FloatWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
-        if (isReadOnly === true) {
+        if (this._isReadOnly === true) {
             this._input.attr('disabled', 'disabled');
         } else {
             this._input.removeAttr('disabled');

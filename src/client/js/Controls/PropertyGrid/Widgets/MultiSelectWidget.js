@@ -114,7 +114,7 @@ define([
     MultiSelectWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
-        if (isReadOnly === true) {
+        if (this._isReadOnly === true) {
             this._select.multiselect('disable');
         } else {
             this._select.multiselect('enable');

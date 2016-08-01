@@ -22,6 +22,7 @@ define([
         this.__checkbox = new ICheckBox({
             checkedText: 'TRUE',
             uncheckedText: 'FALSE',
+            title: propertyDesc.title,
             checkChangedFn: function (data, isChecked) {
                 self.setValue(isChecked);
                 self.fireFinishChange();
@@ -44,8 +45,7 @@ define([
 
     iCheckBoxWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
-
-        this.__checkbox.setEnabled(!isReadOnly);
+        this.__checkbox.setEnabled(!this._isReadOnly);
     };
 
     return iCheckBoxWidget;

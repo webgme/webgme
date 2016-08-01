@@ -32,12 +32,20 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._id;
     };
 
+    GMENode.prototype.getRelid = function () {
+        return this._state.core.getRelid(this._state.nodes[this._id].node);
+    };
+
     GMENode.prototype.getGuid = function () {
         return this._state.core.getGuid(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getChildrenIds = function () {
         return this._state.core.getChildrenPaths(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getChildrenRelids = function () {
+        return this._state.core.getOwnChildrenRelids(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getBaseId = function () {
@@ -47,8 +55,11 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         } else {
             return null;
         }
-
     };
+
+    // GMENode.prototype.isValidBase = function () {
+    //
+    // };
 
     GMENode.prototype.getInheritorIds = function () {
         return [];

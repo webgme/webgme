@@ -11,6 +11,7 @@ define(['js/logger',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Constants',
+    'js/Utils/GMEConcepts',
     'js/Utils/DisplayFormat',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
     'js/Controls/PropertyGrid/PropertyGridWidgets'
@@ -19,6 +20,7 @@ define(['js/logger',
              nodePropertyNames,
              REGISTRY_KEYS,
              CONSTANTS,
+             GMEConcepts,
              displayFormat,
              DecoratorSVGExplorerDialog,
              PROPERTY_GRID_WIDGETS) {
@@ -35,13 +37,16 @@ define(['js/logger',
             REGISTRY_KEYS.VALID_VISUALIZERS,
             REGISTRY_KEYS.VALID_DECORATORS
         ],
+        TEMPLATING_SUB_GROUP = 'Templating',
         PREFERENCES_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,
             REGISTRY_KEYS.DISPLAY_FORMAT,
             REGISTRY_KEYS.SVG_ICON,
             REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON,
             REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON,
             REGISTRY_KEYS.SVG_ICON,
-            REGISTRY_KEYS.PORT_SVG_ICON],
+            REGISTRY_KEYS.PORT_SVG_ICON,
+            REGISTRY_KEYS.REPLACEABLE
+        ],
         NON_INVALID_PTRS = [CONSTANTS.POINTER_BASE];
 
     PropertyEditorController = function (client, propertyGrid, type) {
@@ -226,7 +231,7 @@ define(['js/logger',
                         isCommon: true,
                         readOnly: true
                     };
-                };
+                }
 
                 metaTypeId = cNode.getMetaTypeId();
                 if (metaTypeId) {
@@ -260,6 +265,11 @@ define(['js/logger',
                 value: undefined,
                 isFolder: true
             };
+
+            if (commonPointers.hasOwnProperty(CONSTANTS.POINTER_CONSTRAINED_BY)) {
+                commonPreferences[CONSTANTS.POINTER_CONSTRAINED_BY] = commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
+                delete commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
+            }
 
             this._addItemsToResultList(selectedObjIDs, commonAttrMeta, decoratorNames,
                 commonPreferences, CONSTANTS.PROPERTY_GROUP_PREFERENCES, propList, false, true, false);
@@ -297,10 +307,13 @@ define(['js/logger',
                                                                          isAttribute, isRegistry, isPointer) {
         var onlyRootSelected = selectedObjIDs.length === 1 && selectedObjIDs[0] === CONSTANTS.PROJECT_ROOT_ID,
             keys = Object.keys(src),
+            canBeReplaceable,
             key,
             range,
             i,
             extKey,
+            repKey,
+            cbyKey,
             keyParts;
 
         if (prefix !== '') {
@@ -309,6 +322,11 @@ define(['js/logger',
 
         for (i = 0; i < keys.length; i += 1) {
             key = keys[i];
+
+            if (key === CONSTANTS.POINTER_CONSTRAINED_BY) {
+                // This is handled in replaceable.
+                continue;
+            }
 
             if (isAttribute) {
                 if (commonAttrMeta.hasOwnProperty(key) === false) {
@@ -387,6 +405,53 @@ define(['js/logger',
                             dst[extKey].dialog = DecoratorSVGExplorerDialog;
                             dst[extKey].value = dst[extKey].value === undefined ?
                                 '' : dst[extKey].value;
+                        } else if (key === REGISTRY_KEYS.REPLACEABLE) {
+                            dst[TEMPLATING_SUB_GROUP] = {
+                                name: TEMPLATING_SUB_GROUP,
+                                text: TEMPLATING_SUB_GROUP,
+                                value: undefined,
+                                isFolder: true
+                            };
+
+                            repKey = TEMPLATING_SUB_GROUP + '.' + key;
+                            dst[repKey] = dst[extKey];
+                            delete dst[extKey];
+
+                            canBeReplaceable = this._canBeReplaceable(selectedObjIDs);
+                            dst[repKey].value = (!dst[repKey].value || canBeReplaceable === false) ? false : true;
+                            dst[repKey].valueType = 'boolean';
+                            if (canBeReplaceable === false) {
+                                dst[repKey].readOnly = true;
+                                dst[repKey].alwaysReadOnly = true;
+                                dst[repKey].title = 'Meta nodes or inherited children cannot be templates.';
+                            }
+
+                            if (keys.indexOf(CONSTANTS.POINTER_CONSTRAINED_BY) > -1) {
+                                cbyKey = TEMPLATING_SUB_GROUP + '.' + CONSTANTS.POINTER_CONSTRAINED_BY;
+
+                                dst[cbyKey] = {
+                                    name: CONSTANTS.POINTER_CONSTRAINED_BY,
+                                    value: src[CONSTANTS.POINTER_CONSTRAINED_BY].value,
+                                    valueType: src[CONSTANTS.POINTER_CONSTRAINED_BY].valueType,
+                                    options: src[CONSTANTS.POINTER_CONSTRAINED_BY].options || {},
+                                    widget: PROPERTY_GRID_WIDGETS.POINTER_WIDGET,
+                                    client: this._client
+                                };
+
+                                dst[cbyKey].options.resetable =
+                                    this._isResettablePointer(selectedObjIDs, CONSTANTS.POINTER_CONSTRAINED_BY);
+
+                                dst[cbyKey].options.invalid =
+                                    this._isInvalidPointer(selectedObjIDs, CONSTANTS.POINTER_CONSTRAINED_BY);
+
+                                if (dst[repKey].value === false && !dst[cbyKey].options.resetable &&
+                                    !dst[cbyKey].options.invalid) {
+                                    // In this case it is only clutter to display this pointer widget.
+                                    delete dst[cbyKey];
+                                }
+                            }
+                        } else if (key === CONSTANTS.POINTER_CONSTRAINED_BY) {
+                            // This is handled by the REPLACEABLE above.
                         }
                     } else {
                         if (key === REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON ||
@@ -423,24 +488,21 @@ define(['js/logger',
                     }
                 }
             } else if (isPointer === true) {
-                if (NON_INVALID_PTRS.indexOf(keyParts[0]) === -1 &&
-                    this._isResettablePointer(selectedObjIDs, keyParts[0])) {
-                    //what is non_invalid, cannot be reset
-                    dst[extKey].options = dst[extKey].options || {};
-                    dst[extKey].options.resetable = true;
-                }
+                dst[extKey].options = dst[extKey].options || {};
 
-                if (this._isInvalidPointer(selectedObjIDs, keyParts[0])) {
-                    dst[extKey].options = dst[extKey].options || {};
-                    dst[extKey].options.invalid = true;
-                }
+                // What is non-invalid cannot be reset
+                dst[extKey].options.resetable = NON_INVALID_PTRS.indexOf(keyParts[0]) === -1 &&
+                    this._isResettablePointer(selectedObjIDs, keyParts[0]);
+
+                dst[extKey].options.invalid = this._isInvalidPointer(selectedObjIDs, keyParts[0]);
 
                 //pointers have a custom widget that allows following the pointer
                 dst[extKey].widget = PROPERTY_GRID_WIDGETS.POINTER_WIDGET;
                 //add custom widget specific values
                 dst[extKey].client = this._client;
             }
-            if (dst[extKey].value === undefined) {
+
+            if (!dst[extKey] || dst[extKey].value === undefined) {
                 delete dst[extKey];
             }
         }
@@ -638,6 +700,20 @@ define(['js/logger',
         return true;
     };
 
+    PropertyEditorController.prototype._canBeReplaceable = function (selectedObjIDs) {
+        var i = selectedObjIDs.length;
+
+        while (i--) {
+            if (GMEConcepts.canBeReplaceable(selectedObjIDs[i])) {
+                // continue
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
     PropertyEditorController.prototype._filterCommon = function (commonAttrMeta, result, other, initPhase) {
         var it,
             i,
@@ -823,6 +899,13 @@ define(['js/logger',
                 getterFn = 'getEditableRegistry';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS) {
                 this._client.makePointer(gmeID, keyArr[1], args.newValue);
+            } else if (keyArr[0] === TEMPLATING_SUB_GROUP) {
+                if (keyArr[1] === REGISTRY_KEYS.REPLACEABLE) {
+                    setterFn = 'setRegistry';
+                    getterFn = 'getEditableRegistry';
+                } else if (keyArr[1] === CONSTANTS.POINTER_CONSTRAINED_BY) {
+                    this._client.makePointer(gmeID, keyArr[1], args.newValue);
+                }
             }
 
             if (setterFn && getterFn) {
@@ -878,6 +961,12 @@ define(['js/logger',
                 delFn = 'delRegistry';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS) {
                 delFn = 'delPointer';
+            } else if (keyArr[0] === TEMPLATING_SUB_GROUP) {
+                if (keyArr[1] === REGISTRY_KEYS.REPLACEABLE) {
+                    delFn = 'delRegistry';
+                } else if (keyArr[1] === CONSTANTS.POINTER_CONSTRAINED_BY) {
+                    delFn = 'delPointer';
+                }
             }
 
             if (delFn) {

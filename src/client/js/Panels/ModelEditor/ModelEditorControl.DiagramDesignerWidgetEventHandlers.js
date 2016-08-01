@@ -9,19 +9,23 @@
 define(['js/logger',
     'js/util',
     'js/Constants',
+    'js/UIEvents',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Utils/GMEConcepts',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'js/DragDrop/DragHelper'
+    'js/DragDrop/DragHelper',
+    'js/Dialogs/ReplaceBase/ReplaceBaseDialog'
 ], function (Logger,
              util,
              CONSTANTS,
+             UI_EVENTS,
              nodePropertyNames,
              REGISTRY_KEYS,
              GMEConcepts,
              DiagramDesignerWidgetConstants,
-             DragHelper) {
+             DragHelper,
+             ReplaceBaseDialog) {
 
     'use strict';
 
@@ -1200,47 +1204,57 @@ define(['js/logger',
             MENU_CONSTRAINTS_MODEL = 'conmodel',
             MENU_META_RULES_NODE = 'metaRulesNode',
             MENU_META_RULES_MODEL = 'metaRulesModel',
+            MENU_EDIT_REPLACEABLE = 'editReplaceable',
             self = this;
 
-        /*menuItems[MENU_EXINTCONF] = {
-         "name": 'Export model context...',
-         "icon": 'glyphicon glyphicon-cog'
-         };*/
         if (selectedIds.length === 1) {
+            menuItems[UI_EVENTS.LOCATE_NODE] = {
+                name: 'Locate in tree browser',
+                doNotHide: true,
+                icon: 'glyphicon glyphicon-screenshot'
+            };
+
+            if (GMEConcepts.isReplaceable(self._ComponentID2GmeID[selectedIds[0]])) {
+                menuItems[MENU_EDIT_REPLACEABLE] = {
+                    name: 'Replace base ...',
+                    icon: 'glyphicon glyphicon-transfer'
+                };
+            }
+
             menuItems[MENU_META_RULES_NODE] = {
-                name: 'Check Meta rules for node...',
+                name: 'Check Meta rules for node',
                 icon: 'glyphicon glyphicon-ok-sign'
             };
             menuItems[MENU_META_RULES_MODEL] = {
-                name: 'Check Meta rules for node and its children...',
+                name: 'Check Meta rules for node and its children',
                 icon: 'glyphicon glyphicon-ok-sign'
             };
             if (self._client.gmeConfig.core.enableCustomConstraints === true) {
                 menuItems[MENU_CONSTRAINTS_NODE] = {
-                    name: 'Check Custom Constraints for node...',
+                    name: 'Check Custom Constraints for node',
                     icon: 'glyphicon glyphicon-fire'
                 };
                 menuItems[MENU_CONSTRAINTS_MODEL] = {
-                    name: 'Check Custom Constraints for node and its children...',
+                    name: 'Check Custom Constraints for node and its children',
                     icon: 'glyphicon glyphicon-fire'
                 };
             }
         } else if (selectedIds.length > 1) {
             menuItems[MENU_META_RULES_NODE] = {
-                name: 'Check Meta rules for nodes...',
+                name: 'Check Meta rules for nodes',
                 icon: 'glyphicon glyphicon-ok-sign'
             };
             menuItems[MENU_META_RULES_MODEL] = {
-                name: 'Check Meta rules for nodes and their children...',
+                name: 'Check Meta rules for nodes and their children',
                 icon: 'glyphicon glyphicon-ok-sign'
             };
             if (self._client.gmeConfig.core.enableCustomConstraints === true) {
                 menuItems[MENU_CONSTRAINTS_NODE] = {
-                    name: 'Check Custom Constraints for nodes...',
+                    name: 'Check Custom Constraints for nodes',
                     icon: 'glyphicon glyphicon-fire'
                 };
                 menuItems[MENU_CONSTRAINTS_MODEL] = {
-                    name: 'Check Custom Constraints for nodes and their children...',
+                    name: 'Check Custom Constraints for nodes and their children',
                     icon: 'glyphicon glyphicon-fire'
                 };
             }
@@ -1255,11 +1269,25 @@ define(['js/logger',
                     self._metaRulesCheck(selectedIds, false);
                 } else if (key === MENU_META_RULES_MODEL) {
                     self._metaRulesCheck(selectedIds, true);
+                } else if (key === UI_EVENTS.LOCATE_NODE) {
+                    self._client.dispatchEvent(UI_EVENTS.LOCATE_NODE, {
+                        nodeId: self._ComponentID2GmeID[selectedIds[0]]
+                    });
+                } else if (key === MENU_EDIT_REPLACEABLE) {
+                    self._replaceBaseDialog(self._ComponentID2GmeID[selectedIds[0]]);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
                 mousePos.mY)
         );
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._replaceBaseDialog = function (selectedId) {
+        var dialog;
+        if (typeof selectedId === 'string' && this._client.getNode(selectedId)) {
+            dialog = new ReplaceBaseDialog();
+            dialog.show({client: this._client, nodeId: selectedId});
+        }
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionAlignMenu = function (selectedIds,

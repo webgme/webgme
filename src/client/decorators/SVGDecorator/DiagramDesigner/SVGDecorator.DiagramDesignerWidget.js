@@ -10,7 +10,7 @@
 define([
     'js/Constants',
     'js/NodePropertyNames',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBaseWithDragPointerHelpers',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!../Core/SVGDecorator.html',
     './SVGDecorator.Core',
@@ -78,14 +78,16 @@ define([
             event.stopPropagation();
             event.preventDefault();
         });
+
+        this._updateDropArea();
     };
     //jshint camelcase: true
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     SVGDecoratorDiagramDesignerWidget.prototype.update = function () {
         this._update();
+        this._updateDropArea();
     };
-
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     SVGDecoratorDiagramDesignerWidget.prototype.onRenderGetLayoutInfo = function () {
@@ -315,6 +317,15 @@ define([
         var len = componentList.length;
         while (len--) {
             this._updatePort(componentList[len].id);
+        }
+    };
+
+    SVGDecoratorDiagramDesignerWidget.prototype._updateDropArea = function () {
+        // enable/disable drag events based on pointers and if it's replaceable.
+        if (this._getPointerNames().length > 0 || this._isReplaceable()) {
+            this._enableDragEvents();
+        } else {
+            this._disableDragEvents();
         }
     };
 

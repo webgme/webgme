@@ -3,6 +3,7 @@
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 
@@ -22,15 +23,14 @@ define(['js/logger',
         GME_ATOM_CLASS = 'gme-atom',
         DEFAULT_VISUALIZER = 'ModelEditor',
         STATE_LOADING = 0,
-        STATE_LOADED = 1,
-        FCO_ID;
+        STATE_LOADED = 1;
 
     var InheritanceBrowserControl = function (client, treeBrowser) {
         var self = this;
 
         ObjectBrowserControlBase.call(self, client, treeBrowser);
 
-
+        self._fcoId = this._getRootId();
         self._treeBrowser._enableNodeRename = false;
         self._logger = Logger.create('gme:Panels:ObjectBrowser:InheritanceBrowserControl',
             WebGMEGlobal.gmeConfig.client.log);
@@ -45,6 +45,15 @@ define(['js/logger',
     InheritanceBrowserControl.prototype.constructor = InheritanceBrowserControl;
 
     InheritanceBrowserControl.prototype.destroy = function () {
+        this._logger.debug('destroyed');
+
+        //forget the old territory
+        if (this._territoryId) {
+            this._client.removeUI(this._territoryId);
+            this._territoryId = undefined;
+        }
+
+        this._treeBrowser.deleteNode(this._nodes[this._fcoId].treeNode);
     };
 
     InheritanceBrowserControl.prototype.reLaunch = function () {
@@ -56,7 +65,7 @@ define(['js/logger',
             this._territoryId = undefined;
         }
 
-        this._treeBrowser.deleteNode(this._nodes[FCO_ID].treeNode);
+        this._treeBrowser.deleteNode(this._nodes[this._fcoId].treeNode);
 
         this._initialize();
     };
@@ -64,12 +73,12 @@ define(['js/logger',
     InheritanceBrowserControl.prototype._initialize = function () {
         var self = this;
 
-        FCO_ID = GMEConcepts.getFCOId();
+        this._fcoId = this._getRootId();
 
         this._selfPatterns = {};
         this._nodes = {};
 
-        if (FCO_ID) {
+        if (this._fcoId) {
             var loadingRootTreeNode;
 
             this._territoryId = this._client.addUI(this, function (events) {
@@ -79,21 +88,21 @@ define(['js/logger',
             //add "root" with its children to territory
             //create a new loading node for it in the tree
             loadingRootTreeNode = this._treeBrowser.createNode(null, {
-                id: FCO_ID,
+                id: this._fcoId,
                 name: 'Initializing tree...',
                 hasChildren: false,
                 class: NODE_PROGRESS_CLASS
             });
 
             //store the node's info in the local hashmap
-            this._nodes[FCO_ID] = {
+            this._nodes[this._fcoId] = {
                 treeNode: loadingRootTreeNode,
                 inheritance: [],
                 state: STATE_LOADING
             };
 
             //add the root to the query
-            this._selfPatterns[FCO_ID] = {children: 0};
+            this._selfPatterns[this._fcoId] = {children: 0};
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         } else {
             setTimeout(function () {
@@ -114,9 +123,12 @@ define(['js/logger',
         };
 
         this._treeBrowser.onCreatingContextMenu = function (nodeId, contextMenuOptions) {
-            contextMenuOptions.rename = false;
-            contextMenuOptions.delete = false;
+            self._onCreatingContextMenu(nodeId, contextMenuOptions);
         };
+    };
+
+    InheritanceBrowserControl.prototype._getRootId = function () {
+        return GMEConcepts.getFCOId();
     };
 
     //called from the TreeBrowserWidget when a node is expanded by its expand icon
@@ -163,20 +175,6 @@ define(['js/logger',
                         STATE: STATE_LOADED,
                         INHERITANCE: childNode.getCollectionPaths(CONSTANTS.POINTER_BASE),
                     });
-
-                    //childTreeNode = this._treeBrowser.createNode(parentNode, {
-                    //    id: currentChildId,
-                    //    name: childNode.getAttribute('name'),
-                    //    hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                    //    class: this._getNodeClass(childNode)
-                    //});
-                    //
-                    ////store the node's info in the local hashmap
-                    //this._nodes[currentChildId] = {
-                    //    treeNode: childTreeNode,
-                    //    inheritance: childNode.getCollectionPaths(CONSTANTS.POINTER_BASE),
-                    //    state: STATE_LOADED
-                    //};
                 } else {
                     //the node is not present on the client side, render a loading node instead
                     childrenDescriptors.push({
@@ -188,19 +186,6 @@ define(['js/logger',
                         STATE: STATE_LOADING,
                         INHERITANCE: []
                     });
-                    //childTreeNode = this._treeBrowser.createNode(parentNode, {
-                    //    id: currentChildId,
-                    //    name: 'Loading...',
-                    //    hasChildren: false,
-                    //    class: NODE_PROGRESS_CLASS
-                    //});
-                    //
-                    ////store the node's info in the local hashmap
-                    //this._nodes[currentChildId] = {
-                    //    treeNode: childTreeNode,
-                    //    inheritance: [],
-                    //    state: STATE_LOADING
-                    //};
 
                     this._selfPatterns[currentChildId] = {children: 0};
                 }
@@ -277,6 +262,11 @@ define(['js/logger',
 
         settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
         WebGMEGlobal.State.set(settings);
+    };
+
+    InheritanceBrowserControl.prototype._onCreatingContextMenu = function (nodeId, contextMenuOptions) {
+        contextMenuOptions.rename = false;
+        contextMenuOptions.delete = false;
     };
 
     InheritanceBrowserControl.prototype._getNodeClass = function (/*nodeObj*/) {
