@@ -107,6 +107,10 @@ define([
         if (parameters.executorNonce) {
             this.executorClient.executorNonce = parameters.executorNonce;
         }
+
+        process.env.ORIGIN_URL = (parameters.httpsecure ? 'https' : 'http') + '://' +
+            parameters.server + ':' + parameters.serverPort;
+
         this.jobList = {};
         this.runningJobs = {};
 
