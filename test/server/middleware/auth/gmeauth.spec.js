@@ -1039,8 +1039,55 @@ describe('GME authentication', function () {
     });
 
     it('should remove organization', function (done) {
-        var orgName = 'org1';
-        auth.removeOrganizationByOrgId(orgName)
+        var orgName = 'org_removed';
+        auth.addOrganization(orgName)
+            .then(function () {
+                return auth.listOrganizations();
+            })
+            .then(function (orgs) {
+                var hadOrg = false;
+                orgs.forEach(function (org) {
+                    if (org._id === orgName) {
+                        hadOrg = true;
+                    }
+                });
+
+                expect(hadOrg).to.equal(true);
+
+                return auth.removeOrganizationByOrgId(orgName);
+            })
+            .then(function () {
+                return auth.listOrganizations();
+            })
+            .then(function (orgs) {
+                var hadOrg = false;
+                orgs.forEach(function (org) {
+                    if (org._id === orgName) {
+                        hadOrg = true;
+                    }
+                });
+
+                expect(hadOrg).to.equal(false);
+            })
+            .nodeify(done);
+    });
+
+    it('should remove/disable organization and fail to add it again', function (done) {
+        var orgName = 'org_remove_fail_to_add';
+
+        auth.addOrganization(orgName)
+            .then(function () {
+                return auth.removeOrganizationByOrgId(orgName);
+            })
+            .then(function () {
+                return auth.addOrganization(orgName);
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('user or org already exists');
+            })
             .nodeify(done);
     });
 
