@@ -339,6 +339,12 @@ function GMEAuth(session, gmeConfig) {
      */
     function deleteUser(userId, callback) {
         return collection.remove({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
+            .then(function (count) {
+                if (count === 0) {
+                    return Q.reject(new Error('no such user [' + userId + ']'));
+                }
+                return collection.update({admins: userId}, {$pull: {admins: userId}}, {multi: true});
+            })
             .nodeify(callback);
     }
 

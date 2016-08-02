@@ -1044,8 +1044,62 @@ describe('GME authentication', function () {
             .nodeify(done);
     });
 
-    it('should fail to remove organization twice', function (done) {
-        var orgName = 'org1';
+    it('should remove from user.orgs when removing organization', function (done) {
+        var orgId = 'checkRemovedFromUserOrg',
+            userId = 'checkRemovedFromUserUser';
+
+        auth.addUser(userId, 'mail', 'pass', true, {})
+            .then(function () {
+                return auth.addOrganization(orgId);
+            })
+            .then(function () {
+                return auth.addUserToOrganization(userId, orgId);
+            })
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (userData) {
+                expect(userData.orgs).to.deep.equal([orgId]);
+                return auth.removeOrganizationByOrgId(orgId);
+            })
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (userData) {
+                expect(userData.orgs).to.deep.equal([]);
+            })
+            .nodeify(done);
+    });
+
+    it('should remove from org.admins when removing user', function (done) {
+        var orgId = 'checkRemovedFromOrgOrg',
+            userId = 'checkRemovedFromOrgUser';
+
+        auth.addUser(userId, 'mail', 'pass', true, {})
+            .then(function () {
+                return auth.addOrganization(orgId);
+            })
+            .then(function () {
+                return auth.setAdminForUserInOrganization(userId, orgId, true);
+            })
+            .then(function () {
+                return auth.getOrganization(orgId);
+            })
+            .then(function (orgData) {
+                expect(orgData.admins).to.deep.equal([userId]);
+                return auth.deleteUser(userId);
+            })
+            .then(function () {
+                return auth.getOrganization(orgId);
+            })
+            .then(function (orgData) {
+                expect(orgData.admins).to.deep.equal([]);
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to remove organization that does not exist', function (done) {
+        var orgName = 'orgDoesNotExist';
         auth.removeOrganizationByOrgId(orgName)
             .then(function () {
                 done(new Error('should have been rejected'));
