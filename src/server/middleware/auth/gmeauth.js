@@ -334,19 +334,30 @@ function GMEAuth(session, gmeConfig) {
     /**
      *
      * @param userId {string}
+     * @param force {boolean} - removes the user from the db completely
      * @param callback
      * @returns {*}
      */
-    function deleteUser(userId, callback) {
-        return collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}}, {$set: {disabled: true}})
-            .then(function (count) {
-                if (count instanceof Array ? count[0] === 0 : count === 0) {
-                    return Q.reject(new Error('no such user [' + userId + ']'));
-                }
-
-                return collection.update({admins: userId}, {$pull: {admins: userId}}, {multi: true});
+    function deleteUser(userId, force, callback) {
+        if (force) {
+            return collection.remove({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
+                .then(function () {
+                    return collection.update({admins: userId}, {$pull: {admins: userId}}, {multi: true});
+                })
+                .nodeify(callback);
+        } else {
+            return collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}}, {
+                $set: {disabled: true}
             })
-            .nodeify(callback);
+                .then(function (count) {
+                    if (count instanceof Array ? count[0] === 0 : count === 0) {
+                        return Q.reject(new Error('no such user [' + userId + ']'));
+                    }
+
+                    return collection.update({admins: userId}, {$pull: {admins: userId}}, {multi: true});
+                })
+                .nodeify(callback);
+        }
     }
 
     /**
@@ -665,19 +676,28 @@ function GMEAuth(session, gmeConfig) {
     /**
      *
      * @param orgId
+     * @param force - delete organization from db.
      * @param callback
      * @returns {*}
      */
-    function removeOrganizationByOrgId(orgId, callback) {
-        return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
-            {$set: {disabled: true}})
-            .then(function (count) {
-                if (count instanceof Array ? count[0] === 0 : count === 0) {
-                    return Q.reject(new Error('no such organization [' + orgId + ']'));
-                }
-                return collection.update({orgs: orgId}, {$pull: {orgs: orgId}}, {multi: true});
-            })
-            .nodeify(callback);
+    function removeOrganizationByOrgId(orgId, force, callback) {
+        if (force) {
+            return collection.remove({_id: orgId, type: CONSTANTS.ORGANIZATION})
+                .then(function () {
+                    return collection.update({orgs: orgId}, {$pull: {orgs: orgId}}, {multi: true});
+                })
+                .nodeify(callback);
+        } else {
+            return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
+                {$set: {disabled: true}})
+                .then(function (count) {
+                    if (count instanceof Array ? count[0] === 0 : count === 0) {
+                        return Q.reject(new Error('no such organization [' + orgId + ']'));
+                    }
+                    return collection.update({orgs: orgId}, {$pull: {orgs: orgId}}, {multi: true});
+                })
+                .nodeify(callback);
+        }
     }
 
     /**

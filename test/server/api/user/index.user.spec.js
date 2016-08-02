@@ -26,7 +26,9 @@ describe('USER REST API', function () {
 
         before(function (done) {
             this.timeout(4000);
-            testFixture.clearDBAndGetGMEAuth(gmeConfig)
+            var gmeAuthConfig = JSON.parse(JSON.stringify(gmeConfig));
+            gmeAuthConfig.authentication.enable = true;
+            testFixture.clearDBAndGetGMEAuth(gmeAuthConfig)
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
                     return Q.allDone([
@@ -648,37 +650,32 @@ describe('USER REST API', function () {
             });
 
             it('should create user when accessed in db and not existing for user and setting calls', function (done) {
-                var userId = 'user_not_in_db';
+                var userId = 'user_not_in_db',
+                    token;
 
-                agent.get(server.getUrl() + '/api/v1/user/token')
-                    .set('Authorization', 'Basic ' + new Buffer('user_not_in_db:plaintext').toString('base64'))
-                    .end(function (err, res) {
-                        try {
-                            expect(res.status).equal(200, err);
-                            expect(res.body.webgmeToken.split('.').length).equal(3, 'Returned token not correct format');
-                        } catch (e) {
-                            done(e);
-                            return;
-                        }
+                gmeAuth.generateJWTokenForAuthenticatedUser(userId)
+                    .then(function (token_) {
+                        token = token_;
+                        console.log(token);
+                        return gmeAuth.deleteUser(userId, true);
+                    })
+                    .then(function () {
+                        console.log('removed');
+                        agent.get(server.getUrl() + '/api/v1/user')
+                            .set('Authorization', 'Bearer ' + token)
+                            .end(function (err, res) {
+                                try {
+                                    expect(res.status).equal(200, err);
+                                    expect(res.body._id).equal(userId);
+                                    expect(res.body.settings).to.deep.equal({});
+                                } catch (e) {
+                                    err = e;
+                                }
 
-                        gmeAuth.deleteUser(userId)
-                            .then(function () {
-                                agent.get(server.getUrl() + '/api/v1/user')
-                                    .set('Authorization', 'Bearer ' + res.body.webgmeToken)
-                                    .end(function (err, res) {
-                                        try {
-                                            expect(res.status).equal(200, err);
-                                            expect(res.body._id).equal(userId);
-                                            expect(res.body.settings).to.deep.equal({});
-                                        } catch (e) {
-                                            err = e;
-                                        }
-
-                                        done(err);
-                                    });
-                            })
-                            .catch(done);
-                    });
+                                done(err);
+                            });
+                    })
+                    .catch(done);
             });
 
             it('should fail with wrong password basic authentication GET /api/v1/user', function (done) {
@@ -884,7 +881,6 @@ describe('USER REST API', function () {
                                     .end(function (err, res2) {
                                         expect(res2.status).equal(200, err);
                                         expect(res.body.length - 1).equal(res2.body.length);
-                                        // TODO: verify res2.body does not contain user_to_delete
 
                                         done();
                                     });
@@ -905,7 +901,6 @@ describe('USER REST API', function () {
                                     .end(function (err, res2) {
                                         expect(res2.status).equal(200, err);
                                         expect(res.body.length - 1).equal(res2.body.length);
-                                        // TODO: verify res2.body does not contain user_to_delete
 
                                         done();
                                     });
@@ -926,7 +921,6 @@ describe('USER REST API', function () {
                                     .end(function (err, res2) {
                                         expect(res2.status).equal(200, err);
                                         expect(res.body.length - 1).equal(res2.body.length);
-                                        // TODO: verify res2.body does not contain user_to_delete
 
                                         done();
                                     });

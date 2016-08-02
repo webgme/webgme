@@ -1676,7 +1676,12 @@ describe('SafeStorage', function () {
             notInOrgCanCreate = 'notInOrgCanCreate',
             inOrgCanCreateNotAdmin = 'inOrgCanCreateNotAdmin',
             inOrgCanCreateAdmin = 'inOrgCanCreateAdmin',
+            deletedOrg = 'deletedOrg',
+            userInDeletedOrg = 'userInDeletedOrg',
+            deletedUser = 'deletedUser',
             pName = 'project_creation_transfer',
+            orgProject,
+            userProject,
             pId;
 
         function getProjectData(projects, projectId) {
@@ -1696,12 +1701,16 @@ describe('SafeStorage', function () {
                 gmeAuth.addUser(notInOrgCanCreate, '@', 'p', true, {}),
                 gmeAuth.addUser(inOrgCanCreateNotAdmin, '@', 'p', true, {}),
                 gmeAuth.addUser(inOrgCanCreateAdmin, '@', 'p', true, {}),
-                gmeAuth.addOrganization('theOrg')
+                gmeAuth.addUser(userInDeletedOrg, '@', 'p', true, {}),
+                gmeAuth.addUser(deletedUser, '@', 'p', true, {}),
+                gmeAuth.addOrganization('theOrg'),
+                gmeAuth.addOrganization(deletedOrg),
             ])
                 .then(function () {
                     return Q.allDone([
                         gmeAuth.addUserToOrganization(inOrgCanCreateNotAdmin, 'theOrg'),
                         gmeAuth.addUserToOrganization(inOrgCanCreateAdmin, 'theOrg'),
+                        gmeAuth.addUserToOrganization(userInDeletedOrg, deletedOrg),
                         gmeAuth.setAdminForUserInOrganization(inOrgCanCreateAdmin, 'theOrg', true)
                     ]);
                 })
@@ -1726,6 +1735,31 @@ describe('SafeStorage', function () {
                     }, {
                         entityType: gmeAuth.authorizer.ENTITY_TYPES.PROJECT
                     });
+                })
+                .then(function () {
+                    return testFixture.importProject(safeStorage, {
+                        projectSeed: 'seeds/EmptyProject.webgmex',
+                        projectName: 'orgProject',
+                        ownerId: deletedOrg,
+                        username: 'admin',
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (res) {
+                    orgProject = res.project;
+                })
+                .then(function () {
+                    return testFixture.importProject(safeStorage, {
+                        projectSeed: 'seeds/EmptyProject.webgmex',
+                        projectName: 'orgProject',
+                        username: deletedUser,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (res) {
+                    userProject = res.project;
                 })
                 .nodeify(done);
         });
@@ -1914,7 +1948,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('No such organization [inOrgCanCreateNotAdmin]');
+                    expect(err.message).to.contain('no such organization [inOrgCanCreateNotAdmin]');
                     done();
                 })
                 .done();
@@ -2022,7 +2056,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('No such organization');
+                    expect(err.message).to.contain('no such organization');
                     done();
                 })
                 .done();
@@ -2051,7 +2085,7 @@ describe('SafeStorage', function () {
                     throw new Error('Should have failed!');
                 })
                 .catch(function (err) {
-                    expect(err.message).to.contain('No such organization');
+                    expect(err.message).to.contain('no such organization');
                     done();
                 })
                 .done();
@@ -2182,6 +2216,62 @@ describe('SafeStorage', function () {
                 })
                 .catch(function (err) {
                     expect(err.message).to.include('Not authorized to create project for [' + notInOrgCanNotCreate);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to access org project from user in deleted org but admin should still be able to', function (done) {
+            var data = {
+                username: userInDeletedOrg,
+                projectId: orgProject.projectId
+            };
+
+            safeStorage.openProject(data)
+                .then(function (project) {
+                    expect(project.projectId).to.equal(orgProject.projectId);
+                    return gmeAuth.removeOrganizationByOrgId(deletedOrg);
+                })
+                .then(function () {
+                    return safeStorage.openProject(data);
+                })
+                .then(function () {
+                    throw new Error('should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.include('Not authorized to read project');
+                    data.username = 'admin';
+                    return safeStorage.openProject(data);
+                })
+                .then(function (project) {
+                    expect(project.projectId).to.equal(orgProject.projectId);
+                })
+                .nodeify(done);
+        });
+
+        it('should fail to access user project from deleted user but admin should still be able', function (done) {
+            var data = {
+                username: deletedUser,
+                projectId: userProject.projectId
+            };
+
+            safeStorage.openProject(data)
+                .then(function (project) {
+                    expect(project.projectId).to.equal(userProject.projectId);
+                    return gmeAuth.deleteUser(deletedUser);
+                })
+                .then(function () {
+                    return safeStorage.openProject(data);
+                })
+                .then(function () {
+                    throw new Error('should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.include('no such user');
+                    data.username = 'admin';
+                    return safeStorage.openProject(data);
+                })
+                .then(function (project) {
+                    expect(project.projectId).to.equal(userProject.projectId);
                 })
                 .nodeify(done);
         });

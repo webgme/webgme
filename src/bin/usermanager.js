@@ -152,7 +152,7 @@ main = function (argv) {
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username) {
-                    auth.deleteUser(username)
+                    auth.deleteUser(username, true)
                         .then(mainDeferred.resolve)
                         .catch(mainDeferred.reject)
                         .finally(auth.unload);
@@ -199,7 +199,7 @@ main = function (argv) {
 
             setupGMEAuth(options.parent.db, function (/*err*/) {
                 if (organizationname) {
-                    auth.removeOrganizationByOrgId(organizationname)
+                    auth.removeOrganizationByOrgId(organizationname, true)
                         .then(mainDeferred.resolve)
                         .catch(mainDeferred.reject)
                         .finally(auth.unload);

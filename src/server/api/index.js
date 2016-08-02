@@ -309,7 +309,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.delete('/user', function (req, res/*, next*/) {
         var userId = getUserId(req);
 
-        gmeAuth.deleteUser(userId, function (err) {
+        gmeAuth.deleteUser(userId, false, function (err) {
             if (err) {
                 res.status(404);
                 res.json({
@@ -614,15 +614,11 @@ function createAPI(app, mountPath, middlewareOpts) {
             .then(function () {
                 return gmeAuth.deleteUser(req.params.username);
             })
-            .then(function (nbrOfUpdates) {
-                if (nbrOfUpdates !== 1) {
-                    throw new Error('User not found');
-                } else {
-                    res.sendStatus(204);
-                }
+            .then(function () {
+                res.sendStatus(204);
             })
             .catch(function (err) {
-                if (err.message === 'User not found') {
+                if (err.message.indexOf('no such user') > -1) {
                     res.status(404);
                 }
 
@@ -900,7 +896,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.json(data);
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such organization [') > -1) {
+                if (err.message.indexOf('no such organization [') > -1) {
                     res.status(404);
                 }
                 next(err);
@@ -916,7 +912,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such organization [') > -1) {
+                if (err.message.indexOf('no such organization [') > -1) {
                     res.status(404);
                 }
                 next(err);
@@ -932,8 +928,8 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such organization [') > -1 ||
-                    err.message.indexOf('No such user [') > -1) {
+                if (err.message.indexOf('no such organization [') > -1 ||
+                    err.message.indexOf('no such user [') > -1) {
                     res.status(404);
                 }
                 next(err);
@@ -949,7 +945,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such organization [') > -1) {
+                if (err.message.indexOf('no such organization [') > -1) {
                     res.status(404);
                 }
                 next(err);
@@ -965,8 +961,8 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such organization [') > -1 ||
-                    err.message.indexOf('No such user [') > -1) {
+                if (err.message.indexOf('no such organization [') > -1 ||
+                    err.message.indexOf('no such user [') > -1) {
                     res.status(404);
                 }
                 next(err);
@@ -982,8 +978,8 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such organization [') > -1 ||
-                    err.message.indexOf('No such user [') > -1) {
+                if (err.message.indexOf('no such organization [') > -1 ||
+                    err.message.indexOf('no such user [') > -1) {
                     res.status(404);
                 }
                 next(err);
@@ -1195,7 +1191,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such user or org') > -1 || err.message.indexOf('no such project') > -1) {
+                if (err.message.indexOf('no such user or org') > -1 || err.message.indexOf('no such project') > -1) {
                     res.status(404);
                 }
                 next(err);
@@ -1225,7 +1221,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 res.sendStatus(204);
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such user or org') > -1 || err.message.indexOf('no such project') > -1) {
+                if (err.message.indexOf('no such user or org') > -1 || err.message.indexOf('no such project') > -1) {
                     res.status(404);
                 }
                 next(err);

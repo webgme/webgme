@@ -33,7 +33,7 @@ function DefaultAuthorizer(mainLogger, gmeConfig) {
         }, _getProjection('siteAdmin', 'orgs', 'projects.' + projectId))
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject(new Error('No such user [' + userId + ']'));
+                    return Q.reject(new Error('no such user [' + userId + ']'));
                 }
                 userData.orgs = userData.orgs || [];
 
@@ -99,7 +99,7 @@ function DefaultAuthorizer(mainLogger, gmeConfig) {
             {admins: 1})
             .then(function (org) {
                 if (!org) {
-                    return Q.reject(new Error('No such organization [' + orgId + ']'));
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
                 }
                 return org.admins;
             })
@@ -123,7 +123,7 @@ function DefaultAuthorizer(mainLogger, gmeConfig) {
             return self.collection.update({_id: userOrOrgId, disabled: {$ne: true}}, update)
                 .spread(function (numUpdated) {
                     if (numUpdated !== 1) {
-                        return Q.reject(new Error('No such user or org [' + userOrOrgId + ']'));
+                        return Q.reject(new Error('no such user or org [' + userOrOrgId + ']'));
                     }
                 })
                 .nodeify(callback);

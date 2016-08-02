@@ -8,7 +8,7 @@
 var testFixture = require('../../../_globals.js');
 
 
-describe('GME authentication', function () {
+describe.only('GME authentication', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -145,7 +145,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such user') > -1) {
+                if (err.message.indexOf('no such user') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error ' + err);
@@ -218,6 +218,49 @@ describe('GME authentication', function () {
             .nodeify(done);
     });
 
+    it('removes user with force and can add it again', function (done) {
+        var userId = 'user_to_remove_and_can_add';
+        auth.addUser(userId, 'e@example.com', 'plaintext', true, {overwrite: true})
+            .then(function () {
+                return auth.listUsers();
+            })
+            .then(function (users) {
+                var hadUser = false;
+                users.forEach(function (user) {
+                    if (user._id === userId) {
+                        hadUser = true;
+                    }
+                });
+
+                expect(hadUser).to.equal(true);
+
+                return auth.deleteUser(userId, true);
+            })
+            .then(function () {
+                return auth.listUsers();
+            })
+            .then(function (users) {
+                var hadUser = false;
+                users.forEach(function (user) {
+                    if (user._id === userId) {
+                        hadUser = true;
+                    }
+                });
+
+                expect(hadUser).to.equal(false);
+
+                return auth.addUser(userId, 'a@example.com', 'plaintext', true,
+                    {overwrite: false});
+            })
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (userData) {
+                expect(userData._id).to.equal(userId);
+            })
+            .nodeify(done);
+    });
+
     it('should remove user and throw error in api calls', function (done) {
         var orgId = 'removeUserCheckApiOrg',
             userId = 'removeUserCheckApiUser';
@@ -232,6 +275,8 @@ describe('GME authentication', function () {
             .then(function () {
                 return Q.allSettled([
                     auth.authenticateUser(userId, 'pass'),
+                    auth.generateJWToken(userId, 'pass'),
+                    auth.generateJWTokenForAuthenticatedUser(userId),
                     auth.getUser(userId),
                     auth.deleteUser(userId),
                     auth.updateUser(userId, {email: 'm@il'}),
@@ -909,7 +954,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such user or org') > -1) {
+                if (err.message.indexOf('no such user or org') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error: ' + err);
@@ -922,7 +967,7 @@ describe('GME authentication', function () {
             .then(function () {
                 done(new Error('Should have failed'));
             }, function (err) {
-                if (err.message.indexOf('No such ') > -1) {
+                if (err.message.indexOf('no such ') > -1) {
                     done();
                     return;
                 }
@@ -1152,6 +1197,32 @@ describe('GME authentication', function () {
             })
             .catch(function (err) {
                 expect(err.message).to.include('user or org already exists');
+            })
+            .nodeify(done);
+    });
+
+    it('should remove with force organization and be able to add it again', function (done) {
+        var orgName = 'org_remove_can_add';
+
+        auth.addOrganization(orgName)
+            .then(function () {
+                return auth.removeOrganizationByOrgId(orgName, true);
+            })
+            .then(function () {
+                return auth.getOrganization(orgName);
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('no such organization');
+                return auth.addOrganization(orgName, {newOrg: true});
+            })
+            .then(function () {
+                return auth.getOrganization(orgName);
+            })
+            .then(function (org) {
+                expect(org.info.newOrg).to.equal(true);
             })
             .nodeify(done);
     });
@@ -1535,7 +1606,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('No such user [' + userId);
+                expect(err.message).to.include('no such user [' + userId);
                 done();
             })
             .done();
