@@ -82,7 +82,7 @@ require.config({
         panel: '/panel',
 
         //node_modules
-        jszip: 'bower_components/jszip/dist/jszip' + ( DEBUG ? '' : '.min' ),
+        jszip: 'bower_components/jszip/dist/jszip.min',
         superagent: 'lib/superagent/superagent',
         debug: 'bower_components/visionmedia-debug/dist/debug',
         q: 'bower_components/q/q',
@@ -90,11 +90,12 @@ require.config({
         //codemirror: 'bower_components/codemirror/',
 
         moment: 'bower_components/moment/min/moment.min',
+        blockies: 'lib/blockies/blockies',
 
         urlparse: 'lib/purl/purl.min',
 
         // Angular and modules
-        angular: 'bower_components/angular/angular' + ( DEBUG ? '' : '.min' ),
+        angular: 'bower_components/angular/angular.min',
         'angular-ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls.min',
         'isis-ui-components': 'bower_components/isis-ui-components/dist/isis-ui-components',
         'isis-ui-components-templates': 'bower_components/isis-ui-components/dist/isis-ui-components-templates',

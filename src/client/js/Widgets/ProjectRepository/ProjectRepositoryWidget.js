@@ -12,6 +12,7 @@ define(['js/logger',
     './ProjectRepositoryWidgetControl',
     'common/regexp',
     'moment',
+    'blockies',
     'raphaeljs',
     'css!./styles/ProjectRepositoryWidget.css'
 ], function (Logger,
@@ -19,7 +20,8 @@ define(['js/logger',
              LoaderCircles,
              ProjectRepositoryWidgetControl,
              REGEXP,
-             moment) {
+             moment,
+             blockies) {
     'use strict';
 
     var ProjectRepositoryWidget,
@@ -45,7 +47,8 @@ define(['js/logger',
         COMMON_LABEL_CLASS = 'common-label',
         BTN_LOAD_COMMIT_CLASS = 'btnLoadCommit',
         COMMIT_IT = 'commitId',
-        MESSAGE_DIV_CLASS = 'commit-message';
+        MESSAGE_DIV_CLASS = 'commit-message',
+        USER_TO_AVATAR_PATH = {};
 
     ProjectRepositoryWidget = function (container, client, params) {
         var commitCount = 'commit_count';
@@ -666,6 +669,7 @@ define(['js/logger',
             tr,
             btn,
             firstRow = this._tBody.children().length === 0,
+            userId = params.user || '',
             when;
 
         itemObj = $('<div/>', {
@@ -703,9 +707,22 @@ define(['js/logger',
         $(tr[0].cells[this._tableCellCommitIDIndex]).attr('title', 'Select commit ' + params.id);
         $(tr[0].cells[this._tableCellCommitIDIndex]).addClass(BTN_LOAD_COMMIT_CLASS);
         $(tr[0].cells[this._tableCellCommitIDIndex]).data(COMMIT_IT, params.id);
-
         $(tr[0].cells[this._tableCellMessageIndex]).find('div.' + MESSAGE_DIV_CLASS).text(params.message);
-        $(tr[0].cells[this._tableCellUserIndex]).append(params.user || '');
+
+        if (USER_TO_AVATAR_PATH.hasOwnProperty(userId) === false) {
+            USER_TO_AVATAR_PATH[userId] = blockies({
+                seed: userId,
+                size: 6,
+                scale: 8
+            }).toDataURL();
+        }
+
+        $(tr[0].cells[this._tableCellUserIndex]).addClass('user-column');
+
+        $(tr[0].cells[this._tableCellUserIndex]).append(
+            $('<span class="avatar-container">' + userId +
+                '<img class="avatar-image" src="' + USER_TO_AVATAR_PATH[userId] + '"/></span>'));
+
         $(tr[0].cells[this._tableCellTimeStampIndex]).append(
             //util.formattedDate(new Date(parseInt(params.timestamp, 10)), 'elapsed')
             moment(when).fromNow()

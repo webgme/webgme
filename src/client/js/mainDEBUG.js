@@ -70,6 +70,7 @@ require.config({
         //codemirror: 'bower_components/codemirror/',
 
         moment: 'bower_components/moment/moment',
+        blockies: 'lib/blockies/blockies',
 
         urlparse: 'lib/purl/purl.min',
 

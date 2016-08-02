@@ -40,6 +40,7 @@ var requirejs = require('requirejs'),
             backbone: 'client/bower_components/backbone/backbone',
             moment: 'client/bower_components/moment/min/moment.min',
             d3: 'client/bower_components/d3/d3.min',
+            blockies: 'client/lib/blockies/blockies',
 
             AutoRouterActionApplier: 'client/lib/autorouter/action-applier.min',
 
