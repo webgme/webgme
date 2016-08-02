@@ -8,7 +8,7 @@
 var testFixture = require('../../../_globals.js');
 
 
-describe.only('GME authentication', function () {
+describe('GME authentication', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -1200,6 +1200,7 @@ describe.only('GME authentication', function () {
             })
             .nodeify(done);
     });
+
 
     it('should remove with force organization and be able to add it again', function (done) {
         var orgName = 'org_remove_can_add';
