@@ -338,7 +338,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function deleteUser(userId, callback) {
-        return collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {$set: {disabled: true}})
+        return collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}}, {$set: {disabled: true}})
             .then(function (count) {
                 if (count instanceof Array ? count[0] === 0 : count === 0) {
                     return Q.reject(new Error('no such user [' + userId + ']'));
@@ -614,7 +614,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}})
             .then(function (org) {
                 if (!org) {
-                    return Q.reject(new Error('No such organization [' + orgId + ']'));
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
                 }
                 return [org, collection.find({orgs: orgId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}},
                     {_id: 1})];
@@ -669,10 +669,11 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function removeOrganizationByOrgId(orgId, callback) {
-        return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION}, {$set: {disabled: true}})
+        return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
+            {$set: {disabled: true}})
             .then(function (count) {
                 if (count instanceof Array ? count[0] === 0 : count === 0) {
-                    return Q.reject(new Error('No such organization [' + orgId + ']'));
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
                 }
                 return collection.update({orgs: orgId}, {$pull: {orgs: orgId}}, {multi: true});
             })
@@ -690,7 +691,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}})
             .then(function (org) {
                 if (!org) {
-                    return Q.reject(new Error('No such organization [' + orgId + ']'));
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
                 }
             })
             .then(function () {
@@ -698,7 +699,7 @@ function GMEAuth(session, gmeConfig) {
                     {$addToSet: {orgs: orgId}})
                     .spread(function (count) {
                         if (count === 0) {
-                            return Q.reject(new Error('No such user [' + userId + ']'));
+                            return Q.reject(new Error('no such user [' + userId + ']'));
                         }
                     });
             })
@@ -716,7 +717,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}})
             .then(function (org) {
                 if (!org) {
-                    return Q.reject(new Error('No such organization [' + orgId + ']'));
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
                 }
             })
             .then(function () {
@@ -744,7 +745,7 @@ function GMEAuth(session, gmeConfig) {
             .then(function (user) {
                 if (makeAdmin) {
                     if (!user) {
-                        return Q.reject(new Error('No such user [' + userId + ']'));
+                        return Q.reject(new Error('no such user [' + userId + ']'));
                     }
                     return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
                         {$addToSet: {admins: userId}});
@@ -762,7 +763,7 @@ function GMEAuth(session, gmeConfig) {
         return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}}, {admins: 1})
             .then(function (org) {
                 if (!org) {
-                    return Q.reject(new Error('No such organization [' + orgId + ']'));
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
                 }
                 return org.admins;
             })
