@@ -187,7 +187,7 @@ define([
          * The function goes up on the inheritance chain of the questioned node.
          * At every step, it searches the root of instantiation (the node that is the instance) and collect inverse
          * relation names that are exists in the prototype structure and has purely internal endpoints.
-         * 
+         *
          * @param node - the node in question
          * @returns {Array} - the list of names of relations that has the node as target
          */
@@ -235,8 +235,8 @@ define([
         /**
          * This function gathers the paths of the nodes that are pointing to the questioned node. The set of relations
          * that are checked is the 'inherited' inverse relations.
-         * 
-         * The method of this function is identical to getInheritedCollectionNames, except this function collects the 
+         *
+         * The method of this function is identical to getInheritedCollectionNames, except this function collects the
          * sources of the given relations and not just the name of all such relation. To return a correct path (as
          * the data exists in some bases of the actual nodes) the function always convert it back to the place of
          * inquiry.
@@ -369,6 +369,72 @@ define([
         //     }
         //     return filtered;
         // }
+
+        function isBase(node, compareNode) {
+            while (compareNode) {
+                if (compareNode === node) {
+                    return true;
+                }
+
+                compareNode = self.getBase(compareNode);
+            }
+
+            return false;
+        }
+
+        function isParent(node, compareNode) {
+            while (compareNode) {
+                if (compareNode === node) {
+                    return true;
+                }
+
+                compareNode = self.getParent(compareNode);
+            }
+
+            return false;
+        }
+
+        function isParentOrBaseRec(node, compareNode, visited, traverseContainment) {
+            var comparePath = self.getPath(compareNode);
+
+            if (traverseContainment) {
+                if (visited.containment[comparePath]) {
+                    //console.log('breaking recursion', traverseContainment, basePath);
+                    return false;
+                }
+
+                visited.containment[comparePath] = true;
+                compareNode = self.getParent(compareNode);
+            } else {
+                if (visited.inheritance[comparePath]) {
+                    //console.log('breaking recursion', traverseContainment, basePath);
+                    return false;
+                }
+
+                visited.inheritance[comparePath] = true;
+                compareNode = self.getBase(compareNode);
+            }
+
+            while (compareNode) {
+                //console.log('comparing with node', traverseContainment, basePath);
+                if (node === compareNode || isParentOrBaseRec(node, compareNode, visited, !traverseContainment)) {
+                    //console.log('Found one!');
+                    return true;
+                }
+
+                if (traverseContainment) {
+                    compareNode = self.getParent(compareNode);
+                } else {
+                    compareNode = self.getBase(compareNode);
+                }
+            }
+
+            return false;
+        }
+
+        function childHasSameOrigin(node, otherNode, childRelid) {
+
+        }
 
         //</editor-fold>
 
@@ -522,14 +588,28 @@ define([
             return node;
         };
 
-        this.moveNode = function (node, parent) {
-            //TODO we have to check if the move is really allowed!!!
+        this.isValidNewParent = function (node, parent) {
             ASSERT(self.isValidNode(node) && self.isValidNode(parent));
-            var base = node.base,
-                parentBase = parent.base;
-            ASSERT(!base || self.getPath(base) !== self.getPath(parent));
-            ASSERT(!parentBase || self.getPath(parentBase) !== self.getPath(node));
+            var visited = {
+                    containment: {},
+                    inheritance: {}
+                },
+                result = true;
 
+            if (isBase(parent, node)) {
+                result = false;
+            } else if (isParentOrBaseRec(node, parent, visited, true)) {
+                result = false;
+            } else if (isParentOrBaseRec(node, parent, visited, false)) {
+                result = false;
+            }
+
+            return result;
+        };
+
+        this.moveNode = function (node, parent) {
+            ASSERT(self.isValidNewParent(node, parent), 'New parent would create loop in containment/inheritance tree');
+            var base = node.base;
             var moved = innerCore.moveNode(node, parent);
             moved.base = base;
             return moved;
@@ -796,32 +876,55 @@ define([
             return node.base;
         };
 
+        this.isValidNewBase = function (node, base) {
+            ASSERT(self.isValidNode(node) && (base === undefined || base === null || self.isValidNode(base)));
+            var visited = {
+                    containment: {},
+                    inheritance: {}
+                },
+                result = true;
+
+            if (!base) {
+                result = true;
+            } else if (isParent(base, node)) {
+                result = false;
+            } else if (isParentOrBaseRec(node, base, visited, true)) {
+                result = false;
+            } else if (isParentOrBaseRec(node, base, visited, false)) {
+                result = false;
+            }
+
+            return result;
+        };
+
         this.setBase = function (node, base) {
             ASSERT(self.isValidNode(node) && (base === undefined || base === null || self.isValidNode(base)));
-            // FIXME: These assertion are far from complete.
-            ASSERT(!base || self.getPath(self.getParent(node)) !== self.getPath(base));
-            ASSERT(!base || self.getPath(node) !== self.getPath(base));
+            ASSERT(self.isValidNewBase(node, base), 'New base would create loop in containment/inheritance tree');
 
-            var oldBase = self.getBase(node);
 
-            //TODO this restriction should be removed after clarification of the different scenarios and outcomes
-            //TODO changing base from or to a node which has children is not allowed currently
-
-            // Proposed rules: https://docs.google.com/drawings/d/1dGHaJCuq0q7eHXL2dwC6_oTXw5J7g3T3DlIFPwWT6TA/edit
-            // ASSERT((base === null || oldBase === null) ||
-            //     (self.getChildrenRelids(base).length === 0 && self.getChildrenRelids(oldBase).length === 0));
-
-            if (!!base) {
+            if (base) {
                 //TODO maybe this is not the best way, needs to be double checked
                 node.base = base;
                 var parent = self.getParent(node),
-                    parentBase, baseParent;
+                    nodeChildren = self.getOwnChildrenRelids(node),
+                    baseChildren = self.getOwnChildrenRelids(base),
+                    parentBase,
+                    baseParent,
+                    baseChildIndex,
+                    i;
+
                 if (parent) {
                     parentBase = self.getBase(parent);
                     baseParent = self.getParent(base);
                     if (self.getPath(parentBase) !== self.getPath(baseParent)) {
                         //we have to set an exact pointer only if it is not inherited child
                         innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
+                        for (i = 0; i < nodeChildren.length; i += 1) {
+                            baseChildIndex = baseChildren.indexOf(nodeChildren[i]);
+                            if (baseChildIndex > -1) {
+                                // TODO: check if the child's data really should be applied to the new child
+                            }
+                        }
                     } else {
                         innerCore.deletePointer(node, CONSTANTS.BASE_POINTER); //we remove the pointer just in case
                     }
