@@ -27,6 +27,9 @@ define([], function () {
          */
         this.addOutput = function (outputStr) {
             var lines = outputStr.split(/\r\n|\r|\n/);
+            if (lines[lines.length - 1] === '') {
+                lines.pop();
+            }
 
             self.currOutput.lines = self.currOutput.lines.concat(lines);
             self.logger.debug('length', self.currOutput.lines.length);
