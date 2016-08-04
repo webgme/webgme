@@ -488,6 +488,16 @@ define([
         this.copyNodes = core.copyNodes;
 
         /**
+         * @param {module:Core~Node} node - the node in question.
+         * @param {module:Core~Node | null} parent - the new parent.
+         *
+         * @return {boolean} True if the supplied parent is a valid parent for the node.
+         *
+         * @func
+         */
+        this.isValidNewParent = core.isValidNewParent;
+
+        /**
          * Moves the given node under the given parent.
          * @param {module:Core~Node} node - the node to be moved.
          * @param {module:Core~Node} parent - the parent node of the copy.
@@ -764,12 +774,22 @@ define([
          * @param {string} name - the name of the pointer
          *
          * @return {string | null | undefined} Returns the absolute path. If the path is null, then it means that
-         * 'no-target' was defined specifically for this node for the pointer. If undeinfed it means that the node
+         * 'no-target' was defined specifically for this node for the pointer. If undefined it means that the node
          * either inherits the target of the pointer or there is no pointer defined at all.
          *
          * @func
          */
         this.getOwnPointerPath = core.getOwnPointerPath;
+
+        /**
+         * @param {module:Core~Node} node - the node in question.
+         * @param {module:Core~Node | null} base - the new base.
+         *
+         * @return {boolean} True if the supplied base is a valid base for the node.
+         *
+         * @func
+         */
+        this.isValidNewBase = core.isValidNewBase;
 
         /**
          * Sets the base node of the given node. The function doesn't touches the properties or the children of the node

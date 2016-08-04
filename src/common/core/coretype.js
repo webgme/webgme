@@ -433,7 +433,14 @@ define([
         }
 
         function childHasSameOrigin(node, otherNode, childRelid) {
+            var ancestor = innerCore.getAncestor(node, otherNode),
+                result = false;
 
+            if (ancestor) {
+                result = self.getChildrenRelids(childRelid).indexOf(childRelid) > -1;
+            }
+
+            return result;
         }
 
         //</editor-fold>
@@ -901,16 +908,14 @@ define([
             ASSERT(self.isValidNode(node) && (base === undefined || base === null || self.isValidNode(base)));
             ASSERT(self.isValidNewBase(node, base), 'New base would create loop in containment/inheritance tree');
 
-
             if (base) {
                 //TODO maybe this is not the best way, needs to be double checked
                 node.base = base;
                 var parent = self.getParent(node),
-                    nodeChildren = self.getOwnChildrenRelids(node),
-                    baseChildren = self.getOwnChildrenRelids(base),
+                    nodeChildren = self.getOwnChildrenRelids(node), // We're only interested in the children with data.
+                    baseChildren = self.getChildrenRelids(base),
                     parentBase,
                     baseParent,
-                    baseChildIndex,
                     i;
 
                 if (parent) {
@@ -920,9 +925,10 @@ define([
                         //we have to set an exact pointer only if it is not inherited child
                         innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
                         for (i = 0; i < nodeChildren.length; i += 1) {
-                            baseChildIndex = baseChildren.indexOf(nodeChildren[i]);
-                            if (baseChildIndex > -1) {
-                                // TODO: check if the child's data really should be applied to the new child
+                            if (baseChildren.indexOf(nodeChildren[i]) > -1) {
+                                if(childHasSameOrigin(node, base, nodeChildren[i])) {
+                                    console.log('// FIXME: Remove the child data');
+                                }
                             }
                         }
                     } else {
