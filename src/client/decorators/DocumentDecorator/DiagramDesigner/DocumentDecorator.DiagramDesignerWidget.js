@@ -8,33 +8,32 @@
 
 define([
     '../Libs/EpicEditor/js/epiceditor.min',
-    'js/RegistryKeys',
     'js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
+    '../Core/DocumentDecorator.Core',
     './DocumentEditorDialog',
     'text!./DocumentDecorator.DiagramDesignerWidget.html',
     'css!./DocumentDecorator.DiagramDesignerWidget.css'
 ], function (marked,
-             REGISTRY_KEYS,
              CONSTANTS,
              nodePropertyNames,
              DiagramDesignerWidgetDecoratorBase,
+             DocumentDecoratorCore,
              DocumentEditorDialog,
              DocumentDecoratorTemplate) {
 
     'use strict';
 
     var DocumentDecorator,
-        __parent__ = DiagramDesignerWidgetDecoratorBase,
-        __parent_proto__ = DiagramDesignerWidgetDecoratorBase.prototype,
         DECORATOR_ID = 'DocumentDecorator',
         TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta" title="Edit documentation" />');
 
     DocumentDecorator = function (options) {
         var opts = _.extend({}, options);
 
-        __parent__.apply(this, [opts]);
+        DiagramDesignerWidgetDecoratorBase.apply(this, [opts]);
+        DocumentDecoratorCore.apply(this, [opts]);
 
         this.name = '';
 
@@ -57,6 +56,7 @@ define([
     };
 
     _.extend(DocumentDecorator.prototype, DiagramDesignerWidgetDecoratorBase.prototype);
+    _.extend(DocumentDecorator.prototype, DocumentDecoratorCore.prototype);
 
     DocumentDecorator.prototype.DECORATORID = DECORATOR_ID;
 
@@ -109,7 +109,7 @@ define([
         });
 
         // Let the parent decorator class do its job.
-        __parent_proto__.on_addTo.apply(this, arguments);
+        DiagramDesignerWidgetDecoratorBase.prototype.on_addTo.apply(this, arguments);
 
         // Finally invoke the update too.
         self.update();
@@ -160,43 +160,6 @@ define([
         }
 
         this._updateColors();
-    };
-
-    DocumentDecorator.prototype._updateColors = function () {
-        this._getNodeColorsFromRegistry();
-
-        if (this.fillColor) {
-            this.$el.css({'background-color': this.fillColor});
-        } else {
-            this.$el.css({'background-color': ''});
-        }
-
-        if (this.borderColor) {
-            this.$el.css({
-                'border-color': this.borderColor,
-                'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'
-            });
-            this.skinParts.$name.css({'border-color': this.borderColor});
-        } else {
-            this.$el.css({
-                'border-color': '',
-                'box-shadow': ''
-            });
-            this.skinParts.$name.css({'border-color': ''});
-        }
-
-        if (this.textColor) {
-            this.$el.css({color: this.textColor});
-        } else {
-            this.$el.css({color: ''});
-        }
-    };
-
-    DocumentDecorator.prototype._getNodeColorsFromRegistry = function () {
-        var objID = this._metaInfo[CONSTANTS.GME_ID];
-        this.fillColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.COLOR, true);
-        this.borderColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.BORDER_COLOR, true);
-        this.textColor = this.preferencesHelper.getRegistry(objID, REGISTRY_KEYS.TEXT_COLOR, true);
     };
 
     DocumentDecorator.prototype.getConnectionAreas = function (id /*, isEnd, connectionMetaInfo*/) {
