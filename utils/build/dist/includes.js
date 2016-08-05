@@ -1,24 +1,13 @@
-define([
-    // Loaded at src/client/js/start.js
+/**
+ * This file defines the entry points for webgme.dist.build.js.
+ */
 
-    'jquery',
-    'jquery-ui',
-    'jquery-ui-iPad',
+define([
+
     'js/jquery.WebGME',
-    'bootstrap',
-    'underscore',
-    'backbone',
     'js/WebGME',
     'js/util',
     'js/logger',
-    'superagent',
-    'q',
-
-    'angular',
-    'angular-ui-bootstrap',
-
-    'isis-ui-components',
-    'isis-ui-components-templates',
 
     //layout
     'js/Layouts/DefaultLayout/DefaultLayout',

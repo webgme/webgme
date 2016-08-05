@@ -42,29 +42,30 @@ require.config({
         text: 'lib/require/require-text/text',
 
         //jQuery and stuff
-        jquery: 'bower_components/jquery/dist/jquery.min',
-        'jquery-ui': 'bower_components/jquery-ui/jquery-ui.min',
+        jquery: 'bower_components/jquery/dist/jquery',
+        'jquery-ui': 'bower_components/jquery-ui/jquery-ui',
         'jquery-ui-iPad': 'lib/jquery/jquery.ui.ipad',
         'jquery-dataTables': 'lib/jquery/jquery.dataTables.min',
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
         'jquery-spectrum': 'bower_components/spectrum/spectrum',
-        'jquery-gritter': 'bower_components/jquery.gritter/js/jquery.gritter.min',
-        'jquery-fancytree': 'bower_components/jquery.fancytree/dist/jquery.fancytree-all.min',
+        'jquery-gritter': 'bower_components/jquery.gritter/js/jquery.gritter',
+        'jquery-fancytree': 'bower_components/jquery.fancytree/dist/jquery.fancytree-all',
         'jquery-layout': 'lib/jquery/jquery.layout.min',
 
-        'jquery-contextMenu': 'lib/jquery/jquery.contextMenu.min',
+        'jquery-contextMenu': 'lib/jquery/jquery.contextMenu',
         'jquery-csszoom': 'lib/jquery/jquery.csszoom',
 
         //Bootstrap stuff
-        bootstrap: 'bower_components/bootstrap/dist/js/bootstrap.min',
+        bootstrap: 'bower_components/bootstrap/dist/js/bootstrap',
         'bootstrap-multiselect': 'bower_components/bootstrap-multiselect/dist/js/bootstrap-multiselect',
-        'bootstrap-notify': 'bower_components/remarkable-bootstrap-notify/dist/bootstrap-notify.min',
+        'bootstrap-notify': 'bower_components/remarkable-bootstrap-notify/dist/bootstrap-notify',
 
         //Other modules
-        AutoRouterActionApplier: 'lib/autorouter/action-applier.min',
-        underscore: 'bower_components/underscore/underscore-min',
+        AutoRouterActionApplier: 'lib/autorouter/action-applier',
+        underscore: 'bower_components/underscore/underscore',
         backbone: 'bower_components/backbone/backbone',
         d3: 'bower_components/d3/d3.min',
+        epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
 
         //RaphaelJS family
         eve: 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
@@ -82,21 +83,20 @@ require.config({
         panel: '/panel',
 
         //node_modules
-        jszip: 'bower_components/jszip/dist/jszip.min',
+        jszip: 'bower_components/jszip/dist/jszip',
         superagent: 'lib/superagent/superagent',
         debug: 'bower_components/visionmedia-debug/dist/debug',
         q: 'bower_components/q/q',
 
         //codemirror: 'bower_components/codemirror/',
 
-        moment: 'bower_components/moment/min/moment.min',
-        blockies: 'lib/blockies/blockies',
+        moment: 'bower_components/moment/moment',
 
         urlparse: 'lib/purl/purl.min',
 
         // Angular and modules
         angular: 'bower_components/angular/angular.min',
-        'angular-ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls.min',
+        'angular-ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls',
         'isis-ui-components': 'bower_components/isis-ui-components/dist/isis-ui-components',
         'isis-ui-components-templates': 'bower_components/isis-ui-components/dist/isis-ui-components-templates',
     },
@@ -138,8 +138,12 @@ require([
     'use strict';
 
     require([
-        '/dist/webgme.dist.build.js'
+        '/dist/webgme.lib.build.js'
     ], function () {
+        require([
+            '/dist/webgme.dist.build.js'
+        ], function () {
 
+        });
     });
 });
