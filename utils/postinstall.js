@@ -1,40 +1,30 @@
 /*jshint node:true*/
 /**
- * Arguments passed to this script are propagated to jsdoc.
+ * Runs the prepublish script if distribution files does not exist.
  * @author pmeijer / https://github.com/pmeijer
  */
 
 'use strict';
 
-if (process.env.TEST_FOLDER) {
-    console.warn('TEST_FOLDER environment valiable is set, skipping post install script.');
+var prepublish = require('./prepublish'),
+    path = require('path'),
+    fs = require('fs'),
+    fName = path.join(__dirname, '..', 'dist', 'webgme.dist.build.js'),
+    exists = true;
+
+try {
+    fs.statSync(fName);
+} catch (err) {
+    if (err.code === 'ENOENT') {
+        exists = false;
+    } else {
+        console.error(err);
+    }
+}
+
+if (exists === false) {
+    console.log('dist files did not exist, calling prepublish');
+    prepublish();
 } else {
-    var webgmeBuild = require('./build/webgme.classes/build_classes.js'),
-        webgmeDist = require('./build/dist/build.js');
-
-    console.log('Generating webgme.classes.build.js ...');
-
-    webgmeBuild(function (err, data) {
-        if (err) {
-            console.error('Failed generating webgme.classes.build.js!', err);
-        } else {
-            //console.log(data);
-            console.log('Done with webgme.classes.build.js!');
-        }
-    });
-
-    console.log('Generating webgme.dist.build.js ...');
-
-    webgmeDist(function (err, data) {
-        if (err) {
-            console.error('Failed generating webgme.dist.build.js!', err);
-        } else {
-            //console.log(data);
-            console.log('Done with webgme.dist.build.js!');
-        }
-    });
-
-    console.log('Generating webgme docs/source ...');
-    require('jsdoc/jsdoc');
-    console.log('Done with webgme docs/source!');
+    console.log('dist files existed, will not build from postinstall');
 }

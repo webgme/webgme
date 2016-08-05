@@ -1,0 +1,2 @@
+# these files are downloaded in package.json prepublish script
+!*
