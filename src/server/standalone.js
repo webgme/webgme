@@ -715,7 +715,7 @@ function StandAloneServer(gmeConfig) {
 
     // Panel paths
     logger.debug('creating path specific routing rules');
-    __app.get(/^\/panel\/.*/, webgmeUtils.getRouteFor('panel', gmeConfig.visualization.panelPaths, __baseDir));
+    __app.get(/^\/panel\/.*/, webgmeUtils.getRouteFor('panel', gmeConfig.visualization.panelPaths, __baseDir, logger));
 
     logger.debug('creating external library specific routing rules');
     gmeConfig.server.extlibExcludes.forEach(function (regExStr) {

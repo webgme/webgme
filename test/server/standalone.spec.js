@@ -1,6 +1,7 @@
 /*jshint node:true, mocha:true*/
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 var testFixture = require('../_globals.js');
@@ -185,6 +186,7 @@ describe('standalone server', function () {
             {code: 200, url: '/docs/tutorial.html'},
             {code: 200, url: '/plugin/PluginBase.js'},
             {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/PluginGenerator'},
+            {code: 404, url: '/plugin/PluginGenerator/PluginGenerator'},
             {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/PluginGenerator.js'},
             {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/Templates/plugin.js.ejs'},
             {code: 200, url: '/decorators/DefaultDecorator/DefaultDecorator.js'},
@@ -197,6 +199,12 @@ describe('standalone server', function () {
                 code: 200,
                 url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.js'
             },
+            {code: 200, url: '/panel/ModelEditor/ModelEditorControl.js'},
+            {code: 200, url: '/panel/ModelEditor/ModelEditorControl'},
+            {code: 200, url: '/panel/ModelEditor/ModelEditorControl'},
+            {code: 404, url: '/panel/ModelEditor/ModelEditorControlDoesNotExist'},
+            {code: 200, url: '/panel/SplitPanel/SplitPanel.js'},
+            {code: 404, url: '/panel/DoesNotExist/ModelEditorControl'},
             //{code: 200, url: '/rest/unknown'},
             //{code: 200, url: '/rest/does_not_exist'},
             //{code: 200, url: '/rest/help'},
@@ -228,8 +236,9 @@ describe('standalone server', function () {
             {code: 404, url: '/does_not_exist.js'},
             {code: 404, url: '/asdf'},
 
-            //excluded extlib paths.
             {code: 200, url: '/extlib/config/index.js'},
+            {code: 404, url: '/extlib/src'},
+            //excluded extlib paths.
             {code: 403, url: '/extlib/config/config.default.js'},
 
             //{code: 410, url: '/getToken'},

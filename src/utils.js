@@ -175,7 +175,7 @@ function getGoodExtraAssetRouteFor(component, basePaths, logger, __baseDir) {
  * That is, there are examples of panels (such as SplitPanel) in which the
  * main file does not adhere to the format "NAME/NAME+'Panel'"
  */
-function getRouteFor(component, basePaths, __baseDir) {
+function getRouteFor(component, basePaths, __baseDir, logger) {
     //first we try to give back the common plugin/modules
     return function (req, res) {
         res.sendFile(path.join(__baseDir, req.path), function (err) {
@@ -197,7 +197,7 @@ function getRouteFor(component, basePaths, __baseDir) {
                 basePath = getBasePathByName(pluginName, basePaths);
 
                 if (typeof basePath === 'string' && typeof relPath === 'string') {
-                    expressFileSending(res, path.resolve(path.join(basePath, relPath)));
+                    expressFileSending(res, path.resolve(path.join(basePath, relPath)), logger);
                 } else {
                     res.sendStatus(404);
                 }
