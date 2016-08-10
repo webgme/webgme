@@ -1,7 +1,10 @@
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
-.part-browser .default-decorator .name {
+.part-browser .Document-decorator .name {
   max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis; }
+.part-browser .Document-decorator .embeddedsvg {
+  width: 40px;
+  position: relative; }

@@ -29,7 +29,6 @@ define([
 
     var ModelDecoratorCore,
         ABSTRACT_CLASS = 'abstract',
-        SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         EMBEDDED_SVG_CLASS = 'embeddedsvg',
         CONNECTION_TYPE_CLASS = 'conn-type',
         CONN_TYPE_BASE = $('<div/>', {class: CONNECTION_TYPE_CLASS}),
@@ -417,7 +416,7 @@ define([
 
         if (svgFile) {
             // get the svg from the server in SYNC mode, may take some time
-            svgURL = SVG_DIR + svgFile;
+            svgURL = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + svgFile;
             if (!this.skinParts.$imgSVG) {
                 this.skinParts.$imgSVG = EMBEDDED_SVG_IMG_BASE.clone();
                 this.$el.append(this.skinParts.$imgSVG);
