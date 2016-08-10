@@ -4594,7 +4594,8 @@ define('executor/ExecutorOutputQueue',[], function () {
         this.jobInfo = jobInfo;
 
         this.currOutput = {
-            lines: [],
+            nbrOfLines: 0,
+            output: '',
             callback: null,
             finishFn: null
         };
@@ -4608,10 +4609,15 @@ define('executor/ExecutorOutputQueue',[], function () {
          */
         this.addOutput = function (outputStr) {
             var lines = outputStr.split(/\r\n|\r|\n/);
+            if (lines[lines.length - 1] === '') {
+                lines.pop();
+            }
 
-            self.currOutput.lines = self.currOutput.lines.concat(lines);
-            self.logger.debug('length', self.currOutput.lines.length);
-            if (segmentSize > -1 && self.currOutput.lines.length >= segmentSize) {
+            self.currOutput.nbrOfLines += lines.length;
+            self.currOutput.output += outputStr;
+
+            self.logger.debug('length', self.currOutput.nbrOfLines);
+            if (segmentSize > -1 && self.currOutput.nbrOfLines >= segmentSize) {
                 self._setNewTimeout();
                 self._queueCurrOutput();
             }
@@ -4642,7 +4648,7 @@ define('executor/ExecutorOutputQueue',[], function () {
         };
 
         this._queueCurrOutput = function () {
-            if (self.currOutput.lines.length === 0) {
+            if (self.currOutput.nbrOfLines === 0) {
                 return;
             }
 
@@ -4664,7 +4670,7 @@ define('executor/ExecutorOutputQueue',[], function () {
 
                 // If there are more queued outputs after the one just sent, send the first one in the queue.
                 if (self.outputQueue.length > 0) {
-                    worker.sendOutput(self.jobInfo, self.outputQueue[0].lines.join('\n'), self.outputQueue[0].callback);
+                    worker.sendOutput(self.jobInfo, self.outputQueue[0].output, self.outputQueue[0].callback);
                 }
             };
 
@@ -4672,13 +4678,14 @@ define('executor/ExecutorOutputQueue',[], function () {
             self.outputQueue.push(self.currOutput);
 
             self.currOutput = {
-                lines: [],
+                nbrOfLines: 0,
+                output: '',
                 callback: null,
                 finishFn: null
             };
 
             if (self.outputQueue.length === 1) {
-                worker.sendOutput(self.jobInfo, self.outputQueue[0].lines.join('\n'), self.outputQueue[0].callback);
+                worker.sendOutput(self.jobInfo, self.outputQueue[0].output, self.outputQueue[0].callback);
             }
         };
 
