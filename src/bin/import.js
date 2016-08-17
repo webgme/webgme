@@ -15,7 +15,7 @@ var webgme = require('../../webgme'),
     gmeConfig = require(path.join(process.cwd(), 'config')),
     logger = webgme.Logger.create('gme:bin:import', gmeConfig.bin.log),
     AdmZip = require('adm-zip'),
-    BlobClient = require('../../src/server/middleware/blob/BlobClientWithFSBackend'),
+    FSBlobClient = require('../../src/server/middleware/blob/BlobClientWithFSBackend'),
     storageUtils = webgme.requirejs('common/storage/util'),
     blobUtil = webgme.requirejs('blob/util'),
     main;
@@ -81,7 +81,7 @@ main = function (argv) {
         project,
         params,
         commitHash,
-        blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
+        blobClient = new FSBlobClient(gmeConfig, logger.fork('BlobClient')),
         finishUp = function (error) {
             var ended = function () {
                 if (error) {
