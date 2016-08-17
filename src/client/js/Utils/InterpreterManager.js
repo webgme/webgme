@@ -28,7 +28,7 @@ define([
 
     InterpreterManager.prototype.GLOBAL_OPTIONS = 'Global Options';
 
-    function getPluginErrorResult(pluginName, message, startTime, projectId) {
+    InterpreterManager.prototype.getPluginErrorResult = function (pluginName, message, startTime, projectId) {
         var pluginResult = new PluginResult(),
             pluginMessage = new PluginMessage();
         pluginMessage.severity = 'error';
@@ -70,7 +70,8 @@ define([
                         if (result) {
                             callback(new PluginResult(result));
                         } else {
-                            callback(getPluginErrorResult(metadata.id, err.message, startTime, context.project.projectId));
+                            callback(self.getPluginErrorResult(metadata.id, err.message, startTime,
+                                context.managerConfig.project.projectId));
                         }
                     } else {
                         callback(new PluginResult(result));
@@ -97,7 +98,7 @@ define([
                 // (If not plugin could be executed on the server on a commitHash that does not exist).
                 if (self._client.getBranchStatus() &&
                     self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC) {
-                    callback(getPluginErrorResult(metadata.id, 'Not allowed to invoke plugin while local branch' +
+                    callback(self.getPluginErrorResult(metadata.id, 'Not allowed to invoke plugin while local branch' +
                         ' is AHEAD or PULLING changes from server.', startTime));
                     return;
                 }
@@ -173,7 +174,7 @@ define([
         }
 
         if (errorMessage) {
-            return getPluginErrorResult(pluginMetadata.id, errorMessage, (new Date()).toISOString());
+            return this.getPluginErrorResult(pluginMetadata.id, errorMessage, (new Date()).toISOString());
         } else {
             result.push(runOption);
             namespace.valueItems = this._client.getLibraryNames();
