@@ -20,7 +20,7 @@ var webgme = require('../../webgme'),
     main,
     mainDeferred,
     getMissingRequiredParam,
-    BlobClient = require('../../src/server/middleware/blob/BlobClientWithFSBackend'),
+    FSBlobClient = require('../../src/server/middleware/blob/BlobClientWithFSBackend'),
     storageUtils = webgme.requirejs('common/storage/util'),
     blobUtil = webgme.requirejs('blob/util');
 
@@ -47,7 +47,7 @@ main = function (argv) {
 
     gmeConfig = require(path.join(process.cwd(), 'config'));
     logger = webgme.Logger.create('gme:bin:export', gmeConfig.bin.log, false);
-    blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient'));
+    blobClient = new FSBlobClient(gmeConfig, logger.fork('BlobClient'));
     webgme.addToRequireJsPaths(gmeConfig);
     mainDeferred = Q.defer();
     program

@@ -19,7 +19,7 @@ define([
 
     /**
      * Client to interact with the blob-storage. <br>
-     * FIXME: For some reason the methods do not show up in the generated docs. See source code.
+     *
      * @param {object} parameters
      * @param {object} parameters.logger
      * @constructor
@@ -111,8 +111,14 @@ define([
         return this._getURL('view', hash, subpath);
     };
 
-    BlobClient.prototype.getDownloadURL = function (hash, subpath) {
-        return this.origin + this.getRelativeDownloadURL(hash, subpath);
+    /**
+     * Returns the get-url for downloading a blob.
+     * @param {string} metadataHash
+     * @param {string} [subpath] - optional file-like path to sub-object if complex blob
+     * @return {string} get-url for blob
+     */
+    BlobClient.prototype.getDownloadURL = function (metadataHash, subpath) {
+        return this.origin + this.getRelativeDownloadURL(metadataHash, subpath);
     };
 
     BlobClient.prototype.getRelativeDownloadURL = function (hash, subpath) {
@@ -137,7 +143,7 @@ define([
      * @param {string|Buffer|ArrayBuffer} data - file content.
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise} On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * @return {external:Promise} On success the promise will be resolved with {string} <b>metadataHash</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     BlobClient.prototype.putFile = function (name, data, callback) {
@@ -250,7 +256,7 @@ define([
      * @param {object.<string, string|Buffer|ArrayBuffer>} o - Keys are file names and values the content.
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise} On success the promise will be resolved with {object} <b>hashes</b>.<br>
+     * @return {external:Promise} On success the promise will be resolved with {object} <b>fileNamesToMetadataHashes</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     BlobClient.prototype.putFiles = function (o, callback) {
@@ -301,19 +307,19 @@ define([
      * Retrieves object from blob storage as a Buffer under node and as an ArrayBuffer in the client.
      * N.B. if the retrieved file is a json-file and running in a browser, the content will be decoded and
      * the string parsed as a JSON.
-     * @param {string} hash - hash of metadata for object.
+     * @param {string} metadataHash - hash of metadata for object.
      * @param {function} [callback] - if provided no promise will be returned.
-     * @param {string} [subpath]
+     * @param {string} [subpath] - optional file-like path to sub-object if complex blob
      *
      * @return {external:Promise} On success the promise will be resolved with {Buffer|ArrayBuffer|object}
      * <b>content</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    BlobClient.prototype.getObject = function (hash, callback, subpath) {
+    BlobClient.prototype.getObject = function (metadataHash, callback, subpath) {
         var deferred = Q.defer(),
             self = this;
 
-        this.logger.debug('getObject', hash, subpath);
+        this.logger.debug('getObject', metadataHash, subpath);
 
         superagent.parse['application/zip'] = function (obj, parseCallback) {
             if (parseCallback) {
@@ -324,7 +330,7 @@ define([
         };
         //superagent.parse['application/json'] = superagent.parse['application/zip'];
 
-        var req = superagent.get(this.getViewURL(hash, subpath));
+        var req = superagent.get(this.getViewURL(metadataHash, subpath));
         if (this.webgmeToken) {
             req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
@@ -398,15 +404,15 @@ define([
 
     /**
      * Retrieves object from blob storage and parses the content as a string.
-     * @param {string} hash - hash of metadata for object.
+     * @param {string} metadataHash - hash of metadata for object.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise} On success the promise will be resolved with {string} <b>contentString</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    BlobClient.prototype.getObjectAsString = function (hash, callback) {
+    BlobClient.prototype.getObjectAsString = function (metadataHash, callback) {
         var self = this;
-        return self.getObject(hash)
+        return self.getObject(metadataHash)
             .then(function (content) {
                 if (typeof content === 'string') {
                     // This does currently not happen..
@@ -426,15 +432,15 @@ define([
 
     /**
      * Retrieves object from blob storage and parses the content as a JSON. (Will resolve with error if not valid JSON.)
-     * @param {string} hash - hash of metadata for object.
+     * @param {string} metadataHash - hash of metadata for object.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise} On success the promise will be resolved with {object} <b>contentJSON</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    BlobClient.prototype.getObjectAsJSON = function (hash, callback) {
+    BlobClient.prototype.getObjectAsJSON = function (metadataHash, callback) {
         var self = this;
-        return self.getObject(hash)
+        return self.getObject(metadataHash)
             .then(function (content) {
                 if (typeof content === 'string') {
                     // This does currently not happen..
@@ -454,18 +460,18 @@ define([
 
     /**
      * Retrieves metadata from blob storage.
-     * @param {string} hash - hash of metadata.
+     * @param {string} metadataHash - hash of metadata.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise} On success the promise will be resolved with {object} <b>metadata</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    BlobClient.prototype.getMetadata = function (hash, callback) {
-        var req = superagent.get(this.getMetadataURL(hash)),
+    BlobClient.prototype.getMetadata = function (metadataHash, callback) {
+        var req = superagent.get(this.getMetadataURL(metadataHash)),
             deferred = Q.defer(),
             self = this;
 
-        this.logger.debug('getMetadata', hash);
+        this.logger.debug('getMetadata', metadataHash);
 
         if (this.webgmeToken) {
             req.set('Authorization', 'Bearer ' + this.webgmeToken);
@@ -500,7 +506,7 @@ define([
 
     /**
      * Retrieves the {@link Artifact} from the blob storage.
-     * @param {hash} metadataHash - SHA hash associated with the artifact.
+     * @param {hash} metadataHash - hash associated with the artifact.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise}  On success the promise will be resolved with
@@ -538,7 +544,7 @@ define([
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise}  On success the promise will be resolved with
-     * {string[]} <b>artifactHashes</b>.<br>
+     * {string[]} <b>artifactHashes</b> (metadataHashes).<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     BlobClient.prototype.saveAllArtifacts = function (callback) {
