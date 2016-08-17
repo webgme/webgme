@@ -68,6 +68,13 @@
             height: 100%;
             width: 150px;
             padding: 3px 5px; }
+      .project-repository-widget table tr th.user-column,
+      .project-repository-widget table tr td.user-column {
+        text-align: right; }
+        .project-repository-widget table tr th.user-column .avatar-container .avatar-image,
+        .project-repository-widget table tr td.user-column .avatar-container .avatar-image {
+          width: 18px;
+          margin-left: 8px; }
       .project-repository-widget table tr th.commit-hash,
       .project-repository-widget table tr td.commit-hash {
         font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace; }

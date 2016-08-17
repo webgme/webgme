@@ -119,6 +119,16 @@ $table-row-height: 25px;
           }
         }
 
+        &.user-column {
+          text-align: right;
+          .avatar-container {
+            .avatar-image {
+              width: 18px;
+              margin-left: 8px;
+            }
+          }
+        }
+
         &.commit-hash {
           font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
           &:hover {
