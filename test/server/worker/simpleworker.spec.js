@@ -1712,6 +1712,40 @@ describe('Simple worker', function () {
             .nodeify(done);
     });
 
+    it('should fail to importProjectFromFile if file is corrupted.', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
+            projectName = 'badPackageImport',
+            projectId = testFixture.projectName2Id(projectName);
+
+        blobClient.putFile('bad.webgmex', fs.readFileSync('./test/server/worker/simpleworker/bad.webgmex'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.importProjectFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    branchName: 'master',
+                    blobHash: blobHash
+                });
+            })
+            .then(function (msg) {
+                done(new Error('misisng error handling'));
+            })
+            .catch(function(err){
+                expect(err.message).to.include('Invalid or unsupported zip format.');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
     //addLibrary
     it('should add Library from a file.', function (done) {
         var worker = getSimpleWorker(),
