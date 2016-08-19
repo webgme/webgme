@@ -172,7 +172,7 @@ define([
                         content: metadataHash,
                         contentType: BlobMetadata.CONTENT_TYPES.SOFT_LINK
                     };
-                    deferred.resolve(hash);
+                    deferred.resolve(metadataHash);
                 }
             };
 

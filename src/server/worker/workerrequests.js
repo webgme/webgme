@@ -224,7 +224,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     return Q.ninvoke(artifact, 'addFileAsSoftLink', entryName, zip.readFile(entry));
                 }
             })
-            )
+        )
             .then(function () {
                 var metadata = artifact.descriptor;
                 return blobUtil.addAssetsFromExportedProject(logger, blobClient, metadata);
@@ -356,8 +356,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     logger.debug('seedProject - seeding from existing project:', parameters.seedName);
                     return _getSeedFromProject(storage, parameters.seedName, parameters.seedBranch,
                         parameters.seedCommit);
-                //} else if (parameters.type === 'blob') {
-                //    return _getSeedFromBlob(parameters.seedName, webgmeToken);
+                    //} else if (parameters.type === 'blob') {
+                    //    return _getSeedFromBlob(parameters.seedName, webgmeToken);
                 } else {
                     throw new Error('Unknown seeding type [' + parameters.type + ']');
                 }
@@ -463,11 +463,11 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     }
 
                     merger.resolve({
-                            project: project,
-                            gmeConfig: gmeConfig,
-                            logger: logger.fork('merge'),
-                            partial: partial
-                        })
+                        project: project,
+                        gmeConfig: gmeConfig,
+                        logger: logger.fork('merge'),
+                        partial: partial
+                    })
                         .nodeify(finish);
                 });
             })
@@ -700,6 +700,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
             })
             .catch(function (err) {
                 logger.error('importProjectFromFile failed with error', err);
+                if (typeof err === 'string') {
+                    err = new Error(err);
+                }
                 throw err;
             })
             .nodeify(callback);
@@ -750,9 +753,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
                                     deferred.reject(err);
                                 } else {
                                     storageUtils.getProjectJson(project, {
-                                            branchName: parameters.libraryInfo.branchName,
-                                            commitHash: parameters.libraryInfo.commitHash
-                                        })
+                                        branchName: parameters.libraryInfo.branchName,
+                                        commitHash: parameters.libraryInfo.commitHash
+                                    })
                                         .then(deferred.resolve)
                                         .catch(deferred.reject);
                                 }
@@ -865,9 +868,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
                             deferred.reject(err);
                         } else {
                             storageUtils.getProjectJson(project, {
-                                    branchName: parameters.libraryInfo.branchName,
-                                    commitHash: parameters.libraryInfo.commitHash
-                                })
+                                branchName: parameters.libraryInfo.branchName,
+                                commitHash: parameters.libraryInfo.commitHash
+                            })
                                 .then(deferred.resolve)
                                 .catch(deferred.reject);
                         }
