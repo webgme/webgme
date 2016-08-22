@@ -567,6 +567,112 @@ describe('corediff apply', function () {
                 .catch(done);
         });
 
+        it('should create a new subtree', function (done){
+            var diff = {
+                E: {
+                    902088723: {
+                        pointer: {base: '/175547009/1817665259'},
+                        guid: 'cc9d0d48-9d38-89ea-a0fc-5909e42811ae',
+                        'oGuids': {
+                            'cc9d0d48-9d38-89ea-a0fc-5909e42811ae': true,
+                            'ba70829e-5e52-826f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '5f73946c-68aa-9de1-7979-736d884171af': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    1044885565: {
+                        pointer: {base: '/175547009/871430202'},
+                        guid: '07e5bd66-f0ad-9df6-aea4-23effabebb86'
+                    },
+                    1448030591: {
+                        pointer: {
+                            base: '/175547009/871430202'
+                        },
+                        guid: 'aa1a3bcc-0254-0552-f3c0-5cc64423f290',
+                        oGuids: {
+                            'aa1a3bcc-0254-0552-f3c0-5cc64423f290': true,
+                            'ba70829e-5e52-826f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    1763546084: {
+                        249902827: {
+                            pointer: {
+                                base: '/175547009/1817665259'
+                            }
+                        },
+                        1823288916: {
+                            251993862: {
+                                1219173128: {
+                                    pointer: {
+                                        base: '/175547009/471466181'
+                                    }
+                                },
+                                pointer: {
+                                    base: '/175547009/1817665259'
+                                }
+                            },
+                            pointer: {
+                                base: '/175547009/1817665259'
+                            }
+                        },
+                        pointer: {
+                            base: '/175547009/471466181'
+                        },
+                        guid: 'df95fa8c-a99f-000e-3041-a0c22ca2a5d6'
+                    },
+                    2119137141: {
+                        pointer: {
+                            base: '/175547009/1104061497'
+                        },
+                        guid: '510eb05d-9495-63ce-1acb-0aadebb5c8b5',
+                        oGuids: {
+                            '510eb05d-9495-63ce-1acb-0aadebb5c8b5': true,
+                            'ba70829e-5e52-826f-93b3-ab9c8daa8a42': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: 'ba70829e-5e52-826f-93b3-ab9c8daa8a42',
+                    removed: false,
+                    hash: '#e54a4dcce022c601a808424bb76608b962dc435c',
+                    pointer: {
+                        base: '/175547009/1817665259'
+                    },
+                    oGuids: {
+                        'ba70829e-5e52-826f-93b3-ab9c8daa8a42': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                    }
+                },
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                oGuids: {
+                    '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true
+                }
+            };
+
+            Q.nfcall(core.applyTreeDiff, rootNode, diff)
+                .then(function () {
+                    expect(core.getChildrenRelids(rootNode)).to.include.members(['E']);
+                    return Q.nfcall(core.loadByPath, rootNode, '/E/1763546084/1823288916/251993862/1219173128');
+                })
+                .then(function (node) {
+                    expect(node).not.to.eql(null);
+                    expect(core.getAttribute(node,'name')).to.equal('GraphVizModel');
+                    expect(core.getPointerPath(node,'base')).to.equal('/175547009/471466181');
+                })
+                .nodeify(done);
+        });
+
     });
 
     describe('pointer changes', function () {
