@@ -45,6 +45,7 @@ require.config({
         underscore: 'bower_components/underscore/underscore',
         backbone: 'bower_components/backbone/backbone',
         d3: 'bower_components/d3/d3',
+        epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
 
         //RaphaelJS family
         eve: 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'

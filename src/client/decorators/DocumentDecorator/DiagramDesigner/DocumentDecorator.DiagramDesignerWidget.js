@@ -7,7 +7,7 @@
  */
 
 define([
-    '../Libs/EpicEditor/js/epiceditor.min',
+    'epiceditor',
     'js/Constants',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',

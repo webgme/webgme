@@ -5,7 +5,7 @@
  */
 
 define(['js/util',
-    '../Libs/EpicEditor/js/epiceditor.min',
+    'epiceditor',
     'text!./DocumentEditorDialog.html'
 ], function (Util,
              marked,
@@ -34,7 +34,7 @@ define(['js/util',
          * invoked in callback function when container is rendered on DOM */
         var editorOptions = {
             container: this._content.get(0), // Get raw DOM element
-            basePath: 'decorators/DocumentDecorator/Libs/EpicEditor/',
+            basePath: 'bower_components/EpicEditor/epiceditor',
             autogrow: {
                 minHeight: 300,
             },
