@@ -23,6 +23,7 @@ define([
     'underscore',
     'backbone',
     'moment',
+    'blockies',
     'd3',
     'codemirror',
     'epiceditor',
