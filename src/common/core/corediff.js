@@ -24,7 +24,7 @@ define(['common/util/canon',
         var logger = options.logger,
             self = this,
             key,
-        //FIXME: There shouldn't be state.
+            //FIXME: There shouldn't be state.
             _yetToCompute = {},
             _DIFF = {},
             _needChecking = true,
@@ -964,10 +964,11 @@ define(['common/util/canon',
             return ordered;
         }
 
-        function makeInitialContainmentChanges(node, diff) {
+        function makeInitialContainmentChanges(node, diff, inserting) {
             var relids = getOrderedRelids(diff),
                 i, done, child, moved,
-                moving = function (n, di, r, p, m/*, d*/) {
+                added = false,
+                moving = function (n, di, r, p, m, a/*, d*/) {
                     var nRelid;
                     if (m === true) {
                         n = self.moveNode(n, p);
@@ -979,7 +980,7 @@ define(['common/util/canon',
                             delete diff[r];
                         }
                     }
-                    return makeInitialContainmentChanges(n, di);
+                    return makeInitialContainmentChanges(n, di, a);
                 };
 
             for (i = 0; i < relids.length; i++) {
@@ -990,6 +991,7 @@ define(['common/util/canon',
                     child = self.loadByPath(self.getRoot(node), diff[relids[i]].movedFrom);
                 } else if (diff[relids[i]].removed === false) {
                     //added node
+                    added = true;
                     //first we hack the pointer, then we create the node
                     if (diff[relids[i]].pointer && diff[relids[i]].pointer.base) {
                         //we can set base if the node has one, otherwise it is 'inheritance internal' node
@@ -1004,10 +1006,17 @@ define(['common/util/canon',
                     }
                 } else {
                     //simple node
+                    if (inserting === true) {
+                        //we are inside a new node, so we have to set the base first
+                        if (diff[relids[i]].pointer && diff[relids[i]].pointer.base) {
+                            //we can set base if the node has one, otherwise it is 'inheritance internal' node
+                            setBaseOfNewNode(node, relids[i], diff[relids[i]].pointer.base);
+                        }
+                    }
                     child = self.loadChild(node, relids[i]);
                 }
 
-                done = TASYNC.call(moving, child, diff[relids[i]], relids[i], node, moved, done);
+                done = TASYNC.call(moving, child, diff[relids[i]], relids[i], node, moved, added || inserting, done);
             }
 
             TASYNC.call(function (/*d*/) {
