@@ -110,7 +110,8 @@ define(['js/logger'], function (Logger) {
         var self = this,
             commits = null,
             com,
-            commitsLoaded;
+            commitsLoaded,
+            scrollPos = self._view._el.scrollTop() || 0;
 
         commitsLoaded = function (err, data) {
             var i,
@@ -168,6 +169,8 @@ define(['js/logger'], function (Logger) {
                 if (cLen < num) {
                     self._view.noMoreCommitsToDisplay();
                 }
+
+                self._view._el.scrollTop(scrollPos);
             }
         };
 
