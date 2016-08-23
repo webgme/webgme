@@ -27,10 +27,13 @@ function DefaultAuthorizer(mainLogger, gmeConfig) {
 
     function getProjectAuthorizationByUserOrOrgId(userId, projectId, callback) {
         var ops = ['read', 'write', 'delete'];
-        return self.collection.findOne({_id: userId}, _getProjection('siteAdmin', 'orgs', 'projects.' + projectId))
+        return self.collection.findOne({
+            _id: userId,
+            disabled: {$ne: true}
+        }, _getProjection('siteAdmin', 'orgs', 'projects.' + projectId))
             .then(function (userData) {
                 if (!userData) {
-                    return Q.reject(new Error('No such user [' + userId + ']'));
+                    return Q.reject(new Error('no such user [' + userId + ']'));
                 }
                 userData.orgs = userData.orgs || [];
 
@@ -43,7 +46,7 @@ function DefaultAuthorizer(mainLogger, gmeConfig) {
                             if ((userData.projects[projectId] || {})[op]) {
                                 return 1;
                             }
-                            query = {_id: {$in: userData.orgs}};
+                            query = {_id: {$in: userData.orgs}, disabled: {$ne: true}};
                             query['projects.' + projectId + '.' + op] = true;
                             return self.collection.findOne(query, {_id: 1});
                         }))];
@@ -72,7 +75,11 @@ function DefaultAuthorizer(mainLogger, gmeConfig) {
      * @returns {*}
      */
     function getUser(userId, callback) {
-        return self.collection.findOne({_id: userId, type: {$ne: GME_AUTH_CONSTANTS.ORGANIZATION}})
+        return self.collection.findOne({
+            _id: userId,
+            type: {$ne: GME_AUTH_CONSTANTS.ORGANIZATION},
+            disabled: {$ne: true}
+        })
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject(new Error('no such user [' + userId + ']'));
@@ -88,10 +95,11 @@ function DefaultAuthorizer(mainLogger, gmeConfig) {
     }
 
     function getAdminsInOrganization(orgId, callback) {
-        return self.collection.findOne({_id: orgId, type: GME_AUTH_CONSTANTS.ORGANIZATION}, {admins: 1})
+        return self.collection.findOne({_id: orgId, type: GME_AUTH_CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
+            {admins: 1})
             .then(function (org) {
                 if (!org) {
-                    return Q.reject(new Error('No such organization [' + orgId + ']'));
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
                 }
                 return org.admins;
             })
@@ -112,17 +120,17 @@ function DefaultAuthorizer(mainLogger, gmeConfig) {
         if (type === 'set') {
             update = {$set: {}};
             update.$set['projects.' + projectId] = rights;
-            return self.collection.update({_id: userOrOrgId}, update)
+            return self.collection.update({_id: userOrOrgId, disabled: {$ne: true}}, update)
                 .spread(function (numUpdated) {
                     if (numUpdated !== 1) {
-                        return Q.reject(new Error('No such user or org [' + userOrOrgId + ']'));
+                        return Q.reject(new Error('no such user or org [' + userOrOrgId + ']'));
                     }
                 })
                 .nodeify(callback);
         } else if (type === 'delete') {
             update = {$unset: {}};
             update.$unset['projects.' + projectId] = '';
-            return self.collection.update({_id: userOrOrgId}, update)
+            return self.collection.update({_id: userOrOrgId, disabled: {$ne: true}}, update)
                 .spread(function (numUpdated) {
                     // FIXME this is always true. Try findAndUpdate instead
                     return numUpdated === 1;

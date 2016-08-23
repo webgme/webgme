@@ -148,11 +148,12 @@ main = function (argv) {
     program
         .command('userdel <username>')
         .description('deletes a user')
+        .option('-f, --force', 'removes the entry from the database', false)
         .action(function (username, options) {
             setupGMEAuth(options.parent.db, function (/*err*/) {
 
                 if (username) {
-                    auth.deleteUser(username)
+                    auth.deleteUser(username, options.force)
                         .then(mainDeferred.resolve)
                         .catch(mainDeferred.reject)
                         .finally(auth.unload);
@@ -165,6 +166,7 @@ main = function (argv) {
             console.log('  Examples:');
             console.log();
             console.log('    $ node usermanager.js userdel brubble');
+            console.log('    $ node usermanager.js userdel brubble -f');
             console.log();
         });
 
@@ -195,11 +197,12 @@ main = function (argv) {
     program
         .command('organizationdel <organizationname>')
         .description('deletes an existing organization')
+        .option('-f, --force', 'removes the entry from the database', false)
         .action(function (organizationname, options) {
 
             setupGMEAuth(options.parent.db, function (/*err*/) {
                 if (organizationname) {
-                    auth.removeOrganizationByOrgId(organizationname)
+                    auth.removeOrganizationByOrgId(organizationname, options.force)
                         .then(mainDeferred.resolve)
                         .catch(mainDeferred.reject)
                         .finally(auth.unload);

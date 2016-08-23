@@ -145,7 +145,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such user') > -1) {
+                if (err.message.indexOf('no such user') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error ' + err);
@@ -175,10 +175,126 @@ describe('GME authentication', function () {
             .nodeify(done);
     });
 
-    it('removes user by id', function (done) {
-        auth.addUser('user_to_remove', 'user_to_remove@example.com', 'plaintext', true, {overwrite: true}).
-            then(function () {
-                return auth.deleteUser('user_to_remove');
+    it('removes user by id and fail to add it again', function (done) {
+        var userId = 'user_to_remove_and_fail_to_add';
+        auth.addUser(userId, 'user_to_remove@example.com', 'plaintext', true, {overwrite: true})
+            .then(function () {
+                return auth.listUsers();
+            })
+            .then(function (users) {
+                var hadUser = false;
+                users.forEach(function (user) {
+                    if (user._id === userId) {
+                        hadUser = true;
+                    }
+                });
+
+                expect(hadUser).to.equal(true);
+
+                return auth.deleteUser(userId);
+            })
+            .then(function () {
+                return auth.listUsers();
+            })
+            .then(function (users) {
+                var hadUser = false;
+                users.forEach(function (user) {
+                    if (user._id === userId) {
+                        hadUser = true;
+                    }
+                });
+
+                expect(hadUser).to.equal(false);
+
+                return auth.addUser(userId, 'a@example.com', 'plaintext', true,
+                    {overwrite: false});
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('user already exists');
+            })
+            .nodeify(done);
+    });
+
+    it('removes user with force and can add it again', function (done) {
+        var userId = 'user_to_remove_and_can_add';
+        auth.addUser(userId, 'e@example.com', 'plaintext', true, {overwrite: true})
+            .then(function () {
+                return auth.listUsers();
+            })
+            .then(function (users) {
+                var hadUser = false;
+                users.forEach(function (user) {
+                    if (user._id === userId) {
+                        hadUser = true;
+                    }
+                });
+
+                expect(hadUser).to.equal(true);
+
+                return auth.deleteUser(userId, true);
+            })
+            .then(function () {
+                return auth.listUsers();
+            })
+            .then(function (users) {
+                var hadUser = false;
+                users.forEach(function (user) {
+                    if (user._id === userId) {
+                        hadUser = true;
+                    }
+                });
+
+                expect(hadUser).to.equal(false);
+
+                return auth.addUser(userId, 'a@example.com', 'plaintext', true,
+                    {overwrite: false});
+            })
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (userData) {
+                expect(userData._id).to.equal(userId);
+            })
+            .nodeify(done);
+    });
+
+    it('should remove user and throw error in api calls', function (done) {
+        var orgId = 'removeUserCheckApiOrg',
+            userId = 'removeUserCheckApiUser';
+
+        auth.addUser(userId, 'mail', 'pass', true, {})
+            .then(function () {
+                return Q.allDone([
+                    auth.addOrganization(orgId),
+                    auth.deleteUser(userId)
+                    ]);
+            })
+            .then(function () {
+                return Q.allSettled([
+                    auth.authenticateUser(userId, 'pass'),
+                    auth.generateJWToken(userId, 'pass'),
+                    auth.generateJWTokenForAuthenticatedUser(userId),
+                    auth.getUser(userId),
+                    auth.deleteUser(userId),
+                    auth.updateUser(userId, {email: 'm@il'}),
+                    auth.updateUserDataField(userId, {a: 2}),
+                    auth.updateUserComponentSettings(userId, 'someId', {a: 2}),
+                    auth.updateUserSettings(userId, {a: 2}),
+
+                    auth.addUserToOrganization(userId, orgId),
+                    //auth.removeUserFromOrganization(userId, orgId),
+                    auth.setAdminForUserInOrganization(userId, orgId, true),
+                    //auth.setAdminForUserInOrganization(userId, orgId, false),
+                ]);
+            })
+            .then(function (res) {
+                res.forEach(function (r) {
+                    expect(r.state).to.equal('rejected');
+                    expect(r.reason.message).to.contain('no such user');
+                });
             })
             .nodeify(done);
     });
@@ -786,7 +902,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such organization') > -1) {
+                if (err.message.indexOf('no such organization') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error: ' + err);
@@ -800,7 +916,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such organization') > -1) {
+                if (err.message.indexOf('no such organization') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error: ' + err);
@@ -838,7 +954,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                if (err.message.indexOf('No such user or org') > -1) {
+                if (err.message.indexOf('no such user or org') > -1) {
                     return;
                 }
                 throw new Error('Unexpected error: ' + err);
@@ -851,7 +967,7 @@ describe('GME authentication', function () {
             .then(function () {
                 done(new Error('Should have failed'));
             }, function (err) {
-                if (err.message.indexOf('No such ') > -1) {
+                if (err.message.indexOf('no such ') > -1) {
                     done();
                     return;
                 }
@@ -1007,12 +1123,6 @@ describe('GME authentication', function () {
     });
 
     it('should remove user from organization', function (done) {
-        var orgName = 'org1';
-        auth.removeUserFromOrganization('user', orgName)
-            .nodeify(done);
-    });
-
-    it('should remove user from organization', function (done) {
         var orgId = 'orgWithUser',
             userId = 'userInOrg';
         auth.addUser(userId, '@', 'ss', true, {})
@@ -1039,13 +1149,172 @@ describe('GME authentication', function () {
     });
 
     it('should remove organization', function (done) {
-        var orgName = 'org1';
-        auth.removeOrganizationByOrgId(orgName)
+        var orgName = 'org_removed';
+        auth.addOrganization(orgName)
+            .then(function () {
+                return auth.listOrganizations();
+            })
+            .then(function (orgs) {
+                var hadOrg = false;
+                orgs.forEach(function (org) {
+                    if (org._id === orgName) {
+                        hadOrg = true;
+                    }
+                });
+
+                expect(hadOrg).to.equal(true);
+
+                return auth.removeOrganizationByOrgId(orgName);
+            })
+            .then(function () {
+                return auth.listOrganizations();
+            })
+            .then(function (orgs) {
+                var hadOrg = false;
+                orgs.forEach(function (org) {
+                    if (org._id === orgName) {
+                        hadOrg = true;
+                    }
+                });
+
+                expect(hadOrg).to.equal(false);
+            })
             .nodeify(done);
     });
 
-    it('should fail to remove organization twice', function (done) {
-        var orgName = 'org1';
+    it('should remove/disable organization and fail to add it again', function (done) {
+        var orgName = 'org_remove_fail_to_add';
+
+        auth.addOrganization(orgName)
+            .then(function () {
+                return auth.removeOrganizationByOrgId(orgName);
+            })
+            .then(function () {
+                return auth.addOrganization(orgName);
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('user or org already exists');
+            })
+            .nodeify(done);
+    });
+
+
+    it('should remove with force organization and be able to add it again', function (done) {
+        var orgName = 'org_remove_can_add';
+
+        auth.addOrganization(orgName)
+            .then(function () {
+                return auth.removeOrganizationByOrgId(orgName, true);
+            })
+            .then(function () {
+                return auth.getOrganization(orgName);
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('no such organization');
+                return auth.addOrganization(orgName, {newOrg: true});
+            })
+            .then(function () {
+                return auth.getOrganization(orgName);
+            })
+            .then(function (org) {
+                expect(org.info.newOrg).to.equal(true);
+            })
+            .nodeify(done);
+    });
+
+    it('should remove org and throw error in api calls', function (done) {
+        var orgId = 'removeOrgCheckApiOrg',
+            userId = 'removeOrgCheckApiUser';
+
+        auth.addOrganization(orgId)
+            .then(function () {
+                return Q.allDone([
+                    auth.addUser(userId, 'mail', 'pass', true, {}),
+                    auth.removeOrganizationByOrgId(orgId)
+                ]);
+            })
+            .then(function () {
+                return Q.allSettled([
+                    auth.getOrganization(orgId),
+                    auth.removeOrganizationByOrgId(orgId),
+
+                    auth.addUserToOrganization(userId, orgId),
+                    auth.removeUserFromOrganization(userId, orgId),
+                    auth.setAdminForUserInOrganization(userId, orgId, true),
+                    auth.setAdminForUserInOrganization(userId, orgId, false),
+                ]);
+            })
+            .then(function (res) {
+                res.forEach(function (r) {
+                    expect(r.state).to.equal('rejected');
+                    expect(r.reason.message).to.contain('no such organization');
+                });
+            })
+            .nodeify(done);
+    });
+
+    it('should remove from user.orgs when removing organization', function (done) {
+        var orgId = 'checkRemovedFromUserOrg',
+            userId = 'checkRemovedFromUserUser';
+
+        auth.addUser(userId, 'mail', 'pass', true, {})
+            .then(function () {
+                return auth.addOrganization(orgId);
+            })
+            .then(function () {
+                return auth.addUserToOrganization(userId, orgId);
+            })
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (userData) {
+                expect(userData.orgs).to.deep.equal([orgId]);
+                return auth.removeOrganizationByOrgId(orgId);
+            })
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function (userData) {
+                expect(userData.orgs).to.deep.equal([]);
+            })
+            .nodeify(done);
+    });
+
+    it('should remove from org.admins when removing user', function (done) {
+        var orgId = 'checkRemovedFromOrgOrg',
+            userId = 'checkRemovedFromOrgUser';
+
+        auth.addUser(userId, 'mail', 'pass', true, {})
+            .then(function () {
+                return auth.addOrganization(orgId);
+            })
+            .then(function () {
+                return auth.setAdminForUserInOrganization(userId, orgId, true);
+            })
+            .then(function () {
+                return auth.getOrganization(orgId);
+            })
+            .then(function (orgData) {
+                expect(orgData.admins).to.deep.equal([userId]);
+                return auth.deleteUser(userId);
+            })
+            .then(function () {
+                return auth.getOrganization(orgId);
+            })
+            .then(function (orgData) {
+                expect(orgData.admins).to.deep.equal([]);
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to remove organization that does not exist', function (done) {
+        var orgName = 'orgDoesNotExist';
         auth.removeOrganizationByOrgId(orgName)
             .then(function () {
                 done(new Error('should have been rejected'));
@@ -1061,7 +1330,7 @@ describe('GME authentication', function () {
                 throw new Error('getAdminsInOrganization should fail with non-existing organization');
             })
             .catch(function (error) {
-                expect(error.message).to.include('No such organization [' + orgId);
+                expect(error.message).to.include('no such organization [' + orgId);
                 done();
             })
             .done();
@@ -1338,7 +1607,7 @@ describe('GME authentication', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('No such user [' + userId);
+                expect(err.message).to.include('no such user [' + userId);
                 done();
             })
             .done();

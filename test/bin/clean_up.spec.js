@@ -133,7 +133,7 @@ describe('Clean UP CLI tests', function () {
                 throw new Error('should have failed!');
             })
             .catch(function (err) {
-                expect(err.message).to.contain('No such user');
+                expect(err.message).to.contain('no such user');
             })
             .nodeify(done);
     });
