@@ -809,6 +809,16 @@ define(['js/logger',
             }
 
             self.onExtendMenuItems(node.key, menuItems);
+        } else {
+            menuItems = {
+                loading: {
+                    name: 'Node is loading...',
+                    callback: function (/*key, options*/) {
+                        return;
+                    },
+                    icon: false
+                }
+            };
         }
 
         //return the complete action set for this node
