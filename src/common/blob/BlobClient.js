@@ -559,7 +559,7 @@ define([
 
     /**
      * Converts bytes to a human readable string.
-     * @param {bytes} - File size in bytes.
+     * @param {number} - File size in bytes.
      * @param {boolean} [si] - If true decimal conversion will be used (by default binary is used).
      * @returns {string}
      */
