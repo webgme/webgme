@@ -931,7 +931,7 @@ define(['common/util/canon',
             return node;
         }
 
-        function setBaseOfNewNode(node, relid, basePath) {
+        function _setBaseOfNewNode(node, relid, basePath) {
             //TODO this is a kind of low level hack so maybe there should be another way to do this
             var ancestor = getAncestor(node, basePath),
                 sourcePath = self.getPath(node).substr(self.getPath(ancestor).length),
@@ -939,6 +939,32 @@ define(['common/util/canon',
             sourcePath = sourcePath + '/' + relid;
             innerCore.overlayInsert(self.getChild(ancestor, CONSTANTS.OVERLAYS_PROPERTY),
                 sourcePath, 'base', targetPath);
+        }
+
+        function getAncestorPath(onePath, otherPath) {
+            var ancestorPath = '',
+                onePathArray = onePath.split('/'),
+                otherPathArray = otherPath.split('/'),
+                i = 0;
+            onePathArray.shift();
+            otherPathArray.shift();
+            if (onePathArray.length > 0 && otherPathArray.length > 0) {
+                while (i < onePathArray.length && onePathArray[i] === otherPathArray[i]) {
+                    ancestorPath += '/' + onePathArray[i];
+                    i += 1;
+                }
+            }
+            return ancestorPath;
+        }
+
+        function setBaseOfNewNode(root, nodePath, basePath) {
+            var ancestorPath = getAncestorPath(nodePath, basePath);
+            return TASYNC.call(function (node) {
+                var sourcePath = nodePath.substr(ancestorPath.length),
+                    targetPath = basePath.substr(ancestorPath.length);
+                innerCore.overlayInsert(self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
+                    sourcePath, 'base', targetPath);
+            }, self.loadByPath(root, ancestorPath));
         }
 
         function getOrderedRelids(diffObject) {
@@ -964,10 +990,9 @@ define(['common/util/canon',
             return ordered;
         }
 
-        function makeInitialContainmentChanges(node, diff, inserting) {
+        function makeInitialContainmentChanges(node, diff) {
             var relids = getOrderedRelids(diff),
                 i, done, child, moved,
-                added = false,
                 moving = function (n, di, r, p, m, a/*, d*/) {
                     var nRelid;
                     if (m === true) {
@@ -989,44 +1014,63 @@ define(['common/util/canon',
                     //moved node
                     moved = true;
                     child = self.loadByPath(self.getRoot(node), diff[relids[i]].movedFrom);
+                    done = TASYNC.call(moving, child, diff[relids[i]], relids[i], node, moved, done);
                 } else if (diff[relids[i]].removed === false) {
                     //added node
-                    added = true;
                     //first we hack the pointer, then we create the node
-                    if (diff[relids[i]].pointer && diff[relids[i]].pointer.base) {
-                        //we can set base if the node has one, otherwise it is 'inheritance internal' node
-                        setBaseOfNewNode(node, relids[i], diff[relids[i]].pointer.base);
-                    }
+                    // if (diff[relids[i]].pointer && diff[relids[i]].pointer.base) {
+                    //     //we can set base if the node has one, otherwise it is 'inheritance internal' node
+                    //     setBaseOfNewNode(node, relids[i], diff[relids[i]].pointer.base);
+                    // }
                     if (diff[relids[i]].hash) {
                         self.setProperty(node, relids[i], diff[relids[i]].hash);
-                        child = self.loadChild(node, relids[i]);
+                        //child = self.loadChild(node, relids[i]); no need to load
                     } else {
-                        child = self.getChild(node, relids[i]);
-                        self.setHashed(child, true);
+                        // child = self.getChild(node, relids[i]); no need to load or create anything
+                        // self.setHashed(child, true);
                     }
                 } else {
                     //simple node
-                    if (inserting === true) {
-                        //we are inside a new node, so we have to set the base first
-                        if (diff[relids[i]].pointer && diff[relids[i]].pointer.base) {
-                            //we can set base if the node has one, otherwise it is 'inheritance internal' node
-                            setBaseOfNewNode(node, relids[i], diff[relids[i]].pointer.base);
-                        }
-                    }
                     child = self.loadChild(node, relids[i]);
+                    done = TASYNC.call(moving, child, diff[relids[i]], relids[i], node, moved, done);
                 }
-
-                done = TASYNC.call(moving, child, diff[relids[i]], relids[i], node, moved, added || inserting, done);
             }
 
-            TASYNC.call(function (/*d*/) {
+            return TASYNC.call(function (/*d*/) {
                 return null;
             }, done);
+            // return done;
+        }
+
+        function setBaseRelationsOfNewNodes(root, path, diff, added) {
+            var relids = getOrderedRelids(diff),
+                i,
+                children = [],
+                newNode = false;
+
+
+            for (i = 0; i < relids.length; i += 1) {
+                if ((diff[relids[i]].removed === false || added)
+                    && diff[relids[i]].pointer && diff[relids[i]].pointer.base) {
+                    newNode = true;
+                    children[i] = TASYNC.join(
+                        setBaseOfNewNode(root, path + '/' + relids[i], diff[relids[i]].pointer.base),
+                        setBaseRelationsOfNewNodes(root, path + '/' + relids[i], diff[relids[i]], added || newNode)
+                    );
+                } else {
+                    children[i] = TASYNC.call(
+                        setBaseRelationsOfNewNodes, root, path + '/' + relids[i], diff[relids[i]], added
+                    );
+                }
+            }
+
+            return TASYNC.lift(children);
         }
 
         function applyNodeChange(root, path, nodeDiff) {
             //check for move
             var node;
+
             node = self.loadByPath(root, path);
 
             return TASYNC.call(function (n) {
@@ -1046,10 +1090,10 @@ define(['common/util/canon',
                     done = TASYNC.call(applyMetaChanges, n, nodeDiff.meta, done);
                 }
                 for (i = 0; i < relids.length; i++) {
-                    /*done = TASYNC.call(function () {
+                    done = TASYNC.call(function () {
                      return null;
-                     }, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]), done);*/
-                    done = TASYNC.join(done, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]));
+                     }, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]), done);
+                    // done = TASYNC.join(done, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]));
                 }
                 /*TASYNC.call(function (d) {
                  return done;
@@ -2477,7 +2521,18 @@ define(['common/util/canon',
         };
 
         this.applyTreeDiff = function (root, diff) {
-            return TASYNC.join(makeInitialContainmentChanges(root, diff), applyNodeChange(root, '', diff));
+            // return TASYNC.join(makeInitialContainmentChanges(root, diff), applyNodeChange(root, '', diff));
+            // return makeInitialContainmentChanges(root,diff);
+            var done = makeInitialContainmentChanges(root, diff);
+
+            done = TASYNC.call(setBaseRelationsOfNewNodes, root, '', diff, done);
+
+            return TASYNC.call(function(){
+                return applyNodeChange(root,'',diff);
+            },done);
+            // done = TASYNC.call(applyNodeChange, root, '', diff, done);
+
+            // return done;
         };
 
         this.tryToConcatChanges = function (base, extension) {
