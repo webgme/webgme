@@ -567,7 +567,7 @@ describe('corediff apply', function () {
                 .catch(done);
         });
 
-        it('should create a new subtree', function (done){
+        it('should create a new subtree', function (done) {
             var diff = {
                 E: {
                     902088723: {
@@ -667,8 +667,147 @@ describe('corediff apply', function () {
                 })
                 .then(function (node) {
                     expect(node).not.to.eql(null);
-                    expect(core.getAttribute(node,'name')).to.equal('GraphVizModel');
-                    expect(core.getPointerPath(node,'base')).to.equal('/175547009/471466181');
+                    expect(core.getAttribute(node, 'name')).to.equal('GraphVizModel');
+                    expect(core.getPointerPath(node, 'base')).to.equal('/175547009/471466181');
+                })
+                .nodeify(done);
+        });
+
+        it('should create new objects that has base relation among them', function (done) {
+            var nOne = {
+                    '_id': '#0000001111112222223333334444445555550001',
+                    'atr': {
+                        'name': 'N1',
+                        '_relguid': 'ba62fc78ab8c04e73b715680b838acce'
+                    },
+                    "t1": '#0000001111112222223333334444445555550002'
+                },
+                tOne = {
+                    '_id': '#0000001111112222223333334444445555550002',
+                    'atr': {
+                        'name': 'T1',
+                        '_relguid': 'ba62fc78ab8c04e73b715680b838acce'
+                    },
+                    "c1": '#0000001111112222223333334444445555550003'
+                },
+                cOne = {
+                    '_id': '#0000001111112222223333334444445555550003',
+                    'atr': {
+                        'name': 'C1',
+                        '_relguid': 'ba62fc78ab8c04e73b715680b838acce'
+                    }
+                },
+                nTwo = {
+                    '_id': '#0000001111112222223333334444445555550004',
+                    'atr': {
+                        'name': 'N2',
+                        '_relguid': 'ba62fc78ab8c04e73b715680b838acce'
+                    },
+                    "n3": '#0000001111112222223333334444445555550005'
+                },
+                nThree = {
+                    '_id': '#0000001111112222223333334444445555550005',
+                    'atr': {
+                        'name': 'N3',
+                        '_relguid': 'ba62fc78ab8c04e73b715680b838acce'
+                    },
+                    "t1p": '#0000001111112222223333334444445555550006'
+                },
+                tOnePrime = {
+                    '_id': '#0000001111112222223333334444445555550006',
+                    'atr': {
+                        'name': 'T1P'
+                    }
+                },
+                diff = {
+                    n1: {
+                        guid:'f51037c9-cf37-4324-ac1e-9c5cb7d5d777',
+                        removed:false,
+                        hash:'#0000001111112222223333334444445555550001',
+                        pointer:{
+                            base:'/175547009/1817665259'
+                        },
+                        t1:{
+                            guid:'5ce367f7-cf58-4d18-8d8d-a3ee983ac18d',
+                            pointer:{
+                                base:'/175547009/1817665259'
+                            },
+                            c1:{
+                                guid:'89f2afe9-cbcd-4a85-9f23-9e2c298d01eb',
+                                pointer:{
+                                    base:'/1'
+                                }
+                            }
+                        }
+                    },
+                    n2:{
+                        guid:'48e3e880-1eba-4159-9212-82bbbe0cfebe',
+                        removed:false,
+                        hash:'#0000001111112222223333334444445555550004',
+                        pointer:{
+                            base:'/175547009/1817665259'
+                        },
+                        n3:{
+                            guid:'ec4973bc-edd3-4be7-a85b-bc944940b7e4',
+                            pointer:{
+                                base:'/175547009/1817665259'
+                            },
+                            t1p:{
+                                pointer:{
+                                    base:'/n1/t1'
+                                }
+                            }
+                        }
+                    },
+                    childrenListChanged: true,
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+                };
+
+            project._dbProject.insertObject(nOne)
+                .then(function(){
+                    return project._dbProject.insertObject(tOne);
+                })
+                .then(function(){
+                    return project._dbProject.insertObject(cOne);
+                })
+                .then(function(){
+                    return project._dbProject.insertObject(nTwo);
+                })
+                .then(function(){
+                    return project._dbProject.insertObject(nThree);
+                })
+                .then(function(){
+                    return project._dbProject.insertObject(tOnePrime);
+                })
+                .then(function () {
+                    return Q.nfcall(core.applyTreeDiff, rootNode, diff);
+                })
+                .then(function () {
+                    expect(core.getChildrenRelids(rootNode)).to.include.members(['n1','n2']);
+                    return core.loadByPath(rootNode,'/n1/t1/c1');
+                })
+                .then(function(node){
+                    expect(node).not.to.eql(null);
+                    expect(core.getPath(core.getBase(node))).to.equal('/1');
+                    expect(core.getAttribute(node,'name')).to.equal('C1');
+
+                    return core.loadByPath(rootNode,'/n2/n3/t1p');
+                })
+                .then(function(node){
+                    expect(node).not.to.eql(null);
+                    expect(core.getPath(core.getBase(node))).to.equal('/n1/t1');
+                    expect(core.getAttribute(node,'name')).to.equal('T1P');
+                    expect(core.getChildrenPaths(node)).to.eql(['/n2/n3/t1p/c1']);
+
+                    return core.loadByPath(rootNode,'/n2/n3/t1p/c1');
+                })
+                .then(function(node){
+                    expect(node).not.to.eql(null);
+                    expect(core.getPath(core.getBase(node))).to.equal('/n1/t1/c1');
+                    expect(core.getAttribute(node,'name')).to.equal('C1');
+
+
                 })
                 .nodeify(done);
         });
@@ -690,7 +829,7 @@ describe('corediff apply', function () {
                 .then(function (projects) {
                     var remove = false,
                         i;
-                    for (i=0;i<projects.length;i+=1) {
+                    for (i = 0; i < projects.length; i += 1) {
                         if (projects[i]._id === pointerProjectId) {
                             remove = true;
                         }
@@ -851,15 +990,15 @@ describe('corediff apply', function () {
                 }
             };
             Q.nfcall(pointerCore.applyTreeDiff, pointerRootNode, patch)
-                .then(function(){
+                .then(function () {
                     return Q.allDone([
-                        pointerCore.loadByPath(pointerRootNode,'/579542227/275896267'),
-                        pointerCore.loadByPath(pointerRootNode,'/1532094116')
+                        pointerCore.loadByPath(pointerRootNode, '/579542227/275896267'),
+                        pointerCore.loadByPath(pointerRootNode, '/1532094116')
                     ]);
                 })
-                .then(function(nodes){
+                .then(function (nodes) {
                     expect(nodes).to.have.length(2);
-                    expect(pointerCore.getPointerPath(nodes[0],'dst')).to.equal(pointerCore.getPath(nodes[1]));
+                    expect(pointerCore.getPointerPath(nodes[0], 'dst')).to.equal(pointerCore.getPath(nodes[1]));
                 })
                 .nodeify(done);
         });
@@ -924,15 +1063,15 @@ describe('corediff apply', function () {
             };
 
             Q.nfcall(pointerCore.applyTreeDiff, pointerRootNode, patch)
-                .then(function(){
+                .then(function () {
                     return Q.allDone([
-                        pointerCore.loadByPath(pointerRootNode,'/579542227/275896267'),
-                        pointerCore.loadByPath(pointerRootNode,'/579542227/1532094116')
+                        pointerCore.loadByPath(pointerRootNode, '/579542227/275896267'),
+                        pointerCore.loadByPath(pointerRootNode, '/579542227/1532094116')
                     ]);
                 })
-                .then(function(nodes){
+                .then(function (nodes) {
                     expect(nodes).to.have.length(2);
-                    expect(pointerCore.getPointerPath(nodes[0],'dst')).to.equal(pointerCore.getPath(nodes[1]));
+                    expect(pointerCore.getPointerPath(nodes[0], 'dst')).to.equal(pointerCore.getPath(nodes[1]));
                 })
                 .nodeify(done);
         });
