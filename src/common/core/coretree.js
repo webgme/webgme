@@ -257,31 +257,31 @@ define([
             return TASYNC.call(__loadDescendantByPath2, child, path, index + 1);
         }
 
-        function __printNode(node) {
-            var str = '{';
-            str += 'age:' + node.age;
-
-            if (typeof node.relid === 'string') {
-                str += ', relid: "' + node.relid + '"';
-            }
-
-            str += ', children:';
-            if (node.children === null) {
-                str += 'null';
-            } else {
-                str += '[';
-                for (var i = 0; i < node.children.length; ++i) {
-                    if (i !== 0) {
-                        str += ', ';
-                    }
-                    str += __printNode(node.children[i]);
-                }
-                str += ']';
-            }
-
-            str += '}';
-            return str;
-        }
+        // function __printNode(node) {
+        //     var str = '{';
+        //     str += 'age:' + node.age;
+        //
+        //     if (typeof node.relid === 'string') {
+        //         str += ', relid: "' + node.relid + '"';
+        //     }
+        //
+        //     str += ', children:';
+        //     if (node.children === null) {
+        //         str += 'null';
+        //     } else {
+        //         str += '[';
+        //         for (var i = 0; i < node.children.length; ++i) {
+        //             if (i !== 0) {
+        //                 str += ', ';
+        //             }
+        //             str += __printNode(node.children[i]);
+        //         }
+        //         str += ']';
+        //     }
+        //
+        //     str += '}';
+        //     return str;
+        // }
 
         function __test(text, cond) {
             if (!cond) {
@@ -927,7 +927,7 @@ define([
             }
 
             return node;
-        }
+        };
     }
 
     return CoreTree;

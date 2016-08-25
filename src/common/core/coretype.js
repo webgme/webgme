@@ -437,7 +437,7 @@ define([
                 result = false;
 
             if (ancestor) {
-                result = self.getChildrenRelids(childRelid).indexOf(childRelid) > -1;
+                result = self.getChildrenRelids(ancestor).indexOf(childRelid) > -1;
             }
 
             return result;
@@ -905,12 +905,10 @@ define([
         };
 
         this.setBase = function (node, base) {
-            ASSERT(self.isValidNode(node) && (base === undefined || base === null || self.isValidNode(base)));
             ASSERT(self.isValidNewBase(node, base), 'New base would create loop in containment/inheritance tree');
 
             if (base) {
                 //TODO maybe this is not the best way, needs to be double checked
-                node.base = base;
                 var parent = self.getParent(node),
                     nodeChildren = self.getOwnChildrenRelids(node), // We're only interested in the children with data.
                     baseChildren = self.getChildrenRelids(base),
@@ -924,10 +922,16 @@ define([
                     if (self.getPath(parentBase) !== self.getPath(baseParent)) {
                         //we have to set an exact pointer only if it is not inherited child
                         innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
+
                         for (i = 0; i < nodeChildren.length; i += 1) {
                             if (baseChildren.indexOf(nodeChildren[i]) > -1) {
-                                if(childHasSameOrigin(node, base, nodeChildren[i])) {
-                                    console.log('// FIXME: Remove the child data');
+                                // Deal with relid collisions of the children of the node.
+                                if (childHasSameOrigin(node, base, nodeChildren[i]) === false) {
+                                    // 1. The child is defined in both the node(base chain) and new-base(base chain)
+                                    // -> remove the child.
+                                    innerCore.deleteChild(node, nodeChildren[i]);
+                                } else {
+                                    // 2. The child is defined at a common ancestor -> keep the data as is.
                                 }
                             }
                         }
@@ -938,6 +942,8 @@ define([
                     //if for some reason the node doesn't have a parent it is surely not an inherited child
                     innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
                 }
+
+                node.base = base;
             } else {
                 innerCore.setPointer(node, CONSTANTS.BASE_POINTER, null);
                 node.base = null;
