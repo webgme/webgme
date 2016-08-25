@@ -909,38 +909,6 @@ define(['common/util/canon',
             }
         }
 
-        function getAncestor(node, path) {
-            var ownPath = self.getPath(node),
-                ancestorPath = '',
-                i, ownPathArray, pathArray;
-            pathArray = path.split('/');
-            ownPathArray = ownPath.split('/');
-            ownPathArray.shift();
-            pathArray.shift();
-            for (i = 0; i < ownPathArray.length; i++) {
-                if (ownPathArray[i] === pathArray[i]) {
-                    ancestorPath = ancestorPath + '/' + ownPathArray[i];
-                } else {
-                    break;
-                }
-            }
-            while (ownPath !== ancestorPath) {
-                node = self.getParent(node);
-                ownPath = self.getPath(node);
-            }
-            return node;
-        }
-
-        function _setBaseOfNewNode(node, relid, basePath) {
-            //TODO this is a kind of low level hack so maybe there should be another way to do this
-            var ancestor = getAncestor(node, basePath),
-                sourcePath = self.getPath(node).substr(self.getPath(ancestor).length),
-                targetPath = basePath.substr(self.getPath(ancestor).length);
-            sourcePath = sourcePath + '/' + relid;
-            innerCore.overlayInsert(self.getChild(ancestor, CONSTANTS.OVERLAYS_PROPERTY),
-                sourcePath, 'base', targetPath);
-        }
-
         function getAncestorPath(onePath, otherPath) {
             var ancestorPath = '',
                 onePathArray = onePath.split('/'),
@@ -1017,17 +985,8 @@ define(['common/util/canon',
                     done = TASYNC.call(moving, child, diff[relids[i]], relids[i], node, moved, done);
                 } else if (diff[relids[i]].removed === false) {
                     //added node
-                    //first we hack the pointer, then we create the node
-                    // if (diff[relids[i]].pointer && diff[relids[i]].pointer.base) {
-                    //     //we can set base if the node has one, otherwise it is 'inheritance internal' node
-                    //     setBaseOfNewNode(node, relids[i], diff[relids[i]].pointer.base);
-                    // }
                     if (diff[relids[i]].hash) {
                         self.setProperty(node, relids[i], diff[relids[i]].hash);
-                        //child = self.loadChild(node, relids[i]); no need to load
-                    } else {
-                        // child = self.getChild(node, relids[i]); no need to load or create anything
-                        // self.setHashed(child, true);
                     }
                 } else {
                     //simple node
@@ -1039,7 +998,6 @@ define(['common/util/canon',
             return TASYNC.call(function (/*d*/) {
                 return null;
             }, done);
-            // return done;
         }
 
         function setBaseRelationsOfNewNodes(root, path, diff, added) {
