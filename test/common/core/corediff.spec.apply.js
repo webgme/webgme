@@ -812,6 +812,59 @@ describe('corediff apply', function () {
                 .nodeify(done);
         });
 
+        it('should ignore conflicting patch content', function (done) {
+            var newRoot,
+                diff = {
+                    175547009: {
+                        1817665259: {
+                            guid: '5f73946c-68aa-9de1-7979-736d884171af',
+                            removed: true
+                        }
+                    },
+                    1303043463: {
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                        attr: {
+                            name: 'MyModel'
+                        },
+                        oGuids: {
+                            '5f73946c-68aa-9de1-7979-736d884171af': true
+                        }
+                    },
+                    b: {
+                        hash: '#e54a4dcce022c601a808424bb76608b962dc435c',
+                        removed: false,
+                        oGuids: {
+                            '5f73946c-68aa-9de1-7979-736d884171af': true
+                        }
+                    },
+                    childrenListChanged: true,
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+                };
+
+            Q.nfcall(core.applyTreeDiff, rootNode, diff)
+                .then(function () {
+                    //TODO check why we cannot have these type of changes without complete reload
+                    core.persist(rootNode);
+                    return core.loadRoot(core.getHash(rootNode));
+                })
+                .then(function (root) {
+                    newRoot = root;
+                    return core.loadByPath(newRoot, '/175547009');
+                })
+                .then(function (node) {
+                    expect(core.getChildrenRelids(node)).not.to.include.members(['1817665259']);
+                    return core.loadByPath(newRoot, '/1303043463');
+                })
+                .then(function (node) {
+                    expect(node).to.equal(null);
+                    return core.loadByPath(newRoot, '/b');
+                })
+                .then(function (node) {
+                    expect(node).to.equal(null);
+                })
+                .nodeify(done);
+        });
     });
 
     describe('pointer changes', function () {

@@ -1006,7 +1006,6 @@ define(['common/util/canon',
                 children = [],
                 newNode = false;
 
-
             for (i = 0; i < relids.length; i += 1) {
                 if ((diff[relids[i]].removed === false || added)
                     && diff[relids[i]].pointer && diff[relids[i]].pointer.base) {
@@ -1035,6 +1034,11 @@ define(['common/util/canon',
                 var done,
                     relids = getDiffChildrenRelids(nodeDiff),
                     i;
+                if (n === null) {
+                    logger.warn('Missing node [' + path + '] during patch application. ' +
+                        'Could be a conflicting conflict resolution.');
+                    return;
+                }
                 if (nodeDiff.removed === true) {
                     self.deleteNode(n);
                     return;
@@ -1049,8 +1053,8 @@ define(['common/util/canon',
                 }
                 for (i = 0; i < relids.length; i++) {
                     done = TASYNC.call(function () {
-                     return null;
-                     }, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]), done);
+                        return null;
+                    }, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]), done);
                     // done = TASYNC.join(done, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]));
                 }
                 /*TASYNC.call(function (d) {
@@ -2485,9 +2489,9 @@ define(['common/util/canon',
 
             done = TASYNC.call(setBaseRelationsOfNewNodes, root, '', diff, done);
 
-            return TASYNC.call(function(){
-                return applyNodeChange(root,'',diff);
-            },done);
+            return TASYNC.call(function () {
+                return applyNodeChange(root, '', diff);
+            }, done);
             // done = TASYNC.call(applyNodeChange, root, '', diff, done);
 
             // return done;
