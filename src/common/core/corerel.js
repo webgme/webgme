@@ -301,10 +301,19 @@ define([
             ASSERT(self.isValidNode(node));
 
             var parent = innerCore.getParent(node);
-            var prefix = '/' + innerCore.getRelid(node);
-            ASSERT(parent !== null);
 
-            innerCore.deleteProperty(parent, innerCore.getRelid(node));
+            ASSERT(parent !== null);
+            self.deleteChild(parent, innerCore.getRelid(node));
+        };
+
+        /**
+         *
+         * @param {Node} node - Node containing the child.
+         * @param {string} relid - Relid of the child to be removed.
+         */
+        this.deleteChild = function (parent, relid) {
+            var prefix = '/' + relid;
+            innerCore.deleteProperty(parent, relid);
 
             while (parent) {
                 var overlays = innerCore.getChild(parent, CONSTANTS.OVERLAYS_PROPERTY);

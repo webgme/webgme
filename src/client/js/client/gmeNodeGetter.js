@@ -57,9 +57,35 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         }
     };
 
-    // GMENode.prototype.isValidBase = function () {
-    //
-    // };
+    GMENode.prototype.isValidNewBase = function (basePath) {
+        var base;
+        if (typeof basePath === 'string') {
+            base = this._state.nodes[basePath].node;
+            if (base) {
+                return this._state.core.isValidNewBase(base, this._state.nodes[this._id].node);
+            } else {
+                return false;
+            }
+        } else if (basePath === undefined || basePath || null) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    GMENode.prototype.isValidNewParent = function (parentPath) {
+        var parent;
+        if (typeof parentPath === 'string') {
+            parent = this._state.nodes[parentPath].node;
+            if (parent) {
+                return this._state.core.isValidNewParent(parent, this._state.nodes[this._id].node);
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    };
 
     GMENode.prototype.getInheritorIds = function () {
         return [];

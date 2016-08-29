@@ -59,15 +59,15 @@ describe('coretype', function () {
 
                 core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('coretype:core')});
                 root = core.createNode();
-                base = core.createNode({parent: root});
+                base = core.createNode({parent: root, relid: 'nonconflicting1'});
                 core.setAttribute(base, 'name', 'base');
                 core.setRegistry(base, 'position', {x: 100, y: 100});
                 core.setPointer(base, 'parent', root);
 
-                bChild = core.createNode({parent: base});
+                bChild = core.createNode({parent: base, relid: 'nonconflicting2'});
                 core.setPointer(bChild, 'out', root);
                 core.setPointer(bChild, 'in', base);
-                instance = core.createNode({parent: root, base: base});
+                instance = core.createNode({parent: root, base: base, relid: 'nonconflicting3'});
                 core.setAttribute(instance, 'name', 'instance');
             })
             .then(done)
@@ -567,5 +567,134 @@ describe('coretype', function () {
             expect(core.getCollectionPaths(node, 'ref')).to.eql(['/v/d']);
             done();
         }, core.loadByPath(root, '/v/d/c'));
+    });
+
+    it('isValidNewParent should return true when new-parent is root', function () {
+        var node = core.createNode({parent: root});
+
+        expect(core.isValidNewParent(root, node)).to.equal(true);
+    });
+
+    it('isValidNewParent should return false when new-parent is node', function () {
+        var node = core.createNode({parent: root});
+
+        expect(core.isValidNewParent(node, node)).to.equal(false);
+    });
+
+    it('isValidNewParent should return false when new-parent is base of node', function () {
+        var base = core.createNode({parent: root}),
+            instance = core.createNode({parent: root, base: base});
+
+        expect(core.isValidNewParent(base, instance)).to.equal(false);
+    });
+
+    it('isValidNewParent should return false when new-parent is child node', function () {
+        var fco = core.createNode({parent: root}),
+            parent = core.createNode({parent: root, base: fco}),
+            node = core.createNode({parent: parent, base: fco});
+
+        expect(core.isValidNewParent(node, parent)).to.equal(false);
+    });
+
+    it('isValidNewParent should return false when new-parent\'s parent is instance of node', function () {
+        var base = core.createNode({parent: root}),
+            instance = core.createNode({parent: root, base: base});
+
+        expect(core.isValidNewParent(instance, base)).to.equal(false);
+    });
+
+    // Base
+    it('isValidNewBase should should return true when new-base is undefined', function () {
+        var node = core.createNode({parent: root});
+
+        expect(core.isValidNewBase(undefined, node)).to.equal(true);
+    });
+
+    it('isValidNewBase should should return true when new-base is null', function () {
+        var node = core.createNode({parent: root});
+
+        expect(core.isValidNewBase(null, node)).to.equal(true);
+    });
+
+    it('isValidNewBase should should return true when new-base is valid', function () {
+        var fco = core.createNode({parent: root}),
+            node = core.createNode({parent: root});
+
+        expect(core.isValidNewBase(fco, node)).to.equal(true);
+    });
+
+    it('isValidNewBase should return false when new-base is parent of node', function () {
+        var fco = core.createNode({parent: root}),
+            parent = core.createNode({parent: root, base: fco}),
+            node = core.createNode({parent: parent, base: fco});
+
+        expect(core.isValidNewBase(parent, node)).to.equal(false);
+    });
+
+    it('isValidNewBase should return false when new-base is child of node', function () {
+        var fco = core.createNode({parent: root}),
+            parent = core.createNode({parent: root, base: fco}),
+            node = core.createNode({parent: parent, base: fco});
+
+        expect(core.isValidNewBase(node, parent)).to.equal(false);
+    });
+
+    it('isValidNewBase should return false when new-base is instance of node', function () {
+        var node = core.createNode({parent: root}),
+            instance = core.createNode({parent: root, base: node});
+
+        expect(core.isValidNewBase(instance, node)).to.equal(false);
+    });
+
+    it('setBase should keep children that are not colliding with children of new base', function () {
+        var newBase = core.createNode({parent: root}),
+            node = core.createNode({parent: root});
+
+        core.createNode({parent: newBase, relid: 'a'});
+        core.createNode({parent: node, relid: 'b'});
+
+        core.setBase(node, newBase);
+        expect(core.getChildrenRelids(node)).to.have.members(['a', 'b']);
+    });
+
+    it('setBase should remove children(data) that are colliding and NOT defined in common ancestor', function (done) {
+        var newBase = core.createNode({parent: root, relid: 'b'}),
+            node = core.createNode({parent: root, relid: 'n'}),
+            cBase = core.createNode({parent: newBase, relid: 'a'}),
+            cNode = core.createNode({parent: node, relid: 'a'});
+
+        core.setAttribute(cBase, 'name', 'cBase');
+        core.setAttribute(cNode, 'name', 'cNode');
+
+        core.setBase(node, newBase);
+        expect(core.getChildrenRelids(node)).to.have.members(['a']);
+
+        TASYNC.call(function (child) {
+            expect(core.getPath(child)).to.equal('/n/a');
+            expect(core.getAttribute(child, 'name')).to.eql('cBase');
+            done();
+        }, core.loadByPath(root, '/n/a'));
+    });
+
+    it('setBase should keep children(data) that are colliding but defined in common ancestor', function (done) {
+        var ancestor = core.createNode({parent: root}),
+            newBase = core.createNode({parent: root, relid: 'b', base: ancestor}),
+            node = core.createNode({parent: root, relid: 'n', base: ancestor}),
+            child = core.createNode({parent: ancestor, relid: 'a'});
+
+        core.setAttribute(child, 'name', 'cAncestor');
+
+        TASYNC.call(function (instanceChild) {
+            expect(instanceChild.length).to.equal(1);
+            core.setAttribute(instanceChild[0], 'name', 'cNode');
+            console.log('settingBase');
+            core.setBase(node, newBase);
+            console.log('baseSet');
+            TASYNC.call(function (childAfterSetBase) {
+                expect(core.getPath(childAfterSetBase)).to.equal('/n/a');
+                expect(core.getAttribute(childAfterSetBase, 'name')).to.eql('cNode');
+                done();
+            }, core.loadByPath(root, '/n/a'));
+        }, core.loadChildren(node, '/n'));
     });
 });

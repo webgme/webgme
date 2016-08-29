@@ -187,7 +187,7 @@ define([
          * The function goes up on the inheritance chain of the questioned node.
          * At every step, it searches the root of instantiation (the node that is the instance) and collect inverse
          * relation names that are exists in the prototype structure and has purely internal endpoints.
-         * 
+         *
          * @param node - the node in question
          * @returns {Array} - the list of names of relations that has the node as target
          */
@@ -235,8 +235,8 @@ define([
         /**
          * This function gathers the paths of the nodes that are pointing to the questioned node. The set of relations
          * that are checked is the 'inherited' inverse relations.
-         * 
-         * The method of this function is identical to getInheritedCollectionNames, except this function collects the 
+         *
+         * The method of this function is identical to getInheritedCollectionNames, except this function collects the
          * sources of the given relations and not just the name of all such relation. To return a correct path (as
          * the data exists in some bases of the actual nodes) the function always convert it back to the place of
          * inquiry.
@@ -369,6 +369,101 @@ define([
         //     }
         //     return filtered;
         // }
+
+        function isBase(node, compareNode) {
+            while (compareNode) {
+                if (compareNode === node) {
+                    return true;
+                }
+
+                compareNode = self.getBase(compareNode);
+            }
+
+            return false;
+        }
+
+        function isParent(node, compareNode) {
+            while (compareNode) {
+                if (compareNode === node) {
+                    return true;
+                }
+
+                compareNode = self.getParent(compareNode);
+            }
+
+            return false;
+        }
+
+        function isParentOrBaseRec(node, compareNode, visited, traverseContainment) {
+            var comparePath = self.getPath(compareNode);
+
+            if (traverseContainment) {
+                if (visited.containment[comparePath]) {
+                    //console.log('breaking recursion', traverseContainment, basePath);
+                    return false;
+                }
+
+                visited.containment[comparePath] = true;
+                compareNode = self.getParent(compareNode);
+            } else {
+                if (visited.inheritance[comparePath]) {
+                    //console.log('breaking recursion', traverseContainment, basePath);
+                    return false;
+                }
+
+                visited.inheritance[comparePath] = true;
+                compareNode = self.getBase(compareNode);
+            }
+
+            while (compareNode) {
+                //console.log('comparing with node', traverseContainment, basePath);
+                if (node === compareNode || isParentOrBaseRec(node, compareNode, visited, !traverseContainment)) {
+                    //console.log('Found one!');
+                    return true;
+                }
+
+                if (traverseContainment) {
+                    compareNode = self.getParent(compareNode);
+                } else {
+                    compareNode = self.getBase(compareNode);
+                }
+            }
+
+            return false;
+        }
+
+        function getBaseAncestor(node, otherNode) {
+            var bases = [],
+                base;
+
+            base = node;
+            while (base) {
+                bases.push(base);
+                base = self.getBase(base);
+            }
+
+            base = otherNode;
+            while (base) {
+                if (bases.indexOf(base) > -1) {
+                    return base;
+                }
+
+                base = self.getBase(base);
+            }
+
+            return null;
+        }
+
+        function childHasSameOrigin(node, otherNode, childRelid) {
+            var ancestor = getBaseAncestor(node, otherNode),
+                result = false;
+
+            if (ancestor) {
+                result = self.getChildrenRelids(ancestor).indexOf(childRelid) > -1;
+            }
+
+            return result;
+        }
 
         //</editor-fold>
 
@@ -522,14 +617,29 @@ define([
             return node;
         };
 
-        this.moveNode = function (node, parent) {
-            //TODO we have to check if the move is really allowed!!!
+        this.isValidNewParent = function (parent, node) {
             ASSERT(self.isValidNode(node) && self.isValidNode(parent));
-            var base = node.base,
-                parentBase = parent.base;
-            ASSERT(!base || self.getPath(base) !== self.getPath(parent));
-            ASSERT(!parentBase || self.getPath(parentBase) !== self.getPath(node));
+            var visited = {
+                    containment: {},
+                    inheritance: {}
+                },
+                result = true;
 
+            if (isBase(parent, node)) {
+                result = false;
+            } else if (isParentOrBaseRec(node, parent, visited, true)) {
+                result = false;
+            } else if (isParentOrBaseRec(node, parent, visited, false)) {
+                result = false;
+            }
+
+            return result;
+        };
+
+        this.moveNode = function (node, parent) {
+            ASSERT(self.isValidNewParent(parent, node),
+                'New parent would create loop in containment/inheritance tree.');
+            var base = node.base;
             var moved = innerCore.moveNode(node, parent);
             moved.base = base;
             return moved;
@@ -796,32 +906,59 @@ define([
             return node.base;
         };
 
-        this.setBase = function (node, base) {
+        this.isValidNewBase = function (base, node) {
             ASSERT(self.isValidNode(node) && (base === undefined || base === null || self.isValidNode(base)));
-            // FIXME: These assertion are far from complete.
-            ASSERT(!base || self.getPath(self.getParent(node)) !== self.getPath(base));
-            ASSERT(!base || self.getPath(node) !== self.getPath(base));
+            var visited = {
+                    containment: {},
+                    inheritance: {}
+                },
+                result = true;
 
-            var oldBase = self.getBase(node);
+            if (!base) {
+                result = true;
+            } else if (isParent(base, node)) {
+                result = false;
+            } else if (isParentOrBaseRec(node, base, visited, true)) {
+                result = false;
+            } else if (isParentOrBaseRec(node, base, visited, false)) {
+                result = false;
+            }
 
-            //TODO this restriction should be removed after clarification of the different scenarios and outcomes
-            //TODO changing base from or to a node which has children is not allowed currently
+            return result;
+        };
 
-            // Proposed rules: https://docs.google.com/drawings/d/1dGHaJCuq0q7eHXL2dwC6_oTXw5J7g3T3DlIFPwWT6TA/edit
-            // ASSERT((base === null || oldBase === null) ||
-            //     (self.getChildrenRelids(base).length === 0 && self.getChildrenRelids(oldBase).length === 0));
+        this.setBase = function (node, base) {
+            ASSERT(self.isValidNewBase(base, node),
+                'New base would create loop in containment/inheritance tree.');
 
-            if (!!base) {
+            if (base) {
                 //TODO maybe this is not the best way, needs to be double checked
-                node.base = base;
                 var parent = self.getParent(node),
-                    parentBase, baseParent;
+                    nodeChildren = self.getOwnChildrenRelids(node), // We're only interested in the children with data.
+                    baseChildren = self.getChildrenRelids(base),
+                    parentBase,
+                    baseParent,
+                    i;
+
                 if (parent) {
                     parentBase = self.getBase(parent);
                     baseParent = self.getParent(base);
                     if (self.getPath(parentBase) !== self.getPath(baseParent)) {
                         //we have to set an exact pointer only if it is not inherited child
                         innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
+
+                        for (i = 0; i < nodeChildren.length; i += 1) {
+                            if (baseChildren.indexOf(nodeChildren[i]) > -1) {
+                                // Deal with relid collisions of the children of the node.
+                                if (childHasSameOrigin(node, base, nodeChildren[i]) === false) {
+                                    // 1. The child is defined in both the node(base chain) and new-base(base chain)
+                                    // -> remove the child.
+                                    innerCore.deleteChild(node, nodeChildren[i]);
+                                } else {
+                                    // 2. The child is defined at a common ancestor -> keep the data as is.
+                                }
+                            }
+                        }
                     } else {
                         innerCore.deletePointer(node, CONSTANTS.BASE_POINTER); //we remove the pointer just in case
                     }
@@ -829,6 +966,8 @@ define([
                     //if for some reason the node doesn't have a parent it is surely not an inherited child
                     innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
                 }
+
+                node.base = base;
             } else {
                 innerCore.setPointer(node, CONSTANTS.BASE_POINTER, null);
                 node.base = null;
