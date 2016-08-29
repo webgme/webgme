@@ -94,38 +94,6 @@ define(['js/logger',
             client.updateTerritory(selfId, selfPatterns);
         }
 
-        function addCreateItemsToContextMenu(menuItems, items, menuItemsCallback) {
-            var keys = Object.keys(items),
-                i;
-
-            keys.sort();
-
-            for (i = 0; i < keys.length; i += 1) {
-                if (keys[i] !== 'own.id' && keys[i] !== 'own.title') {
-                    if (typeof items[keys[i]]['own.id'] === 'string' && typeof items[keys[i]]['own.title'] === 'string') {
-                        //it can also be instantiated
-                        menuItems[items[keys[i]]['own.id']] = {
-                            name: items[keys[i]]['own.title'],
-                            callback: menuItemsCallback
-                        };
-                        //it can be the last level
-                        if (Object.keys(items[keys[i]]).length > 2) {
-                            menuItems[items[keys[i]]['own.id']].items = {};
-                            addCreateItemsToContextMenu(menuItems[items[keys[i]]['own.id']].items, items[keys[i]],
-                                menuItemsCallback);
-                        }
-                    } else {
-                        //just a grouping label
-                        menuItems[keys[i]] = {
-                            name: keys[i],
-                            items: {}
-                        };
-                        addCreateItemsToContextMenu(menuItems[keys[i]].items, items[keys[i]], menuItemsCallback);
-                    }
-                }
-            }
-        }
-
         initialize = function () {
             var rootNode = client.getNode(CONSTANTS.PROJECT_ROOT_ID);
             logger.debug('entered initialize');
@@ -518,7 +486,7 @@ define(['js/logger',
                         self._client.openLibraryOriginInNewWindow(nodeId);
                     },
                     icon: false
-                }
+                };
             }
 
             if (nodeObj && nodeObj.getCrosscutsInfo().length > 0) {
@@ -973,8 +941,7 @@ define(['js/logger',
             keys,
             id,
             title,
-            validNode,
-            i;
+            validNode;
 
         if (node) {
             validChildrenInfo = node.getValidChildrenTypesDetailed();
