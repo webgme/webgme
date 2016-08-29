@@ -432,8 +432,30 @@ define([
             return false;
         }
 
+        function getBaseAncestor(node, otherNode) {
+            var bases = [],
+                base;
+
+            base = node;
+            while (base) {
+                bases.push(base);
+                base = self.getBase(base);
+            }
+
+            base = otherNode;
+            while (base) {
+                if (bases.indexOf(base) > -1) {
+                    return base;
+                }
+
+                base = self.getBase(base);
+            }
+
+            return null;
+        }
+
         function childHasSameOrigin(node, otherNode, childRelid) {
-            var ancestor = innerCore.getAncestor(node, otherNode),
+            var ancestor = getBaseAncestor(node, otherNode),
                 result = false;
 
             if (ancestor) {
