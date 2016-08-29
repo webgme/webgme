@@ -59,15 +59,15 @@ describe('coretype', function () {
 
                 core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('coretype:core')});
                 root = core.createNode();
-                base = core.createNode({parent: root});
+                base = core.createNode({parent: root, relid: 'nonconflicting1'});
                 core.setAttribute(base, 'name', 'base');
                 core.setRegistry(base, 'position', {x: 100, y: 100});
                 core.setPointer(base, 'parent', root);
 
-                bChild = core.createNode({parent: base});
+                bChild = core.createNode({parent: base, relid: 'nonconflicting2'});
                 core.setPointer(bChild, 'out', root);
                 core.setPointer(bChild, 'in', base);
-                instance = core.createNode({parent: root, base: base});
+                instance = core.createNode({parent: root, base: base, relid: 'nonconflicting3'});
                 core.setAttribute(instance, 'name', 'instance');
             })
             .then(done)
