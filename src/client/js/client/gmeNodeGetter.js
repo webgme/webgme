@@ -64,12 +64,12 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
             if (base) {
                 return this._state.core.isValidNewBase(base, this._state.nodes[this._id].node);
             } else {
-                throw new Error('Invalid new basePath, node it is not loaded or available "' + basePath + '".');
+                return false;
             }
         } else if (basePath === undefined || basePath || null) {
             return true;
         } else {
-            throw new Error('Invalid basePath provided, must be string, undefined or null: "' + basePath + '".');
+            return false;
         }
     };
 
@@ -80,10 +80,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
             if (parent) {
                 return this._state.core.isValidNewParent(parent, this._state.nodes[this._id].node);
             } else {
-                throw new Error('Invalid new parentPath, node it is not loaded or available "' + parentPath + '".');
+                return false;
             }
         } else {
-            throw new Error('Invalid parentPath provided, must be string: "' + parentPath + '".');
+            return false;
         }
     };
 
