@@ -62,7 +62,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         if (typeof basePath === 'string') {
             base = this._state.nodes[basePath].node;
             if (base) {
-                this._state.core.isValidNewBase(base, this._state.nodes[this._id].node);
+                return this._state.core.isValidNewBase(base, this._state.nodes[this._id].node);
             } else {
                 throw new Error('Invalid new basePath, node it is not loaded or available "' + basePath + '".');
             }
@@ -78,7 +78,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         if (typeof parentPath === 'string') {
             parent = this._state.nodes[parentPath].node;
             if (parent) {
-                this._state.core.isValidNewParent(parent, this._state.nodes[this._id].node);
+                return this._state.core.isValidNewParent(parent, this._state.nodes[this._id].node);
             } else {
                 throw new Error('Invalid new parentPath, node it is not loaded or available "' + parentPath + '".');
             }

@@ -751,19 +751,15 @@ define(['jquery',
     }
 
     function canMoveNodeHere(parentId, nodes) {
-        var parent = client.getNode(parentId),
-            parentBase;
+        var node,
+            i;
 
-        while (parent) {
-            parentBase = parent.getBaseId();
-            if (parentBase) {
-                if (nodes.indexOf(parentBase) !== -1) {
-                    return false;
-                }
+        for (i = 0; i < nodes.length; i += 1) {
+            node = client.getNode(nodes[i]);
+            if (!(node && node.isValidNewParent(parentId))) {
+                return false;
             }
-            parent = client.getNode(parent.getParentId());
         }
-
 
         return true;
     }
@@ -829,104 +825,9 @@ define(['jquery',
         }
     }
 
-    function isChildOf(nodeOrId, parentNodeOrId) {
-        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
-            nodeId = node.getId(),
-            prospectParentNodeId = typeof parentNodeOrId === 'string' ? parentNodeOrId: parentNodeOrId.getId();
-
-        while (node) {
-            if (nodeId === prospectParentNodeId) {
-                return true;
-            }
-
-            nodeId = node.getParentId();
-            if (!nodeId) {
-                return false;
-            }
-
-            node = client.getNode(nodeId);
-        }
-    }
-
-    function isChildOrInstanceRec(nodeOrId, targetNodeOrId, visited, traverseContainment) {
-        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
-            nodeId = node.getId(),
-            targetNode = typeof targetNodeOrId === 'string' ? client.getNode(targetNodeOrId) : targetNodeOrId,
-            baseNode,
-            baseId;
-
-        baseNode = targetNode;
-        baseId = targetNode.getId();
-
-        if (traverseContainment) {
-            if (visited.containment[baseId]) {
-                //console.log('breaking recursion', traverseContainment, baseId);
-                return false;
-            }
-
-            visited.containment[baseId] = true;
-            baseId = baseNode.getParentId();
-        } else {
-            if (visited.inheritance[baseId]) {
-                //console.log('breaking recursion', traverseContainment, baseId);
-                return false;
-            }
-
-            visited.inheritance[baseId] = true;
-            baseId = baseNode.getBaseId();
-        }
-
-        while (baseNode) {
-            //console.log('comparing with node', traverseContainment, baseId);
-            if (baseId === nodeId) {
-                //console.log('Found one!');
-                return true;
-            }
-
-            if (traverseContainment) {
-                baseId = baseNode.getParentId();
-            } else {
-                baseId = baseNode.getBaseId();
-            }
-
-            if (!baseId) {
-                break;
-            }
-
-            baseNode = client.getNode(baseId);
-            if (isChildOrInstanceRec(nodeOrId, baseNode, visited, !traverseContainment)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    function isValidBase(nodeOrId, targetNodeOrId) {
-        var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
-            result = true,
-            visited = {
-                containment: {},
-                inheritance: {}
-            };
-
-        // Check that new base is not a parent of the node.
-        result = !isChildOf(node, targetNodeOrId);
-
-        if (result) {
-            result = !isChildOrInstanceRec(node, targetNodeOrId, visited, true);
-        }
-
-        //console.log('starting from inheritance');
-        if (result) {
-            result = !isChildOrInstanceRec(node, targetNodeOrId, visited, false);
-        }
-
-        return result;
-    }
-
     function isValidReplaceableTarget(nodeOrId, targetNodeOrId) {
         var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
+            targetId = typeof targetNodeOrId === 'string' ? targetNodeOrId : targetNodeOrId.getId(),
             result = true;
 
         result = isReplaceable(node);
@@ -935,7 +836,7 @@ define(['jquery',
         }
 
         if (result) {
-            result = isValidBase(nodeOrId, targetNodeOrId);
+            result = node.isValidNewBase(targetId);
         }
 
         return result;
