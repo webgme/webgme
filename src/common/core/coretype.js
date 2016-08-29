@@ -615,7 +615,8 @@ define([
         };
 
         this.moveNode = function (node, parent) {
-            ASSERT(self.isValidNewParent(parent, node), 'New parent would create loop in containment/inheritance tree');
+            ASSERT(self.isValidNewParent(parent, node),
+                'New parent would create loop in containment/inheritance tree.');
             var base = node.base;
             var moved = innerCore.moveNode(node, parent);
             moved.base = base;
@@ -905,7 +906,8 @@ define([
         };
 
         this.setBase = function (node, base) {
-            ASSERT(self.isValidNewBase(base, node), 'New base would create loop in containment/inheritance tree');
+            ASSERT(self.isValidNewBase(base, node),
+                'New base would create loop in containment/inheritance tree.');
 
             if (base) {
                 //TODO maybe this is not the best way, needs to be double checked
