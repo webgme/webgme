@@ -57,9 +57,35 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         }
     };
 
-    // GMENode.prototype.isValidBase = function () {
-    //
-    // };
+    GMENode.prototype.isValidNewBase = function (basePath) {
+        var base;
+        if (typeof basePath === 'string') {
+            base = this._state.nodes[basePath].node;
+            if (base) {
+                this._state.core.isValidNewBase(base, this._state.nodes[this._id].node);
+            } else {
+                throw new Error('Invalid new basePath, node it is not loaded or available "' + basePath + '".');
+            }
+        } else if (basePath === undefined || basePath || null) {
+            return true;
+        } else {
+            throw new Error('Invalid basePath provided, must be string, undefined or null: "' + basePath + '".');
+        }
+    };
+
+    GMENode.prototype.isValidNewParent = function (parentPath) {
+        var parent;
+        if (typeof parentPath === 'string') {
+            parent = this._state.nodes[parentPath].node;
+            if (parent) {
+                this._state.core.isValidNewParent(parent, this._state.nodes[this._id].node);
+            } else {
+                throw new Error('Invalid new parentPath, node it is not loaded or available "' + parentPath + '".');
+            }
+        } else {
+            throw new Error('Invalid parentPath provided, must be string: "' + parentPath + '".');
+        }
+    };
 
     GMENode.prototype.getInheritorIds = function () {
         return [];

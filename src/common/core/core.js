@@ -488,8 +488,9 @@ define([
         this.copyNodes = core.copyNodes;
 
         /**
+         * Checks if parent can be the new parent of node.
+         * @param {module:Core~Node} parent - the new parent.
          * @param {module:Core~Node} node - the node in question.
-         * @param {module:Core~Node | null} parent - the new parent.
          *
          * @return {boolean} True if the supplied parent is a valid parent for the node.
          *
@@ -782,8 +783,9 @@ define([
         this.getOwnPointerPath = core.getOwnPointerPath;
 
         /**
+         * Checks if base can be the new base of node.
+         * @param {module:Core~Node | null | undefined} base - the new base.
          * @param {module:Core~Node} node - the node in question.
-         * @param {module:Core~Node | null} base - the new base.
          *
          * @return {boolean} True if the supplied base is a valid base for the node.
          *

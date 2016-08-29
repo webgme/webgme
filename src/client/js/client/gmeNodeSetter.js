@@ -486,19 +486,36 @@ define([], function () {
             }
         }
 
-        function setBase(path, basepath) {
+        function setBase(path, basePath) {
             var error;
             if (state.core &&
                 state.nodes[path] &&
                 typeof state.nodes[path].node === 'object' &&
-                state.nodes[basepath] &&
-                typeof state.nodes[basepath].node === 'object') {
-                error = state.core.setBase(state.nodes[path].node, state.nodes[basepath].node);
+                state.nodes[basePath] &&
+                typeof state.nodes[basePath].node === 'object') {
+                error = state.core.setBase(state.nodes[path].node, state.nodes[basePath].node);
                 if (error instanceof Error) {
                     printCoreError(error);
                     return;
                 }
-                saveRoot('setBase(' + path + ',' + basepath + ')');
+                saveRoot('setBase(' + path + ',' + basePath + ')');
+            }
+        }
+
+        function moveNode(path, parentPath) {
+            var error;
+            if (state.core &&
+                state.nodes[path] &&
+                typeof state.nodes[path].node === 'object' &&
+                state.nodes[parentPath] &&
+                typeof state.nodes[parentPath].node === 'object') {
+                error = state.core.moveNode(state.nodes[path].node, state.nodes[parentPath].node);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot('moveNode(' + path + ',' + parentPath + ')');
             }
         }
 
@@ -545,6 +562,7 @@ define([], function () {
             setRegistry: setRegistry,
             delRegistry: delRegistry,
             copyMoreNodes: copyMoreNodes,
+            moveNode: moveNode,
             moveMoreNodes: moveMoreNodes,
             delMoreNodes: delMoreNodes,
             createChild: createChild,
