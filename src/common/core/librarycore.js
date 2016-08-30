@@ -216,6 +216,74 @@ define([
                 self.setProperty(overlay, to, fromOverlay);
             }
 
+            function isPathInSubTree(fullPath, subTreePath) {
+                var fullPathArray = fullPath.split(CONSTANTS.PATH_SEP),
+                    subTreePathArray = subTreePath.split(CONSTANTS.PATH_SEP),
+                    i;
+                fullPathArray.shift();
+                subTreePathArray.shift();
+
+                if (fullPathArray.length < subTreePathArray.length) {
+                    return false;
+                }
+                for (i = 0; i < subTreePathArray.length; i += 1) {
+                    if (fullPathArray[i] !== subTreePathArray[i]) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            function isClosureInternalTarget(targetPath, closureInfo) {
+                var selectionPath;
+
+                for (selectionPath in closureInfo.bases) {
+                    if (isPathInSubTree(targetPath, selectionPath)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            function addRelationsFromNodeToClosureInfo(node, allMetaNodes, closureInfo) {
+                var basePath = self.getPath(node),
+                    overlayInfo = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
+                    overlayKey,
+                    pointerName,
+                    path,
+                    targetPath;
+
+                for (overlayKey in overlayInfo) {
+                    path = basePath + CONSTANTS.PATH_SEP + overlayKey;
+                    if (isClosureInternalTarget(path, closureInfo)) {
+                        for (pointerName in overlayInfo[overlayKey]) {
+                            if (self.isPointerName(pointerName)) {
+                                targetPath = basePath + CONSTANTS.PATH_SEP +
+                                    overlayInfo[overlayKey][pointerName];
+                                if (pointerName === CONSTANTS.BASE_POINTER) {
+                                    if (allMetaNodes[targetPath]) {
+                                        closureInfo.bases[path] = self.getGuid(allMetaNodes[targetPath]);
+                                    } else if (isClosureInternalTarget(targetPath, closureInfo)) {
+                                        closureInfo.relations[path] = closureInfo.relations[path] || {};
+                                        closureInfo.relations[path].base = targetPath;
+                                    } else {
+                                        throw new Error('Base [' + targetPath +
+                                            '] of node [' + path + '] is outside of closure!');
+                                    }
+                                } else {
+                                    if (isClosureInternalTarget(targetPath, closureInfo)) {
+                                        closureInfo.relations[path] = closureInfo.relations[path] || {};
+                                        closureInfo.relations[path][pointerName] = targetPath;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             //</editor-fold>
 
             //<editor-fold=Modified Methods>
@@ -824,6 +892,47 @@ define([
             this.getLibraryInfo = function (node, name) {
                 var libroot = getRootOfLibrary(node, name);
                 return self.getAttribute(libroot, '_libraryInfo');
+            };
+
+            this.getClosureInformation = function (nodes) {
+                var closureInfo = {
+                        selection: {},
+                        bases: {},
+                        relations: {}
+                    },
+                    allMetaNodes,
+                    overlayInfo,
+                    overlayKey,
+                    basePath,
+                    path,
+                    pointerName,
+                    targetPath,
+                    node,
+                    i;
+
+                ASSERT(nodes.length > 0);
+
+                allMetaNodes = this.getAllMetaNodes(nodes[0]);
+
+                // We first collect the absolute paths of the selected nodes
+                for (i = 0; i < nodes.length; i += 1) {
+                    closureInfo.bases[this.getPath(nodes[i])] = true;
+                }
+
+                // Secondly, we collect relation information (the first order ones).
+                // We leave the handling of the root node's overlay info for a separate step
+                for (i = 0; i < nodes.length; i += 1) {
+                    node = nodes[i];
+                    while (this.getPath(node)) { // until it is not the root
+                        addRelationsFromNodeToClosureInfo(node, closureInfo);
+                        node = this.getParent(node);
+                    }
+                }
+
+                // Finally we process the relations of the root
+                addRelationsFromNodeToClosureInfo(this.getRoot(nodes[0]), closureInfo);
+
+                return closureInfo;
             };
             //</editor-fold>
         };
