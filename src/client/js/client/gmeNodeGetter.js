@@ -45,7 +45,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.getChildrenRelids = function () {
-        return this._state.core.getOwnChildrenRelids(this._state.nodes[this._id].node);
+        return this._state.core.getChildrenRelids(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getBaseId = function () {
