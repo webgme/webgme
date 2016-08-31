@@ -195,4 +195,14 @@ describe('corerel', function () {
 
         expect(core.getAttribute(result, 'name')).to.equal(core.getRelid(tempTo));
     });
+
+    it('creating node with explicitly set relid should ASSERT if already exists', function () {
+        core.createNode({parent: root, relid: 'taken'});
+        try {
+            core.createNode({parent: root, relid: 'taken'});
+            throw new Error('Should have failed!');
+        } catch (err) {
+            expect(err.message).to.contain('Given relid already used in parent');
+        }
+    });
 });
