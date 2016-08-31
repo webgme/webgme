@@ -396,8 +396,7 @@ define([
 
         this._txtNewProjectName.on('keyup', function () {
             var val = self._txtNewProjectName.val(),
-                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
-                    self._ownerId, val);
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(self._ownerId, val);
 
             if (val.length === 1) {
                 self._updateFilter([val.toUpperCase()[0], val.toUpperCase()[0]]);
@@ -424,8 +423,7 @@ define([
 
             var enterPressed = event.which === 13,
                 newProjectName = self._txtNewProjectName.val(),
-                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
-                    self._dialog.find('.username').text(), newProjectName);
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(self._ownerId, newProjectName);
 
             if (enterPressed && isValidProjectName(newProjectName, projectId)) {
                 doCreateProject(self._client);
