@@ -52,9 +52,21 @@ define([
         this._dialog.modal('show');
 
         this._dialog.on('hidden.bs.modal', function () {
+            self._tableBody.off('dblclick');
+            self._tableBody.off('click');
+            self._tableHead.off('click');
+            self._btnCreateNew.off('click');
+            self._btnNewProjectCancel.off('click');
+            self._ownerIdList.off('click');
+            self._txtNewProjectName.off('keyup');
+            self._txtNewProjectName.off('keydown');
+            self._btnNewProjectCreate.off('click');
+            self._btnRefresh.off('click');
+
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
+
             self._client.unwatchDatabase(self._projectEventHandling, function (err) {
                 if (err) {
                     self._logger.error('error during unsubscribe', err);
