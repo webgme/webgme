@@ -183,7 +183,7 @@ describe('standalone server', function () {
             {code: 200, url: '/gmeConfig.json'},
             {code: 200, url: '/package.json'},
             {code: 200, url: '/index.html'},
-            {code: 200, url: '/docs/tutorial.html'},
+            //{code: 200, url: '/docs/tutorial.html'},
             {code: 200, url: '/plugin/PluginBase.js'},
             {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/PluginGenerator'},
             {code: 404, url: '/plugin/PluginGenerator/PluginGenerator'},
