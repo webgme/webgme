@@ -128,6 +128,7 @@ define([
                         {
                             id: 'newProject',
                             label: 'New project ...',
+                            disabled: WebGMEGlobal.userInfo.canCreate !== true,
                             iconClass: 'glyphicon glyphicon-plus',
                             action: newProject,
                             actionData: {newType: 'seed'}
@@ -135,6 +136,7 @@ define([
                         {
                             id: 'importProject',
                             label: 'Import project ...',
+                            disabled: WebGMEGlobal.userInfo.canCreate !== true,
                             iconClass: 'glyphicon glyphicon-import',
                             action: newProject,
                             actionData: {newType: 'import'}

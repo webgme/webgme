@@ -335,16 +335,20 @@ define([
             deleteProject(selectedId);
         });
 
-        this._btnCreateNew.on('click', function (event) {
-            self._txtNewProjectName.val('');
-            self._panelButtons.hide();
-            self._panelCreateNew.show();
-            self._txtNewProjectName.focus();
-            self._creatingNew = true;
+        if (WebGMEGlobal.userInfo.canCreate !== true) {
+            this._btnCreateNew.hide();
+        } else {
+            this._btnCreateNew.on('click', function (event) {
+                self._txtNewProjectName.val('');
+                self._panelButtons.hide();
+                self._panelCreateNew.show();
+                self._txtNewProjectName.focus();
+                self._creatingNew = true;
 
-            event.stopPropagation();
-            event.preventDefault();
-        });
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        }
 
         this._btnNewProjectCancel.on('click', function (event) {
             self._panelButtons.show();
