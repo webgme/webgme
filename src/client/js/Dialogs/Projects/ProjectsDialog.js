@@ -52,9 +52,21 @@ define([
         this._dialog.modal('show');
 
         this._dialog.on('hidden.bs.modal', function () {
+            self._tableBody.off('dblclick');
+            self._tableBody.off('click');
+            self._tableHead.off('click');
+            self._btnCreateNew.off('click');
+            self._btnNewProjectCancel.off('click');
+            self._ownerIdList.off('click');
+            self._txtNewProjectName.off('keyup');
+            self._txtNewProjectName.off('keydown');
+            self._btnNewProjectCreate.off('click');
+            self._btnRefresh.off('click');
+
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
+
             self._client.unwatchDatabase(self._projectEventHandling, function (err) {
                 if (err) {
                     self._logger.error('error during unsubscribe', err);
@@ -335,16 +347,20 @@ define([
             deleteProject(selectedId);
         });
 
-        this._btnCreateNew.on('click', function (event) {
-            self._txtNewProjectName.val('');
-            self._panelButtons.hide();
-            self._panelCreateNew.show();
-            self._txtNewProjectName.focus();
-            self._creatingNew = true;
+        if (WebGMEGlobal.userInfo.canCreate !== true) {
+            this._btnCreateNew.hide();
+        } else {
+            this._btnCreateNew.on('click', function (event) {
+                self._txtNewProjectName.val('');
+                self._panelButtons.hide();
+                self._panelCreateNew.show();
+                self._txtNewProjectName.focus();
+                self._creatingNew = true;
 
-            event.stopPropagation();
-            event.preventDefault();
-        });
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        }
 
         this._btnNewProjectCancel.on('click', function (event) {
             self._panelButtons.show();
@@ -380,8 +396,7 @@ define([
 
         this._txtNewProjectName.on('keyup', function () {
             var val = self._txtNewProjectName.val(),
-                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
-                    self._ownerId, val);
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(self._ownerId, val);
 
             if (val.length === 1) {
                 self._updateFilter([val.toUpperCase()[0], val.toUpperCase()[0]]);
@@ -408,8 +423,7 @@ define([
 
             var enterPressed = event.which === 13,
                 newProjectName = self._txtNewProjectName.val(),
-                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
-                    self._dialog.find('.username').text(), newProjectName);
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(self._ownerId, newProjectName);
 
             if (enterPressed && isValidProjectName(newProjectName, projectId)) {
                 doCreateProject(self._client);

@@ -56,6 +56,11 @@ define(['js/Loader/LoaderCircles',
         this._initDialog();
 
         this._dialog.on('hide.bs.modal', function () {
+            self._dialog.find('li.tab').off('click');
+            self._dialog.find('.toggle-info-btn').off('click');
+            self._btnCreateSnapShot.off('click');
+            self._btnCreateBlob.off('click');
+            self._btnDuplicate.off('click');
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
