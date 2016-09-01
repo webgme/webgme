@@ -79,7 +79,7 @@ define([
                 }
             }
             //normal child - as every node should have a base, it is normally mean a direct child of the ROOT
-            if (self.getChildrenRelids(node, true)[relid]) {
+            if (self.getChildrenRelids(node, true).hasOwnProperty(relid) === false) {
                 return null;
             }
 

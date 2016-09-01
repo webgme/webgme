@@ -43,7 +43,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             var relId;
             do {
                 relId = Math.floor(Math.random() * max);
-            } while (existingRelIds.indexOf[relId]);
+            } while (existingRelIds[relId]);
             return '' + relId;
         }
 

@@ -147,13 +147,13 @@ define(['common/util/canon',
                 diff = {added: [], removed: []};
 
             for (relid in sRelids) {
-                if (tRelids[relid]) {
+                if (tRelids.hasOwnProperty(relid) === false) {
                     diff.removed.push({relid: relid, hash: sHashes[relid]});
                 }
             }
 
             for (relid in tRelids) {
-                if (sRelids[relid]) {
+                if (sRelids.hasOwnProperty(relid) === false) {
                     diff.added.push({relid: relid, hash: tHashes[relid]});
                 }
             }
