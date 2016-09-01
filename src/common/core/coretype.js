@@ -532,15 +532,23 @@ define([
             return child;
         };
 
-        this.getChildrenRelids = function (node) {
-            var inheritRelIds = node.base === null ? [] : self.getChildrenRelids(self.getBase(node));
-            var ownRelIds = innerCore.getChildrenRelids(node);
-            for (var i = 0; i < inheritRelIds.length; i++) {
-                if (ownRelIds.indexOf(inheritRelIds[i]) === -1) {
-                    ownRelIds.push(inheritRelIds[i]);
+        this.getChildrenRelids = function (node, asObject) {
+            ASSERT(self.isValidNode(node));
+            var result = {},
+                base = node,
+                relids,
+                i;
+
+            while (base) {
+                relids = innerCore.getChildrenRelids(base);
+                for (i = 0; i < relids.length; i += 1) {
+                    result[relids[i]] = true;
                 }
+
+                base = base.base;
             }
-            return ownRelIds;
+
+            return asObject ? result : Object.keys(result);
         };
 
         this.loadChildren = function (node) {
@@ -604,13 +612,19 @@ define([
         this.createNode = function (parameters) {
             parameters = parameters || {};
             var base = parameters.base || null,
-                parent = parameters.parent;
+                parent = parameters.parent,
+                node,
+                relids;
 
             ASSERT(!parent || self.isValidNode(parent));
             ASSERT(!base || self.isValidNode(base));
             ASSERT(!base || self.getPath(base) !== self.getPath(parent));
 
-            var node = innerCore.createNode(parameters);
+            if (parent) {
+                relids = self.getChildrenRelids(parent, true);
+            }
+
+            node = innerCore.createNode(parameters, relids);
             node.base = base;
             innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
 
@@ -639,19 +653,23 @@ define([
         this.moveNode = function (node, parent) {
             ASSERT(self.isValidNewParent(parent, node),
                 'New parent would create loop in containment/inheritance tree.');
-            var base = node.base;
-            var moved = innerCore.moveNode(node, parent);
+            var base = node.base,
+                moved;
+
+            moved = innerCore.moveNode(node, parent, self.getChildrenRelids(parent, true));
             moved.base = base;
+
             return moved;
         };
 
         this.copyNode = function (node, parent) {
-            var base = node.base;
-            ASSERT(!base || self.getPath(base) !== self.getPath(parent));
+            ASSERT(!node.base || self.getPath(node.base) !== self.getPath(parent));
+            var base = node.base,
+                newnode = innerCore.copyNode(node, parent, self.getChildrenRelids(parent, true));
 
-            var newnode = innerCore.copyNode(node, parent);
             newnode.base = base;
             innerCore.setPointer(newnode, CONSTANTS.BASE_POINTER, base);
+
             return newnode;
         };
 
@@ -680,7 +698,7 @@ define([
             }
 
             //making the actual copy
-            copiedNodes = innerCore.copyNodes(nodes, parent);
+            copiedNodes = innerCore.copyNodes(nodes, parent, self.getChildrenRelids(parent, true));
 
             //setting internal-inherited relations
             for (i = 0; i < nodes.length; i++) {

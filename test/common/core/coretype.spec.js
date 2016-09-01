@@ -2,6 +2,7 @@
 
 /**
  * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 var testFixture = require('../../_globals.js');
 
@@ -11,6 +12,8 @@ describe('coretype', function () {
         Q = testFixture.Q,
         logger = testFixture.logger.fork('coretype.spec'),
         storage,
+        // Has to be in sync with relidPool in util/random.js
+        RELID_POOL = '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'.split(''),
         expect = testFixture.expect,
         __should = testFixture.should,
         Type = testFixture.requirejs('common/core/coretype'),
@@ -677,7 +680,7 @@ describe('coretype', function () {
     });
 
     it('setBase should keep children(data) that are colliding but defined in common ancestor', function (done) {
-        var ancestor = core.createNode({parent: root}),
+        var ancestor = core.createNode({parent: root, relid: 'ancestor'}),
             newBase = core.createNode({parent: root, relid: 'b', base: ancestor}),
             node = core.createNode({parent: root, relid: 'n', base: ancestor}),
             child = core.createNode({parent: ancestor, relid: 'a'});
@@ -696,5 +699,139 @@ describe('coretype', function () {
                 done();
             }, core.loadByPath(root, '/n/a'));
         }, core.loadChildren(node, '/n'));
+    });
+
+    // Relids collision
+    it('creating node with explicitly set relid should ASSERT if already exists', function () {
+        core.createNode({parent: root, relid: 'taken'});
+        try {
+            core.createNode({parent: root, relid: 'taken'});
+            throw new Error('Should have failed!');
+        } catch (err) {
+            expect(err.message).to.contain('Given relid already used in parent');
+        }
+    });
+
+    it('creating node with explicitly set relid should ASSERT if already exists on base', function () {
+        var ancestor = core.createNode({parent: root}),
+            node = core.createNode({parent: root, base: ancestor});
+
+        core.createNode({parent: ancestor, relid: 'taken'});
+        try {
+            core.createNode({parent: node, relid: 'taken'});
+            throw new Error('Should have failed!');
+        } catch (err) {
+            expect(err.message).to.contain('Given relid already used in parent');
+        }
+    });
+
+    it('should generate new relid/child when createNode node with all chars taken on node', function () {
+        var node = core.createNode({parent: root});
+
+        RELID_POOL.forEach(function (relid) {
+            core.createNode({parent: node, relid: relid});
+        });
+
+        core.createNode({parent: node});
+
+        expect(core.getChildrenRelids(node).length).to.equal(RELID_POOL.length + 1);
+    });
+
+    it('should generate new relid/child when createNode with all chars taken on base', function () {
+        var ancestor = core.createNode({parent: root}),
+            node = core.createNode({parent: root, base: ancestor});
+
+        RELID_POOL.forEach(function (relid) {
+            core.createNode({parent: ancestor, relid: relid});
+        });
+
+        core.createNode({parent: node});
+
+        expect(core.getChildrenRelids(node).length).to.equal(core.getChildrenRelids(ancestor).length + 1);
+    });
+
+    it('should generate new relid/child when copyNode node with all chars taken on node', function () {
+        var node = core.createNode({parent: root}),
+            child;
+
+        RELID_POOL.forEach(function (relid) {
+            child = core.createNode({parent: node, relid: relid});
+        });
+
+        core.copyNode(child, node);
+
+        expect(core.getChildrenRelids(node).length).to.equal(RELID_POOL.length + 1);
+    });
+
+    it('should generate new relid/child when copyNode with all chars taken on base', function () {
+        var ancestor = core.createNode({parent: root}),
+            node = core.createNode({parent: root, base: ancestor}),
+            child;
+
+        RELID_POOL.forEach(function (relid) {
+            child = core.createNode({parent: ancestor, relid: relid});
+        });
+
+        core.copyNode(child, node);
+
+        expect(core.getChildrenRelids(node).length).to.equal(core.getChildrenRelids(ancestor).length + 1);
+    });
+
+    it('should generate new relid/child when copyNodes node with all chars taken on node', function () {
+        var node = core.createNode({parent: root}),
+            child,
+            child1;
+
+        RELID_POOL.forEach(function (relid) {
+            child1 = child;
+            child = core.createNode({parent: node, relid: relid});
+        });
+
+        core.copyNodes([child, child1], node);
+
+        expect(core.getChildrenRelids(node).length).to.equal(RELID_POOL.length + 2);
+    });
+
+    it('should generate new relid/child when copyNodes with all chars taken on base', function () {
+        var ancestor = core.createNode({parent: root}),
+            node = core.createNode({parent: root, base: ancestor}),
+            child,
+            child1;
+
+        RELID_POOL.forEach(function (relid) {
+            child1 = child;
+            child = core.createNode({parent: ancestor, relid: relid});
+        });
+
+        core.copyNodes([child, child1], node);
+
+        expect(core.getChildrenRelids(node).length).to.equal(core.getChildrenRelids(ancestor).length + 2);
+    });
+
+    it('should generate new relid/child when moveNode node with all chars taken on node', function () {
+        var node = core.createNode({parent: root, relid: 'theNode'}),
+            child = core.createNode({parent: root, relid: RELID_POOL[0]});
+
+        RELID_POOL.forEach(function (relid) {
+            core.createNode({parent: node, relid: relid});
+        });
+
+        core.moveNode(child, node);
+
+        expect(core.getChildrenRelids(node).length).to.equal(RELID_POOL.length + 1);
+    });
+
+    it('should generate new relid/child when moveNode with all chars taken on base', function () {
+        var ancestor = core.createNode({parent: root, relid: 'theAncestor'}),
+            node = core.createNode({parent: root, base: ancestor, relid: 'theNode'}),
+            child = core.createNode({parent: root, relid: RELID_POOL[0]});
+
+        RELID_POOL.forEach(function (relid) {
+            core.createNode({parent: ancestor, relid: relid});
+        });
+
+        core.moveNode(child, node);
+
+        expect(core.getChildrenRelids(node).length).to.equal(core.getChildrenRelids(ancestor).length + 1);
     });
 });

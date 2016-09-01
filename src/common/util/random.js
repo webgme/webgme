@@ -57,7 +57,7 @@ define(['./chance.min'], function (ChanceJs) {
                 relid += getRandomCharacter(relidPool);
             }
             tries += 1;
-        } while (object.hasOwnProperty(relid) === true);
+        } while (object.hasOwnProperty(relid) === true || isValidRelid(relid) === false);
 
         return relid;
     }
