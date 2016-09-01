@@ -62,12 +62,17 @@ if (typeof define !== 'undefined') {
                 if (!err) {
                     log('Connected to ' + webGMEUrl);
                 }
-                var refreshPeriod = 60 * 1000;
+                var refreshPeriod = 60 * 1000,
+                    disconnected = false;
                 callback = callback || function (err, response) {
                     if (err) {
                         log('Error connecting to ' + webGMEUrl + ' ' + err);
-                    } else {
+                        disconnected = true;
+                    } else if (disconnected) {
+                        log('Reconnected to ' + webGMEUrl);
+                        disconnected = false;
                     }
+
                     if (response && response.refreshPeriod) {
                         refreshPeriod = response.refreshPeriod;
                     }
