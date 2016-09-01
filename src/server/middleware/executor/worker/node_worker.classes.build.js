@@ -3102,7 +3102,8 @@ define('blob/Artifact',[
     'use strict';
 
     /**
-     * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the storage.
+     * Creates a new instance of artifact, i.e. complex object, in memory. This object can be saved in the blob-storage
+     * on the server and later retrieved with its metadata hash.
      * @param {string} name Artifact's name without extension
      * @param {BlobClient} blobClient
      * @param {BlobMetadata} descriptor
@@ -3130,7 +3131,7 @@ define('blob/Artifact',[
      * @param {Blob} content - File object or Blob.
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>metadataHash</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.addFile = function (name, content, callback) {
@@ -3138,19 +3139,19 @@ define('blob/Artifact',[
             filename = name.substring(name.lastIndexOf('/') + 1),
             deferred = Q.defer();
 
-        self.blobClientPutFile.call(self.blobClient, filename, content, function (err, hash) {
+        self.blobClientPutFile.call(self.blobClient, filename, content, function (err, metadataHash) {
             if (err) {
                 deferred.reject(err);
                 return;
             }
 
-            self.addObjectHash(name, hash, function (err, hash) {
+            self.addObjectHash(name, metadataHash, function (err, metadataHash) {
                 if (err) {
                     deferred.reject(err);
                     return;
                 }
 
-                deferred.resolve(hash);
+                deferred.resolve(metadataHash);
             });
         });
 
@@ -3172,7 +3173,7 @@ define('blob/Artifact',[
             filename = name.substring(name.lastIndexOf('/') + 1);
 
         self.blobClientPutFile.call(self.blobClient, filename, content,
-            function (err, hash) {
+            function (err, metadataHash) {
                 if (err) {
                     deferred.reject(err);
                     return;
@@ -3185,7 +3186,7 @@ define('blob/Artifact',[
                     size = content.length;
                 }
 
-                self.addMetadataHash(name, hash, size)
+                self.addMetadataHash(name, metadataHash, size)
                     .then(deferred.resolve)
                     .catch(deferred.reject);
             });
@@ -3196,20 +3197,20 @@ define('blob/Artifact',[
     /**
      * Adds a hash to the artifact using the given file path.
      * @param {string} name - Path to the file in the artifact. Note: 'a/b/c.txt'
-     * @param {string} hash - Metadata hash that has to be added.
+     * @param {string} metadataHash - Metadata hash that has to be added.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    Artifact.prototype.addObjectHash = function (name, hash, callback) {
+    Artifact.prototype.addObjectHash = function (name, metadataHash, callback) {
         var self = this,
             deferred = Q.defer();
 
-        if (BlobConfig.hashRegex.test(hash) === false) {
+        if (BlobConfig.hashRegex.test(metadataHash) === false) {
             deferred.reject('Blob hash is invalid');
         } else {
-            self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
+            self.blobClientGetMetadata.call(self.blobClient, metadataHash, function (err, metadata) {
                 if (err) {
                     deferred.reject(err);
                     return;
@@ -3226,7 +3227,7 @@ define('blob/Artifact',[
                         content: metadata.content,
                         contentType: BlobMetadata.CONTENT_TYPES.OBJECT
                     };
-                    deferred.resolve(hash);
+                    deferred.resolve(metadataHash);
                 }
             });
         }
@@ -3237,14 +3238,14 @@ define('blob/Artifact',[
     /**
      * Adds a hash to the artifact using the given file path.
      * @param {string} name - Path to the file in the artifact. Note: 'a/b/c.txt'
-     * @param {string} hash - Metadata hash that has to be added.
+     * @param {string} metadataHash - Metadata hash that has to be added.
      * @param {number} [size] - Size of the referenced blob.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    Artifact.prototype.addMetadataHash = function (name, hash, size, callback) {
+    Artifact.prototype.addMetadataHash = function (name, metadataHash, size, callback) {
         var self = this,
             deferred = Q.defer(),
             addMetadata = function (size) {
@@ -3256,10 +3257,10 @@ define('blob/Artifact',[
                     self.descriptor.size += size;
 
                     self.descriptor.content[name] = {
-                        content: hash,
+                        content: metadataHash,
                         contentType: BlobMetadata.CONTENT_TYPES.SOFT_LINK
                     };
-                    deferred.resolve(hash);
+                    deferred.resolve(metadataHash);
                 }
             };
 
@@ -3268,10 +3269,10 @@ define('blob/Artifact',[
             size = undefined;
         }
 
-        if (BlobConfig.hashRegex.test(hash) === false) {
+        if (BlobConfig.hashRegex.test(metadataHash) === false) {
             deferred.reject(new Error('Blob hash is invalid'));
         } else if (size === undefined) {
-            self.blobClientGetMetadata.call(self.blobClient, hash, function (err, metadata) {
+            self.blobClientGetMetadata.call(self.blobClient, metadataHash, function (err, metadata) {
                 if (err) {
                     deferred.reject(err);
                     return;
@@ -3290,7 +3291,7 @@ define('blob/Artifact',[
      * @param {Object.<string, Blob>} files files to add
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>hashes</b>.<br>
+     * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>metadataHashes</b>.<br>
      * On error the promise will be rejected with {@link Error|string} <b>error</b>.
      */
     Artifact.prototype.addFiles = function (files, callback) {
@@ -3321,35 +3322,35 @@ define('blob/Artifact',[
 
     /**
      * Adds hashes to the artifact using the given file paths.
-     * @param {object.<string, string>} objectHashes - Keys are file paths and values metadata hashes.
+     * @param {object.<string, string>} metadataHashes - Keys are file paths and values metadata hashes.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>hashes</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    Artifact.prototype.addObjectHashes = function (objectHashes, callback) {
+    Artifact.prototype.addObjectHashes = function (metadataHashes, callback) {
         var self = this,
-            fileNames = Object.keys(objectHashes);
+            fileNames = Object.keys(metadataHashes);
 
         return Q.all(fileNames.map(function (fileName) {
-            return self.addObjectHash(fileName, objectHashes[fileName]);
+            return self.addObjectHash(fileName, metadataHashes[fileName]);
         })).nodeify(callback);
     };
 
     /**
      * Adds hashes to the artifact using the given file paths.
-     * @param {object.<string, string>} objectHashes - Keys are file paths and values object hashes.
+     * @param {object.<string, string>} metadataHashes - Keys are file paths and values metadata hashes.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise}  On success the promise will be resolved with {string[]} <b>hashes</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    Artifact.prototype.addMetadataHashes = function (objectHashes, callback) {
+    Artifact.prototype.addMetadataHashes = function (metadataHashes, callback) {
         var self = this,
-            fileNames = Object.keys(objectHashes);
+            fileNames = Object.keys(metadataHashes);
 
         return Q.all(fileNames.map(function (fileName) {
-            return self.addMetadataHash(fileName, objectHashes[fileName]);
+            return self.addMetadataHash(fileName, metadataHashes[fileName]);
         })).nodeify(callback);
     };
 
@@ -3357,7 +3358,7 @@ define('blob/Artifact',[
      * Saves this artifact and uploads the metadata to the server's storage.
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise}  On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * @return {external:Promise}  On success the promise will be resolved with {string} <b>metadataHash</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     Artifact.prototype.save = function (callback) {
@@ -3422,7 +3423,7 @@ define('blob/BlobClient',[
 
     /**
      * Client to interact with the blob-storage. <br>
-     * FIXME: For some reason the methods do not show up in the generated docs. See source code.
+     *
      * @param {object} parameters
      * @param {object} parameters.logger
      * @constructor
@@ -3514,8 +3515,14 @@ define('blob/BlobClient',[
         return this._getURL('view', hash, subpath);
     };
 
-    BlobClient.prototype.getDownloadURL = function (hash, subpath) {
-        return this.origin + this.getRelativeDownloadURL(hash, subpath);
+    /**
+     * Returns the get-url for downloading a blob.
+     * @param {string} metadataHash
+     * @param {string} [subpath] - optional file-like path to sub-object if complex blob
+     * @return {string} get-url for blob
+     */
+    BlobClient.prototype.getDownloadURL = function (metadataHash, subpath) {
+        return this.origin + this.getRelativeDownloadURL(metadataHash, subpath);
     };
 
     BlobClient.prototype.getRelativeDownloadURL = function (hash, subpath) {
@@ -3540,7 +3547,7 @@ define('blob/BlobClient',[
      * @param {string|Buffer|ArrayBuffer} data - file content.
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise} On success the promise will be resolved with {string} <b>hash</b>.<br>
+     * @return {external:Promise} On success the promise will be resolved with {string} <b>metadataHash</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     BlobClient.prototype.putFile = function (name, data, callback) {
@@ -3653,7 +3660,7 @@ define('blob/BlobClient',[
      * @param {object.<string, string|Buffer|ArrayBuffer>} o - Keys are file names and values the content.
      * @param {function} [callback] - if provided no promise will be returned.
      *
-     * @return {external:Promise} On success the promise will be resolved with {object} <b>hashes</b>.<br>
+     * @return {external:Promise} On success the promise will be resolved with {object} <b>fileNamesToMetadataHashes</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     BlobClient.prototype.putFiles = function (o, callback) {
@@ -3704,19 +3711,19 @@ define('blob/BlobClient',[
      * Retrieves object from blob storage as a Buffer under node and as an ArrayBuffer in the client.
      * N.B. if the retrieved file is a json-file and running in a browser, the content will be decoded and
      * the string parsed as a JSON.
-     * @param {string} hash - hash of metadata for object.
+     * @param {string} metadataHash - hash of metadata for object.
      * @param {function} [callback] - if provided no promise will be returned.
-     * @param {string} [subpath]
+     * @param {string} [subpath] - optional file-like path to sub-object if complex blob
      *
      * @return {external:Promise} On success the promise will be resolved with {Buffer|ArrayBuffer|object}
      * <b>content</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    BlobClient.prototype.getObject = function (hash, callback, subpath) {
+    BlobClient.prototype.getObject = function (metadataHash, callback, subpath) {
         var deferred = Q.defer(),
             self = this;
 
-        this.logger.debug('getObject', hash, subpath);
+        this.logger.debug('getObject', metadataHash, subpath);
 
         superagent.parse['application/zip'] = function (obj, parseCallback) {
             if (parseCallback) {
@@ -3727,7 +3734,7 @@ define('blob/BlobClient',[
         };
         //superagent.parse['application/json'] = superagent.parse['application/zip'];
 
-        var req = superagent.get(this.getViewURL(hash, subpath));
+        var req = superagent.get(this.getViewURL(metadataHash, subpath));
         if (this.webgmeToken) {
             req.set('Authorization', 'Bearer ' + this.webgmeToken);
         }
@@ -3801,15 +3808,15 @@ define('blob/BlobClient',[
 
     /**
      * Retrieves object from blob storage and parses the content as a string.
-     * @param {string} hash - hash of metadata for object.
+     * @param {string} metadataHash - hash of metadata for object.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise} On success the promise will be resolved with {string} <b>contentString</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    BlobClient.prototype.getObjectAsString = function (hash, callback) {
+    BlobClient.prototype.getObjectAsString = function (metadataHash, callback) {
         var self = this;
-        return self.getObject(hash)
+        return self.getObject(metadataHash)
             .then(function (content) {
                 if (typeof content === 'string') {
                     // This does currently not happen..
@@ -3829,15 +3836,15 @@ define('blob/BlobClient',[
 
     /**
      * Retrieves object from blob storage and parses the content as a JSON. (Will resolve with error if not valid JSON.)
-     * @param {string} hash - hash of metadata for object.
+     * @param {string} metadataHash - hash of metadata for object.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise} On success the promise will be resolved with {object} <b>contentJSON</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    BlobClient.prototype.getObjectAsJSON = function (hash, callback) {
+    BlobClient.prototype.getObjectAsJSON = function (metadataHash, callback) {
         var self = this;
-        return self.getObject(hash)
+        return self.getObject(metadataHash)
             .then(function (content) {
                 if (typeof content === 'string') {
                     // This does currently not happen..
@@ -3857,18 +3864,18 @@ define('blob/BlobClient',[
 
     /**
      * Retrieves metadata from blob storage.
-     * @param {string} hash - hash of metadata.
+     * @param {string} metadataHash - hash of metadata.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise} On success the promise will be resolved with {object} <b>metadata</b>.<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
-    BlobClient.prototype.getMetadata = function (hash, callback) {
-        var req = superagent.get(this.getMetadataURL(hash)),
+    BlobClient.prototype.getMetadata = function (metadataHash, callback) {
+        var req = superagent.get(this.getMetadataURL(metadataHash)),
             deferred = Q.defer(),
             self = this;
 
-        this.logger.debug('getMetadata', hash);
+        this.logger.debug('getMetadata', metadataHash);
 
         if (this.webgmeToken) {
             req.set('Authorization', 'Bearer ' + this.webgmeToken);
@@ -3903,7 +3910,7 @@ define('blob/BlobClient',[
 
     /**
      * Retrieves the {@link Artifact} from the blob storage.
-     * @param {hash} metadataHash - SHA hash associated with the artifact.
+     * @param {hash} metadataHash - hash associated with the artifact.
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise}  On success the promise will be resolved with
@@ -3941,7 +3948,7 @@ define('blob/BlobClient',[
      * @param {function} [callback] - if provided no promise will be returned.
      *
      * @return {external:Promise}  On success the promise will be resolved with
-     * {string[]} <b>artifactHashes</b>.<br>
+     * {string[]} <b>artifactHashes</b> (metadataHashes).<br>
      * On error the promise will be rejected with {@link Error} <b>error</b>.
      */
     BlobClient.prototype.saveAllArtifacts = function (callback) {
@@ -3956,7 +3963,7 @@ define('blob/BlobClient',[
 
     /**
      * Converts bytes to a human readable string.
-     * @param {bytes} - File size in bytes.
+     * @param {number} - File size in bytes.
      * @param {boolean} [si] - If true decimal conversion will be used (by default binary is used).
      * @returns {string}
      */
@@ -5460,12 +5467,17 @@ if (typeof define !== 'undefined') {
                 if (!err) {
                     log('Connected to ' + webGMEUrl);
                 }
-                var refreshPeriod = 60 * 1000;
+                var refreshPeriod = 60 * 1000,
+                    disconnected = false;
                 callback = callback || function (err, response) {
                     if (err) {
                         log('Error connecting to ' + webGMEUrl + ' ' + err);
-                    } else {
+                        disconnected = true;
+                    } else if (disconnected) {
+                        log('Reconnected to ' + webGMEUrl);
+                        disconnected = false;
                     }
+
                     if (response && response.refreshPeriod) {
                         refreshPeriod = response.refreshPeriod;
                     }
