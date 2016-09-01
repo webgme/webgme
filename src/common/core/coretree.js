@@ -551,14 +551,14 @@ define([
             return child;
         };
 
-        this.createChild = function (node) {
+        this.createChild = function (node, takenRelids) {
             node = self.normalize(node);
 
             if (typeof node.data !== 'object' || node.data === null) {
                 throw new Error('invalid node data');
             }
 
-            return self.getChild(node, RANDOM.generateRelid(node.data));
+            return self.getChild(node, RANDOM.generateRelid(takenRelids || node.data));
         };
 
         // ------- data manipulation

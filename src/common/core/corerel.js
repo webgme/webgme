@@ -274,7 +274,7 @@ define([
             innerCore.setProperty(node, name, array);
         };
 
-        this.createNode = function (parameters) {
+        this.createNode = function (parameters, takenRelids) {
             parameters = parameters || {};
             var relid = parameters.relid,
                 parent = parameters.parent;
@@ -285,10 +285,15 @@ define([
             var node;
             if (parent) {
                 if (relid) {
-                    node = innerCore.getChild(parent, relid);
+                    if ((takenRelids && takenRelids[relid]) || self.getChildrenRelids(parent).indexOf(relid) > -1) {
+                        throw new Error('Given relid already used in parent "' + relid + '".');
+                    } else {
+                        node = innerCore.getChild(parent, relid);
+                    }
                 } else {
-                    node = innerCore.createChild(parent);
+                    node = innerCore.createChild(parent, takenRelids);
                 }
+
                 innerCore.setHashed(node, true);
             } else {
                 node = innerCore.createRoot();
@@ -329,7 +334,7 @@ define([
             }
         };
 
-        this.copyNode = function (node, parent) {
+        this.copyNode = function (node, parent, takenRelids) {
             ASSERT(self.isValidNode(node));
             ASSERT(!parent || self.isValidNode(parent));
 
@@ -344,7 +349,7 @@ define([
                     return null;
                 }
 
-                newNode = innerCore.createChild(parent);
+                newNode = innerCore.createChild(parent, takenRelids);
                 innerCore.setHashed(newNode, true);
                 innerCore.setData(newNode, innerCore.copyData(node));
 
@@ -415,10 +420,10 @@ define([
             return newNode;
         };
 
-        this.copyNodes = function (nodes, parent) {
+        this.copyNodes = function (nodes, parent, takenRelids) {
             //copying multiple nodes at once for keeping their internal relations
             var paths = [],
-                i, j, index, names, pointer,
+                i, j, index, names, pointer, newNode,
                 copiedNodes = [],
             // Every single element will be an object with the
             // internally pointing relations and the index of the target.
@@ -442,7 +447,11 @@ define([
 
             //now we use our simple copy
             for (i = 0; i < nodes.length; i++) {
-                copiedNodes.push(self.copyNode(nodes[i], parent));
+                newNode = self.copyNode(nodes[i], parent, takenRelids);
+                copiedNodes.push(newNode);
+                if (takenRelids) {
+                    takenRelids[self.getRelid(newNode)] = true;
+                }
             }
 
             //and now back to the relations
@@ -456,7 +465,7 @@ define([
             return copiedNodes;
         };
 
-        this.moveNode = function (node, parent) {
+        this.moveNode = function (node, parent, takenRelids) {
             ASSERT(self.isValidNode(node) && self.isValidNode(parent));
 
             node = innerCore.normalize(node);
@@ -472,12 +481,21 @@ define([
             var aboveAncestor = 1;
 
             var oldNode = node;
-            node = innerCore.getChild(parent, innerCore.getRelid(oldNode));
-            if (!innerCore.isEmpty(node)) {
-                // we have to change the relid of the node, to fit into its new
-                // place...
-                node = innerCore.createChild(parent);
+            if (takenRelids) {
+                if (takenRelids[innerCore.getRelid(oldNode)]) {
+                    node = innerCore.createChild(parent, takenRelids);
+                } else {
+                    node = innerCore.getChild(parent, innerCore.getRelid(oldNode));
+                }
+            } else {
+                node = innerCore.getChild(parent, innerCore.getRelid(oldNode));
+                if (!innerCore.isEmpty(node)) {
+                    // we have to change the relid of the node, to fit into its new
+                    // place...
+                    node = innerCore.createChild(parent);
+                }
             }
+
             innerCore.setHashed(node, true);
             innerCore.setData(node, innerCore.copyData(oldNode));
 
