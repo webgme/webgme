@@ -725,7 +725,7 @@ describe('coretype', function () {
         }
     });
 
-    it('should generate new relid/child for when createNode node with all chars taken on node', function () {
+    it('should generate new relid/child when createNode node with all chars taken on node', function () {
         var node = core.createNode({parent: root});
 
         RELID_POOL.forEach(function (relid) {
@@ -737,7 +737,7 @@ describe('coretype', function () {
         expect(core.getChildrenRelids(node).length).to.equal(RELID_POOL.length + 1);
     });
 
-    it('should generate new relid/child for when createNode with all chars taken on base', function () {
+    it('should generate new relid/child when createNode with all chars taken on base', function () {
         var ancestor = core.createNode({parent: root}),
             node = core.createNode({parent: root, base: ancestor});
 
@@ -750,7 +750,7 @@ describe('coretype', function () {
         expect(core.getChildrenRelids(node).length).to.equal(core.getChildrenRelids(ancestor).length + 1);
     });
 
-    it('should generate new relid/child for when copyNode node with all chars taken on node', function () {
+    it('should generate new relid/child when copyNode node with all chars taken on node', function () {
         var node = core.createNode({parent: root}),
             child;
 
@@ -763,7 +763,7 @@ describe('coretype', function () {
         expect(core.getChildrenRelids(node).length).to.equal(RELID_POOL.length + 1);
     });
 
-    it('should generate new relid/child for when copyNode with all chars taken on base', function () {
+    it('should generate new relid/child when copyNode with all chars taken on base', function () {
         var ancestor = core.createNode({parent: root}),
             node = core.createNode({parent: root, base: ancestor}),
             child;
@@ -777,7 +777,7 @@ describe('coretype', function () {
         expect(core.getChildrenRelids(node).length).to.equal(core.getChildrenRelids(ancestor).length + 1);
     });
 
-    it('should generate new relid/child for when copyNodes node with all chars taken on node', function () {
+    it('should generate new relid/child when copyNodes node with all chars taken on node', function () {
         var node = core.createNode({parent: root}),
             child,
             child1;
@@ -792,7 +792,7 @@ describe('coretype', function () {
         expect(core.getChildrenRelids(node).length).to.equal(RELID_POOL.length + 2);
     });
 
-    it('should generate new relid/child for when copyNodes with all chars taken on base', function () {
+    it('should generate new relid/child when copyNodes with all chars taken on base', function () {
         var ancestor = core.createNode({parent: root}),
             node = core.createNode({parent: root, base: ancestor}),
             child,
@@ -808,8 +808,8 @@ describe('coretype', function () {
         expect(core.getChildrenRelids(node).length).to.equal(core.getChildrenRelids(ancestor).length + 2);
     });
 
-    it('should generate new relid/child for when moveNode node with all chars taken on node', function () {
-        var node = core.createNode({parent: root}),
+    it('should generate new relid/child when moveNode node with all chars taken on node', function () {
+        var node = core.createNode({parent: root, relid: 'theNode'}),
             child = core.createNode({parent: root, relid: RELID_POOL[0]});
 
         RELID_POOL.forEach(function (relid) {
@@ -821,9 +821,9 @@ describe('coretype', function () {
         expect(core.getChildrenRelids(node).length).to.equal(RELID_POOL.length + 1);
     });
 
-    it('should generate new relid/child for when moveNode with all chars taken on base', function () {
-        var ancestor = core.createNode({parent: root}),
-            node = core.createNode({parent: root, base: ancestor}),
+    it('should generate new relid/child when moveNode with all chars taken on base', function () {
+        var ancestor = core.createNode({parent: root, relid: 'theAncestor'}),
+            node = core.createNode({parent: root, base: ancestor, relid: 'theNode'}),
             child = core.createNode({parent: root, relid: RELID_POOL[0]});
 
         RELID_POOL.forEach(function (relid) {
