@@ -39,11 +39,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         //<editor-fold=Helper Functions>
         function createNewConstraintRelId(constraintsNode) {
             var max = Math.pow(2, 31);
-            var existingRelIds = innerCore.getChildrenRelids(constraintsNode);
+            var existingRelIds = innerCore.getChildrenRelids(constraintsNode, true);
             var relId;
             do {
                 relId = Math.floor(Math.random() * max);
-            } while (existingRelIds.indexOf(relId) !== -1);
+            } while (existingRelIds.indexOf[relId]);
             return '' + relId;
         }
 

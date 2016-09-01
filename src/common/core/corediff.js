@@ -139,22 +139,22 @@ define(['common/util/canon',
         }
 
         function childrenDiff(source, target) {
-            var sRelids = self.getChildrenRelids(source),
-                tRelids = self.getChildrenRelids(target),
+            var sRelids = self.getChildrenRelids(source, true),
+                tRelids = self.getChildrenRelids(target, true),
                 tHashes = self.getChildrenHashes(target),
                 sHashes = self.getChildrenHashes(source),
-                i,
+                relid,
                 diff = {added: [], removed: []};
 
-            for (i = 0; i < sRelids.length; i++) {
-                if (tRelids.indexOf(sRelids[i]) === -1) {
-                    diff.removed.push({relid: sRelids[i], hash: sHashes[sRelids[i]]});
+            for (relid in sRelids) {
+                if (tRelids[relid]) {
+                    diff.removed.push({relid: relid, hash: sHashes[relid]});
                 }
             }
 
-            for (i = 0; i < tRelids.length; i++) {
-                if (sRelids.indexOf(tRelids[i]) === -1) {
-                    diff.added.push({relid: tRelids[i], hash: tHashes[tRelids[i]]});
+            for (relid in tRelids) {
+                if (sRelids[relid]) {
+                    diff.added.push({relid: relid, hash: tHashes[relid]});
                 }
             }
 

@@ -91,11 +91,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
         function createNewMemberRelid(setNode) {
             var MAX_RELID = Math.pow(2, 31);
-            var existingRelIds = innerCore.getChildrenRelids(setNode);
+            var existingRelIds = innerCore.getChildrenRelids(setNode, true);
             var relid;
             do {
                 relid = Math.floor(Math.random() * MAX_RELID);
-            } while (existingRelIds.indexOf(relid) !== -1);
+            } while (existingRelIds[relid]);
             return '' + relid;
         }
 
