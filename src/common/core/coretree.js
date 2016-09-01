@@ -41,52 +41,73 @@ define([
         // ------- memory management
 
         function __detachChildren(node) {
-            ASSERT(node.children instanceof Array && node.age >= CONSTANTS.MAX_AGE - 1);
+            //ASSERT(node.children instanceof Array && node.age >= CONSTANTS.MAX_AGE - 1);
 
             var children = node.children;
             node.children = null;
             node.age = CONSTANTS.MAX_AGE;
 
-            for (var i = 0; i < children.length; ++i) {
-                __detachChildren(children[i]);
+            for (var child in children) {
+                __detachChildren(children[child]);
             }
         }
 
         function __ageNodes(nodes) {
-            ASSERT(nodes instanceof Array);
+            ASSERT(nodes instanceof Array === false);
 
-            var i = nodes.length;
-            while (--i >= 0) {
-                var node = nodes[i];
-
+            var node,
+                toDelete = [],
+                i;
+            for (i in nodes) {
+                node = nodes[i];
                 ASSERT(node.age < CONSTANTS.MAX_AGE);
                 if (++node.age >= CONSTANTS.MAX_AGE) {
-                    nodes.splice(i, 1);
+                    toDelete.push(i);
                     __detachChildren(node);
                 } else {
                     __ageNodes(node.children);
                 }
             }
+
+            for (i = 0; i < toDelete.length; i += 1) {
+                delete nodes[toDelete[i]];
+            }
         }
 
         function __ageRoots() {
+            var root,
+                i;
             if (++ticks >= CONSTANTS.MAX_TICKS) {
                 ticks = 0;
-                __ageNodes(roots);
+                for (i = 0; i < roots.length; i += 1) {
+                    root = roots[i];
+                    ASSERT(root.age < CONSTANTS.MAX_AGE);
+                    if (++root.age >= CONSTANTS.MAX_AGE) {
+                        roots.splice(i, 1);
+                        __detachChildren(root);
+                    } else {
+                        __ageNodes(root.children);
+                    }
+                }
             }
         }
 
         function __getChildNode(children, relid) {
-            ASSERT(children instanceof Array && typeof relid === 'string');
+           // ASSERT(children instanceof Array && typeof relid === 'string');
 
-            for (var i = 0; i < children.length; ++i) {
-                var child = children[i];
-                if (child.relid === relid) {
-                    ASSERT(child.parent.age === 0);
+            // for (var i = 0; i < children.length; ++i) {
+            //     var child = children[i];
+            //     if (child.relid === relid) {
+            //         ASSERT(child.parent.age === 0);
+            //
+            //         child.age = 0;
+            //         return child;
+            //     }
+            // }
 
-                    child.age = 0;
-                    return child;
-                }
+            if (children.hasOwnProperty(relid)) {
+                children[relid].age = 0;
+                return children[relid];
             }
 
             return null;
@@ -127,8 +148,8 @@ define([
         }
 
         function __reloadChildrenData(node) {
-            for (var i = 0; i < node.children.length; ++i) {
-                var child = node.children[i];
+            for (var child in node.children) {
+                //var child = node.children[i];
 
                 var data = __getChildData(node.data, child.relid);
                 if (!REGEXP.DB_HASH.test(data) || data !== __getChildData(child.data, ID_NAME)) {
@@ -205,7 +226,7 @@ define([
                 parent: null,
                 relid: null,
                 age: 0,
-                children: [],
+                children: {},
                 data: data,
                 initial: {
                     '': {
@@ -306,7 +327,7 @@ define([
             __test('relid', typeof node.relid === 'string' || node.relid === null);
             __test('parent 2', (node.parent === null) === (node.relid === null));
             __test('age', node.age >= 0 && node.age <= CONSTANTS.MAX_AGE);
-            __test('children', node.children === null || node.children instanceof Array);
+            //__test('children', node.children === null || node.children instanceof Array);
             __test('children 2', (node.age === CONSTANTS.MAX_AGE) === (node.children === null));
             __test('data', typeof node.data === 'object' || typeof node.data === 'string' ||
                 typeof node.data === 'number');
@@ -435,7 +456,7 @@ define([
                     ASSERT(__getChildNode(parent.children, node.relid) === null);
 
                     node.parent = parent;
-                    parent.children.push(node);
+                    parent.children[node.relid] = node;
 
                     temp = __getChildData(parent.data, node.relid);
                     if (!REGEXP.DB_HASH.test(temp) || temp !== __getChildData(node.data, ID_NAME)) {
@@ -446,7 +467,7 @@ define([
                 }
 
                 node.age = 0;
-                node.children = [];
+                node.children = {};
             } else if (node.age !== 0) {
                 parent = node;
                 do {
@@ -512,7 +533,7 @@ define([
                 parent: null,
                 relid: null,
                 age: 0,
-                children: [],
+                children: {},
                 data: {
                     _mutable: true
                 },
@@ -542,10 +563,10 @@ define([
                 parent: node,
                 relid: relid,
                 age: 0,
-                children: [],
+                children: {},
                 data: __getChildData(node.data, relid)
             };
-            node.children.push(child);
+            node.children[relid] = child;
 
             __ageRoots();
             return child;
@@ -918,13 +939,15 @@ define([
         //});
 
         this.removeChildFromCache = function (node, relid) {
-            var i;
-            for (i = 0; i < node.children.length; i += 1) {
-                if (node.children[i].relid === relid) {
-                    node.children.splice(i, 1);
-                    return node;
-                }
-            }
+            // var child;
+            // for (child in node.children) {
+            //     if (child.relid === relid) {
+            //         node.children.splice(i, 1);
+            //         return node;
+            //     }
+
+            // }
+            delete node.children[relid];
 
             return node;
         };
