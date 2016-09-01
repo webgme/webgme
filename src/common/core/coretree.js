@@ -55,14 +55,16 @@ define([
         function __ageNodes(nodes) {
             ASSERT(nodes instanceof Array === false);
 
-            var node,
-                toDelete = [],
-                i;
-            for (i in nodes) {
-                node = nodes[i];
+            var toDelete = [],
+                node,
+                i,
+                key;
+
+            for (key in nodes) {
+                node = nodes[key];
                 ASSERT(node.age < CONSTANTS.MAX_AGE);
                 if (++node.age >= CONSTANTS.MAX_AGE) {
-                    toDelete.push(i);
+                    toDelete.push(key);
                     __detachChildren(node);
                 } else {
                     __ageNodes(node.children);
@@ -148,8 +150,11 @@ define([
         }
 
         function __reloadChildrenData(node) {
-            for (var child in node.children) {
-                //var child = node.children[i];
+            var key,
+                child;
+
+            for (key in node.children) {
+                child = node.children[key];
 
                 var data = __getChildData(node.data, child.relid);
                 if (!REGEXP.DB_HASH.test(data) || data !== __getChildData(child.data, ID_NAME)) {
