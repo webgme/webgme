@@ -970,7 +970,7 @@ describe('corediff-merge', function () {
         });
 
         //FIXME: This started to fail with webgmex as seed.
-        it.skip('should be able to merge if two nodes are moved to the same place', function (done) {
+        it('should be able to merge if two nodes are moved to the same place', function (done) {
             var changeA = {},
                 changeB = {},
                 change = {},
@@ -1174,7 +1174,7 @@ describe('corediff-merge', function () {
         });
 
         //FIXME: This started to fail with webgmex as seed.
-        it.skip('should be able to find the conflict of removing source node even with collision', function (done) {
+        it('should be able to find the conflict of removing source node even with collision', function (done) {
             var changeA = {},
                 changeB = {},
                 change = {},
@@ -1373,7 +1373,7 @@ describe('corediff-merge', function () {
         });
 
         //FIXME: This started to fail with webgmex as seed.
-        it.skip('should be able to move and create a node to the same place', function (done) {
+        it('should be able to move and create a node to the same place', function (done) {
             var changeA = {},
                 changeB = {},
                 change = {},

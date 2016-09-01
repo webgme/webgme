@@ -1554,7 +1554,7 @@ describe('core diff', function () {
         //});
 
         //FIXME: This started to fail with webgmex as seed.
-        it.skip('should add a new object with patch', function (done) {
+        it('should add a new object with patch', function (done) {
             var patch = {
                 175547009: {
                     471466181: {
