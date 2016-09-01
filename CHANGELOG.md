@@ -1,5 +1,32 @@
 # Change Log
 
+## [v.2.4.1](https://github.com/webgme/webgme/tree/v.2.4.1) (2016-09-01)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.4.0...v.2.4.1)
+
+**Implemented enhancements:**
+
+- "WebGME API API documentation" [\#1132](https://github.com/webgme/webgme/issues/1132)
+- Clean up the docs folder [\#1128](https://github.com/webgme/webgme/issues/1128)
+- UI should react to whether the current user can create or not \(project\) [\#1127](https://github.com/webgme/webgme/issues/1127)
+- Notify user on reconnect on executor worker [\#1114](https://github.com/webgme/webgme/issues/1114)
+- Log message when worker reconnects [\#1142](https://github.com/webgme/webgme/pull/1142) ([pmeijer](https://github.com/pmeijer))
+- Fixes regarding project creation on UI, closes \#1127 and \#1138 [\#1140](https://github.com/webgme/webgme/pull/1140) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1128 and \#1132 and ensures that the source code docs are published on npm [\#1139](https://github.com/webgme/webgme/pull/1139) ([pmeijer](https://github.com/pmeijer))
+- Add MIT License badge [\#1136](https://github.com/webgme/webgme/pull/1136) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Projects dialog does not block enter pressing when entered project collides with existing one. [\#1138](https://github.com/webgme/webgme/issues/1138)
+- Relid collision with inherited children not check during create/copy/moveNode [\#1141](https://github.com/webgme/webgme/pull/1141) ([pmeijer](https://github.com/pmeijer))
+- Fixes regarding project creation on UI, closes \\#1127 and \\#1138 [\#1140](https://github.com/webgme/webgme/pull/1140) ([pmeijer](https://github.com/pmeijer))
+- Closes \\#1128 and \\#1132 and ensures that the source code docs are published on npm [\#1139](https://github.com/webgme/webgme/pull/1139) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- getAttribute from rootNode fails [\#1131](https://github.com/webgme/webgme/issues/1131)
+- Uncaught exception on executor [\#1110](https://github.com/webgme/webgme/issues/1110)
+- Future times in the project history [\#1103](https://github.com/webgme/webgme/issues/1103)
+
 ## [v2.4.0](https://github.com/webgme/webgme/tree/v2.4.0) (2016-08-29)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.3.1...v2.4.0)
 
