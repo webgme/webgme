@@ -29,7 +29,6 @@ define([
             roots = [],
             ticks = 0,
             mutateCount = 0,
-            checkValidTreeRunning = true,
             stackedObjects = {},
             self = this;
 
@@ -38,10 +37,15 @@ define([
         this.loadPaths = TASYNC.wrap(storage.loadPaths);
         this.logger = logger;
 
+        function ASSERT_IS_OBJECT(value) {
+            ASSERT(value !== null && typeof value === 'object' && value instanceof Array === false);
+        }
+
         // ------- memory management
 
         function __detachChildren(node) {
-            //ASSERT(node.children instanceof Array && node.age >= CONSTANTS.MAX_AGE - 1);
+            ASSERT_IS_OBJECT(node.children);
+            ASSERT(node.age >= CONSTANTS.MAX_AGE - 1);
 
             var children = node.children;
             node.children = null;
@@ -53,7 +57,7 @@ define([
         }
 
         function __ageNodes(nodes) {
-            ASSERT(nodes instanceof Array === false);
+            ASSERT_IS_OBJECT(nodes);
 
             var toDelete = [],
                 node,
@@ -95,17 +99,8 @@ define([
         }
 
         function __getChildNode(children, relid) {
-           // ASSERT(children instanceof Array && typeof relid === 'string');
-
-            // for (var i = 0; i < children.length; ++i) {
-            //     var child = children[i];
-            //     if (child.relid === relid) {
-            //         ASSERT(child.parent.age === 0);
-            //
-            //         child.age = 0;
-            //         return child;
-            //     }
-            // }
+            ASSERT_IS_OBJECT(children);
+            ASSERT(typeof relid === 'string');
 
             if (children.hasOwnProperty(relid)) {
                 children[relid].age = 0;
@@ -315,16 +310,6 @@ define([
             }
         }
 
-        function __checkValidTree(node) {
-            if (self.isValidNode(node)) {
-                if (node.children instanceof Array) {
-                    for (var i = 0; i < node.children.length; ++i) {
-                        __checkValidTree(node.children[i]);
-                    }
-                }
-            }
-        }
-
         function isValidNodeThrow(node) {
             __test('object', typeof node === 'object' && node !== null);
             __test('object 2', node.hasOwnProperty('parent') && node.hasOwnProperty('relid'));
@@ -340,12 +325,6 @@ define([
             if (node.parent !== null) {
                 __test('age 2', node.age >= node.parent.age);
                 __test('mutable', !__isMutableData(node.data) || __isMutableData(node.parent.data));
-            }
-
-            if (!checkValidTreeRunning) {
-                checkValidTreeRunning = true;
-                __checkValidTree(self.getRoot(node));
-                checkValidTreeRunning = false;
             }
         }
 
@@ -854,23 +833,6 @@ define([
             } else {
                 result = {rootHash: node.data[ID_NAME], objects: {}};
             }
-            //if (result.objects[result.rootHash]) {
-            //    if (gmeConfig.storage.patchRootCommunicationEnabled && node.initial) {
-            //        //TODO this method will change when we will pack similar data for every node
-            //        result.objects[result.rootHash] = {
-            //            newData: result.objects[result.rootHash],
-            //            newHash: result.rootHash,
-            //            oldData: node.initial.data,
-            //            oldHash: node.initial.hash
-            //        };
-            //    }
-            //
-            //    node.initial = {
-            //        data: result.objects[result.rootHash].newData || result.objects[result.rootHash],
-            //        hash: result.rootHash
-            //    };
-            //
-            //}
 
             return result;
         };
@@ -932,26 +894,7 @@ define([
             }
         };
 
-        //Object.keys(self).forEach(function (fName) {
-        //    var orgFn;
-        //    if (fName !== 'logger' && typeof self[fName] === 'function') {
-        //        orgFn = self[fName];
-        //        self[fName] = function () {
-        //            console.count(fName);
-        //            return orgFn.apply(self, arguments);
-        //        };
-        //    }
-        //});
-
         this.removeChildFromCache = function (node, relid) {
-            // var child;
-            // for (child in node.children) {
-            //     if (child.relid === relid) {
-            //         node.children.splice(i, 1);
-            //         return node;
-            //     }
-
-            // }
             delete node.children[relid];
 
             return node;
