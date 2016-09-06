@@ -31,7 +31,7 @@ var express = require('express'),
  * @param {object} middlewareOpts.workerManager - Spawns and keeps track of "worker" sub-processes.
  */
 function initialize(middlewareOpts) {
-    var logger = middlewareOpts.logger.fork('ExampleRestRouter'),
+    var logger = middlewareOpts.logger.fork('<%= restRouterName %>'),
         ensureAuthenticated = middlewareOpts.ensureAuthenticated,
         getUserId = middlewareOpts.getUserId;
 
