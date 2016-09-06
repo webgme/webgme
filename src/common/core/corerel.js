@@ -152,7 +152,10 @@ define([
 
             } while (node);
 
-            return target;
+            return {
+                target: target,
+                node: node
+            };
         }
 
         //</editor-fold>
@@ -661,20 +664,21 @@ define([
         };
 
         this.getPointerPathFrom = function (node, source, name) {
-            var target = getRelativePointerPathFrom(node, source, name);
+            var res = getRelativePointerPathFrom(node, source, name),
+                target;
 
-            if (target !== undefined) {
-                target = innerCore.joinPaths(innerCore.getPath(node), target);
+            if (res.target !== undefined) {
+                target = innerCore.joinPaths(innerCore.getPath(res.node), res.target);
             }
 
             return target;
         };
 
         this.loadPointer = function (node, name) {
-            var target = getRelativePointerPathFrom(node, '', name);
+            var res = getRelativePointerPathFrom(node, '', name);
 
-            if (target !== undefined) {
-                return innerCore.loadByPath(node, target);
+            if (res.target !== undefined) {
+                return innerCore.loadByPath(res.node, res.target);
             } else {
                 return null;
             }
