@@ -1,4 +1,4 @@
-/*globals define, $, WebGMEGlobal*/
+/*globals define, $, WebGMEGlobal, DEBUG*/
 /*jshint browser: true*/
 
 /**
@@ -19,12 +19,11 @@ define([
         this._cancelBtn = null;
         this._infoBtn = null;
         this._infoSpan = null;
-        this._result = null;
     }
 
     ValidVisualizersDialog.prototype.show = function (fnCallback, oldValue) {
         var self = this,
-            client = WebGMEGlobal.Client;
+            result;
 
         this._dialog = $(dialogTemplate);
 
@@ -34,7 +33,13 @@ define([
         this._okBtn = this._dialog.find('.btn-ok');
         this._cancelBtn = this._dialog.find('.btn-cancel');
 
-        this._dialog.find('#selected, #available').sortable({
+        this._availableViz = this._dialog.find('#available');
+        this._chosenViz = this._dialog.find('#chosen');
+
+        this.populateLists(WebGMEGlobal.allVisualizers, oldValue ? oldValue.split(' ') : []);
+
+        // Connect available and selected viz.
+        this._dialog.find('#chosen, #available').sortable({
             connectWith: '.connectedSortable'
         }).disableSelection();
 
@@ -50,7 +55,7 @@ define([
         this._okBtn.on('click', function (event) {
             event.preventDefault();
             event.stopPropagation();
-            self._result = 'ModelEditor';
+            result = self.getResult();
             self._dialog.modal('hide');
         });
 
@@ -67,14 +72,80 @@ define([
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
-            if (typeof self._result === 'string') {
-                fnCallback(self._result);
+            if (typeof result === 'string') {
+                fnCallback(result);
             } else {
                 fnCallback(oldValue);
             }
         });
 
         this._dialog.modal('show');
+    };
+
+    ValidVisualizersDialog.prototype.populateLists = function (available, chosen) {
+        var availableMap = {},
+            vizInfo,
+            id,
+            i;
+
+        for (i = 0; i < available.length; i += 1) {
+            availableMap[available[i].id] = available[i];
+        }
+
+        for (i = 0; i < chosen.length; i += 1) {
+            vizInfo = availableMap[chosen[i]];
+
+            if (vizInfo) {
+                delete availableMap[chosen[i]];
+
+                if (vizInfo.DEBUG_ONLY) {
+                    this._chosenViz.append($('<li/>', {
+                        class: 'alert alert-warning',
+                        text: vizInfo.id,
+                        title: 'Appears as ' + vizInfo.title + ' (only shown in debug mode).'
+                    }));
+                } else {
+                    this._chosenViz.append($('<li/>', {
+                        class: 'alert alert-info',
+                        text: vizInfo.id,
+                        title: 'Appears as ' + vizInfo.title
+                    }));
+                }
+            } else {
+                this._chosenViz.append($('<li/>', {
+                    class: 'alert alert-danger',
+                    text: chosen[i],
+                    title: 'No visualizer with id ' + chosen[i] + ' available!'
+                }));
+            }
+        }
+
+        for (id in availableMap) {
+            vizInfo = availableMap[id];
+            if (vizInfo.DEBUG_ONLY && DEBUG) {
+                this._availableViz.append($('<li/>', {
+                    class: 'alert alert-warning',
+                    text: vizInfo.id,
+                    title: 'Appears as ' + vizInfo.title + ' (only shown in debug mode).'
+                }));
+            } else if (!vizInfo.DEBUG_ONLY) {
+                this._availableViz.append($('<li/>', {
+                    class: 'alert alert-info',
+                    text: vizInfo.id,
+                    title: 'Appears as ' + vizInfo.title
+                }));
+            }
+        }
+    };
+
+    ValidVisualizersDialog.prototype.getResult = function () {
+        var result = [];
+
+        this._chosenViz.children('li').each(function (index, li) {
+            result.push($(li).text().trim());
+        });
+
+        return result.join(' ');
     };
 
     return ValidVisualizersDialog;

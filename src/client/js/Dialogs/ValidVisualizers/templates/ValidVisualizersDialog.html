@@ -9,7 +9,10 @@
                 <h4>Edit valid visualizers
                     <i class="glyphicon glyphicon-info-sign toggle-info-btn"/>
                 </h4>
-                    <span class="info-message hidden">Drag and drop to set the valid visualizers ..
+                    <span class="info-message hidden">Drag and drop to choose valid visualizers for the selected node.
+                        If changes are persisted you need to navigate away and back to the node for changes to show.
+                        The order of the chosen visualizers is respected by the UI and the first one (from top to
+                        bottom) will be activated when the node is navigated to.
                      </span>
                 <span>
                 </span>
@@ -18,18 +21,13 @@
                         Available:
                     </h5>
                     <ul id="available" class="connectedSortable">
-                        <li class="alert alert-info" title="Composition">ModelEditor</li>
-                        <li class="alert alert-info">MetaAspect</li>
-                        <li class="alert alert-info">CrossCut</li>
                     </ul>
                 </div>
                 <div class="visualizers-selection-container">
                     <h5>
-                        Selected:
+                        Chosen:
                     </h5>
-                    <ul id="selected" class="connectedSortable">
-                        <li class="alert alert-info">SetEditor</li>
-                        <li class="alert alert-info">MyOwnOneWithAVeryLongIdIndeedVeryMuchSoVeryLong</li>
+                    <ul id="chosen" class="connectedSortable">
                     </ul>
                 </div>
             </div>
