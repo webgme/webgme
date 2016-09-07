@@ -59,24 +59,19 @@ define([
         function __ageNodes(nodes) {
             ASSERT_IS_OBJECT(nodes);
 
-            var toDelete = [],
+            var keys = Object.keys(nodes),
                 node,
-                i,
-                key;
+                i;
 
-            for (key in nodes) {
-                node = nodes[key];
+            for (i = 0; i < keys.length; i += 1) {
+                node = nodes[keys[i]];
                 ASSERT(node.age < CONSTANTS.MAX_AGE);
                 if (++node.age >= CONSTANTS.MAX_AGE) {
-                    toDelete.push(key);
+                    delete nodes[keys[i]];
                     __detachChildren(node);
                 } else {
                     __ageNodes(node.children);
                 }
-            }
-
-            for (i = 0; i < toDelete.length; i += 1) {
-                delete nodes[toDelete[i]];
             }
         }
 
@@ -85,7 +80,8 @@ define([
                 i;
             if (++ticks >= CONSTANTS.MAX_TICKS) {
                 ticks = 0;
-                for (i = 0; i < roots.length; i += 1) {
+                i = roots.length;
+                while (--i >= 0) {
                     root = roots[i];
                     ASSERT(root.age < CONSTANTS.MAX_AGE);
                     if (++root.age >= CONSTANTS.MAX_AGE) {
