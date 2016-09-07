@@ -2,7 +2,7 @@
 /*jshint browser: true*/
 
 /**
- * Dialog for confirmation of project deletion.
+ * Dialog for setting the validVisualizers registry of a node.
  *
  * @author pmeijer / https://github.com/pmeijer
  */
