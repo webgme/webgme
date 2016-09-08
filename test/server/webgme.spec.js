@@ -100,7 +100,7 @@ describe('webgme', function () {
             .nodeify(done);
     });
 
-    it.only('should fail to getGmeAuth if mongo is not running', function (done) {
+    it('should fail to getGmeAuth if mongo is not running', function (done) {
         var webGME = testFixture.WebGME,
             gmeConfig = testFixture.getGmeConfig();
 
