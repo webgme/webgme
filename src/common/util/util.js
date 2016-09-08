@@ -54,9 +54,35 @@ define([], function () {
         return ordered;
     }
 
+    function indexOfUntil(items, item, maxIndex) {
+        var len = items.length > maxIndex ? maxIndex : items.length;
+        while (len--) {
+            if (items[len] === item) {
+                return len;
+            }
+        }
+
+        return -1;
+    }
+
+    function extendArrayUnique(base, extension) {
+        var originalLength = base.length,
+            extensionLen = extension.length,
+            item;
+
+        while (extensionLen--) {
+            item = extension[extensionLen];
+            if (indexOfUntil(base, item, originalLength) === -1) {
+                base.push(item);
+            }
+        }
+
+    }
+
     return {
         isTrueObject: isTrueObject,
         updateFieldsRec: updateFieldsRec,
-        orderStringArrayByElementLength: orderStringArrayByElementLength
+        orderStringArrayByElementLength: orderStringArrayByElementLength,
+        extendArrayUnique: extendArrayUnique
     };
 })

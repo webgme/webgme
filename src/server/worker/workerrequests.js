@@ -14,6 +14,7 @@ var Core = requireJS('common/core/coreQ'),
     constraint = requireJS('common/core/users/constraintchecker'),
     webgmeUtils = require('../../utils'),
     storageUtils = requireJS('common/storage/util'),
+    commonUtils = requireJS('common/util/util'),
 
 // JsZip can't for some reason extract the exported files..
     AdmZip = require('adm-zip'),
@@ -600,6 +601,96 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return deferred.promise;
             })
             .nodeify(callback);
+    }
+
+    function exportSelectionToFile(webgmeToken, parameters, callback) {
+        var context,
+            closureInformation;
+        getConnectedStorage(webgmeToken)
+            .then(function (storage) {
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash, null);
+            })
+            .then(function (context_) {
+                var promises = [],
+                    i;
+                context = context_;
+                if (parameters.paths && parameters.paths.length > 0) {
+                    for (i = 0; i < parameters.paths.length; i += 1) {
+                        promises.push(context.core.loadByPath(context.rootNode, parameters.paths[i]));
+                    }
+                    return Q.allSettled(promises);
+                }
+
+                throw new Error('no path were given to export!');
+            })
+            .then(function (baseNodes) {
+                var promises,
+                    i;
+                closureInformation = context.core.getClosureInformation(baseNodes);
+                for (i = 0; i < baseNodes.length; i += 1) {
+                    promises.push(
+                        storageUtils.getProjectJson(
+                            context.project,
+                            {rootHash: context.core.getHash(baseNodes[i])}
+                        )
+                    );
+                }
+
+                return Q.allSettled(promises);
+            })
+            .then(function (rawJsons) {
+                // rawJson = {
+                //     rootHash: parameters.rootHash,
+                //     projectId: project.projectId,
+                //     branchName: parameters.branchName,
+                //     commitHash: parameters.commitHash,
+                //     hashes: {objects:[],assets:[]},
+                //     objects: null
+                // };
+                var output = {
+                        projectId: parameters.projectId,
+                        commitHash: parameters.commitHash,
+                        selectionInfo: closureInformation,
+                        objects: null,
+                        hashes: {objects: [], assets: []}
+                    },
+                    blobClient = new BlobClientClass({
+                        serverPort: gmeConfig.server.port,
+                        httpsecure: false,
+                        server: '127.0.0.1',
+                        webgmeToken: webgmeToken,
+                        logger: logger.fork('BlobClient')
+                    }),
+                    deferred = Q.defer(),
+                    i;
+
+                for (i = 0; i < rawJsons.length; i += 1) {
+                    commonUtils.extendArrayUnique(output.hashes.objects, rawJsons[i].hashes.objects);
+                    commonUtils.extendArrayUnique(output.hashes.assets, rawJsons[i].hashes.assets);
+                }
+
+                blobUtil.buildProjectPackage(logger.fork('blobUtil'),
+                    blobClient,
+                    output,
+                    parameters.withAssets,
+                    function (err, hash) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve({
+                                downloadUrl: blobClient.getRelativeDownloadURL(hash),
+                                hash: hash,
+                                // FIXME: Now this needs to be insync with the name in blobUtil..
+                                fileName: output.projectId + '_' + output.commitHash + '.webgmes'
+                            });
+                        }
+                    }
+                );
+
+                return deferred.promise;
+            })
+            .nodeify(callback);
+
     }
 
     function _importProjectPackage(blobClient, packageHash) {
