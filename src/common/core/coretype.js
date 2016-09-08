@@ -56,7 +56,7 @@ define([
                 basechild = null;
             if (base) {
                 //the parent is inherited
-                if (self.getChildrenRelids(base).indexOf(relid) !== -1) {
+                if (self.getChildrenRelids(base, true)[relid]) {
                     //inherited child
                     if (innerCore.getChildrenRelids(node).indexOf(relid) !== -1) {
                         //but it is overwritten so we should load it
@@ -79,7 +79,7 @@ define([
                 }
             }
             //normal child - as every node should have a base, it is normally mean a direct child of the ROOT
-            if (self.getChildrenRelids(node).indexOf(relid) === -1) {
+            if (self.getChildrenRelids(node, true)[relid] !== true) {
                 return null;
             }
 
@@ -459,7 +459,7 @@ define([
                 result = false;
 
             if (ancestor) {
-                result = self.getChildrenRelids(ancestor).indexOf(childRelid) > -1;
+                result = self.getChildrenRelids(ancestor, true).hasOwnProperty(childRelid);
             }
 
             return result;
@@ -953,7 +953,7 @@ define([
                 //TODO maybe this is not the best way, needs to be double checked
                 var parent = self.getParent(node),
                     nodeChildren = self.getOwnChildrenRelids(node), // We're only interested in the children with data.
-                    baseChildren = self.getChildrenRelids(base),
+                    baseChildren = self.getChildrenRelids(base, true),
                     parentBase,
                     baseParent,
                     i;
@@ -966,7 +966,7 @@ define([
                         innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
 
                         for (i = 0; i < nodeChildren.length; i += 1) {
-                            if (baseChildren.indexOf(nodeChildren[i]) > -1) {
+                            if (baseChildren[nodeChildren[i]]) {
                                 // Deal with relid collisions of the children of the node.
                                 if (childHasSameOrigin(node, base, nodeChildren[i]) === false) {
                                     // 1. The child is defined in both the node(base chain) and new-base(base chain)

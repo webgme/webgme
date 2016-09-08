@@ -133,6 +133,31 @@ define([
             test('isobject', isObject(node));
         }
 
+        function getRelativePointerPathFrom(node, source, name) {
+            ASSERT(self.isValidNode(node) && typeof source === 'string' && typeof name === 'string');
+            var target,
+                ovrData;
+
+            do {
+                ovrData = (innerCore.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {})[source];
+                if (ovrData) {
+                    target = ovrData[name];
+                    if (target !== undefined) {
+                        break;
+                    }
+                }
+
+                source = '/' + innerCore.getRelid(node) + source;
+                node = innerCore.getParent(node);
+
+            } while (node);
+
+            return {
+                target: target,
+                node: node
+            };
+        }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -585,10 +610,11 @@ define([
         };
 
         this.getChildrenPaths = function (node) {
-            var path = innerCore.getPath(node);
+            var path = innerCore.getPath(node),
+                relids = self.getChildrenRelids(node),
+                i;
 
-            var relids = self.getChildrenRelids(node);
-            for (var i = 0; i < relids.length; ++i) {
+            for (i = 0; i < relids.length; i += 1) {
                 relids[i] = path + '/' + relids[i];
             }
 
@@ -596,10 +622,10 @@ define([
         };
 
         this.loadChildren = function (node) {
-            ASSERT(self.isValidNode(node));
+            var children = self.getChildrenRelids(node),
+                i;
 
-            var children = innerCore.getKeys(node, self.isValidRelid);
-            for (var i = 0; i < children.length; ++i) {
+            for (i = 0; i < children.length; i += 1) {
                 children[i] = innerCore.loadChild(node, children[i]);
             }
 
@@ -638,52 +664,21 @@ define([
         };
 
         this.getPointerPathFrom = function (node, source, name) {
-            ASSERT(self.isValidNode(node) && typeof source === 'string' && typeof name === 'string');
-            var target,
-                ovrInfo;
+            var res = getRelativePointerPathFrom(node, source, name),
+                target;
 
-            do {
-                ovrInfo = (innerCore.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {})[source];
-                if (ovrInfo) {
-                    target = ovrInfo[name];
-                    if (target !== undefined) {
-                        break;
-                    }
-                }
-
-                source = '/' + innerCore.getRelid(node) + source;
-                node = innerCore.getParent(node);
-
-            } while (node);
-
-            if (target !== undefined) {
-                target = innerCore.joinPaths(innerCore.getPath(node), target);
+            if (res.target !== undefined) {
+                target = innerCore.joinPaths(innerCore.getPath(res.node), res.target);
             }
 
             return target;
         };
 
         this.loadPointer = function (node, name) {
-            ASSERT(self.isValidNode(node) && name);
+            var res = getRelativePointerPathFrom(node, '', name);
 
-            var source = '';
-            var target;
-
-            do {
-                var child = (innerCore.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {})[source];
-                if (child) {
-                    target = child[name];
-                    if (target !== undefined) {
-                        break;
-                    }
-                }
-
-                source = '/' + innerCore.getRelid(node) + source;
-                node = innerCore.getParent(node);
-            } while (node);
-
-            if (target !== undefined) {
-                return innerCore.loadByPath(node, target);
+            if (res.target !== undefined) {
+                return innerCore.loadByPath(res.node, res.target);
             } else {
                 return null;
             }

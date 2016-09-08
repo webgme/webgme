@@ -29,7 +29,6 @@ define([
             roots = [],
             ticks = 0,
             mutateCount = 0,
-            checkValidTreeRunning = true,
             stackedObjects = {},
             self = this;
 
@@ -38,30 +37,37 @@ define([
         this.loadPaths = TASYNC.wrap(storage.loadPaths);
         this.logger = logger;
 
+        function ASSERT_IS_OBJECT(value) {
+            ASSERT(value !== null && typeof value === 'object' && value instanceof Array === false);
+        }
+
         // ------- memory management
 
         function __detachChildren(node) {
-            ASSERT(node.children instanceof Array && node.age >= CONSTANTS.MAX_AGE - 1);
+            ASSERT_IS_OBJECT(node.children);
+            ASSERT(node.age >= CONSTANTS.MAX_AGE - 1);
 
             var children = node.children;
             node.children = null;
             node.age = CONSTANTS.MAX_AGE;
 
-            for (var i = 0; i < children.length; ++i) {
-                __detachChildren(children[i]);
+            for (var child in children) {
+                __detachChildren(children[child]);
             }
         }
 
         function __ageNodes(nodes) {
-            ASSERT(nodes instanceof Array);
+            ASSERT_IS_OBJECT(nodes);
 
-            var i = nodes.length;
-            while (--i >= 0) {
-                var node = nodes[i];
+            var keys = Object.keys(nodes),
+                node,
+                i;
 
+            for (i = 0; i < keys.length; i += 1) {
+                node = nodes[keys[i]];
                 ASSERT(node.age < CONSTANTS.MAX_AGE);
                 if (++node.age >= CONSTANTS.MAX_AGE) {
-                    nodes.splice(i, 1);
+                    delete nodes[keys[i]];
                     __detachChildren(node);
                 } else {
                     __ageNodes(node.children);
@@ -70,23 +76,31 @@ define([
         }
 
         function __ageRoots() {
+            var root,
+                i;
             if (++ticks >= CONSTANTS.MAX_TICKS) {
                 ticks = 0;
-                __ageNodes(roots);
+                i = roots.length;
+                while (--i >= 0) {
+                    root = roots[i];
+                    ASSERT(root.age < CONSTANTS.MAX_AGE);
+                    if (++root.age >= CONSTANTS.MAX_AGE) {
+                        roots.splice(i, 1);
+                        __detachChildren(root);
+                    } else {
+                        __ageNodes(root.children);
+                    }
+                }
             }
         }
 
         function __getChildNode(children, relid) {
-            ASSERT(children instanceof Array && typeof relid === 'string');
+            ASSERT_IS_OBJECT(children);
+            ASSERT(typeof relid === 'string');
 
-            for (var i = 0; i < children.length; ++i) {
-                var child = children[i];
-                if (child.relid === relid) {
-                    ASSERT(child.parent.age === 0);
-
-                    child.age = 0;
-                    return child;
-                }
+            if (children.hasOwnProperty(relid)) {
+                children[relid].age = 0;
+                return children[relid];
             }
 
             return null;
@@ -127,8 +141,11 @@ define([
         }
 
         function __reloadChildrenData(node) {
-            for (var i = 0; i < node.children.length; ++i) {
-                var child = node.children[i];
+            var key,
+                child;
+
+            for (key in node.children) {
+                child = node.children[key];
 
                 var data = __getChildData(node.data, child.relid);
                 if (!REGEXP.DB_HASH.test(data) || data !== __getChildData(child.data, ID_NAME)) {
@@ -205,7 +222,7 @@ define([
                 parent: null,
                 relid: null,
                 age: 0,
-                children: [],
+                children: {},
                 data: data,
                 initial: {
                     '': {
@@ -289,16 +306,6 @@ define([
             }
         }
 
-        function __checkValidTree(node) {
-            if (self.isValidNode(node)) {
-                if (node.children instanceof Array) {
-                    for (var i = 0; i < node.children.length; ++i) {
-                        __checkValidTree(node.children[i]);
-                    }
-                }
-            }
-        }
-
         function isValidNodeThrow(node) {
             __test('object', typeof node === 'object' && node !== null);
             __test('object 2', node.hasOwnProperty('parent') && node.hasOwnProperty('relid'));
@@ -306,7 +313,7 @@ define([
             __test('relid', typeof node.relid === 'string' || node.relid === null);
             __test('parent 2', (node.parent === null) === (node.relid === null));
             __test('age', node.age >= 0 && node.age <= CONSTANTS.MAX_AGE);
-            __test('children', node.children === null || node.children instanceof Array);
+            //__test('children', node.children === null || node.children instanceof Array);
             __test('children 2', (node.age === CONSTANTS.MAX_AGE) === (node.children === null));
             __test('data', typeof node.data === 'object' || typeof node.data === 'string' ||
                 typeof node.data === 'number');
@@ -314,12 +321,6 @@ define([
             if (node.parent !== null) {
                 __test('age 2', node.age >= node.parent.age);
                 __test('mutable', !__isMutableData(node.data) || __isMutableData(node.parent.data));
-            }
-
-            if (!checkValidTreeRunning) {
-                checkValidTreeRunning = true;
-                __checkValidTree(self.getRoot(node));
-                checkValidTreeRunning = false;
             }
         }
 
@@ -435,7 +436,7 @@ define([
                     ASSERT(__getChildNode(parent.children, node.relid) === null);
 
                     node.parent = parent;
-                    parent.children.push(node);
+                    parent.children[node.relid] = node;
 
                     temp = __getChildData(parent.data, node.relid);
                     if (!REGEXP.DB_HASH.test(temp) || temp !== __getChildData(node.data, ID_NAME)) {
@@ -446,7 +447,7 @@ define([
                 }
 
                 node.age = 0;
-                node.children = [];
+                node.children = {};
             } else if (node.age !== 0) {
                 parent = node;
                 do {
@@ -512,7 +513,7 @@ define([
                 parent: null,
                 relid: null,
                 age: 0,
-                children: [],
+                children: {},
                 data: {
                     _mutable: true
                 },
@@ -542,10 +543,10 @@ define([
                 parent: node,
                 relid: relid,
                 age: 0,
-                children: [],
+                children: {},
                 data: __getChildData(node.data, relid)
             };
-            node.children.push(child);
+            node.children[relid] = child;
 
             __ageRoots();
             return child;
@@ -828,23 +829,6 @@ define([
             } else {
                 result = {rootHash: node.data[ID_NAME], objects: {}};
             }
-            //if (result.objects[result.rootHash]) {
-            //    if (gmeConfig.storage.patchRootCommunicationEnabled && node.initial) {
-            //        //TODO this method will change when we will pack similar data for every node
-            //        result.objects[result.rootHash] = {
-            //            newData: result.objects[result.rootHash],
-            //            newHash: result.rootHash,
-            //            oldData: node.initial.data,
-            //            oldHash: node.initial.hash
-            //        };
-            //    }
-            //
-            //    node.initial = {
-            //        data: result.objects[result.rootHash].newData || result.objects[result.rootHash],
-            //        hash: result.rootHash
-            //    };
-            //
-            //}
 
             return result;
         };
@@ -906,25 +890,8 @@ define([
             }
         };
 
-        //Object.keys(self).forEach(function (fName) {
-        //    var orgFn;
-        //    if (fName !== 'logger' && typeof self[fName] === 'function') {
-        //        orgFn = self[fName];
-        //        self[fName] = function () {
-        //            console.count(fName);
-        //            return orgFn.apply(self, arguments);
-        //        };
-        //    }
-        //});
-
         this.removeChildFromCache = function (node, relid) {
-            var i;
-            for (i = 0; i < node.children.length; i += 1) {
-                if (node.children[i].relid === relid) {
-                    node.children.splice(i, 1);
-                    return node;
-                }
-            }
+            delete node.children[relid];
 
             return node;
         };

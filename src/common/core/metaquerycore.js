@@ -6,10 +6,8 @@
  */
 
 define([
-    'common/util/assert',
-    'common/core/tasync',
-    'common/core/constants'
-], function (ASSERT, TASYNC, CONSTANTS) {
+    'common/util/assert'
+], function (ASSERT) {
     'use strict';
 
     var MetaQueryCore = function (innerCore, options) {
