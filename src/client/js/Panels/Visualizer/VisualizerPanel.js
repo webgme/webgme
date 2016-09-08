@@ -221,8 +221,11 @@ define(['js/logger',
     VisualizerPanel.prototype._updateListedVisualizers = function (setActiveViz) {
         var self = this,
             ul = this._getActivePanelElem(),
-            activeVisualizer,
             currentNode = self._client.getNode(self._currentNodeID),
+            idToElem = {},
+            activeVisualizer,
+            i,
+            vizId,
             libraryRoot = false;
 
         if (currentNode) {
@@ -230,23 +233,43 @@ define(['js/logger',
         }
         // For the active panel hide/show listed visualizers
         ul.children('li').each(function (index, _li) {
-            var li = $(_li);
+            var li = $(_li),
+                id = li.attr('data-id');
             if (self._validVisualizers === null) {
                 // By default fall back on showing all loaded visualizers.
-                if (libraryRoot && li.attr('data-id') === 'SetEditor') {
+                if (libraryRoot && id === 'SetEditor') {
                     li.hide();
                 } else {
                     li.show();
                 }
             } else {
-                if (self._validVisualizers.indexOf(li.attr('data-id')) > -1 &&
-                    (!libraryRoot || (libraryRoot && li.attr('data-id') !== 'SetEditor'))) {
+                if (self._validVisualizers.indexOf(id) > -1 && (!libraryRoot || (libraryRoot && id !== 'SetEditor'))) {
                     li.show();
                 } else {
                     li.hide();
                 }
+
+                idToElem[id] = li.detach();
             }
         });
+
+        if (self._validVisualizers !== null) {
+            // Reinsert the detached li-elements based on the specified order.
+            for (i = 0; i < self._validVisualizers.length; i += 1) {
+                vizId = self._validVisualizers[i];
+                if (idToElem.hasOwnProperty(vizId)) {
+                    ul.append(idToElem[vizId]);
+                    idToElem[vizId] = null;
+                }
+            }
+
+            // Finally append the hidden elements too.
+            for (vizId in idToElem) {
+                if (idToElem[vizId] !== null) {
+                    ul.append(idToElem[vizId]);
+                }
+            }
+        }
 
         this.updateContainerSize();
 

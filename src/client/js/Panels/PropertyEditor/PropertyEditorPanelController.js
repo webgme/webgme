@@ -14,6 +14,7 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/Utils/DisplayFormat',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
+    'js/Dialogs/ValidVisualizers/ValidVisualizersDialog',
     'js/Controls/PropertyGrid/PropertyGridWidgets'
 ], function (Logger,
              util,
@@ -23,6 +24,7 @@ define(['js/logger',
              GMEConcepts,
              displayFormat,
              DecoratorSVGExplorerDialog,
+             ValidVisualizersDialog,
              PROPERTY_GRID_WIDGETS) {
 
     'use strict';
@@ -464,10 +466,10 @@ define(['js/logger',
                     }
                 } else if (prefix === CONSTANTS.PROPERTY_GROUP_META + '.') {
                     if (key === REGISTRY_KEYS.VALID_VISUALIZERS) {
+                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
+                        dst[extKey].dialog = ValidVisualizersDialog;
                         dst[extKey].value = dst[extKey].value === undefined ?
                             '' : dst[extKey].value;
-                        dst[extKey].regex = '/[^\w\W]/';
-                        dst[extKey].regexMessage = this._getHintMessage('Visualizers');
                     } else if (key === REGISTRY_KEYS.VALID_PLUGINS) {
                         dst[extKey].value = dst[extKey].value === undefined ?
                             '' : dst[extKey].value;
@@ -751,38 +753,6 @@ define(['js/logger',
                 }
             }
         }
-    };
-
-    PropertyEditorController.prototype._getHintMessage = function (name) {
-        var msg = '',
-            available = WebGMEGlobal['all' + name],
-            debugList = [],
-            i;
-
-        if (!available) {
-            this._logger.error('Could not get all' + name + ' from WebGMEGlobal');
-        } else if (available.length > 0) {
-            msg = 'Available ' + name + ':';
-            if (name === 'Visualizers') {
-                for (i = 0; i < available.length; i += 1) {
-                    if (available[i].DEBUG_ONLY) {
-                        debugList.push(available[i].id);
-                    } else {
-                        msg += '\n - ' + available[i].id;
-                    }
-                }
-                if (debugList.length > 0) {
-                    msg += '\nIn debug mode only:\n - ' + debugList.join('\n - ');
-
-                }
-            } else {
-                msg += '\n - ' + available.join('\n - ');
-            }
-        } else {
-            msg = 'No ' + name + ' available.';
-        }
-
-        return msg;
     };
 
     PropertyEditorController.prototype._buildCommonAttrMeta = function (commonAttrMeta, node, initPhase) {

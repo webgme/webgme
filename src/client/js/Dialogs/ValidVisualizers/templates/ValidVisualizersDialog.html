@@ -1,0 +1,40 @@
+<div class="valid-visualizers-dialog modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <i class="fa fa-list-ul header-icon"></i><span>Valid Visualizers</span>
+            </div>
+            <div class="modal-body">
+                <h5>Edit valid visualizers
+                    <i class="glyphicon glyphicon-info-sign toggle-info-btn"/>
+                </h5>
+                    <span class="info-message hidden">Drag and drop to choose valid visualizers for the selected node.
+                        If changes are persisted you need to navigate away and back to the node for changes to show.
+                        The order of the chosen visualizers (from top to bottom) is respected by the UI and the first
+                        one  will be activated when the node is navigated to.
+                     </span>
+                <span>
+                </span>
+                <div class="visualizers-selection-container">
+                    <h5>
+                        Available:
+                    </h5>
+                    <ul id="available" class="connectedSortable">
+                    </ul>
+                </div>
+                <div class="visualizers-selection-container">
+                    <h5>
+                        Chosen:
+                    </h5>
+                    <ul id="chosen" class="connectedSortable">
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-ok">OK</button>
+                <button class="btn btn-default btn-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
