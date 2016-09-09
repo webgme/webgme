@@ -142,6 +142,7 @@ module.exports = function (config) {
             {pattern: 'src/client/lib/superagent/*.js', included: false},
             {pattern: 'src/client/bower_components/q/*.js', included: false},
             {pattern: 'src/client/bower_components/underscore/underscore.js', included: false},
+            {pattern: 'src/client/bower_components/chance/chance.js', included: false},
             {pattern: 'src/plugin/*.js', included: false},
             {pattern: 'src/plugin/coreplugins/MinimalWorkingExample/**/*', included: false},
             {pattern: 'src/plugin/coreplugins/PluginGenerator/**/*', included: false},

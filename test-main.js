@@ -40,6 +40,7 @@ require.config({
         superagent: './src/client/lib/superagent/superagent',
         jszip: './src/client/bower_components/jszip/dist/jszip',
         debug: './src/client/bower_components/visionmedia-debug/dist/debug',
+        chance: './src/client/bower_components/chance/chance',
         underscore: './src/client/bower_components/underscore/underscore',
         q: './src/client/bower_components/q/q',
 
