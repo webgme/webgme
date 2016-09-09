@@ -134,7 +134,7 @@ var requirejs = require('requirejs'),
             'jquery-csszoom': 'empty:',
             'jquery-fancytree': 'empty:',
             'jquery-layout': 'empty:',
-            'jquery-contextMenu': 'client/lib/jquery/jquery.contextMenu',
+            'jquery-contextMenu': 'client/bower_components/jQuery-contextMenu/dist/jquery.contextMenu',
             'jquery-gritter': 'client/bower_components/jquery.gritter/js/jquery.gritter',
 
             bootstrap: 'client/bower_components/bootstrap/dist/js/bootstrap',
