@@ -74,12 +74,12 @@ define(['js/PanelBase/PanelBase', 'css!./styles/SplitPanel.css'], function (Pane
 
         this._panel1Container.on('mousedown', function (event) {
             self._setActivePanel(0);
-            event.stopPropagation();
+            //#1151 event.stopPropagation();
         });
 
         this._panel2Container.on('mousedown', function (event) {
             self._setActivePanel(1);
-            event.stopPropagation();
+            //#1151 event.stopPropagation();
         });
 
         this._splitter.on('mousedown', function (event) {
