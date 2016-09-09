@@ -21,6 +21,7 @@ require.config({
     paths: {
         css: 'bower_components/require-css/css',
         text: 'lib/require/require-text/text',
+
         //jQuery and stuff
         jquery: 'bower_components/jquery/dist/jquery',
         'jquery-ui': 'bower_components/jquery-ui/jquery-ui',
@@ -43,6 +44,7 @@ require.config({
         //Other modules
         AutoRouterActionApplier: 'lib/autorouter/action-applier',
         underscore: 'bower_components/underscore/underscore',
+        chance: 'bower_components/chance/chance',
         backbone: 'bower_components/backbone/backbone',
         d3: 'bower_components/d3/d3',
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',

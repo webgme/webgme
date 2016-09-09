@@ -237,54 +237,36 @@ function GMEAuth(session, gmeConfig) {
     }
 
     function generateJWToken(userId, password, callback) {
-        var deferred = Q.defer();
         logger.debug('Generating token for user:', userId, '..');
 
-        authenticateUser(userId, password)
+        return authenticateUser(userId, password)
             .then(function () {
-                jwt.sign({userId: userId}, PRIVATE_KEY, jwtOptions, function (token) {
-                    logger.debug('Generated token!');
-                    deferred.resolve(token);
-                });
+                return Q.ninvoke(jwt, 'sign', {userId: userId}, PRIVATE_KEY, jwtOptions);
             })
-            .catch(deferred.reject);
-
-        return deferred.promise.nodeify(callback);
+            .nodeify(callback);
     }
 
     function generateJWTokenForAuthenticatedUser(userId, callback) {
-        var deferred = Q.defer();
         logger.debug('Generating token for user:', userId, '..');
 
-        collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}})
+        return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}})
             .then(function (userData) {
                 if (!userData) {
                     throw new Error('no such user [' + userId + ']');
                 }
 
-                jwt.sign({userId: userId}, PRIVATE_KEY, jwtOptions, function (token) {
-                    logger.debug('Generated token!');
-                    deferred.resolve(token);
-                });
+                return Q.ninvoke(jwt, 'sign', {userId: userId}, PRIVATE_KEY, jwtOptions);
             })
-            .catch(deferred.reject);
-
-        return deferred.promise.nodeify(callback);
+            .nodeify(callback);
     }
 
     function regenerateJWToken(token, callback) {
-        var deferred = Q.defer();
         logger.debug('Regenerate token..');
-        verifyJWToken(token)
+        return verifyJWToken(token)
             .then(function (result) {
-                jwt.sign({userId: result.content.userId}, PRIVATE_KEY, jwtOptions, function (newToken) {
-                    logger.debug('Regenerated new token!');
-                    deferred.resolve(newToken);
-                });
+                return Q.ninvoke(jwt, 'sign', {userId: result.content.userId}, PRIVATE_KEY, jwtOptions);
             })
-            .catch(deferred.reject);
-
-        return deferred.promise.nodeify(callback);
+            .nodeify(callback);
     }
 
     function verifyJWToken(token, callback) {

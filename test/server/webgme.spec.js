@@ -12,8 +12,7 @@ describe('webgme', function () {
     'use strict';
 
     var expect = testFixture.expect,
-        logger = testFixture.logger.fork('webgme.spec'),
-        MongoURI = require('mongodb-uri');
+        logger = testFixture.logger.fork('webgme.spec');
 
     it('should export public API functions and classes', function () {
         var webGME = testFixture.WebGME;
@@ -103,32 +102,21 @@ describe('webgme', function () {
 
     it('should fail to getGmeAuth if mongo is not running', function (done) {
         var webGME = testFixture.WebGME,
-            gmeConfig = testFixture.getGmeConfig(),
-            uri = MongoURI.parse(gmeConfig.mongo.uri),
-            i, ports = [], port;
+            gmeConfig = testFixture.getGmeConfig();
 
         this.timeout(5000);
 
-        //change all ports so they will point to
-        for (i = 0; i < uri.hosts.length; i += 1) {
-            ports.push(uri.hosts[i].port);
-        }
-        for (i = 0; i < uri.hosts.length; i += 1) {
-            do {
-                port = 20000 + Math.round(Math.random() * 10000);
-            } while (ports.indexOf(port) !== -1);
-            uri.hosts[i].port = port;
-        }
-        gmeConfig.mongo.uri = MongoURI.format(uri);
+        gmeConfig.mongo.uri = 'mongodb://127.0.0.1:27000/webgme_tests';
 
         webGME.getGmeAuth(gmeConfig)
             .then(function () {
                 done(new Error('should have failed to connect to mongo'));
             })
             .catch(function (err) {
-                // TODO: check if error is failed to connect
+                expect(err.message).to.include('failed to connect to [127.0.0.1:27000]');
                 done();
-            });
+            })
+            .done();
     });
 
     it('should getStorage', function (done) {

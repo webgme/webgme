@@ -620,7 +620,7 @@ function openSocketIo(server, agent, userName, password, token) {
                     multiplex: false
                 };
 
-            agent.attachCookies(socketReq);
+            agent._attachCookies(socketReq);
             split = /access_token=([^;]+)/.exec(socketReq.cookies);
 
             if (token) {
