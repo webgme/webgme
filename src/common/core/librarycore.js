@@ -248,23 +248,24 @@ define([
             }
 
             function collectBaseInformation(baseNode, closureInfo) {
-                var libraryRoots = getLibraryRootsInfo(baseNode),
+                var libraryRoots = getAllLibraryRoots(baseNode),
                     namespaceInfo = {},
+                    i,
                     namespace;
 
-                for (namespace in libraryRoots) {
+                for (i = 0; i < libraryRoots.length; i += 1) {
+                    namespace = self.getFullyQualifiedName(libraryRoots[i]);
                     namespaceInfo[namespace] = {
-                        info: self.getLibraryInfo(libraryRoots[namespace], namespace),
+                        info: self.getLibraryInfo(libraryRoots[i], namespace),
                         guid: self.getLibraryGuid(baseNode, namespace)
                     };
-
                     if (namespaceInfo[namespace].info && namespaceInfo[namespace].info.hash) {
                         namespaceInfo[namespace].hash = namespaceInfo[namespace].info.hash
                     }
                 }
 
-                closureInfo.baseInfo[self.getGuid(baseNode)] = {
-                    originGuid: self.getLibraryGuid(baseNode),
+                closureInfo.bases[self.getGuid(baseNode)] = {
+                    originGuid: libraryRoots.length > 0 ? self.getLibraryGuid(baseNode) : self.getGuid(baseNode),
                     namsespaces: namespaceInfo
                 };
             }
@@ -278,15 +279,13 @@ define([
                     targetPath;
 
                 for (overlayKey in overlayInfo) {
-                    path = basePath + CONSTANTS.PATH_SEP + overlayKey;
+                    path = basePath + overlayKey;
                     if (isClosureInternalTarget(path, closureInfo)) {
                         for (pointerName in overlayInfo[overlayKey]) {
                             if (self.isPointerName(pointerName)) {
-                                targetPath = basePath + CONSTANTS.PATH_SEP +
-                                    overlayInfo[overlayKey][pointerName];
+                                targetPath = basePath + overlayInfo[overlayKey][pointerName];
                                 if (pointerName === CONSTANTS.BASE_POINTER) {
                                     if (allMetaNodes[targetPath]) {
-                                        closureInfo.bases[path] = self.getGuid(allMetaNodes[targetPath]);
                                         collectBaseInformation(allMetaNodes[targetPath], closureInfo);
                                     } else if (isClosureInternalTarget(targetPath, closureInfo)) {
                                         closureInfo.relations[path] = closureInfo.relations[path] || {};
@@ -312,7 +311,7 @@ define([
 
             function normalizeSelectionForClosure(nodes) {
                 var paths = [],
-                    i, j, path,
+                    i, j,
                     nodesToKeep = [],
                     nodesToCut = {};
 
@@ -321,9 +320,8 @@ define([
                 }
 
                 for (i = 0; i < paths.length; i += 1) {
-                    path = paths[i];
                     for (j = 0; j < paths.length; j += 1) {
-                        if (isPathInSubTree(paths[j], path)) {
+                        if (i !== j && isPathInSubTree(paths[j], paths[i])) {
                             nodesToCut[paths[j]] = true;
                         }
                     }
@@ -954,7 +952,6 @@ define([
                 var closureInfo = {
                         selection: {},
                         bases: {},
-                        baseInfo: {},
                         relations: {}
                     },
                     infoLosses = {},
@@ -981,13 +978,13 @@ define([
                 for (i = 0; i < nodes.length; i += 1) {
                     node = nodes[i];
                     while (this.getPath(node)) { // until it is not the root
-                        addRelationsFromNodeToClosureInfo(node, closureInfo, infoLosses);
+                        addRelationsFromNodeToClosureInfo(node, allMetaNodes, closureInfo, infoLosses);
                         node = this.getParent(node);
                     }
                 }
 
                 // Finally we process the relations of the root
-                addRelationsFromNodeToClosureInfo(this.getRoot(nodes[0]), closureInfo, infoLosses);
+                addRelationsFromNodeToClosureInfo(this.getRoot(nodes[0]), allMetaNodes, closureInfo, infoLosses);
 
                 //checking and logging lost relation information
                 logger.info('Closure creation finished!', {info: closureInfo, losses: infoLosses});
@@ -998,7 +995,7 @@ define([
                             path + '] misses its base [' + infoLosses[path][CONSTANTS.BASE_POINTER] + '].');
                     }
                 }
-                
+
                 return closureInfo;
             };
             //</editor-fold>

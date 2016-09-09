@@ -618,15 +618,19 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     for (i = 0; i < parameters.paths.length; i += 1) {
                         promises.push(context.core.loadByPath(context.rootNode, parameters.paths[i]));
                     }
-                    return Q.allSettled(promises);
+                    return Q.all(promises);
                 }
 
                 throw new Error('no path were given to export!');
             })
             .then(function (baseNodes) {
-                var promises,
+                var promises = [],
                     i;
                 closureInformation = context.core.getClosureInformation(baseNodes);
+                if (closureInformation instanceof Error) {
+                    throw closureInformation;
+                }
+
                 for (i = 0; i < baseNodes.length; i += 1) {
                     promises.push(
                         storageUtils.getProjectJson(
@@ -636,7 +640,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     );
                 }
 
-                return Q.allSettled(promises);
+                return Q.all(promises);
             })
             .then(function (rawJsons) {
                 // rawJson = {
@@ -651,7 +655,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         projectId: parameters.projectId,
                         commitHash: parameters.commitHash,
                         selectionInfo: closureInformation,
-                        objects: null,
+                        objects: [],
                         hashes: {objects: [], assets: []}
                     },
                     blobClient = new BlobClientClass({
@@ -667,6 +671,11 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 for (i = 0; i < rawJsons.length; i += 1) {
                     commonUtils.extendArrayUnique(output.hashes.objects, rawJsons[i].hashes.objects);
                     commonUtils.extendArrayUnique(output.hashes.assets, rawJsons[i].hashes.assets);
+                    commonUtils.extendObjectArrayUnique(
+                        output.objects,
+                        rawJsons[i].objects,
+                        STORAGE_CONSTANTS.MONGO_ID
+                    );
                 }
 
                 blobUtil.buildProjectPackage(logger.fork('blobUtil'),
@@ -1060,6 +1069,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         _addZippedExportToBlob: _addZippedExportToBlob,
         exportProjectToFile: exportProjectToFile,
         importProjectFromFile: importProjectFromFile,
+        exportSelectionToFile: exportSelectionToFile,
         addLibrary: addLibrary,
         updateLibrary: updateLibrary
     };

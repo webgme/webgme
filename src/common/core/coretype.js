@@ -25,8 +25,8 @@ define([
             this[key] = innerCore[key];
         }
 
-        //isPointerName should be removed from API at this level
-        delete self.isPointerName;
+        // //isPointerName should be removed from API at this level
+        // delete self.isPointerName;
 
         logger.debug('initialized CoreType');
 

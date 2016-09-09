@@ -40,8 +40,8 @@ define(['js/logger',
             stateLoaded = 1,
             selfId,
             selfPatterns = {},
-        //local container for accounting the currently opened node list,
-        // its a hashmap with a key of nodeId and a value of { FancyTreeNode, childrenIds[], state }
+            //local container for accounting the currently opened node list,
+            // its a hashmap with a key of nodeId and a value of { FancyTreeNode, childrenIds[], state }
             nodes = {},
             refresh,
             initialize,
@@ -358,13 +358,14 @@ define(['js/logger',
 
             var validChildren = self._getValidChildrenTypesFlattened(nodeId),
                 keys, i,
+                selectedIds = self._treeBrowser.getSelectedIDs() || [],
                 nodeObj = self._client.getNode(nodeId),
                 readOnly = self._client.isProjectReadOnly() || self._client.isCommitReadOnly(),
                 menuItemsCallback = function (key/*, options*/) {
                     self._createChild(nodeId, key);
                 };
 
-            if (!readOnly && validChildren && validChildren['has.children'] === true &&
+            if ((selectedIds.length === 0 || (selectedIds.length === 1 && selectedIds[0] === nodeId)) && !readOnly && validChildren && validChildren['has.children'] === true &&
                 nodeObj && !nodeObj.isLibraryRoot() && !nodeObj.isLibraryElement()) {
                 menuItems.create = { // The "create" menu item
                     name: 'Create child',
@@ -509,6 +510,26 @@ define(['js/logger',
                     },
                     icon: false
                 };
+            }
+
+            if (selectedIds.length > 0) {
+                menuItems.exportModel = {
+                    name: 'Export selection',
+                    icon: false,
+                    callback: function (/*key,options*/) {
+                        self._client.exportSelectionToFile(self._client.getActiveProjectId(),
+                            self._client.getActiveCommitHash(),
+                            selectedIds,
+                            false, function (err, result) {
+                                if (err) {
+                                    logger.error('unable to export selection', err);
+                                } else {
+                                    saveToDisk.saveUrlToDisk(result.downloadUrl);
+                                }
+                            }
+                        );
+                    }
+                }
             }
         };
 

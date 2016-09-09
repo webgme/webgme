@@ -65,6 +65,17 @@ define([], function () {
         return -1;
     }
 
+    function indexOfUntilInObjectArray(items, item, maxIndex, key) {
+        var len = items.length > maxIndex ? maxIndex : items.length;
+        while (len--) {
+            if (items[len][key] === item[key]) {
+                return len;
+            }
+        }
+
+        return -1;
+    }
+
     function extendArrayUnique(base, extension) {
         var originalLength = base.length,
             extensionLen = extension.length,
@@ -79,10 +90,25 @@ define([], function () {
 
     }
 
+    function extendObjectArrayUnique(base, extension, key) {
+        var originalLength = base.length,
+            extensionLen = extension.length,
+            item;
+
+        while (extensionLen--) {
+            item = extension[extensionLen];
+            if (indexOfUntilInObjectArray(base, item, originalLength, key) === -1) {
+                base.push(item);
+            }
+        }
+
+    }
+
     return {
         isTrueObject: isTrueObject,
         updateFieldsRec: updateFieldsRec,
         orderStringArrayByElementLength: orderStringArrayByElementLength,
-        extendArrayUnique: extendArrayUnique
+        extendArrayUnique: extendArrayUnique,
+        extendObjectArrayUnique: extendObjectArrayUnique
     };
-})
+});
