@@ -1,3 +1,6 @@
+// Important! https://github.com/allpro/layout/issues/10
+// Local change at line 1808
+
 /**
  * @preserve
  * jquery.layout 1.3.0 - Release Candidate 30.79
@@ -1802,7 +1805,7 @@ $.fn.layout = function (opts) {
 		,	$parent, n
 		;
 		// sC = state.container
-		sC.selector = $N.selector.split(".slice")[0];
+		sC.selector = "";//pmeijer: selector is depracted in jquery 3! //$N.selector.split(".slice")[0];
 		sC.ref		= (o.name ? o.name +' layout / ' : '') + tag + (id ? "#"+id : cls ? '.['+cls+']' : ''); // used in messages
 		sC.isBody	= (tag === "BODY");
 
