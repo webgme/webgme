@@ -3,6 +3,4 @@ https://github.com/visionmedia/superagent/issues/587#issuecomment-89029589
 Download and put the file here, when you upgrade the npm version.
 Browser and server side library versions should be in sync.
 
-https://wzrd.in/standalone/superagent@1.7.2
-
 Update the content of superagent.js with the matching version `npm ls superagent`

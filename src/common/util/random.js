@@ -7,7 +7,7 @@
  * collection of functions that uses random Numbers in WebGME
  */
 
-define(['./chance.min'], function (ChanceJs) {
+define(['chance'], function (ChanceJs) {
     'use strict';
 
     function _generateRelidRegexp() {

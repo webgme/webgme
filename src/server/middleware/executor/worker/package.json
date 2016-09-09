@@ -10,6 +10,6 @@
     "requirejs": "2.1.20",
     "rimraf": "2.5.4",
     "ssl-root-cas": "1.2.2",
-    "superagent": "1.7.2"
+    "superagent": "2.2.0"
   }
 }

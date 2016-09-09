@@ -63,6 +63,7 @@ require.config({
         //Other modules
         AutoRouterActionApplier: 'lib/autorouter/action-applier',
         underscore: 'bower_components/underscore/underscore',
+        chance: 'bower_components/chance/chance',
         backbone: 'bower_components/backbone/backbone',
         d3: 'bower_components/d3/d3.min',
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',

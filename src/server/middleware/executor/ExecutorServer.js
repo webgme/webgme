@@ -17,7 +17,7 @@
 
 var express = require('express'),
     Q = require('q'),
-    Chance = requireJS('common/util/chance.min'),
+    Chance = require('chance'),
 // Mongo collections
     JOB_LIST = '_executorJobList',
     WORKER_LIST = '_executorWorkerList',
