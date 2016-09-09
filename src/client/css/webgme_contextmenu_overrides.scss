@@ -1,29 +1,23 @@
+/*!*FIX line-height so text and icons are nicely aligned to the middle*!*/
+.context-menu-item {
+  line-height: 18px;
+}
+
+/*FIX fix menu's z-index to be over the jqueryUI's layouting...*/
 .context-menu-list {
+  z-index: 10 !important;
+}
 
-  li.context-menu-item {
-    display: list-item;
-
-    &.icon {
-      width: auto;
-    }
-  }
-
-  .context-menu-item.icon-edit {
-    background-image: url(../img/edit.png);
-  }
-  .context-menu-item.icon-cut {
-    background-image: url(../img/cut.png);
-  }
-  .context-menu-item.icon-copy {
-    background-image: url(../img/copy.png);
-  }
-  .context-menu-item.icon-paste {
-    background-image: url(../img/paste.png);
-  }
-  .context-menu-item.icon-delete {
-    background-image: url(../img/delete.png);
-  }
-  .context-menu-item.icon-add {
-    background-image: url(../img/create.png);
+.context-menu-submenu {
+  .context-menu-list {
+    /* if the modeling language has many elements right click on the root and select create sub-menu
+       we have to make it scrollable in y direction, but not in x direction.
+       https://github.com/medialize/jQuery-contextMenu/issues/60#issuecomment-30870663
+       http://stackoverflow.com/a/13347579
+     */
+    max-height: 400px; /* ~18 elements without scroll */
+    overflow-y: auto;
+    overflow-x: auto;
+    text-overflow: ellipsis;
   }
 }
