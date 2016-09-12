@@ -803,6 +803,7 @@ define(['js/logger',
         this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionSelected);
         this.designerCanvas.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionSelected);
         this.designerCanvas.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionLabelPlacement.enabled(onlyConnectionSelected);
 
         this.$btnConnectionRemoveSegmentPoints.enabled(onlyConnectionSelected);
 
@@ -1077,6 +1078,7 @@ define(['js/logger',
                 setObjRegistry(id, CONSTANTS.LINE_STYLE.TYPE, REGISTRY_KEYS.LINE_TYPE);
                 setObjRegistry(id, CONSTANTS.LINE_STYLE.PATTERN, REGISTRY_KEYS.LINE_STYLE);
                 setObjRegistry(id, CONSTANTS.LINE_STYLE.WIDTH, REGISTRY_KEYS.LINE_WIDTH);
+                setObjRegistry(id, CONSTANTS.LINE_STYLE.LABEL_PLACEMENT, REGISTRY_KEYS.LINE_LABEL_PLACEMENT);
             }
 
             this._client.completeTransaction();

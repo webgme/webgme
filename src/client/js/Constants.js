@@ -57,6 +57,12 @@ define([
             START_ARROW: 'start-arrow',
             END_ARROW: 'end-arrow',
             CUSTOM_POINTS: 'custom-points',
+            LABEL_PLACEMENT: 'label-placement',
+            LABEL_PLACEMENTS: {
+                SRC: 'src',
+                MIDDLE: 'mid',
+                DST: 'dst'
+            },
             LINE_ARROWS: {
                 NONE: 'none',
                 DIAMOND: 'diamond',

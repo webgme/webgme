@@ -26,6 +26,7 @@ define([], function () {
         LINE_START_ARROW: 'lineStartArrow',     //start arrow of a line
         LINE_END_ARROW: 'lineEndArrow',     //start arrow of a line
         LINE_CUSTOM_POINTS: 'lineCustomPoints',  //custom routing points of a line
+        LINE_LABEL_PLACEMENT: 'lineLabel', // Where the connection labels should be placed 'src', 'mid', 'dst'.
 
         //TODO maybe we should harmonize with project registry
         VALID_PLUGINS: 'validPlugins', //space separated list of valid plugins for the project

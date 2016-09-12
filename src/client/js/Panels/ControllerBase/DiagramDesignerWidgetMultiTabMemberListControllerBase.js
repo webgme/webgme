@@ -1188,6 +1188,10 @@ define(['js/logger',
                             objDesc.reconnectable = desc.reconnectable === undefined ? false : desc.reconnectable;
                             objDesc.editable = desc.editable === undefined ? false : desc.editable;
 
+                            if (objDesc.srcText || objDesc.dstText) {
+                                delete objDesc.name;
+                            }
+
                             delete objDesc.source;
                             delete objDesc.target;
 

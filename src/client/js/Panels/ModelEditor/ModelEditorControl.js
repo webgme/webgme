@@ -209,6 +209,11 @@ define(['js/logger',
                     //get all the other visual properties of the connection
                     _.extend(objDescriptor, GMEVisualConcepts.getConnectionVisualProperties(nodeId));
 
+                    // If srcText or dstText is given -> remove the name.
+                    if (objDescriptor.srcText || objDescriptor.dstText) {
+                        delete objDescriptor.name;
+                    }
+
                     //get custom points from the node object
                     customPoints = nodeObj.getRegistry(REGISTRY_KEYS.LINE_CUSTOM_POINTS);
                     if (customPoints && _.isArray(customPoints)) {

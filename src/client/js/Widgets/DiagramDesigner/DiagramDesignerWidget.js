@@ -427,12 +427,14 @@ define([
     };
 
     DiagramDesignerWidget.prototype._createLineStyleMenuItem = function (width, color, pattern, startArrow,
-                                                                         endArrow, type) {
+                                                                         endArrow, type, label) {
         //jshint newcap:false
         var el = $('<div/>'),
             path,
             hSize = 50,
             vSize = 20,
+            bbox,
+            xLabel,
             paper = Raphael(el[0], hSize, vSize),
             bezierControlOffset = 10;
 
@@ -454,6 +456,23 @@ define([
         } else {
             path = paper.path('M 5,' + (Math.round(vSize / 2) + 0.5) + ' L' + (hSize - 5) + ',' +
                 (Math.round(vSize / 2) + 0.5));
+        }
+
+        if (label) {
+            bbox = path.getBBox();
+
+            if (label === DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENTS.SRC) {
+                xLabel = bbox.x + 2;
+            } else if (label === DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENTS.DST) {
+                xLabel = bbox.x + bbox.width - 2;
+            } else {
+                xLabel = bbox.x + bbox.width / 2;
+            }
+
+            paper.text(xLabel, bbox.y - 1.5, '$').attr({
+                'font-size': 8,
+                fill: color
+            });
         }
 
         path.attr({
@@ -986,6 +1005,10 @@ define([
 
             if (this.toolbarItems.ddbtnConnectionLineType) {
                 this.toolbarItems.ddbtnConnectionLineType.enabled(connectionSelected);
+            }
+
+            if (this.toolbarItems.ddbtnConnectionLabelPlacement) {
+                this.toolbarItems.ddbtnConnectionLabelPlacement.enabled(connectionSelected);
             }
 
             if (this.toolbarItems.ddbtnConnectionLineWidth) {

@@ -85,7 +85,19 @@ define([
 
         if (obj) {
             _.extend(result, DEFAULT_LINE_STYLE);
-            result.name = displayFormat.resolve(obj);
+
+            val = getValue(obj, REGISTRY_KEYS.LINE_LABEL_PLACEMENT);
+
+            switch (val) {
+                case 'src':
+                    result.srcText = displayFormat.resolve(obj);
+                    break;
+                case 'dst':
+                    result.dstText = displayFormat.resolve(obj);
+                    break;
+                default:
+                    result.name = displayFormat.resolve(obj);
+            }
 
             //line width
             val = getValue(obj, REGISTRY_KEYS.LINE_WIDTH, 'int');
