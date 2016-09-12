@@ -13,7 +13,7 @@
 @import url("../bower_components/bootstrap-multiselect/dist/css/bootstrap-multiselect.css");
 @import url("../bower_components/jquery.fancytree/dist/skin-vista/ui.fancytree.css");
 @import url("webgme_fancytree_overrides.css");
-@import url("contextmenu/jquery.contextMenu.min.css");
+@import url("../bower_components/jQuery-contextMenu/dist/jquery.contextMenu.css");
 @import url("webgme_contextmenu_overrides.css");
 
 @import url("print.css");
@@ -148,43 +148,6 @@ div.spacer {
 
 .ui-layout-pane {
     border: 0;
-}
-
-/*FIX jquery context menu's z-index to be over the jqueryUI's layouting...*/
-.context-menu-list {
-    z-index: 10 !important;
-}
-
-.context-menu-item.hover > .context-menu-list {
-    /* if the modeling language has many elements right click on the root and select create sub-menu
-       we have to make it scrollable in y direction, but not in x direction.
-       https://github.com/medialize/jQuery-contextMenu/issues/60#issuecomment-30870663
-       http://stackoverflow.com/a/13347579
-     */
-    max-height: 400px; /* ~18 elements without scroll */
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-
-/*FIX line-height so text and icons are nicely aligned to the middle*/
-.context-menu-item {
-    line-height: 18px;
-}
-
-/*FIX poor submenu indicator of the original jQuery.contextMenu.css*/
-.context-menu-submenu:after {
-    display: block;
-    float: right;
-    width: 0;
-    height: 0;
-    margin-top: 5px;
-    margin-right: 0px;
-    border-color: transparent;
-    border-left-color: #333333;
-    border-style: solid;
-    border-width: 5px 0 5px 5px;
-    content: " " !important;
 }
 
 /********WEBKIT SCROLLBAR **********/

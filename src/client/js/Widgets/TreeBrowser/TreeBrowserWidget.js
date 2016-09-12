@@ -747,6 +747,12 @@ define(['js/logger',
 
             self.onCreatingContextMenu(node.key, contextMenuOptions);
             contextMenuOptions.rename = this.enableEdit;
+            if (node.isSelected() === false) {
+                self._deselectSelectedNodes();
+                node.setSelected(true);
+            }
+
+            node.setFocus(true);
 
             // The default set of available items :  Rename, Create, Copy, Paste, Delete
             menuItems = {

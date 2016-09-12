@@ -33,8 +33,8 @@ require.config({
         'jquery-fancytree': 'bower_components/jquery.fancytree/dist/jquery.fancytree-all',
         'jquery-layout': 'lib/jquery/jquery.layout',
 
-        'jquery-contextMenu': 'lib/jquery/jquery.contextMenu',
-        'jquery-csszoom': 'lib/jquery/jquery.csszoom',
+        'jquery-contextMenu': 'bower_components/jQuery-contextMenu/dist/jquery.contextMenu',
+        'jquery-csszoom': 'bower_components/jquery.csszoom/jquery.csszoom',
 
         //Bootstrap stuff
         bootstrap: 'bower_components/bootstrap/dist/js/bootstrap',
