@@ -260,8 +260,7 @@ define([
                 //fill linetype dropdown
                 this.toolbarItems.ddbtnConnectionLineType.addButton({
                     title: 'Straight',
-                    icon: self._createLineStyleMenuItem(null, null, null, null, null,
-                        DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER),
+                    icon: self._createLineStyleMenuItem(),
                     clickFn: function (/*data*/) {
                         var p = {};
                         p[DiagramDesignerWidgetConstants.LINE_TYPE] = DiagramDesignerWidgetConstants.LINE_TYPES.NONE;
