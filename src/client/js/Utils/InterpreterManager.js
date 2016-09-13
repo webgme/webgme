@@ -96,14 +96,15 @@ define([
 
                 // Before executing the plugin - make sure the client is in SYNC.
                 // (If not plugin could be executed on the server on a commitHash that does not exist).
-                if (self._client.getBranchStatus() &&
-                    self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC) {
-                    callback(self.getPluginErrorResult(metadata.id, 'Not allowed to invoke plugin while local branch' +
-                        ' is AHEAD or PULLING changes from server.', startTime));
-                    return;
-                }
-
                 if (globalConfig.runOnServer === true) {
+                    if (self._client.getBranchStatus() &&
+                        self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC) {
+                        callback(self.getPluginErrorResult(metadata.id, 'Not allowed ' +
+                            'to invoke server plugin while local branch is AHEAD or ' +
+                            'PULLING changes from server.', startTime));
+                        return;
+                    }
+
                     self._client.runServerPlugin(metadata.id, context, execCallback);
                 } else {
                     self._client.runBrowserPlugin(metadata.id, context, execCallback);
