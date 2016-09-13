@@ -2036,6 +2036,25 @@ define([
             }
         };
 
+        this.importSelectionFromFile = function (projectId, branchName, parentId, blobHash, callback) {
+            var parameters = {
+                command: 'importSelectionFromFile',
+                projectId: projectId,
+                blobHash: blobHash,
+                parentPath: parentId,
+                branchName: branchName
+            };
+
+            logger.debug('import selection from package', parameters);
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
+            });
+        };
+
         this.emitStateNotification = function () {
             var data = {
                 type: CONSTANTS.STORAGE.CLIENT_STATE_NOTIFICATION,

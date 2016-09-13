@@ -702,6 +702,78 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     }
 
+    function importSelectionFromFile(webgmeToken, parameters, callback) {
+        var jsonProject,
+            context,
+            storage,
+            blobClient = new BlobClientClass({
+                serverPort: gmeConfig.server.port,
+                httpsecure: false,
+                server: '127.0.0.1',
+                webgmeToken: webgmeToken,
+                logger: logger.fork('BlobClient')
+            });
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, null, parameters.branchName);
+            })
+            .then(function (context_) {
+                context = context_;
+
+                return _importProjectPackage(blobClient, parameters.blobHash);
+            })
+            .then(function (jsonProject_) {
+                var contentJson = {
+                    rootHash: null,
+                    objects: jsonProject_.objects
+                };
+                jsonProject = jsonProject_;
+
+                return storageUtils.insertProjectJson(context.project,
+                    contentJson,
+                    {commitMessage: 'commit that represents the selection content'});
+            })
+            .then(function (commitHash) {
+                logger.debug('Selection content was persisted [' + commitHash + ']');
+                return context.core.loadByPath(context.rootNode, parameters.parentPath);
+            })
+            .then(function (parent) {
+                var deferred = Q.defer(),
+                    persisted;
+
+                if (parent === null) {
+                    throw new Error('Unable to locate parent node of selection [' + parameters.parent + ']');
+                }
+
+                context.core.importClosure(parent, jsonProject.selectionInfo);
+
+                persisted = context.core.persist(context.rootNode);
+
+                context.project.makeCommit(
+                    parameters.branchName,
+                    [context.commitObject._id],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'importing selection', function (err/*, saveResult*/) {
+                        if (err) {
+                            deferred.reject(err);
+                            return;
+                        }
+
+                        deferred.resolve();
+                    });
+
+                return deferred.promise;
+            })
+            .catch(function (err) {
+                logger.error('importSelectionFromFile failed with error', err);
+                throw err;
+            })
+            .nodeify(callback);
+    }
+
     function _importProjectPackage(blobClient, packageHash) {
         var zip = new AdmZip(),
             artifact = blobClient.createArtifact('files'),
@@ -1070,6 +1142,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         exportProjectToFile: exportProjectToFile,
         importProjectFromFile: importProjectFromFile,
         exportSelectionToFile: exportSelectionToFile,
+        importSelectionFromFile: importSelectionFromFile,
         addLibrary: addLibrary,
         updateLibrary: updateLibrary
     };

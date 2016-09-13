@@ -175,6 +175,19 @@ process.on('message', function (parameters) {
                 });
             }
         );
+    } else if (parameters.command === CONSTANTS.workerCommands.importSelectionFromFile) {
+        wr.importSelectionFromFile(parameters.webgmeToken, parameters, function (err, result) {
+                if (err) {
+                    logger.error('FAILED:', err);
+                }
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.result,
+                    error: err ? err.message : null,
+                    result: result
+                });
+            }
+        );
     } else {
         safeSend({
             pid: process.pid,
