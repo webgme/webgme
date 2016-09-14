@@ -55,8 +55,7 @@ define(['js/PanelBase/PanelBase',
 
         //padding from screen right edge
         navBarInner.append(separator.clone());
-
-	this.createWidgets(navBarInner);
+        this.createWidgets(navBarInner);
     };
 
     FooterControlsPanel.prototype.createCredits = function (navBarInner) {

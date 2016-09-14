@@ -14,6 +14,7 @@ define(['jquery', 'css!./styles/PopoverBox.css'], function () {
 
     PopoverBox = function (el) {
         this._el = el;
+        this._timeout = null;
     };
 
     PopoverBox.prototype.show = function (message, alertLevel, autoHideOrDelay) {
@@ -24,10 +25,8 @@ define(['jquery', 'css!./styles/PopoverBox.css'], function () {
             autoHideOrDelay = AUTO_HIDE_MILLISEC;
         }
 
+        clearTimeout(this._timeout);
         el.addClass('pobox');
-
-        //remove existing
-        el.popover('destroy');
 
         //show new
         el.popover({
@@ -45,7 +44,7 @@ define(['jquery', 'css!./styles/PopoverBox.css'], function () {
         }
 
         if (autoHide === true) {
-            setTimeout(function () {
+            this._timeout = setTimeout(function () {
                 el.popover('destroy');
             }, autoHideOrDelay);
         }
