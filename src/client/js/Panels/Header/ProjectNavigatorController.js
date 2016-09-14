@@ -9,6 +9,7 @@ define([
     'js/logger',
     'js/Constants',
     'angular',
+    'js/Loader/ProgressNotification',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/Merge/MergeDialog',
@@ -23,6 +24,7 @@ define([
 ], function (Logger,
              CONSTANTS,
              ng,
+             ProgressNotification,
              ProjectsDialog,
              CommitDialog,
              MergeDialog,
@@ -613,7 +615,7 @@ define([
                 data.branchId === self.gmeClient.getActiveBranchName() ?
                     self.gmeClient.getActiveCommitHash() : data.commitHash,
                 displayName = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId),
-                progress = self.getProgressNote('<strong>Exporting </strong> branch ' +
+                progress = ProgressNotification.start('<strong>Exporting </strong> branch ' +
                     data.branchId + ' of ' + displayName + '...');
 
             self.gmeClient.exportProjectToFile(
@@ -670,7 +672,7 @@ define([
         }
 
         function mergeBranch(data) {
-            var progress = self.getProgressNote('<strong>Merging </strong> branch ' +
+            var progress = ProgressNotification.start('<strong>Merging </strong> branch ' +
                 data.branchId + ' into ' + self.$scope.navigator.items[self.navIdBranch].id + '...');
 
             if (data.projectId !== self.gmeClient.getActiveProjectId()) {
@@ -1210,41 +1212,6 @@ define([
             rootDisplayName: 'GME',
             projectMenuClass: '',
             branchMenuClass: ''
-        };
-    };
-
-    ProjectNavigatorController.prototype.getProgressNote = function (msg) {
-        var note = $.notify(msg, {
-                showProgressbar: true,
-                delay: 0,
-                type: 'info',
-                offset: {
-                    x: 20,
-                    y: 37
-                }
-            }),
-            progress = 15,
-            intervalId;
-
-        note.update('progress', progress);
-        intervalId = setInterval(function () {
-            if (progress < 50) {
-                progress += 5;
-            } else if (progress < 70) {
-                progress += 2;
-            } else if (progress < 98) {
-                progress += 1;
-            } else {
-                progress = 10;
-                note.update('type', 'warning');
-            }
-
-            note.update('progress', progress);
-        }, 5000);
-
-        return {
-            note: note,
-            intervalId: intervalId
         };
     };
 
