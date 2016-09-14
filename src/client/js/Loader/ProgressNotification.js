@@ -45,6 +45,7 @@ define(['jquery'], function () {
     }
 
     return {
-        startProgressNotification: startProgressNotification
+        startProgressNotification: startProgressNotification,
+        start: startProgressNotification
     };
 });

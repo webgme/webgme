@@ -11,6 +11,7 @@ define(['js/logger',
     'js/RegistryKeys',
     './ObjectBrowserControlBase',
     'js/Dialogs/LibraryManager/LibraryManager',
+    'js/Loader/ProgressNotification',
     'js/Utils/SaveToDisk'
 ], function (Logger,
              nodePropertyNames,
@@ -18,6 +19,7 @@ define(['js/logger',
              REGISTRY_KEYS,
              ObjectBrowserControlBase,
              LibraryManager,
+             ProgressNotification,
              saveToDisk) {
     'use strict';
 
@@ -421,32 +423,14 @@ define(['js/logger',
                         assetless: {
                             name: 'with assets',
                             callback: function (/*key, options*/) {
-                                self._client.exportProjectToFile(self._client.getActiveProjectId(),
-                                    self._client.getActiveBranchName(),
-                                    self._client.getActiveCommitHash(), true, function (err, result) {
-                                        if (err) {
-                                            logger.error('unable to save project', err);
-                                        } else {
-                                            saveToDisk.saveUrlToDisk(result.downloadUrl);
-                                        }
-                                    }
-                                );
+                                self._exportProject(true);
                             },
                             icon: false
                         },
                         assetfull: {
                             name: 'without assets',
                             callback: function (/*key, options*/) {
-                                self._client.exportProjectToFile(self._client.getActiveProjectId(),
-                                    self._client.getActiveBranchName(),
-                                    self._client.getActiveCommitHash(), false, function (err, result) {
-                                        if (err) {
-                                            logger.error('unable to save project', err);
-                                        } else {
-                                            saveToDisk.saveUrlToDisk(result.downloadUrl);
-                                        }
-                                    }
-                                );
+                                self._exportProject(false);
                             },
                             icon: false
                         }
@@ -968,6 +952,42 @@ define(['js/logger',
         params[childId] = {registry: {}};
         params[childId].registry[REGISTRY_KEYS.POSITION] = {x: 100, y: 100};
         client.createChildren(params);
+    };
+
+    TreeBrowserControl.prototype._exportProject = function (withAssets, callback) {
+        var self = this,
+            progress = ProgressNotification.start('<strong>Exporting </strong> project ...');
+
+        self._client.exportProjectToFile(
+            self._client.getActiveProjectId(),
+            self._client.getActiveBranchName(),
+            self._client.getActiveCommitHash(),
+            withAssets,
+            function (err, result) {
+                clearInterval(progress.intervalId);
+                if (err) {
+                    self._logger.error('unable to save project', err);
+                    progress.note.update({
+                        message: '<strong>Failed to export: </strong>' + err.message,
+                        type: 'danger',
+                        progress: 100
+                    });
+                } else {
+                    progress.note.update({
+                        message: '<strong>Exported </strong> project <a href="' +
+                        result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
+                        progress: 100,
+                        type: 'success'
+                    });
+
+                    saveToDisk.saveUrlToDisk(result.downloadUrl);
+                }
+
+                if (typeof callback === 'function') {
+                    callback(err);
+                }
+            }
+        );
     };
 
     return TreeBrowserControl;
