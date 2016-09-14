@@ -157,7 +157,7 @@ define(['js/logger',
             });
 
             node = this._client.getNode(nodeId);
-            if (node && !this._client.isProjectReadOnly()) {
+            if (node && !this._client.isProjectReadOnly() && !this._client.isCommitReadOnly()) {
                 this.designerCanvas.setReadOnly(node.isLibraryRoot() || node.isLibraryElement());
                 this.setReadOnly(node.isLibraryRoot() || node.isLibraryElement());
             }
