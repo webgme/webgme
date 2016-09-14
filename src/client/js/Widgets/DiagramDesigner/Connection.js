@@ -1626,7 +1626,6 @@ define([
             pathN = this.skinParts.path.getPointAtLength(totalLength),
             pathN1 = this.skinParts.path.getPointAtLength(totalLength - 1),
             alphaEnd = this._calculateSteep(pathN1, pathN),
-            hasText = false,
             self = this;
 
         this._hideTexts();
@@ -1637,13 +1636,13 @@ define([
         if (this.name && this.name !== '') {
             this.skinParts.name = this._textNameBase.clone();
             this.skinParts.name.css({
-                top: pathCenter.y - 4/*+ this.designerAttributes.width / 2*/,
+                top: pathCenter.y - 2 + this.designerAttributes.width,
                 left: pathCenter.x,
                 color: this.designerAttributes.color
             });
             this.skinParts.name.find('span').text(this.name);
             this.skinParts.textContainer.append(this.skinParts.name);
-            hasText = true;
+            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.textContainer);
 
             if ((pathCenter.alpha >= 45 && pathCenter.alpha <= 135) ||
                 (pathCenter.alpha >= 225 && pathCenter.alpha <= 315)) {
@@ -1667,6 +1666,10 @@ define([
 
         if (this.srcText && this.srcText !== '') {
             this.skinParts.srcText = this._textSrcBase.clone();
+            this.skinParts.srcText.find('span').text(this.srcText);
+            this.skinParts.textContainer.append(this.skinParts.srcText);
+            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.textContainer);
+
             dx = this.designerAttributes.width;
             dy = this.designerAttributes.width;
 
@@ -1678,9 +1681,9 @@ define([
             } else if (alphaBegin > 90 && alphaBegin <= 135) {
                 dy = 0;
             } else if (alphaBegin > 135 && alphaBegin <= 180) {
-                dx = -5 * this.srcText.length;
+                dx = -1 * this.skinParts.srcText.width();
             } else if (alphaBegin > 180 && alphaBegin <= 225) {
-                dx = -5 * this.srcText.length;
+                dx = -1 * this.skinParts.srcText.width();;
                 dy *= -1;
             } else if (alphaBegin > 225 && alphaBegin <= 270) {
                 dy = -3 * TEXT_OFFSET;
@@ -1695,9 +1698,6 @@ define([
                 left: pathBegin.x + dx,
                 color: this.designerAttributes.color
             });
-            this.skinParts.srcText.find('span').text(this.srcText);
-            this.skinParts.textContainer.append(this.skinParts.srcText);
-            hasText = true;
 
             // set title editable on double-click
             this.skinParts.srcText.find('span').on('dblclick.editOnDblClick', null, function (event) {
@@ -1716,11 +1716,15 @@ define([
 
         if (this.dstText && this.dstText !== '') {
             this.skinParts.dstText = this._textDstBase.clone();
+            this.skinParts.dstText.find('span').text(this.dstText);
+            this.skinParts.textContainer.append(this.skinParts.dstText);
+            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.textContainer);
+
             dx = this.designerAttributes.width;
             dy = this.designerAttributes.width;
 
             if (alphaEnd === 0) {
-                dx = -5 * this.dstText.length;
+                dx = -1 * this.skinParts.dstText.width();
                 dy *= -1;
             } else if (alphaEnd > 0 && alphaEnd <= 45) {
                 dy = -3 * TEXT_OFFSET;
@@ -1738,7 +1742,7 @@ define([
             } else if (alphaEnd > 270 && alphaEnd <= 315) {
                 dy = 0;
             } else if (alphaEnd > 315 && alphaEnd <= 360) {
-                dx = -5 * this.dstText.length;
+                dx = -1 * this.skinParts.dstText.width();
             }
 
             this.skinParts.dstText.css({
@@ -1746,9 +1750,6 @@ define([
                 left: pathEnd.x + dx,
                 color: this.designerAttributes.color
             });
-            this.skinParts.dstText.find('span').text(this.dstText);
-            this.skinParts.textContainer.append(this.skinParts.dstText);
-            hasText = true;
 
             // set title editable on double-click
             this.skinParts.dstText.find('span').on('dblclick.editOnDblClick', null, function (event) {
@@ -1763,10 +1764,6 @@ define([
                 event.stopPropagation();
                 event.preventDefault();
             });
-        }
-
-        if (hasText) {
-            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.textContainer);
         }
     };
 

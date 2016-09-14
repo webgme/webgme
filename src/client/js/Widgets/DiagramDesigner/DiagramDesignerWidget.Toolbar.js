@@ -129,7 +129,7 @@ define([
             this.toolbarItems.crossingLinesSeparator = toolbar.addSeparator();
 
             if (this._lineStyleControls === true) {
-                /************** END OF - VISUAL STYLE ARROWS *****************/
+                /************** START - VISUAL STYLE ARROWS *****************/
                 this.toolbarItems.ddbtnConnectionArrowStart = toolbar.addDropDownButton({
                     title: 'Line start marker',
                     icon: 'glyphicon glyphicon-arrow-left',
@@ -143,6 +143,11 @@ define([
                 this.toolbarItems.ddbtnConnectionArrowEnd = toolbar.addDropDownButton({
                     title: 'Line end marker',
                     icon: 'glyphicon glyphicon-arrow-right',
+                    menuClass: 'no-min-width'
+                });
+                this.toolbarItems.ddbtnConnectionLabelPlacement = toolbar.addDropDownButton({
+                    title: 'Line label placement',
+                    icon: 'fa fa-sliders fa-rotate-90',
                     menuClass: 'no-min-width'
                 });
 
@@ -215,6 +220,43 @@ define([
                     }
                 }
 
+                // Connection Label Placement
+                this.toolbarItems.ddbtnConnectionLabelPlacement.addButton({
+                    title: 'In the middle',
+                    icon: self._createLineStyleMenuItem(null, null, null, null, null, null,
+                        DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENTS.MIDDLE),
+                    clickFn: function (/*data*/) {
+                        var p = {};
+                        p[DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENT] =
+                            DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENTS.MIDDLE;
+                        self._setConnectionProperty(p);
+                    }
+                });
+
+                this.toolbarItems.ddbtnConnectionLabelPlacement.addButton({
+                    title: 'Next to source',
+                    icon: self._createLineStyleMenuItem(null, null, null, null, null, null,
+                        DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENTS.SRC),
+                    clickFn: function (/*data*/) {
+                        var p = {};
+                        p[DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENT] =
+                            DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENTS.SRC;
+                        self._setConnectionProperty(p);
+                    }
+                });
+
+                this.toolbarItems.ddbtnConnectionLabelPlacement.addButton({
+                    title: 'Next to destination',
+                    icon: self._createLineStyleMenuItem(null, null, null, null, null, null,
+                        DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENTS.DST),
+                    clickFn: function (/*data*/) {
+                        var p = {};
+                        p[DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENT] =
+                            DiagramDesignerWidgetConstants.LINE_LABEL_PLACEMENTS.DST;
+                        self._setConnectionProperty(p);
+                    }
+                });
+
                 //fill linetype dropdown
                 this.toolbarItems.ddbtnConnectionLineType.addButton({
                     title: 'Straight',
@@ -261,6 +303,7 @@ define([
                 this.toolbarItems.ddbtnConnectionArrowEnd.enabled(false);
                 this.toolbarItems.ddbtnConnectionLineType.enabled(false);
                 this.toolbarItems.ddbtnConnectionLineWidth.enabled(false);
+                this.toolbarItems.ddbtnConnectionLabelPlacement.enabled(false);
                 /************** END OF - VISUAL STYLE ARROWS *****************/
             }
 
