@@ -11,8 +11,15 @@ define([
     'plugin/PluginBase',
     'text!./metadata.json',
     'common/util/ejs',
-    'text!./RestRouter.ejs'
-], function (PluginBase, pluginMetadata, ejs, ROUTER_TEMPLATE) {
+    'text!./RestRouter.ejs',
+    'text!./RestRouterTest.ejs'
+], function (
+    PluginBase,
+    pluginMetadata,
+    ejs,
+    ROUTER_TEMPLATE,
+    TEST_TEMPLATE
+) {
     'use strict';
 
     pluginMetadata = JSON.parse(pluginMetadata);
@@ -50,8 +57,11 @@ define([
 
         // Add the RestRouterGenerator file.
         restRouterFile = self.outputDir + self.currentConfig.restRouterName + '.js';
+        // TODO: 
+        restRouterTest = self.outputDir + self.currentConfig.restRouterName + '.js';
 
         self.filesToAdd[restRouterFile] = ejs.render(ROUTER_TEMPLATE, self.currentConfig);
+        self.filesToAdd[restRouterTest] = ejs.render(TEST_TEMPLATE, self.currentConfig);
 
         self.logger.debug(JSON.stringify(self.filesToAdd, null, 4));
         artifact = self.blobClient.createArtifact('RestRouterFiles');
