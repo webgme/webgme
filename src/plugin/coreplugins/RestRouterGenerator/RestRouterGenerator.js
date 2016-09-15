@@ -43,6 +43,7 @@ define([
     RestRouterGenerator.prototype.main = function (callback) {
         var self = this,
             restRouterFile,
+            restRouterTest,
             artifact;
 
         // Get and log the configuration which will be appended to and used in the templates.
@@ -57,8 +58,7 @@ define([
 
         // Add the RestRouterGenerator file.
         restRouterFile = self.outputDir + self.currentConfig.restRouterName + '.js';
-        // TODO: 
-        restRouterTest = self.outputDir + self.currentConfig.restRouterName + '.js';
+        restRouterTest = self.outputDir + self.currentConfig.restRouterName + '.spec.js';
 
         self.filesToAdd[restRouterFile] = ejs.render(ROUTER_TEMPLATE, self.currentConfig);
         self.filesToAdd[restRouterTest] = ejs.render(TEST_TEMPLATE, self.currentConfig);
