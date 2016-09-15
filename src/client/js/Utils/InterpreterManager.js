@@ -95,16 +95,20 @@ define([
                 context.managerConfig.namespace = globalConfig.namespace;
 
                 // Before executing the plugin - make sure the client is in SYNC.
-                // (If not plugin could be executed on the server on a commitHash that does not exist).
-                if (globalConfig.runOnServer === true) {
-                    if (self._client.getBranchStatus() &&
-                        self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC) {
-                        callback(self.getPluginErrorResult(metadata.id, 'Not allowed ' +
-                            'to invoke server plugin while local branch is AHEAD or ' +
-                            'PULLING changes from server.', startTime));
-                        return;
-                    }
+                // This can be skipped if the plugin is read-only and executed on
+                // the client.
+                var readOnlyClient = !globalConfig.runOnServer && !metadata.writeAccessRequired,
+                    isOutOfSync = self._client.getBranchStatus() &&
+                        self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC;
 
+                if (!readOnlyClient && isOutOfSync) {
+                    callback(self.getPluginErrorResult(metadata.id, 'Not allowed ' +
+                        'to invoke server plugin while local branch is AHEAD or ' +
+                        'PULLING changes from server.', startTime));
+                    return;
+                }
+
+                if (globalConfig.runOnServer === true) {
                     self._client.runServerPlugin(metadata.id, context, execCallback);
                 } else {
                     self._client.runBrowserPlugin(metadata.id, context, execCallback);
