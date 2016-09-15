@@ -3,7 +3,9 @@ var testFixture = require('../../globals'),  // TODO: May need to change this if
     expect = testFixture.expect,
     gmeConfig = testFixture.getGmeConfig(),
     server = testFixture.WebGME.standaloneServer(gmeConfig),
-    mntPt = require('../../webgme-setup.json').components.routers['<%= restRouterName %>'].mount,
+    // TODO: If not using webgme-cli, replace the mntPt w/ the desired mount point
+    // If using the webgme-cli, this will look up the mount point for the given router
+    mntPt = require('../../../webgme-setup.json').components.routers['<%= restRouterName %>'].mount,
     urlFor = function(action) {
         return [
             server.getUrl(),
