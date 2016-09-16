@@ -268,26 +268,19 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
-        this.getPointerNames = function (node) {
-            var sorted = [],
-                raw = innerCore.getPointerNames(node);
-            for (var i = 0; i < raw.length; i++) {
-                if (raw[i].indexOf(CONSTANTS.MEMBER_RELATION) === -1) {
-                    sorted.push(raw[i]);
-                }
-            }
-            return sorted;
-        };
-
         this.getCollectionNames = function (node) {
-            var sorted = [],
-                raw = innerCore.getCollectionNames(node);
-            for (var i = 0; i < raw.length; i++) {
-                if (raw[i].indexOf(CONSTANTS.MEMBER_RELATION) === -1) {
-                    sorted.push(raw[i]);
+            var result = innerCore.getCollectionNames(node),
+                i;
+
+            for (i = 0; i < result.length; i++) {
+                // The member collection is coming from being a member of a set and is not a defined relationship.
+                if (result[i] === CONSTANTS.MEMBER_RELATION) {
+                    result.splice(i, 1);
+                    break;
                 }
             }
-            return sorted;
+
+            return result;
         };
         //</editor-fold>
 
