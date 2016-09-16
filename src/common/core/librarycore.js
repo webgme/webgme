@@ -160,7 +160,7 @@ define([
                         tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX]
                             .splice(tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX].indexOf(source), 1);
                         if (tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX].length === 0) {
-                            delete tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX]
+                            delete tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX];
                         }
                         self.setProperty(overlay, target, tOvr);
                     }
@@ -260,7 +260,7 @@ define([
                         guid: self.getLibraryGuid(baseNode, namespace)
                     };
                     if (namespaceInfo[namespace].info && namespaceInfo[namespace].info.hash) {
-                        namespaceInfo[namespace].hash = namespaceInfo[namespace].info.hash
+                        namespaceInfo[namespace].hash = namespaceInfo[namespace].info.hash;
                     }
                 }
 
@@ -968,7 +968,7 @@ define([
                 }, self.loadChild(root, libraryRelid));
             };
 
-            this.updateLibrary = function (node, name, updatedLibraryRootHash, libraryInfo, updateInstructions) {
+            this.updateLibrary = function (node, name, updatedLibraryRootHash, libraryInfo/*, updateInstructions*/) {
                 var logs = {added: {}, updated: {}, moved: {}, removed: {}},
                     root = self.getRoot(node),
                     libraryRoot = getRootOfLibrary(root, name),
@@ -1047,7 +1047,7 @@ define([
 
                             return logs;
                         }, self.loadSubTree(newLibraryRoot));
-                    }, self.loadChild(root, relid))
+                    }, self.loadChild(root, relid));
                 }, getLibraryInfo(libraryRoot), getLibraryInfo(updatedLibraryRootHash));
 
             };
@@ -1128,6 +1128,15 @@ define([
 
                 // We first collect the absolute paths of the selected nodes
                 for (i = 0; i < nodes.length; i += 1) {
+                    // The selection cannot contain library elements as that would violate read-only
+                    if (this.isLibraryElement(nodes[i]) || this.isLibraryRoot(nodes[i])) {
+                        return new Error('Cannot select node[' +
+                            this.getPath(nodes[i]) + '] because it is library content!'
+                        );
+                    }
+                    if (this.getParent(nodes[i]) === null) {
+                        return new Error('Cannot select the project root!');
+                    }
                     closureInfo.selection[this.getPath(nodes[i])] = this.getGuid(nodes[i]);
                     closureInfo.hashes[this.getPath(nodes[i])] = this.getHash(nodes[i]);
                 }
@@ -1135,7 +1144,7 @@ define([
                 // Secondly, we collect relation information (the first order ones).
                 // We leave the handling of the root node's overlay info for a separate step
                 for (i = 0; i < nodes.length; i += 1) {
-                    node = nodes[i];
+                    node = this.getParent(nodes[i]);
                     while (this.getPath(node)) { // until it is not the root
                         addRelationsFromNodeToClosureInfo(node, allMetaNodes, closureInfo, infoLosses);
                         node = this.getParent(node);
@@ -1168,6 +1177,8 @@ define([
                     }
                 }
 
+                //put the losses into the info
+                closureInfo.losses = infoLosses;
                 return closureInfo;
             };
 
@@ -1206,6 +1217,8 @@ define([
                         addRelation(parent, key, closureInformation.relations[key][name], name);
                     }
                 }
+
+                return closureInformation;
             };
             //</editor-fold>
         };
