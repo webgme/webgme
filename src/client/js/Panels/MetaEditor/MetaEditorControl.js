@@ -658,6 +658,14 @@ define(['js/logger',
             connTexts: connTexts
         };
     };
+
+    MetaEditorControl.prototype._isPointerOrSetAndConnDescDoesNotMatchName = function (connDesc, connType, pointerOrSetName) {
+        return (connType === MetaRelations.META_RELATIONS.POINTER || connType === MetaRelations.META_RELATIONS.SET) &&
+            pointerOrSetName &&
+            pointerOrSetName !== '' &&
+            connDesc.name !== pointerOrSetName;
+    };
+
     /****************************************************************************/
     /*  END OF --- CREATE A SPECIFIC TYPE OF CONNECTION BETWEEN 2 GME OBJECTS   */
     /****************************************************************************/
@@ -665,7 +673,7 @@ define(['js/logger',
     /****************************************************************************/
     /*  REMOVES A SPECIFIC TYPE OF CONNECTION FROM 2 GME OBJECTS                */
     /****************************************************************************/
-    MetaEditorControl.prototype._removeConnection = function (gmeSrcId, gmeDstId, connType, pointerName) {
+    MetaEditorControl.prototype._removeConnection = function (gmeSrcId, gmeDstId, connType, pointerOrSetName) {
         var connectionID,
             idx,
             len,
@@ -689,12 +697,12 @@ define(['js/logger',
         while (len--) {
             connectionID = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType][len];
 
-            //if a pointer with a specific name should be removed
-            //clear out the connectionID if this connection is not the representation of that pointer
-            if (connType === MetaRelations.META_RELATIONS.POINTER &&
-                pointerName &&
-                pointerName !== '' &&
-                this._connectionListByID[connectionID].name !== pointerName) {
+            // If a pointer or set with a specific name should be removed
+            // clear out the connectionID if this connection is not the representation of that pointer.
+            if (this._isPointerOrSetAndConnDescDoesNotMatchName(
+                    this._connectionListByID[connectionID],
+                    connType,
+                    pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -727,19 +735,19 @@ define(['js/logger',
         var connectionID,
             idx,
             len = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType].length,
-            pointerName = connTexts.name,
+            pointerOrSetName = connTexts.name,
             found = false,
             connDesc;
 
         while (len--) {
             connectionID = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType][len];
 
-            //if a pointer with a specific name should be removed
-            //clear out the connectionID if this connection is not the representation of that pointer
-            if (connType === MetaRelations.META_RELATIONS.POINTER &&
-                pointerName &&
-                pointerName !== '' &&
-                this._connectionListByID[connectionID].name !== pointerName) {
+            // If a pointer or set with a specific name should be updated
+            // clear out the connectionID if this connection is not the representation of that pointer.
+            if (this._isPointerOrSetAndConnDescDoesNotMatchName(
+                    this._connectionListByID[connectionID],
+                    connType,
+                    pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -762,11 +770,16 @@ define(['js/logger',
                 for (idx = 0; idx < len; idx += 1) {
                     connDesc = this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId][idx];
                     if (connDesc[0] === connType) {
-                        if (connType !== MetaRelations.META_RELATIONS.POINTER ||
-                            (connType === MetaRelations.META_RELATIONS.POINTER &&
-                            pointerName &&
-                            pointerName !== '' &&
-                            connDesc[1].name === pointerName)) {
+                        if (connType === MetaRelations.META_RELATIONS.POINTER ||
+                            connType === MetaRelations.META_RELATIONS.SET) {
+
+                            if (pointerOrSetName &&
+                                pointerOrSetName !== '' &&
+                                connDesc[1].name === pointerOrSetName) {
+                                connDesc[1] = connTexts;
+                            }
+
+                        } else{
                             connDesc[1] = connTexts;
                         }
                     }
@@ -777,11 +790,16 @@ define(['js/logger',
                 for (idx = 0; idx < len; idx += 1) {
                     connDesc = this._connectionWaitingListBySrcGMEID[gmeSrcId][gmeDstId][idx];
                     if (connDesc[0] === connType) {
-                        if (connType !== MetaRelations.META_RELATIONS.POINTER ||
-                            (connType === MetaRelations.META_RELATIONS.POINTER &&
-                            pointerName &&
-                            pointerName !== '' &&
-                            connDesc[1].name === pointerName)) {
+                        if (connType === MetaRelations.META_RELATIONS.POINTER ||
+                            connType === MetaRelations.META_RELATIONS.SET) {
+
+                            if (pointerOrSetName &&
+                                pointerOrSetName !== '' &&
+                                connDesc[1].name === pointerOrSetName) {
+                                connDesc[1] = connTexts;
+                            }
+
+                        } else{
                             connDesc[1] = connTexts;
                         }
                     }
@@ -1175,6 +1193,11 @@ define(['js/logger',
             existingPointerNames = _.difference(existingPointerNames, MetaEditorConstants.RESERVED_POINTER_NAMES);
             notAllowedPointerNames = notAllowedPointerNames.concat(MetaEditorConstants.RESERVED_POINTER_NAMES);
 
+            if (isSet !== true) {
+                // Only pointers cannot have the name member.
+                notAllowedPointerNames.push(CONSTANTS.CORE.MEMBER_RELATION);
+            }
+
             //query pointer name from user
             this.diagramDesigner.selectNewPointerName(existingPointerNames,
                 notAllowedPointerNames,
@@ -1367,7 +1390,7 @@ define(['js/logger',
             gmeSrcId,
             gmeDstId,
             connTexts,
-            pointerName;
+            pointerOrSetName;
 
         this._filteredOutConnectionDescriptors[connType] = [];
 
@@ -1380,13 +1403,13 @@ define(['js/logger',
             gmeDstId = this._connectionListByID[connComponentId].GMEDstId;
             connTexts = this._connectionListByID[connComponentId].connTexts;
 
-            if (connType === MetaRelations.META_RELATIONS.POINTER) {
-                pointerName = this._connectionListByID[connComponentId].name;
+            if (connType === MetaRelations.META_RELATIONS.POINTER || connType === MetaRelations.META_RELATIONS.SET) {
+                pointerOrSetName = this._connectionListByID[connComponentId].name;
             }
 
             this._filteredOutConnectionDescriptors[connType].push([gmeSrcId, gmeDstId, connTexts]);
 
-            this._removeConnection(gmeSrcId, gmeDstId, connType, pointerName);
+            this._removeConnection(gmeSrcId, gmeDstId, connType, pointerOrSetName);
         }
 
         this.diagramDesigner.endUpdate();
