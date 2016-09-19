@@ -203,7 +203,7 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
                 }
             })
             .then(function () {
-                return artie.addFile('project.json', JSON.stringify(jsonExport, null, 4));
+                return artie.addFile('project.json', JSON.stringify(jsonExport));
             })
             .then(function () {
                 return artie.save();

@@ -1318,7 +1318,7 @@ define(['js/logger',
                         paths.push(self._ComponentID2GmeID[selectedIds[i]]);
                     }
 
-                    exporters.exportModels(self._client, self._logger, paths);
+                    exporters.exportModels(self._client, self.logger, paths);
                 } else if (key === MENU_IMPORT_MODELS) {
                     var importDialog = new ImportModelDialog(self._client);
                     importDialog.show(self._ComponentID2GmeID[selectedIds[0]]);
