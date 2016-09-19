@@ -31,30 +31,30 @@ define([
         if (toolbar) {
             this.toolbarItems.beginSeparator = toolbar.addSeparator();
 
+            this.toolbarItems.btnGridLayout = toolbar.addButton({
+                title: 'Compact Grid Layout',
+                icon: 'glyphicon glyphicon-th',
+                data: {mode: 'grid'},
+                clickFn: function (data) {
+                    self.itemAutoLayout(data.mode);
+                }
+            });
+
+            this.toolbarItems.btnCozyGridLayout = toolbar.addButton({
+                title: 'Sparse Grid Layout',
+                icon: 'glyphicon glyphicon-th-large',
+                data: {mode: 'cozygrid'},
+                clickFn: function (data) {
+                    self.itemAutoLayout(data.mode);
+                }
+            });
+
             if (DEBUG === true) {
-                this.toolbarItems.btnGridLayout = toolbar.addButton({
-                    title: 'Grid layout',
-                    icon: 'glyphicon glyphicon-th',
-                    data: {mode: 'grid'},
-                    clickFn: function (data) {
-                        self.itemAutoLayout(data.mode);
-                    }
-                });
-
-                this.toolbarItems.btnCozyGridLayout = toolbar.addButton({
-                    title: 'Cozy Grid layout',
-                    icon: 'glyphicon glyphicon-th-large',
-                    data: {mode: 'cozygrid'},
-                    clickFn: function (data) {
-                        self.itemAutoLayout(data.mode);
-                    }
-                });
-
                 //progress text in toolbar for debug only
                 this.toolbarItems.progressText = toolbar.addLabel();
-
-                this.toolbarItems.gridSeparator = toolbar.addSeparator();
             }
+
+            this.toolbarItems.gridSeparator = toolbar.addSeparator();
 
             /************** ROUTING MANAGER SELECTION **************************/
             this.toolbarItems.radioButtonGroupRouteManager = toolbar.addRadioButtonGroup(function (data) {
@@ -117,16 +117,18 @@ define([
 
             this.toolbarItems.modeSeparator = toolbar.addSeparator();
 
-            this.toolbarItems.btnXing = toolbar.addToggleButton({
-                    icon: btnIconBase.clone().addClass('gme icon-gme_crossing-lines'),
-                    title: 'Connection crossing bumps ON/OFF',
-                    clickFn: function (data, isPressed) {
-                        self._setConnectionXingJumpMode(isPressed);
+            if (DEBUG === true) {
+                this.toolbarItems.btnXing = toolbar.addToggleButton({
+                        icon: btnIconBase.clone().addClass('gme icon-gme_crossing-lines'),
+                        title: 'Connection crossing bumps ON/OFF',
+                        clickFn: function (data, isPressed) {
+                            self._setConnectionXingJumpMode(isPressed);
+                        }
                     }
-                }
-            );
+                );
 
-            this.toolbarItems.crossingLinesSeparator = toolbar.addSeparator();
+                this.toolbarItems.crossingLinesSeparator = toolbar.addSeparator();
+            }
 
             if (this._lineStyleControls === true) {
                 /************** START - VISUAL STYLE ARROWS *****************/
