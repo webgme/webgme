@@ -1,8 +1,9 @@
+/*globals define, $*/
+/*jshint browser: true*/
+
 /**
  * @author kecso / https://github.com/kecso
  */
-/*globals define, $*/
-/*jshint browser: true*/
 
 define(['js/Loader/LoaderCircles',
     'common/core/constants',

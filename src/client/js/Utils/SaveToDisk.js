@@ -7,17 +7,6 @@
 define(['blob/BlobClient'], function (BlobClient) {
     'use strict';
 
-    function saveJsonToDisk(fileName, data, logger, callback) {
-        saveJsonToBlobStorage(fileName, data, logger, function (err, downloadUrl) {
-            if (err) {
-                return callback(err);
-            }
-
-            saveUrlToDisk(downloadUrl, fileName);
-            callback(null);
-        });
-    }
-
     function saveUrlToDisk(fileURL, fileName) {
         // for non-IE
         if (!window.ActiveXObject) {
@@ -40,7 +29,7 @@ define(['blob/BlobClient'], function (BlobClient) {
         else if (!!window.ActiveXObject && document.execCommand) {
             var _window = window.open(fileURL, '_self');
             _window.document.close();
-            _window.document.execCommand('SaveAs', true, fileName || fileURL)
+            _window.document.execCommand('SaveAs', true, fileName || fileURL);
             _window.close();
         }
     }
@@ -54,79 +43,20 @@ define(['blob/BlobClient'], function (BlobClient) {
         });
     }
 
-    function exportProject(client, logger, projectParams, withAssets, callback) {
-        var progress = ProgressNotification.start('<strong>Exporting </strong> project ...');
-
-        client.exportProjectToFile(
-            projectParams ? projectParams.projectId : client.getActiveProjectId(),
-            projectParams ? projectParams.branchName : client.getActiveBranchName(),
-            projectParams ? projectParams.commitHash : client.getActiveCommitHash(),
-            withAssets,
-            function (err, result) {
-                clearInterval(progress.intervalId);
-                if (err) {
-                    logger.error('unable to save project', err);
-                    progress.note.update({
-                        message: '<strong>Failed to export: </strong>' + err.message,
-                        type: 'danger',
-                        progress: 100
-                    });
-                } else {
-                    progress.note.update({
-                        message: '<strong>Exported </strong> project <a href="' +
-                        result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
-                        progress: 100,
-                        type: 'success'
-                    });
-
-                    saveUrlToDisk(result.downloadUrl);
-                }
-
-                if (typeof callback === 'function') {
-                    callback(err);
-                }
+    function saveJsonToDisk(fileName, data, logger, callback) {
+        saveJsonToBlobStorage(fileName, data, logger, function (err, downloadUrl) {
+            if (err) {
+                return callback(err);
             }
-        );
-    }
 
-    function exportModels(client, logger, selectedIds, callback) {
-        var progress = ProgressNotification.start('<strong>Exporting </strong> models ...');
-
-        client.exportSelectionToFile(
-            client.getActiveProjectId(),
-            client.getActiveCommitHash(),
-            selectedIds,
-            true, function (err, result) {
-                clearInterval(progress.intervalId);
-                if (err) {
-                    logger.error('unable to export models', err);
-                    progress.note.update({
-                        message: '<strong>Failed to export: </strong>' + err.message,
-                        type: 'danger',
-                        progress: 100
-                    });
-                } else {
-                    progress.note.update({
-                        message: '<strong>Exported </strong> models <a href="' +
-                        result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
-                        progress: 100,
-                        type: 'success'
-                    });
-                    saveUrlToDisk(result.downloadUrl);
-                }
-
-                if (typeof callback === 'function') {
-                    callback(err);
-                }
-            }
-        );
+            saveUrlToDisk(downloadUrl, fileName);
+            callback(null);
+        });
     }
 
     return {
         saveToBlobStorage: saveJsonToBlobStorage,
         saveUrlToDisk: saveUrlToDisk,
-        saveJsonToDisk: saveJsonToDisk,
-        exportProject: exportProject,
-        exportModels: exportModels
+        saveJsonToDisk: saveJsonToDisk
     };
 });

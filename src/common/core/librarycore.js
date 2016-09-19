@@ -217,22 +217,14 @@ define([
             }
 
             function isPathInSubTree(fullPath, subTreePath) {
-                var fullPathArray = fullPath.split(CONSTANTS.PATH_SEP),
-                    subTreePathArray = subTreePath.split(CONSTANTS.PATH_SEP),
-                    i;
-                fullPathArray.shift();
-                subTreePathArray.shift();
-
-                if (fullPathArray.length < subTreePathArray.length) {
-                    return false;
+                if (fullPath === subTreePath) {
+                    return true;
                 }
-                for (i = 0; i < subTreePathArray.length; i += 1) {
-                    if (fullPathArray[i] !== subTreePathArray[i]) {
-                        return false;
-                    }
+                if (fullPath.indexOf(subTreePath + CONSTANTS.PATH_SEP) === 0) {
+                    return true;
                 }
 
-                return true;
+                return false;
             }
 
             function isClosureInternalTarget(targetPath, closureInfo) {

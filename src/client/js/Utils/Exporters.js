@@ -42,14 +42,17 @@ define(['js/Utils/SaveToDisk', 'js/Loader/ProgressNotification'], function (save
         );
     }
 
-    function exportModels(client, logger, selectedIds, callback) {
+    function exportModels(client, logger, selectedIds, withAssets, callback) {
         var progress = ProgressNotification.start('<strong>Exporting </strong> models ...');
+
+        withAssets = withAssets === false ? false : true;
 
         client.exportSelectionToFile(
             client.getActiveProjectId(),
             client.getActiveCommitHash(),
             selectedIds,
-            true, function (err, result) {
+            withAssets,
+            function (err, result) {
                 clearInterval(progress.intervalId);
                 if (err) {
                     logger.error('unable to export models', err);

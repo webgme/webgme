@@ -421,17 +421,17 @@ define(['js/logger',
                     name: 'Export project',
                     icon: false,
                     items: {
-                        assetless: {
+                        assetfull: {
                             name: 'with assets',
                             callback: function (/*key, options*/) {
-                                exporters.exportProject(self._client, self._logger, null, false);
+                                exporters.exportProject(self._client, self._logger, null, true);
                             },
                             icon: false
                         },
-                        assetfull: {
+                        assetless: {
                             name: 'without assets',
                             callback: function (/*key, options*/) {
-                                exporters.exportProject(self._client, self._logger, null, true);
+                                exporters.exportProject(self._client, self._logger, null, false);
                             },
                             icon: false
                         }
@@ -520,8 +520,21 @@ define(['js/logger',
                     menuItems.exportModel = {
                         name: 'Export models',
                         icon: false,
-                        callback: function (/*key,options*/) {
-                            exporters.exportModels(self._client, self._logger, selectedIds);
+                        items: {
+                            assetfull: {
+                                name: 'with assets',
+                                callback: function (/*key, options*/) {
+                                    exporters.exportModels(self._client, self._logger, selectedIds, true);
+                                },
+                                icon: false
+                            },
+                            assetless: {
+                                name: 'without assets',
+                                callback: function (/*key, options*/) {
+                                    exporters.exportModels(self._client, self._logger, selectedIds, false);
+                                },
+                                icon: false
+                            }
                         }
                     };
 

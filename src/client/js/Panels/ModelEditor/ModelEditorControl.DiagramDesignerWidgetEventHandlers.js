@@ -1212,7 +1212,7 @@ define(['js/logger',
             node,
             i,
             paths,
-            no_library_content_selected = true,
+            libraryContentSelected = false,
             self = this;
 
         if (selectedIds.length === 1) {
@@ -1284,12 +1284,12 @@ define(['js/logger',
             for (i = 0; i < selectedIds.length; i += 1) {
                 node = self._client.getNode(self._ComponentID2GmeID[selectedIds[i]]);
                 if (node.isLibraryElement() || node.isLibraryRoot()) {
-                    no_library_content_selected = false;
+                    libraryContentSelected = true;
                     break;
                 }
             }
 
-            if (no_library_content_selected) {
+            if (libraryContentSelected === false) {
                 menuItems[MENU_EXPORT_MODELS] = {
                     name: 'Export selected models',
                     icon: 'glyphicon glyphicon-export'
@@ -1317,6 +1317,7 @@ define(['js/logger',
                     for (i = 0; i < selectedIds.length; i += 1) {
                         paths.push(self._ComponentID2GmeID[selectedIds[i]]);
                     }
+
                     exporters.exportModels(self._client, self._logger, paths);
                 } else if (key === MENU_IMPORT_MODELS) {
                     var importDialog = new ImportModelDialog(self._client);
