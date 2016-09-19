@@ -11,7 +11,6 @@ define(['js/logger',
     'js/RegistryKeys',
     './ObjectBrowserControlBase',
     'js/Dialogs/LibraryManager/LibraryManager',
-    'js/Loader/ProgressNotification',
     'js/Dialogs/ImportModel/ImportModelDialog',
     'js/Utils/SaveToDisk'
 ], function (Logger,
@@ -20,7 +19,6 @@ define(['js/logger',
              REGISTRY_KEYS,
              ObjectBrowserControlBase,
              LibraryManager,
-             ProgressNotification,
              ImportModelDialog,
              saveToDisk) {
     'use strict';
@@ -118,8 +116,8 @@ define(['js/logger',
                             //});
                             nodes[self._treeRootId].treeNode.setExpanded(true);
                         } else {
-                            logger.error('Specified tree-root ' + self._treeRootId + ' did not exist in model - falling' +
-                                ' back on root-node.');
+                            logger.error('Specified tree-root ' + self._treeRootId +
+                                ' did not exist in model - falling back on root-node.');
 
                             treeBrowser.deleteNode(nodes[self._treeRootId].treeNode);
                             self._treeRootId = CONSTANTS.PROJECT_ROOT_ID;
@@ -367,7 +365,7 @@ define(['js/logger',
                     self._createChild(nodeId, key);
                 };
 
-            if ((selectedIds.length === 0 || (selectedIds.length === 1 && selectedIds[0] === nodeId)) && !readOnly && validChildren && validChildren['has.children'] === true &&
+            if (selectedIds.length === 1 && !readOnly && validChildren && validChildren['has.children'] === true &&
                 nodeObj && !nodeObj.isLibraryRoot() && !nodeObj.isLibraryElement()) {
                 menuItems.create = { // The "create" menu item
                     name: 'Create child',
@@ -426,32 +424,14 @@ define(['js/logger',
                         assetless: {
                             name: 'with assets',
                             callback: function (/*key, options*/) {
-                                self._client.exportProjectToFile(self._client.getActiveProjectId(),
-                                    self._client.getActiveBranchName(),
-                                    self._client.getActiveCommitHash(), true, function (err, result) {
-                                        if (err) {
-                                            logger.error('unable to save project', err);
-                                        } else {
-                                            saveToDisk.saveUrlToDisk(result.downloadUrl);
-                                        }
-                                    }
-                                );
+                                saveToDisk.exportProject(self._client, self._logger, null, false);
                             },
                             icon: false
                         },
                         assetfull: {
                             name: 'without assets',
                             callback: function (/*key, options*/) {
-                                self._client.exportProjectToFile(self._client.getActiveProjectId(),
-                                    self._client.getActiveBranchName(),
-                                    self._client.getActiveCommitHash(), false, function (err, result) {
-                                        if (err) {
-                                            logger.error('unable to save project', err);
-                                        } else {
-                                            saveToDisk.saveUrlToDisk(result.downloadUrl);
-                                        }
-                                    }
-                                );
+                                saveToDisk.exportProject(self._client, self._logger, null, true);
                             },
                             icon: false
                         }
@@ -532,35 +512,34 @@ define(['js/logger',
                 };
             }
 
-            if (selectedIds.length > 0) {
-                menuItems.exportModel = {
-                    name: 'Export selection',
-                    icon: false,
-                    callback: function (/*key,options*/) {
-                        self._client.exportSelectionToFile(self._client.getActiveProjectId(),
-                            self._client.getActiveCommitHash(),
-                            selectedIds,
-                            false, function (err, result) {
-                                if (err) {
-                                    logger.error('unable to export selection', err);
-                                } else {
-                                    saveToDisk.saveUrlToDisk(result.downloadUrl);
-                                }
-                            }
-                        );
-                    }
-                };
-            }
+            if (selectedIds.indexOf(CONSTANTS.PROJECT_ROOT_ID) === -1 || selectedIds.length === 1) {
+                // TODO check and decide where and how to put an additional separator
+                // menuItems.separatorModelStart = '-';
 
-            if (selectedIds.length < 2) {
-                menuItems.importModel = {
-                    name: 'Import model',
-                    icon: false,
-                    callback: function (/*key,options*/) {
-                        var importDialog = new ImportModelDialog(self._client);
-                        importDialog.show(nodeId);
+                if (selectedIds.indexOf(CONSTANTS.PROJECT_ROOT_ID) === -1) {
+                    menuItems.exportModel = {
+                        name: 'Export models',
+                        icon: false,
+                        callback: function (/*key,options*/) {
+                            saveToDisk.exportModels(self._client, self._logger, selectedIds);
+                        }
+                    };
+
+                    if (selectedIds.length === 1) {
+                        menuItems.exportModel.name = 'Export model';
                     }
-                };
+                }
+
+                if (selectedIds.length === 1) {
+                    menuItems.importModel = {
+                        name: 'Import models ...',
+                        icon: false,
+                        callback: function (/*key,options*/) {
+                            var importDialog = new ImportModelDialog(self._client);
+                            importDialog.show(nodeId);
+                        }
+                    };
+                }
             }
         };
 

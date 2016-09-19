@@ -15,7 +15,9 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'js/DragDrop/DragHelper',
-    'js/Dialogs/ReplaceBase/ReplaceBaseDialog'
+    'js/Dialogs/ReplaceBase/ReplaceBaseDialog',
+    'js/Utils/SaveToDisk',
+    'js/Dialogs/ImportModel/ImportModelDialog',
 ], function (Logger,
              util,
              CONSTANTS,
@@ -25,7 +27,9 @@ define(['js/logger',
              GMEConcepts,
              DiagramDesignerWidgetConstants,
              DragHelper,
-             ReplaceBaseDialog) {
+             ReplaceBaseDialog,
+             saveToDisk,
+             ImportModelDialog) {
 
     'use strict';
 
@@ -849,7 +853,6 @@ define(['js/logger',
         }
     };
 
-
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onFilterNewConnectionDroppableEnds = function (params) {
         var availableConnectionEnds = params.availableConnectionEnds,
             result = [],
@@ -903,7 +906,6 @@ define(['js/logger',
 
         return result;
     };
-
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onFilterReconnectionDroppableEnds = function (params) {
         var connID = params.connId,
@@ -986,7 +988,6 @@ define(['js/logger',
 
         return result;
     };
-
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDragStartDesignerConnectionCopyable = function (connectionID) {
         return this._onDragStartDesignerItemCopyable(connectionID);
@@ -1170,7 +1171,6 @@ define(['js/logger',
         }
     };
 
-
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragItems = function (selectedElements) {
         var res = [],
             i = selectedElements.length;
@@ -1207,6 +1207,12 @@ define(['js/logger',
             MENU_META_RULES_NODE = 'metaRulesNode',
             MENU_META_RULES_MODEL = 'metaRulesModel',
             MENU_EDIT_REPLACEABLE = 'editReplaceable',
+            MENU_EXPORT_MODELS = 'exportModels',
+            MENU_IMPORT_MODELS = 'importModels',
+            node,
+            i,
+            paths,
+            no_library_content_selected = true,
             self = this;
 
         if (selectedIds.length === 1) {
@@ -1241,6 +1247,20 @@ define(['js/logger',
                     icon: 'glyphicon glyphicon-fire'
                 };
             }
+
+            node = self._client.getNode(self._ComponentID2GmeID[selectedIds[0]]);
+
+            if (node.isLibraryElement() === false && node.isLibraryRoot() === false) {
+                menuItems[MENU_EXPORT_MODELS] = {
+                    name: 'Export selected model',
+                    icon: 'glyphicon glyphicon-export'
+                };
+                menuItems[MENU_IMPORT_MODELS] = {
+                    name: 'Import models into',
+                    icon: 'glyphicon glyphicon-import'
+                };
+            }
+
         } else if (selectedIds.length > 1) {
             menuItems[MENU_META_RULES_NODE] = {
                 name: 'Check Meta rules for nodes',
@@ -1260,6 +1280,21 @@ define(['js/logger',
                     icon: 'glyphicon glyphicon-fire'
                 };
             }
+
+            for (i = 0; i < selectedIds.length; i += 1) {
+                node = self._client.getNode(self._ComponentID2GmeID[selectedIds[i]]);
+                if (node.isLibraryElement() || node.isLibraryRoot()) {
+                    no_library_content_selected = false;
+                    break;
+                }
+            }
+
+            if (no_library_content_selected) {
+                menuItems[MENU_EXPORT_MODELS] = {
+                    name: 'Export selected models',
+                    icon: 'glyphicon glyphicon-export'
+                };
+            }
         }
 
         this.designerCanvas.createMenu(menuItems, function (key) {
@@ -1277,6 +1312,15 @@ define(['js/logger',
                     });
                 } else if (key === MENU_EDIT_REPLACEABLE) {
                     self._replaceBaseDialog(self._ComponentID2GmeID[selectedIds[0]]);
+                } else if (key === MENU_EXPORT_MODELS) {
+                    paths = [];
+                    for (i = 0; i < selectedIds.length; i += 1) {
+                        paths.push(self._ComponentID2GmeID[selectedIds[i]]);
+                    }
+                    saveToDisk.exportModels(self._client, self._logger, paths);
+                } else if (key === MENU_IMPORT_MODELS) {
+                    var importDialog = new ImportModelDialog(self._client);
+                    importDialog.show(self._ComponentID2GmeID[selectedIds[0]]);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
