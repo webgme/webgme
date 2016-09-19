@@ -4,55 +4,8 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-define(['blob/BlobClient'], function (BlobClient) {
+define(['js/Utils/SaveToDisk', 'js/Loader/ProgressNotification'], function (saveToDisk, ProgressNotification) {
     'use strict';
-
-    function saveJsonToDisk(fileName, data, logger, callback) {
-        saveJsonToBlobStorage(fileName, data, logger, function (err, downloadUrl) {
-            if (err) {
-                return callback(err);
-            }
-
-            saveUrlToDisk(downloadUrl, fileName);
-            callback(null);
-        });
-    }
-
-    function saveUrlToDisk(fileURL, fileName) {
-        // for non-IE
-        if (!window.ActiveXObject) {
-            var save = document.createElement('a'),
-                event = document.createEvent('Event');
-
-            save.href = fileURL;
-            save.target = '_self';
-
-            if (fileName) {
-                save.download = fileName;
-            }
-
-            event.initEvent('click', true, true);
-            save.dispatchEvent(event);
-            (window.URL || window.webkitURL).revokeObjectURL(save.href);
-        }
-
-        // for IE
-        else if (!!window.ActiveXObject && document.execCommand) {
-            var _window = window.open(fileURL, '_self');
-            _window.document.close();
-            _window.document.execCommand('SaveAs', true, fileName || fileURL)
-            _window.close();
-        }
-    }
-
-    function saveJsonToBlobStorage(fileName, data, logger, callback) {
-        var bc = new BlobClient({logger: logger}),
-            artifact = bc.createArtifact('uploaded');
-
-        artifact.addFile(fileName, JSON.stringify(data, null, 4), function (err, fileHash) {
-            callback(err, bc.getDownloadURL(fileHash));
-        });
-    }
 
     function exportProject(client, logger, projectParams, withAssets, callback) {
         var progress = ProgressNotification.start('<strong>Exporting </strong> project ...');
@@ -79,7 +32,7 @@ define(['blob/BlobClient'], function (BlobClient) {
                         type: 'success'
                     });
 
-                    saveUrlToDisk(result.downloadUrl);
+                    saveToDisk.saveUrlToDisk(result.downloadUrl);
                 }
 
                 if (typeof callback === 'function') {
@@ -112,7 +65,7 @@ define(['blob/BlobClient'], function (BlobClient) {
                         progress: 100,
                         type: 'success'
                     });
-                    saveUrlToDisk(result.downloadUrl);
+                    saveToDisk.saveUrlToDisk(result.downloadUrl);
                 }
 
                 if (typeof callback === 'function') {
@@ -123,9 +76,6 @@ define(['blob/BlobClient'], function (BlobClient) {
     }
 
     return {
-        saveToBlobStorage: saveJsonToBlobStorage,
-        saveUrlToDisk: saveUrlToDisk,
-        saveJsonToDisk: saveJsonToDisk,
         exportProject: exportProject,
         exportModels: exportModels
     };

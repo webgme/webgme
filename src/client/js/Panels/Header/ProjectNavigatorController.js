@@ -19,6 +19,7 @@ define([
     'js/Dialogs/ApplyCommitQueue/ApplyCommitQueueDialog',
     'common/storage/util',
     'js/Utils/SaveToDisk',
+    'js/Utils/Exporters',
     'q',
     'js/Utils/ComponentSettings'
 ], function (Logger,
@@ -34,6 +35,7 @@ define([
              ApplyCommitQueueDialog,
              StorageUtil,
              saveToDisk,
+             exporters,
              Q,
              ComponentSettings) {
     'use strict';
@@ -608,7 +610,7 @@ define([
         }
 
         function exportBranch(data) {
-            saveToDisk.exportProject(self.gmeClient, self.logger, {
+            exporters.exportProject(self.gmeClient, self.logger, {
                 projectId: data.projectId,
                 branchId: data.branchId,
                 commitHash: data.projectId === self.gmeClient.getActiveProjectId() &&

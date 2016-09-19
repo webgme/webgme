@@ -12,7 +12,7 @@ define(['js/logger',
     './ObjectBrowserControlBase',
     'js/Dialogs/LibraryManager/LibraryManager',
     'js/Dialogs/ImportModel/ImportModelDialog',
-    'js/Utils/SaveToDisk'
+    'js/Utils/Exporters'
 ], function (Logger,
              nodePropertyNames,
              CONSTANTS,
@@ -20,7 +20,7 @@ define(['js/logger',
              ObjectBrowserControlBase,
              LibraryManager,
              ImportModelDialog,
-             saveToDisk) {
+             exporters) {
     'use strict';
 
     var NODE_PROGRESS_CLASS = 'node-progress',
@@ -424,14 +424,14 @@ define(['js/logger',
                         assetless: {
                             name: 'with assets',
                             callback: function (/*key, options*/) {
-                                saveToDisk.exportProject(self._client, self._logger, null, false);
+                                exporters.exportProject(self._client, self._logger, null, false);
                             },
                             icon: false
                         },
                         assetfull: {
                             name: 'without assets',
                             callback: function (/*key, options*/) {
-                                saveToDisk.exportProject(self._client, self._logger, null, true);
+                                exporters.exportProject(self._client, self._logger, null, true);
                             },
                             icon: false
                         }
@@ -521,7 +521,7 @@ define(['js/logger',
                         name: 'Export models',
                         icon: false,
                         callback: function (/*key,options*/) {
-                            saveToDisk.exportModels(self._client, self._logger, selectedIds);
+                            exporters.exportModels(self._client, self._logger, selectedIds);
                         }
                     };
 

@@ -16,7 +16,7 @@ define(['js/logger',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'js/DragDrop/DragHelper',
     'js/Dialogs/ReplaceBase/ReplaceBaseDialog',
-    'js/Utils/SaveToDisk',
+    'js/Utils/Exporters',
     'js/Dialogs/ImportModel/ImportModelDialog',
 ], function (Logger,
              util,
@@ -28,7 +28,7 @@ define(['js/logger',
              DiagramDesignerWidgetConstants,
              DragHelper,
              ReplaceBaseDialog,
-             saveToDisk,
+             exporters,
              ImportModelDialog) {
 
     'use strict';
@@ -1317,7 +1317,7 @@ define(['js/logger',
                     for (i = 0; i < selectedIds.length; i += 1) {
                         paths.push(self._ComponentID2GmeID[selectedIds[i]]);
                     }
-                    saveToDisk.exportModels(self._client, self._logger, paths);
+                    exporters.exportModels(self._client, self._logger, paths);
                 } else if (key === MENU_IMPORT_MODELS) {
                     var importDialog = new ImportModelDialog(self._client);
                     importDialog.show(self._ComponentID2GmeID[selectedIds[0]]);
