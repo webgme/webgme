@@ -388,7 +388,7 @@ function StandAloneServer(gmeConfig) {
                             res.redirect(gmeConfig.authentication.logInUrl);
                         }
                     } else {
-                        logger.debug('Cookie verification failed', {metadata: err});
+                        logger.error('Cookie verification failed', {metadata: err});
                         res.status(401);
                         next(err);
                     }
@@ -430,7 +430,7 @@ function StandAloneServer(gmeConfig) {
                             res.redirect(gmeConfig.authentication.logInUrl);
                         }
                     } else {
-                        logger.debug('Cookie verification failed', err);
+                        logger.error('Cookie verification failed', err);
                         res.status(401);
                         next(err);
                     }

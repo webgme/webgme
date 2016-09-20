@@ -73,7 +73,7 @@ function connectedWorkerStart(webgmeToken, projectId, branchName, callback) {
 
     logger.info('connectedWorkerStart', projectId, branchName);
     if (!projectId || !branchName) {
-        finish(new Error('Required parameter was not provided'));
+        finish(new Error('Required parameters were not provided', projectId, branchName));
         return;
     }
 
