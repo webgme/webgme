@@ -179,14 +179,14 @@ define([
 
         /**
          * This function collects the inherited collection names.
-         * Although there is no collection inheritance, we know that if a model is instantiated it internal structure
+         * Although there is no collection inheritance, we know that if a model is instantiated its internal structure
          * is not duplicated or no new data will be created. This means that in a sense, to keep the prototypical
          * inheritance correct, we need to build the internal relations on the fly. This means that whenever the user
          * has a question about the inverse relations of an internal part of the instance, we have to check the
          * prototype for such 'internal' relations and provide them - like in case of inherited attributes.
          * The function goes up on the inheritance chain of the questioned node.
          * At every step, it searches the root of instantiation (the node that is the instance) and collect inverse
-         * relation names that are exists in the prototype structure and has purely internal endpoints.
+         * relation names that exist in the prototype structure and has purely internal endpoints.
          *
          * @param node - the node in question
          * @returns {Array} - the list of names of relations that has the node as target

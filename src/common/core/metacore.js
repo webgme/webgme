@@ -222,12 +222,14 @@ define([
         };
 
         this.getValidPointerNames = function (node) {
-            var validNames = self.getPointerNames(getMetaNode(node)) || [],
+            var metaDefNode = getMetaNode(node),
+                validNames = self.getPointerNames(metaDefNode) || [],
                 i,
                 validPointerNames = [],
                 metaPointerNode, max;
+
             for (i = 0; i < validNames.length; i++) {
-                metaPointerNode = getMetaPointerNode(node, validNames[i]);
+                metaPointerNode = self.getChild(metaDefNode, CONSTANTS.META_POINTER_PREFIX + validNames[i]);
                 max = self.getAttribute(metaPointerNode, CONSTANTS.SET_ITEMS_MAX);
                 if (max === 1) {
                     //TODO Specify what makes something a pointer and what a set???
@@ -240,13 +242,14 @@ define([
         };
 
         this.getOwnValidPointerNames = function (node) {
-            var validNames = self.getOwnPointerNames(getMetaNode(node)) || [],
+            var metaDefNode = getMetaNode(node),
+                validNames = self.getOwnPointerNames(metaDefNode) || [],
                 i,
                 validPointerNames = [],
                 metaPointerNode, max;
 
             for (i = 0; i < validNames.length; i++) {
-                metaPointerNode = getMetaPointerNode(node, validNames[i]);
+                metaPointerNode = self.getChild(metaDefNode, CONSTANTS.META_POINTER_PREFIX + validNames[i]);
                 max = self.getOwnAttribute(metaPointerNode, CONSTANTS.SET_ITEMS_MAX);
                 if (max === 1) {
                     //TODO Specify what makes something a pointer and what a set???
@@ -259,14 +262,17 @@ define([
         };
 
         this.getValidSetNames = function (node) {
-            var validNames = self.getPointerNames(getMetaNode(node)) || [],
+            var metaDefNode = getMetaNode(node),
+                validNames = self.getPointerNames(metaDefNode) || [],
                 i,
                 validSetNames = [],
                 metaPointerNode, max;
 
             for (i = 0; i < validNames.length; i++) {
-                metaPointerNode = getMetaPointerNode(node, validNames[i]);
+                metaPointerNode = self.getChild(metaDefNode, CONSTANTS.META_POINTER_PREFIX + validNames[i]);
                 max = self.getAttribute(metaPointerNode, CONSTANTS.SET_ITEMS_MAX);
+
+                // FIXME: max seems to always be undefined - there is no such attribute on the set definitions
                 if (max === undefined || max === -1 || max > 1) {
                     //TODO specify what makes something a pointer and what a set???
                     //TODO can you extend a pointer to a set????
@@ -278,14 +284,17 @@ define([
         };
 
         this.getOwnValidSetNames = function (node) {
-            var validNames = self.getOwnPointerNames(getMetaNode(node)) || [],
+            var metaDefNode = getMetaNode(node),
+                validNames = self.getOwnPointerNames(metaDefNode) || [],
                 i,
                 validSetNames = [],
                 metaPointerNode, max;
 
             for (i = 0; i < validNames.length; i++) {
-                metaPointerNode = getMetaPointerNode(node, validNames[i]);
+                metaPointerNode = self.getChild(metaDefNode, CONSTANTS.META_POINTER_PREFIX + validNames[i]);
                 max = self.getOwnAttribute(metaPointerNode, CONSTANTS.SET_ITEMS_MAX);
+
+                // FIXME: max seems to always be undefined - there is no such attribute on the set definitions
                 if (max === undefined || max === -1 || max > 1) {
                     //TODO specify what makes something a pointer and what a set???
                     //TODO can you extend a pointer to a set????
