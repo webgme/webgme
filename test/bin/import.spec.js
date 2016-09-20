@@ -97,7 +97,7 @@ describe('import CLI tests', function () {
         projectName = null;
         projectId = null;
 
-        importCLI.should.have.property('main');
+        expect(importCLI).to.have.property('main');
     });
 
     it('should fail if mandatory parameters missing', function (done) {

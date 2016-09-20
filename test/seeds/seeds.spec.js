@@ -81,7 +81,6 @@ describe('Seeds', function () {
         var agent = superagent.agent();
 
         agent.get(serverBaseUrl + '/api/seeds', function (err, res) {
-            console.error(res.body);
             expect(err).to.equal(null);
             expect(res.body).to.deep.equal(seedNames); // ensures that we test all available seeds
             done();
