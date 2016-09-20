@@ -265,9 +265,13 @@ define([
 
             options = options || {};
 
-            project.makeCommit(null, [], rootHash, toPersist, options.commitMessage || defaultCommitMessage)
+            options.branch = options.branch || null;
+            options.parentCommit = options.parentCommit || [];
+
+            project.makeCommit(options.branch, options.parentCommit,
+                rootHash, toPersist, options.commitMessage || defaultCommitMessage)
                 .then(function (commitResult) {
-                    deferred.resolve(commitResult.hash);
+                    deferred.resolve(commitResult);
                 })
                 .catch(deferred.reject);
 

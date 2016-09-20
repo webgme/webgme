@@ -664,8 +664,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     commitMessage: 'loading project from package'
                 });
             })
-            .then(function (commitHash) {
-                return project.createBranch(branchName, commitHash);
+            .then(function (commitResult) {
+                return project.createBranch(branchName, commitResult.hash);
             })
             .then(function () {
                 return (projectId);
@@ -775,7 +775,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     jsonProject,
                     {commitMessage: 'commit that represents the library to be imported'});
             })
-            .then(function (/*commitHash*/) {
+            .then(function (/*commitResult*/) {
 
                 return Q.nfcall(context.core.addLibrary,
                     context.rootNode,

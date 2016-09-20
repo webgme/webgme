@@ -159,13 +159,12 @@ describe('Seeds', function () {
 
                         return testFixture.storageUtil.insertProjectJson(ir.project, projectJson);
                     })
-                    .then(function (newCommitHash) {
-                        expect(newCommitHash).to.not.equal(ir.commitHash);
+                    .then(function (commitResult) {
+                        expect(commitResult.hash).to.not.equal(ir.commitHash);
 
-                        return testFixture.storageUtil.getProjectJson(ir.project, {commitHash: newCommitHash});
+                        return testFixture.storageUtil.getProjectJson(ir.project, {commitHash: commitResult.hash});
                     })
                     .then(function (projectJson) {
-
                         return testFixture.compareWebgmexFiles(projectJson, importedProjectJson, logger, gmeConfig);
                     })
                     .nodeify(done);

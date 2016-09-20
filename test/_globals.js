@@ -491,10 +491,10 @@ function importProject(storage, parameters, callback) {
             storageUtils.insertProjectJson(project, projectJson, {
                 commitMessage: 'project imported'
             })
-                .then(function (commitHash) {
-                    result.commitHash = commitHash;
+                .then(function (commitResult) {
+                    result.commitHash = commitResult.hash;
                     result.rootHash = projectJson.rootHash;
-                    return project.createBranch(branchName, commitHash);
+                    return project.createBranch(branchName, commitResult.hash);
                 })
                 .then(function (result_) {
                     result.status = result_.status;

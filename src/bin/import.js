@@ -81,6 +81,7 @@ main = function (argv) {
         project,
         params,
         commitHash,
+        makeCommitParams = {commitMessage: 'loading project from package'},
         blobClient = new FSBlobClient(gmeConfig, logger.fork('BlobClient')),
         finishUp = function (error) {
             var ended = function () {
@@ -151,7 +152,7 @@ main = function (argv) {
             return cliStorage.openDatabase();
         })
         .then(function () {
-            var params = {};
+            var params = {branches: true};
 
             if (program.user) {
                 params.username = program.user;
@@ -185,6 +186,12 @@ main = function (argv) {
             for (i = 0; i < projects.length; i++) {
                 if (projects[i]._id === params.projectId) {
                     exists = true;
+                    if (!program.overwrite && projects[i].branches.hasOwnProperty(program.branch)) {
+                        makeCommitParams.branch = program.branch;
+                        makeCommitParams.parentCommit = [projects[i].branches[program.branch]];
+                        makeCommitParams.commitMessage = 'Updating branch\'' +
+                            program.branch + '\' from project package.';
+                    }
                     break;
                 }
             }
@@ -215,19 +222,19 @@ main = function (argv) {
                 project.setUser(program.user);
             }
 
-            return storageUtils.insertProjectJson(project, jsonProject, {
-                commitMessage: 'loading project from package'
-            });
+            return storageUtils.insertProjectJson(project, jsonProject, makeCommitParams);
 
         })
-        .then(function (commitHash_) {
-            commitHash = commitHash_;
-            params.branchName = program.branch;
-            return cliStorage.deleteBranch(params);
-        })
-        .then(function () {
-            params.hash = commitHash;
-            return cliStorage.createBranch(params);
+        .then(function (commitResult) {
+            if (commitResult.status === STORAGE_CONSTANTS.FORKED) {
+                throw new Error('File was imported into commit:\'' + commitResult.hash +
+                    '\', but the branch was not updated');
+            } else if (commitResult.status === null || commitResult.status === undefined) {
+                // makeCommit was called without branch, so we need to create it
+                params.hash = commitResult.hash;
+                params.branchName = program.branch;
+                return cliStorage.createBranch(params);
+            }
         })
         .then(function () {
             finishUp(null);

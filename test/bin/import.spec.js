@@ -15,7 +15,6 @@ describe('import CLI tests', function () {
         importPath = './test/bin/import/project.webgmex',
         projectName,
         projectId,
-        __should = testFixture.should,
         existingProjectName = 'importCliExisting',
         existingProjectId = testFixture.projectName2Id(existingProjectName),
         Q = testFixture.Q,
@@ -98,7 +97,7 @@ describe('import CLI tests', function () {
         projectName = null;
         projectId = null;
 
-        importCLI.should.have.property('main');
+        expect(importCLI).to.have.property('main');
     });
 
     it('should fail if mandatory parameters missing', function (done) {
@@ -204,6 +203,64 @@ describe('import CLI tests', function () {
                 done();
             })
             .catch(done);
+    });
+
+    it('should import into existing project as a new version of existing branch', function (done) {
+        var oldCommitHash, newCommitHash;
+
+        projectName = null;
+        projectId = null;
+
+        storage.getProjects({branches: true})
+            .then(function (projects) {
+                var i, found = false;
+
+                expect(projects).not.to.equal(null);
+                for (i = 0; i < projects.length; i += 1) {
+                    if (projects[i]._id === existingProjectId) {
+                        found = true;
+                        expect(projects[i].branches).to.include.keys(['master']);
+                        oldCommitHash = projects[i].branches.master;
+                    }
+                }
+
+                expect(found).to.equal(true);
+
+                return importCLI.main(['node', filename,
+                    importPath,
+                    '-m', gmeConfig.mongo.uri,
+                    '-p', existingProjectName,
+                    '-o', gmeConfig.authentication.guestAccount,
+                    '-b', 'master'
+                ]);
+            })
+            .then(function () {
+                return storage.getProjects({branches: true});
+            })
+            .then(function (projects) {
+                var i;
+
+                expect(projects).not.to.equal(null);
+                for (i = 0; i < projects.length; i += 1) {
+                    if (projects[i]._id === existingProjectId) {
+                        expect(projects[i].branches).to.include.keys(['master']);
+                        expect(projects[i].branches.master).not.to.equal(oldCommitHash);
+                        newCommitHash = projects[i].branches.master;
+                        return storage.openProject({projectId: existingProjectId});
+                    }
+                }
+
+                throw new Error('project was not found after importing new version');
+
+            })
+            .then(function (project) {
+                return Q.ninvoke(project, 'loadObject', newCommitHash);
+            })
+            .then(function (commitObject) {
+                expect(commitObject).not.to.equal(null);
+                expect(commitObject.parents).to.eql([oldCommitHash]);
+            })
+            .nodeify(done);
     });
 
 });
