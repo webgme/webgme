@@ -1237,6 +1237,19 @@ define([
             return state.gHash;
         }
 
+        function addLoadUnloadPathToUpdates(paths) {
+            var i,
+                pathPieces;
+
+            for (i = 0; i < paths.length; i += 1) {
+                pathPieces = paths[i].split(CONSTANTS.CORE.PATH_SEP);
+                while (pathPieces.length > 1) {
+                    state.loading.changedNodes.update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
+                    pathPieces.pop();
+                }
+            }
+        }
+
         function getModifiedNodes(newerNodes) {
             var modifiedNodes = [],
                 updatedMetaPaths = [],
@@ -1244,8 +1257,6 @@ define([
                 metaPath,
                 updatePath,
                 nodePath,
-                loadUnloadPath,
-                pathPieces,
                 i;
 
             // For the client these rules apply for finding the affected nodes.
@@ -1285,27 +1296,8 @@ define([
                 state.loading.changedNodes.update[ROOT_PATH] = true;
 
                 // 3. Account for loads and unloads.
-                for (loadUnloadPath in state.loading.changedNodes.load) {
-                    if (state.loading.changedNodes.load.hasOwnProperty(loadUnloadPath)) {
-                        pathPieces = loadUnloadPath.split(CONSTANTS.CORE.PATH_SEP);
-                        while (pathPieces.length > 2) {
-                            pathPieces.pop();
-                            state.loading.changedNodes
-                                .update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
-                        }
-                    }
-                }
-
-                for (loadUnloadPath in state.loading.changedNodes.unload) {
-                    if (state.loading.changedNodes.unload.hasOwnProperty(loadUnloadPath)) {
-                        pathPieces = loadUnloadPath.split(CONSTANTS.CORE.PATH_SEP);
-                        while (pathPieces.length > 2) {
-                            pathPieces.pop();
-                            state.loading.changedNodes
-                                .update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
-                        }
-                    }
-                }
+                addLoadUnloadPathToUpdates(Object.keys(state.loading.changedNodes.load));
+                addLoadUnloadPathToUpdates(Object.keys(state.loading.changedNodes.unload));
 
                 //console.log('Update after loads and unloads considered',
                 //    Object.keys(state.loading.changedNodes.update));
@@ -1363,6 +1355,7 @@ define([
         function userEvents(userId, modifiedNodes) {
             var newPaths = {},
                 startErrorLevel = state.loadError,
+                loadedOrUnloaded = {},
                 i,
                 events = [];
 
@@ -1382,6 +1375,7 @@ define([
             for (i in state.users[userId].PATHS) {
                 if (!newPaths[i]) {
                     events.push({etype: 'unload', eid: i});
+                    loadedOrUnloaded[i] = true;
                 }
             }
 
@@ -1389,12 +1383,14 @@ define([
             for (i in newPaths) {
                 if (!state.users[userId].PATHS[i]) {
                     events.push({etype: 'load', eid: i});
+                    loadedOrUnloaded[i] = true;
                 }
             }
 
             //updated items
             for (i = 0; i < modifiedNodes.length; i++) {
-                if (newPaths[modifiedNodes[i]]) {
+                // Check that there wasn't a load or unload event for the node
+                if (newPaths[modifiedNodes[i]] && !loadedOrUnloaded[modifiedNodes[i]]) {
                     events.push({etype: 'update', eid: modifiedNodes[i]});
                 }
             }
@@ -1411,6 +1407,7 @@ define([
             } else {
                 events.unshift({etype: 'complete', eid: null});
             }
+
             state.users[userId].FN(events);
         }
 
@@ -1790,7 +1787,7 @@ define([
         }
 
         function wasNodeUpdated(changedNodes, node) {
-            // Is changedNodes available at all, if not emitt for all nodes.
+            // Is changedNodes available at all?  If not (undo/redo) emit for all nodes...
             if (!changedNodes) {
                 return true;
             }
