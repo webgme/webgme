@@ -7,12 +7,14 @@
 
 define(['js/Loader/LoaderCircles',
     'common/core/constants',
+    'blob/BlobClient',
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
     'js/util',
     'common/regexp',
     'text!./templates/ImportModelDialog.html'
 ], function (LoaderCircles,
              CORE_CONSTANTS,
+             BlobClient,
              AssetWidget,
              UTILS,
              REGEXP,
@@ -23,8 +25,11 @@ define(['js/Loader/LoaderCircles',
     var ImportModelDialog,
         MAX_FILE_SIZE = 100000000;
 
-    ImportModelDialog = function (client) {
+    ImportModelDialog = function (client, logger) {
         this._client = client;
+        this._logger = logger;
+        this._blobIsModel = false;
+        this.blobClient = new BlobClient({logger: this._logger.fork('BlobClient')});
         this.assetWidget = new AssetWidget({
             propertyName: 'ImportModel',
             propertyValue: ''
@@ -66,10 +71,33 @@ define(['js/Loader/LoaderCircles',
         this._dialog.find('.modal-body').css('max-height', 'none');
 
         //blob
-        this.assetWidget.onFinishChange(function (/*data*/) {
+        this.assetWidget.onFinishChange(function (data) {
             //TODO maybe some kind of checking needed
             self.clearError();
-            self.setButton();
+            self._blobIsModel = false;
+
+            if (!data.newValue) {
+                self._logger.error(new Error('New data does not have a value, ' + data));
+                self.setButton();
+                return;
+            }
+
+            self.blobClient.getMetadata(data.newValue)
+                .then(function (metadata) {
+                    if (metadata.name.toLowerCase().lastIndexOf('.webgmexm') ===
+                        metadata.name.length - '.webgmexm'.length) {
+                        self._blobIsModel = true;
+                        self.setButton();
+                    } else {
+                        throw new Error('Not .webgmexm extension');
+                    }
+                })
+                .catch(function (err) {
+                    //TODO: Better feedback here.
+                    self._logger.error('Error in uploaded file', err);
+                    self.setError(err.message);
+                    self.setButton();
+                });
         });
 
         this._btnUpdate.on('click', function () {
@@ -92,7 +120,7 @@ define(['js/Loader/LoaderCircles',
     };
 
     ImportModelDialog.prototype.canStartUpdate = function () {
-        if (this.assetWidget.propertyValue) {
+        if (this.assetWidget.propertyValue && this._blobIsModel) {
             return true;
         }
         return false;

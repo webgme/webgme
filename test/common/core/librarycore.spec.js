@@ -1073,10 +1073,10 @@ describe('Library core ', function () {
                     '8b58a986-de24-fc50-61ed-8fdb095d2dff': '#8dd00ed313a9ea1f020982a559ca99018c0fc8b7',
                     '3e801ed3-efa7-c527-eb91-91fefc521f2a': '#9214662e087d95c97517a5225150ef523b67d058'
                 });
-                expect(closure.relations['#9214662e087d95c97517a5225150ef523b67d058/W'].base).to.equal(
+                expect(closure.relations.preserved['#9214662e087d95c97517a5225150ef523b67d058/W'].base).to.equal(
                     '#8dd00ed313a9ea1f020982a559ca99018c0fc8b7/V'
                 );
-                expect(closure.losses).to.eql({});
+                expect(closure.relations.lost).to.eql({});
             })
             .nodeify(done);
     });
@@ -1099,7 +1099,7 @@ describe('Library core ', function () {
                     'e1d25d7e-7af8-6d9b-8ecf-65908c2063a3': '#55fb962119de9dc4afc80767dbc0288438c1f4df',
                     'c19737ae-2547-d608-9afa-5de493b4c2dd': '#e22a53655588bf011a2e9fc3019c82a13d87a4d1'
                 });
-                expect(closure.losses).to.eql({'/Q/T': {src: '/Q/P'}});
+                expect(closure.relations.lost).to.eql({'/Q/T': {src: '/Q/P'}});
             })
             .nodeify(done);
     });
@@ -1244,7 +1244,7 @@ describe('Library core ', function () {
                 closure = shareContext.core.importClosure(shareContext.rootNode, closure);
                 expect(closure).not.to.eql(null);
                 expect(closure instanceof Error).to.equal(true);
-                expect(closure.message).to.include('Cannot import given closure!');
+                expect(closure.message).to.include('Cannot find necessary base');
             })
             .nodeify(done);
     });

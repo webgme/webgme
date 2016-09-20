@@ -258,11 +258,13 @@ define([
 
                 closureInfo.bases[self.getGuid(baseNode)] = {
                     originGuid: libraryRoots.length > 0 ? self.getLibraryGuid(baseNode) : self.getGuid(baseNode),
+                    name: self.getAttribute(baseNode, 'name'),
+                    fullName: self.getFullyQualifiedName(baseNode),
                     namsespaces: namespaceInfo
                 };
             }
 
-            function addRelationsFromNodeToClosureInfo(node, allMetaNodes, closureInfo, infoLosses) {
+            function addRelationsFromNodeToClosureInfo(node, allMetaNodes, closureInfo) {
                 var basePath = self.getPath(node),
                     overlayInfo = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
                     overlayKey,
@@ -279,23 +281,26 @@ define([
                                 if (pointerName === CONSTANTS.BASE_POINTER) {
                                     if (allMetaNodes[targetPath]) {
                                         collectBaseInformation(allMetaNodes[targetPath], closureInfo);
-                                        closureInfo.relations[path] = closureInfo.relations[path] || {};
-                                        closureInfo.relations[path][CONSTANTS.BASE_POINTER] =
+                                        closureInfo.relations.preserved[path] =
+                                            closureInfo.relations.preserved[path] || {};
+                                        closureInfo.relations.preserved[path][CONSTANTS.BASE_POINTER] =
                                             self.getGuid(allMetaNodes[targetPath]);
                                     } else if (isClosureInternalTarget(targetPath, closureInfo)) {
-                                        closureInfo.relations[path] = closureInfo.relations[path] || {};
-                                        closureInfo.relations[path][CONSTANTS.BASE_POINTER] = targetPath;
+                                        closureInfo.relations.preserved[path] =
+                                            closureInfo.relations.preserved[path] || {};
+                                        closureInfo.relations.preserved[path][CONSTANTS.BASE_POINTER] = targetPath;
                                     } else {
-                                        infoLosses[path] = infoLosses[path] || {};
-                                        infoLosses[path][CONSTANTS.BASE_POINTER] = targetPath;
+                                        closureInfo.relations.lost[path] = closureInfo.relations.lost[path] || {};
+                                        closureInfo.relations.lost[path][CONSTANTS.BASE_POINTER] = targetPath;
                                     }
                                 } else {
                                     if (isClosureInternalTarget(targetPath, closureInfo)) {
-                                        closureInfo.relations[path] = closureInfo.relations[path] || {};
-                                        closureInfo.relations[path][pointerName] = targetPath;
+                                        closureInfo.relations.preserved[path] =
+                                            closureInfo.relations.preserved[path] || {};
+                                        closureInfo.relations.preserved[path][pointerName] = targetPath;
                                     } else {
-                                        infoLosses[path] = infoLosses[path] || {};
-                                        infoLosses[path][pointerName] = targetPath;
+                                        closureInfo.relations.lost[path] = closureInfo.relations.lost[path] || {};
+                                        closureInfo.relations.lost[path][pointerName] = targetPath;
                                     }
                                 }
                             }
@@ -346,35 +351,34 @@ define([
 
             function mapRelationEndings(closureInfo) {
                 var source,
+                    sourceInfo,
                     name,
                     basePath;
 
-                for (source in closureInfo.relations) {
-                    for (name in closureInfo.relations[source]) {
-                        if (!closureInfo.bases[closureInfo.relations[source][name]]) {
-                            basePath = getBasePathOfPath(closureInfo.relations[source][name], closureInfo);
+                for (source in closureInfo.relations.preserved) {
+                    sourceInfo = closureInfo.relations.preserved[source];
+                    for (name in sourceInfo) {
+                        if (!closureInfo.bases[sourceInfo[name]]) {
+                            basePath = getBasePathOfPath(sourceInfo[name], closureInfo);
                             if (basePath) {
-                                closureInfo.relations[source][name] = closureInfo.relations[source][name].replace(
-                                    basePath,
-                                    closureInfo.hashes[basePath]
-                                );
+                                sourceInfo[name] = sourceInfo[name].replace(basePath, closureInfo.hashes[basePath]);
                             } else {
                                 logger.error('during closure generation unknown based target [' +
-                                    closureInfo.relations[source][name] + '] remained.');
-                                delete closureInfo.relations[source][name];
+                                    sourceInfo[name] + '] remained.');
+                                delete sourceInfo[name];
                             }
                         }
                     }
 
                     basePath = getBasePathOfPath(source, closureInfo);
                     if (basePath) {
-                        closureInfo.relations[source.replace(basePath, closureInfo.hashes[basePath])] =
-                            closureInfo.relations[source];
-                        delete closureInfo.relations[source];
+                        closureInfo.relations.preserved[source.replace(basePath, closureInfo.hashes[basePath])] =
+                            closureInfo.relations.preserved[source];
+                        delete closureInfo.relations.preserved[source];
                     } else {
                         logger.error('during closure generation unknown based source [' +
                             source + '] remained.');
-                        delete closureInfo.relations[source];
+                        delete closureInfo.relations.preserved[source];
                     }
 
                 }
@@ -395,7 +399,8 @@ define([
 
                 for (i = 0; i < keys.length; i += 1) {
                     if (!closureInformation.destinationBases[keys[i]]) {
-                        return new Error('Cannot find necessary base [' + keys[i] + ']');
+                        return new Error('Cannot find necessary base [' +
+                            closureInformation.bases[keys[i]].fullName + ' : ' + keys[i] + ']');
                     }
                 }
 
@@ -467,26 +472,23 @@ define([
             }
 
             function computePaths(closureInformation) {
-                var source, name;
+                var source, name, sourceInfo;
 
-                for (source in closureInformation.relations) {
-                    for (name in closureInformation.relations[source]) {
-                        if (closureInformation.destinationBases[closureInformation.relations[source][name]]) {
-                            closureInformation.relations[source][name] =
-                                closureInformation.destinationBases[closureInformation.relations[source][name]];
+                for (source in closureInformation.relations.preserved) {
+                    sourceInfo = closureInformation.relations.preserved[source];
+                    for (name in sourceInfo) {
+                        if (closureInformation.destinationBases[sourceInfo[name]]) {
+                            sourceInfo[name] = closureInformation.destinationBases[sourceInfo[name]];
                         } else {
-                            closureInformation.relations[source][name] = getFinalPath(
-                                closureInformation.relations[source][name],
-                                closureInformation
-                            );
+                            sourceInfo[name] = getFinalPath(sourceInfo[name], closureInformation);
                         }
                     }
                 }
 
-                for (source in closureInformation.relations) {
-                    closureInformation.relations[getFinalPath(source, closureInformation)] =
-                        closureInformation.relations[source];
-                    delete closureInformation.relations[source];
+                for (source in closureInformation.relations.preserved) {
+                    closureInformation.relations.preserved[getFinalPath(source, closureInformation)] =
+                        closureInformation.relations.preserved[source];
+                    delete closureInformation.relations.preserved[source];
                 }
             }
 
@@ -1106,7 +1108,7 @@ define([
                         hashes: {},
                         selection: {},
                         bases: {},
-                        relations: {}
+                        relations: {preserved: {}, lost: {}}
                     },
                     infoLosses = {},
                     allMetaNodes,
@@ -1138,13 +1140,13 @@ define([
                 for (i = 0; i < nodes.length; i += 1) {
                     node = this.getParent(nodes[i]);
                     while (this.getPath(node)) { // until it is not the root
-                        addRelationsFromNodeToClosureInfo(node, allMetaNodes, closureInfo, infoLosses);
+                        addRelationsFromNodeToClosureInfo(node, allMetaNodes, closureInfo);
                         node = this.getParent(node);
                     }
                 }
 
                 // Finally we process the relations of the root
-                addRelationsFromNodeToClosureInfo(this.getRoot(nodes[0]), allMetaNodes, closureInfo, infoLosses);
+                addRelationsFromNodeToClosureInfo(this.getRoot(nodes[0]), allMetaNodes, closureInfo);
 
                 //now we combine the selection and hashes info
                 keys = Object.keys(closureInfo.selection);
@@ -1160,17 +1162,15 @@ define([
                 delete closureInfo.hashes;
 
                 //checking and logging lost relation information
-                logger.info('Closure creation finished!', {info: closureInfo, losses: infoLosses});
-                for (path in infoLosses) {
-                    if (infoLosses[path][CONSTANTS.BASE_POINTER]) {
+                logger.info('Closure creation finished!', closureInfo);
+                for (path in closureInfo.relations.lost) {
+                    if (closureInfo.relations.lost[path][CONSTANTS.BASE_POINTER]) {
                         //we do not allow external non-Meta bases
-                        return new Error('Closure cannot be created due to [' +
-                            path + '] misses its base [' + infoLosses[path][CONSTANTS.BASE_POINTER] + '].');
+                        return new Error('Closure cannot be created due to [' + path +
+                            '] misses its base [' + closureInfo.relations.lost[path][CONSTANTS.BASE_POINTER] + '].');
                     }
                 }
 
-                //put the losses into the info
-                closureInfo.losses = infoLosses;
                 return closureInfo;
             };
 
@@ -1186,7 +1186,7 @@ define([
                 checkResult = checkClosure(allMetaNodes, closureInformation);
 
                 if (checkResult) {
-                    return new Error('Cannot import given closure!', checkResult);
+                    return checkResult;
                 }
 
                 closureInformation.relids = {};
@@ -1204,9 +1204,9 @@ define([
                 computePaths(closureInformation);
 
                 // Creating all the relations
-                for (key in closureInformation.relations) {
-                    for (name in closureInformation.relations[key]) {
-                        addRelation(parent, key, closureInformation.relations[key][name], name);
+                for (key in closureInformation.relations.preserved) {
+                    for (name in closureInformation.relations.preserved[key]) {
+                        addRelation(parent, key, closureInformation.relations.preserved[key][name], name);
                     }
                 }
 

@@ -548,7 +548,7 @@ define(['js/logger',
                         name: 'Import models ...',
                         icon: false,
                         callback: function (/*key,options*/) {
-                            var importDialog = new ImportModelDialog(self._client);
+                            var importDialog = new ImportModelDialog(self._client, self._logger.fork('ImportModel'));
                             importDialog.show(nodeId);
                         }
                     };
