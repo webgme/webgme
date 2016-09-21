@@ -55,26 +55,11 @@ define(['q'], function (Q) {
 
     function getMatchedItemIndices(core, node, items) {
         var i,
+            metaNodes = core.getAllMetaNodes(node),
             indices = [];
 
-        function isInstanceOf(basePath, node) {
-            var result = false,
-                baseNode;
-            baseNode = node;
-
-            while (baseNode) {
-                if (core.getPath(baseNode) === basePath) {
-                    result = true;
-                    break;
-                }
-                baseNode = core.getBase(baseNode);
-            }
-
-            return result;
-        }
-
         for (i = 0; i < items.length; i += 1) {
-            if (isInstanceOf(items[i], node)) {
+            if (core.isTypeOf(node, metaNodes[items[i]])) {
                 indices.push(i);
             }
         }

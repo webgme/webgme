@@ -322,4 +322,28 @@ describe('Meta Rules', function () {
             })
             .nodeify(done);
     });
+
+    it('MixingInValidChildren should pass', function (done) {
+        var nodePath = '/R';
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (node) {
+                return checkMetaRules(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(false, result.message);
+            })
+            .nodeify(done);
+    });
+
+    it('ModelWithMixinsValidChildren should pass', function (done) {
+        var nodePath = '/j';
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (node) {
+                return checkMetaRules(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(false, result.message);
+            })
+            .nodeify(done);
+    });
 });
