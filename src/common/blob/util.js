@@ -78,15 +78,15 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
             deferred = Q.defer();
 
         Q.allSettled(softLinkNames.map(function (softLinkName) {
-                var softLinkPieces = softLinkName.split('.'),
-                    type = softLinkPieces.pop();
+            var softLinkPieces = softLinkName.split('.'),
+                type = softLinkPieces.pop();
 
-                if (type === 'json') {
-                    projectFileHash = mainMetadata.content[softLinkName].content;
-                } else if (type === 'metadata') {
-                    return _addMetadataAsMetadata(logger, blobClient, mainMetadata, softLinkPieces.pop());
-                }
-            }))
+            if (type === 'json') {
+                projectFileHash = mainMetadata.content[softLinkName].content;
+            } else if (type === 'metadata') {
+                return _addMetadataAsMetadata(logger, blobClient, mainMetadata, softLinkPieces.pop());
+            }
+        }))
             .then(function (result) {
                 var i,
                     error;
@@ -136,14 +136,14 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
             // Add .metadata and .content for all linked soft-links (recursively).
             softLinkNames = Object.keys(metadata.content);
             Q.all(softLinkNames.map(function (softLinkName) {
-                    var softLinkMetadataHash = metadata.content[softLinkName].content;
-                    logger.debug('Complex object, softLinkMetadataHash:', softLinkMetadataHash);
-                    return Q.ninvoke(blobClient, 'getMetadata', softLinkMetadataHash)
-                        .then(function (softLinkMetadata) {
-                            return _gatherFilesFromMetadataHashRec(logger, blobClient,
-                                softLinkMetadata, softLinkMetadataHash, artifact);
-                        });
-                }))
+                var softLinkMetadataHash = metadata.content[softLinkName].content;
+                logger.debug('Complex object, softLinkMetadataHash:', softLinkMetadataHash);
+                return Q.ninvoke(blobClient, 'getMetadata', softLinkMetadataHash)
+                    .then(function (softLinkMetadata) {
+                        return _gatherFilesFromMetadataHashRec(logger, blobClient,
+                            softLinkMetadata, softLinkMetadataHash, artifact);
+                    });
+            }))
                 .then(function () {
                     // Finally add the .metadata for the complex object.
                     return Q.ninvoke(artifact, 'addFile', filenameMetadata, JSON.stringify(metadata));
@@ -168,25 +168,25 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
      * @param callback
      * @returns {*}
      */
-    function buildProjectPackage(logger, blobClient, jsonExport, addAssets, callback) {
+    function buildProjectPackage(logger, blobClient, jsonExport, addAssets, filename, callback) {
         var artie = blobClient.createArtifact(jsonExport.projectId +
                 '_' + (jsonExport.branchName || jsonExport.commitHash)),
             assets = jsonExport.hashes.assets || [],
             deferred = Q.defer();
 
-        artie.descriptor.name = jsonExport.projectId +
-            '_' + (jsonExport.branchName || jsonExport.commitHash) + '.webgmex';
+        artie.descriptor.name = filename || (jsonExport.projectId +
+            '_' + (jsonExport.branchName || jsonExport.commitHash) + '.webgmex');
 
         if (!addAssets) {
             assets = [];
         }
 
         Q.allSettled(assets.map(function (assetHash) {
-                return Q.ninvoke(blobClient, 'getMetadata', assetHash)
-                    .then(function (metadata) {
-                        return _gatherFilesFromMetadataHashRec(logger, blobClient, metadata, assetHash, artie);
-                    });
-            }))
+            return Q.ninvoke(blobClient, 'getMetadata', assetHash)
+                .then(function (metadata) {
+                    return _gatherFilesFromMetadataHashRec(logger, blobClient, metadata, assetHash, artie);
+                });
+        }))
             .then(function (result) {
                 var error,
                     i;
@@ -203,7 +203,7 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
                 }
             })
             .then(function () {
-                return artie.addFile('project.json', JSON.stringify(jsonExport, null, 4));
+                return artie.addFile('project.json', JSON.stringify(jsonExport));
             })
             .then(function () {
                 return artie.save();

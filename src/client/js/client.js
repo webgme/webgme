@@ -91,7 +91,7 @@ define([
             pluginManager,
             nodeSetterFunctions,
             coreLibraryFunctions,
-        //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
+            //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
         //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
 
@@ -2012,7 +2012,49 @@ define([
                 callback(new Error('invalid parameters!'));
             }
         };
-        
+
+        this.exportSelectionToFile = function (projectId, commitHash, selectedIds, withAssets, callback) {
+            var command = {};
+            command.command = 'exportSelectionToFile';
+            command.projectId = projectId;
+            command.commitHash = commitHash;
+            command.withAssets = withAssets;
+            command.paths = selectedIds;
+
+            logger.debug('exportSelectionToFile, command', command);
+            if (command.projectId && commitHash && selectedIds && selectedIds.length > 0) {
+                storage.simpleRequest(command, function (err, result) {
+                    if (err && !result) {
+                        logger.error('exportSelectionToFile failed with error', err);
+                        callback(err);
+                    } else {
+                        callback(err, result);
+                    }
+                });
+            } else {
+                callback(new Error('invalid parameters!'));
+            }
+        };
+
+        this.importSelectionFromFile = function (projectId, branchName, parentId, blobHash, callback) {
+            var parameters = {
+                command: 'importSelectionFromFile',
+                projectId: projectId,
+                blobHash: blobHash,
+                parentPath: parentId,
+                branchName: branchName
+            };
+
+            logger.debug('import selection from package', parameters);
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
+            });
+        };
+
         this.emitStateNotification = function () {
             var data = {
                 type: CONSTANTS.STORAGE.CLIENT_STATE_NOTIFICATION,

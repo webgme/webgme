@@ -19,6 +19,7 @@ define([
     'js/Dialogs/ApplyCommitQueue/ApplyCommitQueueDialog',
     'common/storage/util',
     'js/Utils/SaveToDisk',
+    'js/Utils/Exporters',
     'q',
     'js/Utils/ComponentSettings'
 ], function (Logger,
@@ -34,6 +35,7 @@ define([
              ApplyCommitQueueDialog,
              StorageUtil,
              saveToDisk,
+             exporters,
              Q,
              ComponentSettings) {
     'use strict';
@@ -101,7 +103,6 @@ define([
             items: [],
             separator: true
         };
-
 
         manageProjects = function (/*data*/) {
             var pd = new ProjectsDialog(self.gmeClient);
@@ -437,7 +438,6 @@ define([
             StorageUtil.getProjectDisplayedNameFromProjectId(projectId) :
             StorageUtil.getProjectNameFromProjectId(projectId);
 
-
         updateProjectList = function () {
             self.updateProjectList.call(self);
         };
@@ -481,7 +481,6 @@ define([
                 });
             }
         };
-
 
         selectProject = function (data) {
             self.selectProject(data);
@@ -611,39 +610,13 @@ define([
         }
 
         function exportBranch(data) {
-            var commitHash = data.projectId === self.gmeClient.getActiveProjectId() &&
+            exporters.exportProject(self.gmeClient, self.logger, {
+                projectId: data.projectId,
+                branchId: data.branchId,
+                commitHash: data.projectId === self.gmeClient.getActiveProjectId() &&
                 data.branchId === self.gmeClient.getActiveBranchName() ?
-                    self.gmeClient.getActiveCommitHash() : data.commitHash,
-                displayName = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId),
-                progress = ProgressNotification.start('<strong>Exporting </strong> branch ' +
-                    data.branchId + ' of ' + displayName + '...');
-
-            self.gmeClient.exportProjectToFile(
-                data.projectId,
-                data.branchId,
-                commitHash,
-                true,
-                function (err, result) {
-                    clearInterval(progress.intervalId);
-                    if (err) {
-                        self.logger.error('unable to save project', err);
-                        progress.note.update({
-                            message: '<strong>Failed to export: </strong>' + err.message,
-                            type: 'danger',
-                            progress: 100
-                        });
-                    } else {
-                        progress.note.update({
-                            message: '<strong>Exported </strong> branch to <a href="' + result.downloadUrl +
-                            '" target="_blank">' + result.fileName + '</a>',
-                            progress: 100,
-                            type: 'success'
-                        });
-
-                        saveToDisk.saveUrlToDisk(result.downloadUrl);
-                    }
-                }
-            );
+                    self.gmeClient.getActiveCommitHash() : data.commitHash
+            }, true);
         }
 
         function showBranchHistory(data) {
@@ -1013,7 +986,6 @@ define([
 
             // mark project as selected
             self.projects[projectId].isSelected = true;
-
 
             if (projectId !== self.gmeClient.getActiveProjectId()) {
                 self.gmeClient.selectProject(projectId, null, function (err) {

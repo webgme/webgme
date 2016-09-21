@@ -2003,6 +2003,9 @@ define([
          * @func
          */
         this.traverse = core.traverse;
+
+        this.getClosureInformation = core.getClosureInformation;
+        this.importClosure = core.importClosure;
     }
 
     return Core;

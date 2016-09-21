@@ -14,6 +14,7 @@ var Core = requireJS('common/core/coreQ'),
     constraint = requireJS('common/core/users/constraintchecker'),
     webgmeUtils = require('../../utils'),
     storageUtils = requireJS('common/storage/util'),
+    commonUtils = requireJS('common/util/util'),
 
 // JsZip can't for some reason extract the exported files..
     AdmZip = require('adm-zip'),
@@ -90,6 +91,16 @@ function WorkerRequests(mainLogger, gmeConfig) {
         });
 
         return deferred.promise.nodeify(callback);
+    }
+
+    function getBlobClient(webgmeToken) {
+        return new BlobClientClass({
+            serverPort: gmeConfig.server.port,
+            httpsecure: false,
+            server: '127.0.0.1',
+            webgmeToken: webgmeToken,
+            logger: logger.fork('BlobClient')
+        });
     }
 
     /**
@@ -248,13 +259,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         logger.debug('Found .webgmex seed at:', filename);
                     }
 
-                    blobClient = new BlobClientClass({
-                        serverPort: gmeConfig.server.port,
-                        httpsecure: false,
-                        server: '127.0.0.1',
-                        webgmeToken: webgmeToken,
-                        logger: logger.fork('BlobClient')
-                    });
+                    blobClient = getBlobClient(webgmeToken);
 
                     _addZippedExportToBlob(filename, blobClient)
                         .then(function (jsonProject) {
@@ -304,6 +309,39 @@ function WorkerRequests(mainLogger, gmeConfig) {
         });
 
         return deferred.promise.nodeify(callback);
+    }
+
+    function _createProjectFromRawJson(storage, projectName, ownerId, branchName, jsonProject, callback) {
+        var projectId,
+            project;
+
+        Q.ninvoke(storage, 'createProject', projectName, ownerId)
+            .then(function (projectId_) {
+                var deferred = Q.defer();
+
+                projectId = projectId_;
+                storage.openProject(projectId, function (err, project_/*, branches*/) {
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        project = project_;
+                        deferred.resolve();
+                    }
+                });
+                return deferred.promise;
+            })
+            .then(function () {
+                return storageUtils.insertProjectJson(project, jsonProject, {
+                    commitMessage: 'loading project from package'
+                });
+            })
+            .then(function (commitResult) {
+                return project.createBranch(branchName, commitResult.hash);
+            })
+            .then(function () {
+                return (projectId);
+            })
+            .nodeify(callback);
     }
 
     /**
@@ -570,19 +608,15 @@ function WorkerRequests(mainLogger, gmeConfig) {
             })
             .then(function (rawJson) {
                 var output = rawJson,
-                    blobClient = new BlobClientClass({
-                        serverPort: gmeConfig.server.port,
-                        httpsecure: false,
-                        server: '127.0.0.1',
-                        webgmeToken: webgmeToken,
-                        logger: logger.fork('BlobClient')
-                    }),
-                    deferred = Q.defer();
+                    blobClient = getBlobClient(webgmeToken),
+                    deferred = Q.defer(),
+                    filename = output.projectId + '_' + (output.branchName || output.commitHash) + '.webgmex';
 
                 blobUtil.buildProjectPackage(logger.fork('blobUtil'),
                     blobClient,
                     output,
                     parameters.withAssets,
+                    filename,
                     function (err, hash) {
                         if (err) {
                             deferred.reject(err);
@@ -590,8 +624,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                             deferred.resolve({
                                 downloadUrl: blobClient.getRelativeDownloadURL(hash),
                                 hash: hash,
-                                // FIXME: Now this needs to be insync with the name in blobUtil..
-                                fileName: output.projectId + '_' + (output.branchName || output.commitHash) + '.webgmex'
+                                fileName: filename
                             });
                         }
                     }
@@ -602,7 +635,94 @@ function WorkerRequests(mainLogger, gmeConfig) {
             .nodeify(callback);
     }
 
-    function _importProjectPackage(blobClient, packageHash) {
+    function exportSelectionToFile(webgmeToken, parameters, callback) {
+        var context,
+            closureInformation;
+        getConnectedStorage(webgmeToken)
+            .then(function (storage) {
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash, null);
+            })
+            .then(function (context_) {
+                var promises = [],
+                    i;
+                context = context_;
+                if (parameters.paths && parameters.paths.length > 0) {
+                    for (i = 0; i < parameters.paths.length; i += 1) {
+                        promises.push(context.core.loadByPath(context.rootNode, parameters.paths[i]));
+                    }
+                    return Q.all(promises);
+                }
+
+                throw new Error('no path were given to export!');
+            })
+            .then(function (baseNodes) {
+                var promises = [],
+                    i;
+                closureInformation = context.core.getClosureInformation(baseNodes);
+                if (closureInformation instanceof Error) {
+                    throw closureInformation;
+                }
+
+                for (i = 0; i < baseNodes.length; i += 1) {
+                    promises.push(
+                        storageUtils.getProjectJson(
+                            context.project,
+                            {rootHash: context.core.getHash(baseNodes[i])}
+                        )
+                    );
+                }
+
+                return Q.all(promises);
+            })
+            .then(function (rawJsons) {
+                var output = {
+                        projectId: parameters.projectId,
+                        commitHash: parameters.commitHash,
+                        selectionInfo: closureInformation,
+                        objects: [],
+                        hashes: {objects: [], assets: []}
+                    },
+                    blobClient = getBlobClient(webgmeToken),
+                    deferred = Q.defer(),
+                    filename = output.projectId + '_' + output.commitHash.substr(1, 6) + '.webgmexm',
+                    i;
+
+                for (i = 0; i < rawJsons.length; i += 1) {
+                    commonUtils.extendArrayUnique(output.hashes.objects, rawJsons[i].hashes.objects);
+                    commonUtils.extendArrayUnique(output.hashes.assets, rawJsons[i].hashes.assets);
+                    commonUtils.extendObjectArrayUnique(
+                        output.objects,
+                        rawJsons[i].objects,
+                        STORAGE_CONSTANTS.MONGO_ID
+                    );
+                }
+
+                blobUtil.buildProjectPackage(logger.fork('blobUtil'),
+                    blobClient,
+                    output,
+                    parameters.withAssets,
+                    filename,
+                    function (err, hash) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve({
+                                downloadUrl: blobClient.getRelativeDownloadURL(hash),
+                                hash: hash,
+                                // FIXME: Now this needs to be insync with the name in blobUtil..
+                                fileName: filename
+                            });
+                        }
+                    }
+                );
+
+                return deferred.promise;
+            })
+            .nodeify(callback);
+
+    }
+
+    function _importProjectPackage(blobClient, packageHash, fullProject) {
         var zip = new AdmZip(),
             artifact = blobClient.createArtifact('files'),
             projectStr,
@@ -626,10 +746,22 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 );
             })
             .then(function () {
+                var projectJson,
+                    metadata;
                 if (!projectStr) {
                     throw new Error('given package missing project data!');
                 }
-                var metadata = artifact.descriptor;
+                projectJson = JSON.parse(projectStr);
+                if (fullProject) {
+                    if (projectJson.selectionInfo) {
+                        throw new Error('given package is not a full project');
+                    }
+                } else {
+                    if (!projectJson.selectionInfo) {
+                        throw new Error('given package contains a full project and not a model');
+                    }
+                }
+                metadata = artifact.descriptor;
                 return blobUtil.addAssetsFromExportedProject(logger, blobClient, metadata);
             })
             .then(function () {
@@ -640,35 +772,73 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise;
     }
 
-    function _createProjectFromRawJson(storage, projectName, ownerId, branchName, jsonProject, callback) {
-        var projectId,
-            project;
+    function importSelectionFromFile(webgmeToken, parameters, callback) {
+        var jsonProject,
+            context,
+            storage,
+            blobClient = getBlobClient(webgmeToken);
 
-        Q.ninvoke(storage, 'createProject', projectName, ownerId)
-            .then(function (projectId_) {
-                var deferred = Q.defer();
-
-                projectId = projectId_;
-                storage.openProject(projectId, function (err, project_/*, branches*/) {
-                    if (err) {
-                        deferred.reject(err);
-                    } else {
-                        project = project_;
-                        deferred.resolve();
-                    }
-                });
-                return deferred.promise;
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, null, parameters.branchName);
             })
-            .then(function () {
-                return storageUtils.insertProjectJson(project, jsonProject, {
-                    commitMessage: 'loading project from package'
-                });
+            .then(function (context_) {
+                context = context_;
+
+                return _importProjectPackage(blobClient, parameters.blobHash, false);
+            })
+            .then(function (jsonProject_) {
+                var contentJson = {
+                    rootHash: null,
+                    objects: jsonProject_.objects
+                };
+                jsonProject = jsonProject_;
+
+                return storageUtils.insertProjectJson(context.project,
+                    contentJson,
+                    {commitMessage: 'commit that represents the selection content'});
             })
             .then(function (commitResult) {
-                return project.createBranch(branchName, commitResult.hash);
+                logger.debug('Selection content was persisted [' + commitResult.hash + ']');
+                return context.core.loadByPath(context.rootNode, parameters.parentPath);
             })
-            .then(function () {
-                return (projectId);
+            .then(function (parent) {
+                var deferred = Q.defer(),
+                    persisted,
+                    closureInfo;
+
+                if (parent === null) {
+                    throw new Error('Unable to locate parent node of selection [' + parameters.parent + ']');
+                }
+
+                closureInfo = context.core.importClosure(parent, jsonProject.selectionInfo);
+
+                if (closureInfo instanceof Error) {
+                    throw closureInfo;
+                }
+
+                persisted = context.core.persist(context.rootNode);
+
+                context.project.makeCommit(
+                    parameters.branchName,
+                    [context.commitObject._id],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'importing models', function (err/*, saveResult*/) {
+                        if (err) {
+                            deferred.reject(err);
+                            return;
+                        }
+
+                        deferred.resolve();
+                    });
+
+                return deferred.promise;
+            })
+            .catch(function (err) {
+                logger.error('importSelectionFromFile failed with error', err);
+                throw err;
             })
             .nodeify(callback);
     }
@@ -681,18 +851,12 @@ function WorkerRequests(mainLogger, gmeConfig) {
      */
     function importProjectFromFile(webgmeToken, parameters, callback) {
         var storage,
-            blobClient = new BlobClientClass({
-                serverPort: gmeConfig.server.port,
-                httpsecure: false,
-                server: '127.0.0.1',
-                webgmeToken: webgmeToken,
-                logger: logger.fork('BlobClient')
-            });
+            blobClient = getBlobClient(webgmeToken);
 
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                return _importProjectPackage(blobClient, parameters.blobHash);
+                return _importProjectPackage(blobClient, parameters.blobHash, true);
             })
             .then(function (jsonProject) {
                 return Q.nfcall(_createProjectFromRawJson,
@@ -718,13 +882,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         var jsonProject,
             context,
             storage,
-            blobClient = new BlobClientClass({
-                serverPort: gmeConfig.server.port,
-                httpsecure: false,
-                server: '127.0.0.1',
-                webgmeToken: webgmeToken,
-                logger: logger.fork('BlobClient')
-            });
+            blobClient = getBlobClient(webgmeToken);
 
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
@@ -740,7 +898,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     deferred.reject(new Error('New library name should be unique'));
                 }
                 if (parameters.blobHash) {
-                    _importProjectPackage(blobClient, parameters.blobHash)
+                    _importProjectPackage(blobClient, parameters.blobHash, true)
                         .then(deferred.resolve)
                         .catch(deferred.reject);
                 } else if (parameters.libraryInfo) {
@@ -841,13 +999,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             context,
             storage,
             jsonProject,
-            blobClient = new BlobClientClass({
-                serverPort: gmeConfig.server.port,
-                httpsecure: false,
-                server: '127.0.0.1',
-                webgmeToken: webgmeToken,
-                logger: logger.fork('BlobClient')
-            });
+            blobClient = getBlobClient(webgmeToken);
 
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
@@ -859,7 +1011,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     libraryInfo;
                 context = context_;
                 if (parameters.blobHash) {
-                    _importProjectPackage(blobClient, parameters.blobHash)
+                    _importProjectPackage(blobClient, parameters.blobHash, true)
                         .then(deferred.resolve)
                         .catch(deferred.reject);
                 } else if (parameters.libraryInfo) {
@@ -969,6 +1121,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
         _addZippedExportToBlob: _addZippedExportToBlob,
         exportProjectToFile: exportProjectToFile,
         importProjectFromFile: importProjectFromFile,
+        exportSelectionToFile: exportSelectionToFile,
+        importSelectionFromFile: importSelectionFromFile,
         addLibrary: addLibrary,
         updateLibrary: updateLibrary
     };

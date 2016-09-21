@@ -29,6 +29,34 @@ define([
             logger.debug('initialized LibraryCore');
 
             //<editor-fold=Helper Functions>
+            function getAllLibraryRoots(node) {
+                var roots = [];
+                while (node) {
+                    if (self.isLibraryRoot(node)) {
+                        roots.push(node);
+                    }
+                    node = self.getParent(node);
+                }
+
+                return roots;
+            }
+
+            function getLibraryName(node) {
+                ASSERT(self.isValidNode(node));
+                var name = '';
+
+                node = self.getParent(node);
+
+                while (node) {
+                    if (self.isLibraryRoot(node) && self.getParent(node) !== null) {
+                        name = self.getAttribute(node, 'name') + CONSTANTS.NAMESPACE_SEPARATOR + name;
+                    }
+                    node = self.getParent(node);
+                }
+
+                return name;
+            }
+
             function getLibraryRootsInfo(node) {
                 var allMetaNodes = self.getAllMetaNodes(node),
                     libraryRoots = {},
@@ -50,22 +78,6 @@ define([
                 return libraryRoots;
             }
 
-            function getLibraryName(node) {
-                ASSERT(self.isValidNode(node));
-                var name = '';
-
-                node = self.getParent(node);
-
-                while (node) {
-                    if (self.isLibraryRoot(node) && self.getParent(node) !== null) {
-                        name = self.getAttribute(node, 'name') + CONSTANTS.NAMESPACE_SEPARATOR + name;
-                    }
-                    node = self.getParent(node);
-                }
-
-                return name;
-            }
-
             function getRootOfLibrary(node, name) {
                 return self.getRoot(node).libraryRoots[name];
             }
@@ -79,18 +91,6 @@ define([
                 }
 
                 return null;
-            }
-
-            function getAllLibraryRoots(node) {
-                var roots = [];
-                while (node) {
-                    if (self.isLibraryRoot(node)) {
-                        roots.push(node);
-                    }
-                    node = self.getParent(node);
-                }
-
-                return roots;
             }
 
             function getLibraryInfo(libraryRootHashOrNode) {
@@ -160,7 +160,7 @@ define([
                         tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX]
                             .splice(tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX].indexOf(source), 1);
                         if (tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX].length === 0) {
-                            delete tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX]
+                            delete tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX];
                         }
                         self.setProperty(overlay, target, tOvr);
                     }
@@ -214,6 +214,282 @@ define([
 
                 self.deleteProperty(overlay, from);
                 self.setProperty(overlay, to, fromOverlay);
+            }
+
+            function isPathInSubTree(fullPath, subTreePath) {
+                if (fullPath === subTreePath) {
+                    return true;
+                }
+                if (fullPath.indexOf(subTreePath + CONSTANTS.PATH_SEP) === 0) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            function isClosureInternalTarget(targetPath, closureInfo) {
+                var selectionPath;
+
+                for (selectionPath in closureInfo.selection) {
+                    if (isPathInSubTree(targetPath, selectionPath)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            function collectBaseInformation(baseNode, closureInfo) {
+                var libraryRoots = getAllLibraryRoots(baseNode),
+                    namespaceInfo = {},
+                    i,
+                    namespace;
+
+                for (i = 0; i < libraryRoots.length; i += 1) {
+                    namespace = self.getFullyQualifiedName(libraryRoots[i]);
+                    namespaceInfo[namespace] = {
+                        info: self.getLibraryInfo(libraryRoots[i], namespace),
+                        guid: self.getLibraryGuid(baseNode, namespace)
+                    };
+                    if (namespaceInfo[namespace].info && namespaceInfo[namespace].info.hash) {
+                        namespaceInfo[namespace].hash = namespaceInfo[namespace].info.hash;
+                    }
+                }
+
+                closureInfo.bases[self.getGuid(baseNode)] = {
+                    originGuid: libraryRoots.length > 0 ? self.getLibraryGuid(baseNode) : self.getGuid(baseNode),
+                    name: self.getAttribute(baseNode, 'name'),
+                    fullName: self.getFullyQualifiedName(baseNode),
+                    namsespaces: namespaceInfo
+                };
+            }
+
+            function addRelationsFromNodeToClosureInfo(node, allMetaNodes, closureInfo) {
+                var basePath = self.getPath(node),
+                    overlayInfo = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
+                    overlayKey,
+                    pointerName,
+                    path,
+                    targetPath;
+
+                for (overlayKey in overlayInfo) {
+                    path = basePath + overlayKey;
+                    if (isClosureInternalTarget(path, closureInfo)) {
+                        for (pointerName in overlayInfo[overlayKey]) {
+                            if (self.isPointerName(pointerName)) {
+                                targetPath = basePath + overlayInfo[overlayKey][pointerName];
+                                if (pointerName === CONSTANTS.BASE_POINTER) {
+                                    if (allMetaNodes[targetPath]) {
+                                        collectBaseInformation(allMetaNodes[targetPath], closureInfo);
+                                        closureInfo.relations.preserved[path] =
+                                            closureInfo.relations.preserved[path] || {};
+                                        closureInfo.relations.preserved[path][CONSTANTS.BASE_POINTER] =
+                                            self.getGuid(allMetaNodes[targetPath]);
+                                    } else if (isClosureInternalTarget(targetPath, closureInfo)) {
+                                        closureInfo.relations.preserved[path] =
+                                            closureInfo.relations.preserved[path] || {};
+                                        closureInfo.relations.preserved[path][CONSTANTS.BASE_POINTER] = targetPath;
+                                    } else {
+                                        closureInfo.relations.lost[path] = closureInfo.relations.lost[path] || {};
+                                        closureInfo.relations.lost[path][CONSTANTS.BASE_POINTER] = targetPath;
+                                    }
+                                } else {
+                                    if (isClosureInternalTarget(targetPath, closureInfo)) {
+                                        closureInfo.relations.preserved[path] =
+                                            closureInfo.relations.preserved[path] || {};
+                                        closureInfo.relations.preserved[path][pointerName] = targetPath;
+                                    } else {
+                                        closureInfo.relations.lost[path] = closureInfo.relations.lost[path] || {};
+                                        closureInfo.relations.lost[path][pointerName] = targetPath;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            function normalizeSelectionForClosure(nodes) {
+                var paths = [],
+                    i, j,
+                    nodesToKeep = [],
+                    nodesToCut = {};
+
+                for (i = 0; i < nodes.length; i += 1) {
+                    paths.push(self.getPath(nodes[i]));
+                }
+
+                for (i = 0; i < paths.length; i += 1) {
+                    for (j = 0; j < paths.length; j += 1) {
+                        if (i !== j && isPathInSubTree(paths[j], paths[i])) {
+                            nodesToCut[paths[j]] = true;
+                        }
+                    }
+                }
+
+                for (i = 0; i < paths.length; i += 1) {
+                    if (nodesToCut[paths[i]] !== true) {
+                        nodesToKeep.push(nodes[i]);
+                    }
+                }
+
+                return nodesToKeep;
+
+            }
+
+            function getBasePathOfPath(path, closureInfo) {
+                var basePath;
+
+                for (basePath in closureInfo.hashes) {
+                    if (isPathInSubTree(path, basePath)) {
+                        return basePath;
+                    }
+                }
+
+                return '';
+            }
+
+            function mapRelationEndings(closureInfo) {
+                var source,
+                    sourceInfo,
+                    name,
+                    basePath;
+
+                for (source in closureInfo.relations.preserved) {
+                    sourceInfo = closureInfo.relations.preserved[source];
+                    for (name in sourceInfo) {
+                        if (!closureInfo.bases[sourceInfo[name]]) {
+                            basePath = getBasePathOfPath(sourceInfo[name], closureInfo);
+                            if (basePath) {
+                                sourceInfo[name] = sourceInfo[name].replace(basePath, closureInfo.hashes[basePath]);
+                            } else {
+                                logger.error('during closure generation unknown based target [' +
+                                    sourceInfo[name] + '] remained.');
+                                delete sourceInfo[name];
+                            }
+                        }
+                    }
+
+                    basePath = getBasePathOfPath(source, closureInfo);
+                    if (basePath) {
+                        closureInfo.relations.preserved[source.replace(basePath, closureInfo.hashes[basePath])] =
+                            closureInfo.relations.preserved[source];
+                        delete closureInfo.relations.preserved[source];
+                    } else {
+                        logger.error('during closure generation unknown based source [' +
+                            source + '] remained.');
+                        delete closureInfo.relations.preserved[source];
+                    }
+
+                }
+            }
+
+            function checkClosure(allMetaNodes, closureInformation) {
+                //here we only check for exact GUID matches
+                //TODO we might be able to map even with no exact GUID match based on library information
+                var keys = Object.keys(allMetaNodes),
+                    i;
+
+                closureInformation.destinationBases = {};
+                for (i = 0; i < keys.length; i += 1) {
+                    closureInformation.destinationBases[self.getGuid(allMetaNodes[keys[i]])] = keys[i];
+                }
+
+                keys = Object.keys(closureInformation.bases || {});
+
+                for (i = 0; i < keys.length; i += 1) {
+                    if (!closureInformation.destinationBases[keys[i]]) {
+                        return new Error('Cannot find necessary base [' +
+                            closureInformation.bases[keys[i]].fullName + ' : ' + keys[i] + ']');
+                    }
+                }
+
+                return null;
+            }
+
+            function getAncestor(node, from, to) {
+                var fromArray = from.split(CONSTANTS.PATH_SEP),
+                    toArray = to.split(CONSTANTS.PATH_SEP),
+                    commonAncestorPath = '',
+                    i;
+
+                fromArray.shift();
+                toArray.shift();
+
+                for (i = 0; i < fromArray.length && i < toArray.length; i += 1) {
+                    if (fromArray[i] === toArray[i]) {
+                        commonAncestorPath += CONSTANTS.PATH_SEP + fromArray[i];
+                    } else {
+                        break;
+                    }
+                }
+
+                while (self.getPath(node) !== commonAncestorPath && node !== null) {
+                    node = self.getParent(node);
+                }
+
+                return node;
+            }
+
+            function addRelation(parent, from, to, name) {
+                var commonAncestor = getAncestor(parent, from, to),
+                    overlay,
+                    collectionName = name + CONSTANTS.COLLECTION_NAME_SUFFIX,
+                    relFrom, relTo,
+                    newEntry;
+
+                if (commonAncestor) {
+                    overlay = self.getChild(commonAncestor, CONSTANTS.OVERLAYS_PROPERTY);
+                    relFrom = from.substr(self.getPath(commonAncestor).length);
+                    relTo = to.substr(self.getPath(commonAncestor).length);
+
+                    // First we set the forward direction
+                    newEntry = JSON.parse(JSON.stringify(self.getProperty(overlay, relFrom) || {}));
+                    newEntry[name] = relTo;
+                    self.setProperty(overlay, relFrom, newEntry);
+
+                    // Then the backward direction
+                    newEntry = JSON.parse(JSON.stringify(self.getProperty(overlay, relTo) || {}));
+                    newEntry[collectionName] = newEntry[collectionName] || [];
+                    newEntry[collectionName].push(relFrom);
+                    self.setProperty(overlay, relTo, newEntry);
+                } else {
+                    logger.error('unable to add relation: ' + name + '(' + from + '->' + to + ')');
+                }
+            }
+
+            function getFinalPath(path, closureInformation) {
+                // #9ab4 1eaad 98572 de827 49f0d 54520 3ad99 6b564 7 => 41 char is the hash length
+                var hash = path.substr(0, 41),
+                    resultPath = '';
+
+                if (closureInformation.relids[hash]) {
+                    resultPath = closureInformation.parent + CONSTANTS.PATH_SEP + closureInformation.relids[hash];
+                    resultPath += path.substr(41);
+                }
+
+                return resultPath;
+            }
+
+            function computePaths(closureInformation) {
+                var source, name, sourceInfo;
+
+                for (source in closureInformation.relations.preserved) {
+                    sourceInfo = closureInformation.relations.preserved[source];
+                    for (name in sourceInfo) {
+                        if (closureInformation.destinationBases[sourceInfo[name]]) {
+                            sourceInfo[name] = closureInformation.destinationBases[sourceInfo[name]];
+                        } else {
+                            sourceInfo[name] = getFinalPath(sourceInfo[name], closureInformation);
+                        }
+                    }
+                }
+
+                for (source in closureInformation.relations.preserved) {
+                    closureInformation.relations.preserved[getFinalPath(source, closureInformation)] =
+                        closureInformation.relations.preserved[source];
+                    delete closureInformation.relations.preserved[source];
+                }
             }
 
             //</editor-fold>
@@ -686,7 +962,7 @@ define([
                 }, self.loadChild(root, libraryRelid));
             };
 
-            this.updateLibrary = function (node, name, updatedLibraryRootHash, libraryInfo, updateInstructions) {
+            this.updateLibrary = function (node, name, updatedLibraryRootHash, libraryInfo/*, updateInstructions*/) {
                 var logs = {added: {}, updated: {}, moved: {}, removed: {}},
                     root = self.getRoot(node),
                     libraryRoot = getRootOfLibrary(root, name),
@@ -765,7 +1041,7 @@ define([
 
                             return logs;
                         }, self.loadSubTree(newLibraryRoot));
-                    }, self.loadChild(root, relid))
+                    }, self.loadChild(root, relid));
                 }, getLibraryInfo(libraryRoot), getLibraryInfo(updatedLibraryRootHash));
 
             };
@@ -824,6 +1100,117 @@ define([
             this.getLibraryInfo = function (node, name) {
                 var libroot = getRootOfLibrary(node, name);
                 return self.getAttribute(libroot, '_libraryInfo');
+            };
+
+            this.getClosureInformation = function (nodes) {
+                ASSERT(nodes.length > 0);
+                var closureInfo = {
+                        hashes: {},
+                        selection: {},
+                        bases: {},
+                        relations: {preserved: {}, lost: {}}
+                    },
+                    infoLosses = {},
+                    allMetaNodes,
+                    path,
+                    node,
+                    keys,
+                    i;
+
+                nodes = normalizeSelectionForClosure(nodes);
+                allMetaNodes = this.getAllMetaNodes(nodes[0]);
+
+                // We first collect the absolute paths of the selected nodes
+                for (i = 0; i < nodes.length; i += 1) {
+                    // The selection cannot contain library elements as that would violate read-only
+                    if (this.isLibraryElement(nodes[i]) || this.isLibraryRoot(nodes[i])) {
+                        return new Error('Cannot select node[' +
+                            this.getPath(nodes[i]) + '] because it is library content!'
+                        );
+                    }
+                    if (this.getParent(nodes[i]) === null) {
+                        return new Error('Cannot select the project root!');
+                    }
+                    closureInfo.selection[this.getPath(nodes[i])] = this.getGuid(nodes[i]);
+                    closureInfo.hashes[this.getPath(nodes[i])] = this.getHash(nodes[i]);
+                }
+
+                // Secondly, we collect relation information (the first order ones).
+                // We leave the handling of the root node's overlay info for a separate step
+                for (i = 0; i < nodes.length; i += 1) {
+                    node = this.getParent(nodes[i]);
+                    while (this.getPath(node)) { // until it is not the root
+                        addRelationsFromNodeToClosureInfo(node, allMetaNodes, closureInfo);
+                        node = this.getParent(node);
+                    }
+                }
+
+                // Finally we process the relations of the root
+                addRelationsFromNodeToClosureInfo(this.getRoot(nodes[0]), allMetaNodes, closureInfo);
+
+                //now we combine the selection and hashes info
+                keys = Object.keys(closureInfo.selection);
+                for (i = 0; i < keys.length; i += 1) {
+                    closureInfo.selection[closureInfo.selection[keys[i]]] = closureInfo.hashes[keys[i]];
+                    delete closureInfo.selection[keys[i]];
+                }
+
+                //now map the paths to some guid+relpath format
+                mapRelationEndings(closureInfo);
+
+                //remove hashes field from closure information
+                delete closureInfo.hashes;
+
+                //checking and logging lost relation information
+                logger.info('Closure creation finished!', closureInfo);
+                for (path in closureInfo.relations.lost) {
+                    if (closureInfo.relations.lost[path][CONSTANTS.BASE_POINTER]) {
+                        //we do not allow external non-Meta bases
+                        return new Error('Closure cannot be created due to [' + path +
+                            '] misses its base [' + closureInfo.relations.lost[path][CONSTANTS.BASE_POINTER] + '].');
+                    }
+                }
+
+                return closureInfo;
+            };
+
+            this.importClosure = function (parent, closureInformation) {
+                //at this point we can assume that the database has the necessary blobs
+                var allMetaNodes = this.getAllMetaNodes(parent),
+                    checkResult = null,
+                    key,
+                    name,
+                    reservedRelids = this.getChildrenRelids(parent, true),
+                    newRelid;
+
+                checkResult = checkClosure(allMetaNodes, closureInformation);
+
+                if (checkResult) {
+                    return checkResult;
+                }
+
+                closureInformation.relids = {};
+                closureInformation.parent = this.getPath(parent);
+
+                // Attaching the selected nodes under the parent node
+                for (key in closureInformation.selection) {
+                    newRelid = RANDOM.generateRelid(reservedRelids);
+                    reservedRelids[newRelid] = true;
+                    innerCore.setProperty(parent, newRelid, closureInformation.selection[key]);
+                    closureInformation.relids[closureInformation.selection[key]] = newRelid;
+                }
+
+                // Replacing the paths in the closure information with actual paths in the target project
+                computePaths(closureInformation);
+
+                // Creating all the relations
+                for (key in closureInformation.relations.preserved) {
+                    for (name in closureInformation.relations.preserved[key]) {
+                        addRelation(parent, key, closureInformation.relations.preserved[key][name], name);
+                    }
+                }
+
+                return closureInformation;
             };
             //</editor-fold>
         };

@@ -7,17 +7,6 @@
 define(['blob/BlobClient'], function (BlobClient) {
     'use strict';
 
-    function saveJsonToDisk(fileName, data, logger, callback) {
-        saveJsonToBlobStorage(fileName, data, logger, function (err, downloadUrl) {
-            if (err) {
-                return callback(err);
-            }
-
-            saveUrlToDisk(downloadUrl, fileName);
-            callback(null);
-        });
-    }
-
     function saveUrlToDisk(fileURL, fileName) {
         // for non-IE
         if (!window.ActiveXObject) {
@@ -40,7 +29,7 @@ define(['blob/BlobClient'], function (BlobClient) {
         else if (!!window.ActiveXObject && document.execCommand) {
             var _window = window.open(fileURL, '_self');
             _window.document.close();
-            _window.document.execCommand('SaveAs', true, fileName || fileURL)
+            _window.document.execCommand('SaveAs', true, fileName || fileURL);
             _window.close();
         }
     }
@@ -54,6 +43,16 @@ define(['blob/BlobClient'], function (BlobClient) {
         });
     }
 
+    function saveJsonToDisk(fileName, data, logger, callback) {
+        saveJsonToBlobStorage(fileName, data, logger, function (err, downloadUrl) {
+            if (err) {
+                return callback(err);
+            }
+
+            saveUrlToDisk(downloadUrl, fileName);
+            callback(null);
+        });
+    }
 
     return {
         saveToBlobStorage: saveJsonToBlobStorage,

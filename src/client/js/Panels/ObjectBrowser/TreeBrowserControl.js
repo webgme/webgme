@@ -11,16 +11,16 @@ define(['js/logger',
     'js/RegistryKeys',
     './ObjectBrowserControlBase',
     'js/Dialogs/LibraryManager/LibraryManager',
-    'js/Loader/ProgressNotification',
-    'js/Utils/SaveToDisk'
+    'js/Dialogs/ImportModel/ImportModelDialog',
+    'js/Utils/Exporters'
 ], function (Logger,
              nodePropertyNames,
              CONSTANTS,
              REGISTRY_KEYS,
              ObjectBrowserControlBase,
              LibraryManager,
-             ProgressNotification,
-             saveToDisk) {
+             ImportModelDialog,
+             exporters) {
     'use strict';
 
     var NODE_PROGRESS_CLASS = 'node-progress',
@@ -40,8 +40,8 @@ define(['js/logger',
             stateLoaded = 1,
             selfId,
             selfPatterns = {},
-        //local container for accounting the currently opened node list,
-        // its a hashmap with a key of nodeId and a value of { FancyTreeNode, childrenIds[], state }
+            //local container for accounting the currently opened node list,
+            // its a hashmap with a key of nodeId and a value of { FancyTreeNode, childrenIds[], state }
             nodes = {},
             refresh,
             initialize,
@@ -116,8 +116,8 @@ define(['js/logger',
                             //});
                             nodes[self._treeRootId].treeNode.setExpanded(true);
                         } else {
-                            logger.error('Specified tree-root ' + self._treeRootId + ' did not exist in model - falling' +
-                                ' back on root-node.');
+                            logger.error('Specified tree-root ' + self._treeRootId +
+                                ' did not exist in model - falling back on root-node.');
 
                             treeBrowser.deleteNode(nodes[self._treeRootId].treeNode);
                             self._treeRootId = CONSTANTS.PROJECT_ROOT_ID;
@@ -358,13 +358,14 @@ define(['js/logger',
 
             var validChildren = self._getValidChildrenTypesFlattened(nodeId),
                 keys, i,
+                selectedIds = self._treeBrowser.getSelectedIDs() || [],
                 nodeObj = self._client.getNode(nodeId),
                 readOnly = self._client.isProjectReadOnly() || self._client.isCommitReadOnly(),
                 menuItemsCallback = function (key/*, options*/) {
                     self._createChild(nodeId, key);
                 };
 
-            if (!readOnly && validChildren && validChildren['has.children'] === true &&
+            if (selectedIds.length === 1 && !readOnly && validChildren && validChildren['has.children'] === true &&
                 nodeObj && !nodeObj.isLibraryRoot() && !nodeObj.isLibraryElement()) {
                 menuItems.create = { // The "create" menu item
                     name: 'Create child',
@@ -420,17 +421,17 @@ define(['js/logger',
                     name: 'Export project',
                     icon: false,
                     items: {
-                        assetless: {
+                        assetfull: {
                             name: 'with assets',
                             callback: function (/*key, options*/) {
-                                self._exportProject(true);
+                                exporters.exportProject(self._client, self._logger, null, true);
                             },
                             icon: false
                         },
-                        assetfull: {
+                        assetless: {
                             name: 'without assets',
                             callback: function (/*key, options*/) {
-                                self._exportProject(false);
+                                exporters.exportProject(self._client, self._logger, null, false);
                             },
                             icon: false
                         }
@@ -509,6 +510,49 @@ define(['js/logger',
                     },
                     icon: false
                 };
+            }
+
+            if (selectedIds.indexOf(CONSTANTS.PROJECT_ROOT_ID) === -1 || selectedIds.length === 1) {
+                // TODO check and decide where and how to put an additional separator
+                // menuItems.separatorModelStart = '-';
+
+                if (selectedIds.indexOf(CONSTANTS.PROJECT_ROOT_ID) === -1) {
+                    menuItems.exportModel = {
+                        name: 'Export models',
+                        icon: false,
+                        items: {
+                            assetfull: {
+                                name: 'with assets',
+                                callback: function (/*key, options*/) {
+                                    exporters.exportModels(self._client, self._logger, selectedIds, true);
+                                },
+                                icon: false
+                            },
+                            assetless: {
+                                name: 'without assets',
+                                callback: function (/*key, options*/) {
+                                    exporters.exportModels(self._client, self._logger, selectedIds, false);
+                                },
+                                icon: false
+                            }
+                        }
+                    };
+
+                    if (selectedIds.length === 1) {
+                        menuItems.exportModel.name = 'Export model';
+                    }
+                }
+
+                if (selectedIds.length === 1) {
+                    menuItems.importModel = {
+                        name: 'Import models ...',
+                        icon: false,
+                        callback: function (/*key,options*/) {
+                            var importDialog = new ImportModelDialog(self._client, self._logger.fork('ImportModel'));
+                            importDialog.show(nodeId);
+                        }
+                    };
+                }
             }
         };
 
@@ -952,42 +996,6 @@ define(['js/logger',
         params[childId] = {registry: {}};
         params[childId].registry[REGISTRY_KEYS.POSITION] = {x: 100, y: 100};
         client.createChildren(params);
-    };
-
-    TreeBrowserControl.prototype._exportProject = function (withAssets, callback) {
-        var self = this,
-            progress = ProgressNotification.start('<strong>Exporting </strong> project ...');
-
-        self._client.exportProjectToFile(
-            self._client.getActiveProjectId(),
-            self._client.getActiveBranchName(),
-            self._client.getActiveCommitHash(),
-            withAssets,
-            function (err, result) {
-                clearInterval(progress.intervalId);
-                if (err) {
-                    self._logger.error('unable to save project', err);
-                    progress.note.update({
-                        message: '<strong>Failed to export: </strong>' + err.message,
-                        type: 'danger',
-                        progress: 100
-                    });
-                } else {
-                    progress.note.update({
-                        message: '<strong>Exported </strong> project <a href="' +
-                        result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
-                        progress: 100,
-                        type: 'success'
-                    });
-
-                    saveToDisk.saveUrlToDisk(result.downloadUrl);
-                }
-
-                if (typeof callback === 'function') {
-                    callback(err);
-                }
-            }
-        );
     };
 
     return TreeBrowserControl;
