@@ -341,12 +341,12 @@ define([
             }
 
             switch (meta.type) {
-                case 'boolean':
+                case CONSTANTS.ATTRIBUTE_TYPES.BOOLEAN:
                     if (value === true || value === false) {
                         return true;
                     }
                     break;
-                case 'string':
+                case CONSTANTS.ATTRIBUTE_TYPES.STRING:
                     if (typeof value === 'string') {
                         if (meta.regexp) {
                             return (new RegExp(meta.regexp).test(value));
@@ -354,12 +354,12 @@ define([
                         return true;
                     }
                     break;
-                case 'asset':
+                case CONSTANTS.ATTRIBUTE_TYPES.ASSET:
                     if (typeof value === 'string') {
                         return true;
                     }
                     break;
-                case 'integer':
+                case CONSTANTS.ATTRIBUTE_TYPES.INTEGER:
                     typedValue = parseInt(value);
                     if (!isNaN(typedValue) && parseFloat(value) === typedValue) {
                         if ((typeof meta.min !== 'number' || typedValue >= meta.min) &&
@@ -369,7 +369,7 @@ define([
                         return false;
                     }
                     break;
-                case 'float':
+                case CONSTANTS.ATTRIBUTE_TYPES.FLOAT:
                     typedValue = parseFloat(value);
                     if (!isNaN(typedValue)) {
                         if ((typeof meta.min !== 'number' || typedValue >= meta.min) &&
@@ -382,6 +382,7 @@ define([
                 default:
                     break;
             }
+
             return false;
         };
 
@@ -581,8 +582,20 @@ define([
 
         this.setAttributeMeta = function (node, name, value) {
             ASSERT(typeof value === 'object' && typeof name === 'string' && name);
+            var defaultGiven,
+                defaultValue;
+
+            if (value.hasOwnProperty('default')) {
+                defaultValue = value.default;
+                delete value.default;
+                defaultGiven = true;
+            }
 
             self.setAttribute(getMetaNode(node), name, value);
+
+            if (defaultGiven) {
+                self.setAttribute(node, name, defaultValue);
+            }
         };
 
         this.delAttributeMeta = function (node, name) {

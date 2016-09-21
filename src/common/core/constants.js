@@ -41,6 +41,14 @@ define([], function () {
         META_POINTER_PREFIX: '_p_',
         META_ASPECT_PREFIX: '_a_',
 
+        ATTRIBUTE_TYPES: {
+            STRING: 'string',
+            INTEGER: 'integer',
+            FLOAT: 'float',
+            BOOLEAN: 'boolean',
+            ASSET: 'asset'
+        },
+
         MIXINS_SET: '_mixins',
         MIXIN_ERROR_TYPE: {
             MISSING: 'missing',

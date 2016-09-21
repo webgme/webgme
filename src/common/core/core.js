@@ -1294,8 +1294,11 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the attribute.
          * @param {object} rule - the rules that defines the attribute
-         * @param {'string'|'integer'|'float'|'bool'} rule.type - the type of the attribute
-         * @param {string[]} rule.enum - if the attribute is an enumeration, this array contains the possible values
+         * @param {'string'|'integer'|'float'|'boolean'|'asset'} rule.type - the type of the attribute (valid types see
+         * CONSTANTS.ATTRIBUTE_TYPES).
+         * @param {string[]} [rule.enum] - if the attribute is an enumeration, this array contains the possible values
+         * @param {string|number|boolean} [rule.default] - The value the attribute should have at the node. If not given
+         * it should be set at some point.
          *
          * @return {undefined | Error} If the node is not allowed to be modified, the function returns
          * an error.
