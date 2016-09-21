@@ -403,6 +403,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getNamespace(this._state.nodes[this._id].node);
     };
 
+    GMENode.prototype.isReadOnly = function () {
+        return this._state.readOnlyProject || this._state.viewer || this.isLibraryRoot() || this.isLibraryElement();
+    };
+
     //getNode
     function getNode(_id, logger, state, meta, storeNode) {
         if (state.nodes[_id]) {

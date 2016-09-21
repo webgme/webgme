@@ -36,7 +36,7 @@ define([], function () {
                     printCoreError(error);
                     return;
                 }
-                msg = msg || 'setAttribute(' + path + ',' + name + ',' + value + ')';
+                msg = msg || 'setAttribute(' + path + ',' + name + ',' + JSON.stringify(value) + ')';
                 saveRoot(msg);
             }
         }
@@ -64,7 +64,7 @@ define([], function () {
                     printCoreError(error);
                     return;
                 }
-                msg = msg || 'setRegistry(' + path + ',' + ',' + name + ',' + value + ')';
+                msg = msg || 'setRegistry(' + path + ',' + name + ',' + JSON.stringify(value) + ')';
                 saveRoot(msg);
             }
         }
@@ -78,13 +78,13 @@ define([], function () {
                     printCoreError(error);
                     return;
                 }
-                msg = msg || 'delRegistry(' + path + ',' + ',' + name + ')';
+                msg = msg || 'delRegistry(' + path + ',' + name + ')';
                 saveRoot(msg);
             }
         }
 
         function copyMoreNodes(parameters, msg) {
-            var pathestocopy = [],
+            var pathsToCopy = [],
                 nodePath,
                 newNodes,
                 newNode,
@@ -95,25 +95,25 @@ define([], function () {
 
                 for (nodePath in parameters) {
                     if (parameters.hasOwnProperty(nodePath) && nodePath !== 'parentId') {
-                        pathestocopy.push(nodePath);
+                        pathsToCopy.push(nodePath);
                     }
                 }
 
-                msg = msg || 'copyMoreNodes(' + pathestocopy + ',' + parameters.parentId + ')';
-                if (pathestocopy.length < 1) {
+                msg = msg || 'copyMoreNodes(' + JSON.stringify(pathsToCopy) + ',' + parameters.parentId + ')';
+                if (pathsToCopy.length < 1) {
                     // empty on purpose
-                } else if (pathestocopy.length === 1) {
-                    newNode = state.core.copyNode(state.nodes[pathestocopy[0]].node,
+                } else if (pathsToCopy.length === 1) {
+                    newNode = state.core.copyNode(state.nodes[pathsToCopy[0]].node,
                         state.nodes[parameters.parentId].node);
                     if (newNode instanceof Error) {
                         printCoreError(newNode);
                         return;
                     }
                     storeNode(newNode);
-                    _setAttrAndRegistry(newNode, parameters[pathestocopy[0]]);
+                    _setAttrAndRegistry(newNode, parameters[pathsToCopy[0]]);
                     saveRoot(msg);
                 } else {
-                    newNodes = _copyMultipleNodes(pathestocopy, parameters.parentId);
+                    newNodes = _copyMultipleNodes(pathsToCopy, parameters.parentId);
                     if (newNodes instanceof Error) {
                         printCoreError(newNodes);
                         return;
@@ -452,7 +452,8 @@ define([], function () {
             if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
                 state.core.setMemberRegistry(state.nodes[path].node, setid, memberpath, name, value);
                 msg = msg ||
-                    'setMemberRegistry(' + path + ',' + memberpath + ',' + setid + ',' + name + ',' + value + ')';
+                    'setMemberRegistry(' + path + ',' + memberpath + ',' + setid + ',' + name + ',' +
+                    JSON.stringify(value) + ')';
                 saveRoot(msg);
             }
         }

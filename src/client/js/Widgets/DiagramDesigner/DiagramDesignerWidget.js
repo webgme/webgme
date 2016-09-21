@@ -336,8 +336,18 @@ define([
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
     DiagramDesignerWidget.prototype.setReadOnly = function (isReadOnly) {
         this._setReadOnlyMode(isReadOnly);
-        if (this.toolbarItems && this.toolbarItems.radioButtonGroupOperatingMode) {
-            this.toolbarItems.radioButtonGroupOperatingMode.enabled(!isReadOnly);
+        if (this.toolbarItems) {
+            if (this.toolbarItems.radioButtonGroupOperatingMode) {
+                this.toolbarItems.radioButtonGroupOperatingMode.enabled(!isReadOnly);
+            }
+
+            if (this.toolbarItems.btnGridLayout) {
+                this.toolbarItems.btnGridLayout.enabled(!isReadOnly);
+            }
+
+            if (this.toolbarItems.btnCozyGridLayout) {
+                this.toolbarItems.btnCozyGridLayout.enabled(!isReadOnly);
+            }
         }
     };
 
@@ -1051,8 +1061,8 @@ define([
 
     DiagramDesignerWidget.prototype.itemAutoLayout = function (mode) {
         var i = this.itemIds.length,
-            x = 10,
-            y = 10,
+            x = 40,
+            y = 80,
             dx = 20,
             dy = 20,
             w,
@@ -1094,7 +1104,7 @@ define([
                     };
                     x += w + dx;
                     if (x >= 1000) {
-                        x = 10;
+                        x = 40;
                         y += h + dy;
                         h = 0;
                     }
