@@ -1542,6 +1542,12 @@ define([
             delete state.users[guid];
         };
 
+        this._removeAllUIs = function () {
+            // This is mainly intended for clean up during testing.
+            logger.debug('_removeAllUIs called');
+            state.users = {};
+        };
+
         function reLaunchUsers() {
             var i;
             for (i in state.users) {

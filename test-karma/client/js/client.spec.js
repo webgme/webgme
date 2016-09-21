@@ -1668,9 +1668,11 @@ describe('GME client', function () {
             client,
             projectName = 'territoryProject',
             projectId,
+            currentTestId,
             baseCommitHash;
 
         function buildUpForTest(branchName, next) {
+            currentTestId = branchName;
             client.selectProject(projectId, null, function (err) {
                 expect(err).to.equal(null);
                 client.createBranch(projectId, branchName, baseCommitHash, function (err) {
@@ -1701,6 +1703,26 @@ describe('GME client', function () {
                     });
                 });
             });
+        });
+
+        afterEach(function (done) {
+            client._removeAllUIs();
+            if (currentTestId && client.getActiveProjectId()) {
+                var branchHash = client.getActiveCommitHash();
+                client.selectBranch('master', null, function (err) {
+                    if (err) {
+                        done(err);
+                        return;
+                    }
+
+                    client.deleteBranch(projectId, currentTestId, branchHash, function (err) {
+                        currentTestId = null;
+                        done(err);
+                    });
+                });
+            } else {
+                done();
+            }
         });
 
         it('should remove UI even if unknown', function () {
@@ -1903,6 +1925,7 @@ describe('GME client', function () {
             var testId = 'updateTerritoryPlusModify',
                 tOneState = 'init',
                 tOneId = null,
+                newNodePath = null,
                 basicNodePaths = ['', '/1', '/701504349', '/5185791', '/1400778473', '/1697300825'];
 
             function tOneEvents(events) {
@@ -1910,7 +1933,7 @@ describe('GME client', function () {
                     parent,
                     i,
                     eventPaths = [],
-                    newNodePath = null,
+                    expectedEventNodes = [],
                     getEventPaths = function (events) {
                         var i,
                             paths = [];
@@ -1927,13 +1950,12 @@ describe('GME client', function () {
                     node = client.getNode(events[1].eid);
                     parent = client.getNode(node.getParentId());
                     client.updateTerritory(tOneId, {'': {children: 1}});
-                    client.copyMoreNodes({parentId: parent.getId(), '/323573539': {}}, 'duplicating node');
+                    client.copyMoreNodes({parentId: '', '/323573539': {}}, 'duplicating node');
 
                 } else if (tOneState === 'tUpdate') {
                     //first our territoryUpdate should be resolved
                     expect(events).to.have.length(8);
                     eventPaths = getEventPaths(events);
-
                     expect(eventPaths).to.include.members(basicNodePaths);
                     for (i = 1; i < events.length; i += 1) {
                         expect(events[i].etype).to.equal('load');
@@ -1942,15 +1964,28 @@ describe('GME client', function () {
                         }
                     }
 
+                    expect(newNodePath).to.not.equal(null);
                     tOneState = 'modified';
                     return;
 
                 } else if (tOneState === 'modified') {
-                    //finally our modification should generate events
-                    //the number of events should remain the same as the newObject will not generate one!
-                    expect(events).to.have.length(5);
+                    expect(events).to.have.length(6);
+
+                    // There should be 5 nodes in the event list
+                    // 1. root node (always)
+                    expectedEventNodes.push('');
+                    // 2. the base of the copied node
+                    expectedEventNodes.push('/701504349');
+                    // 3,4. the two memebers of the copied node
+                    expectedEventNodes.push('/1697300825');
+                    expectedEventNodes.push('/1400778473');
+                    // 5. the raw data finds a load event and since the node is already loaded
+                    //    from the updateTerritory - it will be treated as an update (#1172)
+                    expectedEventNodes.push(newNodePath);
+
                     eventPaths = getEventPaths(events);
-                    expect(eventPaths).not.to.include.members([newNodePath]);
+                    expect(eventPaths).to.have.members(expectedEventNodes, JSON.stringify(eventPaths) + ' vs ' +
+                        JSON.stringify(expectedEventNodes));
                     for (i = 1; i < events.length; i += 1) {
                         expect(events[i].etype).to.equal('update');
                     }
@@ -1971,6 +2006,7 @@ describe('GME client', function () {
             var testId = 'modifyPlusUpdateTerritory',
                 tOneState = 'init',
                 tOneId = null,
+                newNodePath = null,
                 basicNodePaths = ['', '/1', '/701504349', '/5185791', '/1400778473', '/1697300825'];
 
             function tOneEvents(events) {
@@ -1978,7 +2014,7 @@ describe('GME client', function () {
                     parent,
                     i,
                     eventPaths = [],
-                    newnodePath = null,
+                    expectedEventNodes = [],
                     getEventPaths = function (events) {
                         var i,
                             paths = [];
@@ -2000,26 +2036,39 @@ describe('GME client', function () {
                     //first our territoryUpdate should be resolved
                     expect(events).to.have.length(8);
                     eventPaths = getEventPaths(events);
-
                     expect(eventPaths).to.include.members(basicNodePaths);
                     for (i = 1; i < events.length; i += 1) {
                         expect(events[i].etype).to.equal('load');
                         if (basicNodePaths.indexOf(events[i].eid) === -1) {
-                            newnodePath = events[i].eid;
+                            newNodePath = events[i].eid;
                         }
                     }
 
+                    expect(newNodePath).to.not.equal(null);
                     tOneState = 'modified';
                     return;
                 } else if (tOneState === 'modified') {
-                    //finally our modification should generate events
-                    //the number of events should remain the same as the newObject will not generate one!
-                    expect(events).to.have.length(5);
+                    expect(events).to.have.length(6);
+
+                    // There should be 5 nodes in the event list
+                    // 1. root node (always)
+                    expectedEventNodes.push('');
+                    // 2. the base of the copied node
+                    expectedEventNodes.push('/701504349');
+                    // 3,4. the two memebers of the copied node
+                    expectedEventNodes.push('/1697300825');
+                    expectedEventNodes.push('/1400778473');
+                    // 5. the raw data finds a load event and since the node is already loaded
+                    //    from the updateTerritory - it will be treated as an update (#1172)
+                    expectedEventNodes.push(newNodePath);
+
                     eventPaths = getEventPaths(events);
-                    expect(eventPaths).not.to.include.members([newnodePath]);
+                    expect(eventPaths).to.have.members(expectedEventNodes);
+
                     for (i = 1; i < events.length; i += 1) {
                         expect(events[i].etype).to.equal('update');
                     }
+
                     client.removeUI(tOneId);
                     done();
                 }
@@ -2030,6 +2079,130 @@ describe('GME client', function () {
                 expect(tOneId).not.to.equal(null);
 
                 client.updateTerritory(tOneId, {'/323573539': {children: 0}});
+            });
+        });
+
+        it('should dispatch update event when inherited child with data is "removed"', function (done) {
+            var testId = 'inheritedChildRemoval',
+                tOneState = 'init',
+                tOneId = null,
+                territory = {'': {children: 1}},
+                newNodeRelid = 'XXXXX',
+                baseNodePath = '/323573539',
+                baseChildRelid = '564787551',
+                childPath;
+
+            function tOneEvents(events) {
+                var node,
+                    i;
+
+                if (tOneState === 'init') {
+                    tOneState = 'tCreate';
+                    expect(events).to.have.length(8);
+                    client.createChild({parentId: '', baseId: baseNodePath, relid: newNodeRelid}, 'new instance node');
+                } else if (tOneState === 'tCreate') {
+                    tOneState = 'territoryUpdate';
+                    expect(events.length).to.equal(4);
+                    expect(events).to.include({etype: 'load', eid: '/XXXXX'});
+
+                    territory['/' + newNodeRelid] = {children: 1};
+                    client.updateTerritory(tOneId, territory);
+                } else if (tOneState === 'territoryUpdate') {
+                    tOneState = 'tUpdate';
+                    // The three children should be loaded.
+                    expect(events.length).to.equal(4);
+                    for (i = 1; i < events.length; i += 1) {
+                        expect(events[i].etype).to.equal('load');
+                    }
+
+                    childPath = '/' + newNodeRelid + '/' + baseChildRelid;
+                    node = client.setRegistry(childPath, 'position', {x: 0, y: 0}, 'new position for child');
+                } else if (tOneState === 'tUpdate') {
+                    tOneState = 'tRemove';
+                    // Root, parent and child should be updated.
+                    expect(events.length).to.equal(4);
+                    for (i = 1; i < events.length; i += 1) {
+                        expect(events[i].etype).to.equal('update');
+                    }
+
+                    node = client.delMoreNodes([childPath]);
+                } else if (tOneState === 'tRemove') {
+                    tOneState = null;
+                    // Root, parent and child should be updated,
+                    expect(events.length).to.equal(4);
+                    for (i = 1; i < events.length; i += 1) {
+                        expect(events[i].etype).to.equal('update');
+                    }
+                    // and especially the child should be updated (#1172)!
+                    expect(events).to.include({etype: 'update', eid: childPath});
+
+                    client.removeUI(tOneId);
+                    done();
+                } else {
+                    done(new Error('Unexpected event state: "' + tOneState + '"'));
+                }
+            }
+
+            buildUpForTest(testId, function () {
+                tOneId = client.addUI({}, tOneEvents);
+                expect(tOneId).not.to.equal(null);
+
+                client.updateTerritory(tOneId, territory);
+            });
+        });
+
+        it('should dispatch no event when inherited child with no data is "removed"', function (done) {
+            var testId = 'inheritedChildRemovalWithNoData',
+                tOneState = 'init',
+                tOneId = null,
+                territory = {'': {children: 1}},
+                newNodeRelid = 'XXXXX',
+                baseNodePath = '/323573539',
+                baseChildRelid = '564787551',
+                childPath;
+
+            function tOneEvents(events) {
+                var node,
+                    i;
+
+                if (tOneState === 'init') {
+                    tOneState = 'tCreate';
+                    expect(events).to.have.length(8);
+                    client.createChild({parentId: '', baseId: baseNodePath, relid: newNodeRelid}, 'new instance node');
+                } else if (tOneState === 'tCreate') {
+                    tOneState = 'territoryUpdate';
+                    expect(events.length).to.equal(4);
+                    expect(events).to.include({etype: 'load', eid: '/XXXXX'});
+
+                    territory['/' + newNodeRelid] = {children: 1};
+                    client.updateTerritory(tOneId, territory);
+                } else if (tOneState === 'territoryUpdate') {
+                    tOneState = 'tRemove';
+                    // The three children should be loaded.
+                    expect(events.length).to.equal(4);
+                    for (i = 1; i < events.length; i += 1) {
+                        expect(events[i].etype).to.equal('load');
+                    }
+                    childPath = '/' + newNodeRelid + '/' + baseChildRelid;
+                    node = client.delMoreNodes([childPath]);
+                } else if (tOneState === 'tRemove') {
+                    tOneState = null;
+                    // Only the root should have an event.
+                    expect(events.length).to.equal(2);
+                    expect(events).to.include({etype: 'update', eid: ''});
+
+                    client.removeUI(tOneId);
+                    done();
+                } else {
+                    done(new Error('Unexpected event state: "' + tOneState + '"'));
+                }
+            }
+
+            buildUpForTest(testId, function () {
+                tOneId = client.addUI({}, tOneEvents);
+                expect(tOneId).not.to.equal(null);
+
+                client.updateTerritory(tOneId, territory);
             });
         });
 
