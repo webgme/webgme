@@ -41,10 +41,10 @@ define(['chance'], function (ChanceJs) {
         return (S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4());
     }
 
-    function generateRelid(object) {
+    function generateRelid(object, minimalLength) {
         var relid,
             i,
-            length = 1,
+            length = minimalLength || 1,
             tries = 0;
 
         do {

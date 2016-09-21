@@ -1194,7 +1194,8 @@ define([
 
                 // Attaching the selected nodes under the parent node
                 for (key in closureInformation.selection) {
-                    newRelid = RANDOM.generateRelid(reservedRelids);
+                    newRelid = RANDOM.generateRelid(reservedRelids,
+                        innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY));
                     reservedRelids[newRelid] = true;
                     innerCore.setProperty(parent, newRelid, closureInformation.selection[key]);
                     closureInformation.relids[closureInformation.selection[key]] = newRelid;

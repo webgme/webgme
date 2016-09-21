@@ -21,6 +21,7 @@ describe('coretype', function () {
         Tree = testFixture.requirejs('common/core/coretree'),
         NullPtr = testFixture.requirejs('common/core/nullpointercore'),
         TASYNC = testFixture.requirejs('common/core/tasync'),
+        CONSTANTS = testFixture.requirejs('common/core/constants'),
         Core = function (s, options) {
             return new NullPtr(
                 new Type(new NullPtr(new Rel(new Tree(s, options), options), options), options), options);
@@ -43,9 +44,9 @@ describe('coretype', function () {
 
     after(function (done) {
         Q.allDone([
-                storage.closeDatabase(),
-                gmeAuth.unload()
-            ])
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
             .nodeify(done);
     });
 
@@ -833,5 +834,36 @@ describe('coretype', function () {
         core.moveNode(child, node);
 
         expect(core.getChildrenRelids(node).length).to.equal(core.getChildrenRelids(ancestor).length + 1);
+    });
+
+    it('should generate length 2 relid for child if instance already has a child', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInsatnce'}),
+            child = core.createNode({parent: inst}),
+            protoChild = core.createNode({parent: proto});
+
+        expect(core.getRelid(child)).to.have.length(1);
+        expect(core.getRelid(protoChild)).to.have.length(2);
+    });
+
+    it('should generate longer relid for child if instance already has a child', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInsatnce'}),
+            child = core.createNode({parent: inst, relid: '123'}),
+            protoChild = core.createNode({parent: proto});
+
+        expect(core.getRelid(child)).to.have.length(3);
+        expect(core.getRelid(protoChild)).to.have.length(4);
+    });
+
+    it('should not generate longer relid than allowed even if instance has child with longer relid', function () {
+        var longrelid = 'thisIsWayTooLong',
+            proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInsatnce'}),
+            child = core.createNode({parent: inst, relid: longrelid}),
+            protoChild = core.createNode({parent: proto});
+
+        expect(core.getRelid(child)).to.have.length(longrelid.length);
+        expect(core.getRelid(protoChild)).to.have.length(CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH);
     });
 });
