@@ -23,6 +23,7 @@ var requirejs = require('requirejs'),
             q: './client/bower_components/q/q',
             js: './client/js/',
             lib: './client/lib/',
+            chance: './client/bower_components/chance/chance',
             'js/Dialogs/PluginConfig/PluginConfigDialog': '../utils/build/empty/empty',
             teststorage: '../teststorage'
         },
