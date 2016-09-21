@@ -238,6 +238,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getValidAttributeNames(this._state.nodes[this._id].node);
     };
 
+    GMENode.prototype.isValidAttributeValueOf = function (name, value) {
+        return this._state.core.isValidAttributeValueOf(this._state.nodes[this._id].node, name, value);
+    };
+
     GMENode.prototype.getValidPointerNames = function () {
         return this._state.core.getValidPointerNames(this._state.nodes[this._id].node);
     };

@@ -136,19 +136,17 @@ $input-color: lighten($background-color, 18.5%);
         div.p-reset {
           width: 10%;
           text-align: right;
-        }
-
-        .p-reset {
           float: left;
-          i.btn-reset {
+          i.reset-badge {
             margin-left: 1px;
             margin-right: 2px;
 
-            &:hover {
+            &.btn-reset:hover {
               cursor: pointer;
             }
           }
         }
+
 
         /** Controllers */
         /** Controller-half (right) */
@@ -158,6 +156,10 @@ $input-color: lighten($background-color, 18.5%);
           height: $row-height;
           overflow: hidden;
           text-overflow: ellipsis;
+
+          &.has-invalid-value {
+            background-color: #f98980;
+          }
 
           /** Controller placement */
           input {

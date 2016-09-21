@@ -14,7 +14,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
 
     OptionWidget = function (propertyDesc) {
-        var _self = this,
+        var self = this,
             i,
             opt;
 
@@ -31,24 +31,31 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         for (i = 0; i < this.valueItems.length; i += 1) {
             opt = OPTION_BASE.clone();
             opt.text(this.valueItems[i]);
+
             this.__select.append(opt);
         }
 
+        if (this.valueItems.indexOf(propertyDesc.value) === -1) {
+            this.el.prop('title', '"' + propertyDesc.value + '" <' + typeof propertyDesc.value + '> not part of enum');
+        }
+
         this.__select.on('change', function (e) {
-            var val = _self.__select.val();
+            var val = self.__select.val();
             e.stopPropagation();
             e.preventDefault();
 
-            if (this.valueType === 'number') {
+            if (self.valueType === 'float') {
                 val = parseFloat(val);
+            } else if (self.valueType === 'integer') {
+                val = parseInt(val, 10);
             }
 
             if (val !== NaN) {
                 //remove empty value if present
-                _self.__select.find('option[value="empty"]').remove();
+                self.__select.find('option[value="empty"]').remove();
 
-                _self.setValue(val);
-                _self.fireFinishChange();
+                self.setValue(val);
+                self.fireFinishChange();
             }
         });
 

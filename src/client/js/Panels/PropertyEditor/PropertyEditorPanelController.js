@@ -371,6 +371,9 @@ define(['js/logger',
                 if (this._isInvalidAttribute(selectedObjIDs, keyParts[0])) {
                     dst[extKey].options = dst[extKey].options || {};
                     dst[extKey].options.invalid = true;
+                } else if (this._isInvalidAttributeValue(selectedObjIDs, keyParts[0])) {
+                    dst[extKey].options = dst[extKey].options || {};
+                    dst[extKey].options.invalidValue = true;
                 }
 
                 //if the attribute value is an enum, display the enum values
@@ -565,6 +568,22 @@ define(['js/logger',
         }
 
         return true;
+    };
+
+    PropertyEditorController.prototype._isInvalidAttributeValue = function (selectedObjIDs, attrName) {
+        var result = false,
+            attrValue,
+            node;
+
+        if (selectedObjIDs.length === 1) {
+            node = this._client.getNode(selectedObjIDs[0]);
+            if (node) {
+                attrValue = node.getAttribute(attrName);
+                result = !node.isValidAttributeValueOf(attrName, attrValue);
+            }
+        }
+
+        return result;
     };
 
     PropertyEditorController.prototype._getAttributeRange = function (selectedObjIDs, attrName) {

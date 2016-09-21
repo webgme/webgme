@@ -17,11 +17,13 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         CSS_NAMESPACE = 'pgp',
         CLASS_CLOSED = 'closed',
         CLASS_CONTROLLER_ROW = 'cr',
-        RESET_BUTTON_BASE = $('<i class="glyphicon glyphicon-remove-circle btn-reset" title="Reset value"/>'),
-        INVALID_BUTTON_BASE = $('<i class="glyphicon glyphicon-exclamation-sign btn-reset" ' +
+        RESET_BUTTON_BASE = $('<i class="glyphicon glyphicon-remove-circle reset-badge btn-reset" title="Reset value"/>'),
+        INVALID_BASE_VALUE_BASE = $('<i class="fa fa-exclamation-triangle reset-badge" ' +
+            'title="Inherits META-invalid property"/>'),
+        INVALID_BUTTON_BASE = $('<i class="glyphicon glyphicon-exclamation-sign reset-badge btn-reset" ' +
             'title="Remove META-invalid property"/>');
 
-    PropertyGridPart = function (params) {
+        PropertyGridPart = function (params) {
         if (params.el) {
             this._containerElement = params.el;
         }
@@ -198,12 +200,19 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
             spnName.css(extraCss);
 
-            //invalid
-            if (propertyDesc.options.invalid === true) {
-                actionBtn = INVALID_BUTTON_BASE.clone();
+            // invalid value
+            if (propertyDesc.options.invalidValue === true) {
+                widget.el.addClass('has-invalid-value');
+            }
 
+            // resettable and invalid in terms of not having a definition.
+            if (propertyDesc.options.invalid === true && propertyDesc.options.resetable === true) {
+                actionBtn = INVALID_BUTTON_BASE.clone();
             } else if (propertyDesc.options.resetable === true) {
                 actionBtn = RESET_BUTTON_BASE.clone();
+            } else if (propertyDesc.options.invalid === true) {
+                divAction.append(INVALID_BASE_VALUE_BASE.clone());
+                spnName.addClass('p-reset');
             }
 
             if (actionBtn) {
