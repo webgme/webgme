@@ -1,20 +1,20 @@
-var testFixture = require('../../globals'),  // TODO: May need to change this if not created from webgme-cli
-    superagent = testFixture.superagent,
-    expect = testFixture.expect,
-    gmeConfig = testFixture.getGmeConfig(),
-    server = testFixture.WebGME.standaloneServer(gmeConfig),
-    // TODO: If not using webgme-cli, replace the mntPt w/ the desired mount point
-    // If using the webgme-cli, this will look up the mount point for the given router
-    mntPt = require('../../../webgme-setup.json').components.routers['<%= restRouterName %>'].mount,
-    urlFor = function(action) {
-        return [
-            server.getUrl(),
-            mntPt,
-            action
-        ].join('/');
-    };
-
+/*jshint node:true, mocha:true*/
 describe('<%= restRouterName %>', function() {
+    var testFixture = require('../../globals'),  // TODO: May need to change this if not created from webgme-cli
+        superagent = testFixture.superagent,
+        expect = testFixture.expect,
+        gmeConfig = testFixture.getGmeConfig(),
+        server = testFixture.WebGME.standaloneServer(gmeConfig),
+        // TODO: If not using webgme-cli, replace the mntPt w/ the desired mount point
+        // If using the webgme-cli, this will look up the mount point for the given router
+        mntPt = require('../../../webgme-setup.json').components.routers['<%= restRouterName %>'].mount,
+        urlFor = function(action) {
+            return [
+                server.getUrl(),
+                mntPt,
+                action
+            ].join('/');
+        };
 
     before(function(done) {
         server.start(done);
