@@ -17,6 +17,8 @@ define([
 
     'use strict';
 
+    var MIN_RELID_LENGTH_PATH = CORE_CONSTANTS.PATH_SEP + CORE_CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY;
+
     function _strEncode(str) {
         //we should replace the '/' in the patch paths
         return str.replace(/\//g, '%2f');
@@ -327,7 +329,7 @@ define([
                     default:
                         throw new Error('Unexpected patch operation ' + nodePatches[i]);
                 }
-            } else {
+            } else if (patchPath !== MIN_RELID_LENGTH_PATH) {
                 ownChange = true;
             }
         }
