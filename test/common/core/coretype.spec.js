@@ -859,11 +859,59 @@ describe('coretype', function () {
     it('should not generate longer relid than allowed even if instance has child with longer relid', function () {
         var longrelid = 'thisIsWayTooLong',
             proto = core.createNode({parent: root, relid: 'theAncestor'}),
-            inst = core.createNode({parent: root, base: proto, relid: 'theInsatnce'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
             child = core.createNode({parent: inst, relid: longrelid}),
             protoChild = core.createNode({parent: proto});
 
         expect(core.getRelid(child)).to.have.length(longrelid.length);
         expect(core.getRelid(protoChild)).to.have.length(CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH);
+    });
+
+    it('should not leave any overlay residue as an instance child that only has relations deleted', function (done) {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: proto, relid: 'theChild'}),
+            inheritedChildPath = core.getPath(inst) + CONSTANTS.PATH_SEP + core.getRelid(child);
+
+        TASYNC.call(function (children) {
+            expect(children).to.have.length(1);
+            core.setPointer(children[0], 'ref', root);
+            core.deleteNode(child, true);
+            core.persist(root);
+            TASYNC.call(function (newRoot) {
+                expect(core.getProperty(newRoot, CONSTANTS.OVERLAYS_PROPERTY)).to.include.keys(inheritedChildPath);
+                TASYNC.call(function (inheritedChild) {
+                    expect(inheritedChild).to.eql(null);
+                    expect(core.getProperty(newRoot, CONSTANTS.OVERLAYS_PROPERTY))
+                        .not.to.include.keys(inheritedChildPath);
+                    done();
+                }, core.loadByPath(newRoot, inheritedChildPath));
+            }, core.loadRoot(core.getHash(root)));
+
+        }, core.loadChildren(inst));
+    });
+
+    it('should not leave any overlay residue even if the inherited child was the target', function (done) {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: proto, relid: 'theChild'}),
+            inheritedChildPath = core.getPath(inst) + CONSTANTS.PATH_SEP + core.getRelid(child);
+
+        TASYNC.call(function (children) {
+            expect(children).to.have.length(1);
+            core.setPointer(root, 'ref', children[0]);
+            core.deleteNode(child, true);
+            core.persist(root);
+            TASYNC.call(function (newRoot) {
+                expect(core.getProperty(newRoot, CONSTANTS.OVERLAYS_PROPERTY)['']).to.include.keys('ref');
+                TASYNC.call(function (inheritedChild) {
+                    expect(inheritedChild).to.eql(null);
+                    expect(core.getProperty(newRoot, CONSTANTS.OVERLAYS_PROPERTY)[''])
+                        .not.to.include.keys('ref');
+                    done();
+                }, core.loadByPath(newRoot, inheritedChildPath));
+            }, core.loadRoot(core.getHash(root)));
+
+        }, core.loadChildren(inst));
     });
 });

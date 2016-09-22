@@ -570,6 +570,17 @@ define([
             }, TASYNC.lift(children));
         };
 
+        this.setPointer = function (node, name, target) {
+            innerCore.setPointer(node, name, target);
+            if (isInheritedChild(node)) {
+                this.setProperty(node, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
+            }
+
+            if (isInheritedChild(target)) {
+                this.setProperty(target, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
+            }
+        };
+
         this.getCollectionNames = function (node) {
             ASSERT(self.isValidNode(node));
             var ownNames = innerCore.getCollectionNames(node),
@@ -1090,7 +1101,7 @@ define([
             return innerCore.getChildrenPaths(node);
         };
 
-        this.processRelidReservation = function(node, relid) {
+        this.processRelidReservation = function (node, relid) {
             var newLength = relid.length + 1 > CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH ?
                 CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH : relid.length + 1;
 
