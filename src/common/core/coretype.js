@@ -465,19 +465,6 @@ define([
             return result;
         }
 
-        function processRelidReservation(node, relid) {
-            var newLength = relid.length + 1 > CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH ?
-                CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH : relid.length + 1;
-
-            node = node.base;
-            while (node) {
-                if (innerCore.getProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) >= newLength) {
-                    return;
-                }
-                innerCore.setProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY, newLength);
-            }
-        }
-
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -744,7 +731,7 @@ define([
                     longestNewRelid = j;
                 }
             }
-            processRelidReservation(parent, longestNewRelid);
+            this.processRelidReservation(parent, longestNewRelid);
 
             //searching for the longest new relid and then process it towards the bases of the parent
             for (i = 0; i < copiedNodes.length; i += 1) {
