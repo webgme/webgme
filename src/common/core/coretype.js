@@ -465,19 +465,6 @@ define([
             return result;
         }
 
-        function processRelidReservation(node, relid) {
-            var newLength = relid.length + 1 > CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH ?
-                CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH : relid.length + 1;
-
-            node = node.base;
-            while (node) {
-                if (innerCore.getProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) >= newLength) {
-                    return;
-                }
-                innerCore.setProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY, newLength);
-            }
-        }
-
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -642,7 +629,7 @@ define([
             innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
 
             if (parent) {
-                processRelidReservation(parent, this.getRelid(node));
+                this.processRelidReservation(parent, this.getRelid(node));
             }
 
             return node;
@@ -676,7 +663,7 @@ define([
             moved = innerCore.moveNode(node, parent, self.getChildrenRelids(parent, true));
             moved.base = base;
 
-            processRelidReservation(parent, this.getRelid(moved));
+            this.processRelidReservation(parent, this.getRelid(moved));
 
             return moved;
         };
@@ -689,7 +676,7 @@ define([
             newnode.base = base;
             innerCore.setPointer(newnode, CONSTANTS.BASE_POINTER, base);
 
-            processRelidReservation(parent, this.getRelid(newnode));
+            this.processRelidReservation(parent, this.getRelid(newnode));
 
             return newnode;
         };
@@ -744,7 +731,7 @@ define([
                     longestNewRelid = j;
                 }
             }
-            processRelidReservation(parent, longestNewRelid);
+            this.processRelidReservation(parent, longestNewRelid);
 
             return copiedNodes;
         };
@@ -1101,6 +1088,19 @@ define([
 
         this.getOwnChildrenPaths = function (node) {
             return innerCore.getChildrenPaths(node);
+        };
+
+        this.processRelidReservation = function(node, relid) {
+            var newLength = relid.length + 1 > CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH ?
+                CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH : relid.length + 1;
+
+            node = node.base;
+            while (node) {
+                if (innerCore.getProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) >= newLength) {
+                    return;
+                }
+                innerCore.setProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY, newLength);
+            }
         };
         //</editor-fold>
     };

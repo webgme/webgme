@@ -1180,6 +1180,7 @@ define([
                     checkResult = null,
                     key,
                     name,
+                    longestNewRelid = '',
                     reservedRelids = this.getChildrenRelids(parent, true),
                     newRelid;
 
@@ -1199,7 +1200,13 @@ define([
                     reservedRelids[newRelid] = true;
                     innerCore.setProperty(parent, newRelid, closureInformation.selection[key]);
                     closureInformation.relids[closureInformation.selection[key]] = newRelid;
+                    if (newRelid.length > longestNewRelid) {
+                        longestNewRelid = newRelid;
+                    }
                 }
+
+                // Now processing the new relid creations
+                innerCore.processRelidReservation(parent, longestNewRelid);
 
                 // Replacing the paths in the closure information with actual paths in the target project
                 computePaths(closureInformation);
