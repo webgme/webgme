@@ -81,7 +81,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
         ComponentSettings.resolveWithWebGMEGlobal(compositionSettings, TreeBrowserControl.getComponentId());
 
         compositionTreeBrowserWidget = new TreeBrowserWidget(this.$el.find('div#composition').first(), {
-            enableEdit: true,
             hideConnections: compositionSettings.filters.toggled.hideConnections,
             hideAbstracts: compositionSettings.filters.toggled.hideAbstracts,
             hideLeaves: compositionSettings.filters.toggled.hideLeaves,

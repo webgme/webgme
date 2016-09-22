@@ -79,7 +79,7 @@ define(['js/Constants'], function (CONSTANTS) {
             saveRoot('renameLibrary(' + oldName + ',' + newName + ')');
         }
 
-        function openLibraryOriginInNewWindow(libraryRootId) {
+        function openLibraryOriginInNewWindow(libraryRootId, followBranch) {
             var address,
                 info;
             if (!state.nodes[libraryRootId]) {
@@ -100,10 +100,10 @@ define(['js/Constants'], function (CONSTANTS) {
 
             address = window.location.origin + '/?project=' + encodeURIComponent(info.projectId);
 
-            if (info.commitHash) {
-                address += '&commit=' + encodeURIComponent(info.commitHash);
-            } else if (info.branchName) {
+            if (info.branchName && followBranch) {
                 address += '&branch=' + encodeURIComponent(info.branchName);
+            } else if (info.commitHash) {
+                address += '&commit=' + encodeURIComponent(info.commitHash);
             }
 
             window.open(address, '_blank');

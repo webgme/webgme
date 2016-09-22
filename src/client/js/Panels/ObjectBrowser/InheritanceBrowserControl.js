@@ -28,12 +28,13 @@ define(['js/logger',
     var InheritanceBrowserControl = function (client, treeBrowser) {
         var self = this;
 
-        ObjectBrowserControlBase.call(self, client, treeBrowser);
+        self._logger = Logger.create('gme:Panels:ObjectBrowser:InheritanceBrowserControl',
+            WebGMEGlobal.gmeConfig.client.log);
+
+        ObjectBrowserControlBase.call(self, client, treeBrowser, self._logger);
 
         self._fcoId = this._getRootId();
         self._treeBrowser._enableNodeRename = false;
-        self._logger = Logger.create('gme:Panels:ObjectBrowser:InheritanceBrowserControl',
-            WebGMEGlobal.gmeConfig.client.log);
 
         setTimeout(function () {
             self._initialize();
@@ -120,10 +121,6 @@ define(['js/logger',
 
         this._treeBrowser.onNodeDoubleClicked = function (nodeId) {
             self._onNodeDoubleClicked(nodeId);
-        };
-
-        this._treeBrowser.onCreatingContextMenu = function (nodeId, contextMenuOptions) {
-            self._onCreatingContextMenu(nodeId, contextMenuOptions);
         };
     };
 
@@ -262,11 +259,6 @@ define(['js/logger',
 
         settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = DEFAULT_VISUALIZER;
         WebGMEGlobal.State.set(settings);
-    };
-
-    InheritanceBrowserControl.prototype._onCreatingContextMenu = function (nodeId, contextMenuOptions) {
-        contextMenuOptions.rename = false;
-        contextMenuOptions.delete = false;
     };
 
     InheritanceBrowserControl.prototype._getNodeClass = function (/*nodeObj*/) {

@@ -810,6 +810,10 @@ define([
             return state.viewer;
         };
 
+        this.isReadOnly = function () {
+            return state.viewer || state.readOnlyProject;
+        };
+
         this.getProjectObject = function () {
             return state.project;
         };
