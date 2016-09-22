@@ -744,15 +744,6 @@ define([
             }
             this.processRelidReservation(parent, longestNewRelid);
 
-            //searching for the longest new relid and then process it towards the bases of the parent
-            for (i = 0; i < copiedNodes.length; i += 1) {
-                j = this.getRelid(copiedNodes[i]);
-                if (j.length > longestNewRelid) {
-                    longestNewRelid = j;
-                }
-            }
-            this.processRelidReservation(parent, longestNewRelid);
-
             return copiedNodes;
         };
 
