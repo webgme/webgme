@@ -31,7 +31,6 @@ define(['js/logger',
         //save parent control
         this._el = container;
 
-        this.enableEdit = options.enableEdit === true;
         this._isReadOnly = false;
 
         this._initialize(options);
@@ -211,7 +210,7 @@ define(['js/logger',
                 triggerStart: [],
                 beforeEdit: function (event, data) {
                     self._logger.debug('beforeEdit', event, data);
-                    if (data.node.extraClasses === NODE_PROGRESS_CLASS || self.enableEdit === false) {
+                    if (data.node.extraClasses === NODE_PROGRESS_CLASS || self._isReadOnly) {
                         return false;
                     }
                 },
@@ -737,22 +736,17 @@ define(['js/logger',
         var node = $.ui.fancytree.getNode($trigger),
             menuItems = {},
             self = this,
-            contextMenuOptions = {
-                rename: this.enableEdit,
-                delete: true
-            };
+            multiple;
 
         //context menu is available for nodes that are not currently in 'loading' state
         if ($trigger.hasClass(NODE_PROGRESS_CLASS) !== true) {
-
-            self.onCreatingContextMenu(node.key, contextMenuOptions);
-            contextMenuOptions.rename = this.enableEdit;
             if (node.isSelected() === false) {
                 self._deselectSelectedNodes();
                 node.setSelected(true);
             }
 
             node.setFocus(true);
+            multiple = self.getSelectedIDs().length > 1;
 
             // The default set of available items :  Rename, Create, Copy, Paste, Delete
             menuItems = {
@@ -771,40 +765,31 @@ define(['js/logger',
                     icon: false
                 },
                 open: { // The "select (aka double-click)" menu item
-                    name: 'Open in',
-                    items: {
-                        visualizer: {
-                            name: 'Visualizer',
-                            callback: function (/*key, options*/) {
-                                self.onNodeDoubleClicked.call(self, node.key);
-                            },
-                            icon: false
-                        }
+                    name: 'Open in visualizer',
+                    callback: function (/*key, options*/) {
+                        self.onNodeDoubleClicked.call(self, node.key);
                     },
                     icon: 'paste'
                 }
             };
 
             menuItems.separatorOperationsStart = '-';
-            if (contextMenuOptions.rename === true) {
-                menuItems.rename = { // The "rename" menu item
-                    name: 'Rename',
-                    callback: function (/*key, options*/) {
-                        node.editStart();
-                    },
-                    icon: 'edit'
-                };
-            }
 
-            if (contextMenuOptions.delete === true) {
-                menuItems.delete = { // The "delete" menu item
-                    name: 'Delete',
-                    callback: function (/*key, options*/) {
-                        self._nodeDelete(node);
-                    },
-                    icon: 'delete'
-                };
-            }
+            menuItems.rename = { // The "rename" menu item
+                name: 'Rename',
+                callback: function (/*key, options*/) {
+                    node.editStart();
+                },
+                icon: 'edit'
+            };
+
+            menuItems.delete = { // The "delete" menu item
+                name: multiple ? 'Delete selection' : 'Delete',
+                callback: function (/*key, options*/) {
+                    self._nodeDelete(node);
+                },
+                icon: 'delete'
+            };
 
             if ($trigger.hasClass('fancytree-has-children') === true) {
                 if (node.isExpanded()) {

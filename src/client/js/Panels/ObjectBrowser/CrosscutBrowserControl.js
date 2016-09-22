@@ -27,10 +27,10 @@ define(['js/logger',
     var CrosscutBrowserControl = function (client, treeBrowser) {
         var self = this;
 
-        ObjectBrowserControlBase.call(this, client, treeBrowser);
-
         this._logger = Logger.create('gme:Panels:ObjectBrowser:CrosscutBrowserControl',
             WebGMEGlobal.gmeConfig.client.log);
+
+        ObjectBrowserControlBase.call(this, client, treeBrowser, this._logger);
 
         setTimeout(function () {
             self._initialize();
@@ -78,11 +78,6 @@ define(['js/logger',
 
         this._treeBrowser.onNodeDoubleClicked = function (nodeId) {
             self._onNodeDoubleClicked(nodeId);
-        };
-
-        this._treeBrowser.onCreatingContextMenu = function (nodeId, contextMenuOptions) {
-            contextMenuOptions.rename = false;
-            contextMenuOptions.delete = false;
         };
 
         //create territory
