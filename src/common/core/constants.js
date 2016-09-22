@@ -18,6 +18,7 @@ define([], function () {
         PATH_SEP: '/',
         MUTABLE_PROPERTY: '_mutable',
         MINIMAL_RELID_LENGTH_PROPERTY: '_minlenrelid',
+        INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY: '_hasownrelation',
 
         NULLPTR_NAME: '_null_pointer',
         NULLPTR_RELID: '_nullptr',
