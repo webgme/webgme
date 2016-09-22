@@ -582,18 +582,17 @@ define([
 
         this.setAttributeMeta = function (node, name, value) {
             ASSERT(typeof value === 'object' && typeof name === 'string' && name);
-            var defaultGiven,
-                defaultValue;
+            var defaultValue;
 
             if (value.hasOwnProperty('default')) {
                 defaultValue = value.default;
+                value = JSON.parse(JSON.stringify(value));
                 delete value.default;
-                defaultGiven = true;
             }
 
             self.setAttribute(getMetaNode(node), name, value);
 
-            if (defaultGiven) {
+            if (typeof defaultValue !== 'undefined') {
                 self.setAttribute(node, name, defaultValue);
             }
         };
