@@ -628,6 +628,10 @@ define([
             node.base = base;
             innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
 
+            if (parent) {
+                this.processRelidReservation(parent, this.getRelid(node));
+            }
+
             return node;
         };
 
@@ -659,6 +663,8 @@ define([
             moved = innerCore.moveNode(node, parent, self.getChildrenRelids(parent, true));
             moved.base = base;
 
+            this.processRelidReservation(parent, this.getRelid(moved));
+
             return moved;
         };
 
@@ -670,6 +676,8 @@ define([
             newnode.base = base;
             innerCore.setPointer(newnode, CONSTANTS.BASE_POINTER, base);
 
+            this.processRelidReservation(parent, this.getRelid(newnode));
+
             return newnode;
         };
 
@@ -678,6 +686,7 @@ define([
                 i, j, index, base,
                 relations = [],
                 names, pointer,
+                longestNewRelid = '',
                 paths = [];
 
             //here we also have to copy the inherited relations which points inside the copy area
@@ -714,6 +723,15 @@ define([
                 copiedNodes[i].base = base;
                 innerCore.setPointer(copiedNodes[i], CONSTANTS.BASE_POINTER, base);
             }
+
+            //searching for the longest new relid and then process it towards the bases of the parent
+            for (i = 0; i < copiedNodes.length; i += 1) {
+                j = this.getRelid(copiedNodes[i]);
+                if (j.length > longestNewRelid) {
+                    longestNewRelid = j;
+                }
+            }
+            this.processRelidReservation(parent, longestNewRelid);
 
             return copiedNodes;
         };
@@ -1070,6 +1088,19 @@ define([
 
         this.getOwnChildrenPaths = function (node) {
             return innerCore.getChildrenPaths(node);
+        };
+
+        this.processRelidReservation = function(node, relid) {
+            var newLength = relid.length + 1 > CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH ?
+                CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH : relid.length + 1;
+
+            node = node.base;
+            while (node) {
+                if (innerCore.getProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) >= newLength) {
+                    return;
+                }
+                innerCore.setProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY, newLength);
+            }
         };
         //</editor-fold>
     };

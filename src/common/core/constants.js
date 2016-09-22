@@ -17,6 +17,7 @@ define([], function () {
         BASE_POINTER: 'base',
         PATH_SEP: '/',
         MUTABLE_PROPERTY: '_mutable',
+        MINIMAL_RELID_LENGTH_PROPERTY: '_minlenrelid',
 
         NULLPTR_NAME: '_null_pointer',
         NULLPTR_RELID: '_nullptr',
@@ -59,6 +60,7 @@ define([], function () {
 
         MAX_AGE: 3,
         MAX_TICKS: 2000,
-        MAX_MUTATE: 30000
+        MAX_MUTATE: 30000,
+        MAXIMUM_STARTING_RELID_LENGTH: 5
     };
 });
