@@ -2726,7 +2726,7 @@ describe('GME client', function () {
                 if (testState === 'checking') {
                     //FIXME why the update events missing about the source nodes -
                     // it works correctly with single node copying
-                    expect(events).to.have.length(6);
+                    expect(events).to.have.length(10);
 
                     //find out the new node paths
                     for (i = 1; i < events.length; i++) {
@@ -2811,7 +2811,7 @@ describe('GME client', function () {
                 if (testState === 'checking') {
                     //FIXME why the update events missing about the source nodes -
                     // it works correctly with single node copying
-                    expect(events).to.have.length(6);
+                    expect(events).to.have.length(10);
 
                     //find out the new node paths
                     for (i = 1; i < events.length; i++) {
@@ -2902,7 +2902,7 @@ describe('GME client', function () {
                     //events.forEach(function (e) {
                     //    console.log(e);
                     //});
-                    expect(events).to.have.length(7);
+                    expect(events).to.have.length(11);
 
                     //find out the new node paths
                     for (i = 1; i < events.length; i++) {
