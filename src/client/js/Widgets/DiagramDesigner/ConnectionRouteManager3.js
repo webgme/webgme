@@ -640,10 +640,12 @@ define([
             filename = 'console.json';
         }
 
-        Saver.saveJsonToDisk(filename, data, function (err) {
+        Saver.saveJsonToDisk(filename, data, self.logger, function (err, downloadUrl) {
             if (err) {
                 self.logger.error('downloading resource for error handling failed', {metadata: {error: err}});
             }
+
+            self.logger.error('Download url for auto-router debug data:', downloadUrl);
             this.readyToDownload = false;
         });
     };
