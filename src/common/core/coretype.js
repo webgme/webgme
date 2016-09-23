@@ -8,7 +8,7 @@
 define([
     'common/util/assert',
     'common/core/tasync',
-    'common/core/constants',
+    'common/core/constants'
 ], function (ASSERT, TASYNC, CONSTANTS) {
     'use strict';
 
@@ -690,6 +690,8 @@ define([
             var base = node.base,
                 moved;
 
+            // TODO: Should we stop trying to reuse the current path?
+            // TODO: Maybe check if it is longer than MINIMAL_RELID_LENGTH_PROPERTY
             moved = innerCore.moveNode(node, parent, self.getChildrenRelids(parent, true));
             moved.base = base;
 
@@ -705,6 +707,7 @@ define([
 
             newnode.base = base;
             innerCore.setPointer(newnode, CONSTANTS.BASE_POINTER, base);
+            innerCore.deleteProperty(newnode, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
 
             this.processRelidReservation(parent, this.getRelid(newnode));
 
@@ -752,6 +755,7 @@ define([
                 base = nodes[i].base;
                 copiedNodes[i].base = base;
                 innerCore.setPointer(copiedNodes[i], CONSTANTS.BASE_POINTER, base);
+                innerCore.deleteProperty(copiedNodes[i], CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
             }
 
             //searching for the longest new relid and then process it towards the bases of the parent
@@ -761,6 +765,7 @@ define([
                     longestNewRelid = j;
                 }
             }
+
             this.processRelidReservation(parent, longestNewRelid);
 
             return copiedNodes;
@@ -1038,8 +1043,11 @@ define([
 
                 // Handle the minimal new length propagation to the new base chain.
                 for (i = 0; i < nodeChildren.length; i += 1) {
-                    minRelidLength = nodeChildren[i].length + 1 > minRelidLength ?
-                    nodeChildren[i].length + 1 : minRelidLength;
+                    // Do not account for old relids..
+                    if (nodeChildren[i].length <= CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH) {
+                        minRelidLength = nodeChildren[i].length + 1 > minRelidLength ?
+                        nodeChildren[i].length + 1 : minRelidLength;
+                    }
                 }
 
                 if (minRelidLength >= 2) {

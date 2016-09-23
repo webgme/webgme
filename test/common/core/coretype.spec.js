@@ -6,7 +6,7 @@
  */
 var testFixture = require('../../_globals.js');
 
-describe('coretype', function () {
+describe.only('coretype', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -867,7 +867,7 @@ describe('coretype', function () {
         expect(core.getRelid(protoChild)).to.have.length(CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH);
     });
 
-    it('should generate longer relid for copied child if instance already has a child 1', function () {
+    it('should generate longer relid for copyNode child if instance already has a child 1', function () {
         var proto = core.createNode({parent: root, relid: 'theAncestor'}),
             inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
             child = core.createNode({parent: inst, relid: '1'}),
@@ -878,12 +878,34 @@ describe('coretype', function () {
         expect(core.getRelid(copiedChild)).to.have.length(2);
     });
 
-    it('should generate longer relid for copied child if instance already has a child 2', function () {
+    it('should generate longer relid for copyNode child if instance already has a child 2', function () {
         var proto = core.createNode({parent: root, relid: 'theAncestor'}),
             inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
             child = core.createNode({parent: inst, relid: '1'}),
             cpyChild = core.createNode({parent: root, relid: '1'}),
             copiedChild = core.copyNode(cpyChild, proto);
+
+        expect(core.getRelid(child)).to.have.length(1);
+        expect(core.getRelid(copiedChild)).to.have.length(2);
+    });
+
+    it('should generate longer relid for copyNodes child if instance already has a child 1', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: inst, relid: '1'}),
+            cpyChild = core.createNode({parent: root, relid: '2'}),
+            copiedChild = core.copyNodes([cpyChild], proto)[0];
+
+        expect(core.getRelid(child)).to.have.length(1);
+        expect(core.getRelid(copiedChild)).to.have.length(2);
+    });
+
+    it('should generate longer relid for copyNodes child if instance already has a child 2', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: inst, relid: '1'}),
+            cpyChild = core.createNode({parent: root, relid: '1'}),
+            copiedChild = core.copyNodes([cpyChild], proto)[0];
 
         expect(core.getRelid(child)).to.have.length(1);
         expect(core.getRelid(copiedChild)).to.have.length(2);
@@ -992,14 +1014,64 @@ describe('coretype', function () {
     it('should only update MINIMAL_RELID_LENGTH_PROPERTY up to MAXIMUM_STARTING_RELID_LENGTH at setBase', function () {
         var proto = core.createNode({parent: root, relid: 'theAncestor'}),
             toBeInst = core.createNode({parent: root, relid: 'i'}),
-            child = core.createNode({parent: toBeInst, relid: '123456789'});
+            child1 = core.createNode({parent: toBeInst, relid: '12345'}),
+            child2 = core.createNode({parent: toBeInst, relid: '123456789'});
 
-        expect(core.getRelid(child)).to.have.length(9);
+        expect(core.getRelid(child1)).to.have.length(CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH);
+        expect(core.getRelid(child2)).to.have.length(9);
 
         core.setBase(toBeInst, proto);
 
-        child = core.createNode({parent: proto});
-        expect(core.getRelid(child)).to.have.length(CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH);
+        child1 = core.createNode({parent: proto});
+        expect(core.getRelid(child1)).to.have.length(CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH);
+    });
+
+    // This case is for avoiding old relids increasing the size unnessesarily much.
+    it('should only update MINIMAL_RELID_LENGTH_PROPERTY to length of children not exceeding MAXIMUM_STARTING_RELID_LENGTH at setBase', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            toBeInst = core.createNode({parent: root, relid: 'i'}),
+            child1 = core.createNode({parent: toBeInst, relid: '123'}),
+            child2 = core.createNode({parent: toBeInst, relid: '123456789'});
+
+        expect(core.getRelid(child1)).to.have.length(3);
+        expect(core.getRelid(child2)).to.have.length(9);
+
+        core.setBase(toBeInst, proto);
+
+        child1 = core.createNode({parent: proto});
+        expect(core.getRelid(child1)).to.have.length(4);
+    });
+
+    it('should not copy over the MINIMAL_RELID_LENGTH_PROPERTY at copyNode', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: inst, relid: '123'}),
+            protoChild = core.createNode({parent: proto}),
+            copy;
+
+        expect(core.getRelid(child)).to.have.length(3);
+        expect(core.getRelid(protoChild)).to.have.length(4);
+
+        copy = core.copyNode(proto, root);
+        child = core.createNode({parent: copy});
+
+        expect(core.getRelid(child)).to.have.length(1);
+    });
+
+    it('should not copy over the MINIMAL_RELID_LENGTH_PROPERTY at copyNodes', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: inst, relid: '123'}),
+            protoChild = core.createNode({parent: proto}),
+            copy;
+
+        expect(core.getRelid(child)).to.have.length(3);
+        expect(core.getRelid(protoChild)).to.have.length(4);
+
+        copy = core.copyNodes([proto], root)[0];
+        child = core.createNode({parent: copy});
+
+        expect(core.getRelid(child)).to.have.length(1);
     });
 
     it('should not leave any overlay residue as an instance child that only has relations deleted', function (done) {
