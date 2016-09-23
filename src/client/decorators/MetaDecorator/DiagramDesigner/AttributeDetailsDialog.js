@@ -47,6 +47,18 @@ define([
             selectedTypeChanged,
             getTypeConvertedValue;
 
+        function isValidRegExp(val) {
+            var result = true;
+
+            try {
+                new RegExp(val);
+            } catch (e) {
+                result = false;
+            }
+
+            return result;
+        }
+
         closeSave = function () {
             var i,
                 len,
@@ -228,6 +240,20 @@ define([
                 self._btnDelete.disable(true);
             } else {
                 self._inputName.removeClass('text-danger');
+                self._btnSave.disable(false);
+                self._btnDelete.disable(false);
+            }
+        });
+
+        this._pRegExpValue.on('keyup', function () {
+            var val = self._pRegExpValue.val();
+
+            if (!isValidRegExp(val)) {
+                self._pRegExpValue.addClass('text-danger');
+                self._btnSave.disable(true);
+                self._btnDelete.disable(true);
+            } else {
+                self._pRegExpValue.removeClass('text-danger');
                 self._btnSave.disable(false);
                 self._btnDelete.disable(false);
             }
