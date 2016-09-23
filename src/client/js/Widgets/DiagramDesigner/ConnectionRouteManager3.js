@@ -646,7 +646,7 @@ define([
             }
 
             self.logger.error('Download url for auto-router debug data:', downloadUrl);
-            this.readyToDownload = false;
+            self.readyToDownload = false;
         });
     };
 
