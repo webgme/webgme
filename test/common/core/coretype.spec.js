@@ -867,6 +867,141 @@ describe('coretype', function () {
         expect(core.getRelid(protoChild)).to.have.length(CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH);
     });
 
+    it('should generate longer relid for copied child if instance already has a child 1', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: inst, relid: '1'}),
+            cpyChild = core.createNode({parent: root, relid: '2'}),
+            copiedChild = core.copyNode(cpyChild, proto);
+
+        expect(core.getRelid(child)).to.have.length(1);
+        expect(core.getRelid(copiedChild)).to.have.length(2);
+    });
+
+    it('should generate longer relid for copied child if instance already has a child 2', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: inst, relid: '1'}),
+            cpyChild = core.createNode({parent: root, relid: '1'}),
+            copiedChild = core.copyNode(cpyChild, proto);
+
+        expect(core.getRelid(child)).to.have.length(1);
+        expect(core.getRelid(copiedChild)).to.have.length(2);
+    });
+
+    it('should generate longer relid for moved child if instance already has a child 1', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: inst, relid: '1'}),
+            moveChild = core.createNode({parent: root, relid: '2'}),
+            movedChild = core.moveNode(moveChild, proto);
+
+        expect(core.getRelid(child)).to.have.length(1);
+        expect(core.getRelid(movedChild)).to.have.length(2);
+    });
+
+    it('should generate longer relid for moved child if instance already has a child 2', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: inst, relid: '1'}),
+            moveChild = core.createNode({parent: root, relid: '1'}),
+            movedChild = core.moveNode(moveChild, proto);
+
+        expect(core.getRelid(child)).to.have.length(1);
+        expect(core.getRelid(movedChild)).to.have.length(2);
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY recursively through the inheritance chain at createdNOde 1', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            instInst = core.createNode({parent: root, base: inst, relid: 'theInstanceInstance'}),
+            child1 = core.createNode({parent: instInst, relid: '1'}),
+            child2 = core.createNode({parent: inst}),
+            child3 = core.createNode({parent: proto});
+
+        expect(core.getRelid(child1)).to.have.length(1);
+        expect(core.getRelid(child2)).to.have.length(2);
+        expect(core.getRelid(child3)).to.have.length(3);
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY recursively through the inheritance chain at createdNode 2', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            instInst = core.createNode({parent: root, base: inst, relid: 'theInstanceInstance'}),
+            child1 = core.createNode({parent: instInst, relid: '1'}),
+            child2 = core.createNode({parent: inst}),
+            child3 = core.createNode({parent: proto});
+
+        expect(core.getRelid(child1)).to.have.length(1);
+        expect(core.getRelid(child2)).to.have.length(2);
+        expect(core.getRelid(child3)).to.have.length(3);
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY recursively through the inheritance chain at createdNode 3', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            instInst = core.createNode({parent: root, base: inst, relid: 'theInstanceInstance'}),
+            child1 = core.createNode({parent: instInst, relid: '1'}),
+            child3 = core.createNode({parent: proto});
+
+        expect(core.getRelid(child1)).to.have.length(1);
+        expect(core.getRelid(child3)).to.have.length(2);
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY at setBase', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            toBeInst = core.createNode({parent: root, relid: 'theInstance'}),
+            child = core.createNode({parent: toBeInst, relid: '1'});
+
+        expect(core.getRelid(child)).to.have.length(1);
+
+        core.setBase(toBeInst, proto);
+
+        child = core.createNode({parent: proto});
+        expect(core.getRelid(child)).to.have.length(2);
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY recursively through the inheritance chain at setBase', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            toBeInst = core.createNode({parent: root, relid: 'theInstanceInstance'}),
+            child = core.createNode({parent: toBeInst, relid: '1'});
+
+        expect(core.getRelid(child)).to.have.length(1);
+
+        core.setBase(toBeInst, inst);
+
+        child = core.createNode({parent: proto});
+        expect(core.getRelid(child)).to.have.length(2);
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY from property at setBase', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            toBeInst = core.createNode({parent: root, relid: 'i'}),
+            toBeInstInst = core.createNode({parent: root, base: toBeInst, relid: 'theInstanceInstance'}),
+            child = core.createNode({parent: toBeInstInst, relid: '1'});
+
+        expect(core.getRelid(child)).to.have.length(1);
+
+        core.setBase(toBeInst, proto);
+
+        child = core.createNode({parent: proto});
+        expect(core.getRelid(child)).to.have.length(2);
+    });
+
+    it('should only update MINIMAL_RELID_LENGTH_PROPERTY up to MAXIMUM_STARTING_RELID_LENGTH at setBase', function () {
+        var proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            toBeInst = core.createNode({parent: root, relid: 'i'}),
+            child = core.createNode({parent: toBeInst, relid: '123456789'});
+
+        expect(core.getRelid(child)).to.have.length(9);
+
+        core.setBase(toBeInst, proto);
+
+        child = core.createNode({parent: proto});
+        expect(core.getRelid(child)).to.have.length(CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH);
+    });
+
     it('should not leave any overlay residue as an instance child that only has relations deleted', function (done) {
         var proto = core.createNode({parent: root, relid: 'theAncestor'}),
             inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
