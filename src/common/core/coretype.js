@@ -688,11 +688,15 @@ define([
             ASSERT(self.isValidNewParent(parent, node),
                 'New parent would create loop in containment/inheritance tree.');
             var base = node.base,
+                minRelidLength = innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) || 0,
+                takenRelids = self.getChildrenRelids(parent, true),
                 moved;
 
-            // TODO: Should we stop trying to reuse the current path?
-            // TODO: Maybe check if it is longer than MINIMAL_RELID_LENGTH_PROPERTY
-            moved = innerCore.moveNode(node, parent, self.getChildrenRelids(parent, true));
+            if (this.getRelid(node).length < minRelidLength) {
+                takenRelids[this.getRelid(node)] = true;
+            }
+
+            moved = innerCore.moveNode(node, parent, takenRelids);
             moved.base = base;
 
             this.processRelidReservation(parent, this.getRelid(moved));
