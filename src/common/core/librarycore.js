@@ -1177,7 +1177,7 @@ define([
             this.importClosure = function (parent, closureInformation) {
                 //at this point we can assume that the database has the necessary blobs
                 var allMetaNodes = this.getAllMetaNodes(parent),
-                    checkResult = null,
+                    checkResult,
                     key,
                     name,
                     longestNewRelid = '',
@@ -1200,7 +1200,7 @@ define([
                     reservedRelids[newRelid] = true;
                     innerCore.setProperty(parent, newRelid, closureInformation.selection[key]);
                     closureInformation.relids[closureInformation.selection[key]] = newRelid;
-                    if (newRelid.length > longestNewRelid) {
+                    if (newRelid.length > longestNewRelid.length) {
                         longestNewRelid = newRelid;
                     }
                 }
