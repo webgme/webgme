@@ -260,10 +260,20 @@ define(['q'], function (Q) {
 
         for (i = 0; i < names.length; i++) {
             if (validNames.indexOf(names[i]) !== -1) {
-                if (!core.isValidAttributeValueOf(node, names[i], core.getAttribute(node, names[i]))) {
-                    result.hasViolation = true;
-                    result.message += 'attribute "' + names[i] + '" has invalid value (' +
-                        core.getAttribute(node, names[i]) + ')\n';
+                try {
+                    if (!core.isValidAttributeValueOf(node, names[i], core.getAttribute(node, names[i]))) {
+                        result.hasViolation = true;
+                        result.message += 'attribute "' + names[i] + '" has invalid value (' +
+                            core.getAttribute(node, names[i]) + ')\n';
+                    }
+                } catch (e) {
+                    if (e.message.indexOf('Invalid regular expression') > -1) {
+                        result.message = 'Invalid regular expression defined in the meta model for attribute "' +
+                            names[i] + '"!';
+                        result.hasViolation = true;
+                    } else {
+                        throw e;
+                    }
                 }
             } else {
                 result.hasViolation = true;
