@@ -579,7 +579,17 @@ define(['js/logger',
             node = this._client.getNode(selectedObjIDs[0]);
             if (node) {
                 attrValue = node.getAttribute(attrName);
-                result = !node.isValidAttributeValueOf(attrName, attrValue);
+                try {
+                    result = !node.isValidAttributeValueOf(attrName, attrValue);
+                } catch (e) {
+                    if (e.message.indexOf('Invalid regular expression') > -1) {
+                        this._logger.error('Invalid regular expression defined in the meta model for attribute "' +
+                            attrName + '"');
+                        result = true;
+                    } else {
+                        throw e;
+                    }
+                }
             }
         }
 

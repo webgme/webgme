@@ -346,4 +346,34 @@ describe('Meta Rules', function () {
             })
             .nodeify(done);
     });
+
+    it('should return false result when an invalid regex is defined on the meta', function (done) {
+        var nodePath = '/1',
+            node;
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (node_) {
+                node = node_;
+                ir.core.setAttributeMeta(node, 'withInvalidRegEx', {
+                    type: 'string',
+                    regexp: "/((?<=\\()[A-Za-z][A-Za-z0-9\\+\\.\\-]*:([A-Za-z0-9\\.\\-_~:/\\?#\\[\\]@!\\$&'\\(\\)\\*\\+,;=]|%[A-Fa-f0-9]{2})+(?=\\)))|([A-Za-z][A-Za-z0-9\\+\\.\\-]*:([A-Za-z0-9\\.\\-_~:/\\?#\\[\\]@!\\$&'\\(\\)\\*\\+,;=]|%[A-Fa-f0-9]{2})+)/"
+                });
+
+                ir.core.setAttribute(node, 'withInvalidRegEx', 'hej');
+
+                return checkMetaRules(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(true, result.message);
+                expect(result.message).to.include('Invalid regular expression');
+                ir.core.delAttributeMeta(node, 'withInvalidRegEx');
+                ir.core.delAttribute(node, 'withInvalidRegEx', 'hej');
+
+                // Make sure that other tests could broke.
+                return checkMetaRules(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(false, result.message);
+            })
+            .nodeify(done);
+    });
 });

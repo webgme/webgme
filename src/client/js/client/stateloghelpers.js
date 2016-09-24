@@ -106,6 +106,7 @@ define([
                     version: 'n/a',
                     GitHubVersion: 'n/a'
                 },
+                gmeConfig: client.gmeConfig,
                 uiState: null,
                 branchErrors: [],
                 browserInfo: {
