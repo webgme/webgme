@@ -50,7 +50,7 @@ define(['blob/BlobClient'], function (BlobClient) {
             }
 
             saveUrlToDisk(downloadUrl, fileName);
-            callback(null);
+            callback(null, downloadUrl);
         });
     }
 
