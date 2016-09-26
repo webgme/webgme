@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/logger'], function (Logger) {
+define(['js/logger', 'js/Constants'], function (Logger, CONSTANTS) {
 
     'use strict';
 
@@ -33,6 +33,8 @@ define(['js/logger'], function (Logger) {
                 this._activePanel = p;
                 this._activePanel.setActive(true);
             }
+
+            WebGMEGlobal.State.registerActiveVisualizer(this._activePanel[CONSTANTS.VISUALIZER_PANEL_IDENTIFIER]);
         }
 
         WebGMEGlobal.KeyboardManager.captureFocus();
