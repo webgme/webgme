@@ -8,7 +8,7 @@
 define([
     'common/util/assert',
     'common/core/tasync',
-    'common/core/constants',
+    'common/core/constants'
 ], function (ASSERT, TASYNC, CONSTANTS) {
     'use strict';
 
@@ -465,6 +465,25 @@ define([
             return result;
         }
 
+        function processNewRelidLength(node, newMinLength) {
+            var currMinLength;
+
+            newMinLength = newMinLength > CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH ?
+                CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH : newMinLength;
+
+            node = node.base;
+            while (node) {
+                currMinLength = innerCore.getProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) || 0;
+                if (currMinLength >= newMinLength) {
+                    return;
+                }
+
+                // TODO: Check for library element here??
+                innerCore.setProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY, newMinLength);
+                node = node.base;
+            }
+        }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -669,9 +688,15 @@ define([
             ASSERT(self.isValidNewParent(parent, node),
                 'New parent would create loop in containment/inheritance tree.');
             var base = node.base,
+                minRelidLength = innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) || 0,
+                takenRelids = self.getChildrenRelids(parent, true),
                 moved;
 
-            moved = innerCore.moveNode(node, parent, self.getChildrenRelids(parent, true));
+            if (this.getRelid(node).length < minRelidLength) {
+                takenRelids[this.getRelid(node)] = true;
+            }
+
+            moved = innerCore.moveNode(node, parent, takenRelids);
             moved.base = base;
 
             this.processRelidReservation(parent, this.getRelid(moved));
@@ -686,6 +711,7 @@ define([
 
             newnode.base = base;
             innerCore.setPointer(newnode, CONSTANTS.BASE_POINTER, base);
+            innerCore.deleteProperty(newnode, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
 
             this.processRelidReservation(parent, this.getRelid(newnode));
 
@@ -733,6 +759,7 @@ define([
                 base = nodes[i].base;
                 copiedNodes[i].base = base;
                 innerCore.setPointer(copiedNodes[i], CONSTANTS.BASE_POINTER, base);
+                innerCore.deleteProperty(copiedNodes[i], CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
             }
 
             //searching for the longest new relid and then process it towards the bases of the parent
@@ -742,6 +769,7 @@ define([
                     longestNewRelid = j;
                 }
             }
+
             this.processRelidReservation(parent, longestNewRelid);
 
             return copiedNodes;
@@ -982,6 +1010,7 @@ define([
                 //TODO maybe this is not the best way, needs to be double checked
                 var parent = self.getParent(node),
                     nodeChildren = self.getOwnChildrenRelids(node), // We're only interested in the children with data.
+                    minRelidLength = innerCore.getProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) || 0,
                     baseChildren = self.getChildrenRelids(base, true),
                     parentBase,
                     baseParent,
@@ -1015,6 +1044,19 @@ define([
                 }
 
                 node.base = base;
+
+                // Handle the minimal new length propagation to the new base chain.
+                for (i = 0; i < nodeChildren.length; i += 1) {
+                    // Do not account for old relids..
+                    if (nodeChildren[i].length <= CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH) {
+                        minRelidLength = nodeChildren[i].length + 1 > minRelidLength ?
+                        nodeChildren[i].length + 1 : minRelidLength;
+                    }
+                }
+
+                if (minRelidLength >= 2) {
+                    processNewRelidLength(node, minRelidLength);
+                }
             } else {
                 innerCore.setPointer(node, CONSTANTS.BASE_POINTER, null);
                 node.base = null;
@@ -1102,16 +1144,7 @@ define([
         };
 
         this.processRelidReservation = function (node, relid) {
-            var newLength = relid.length + 1 > CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH ?
-                CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH : relid.length + 1;
-
-            node = node.base;
-            while (node) {
-                if (innerCore.getProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) >= newLength) {
-                    return;
-                }
-                innerCore.setProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY, newLength);
-            }
+            processNewRelidLength(node, relid.length + 1);
         };
         //</editor-fold>
     };
