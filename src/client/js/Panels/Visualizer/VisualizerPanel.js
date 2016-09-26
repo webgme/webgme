@@ -124,6 +124,7 @@ define(['js/logger',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
             if (self._settingVisualizer !== true) {
+                if (self._splitPanel)
                 self._setActiveVisualizer(activeVisualizer, self._ul1);
             }
         });
@@ -173,6 +174,7 @@ define(['js/logger',
                 PanelClass = this._visualizers[visualizer].panel;
                 if (PanelClass) {
                     this._activePanel[panel] = new PanelClass(this._layoutManager, {client: this._client});
+                    this._activePanel[panel][CONSTANTS.VISUALIZER_PANEL_IDENTIFIER] = this._visualizers[visualizer].id;
                     this._splitPanel.setPanel(this._activePanel[panel], panel);
                 }
 
@@ -356,7 +358,7 @@ define(['js/logger',
                 require([menuDesc.panel],
                     function (panelClass) {
                         self.logger.debug('downloaded: ' + menuDesc.panel);
-                        self._visualizers[menuDesc.id] = {panel: panelClass};
+                        self._visualizers[menuDesc.id] = {panel: panelClass, id: menuDesc.id};
                         self._removeLoader(li, loaderDiv);
                         doCallBack();
                     },

@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/logger'], function (Logger) {
+define(['js/logger', 'js/Constants'], function (Logger, CONSTANTS) {
 
     'use strict';
 

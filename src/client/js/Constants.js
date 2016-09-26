@@ -104,7 +104,11 @@ define([
         PROPERTY_GROUP_POINTERS: 'Pointers',
 
         /* Visualizer */
-        DEFAULT_VISUALIZER: 'ModelEditor'
+        DEFAULT_VISUALIZER: 'ModelEditor',
+
+        // This is assigned by the VisualizerPanel onto the visualizer instance on the fly and is set to
+        // the id defined in Visualizers.json.
+        VISUALIZER_PANEL_IDENTIFIER: 'VISUALIZER_PANEL_IDENTIFIER'
     });
 
     clientConstants.CLIENT = CLIENT_CONSTANTS;
