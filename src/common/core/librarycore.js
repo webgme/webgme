@@ -384,11 +384,26 @@ define([
                 }
             }
 
+            function gatherOccurancesOfType(baseGuid, closureInformation, allMetaNodes) {
+                var keys = Object.keys(allMetaNodes),
+                    occurrences = [],
+                    i;
+
+                for (i = 0; i < keys.length; i += 1) {
+                    if (closureInformation.bases[baseGuid].originGuid === self.getLibraryGuid(allMetaNodes[keys[i]]) ||
+                        closureInformation.bases[baseGuid].originGuid === self.getGuid(allMetaNodes[keys[i]])) {
+                        occurrences.push(allMetaNodes[keys[i]]);
+                    }
+                }
+
+                return occurrences;
+            }
+
             function checkClosure(allMetaNodes, closureInformation) {
                 //here we only check for exact GUID matches
                 //TODO we might be able to map even with no exact GUID match based on library information
                 var keys = Object.keys(allMetaNodes),
-                    i;
+                    occurrences, i, j, errorTxt;
 
                 closureInformation.destinationBases = {};
                 for (i = 0; i < keys.length; i += 1) {
@@ -399,8 +414,23 @@ define([
 
                 for (i = 0; i < keys.length; i += 1) {
                     if (!closureInformation.destinationBases[keys[i]]) {
-                        return new Error('Cannot find necessary base [' +
-                            closureInformation.bases[keys[i]].fullName + ' : ' + keys[i] + ']');
+                        occurrences = gatherOccurancesOfType(keys[i], closureInformation, allMetaNodes);
+                        if (occurrences.length === 0) {
+                            return new Error('Cannot find necessary base [' +
+                                closureInformation.bases[keys[i]].fullName + ' : ' + keys[i] + ']');
+                        } else if (occurrences.length === 1) {
+                            closureInformation.destinationBases[keys[i]] = self.getPath(occurrences[0]);
+                        } else {
+                            errorTxt = 'Ambiguous occurrences of base [' +
+                                closureInformation.bases[keys[i]].fullName + ' : ' + keys[i] + '] ( ';
+                            for (j = 0; j < occurrences.length; j += 1) {
+                                errorTxt += '[' + self.getFullyQualifiedName(occurrences[j]) +
+                                    ' : ' + self.getPath(occurrences[j]) + '] ';
+                            }
+                            errorTxt += ')';
+                            return new Error(errorTxt);
+                        }
+
                     }
                 }
 
@@ -1162,7 +1192,7 @@ define([
                 delete closureInfo.hashes;
 
                 //checking and logging lost relation information
-                logger.info('Closure creation finished!', closureInfo);
+                logger.debug('Closure creation finished!', closureInfo);
                 for (path in closureInfo.relations.lost) {
                     if (closureInfo.relations.lost[path][CONSTANTS.BASE_POINTER]) {
                         //we do not allow external non-Meta bases
@@ -1217,6 +1247,8 @@ define([
                         addRelation(parent, key, closureInformation.relations.preserved[key][name], name);
                     }
                 }
+
+                logger.debug('Closure import finished!', closureInformation);
 
                 return closureInformation;
             };

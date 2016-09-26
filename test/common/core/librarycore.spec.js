@@ -1224,7 +1224,7 @@ describe('Library core ', function () {
             .nodeify(done);
     });
 
-    it('should fail to import if closure missing a base', function (done) {
+    it('should import if closure base matches only by originGuid', function (done) {
         var closure,
             paths = [];
         Q.all([
@@ -1243,10 +1243,89 @@ describe('Library core ', function () {
                 delete closure.bases['6686433f-c77c-61a5-cd70-e12860311fe1'];
                 closure = shareContext.core.importClosure(shareContext.rootNode, closure);
                 expect(closure).not.to.eql(null);
+
+                expect(Object.keys(closure.relids)).to.have.members([
+                    '#8dd00ed313a9ea1f020982a559ca99018c0fc8b7',
+                    '#9214662e087d95c97517a5225150ef523b67d058']);
+
+                paths.push('/' + closure.relids['#8dd00ed313a9ea1f020982a559ca99018c0fc8b7']);
+                paths.push('/' + closure.relids['#9214662e087d95c97517a5225150ef523b67d058']);
+                return Q.all([
+                    shareContext.core.loadByPath(shareContext.rootNode, paths[0]),
+                    shareContext.core.loadByPath(shareContext.rootNode, paths[1])
+                ]);
+
+            })
+            .then(function (newNodes) {
+                expect(newNodes).to.have.length(2);
+                expect(shareContext.core.getChildrenRelids(newNodes[0])).to.have.members(['V', 'e']);
+                expect(shareContext.core.getChildrenRelids(newNodes[1])).to.have.members([
+                    'P', 'T', 'X', 'W', 'g', 'C', 'M', 'm'
+                ]);
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to import if closure missing a base', function (done) {
+        var closure;
+        Q.all([
+            shareContext.core.loadByPath(shareContext.rootNode, '/E'),
+            shareContext.core.loadByPath(shareContext.rootNode, '/Q'),
+            shareContext.core.loadByPath(shareContext.rootNode, '/Q/P')
+        ])
+            .then(function (nodes) {
+                closure = shareContext.core.getClosureInformation(nodes);
+
+                expect(closure).not.to.eql(null);
+                expect(Object.keys(closure.selection)).to.have.length(2);
+
+                closure.bases['6686433f-c77c-61a5-cd70-000000000000'] =
+                    closure.bases['6686433f-c77c-61a5-cd70-e12860311fe1'];
+                delete closure.bases['6686433f-c77c-61a5-cd70-e12860311fe1'];
+                closure.bases['6686433f-c77c-61a5-cd70-000000000000'].originGuid =
+                    '6686433f-c77c-61a5-cd70-000000000000';
+                closure = shareContext.core.importClosure(shareContext.rootNode, closure);
+                expect(closure).not.to.eql(null);
                 expect(closure instanceof Error).to.equal(true);
                 expect(closure.message).to.include('Cannot find necessary base');
             })
             .nodeify(done);
     });
 
+    it('should fail to import if closure base has multiple occurrences', function (done) {
+        var closure;
+        Q.all([
+            shareContext.core.loadByPath(shareContext.rootNode, '/E'),
+            shareContext.core.loadByPath(shareContext.rootNode, '/Q'),
+            shareContext.core.loadByPath(shareContext.rootNode, '/Q/P')
+        ])
+            .then(function (nodes) {
+                closure = shareContext.core.getClosureInformation(nodes);
+
+                expect(closure).not.to.eql(null);
+                expect(Object.keys(closure.selection)).to.have.length(2);
+
+                return shareContext.core.loadByPath(shareContext.rootNode, '/Q');
+            })
+            .then(function (exampleMachine) {
+                shareContext.core.addMember(shareContext.rootNode, 'MetaAspectSet', exampleMachine);
+                return shareContext.core.setGuid(exampleMachine, '5f55234d-5975-19c3-063e-318b0fc93a17');
+            })
+            .then(function(){
+                shareContext.core.persist(shareContext.rootNode);
+
+                return shareContext.core.loadRoot(shareContext.core.getHash(shareContext.rootNode));
+            })
+            .then(function (newRoot) {
+
+                closure.bases['6686433f-c77c-61a5-cd70-000000000000'] =
+                    closure.bases['6686433f-c77c-61a5-cd70-e12860311fe1'];
+                delete closure.bases['6686433f-c77c-61a5-cd70-e12860311fe1'];
+                closure = shareContext.core.importClosure(newRoot, closure);
+                expect(closure).not.to.eql(null);
+                expect(closure instanceof Error).to.equal(true);
+                expect(closure.message).to.include('Ambiguous occurrences of base');
+            })
+            .nodeify(done);
+    });
 });
