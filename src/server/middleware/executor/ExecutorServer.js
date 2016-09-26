@@ -171,6 +171,8 @@ function ExecutorServer(options) {
                 }
 
                 if (self.running === false) {
+                    self.logger.error('Cleared job\'s outputNumber, but was shutdown before actual output was removed.',
+                        jobInfo.hash);
                     deferred.resolve();
                     return;
                 }
@@ -264,7 +266,7 @@ function ExecutorServer(options) {
             return deferred.promise;
         }
 
-        if (self.clearOutputsTimers[oldJobInfo.hash]) {
+        if (self.clearOutputsTimers[oldJobInfo.hash] || oldJobInfo.outputNumber !== null) {
             delete self.clearOutputsTimers[oldJobInfo.hash];
 
             return clearOutput(oldJobInfo)
