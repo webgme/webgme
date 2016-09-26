@@ -33,6 +33,8 @@ define(['js/logger', 'js/Constants'], function (Logger, CONSTANTS) {
                 this._activePanel = p;
                 this._activePanel.setActive(true);
             }
+
+            WebGMEGlobal.State.registerActiveVisualizer(this._activePanel[CONSTANTS.VISUALIZER_PANEL_IDENTIFIER]);
         }
 
         WebGMEGlobal.KeyboardManager.captureFocus();

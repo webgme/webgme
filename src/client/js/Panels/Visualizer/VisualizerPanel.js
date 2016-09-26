@@ -124,8 +124,7 @@ define(['js/logger',
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
             if (self._settingVisualizer !== true) {
-                if (self._splitPanel)
-                self._setActiveVisualizer(activeVisualizer, self._ul1);
+                self.setActiveVisualizer(activeVisualizer);
             }
         });
 
