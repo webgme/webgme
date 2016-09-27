@@ -164,6 +164,15 @@ ul.fancytree-container {
   span.gme-library span.fancytree-icon {
     background-position: -0px 0 !important;
   }
+
+  span.gme-meta-node {
+    span.fancytree-icon {
+      background-position: -96px 0 !important;
+    }
+    span.fancytree-title {
+      font-weight: bold !important;
+    }
+  }
 }
 
 // This could be dangerous but right now the filter buttons use these too so cannot scope it under fancy tree.
@@ -184,6 +193,13 @@ i.gme-atom {
 i.gme-library {
   background: url("../img/gmeicons.png") 0 0;
   background-position: -0px 0 !important;
+  width: 16px;
+  height: 16px;
+}
+
+i.gme-meta-node {
+  background: url("../img/gmeicons.png") 0 0;
+  background-position: -96px 0 !important;
   width: 16px;
   height: 16px;
 }

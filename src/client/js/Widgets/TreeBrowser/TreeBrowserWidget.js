@@ -967,8 +967,10 @@ define(['js/logger',
 
                 if (el.hasClass('active')) {
                     el.prop('title', 'Hide ' + displayName);
+                    el.removeClass('active');
                 } else {
                     el.prop('title', 'Show ' + displayName);
+                    el.addClass('active');
                 }
 
                 self._currentFilters[name] = !self._currentFilters[name];
