@@ -60,8 +60,6 @@ define([
                 users: {},
                 nodes: {},
                 loadNodes: {},
-                // FIXME: This should be the same as nodes (need to make sure they are not modified in meta).
-                metaNodes: {},
 
                 rootHash: null,
                 rootObject: null,
@@ -207,7 +205,7 @@ define([
             //basic = basic || true;
             if (node) {
                 path = state.core.getPath(node);
-                state.metaNodes[path] = node;
+                //state.metaNodes[path] = node;
                 if (state.nodes[path]) {
                     //TODO we try to avoid this
                 } else {
@@ -451,7 +449,7 @@ define([
                     logger: logger.fork('core')
                 });
                 state.projectAccess = access;
-                self.meta.initialize(state.core, state.metaNodes, saveRoot, printCoreError);
+                self.meta.initialize(state.core, state, saveRoot, printCoreError);
                 logState('info', 'projectOpened');
                 logger.debug('projectOpened, branches: ', branches);
                 self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
@@ -1660,6 +1658,7 @@ define([
         };
 
         function refreshMetaNodes(oldSource, newSource) {
+            return;
             var pathsToRemove = [],
                 i,
                 oldPaths = Object.keys(oldSource),

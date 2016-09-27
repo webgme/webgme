@@ -10,7 +10,7 @@ define([], function () {
 
     function metaStorage() {
         var _core = null,
-            _nodes = null,
+            _state = null,
             _saveFunc = function () {
             },
             _errorFunc = function () {
@@ -24,9 +24,9 @@ define([], function () {
             _saveFunc(message);
         }
 
-        function initialize(core, nodes, save, printCoreError) {
+        function initialize(core, state, save, printCoreError) {
             _core = core;
-            _nodes = nodes;
+            _state = state;
             _saveFunc = save;
             _errorFunc = printCoreError;
             _initialized = true;
@@ -55,13 +55,9 @@ define([], function () {
 
         //getter setter functions
         function getMeta(path) {
-            var node = _nodes[path],
+            var node = _state.nodes[path].node,
                 meta = {children: {}, attributes: {}, pointers: {}, aspects: {}},
                 temp, i, j;
-
-            if (_nodes === null || _nodes === undefined) {
-                return meta;
-            }
 
             if (!node) {
                 return null;
@@ -81,7 +77,7 @@ define([], function () {
             if (!isValidMeta) {
                 return;
             }
-            var node = _nodes[path] || null;
+            var node = _state.nodes[path] && _state.nodes[path].node;
             if (node) {
                 _core.clearMetaRules(node);
 
@@ -93,9 +89,10 @@ define([], function () {
                         return;
                     }
                     for (i = 0; i < meta.children.items.length; i += 1) {
-                        if (typeof meta.children.items[i] === 'string' && _nodes[meta.children.items[i]]) {
+                        if (typeof meta.children.items[i] === 'string' && _state.nodes[meta.children.items[i]] &&
+                            _state.nodes[meta.children.items[i]].node) {
                             error = _core.setChildMeta(node,
-                                _nodes[meta.children.items[i]], meta.children.minItems[i], meta.children.maxItems[i]);
+                                _state.nodes[meta.children.items[i]].node, meta.children.minItems[i], meta.children.maxItems[i]);
                             if (error instanceof Error) {
                                 _errorFunc(error);
                                 return;
@@ -126,8 +123,10 @@ define([], function () {
                             }
                             for (j = 0; j < meta.pointers[i].items.length; j += 1) {
                                 if (typeof meta.pointers[i].items[j] === 'string' &&
-                                    _nodes[meta.pointers[i].items[j]]) {
-                                    error = _core.setPointerMetaTarget(node, i, _nodes[meta.pointers[i].items[j]],
+                                    _state.nodes[meta.pointers[i].items[j]] &&
+                                    _state.nodes[meta.pointers[i].items[j]].node
+                                ) {
+                                    error = _core.setPointerMetaTarget(node, i, _state.nodes[meta.pointers[i].items[j]].node,
                                         meta.pointers[i].minItems[j], meta.pointers[i].maxItems[j]);
                                     if (error instanceof Error) {
                                         _errorFunc(error);
@@ -144,8 +143,9 @@ define([], function () {
                     for (i in meta.aspects) {
                         if (meta.aspects[i].length > 0) {
                             for (j = 0; j < meta.aspects[i].length; j += 1) {
-                                if (typeof meta.aspects[i][j] === 'string' && _nodes[meta.aspects[i][j]]) {
-                                    error = _core.setAspectMetaTarget(node, i, _nodes[meta.aspects[i][j]]);
+                                if (typeof meta.aspects[i][j] === 'string' && _state.nodes[meta.aspects[i][j]] &&
+                                    _state.nodes[meta.aspects[i][j]].node ) {
+                                    error = _core.setAspectMetaTarget(node, i, _state.nodes[meta.aspects[i][j]].node);
                                     if (error instanceof Error) {
                                         _errorFunc(error);
                                         return;
@@ -176,7 +176,7 @@ define([], function () {
         //validation functions
         function getBaseChain(path) {
             var chain = [];
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
             if (node) {
                 while (node !== null) {
                     chain.push(_core.getPath(node));
@@ -187,8 +187,8 @@ define([], function () {
         }
 
         function isTypeOf(path, typePath) {
-            var node = _nodes[path],
-                typeNode = _nodes[typePath];
+            var node = _state.nodes[path] && _state.nodes[path].node,
+                typeNode = _state.nodes[typePath] && _state.nodes[typePath].node;
 
             if (node && typeNode) {
                 return _core.isTypeOf(node, typeNode);
@@ -208,8 +208,8 @@ define([], function () {
         }
 
         function isValidChild(path, childPath) {
-            var node = _nodes[path],
-                child = _nodes[childPath];
+            var node = _state.nodes[path] && _state.nodes[path].node,
+                child = _state.nodes[childPath] && _state.nodes[childPath].node;
 
             if (node && child) {
                 return _core.isValidChildOf(child, node);
@@ -218,8 +218,8 @@ define([], function () {
         }
 
         function isValidTarget(path, name, targetPath) {
-            var node = _nodes[path],
-                target = _nodes[targetPath];
+            var node = _state.nodes[path] && _state.nodes[path].node,
+                target = _state.nodes[targetPath] && _state.nodes[targetPath].node;
 
             if (node && target) {
                 return _core.isValidTargetOf(target, node, name);
@@ -234,7 +234,7 @@ define([], function () {
         }
 
         function getValidChildrenTypes(path) {
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
 
             if (node) {
                 return _core.getValidChildrenPaths(node);
@@ -244,7 +244,7 @@ define([], function () {
         }
 
         function getValidTargetTypes(path, name) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 meta, i,
                 targets = [];
 
@@ -261,7 +261,7 @@ define([], function () {
         }
 
         function hasOwnMetaRules(path) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 ownMeta, key;
 
             if (node) {
@@ -306,7 +306,7 @@ define([], function () {
         }
 
         function getOwnValidChildrenTypes(path) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 ownMeta;
 
             if (node) {
@@ -321,7 +321,7 @@ define([], function () {
         }
 
         function getOwnValidTargetTypes(path, name) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 i,
                 ownMeta;
 
@@ -337,7 +337,7 @@ define([], function () {
         }
 
         function getValidAttributeNames(path) {
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
 
             if (node) {
                 return _core.getValidAttributeNames(node);
@@ -347,7 +347,7 @@ define([], function () {
         }
 
         function getOwnValidAttributeNames(path) {
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
 
             if (node) {
                 return _core.getOwnValidAttributeNames(node);
@@ -368,7 +368,7 @@ define([], function () {
 
         function getChildrenMeta(path) {
             //the returned object structure is : {'min':0,'max':0,'items':[{'id':path,'min':0,'max':0},...]}
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 meta, i,
                 childrenMeta = {items: []},
                 childrenPaths;
@@ -420,13 +420,13 @@ define([], function () {
         }
 
         function updateValidChildrenItem(path, newTypeObj) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 i,
                 error,
                 child;
 
             if (newTypeObj && newTypeObj.id && node) {
-                child = _nodes[newTypeObj.id];
+                child = _state.nodes[newTypeObj.id] && _state.nodes[newTypeObj.id].node;
                 if (child) {
                     error = _core.setChildMeta(node, child, newTypeObj.min, newTypeObj.max);
                     if (error instanceof Error) {
@@ -439,7 +439,7 @@ define([], function () {
         }
 
         function removeValidChildrenItem(path, typeId) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 error;
 
             if (node) {
@@ -453,11 +453,11 @@ define([], function () {
         }
 
         function getAttributeSchema(path, name) {
-            return _core.getAttributeMeta(_nodes[path], name);
+            return _core.getAttributeMeta(_state.nodes[path].node, name);
         }
 
         function setAttributeSchema(path, name, schema) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 error;
 
             if (node) {
@@ -471,7 +471,7 @@ define([], function () {
         }
 
         function removeAttributeSchema(path, name) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 error;
 
             if (node) {
@@ -485,7 +485,7 @@ define([], function () {
         }
 
         function getPointerMeta(path, name) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 meta, i,
                 pointerMeta;
 
@@ -513,7 +513,7 @@ define([], function () {
         }
 
         function _getValidTargetItems(path, name, ownOnly) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 meta,
                 paths,
                 items = [],
@@ -555,12 +555,12 @@ define([], function () {
         }
 
         function updateValidTargetItem(path, name, targetObj) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 target,
                 error;
 
             if (targetObj && targetObj.id && node) {
-                target = _nodes[targetObj.id];
+                target = _state.nodes[targetObj.id] && _state.nodes[targetObj.id].node;
                 if (target) {
                     error = _core.setPointerMetaTarget(node, name, target, targetObj.min, targetObj.max);
                     if (error instanceof Error) {
@@ -573,7 +573,7 @@ define([], function () {
         }
 
         function removeValidTargetItem(path, name, targetId) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 error;
 
             if (node) {
@@ -587,7 +587,7 @@ define([], function () {
         }
 
         function deleteMetaPointer(path, name) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 error;
 
             if (node) {
@@ -601,14 +601,14 @@ define([], function () {
         }
 
         function setPointerMeta(path, name, meta) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 target,
                 error,
                 i;
 
             if (meta && meta.items && node) {
                 for (i = 0; i < meta.items.length; i += 1) {
-                    target = _nodes[meta.items[i].id];
+                    target = _state.nodes[meta.items[i].id] && _state.nodes[meta.items[i].id].node;
                     if (target) {
                         error = _core.setPointerMetaTarget(node, name, target, meta.items[i].min, meta.items[i].max);
                         if (error instanceof Error) {
@@ -627,7 +627,7 @@ define([], function () {
         }
 
         function setChildrenMeta(path, meta) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 target,
                 error,
                 i;
@@ -653,7 +653,7 @@ define([], function () {
         }
 
         function getMetaAspectNames(path) {
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
 
             if (node) {
                 return _core.getValidAspectNames(node);
@@ -663,7 +663,7 @@ define([], function () {
         }
 
         function getOwnMetaAspectNames(path) {
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
 
             if (node) {
                 return _core.getOwnValidAspectNames(node);
@@ -673,7 +673,7 @@ define([], function () {
         }
 
         function getMetaAspect(path, name) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 meta,
                 aspectMeta,
                 i;
@@ -692,7 +692,7 @@ define([], function () {
         function setMetaAspect(path, name, aspect) {
             var i,
                 target,
-                node = _nodes[path],
+                node = _state.nodes[path] && _state.nodes[path].node,
                 error;
 
             if (node) {
@@ -702,7 +702,7 @@ define([], function () {
                     return;
                 }
                 for (i = 0; i < aspect.length; i += 1) {
-                    target = _nodes[aspect[i]];
+                    target = _state.nodes[aspect[i]] && _state.nodes[aspect[i]].node;
                     if (target) {
                         error = _core.setAspectMetaTarget(node, name, target);
                         if (error instanceof Error) {
@@ -726,7 +726,7 @@ define([], function () {
         }
 
         function deleteMetaAspect(path, name) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 error;
 
             if (node) {
