@@ -85,6 +85,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             hideAbstracts: compositionSettings.filters.toggled.hideAbstracts,
             hideLeaves: compositionSettings.filters.toggled.hideLeaves,
             hideLibraries: compositionSettings.filters.toggled.hideLibraries,
+            hideMetaNodes: compositionSettings.filters.toggled.hideMetaNodes,
             titleFilter: {
                 text: '',
                 type: 'caseInsensitive' //caseSensitive, regex
@@ -92,7 +93,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             metaTypeFilter: {
                 text: '',
                 type: 'caseInsensitive' //caseSensitive, regex
-            },
+            }
         });
         compositionTreeBrowserControl = new TreeBrowserControl(this._client, compositionTreeBrowserWidget,
             compositionSettings);
