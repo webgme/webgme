@@ -224,6 +224,7 @@ define(['js/logger',
                             isAbstract: childNode.isAbstract(),
                             isLibrary: childNode.isLibraryRoot() || childNode.isLibraryElement(),
                             isLibraryRoot: childNode.isLibraryRoot(),
+                            isMetaNode: metaTypeInfo.isMetaNode,
                             metaType: metaTypeInfo.name,
                             libraryInfo: getLibraryInfo(childNode),
                             // Data used locally here.
@@ -615,6 +616,7 @@ define(['js/logger',
                                 isLibrary: updatedObject.isLibraryRoot() || updatedObject.isLibraryElement(),
                                 isLibraryRoot: updatedObject.isLibraryRoot(),
                                 libraryInfo: getLibraryInfo(updatedObject),
+                                isMetaNode: metaTypeInfo.isMetaNode,
                                 metaType: metaTypeInfo.name
                             };
 
@@ -644,6 +646,7 @@ define(['js/logger',
                                 isLibrary: updatedObject.isLibraryRoot() || updatedObject.isLibraryElement(),
                                 isLibraryRoot: updatedObject.isLibraryRoot(),
                                 libraryInfo: getLibraryInfo(updatedObject),
+                                isMetaNode: metaTypeInfo.isMetaNode,
                                 metaType: metaTypeInfo.name
                             };
 
@@ -725,6 +728,7 @@ define(['js/logger',
                                             isLibrary: childNode.isLibraryRoot() || childNode.isLibraryElement(),
                                             isLibraryRoot: childNode.isLibraryRoot(),
                                             libraryInfo: getLibraryInfo(childNode),
+                                            isMetaNode: metaTypeInfo.isMetaNode,
                                             metaType: metaTypeInfo.name
                                         });
 
@@ -866,7 +870,8 @@ define(['js/logger',
                     hideConnections: false,
                     hideAbstracts: false,
                     hideLeaves: false,
-                    hideLibraries: false
+                    hideLibraries: false,
+                    hideMetaNodes: false
                 }
             },
             byProjectName: {

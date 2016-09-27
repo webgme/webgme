@@ -294,7 +294,8 @@ define(['js/logger',
                 isLibrary: objDescriptors[i].isLibrary,
                 isLibraryRoot: objDescriptors[i].isLibraryRoot,
                 libraryInfo: objDescriptors[i].libraryInfo,
-                metaType: objDescriptors[i].metaType
+                metaType: objDescriptors[i].metaType,
+                isMetaNode: objDescriptors[i].isMetaNode
             });
         }
 
@@ -366,7 +367,8 @@ define(['js/logger',
             isLibrary: objDescriptor.isLibrary,
             isLibraryRoot: objDescriptor.isLibraryRoot,
             libraryInfo: objDescriptor.libraryInfo,
-            metaType: objDescriptor.metaType
+            metaType: objDescriptor.metaType,
+            isMetaNode: objDescriptor.isMetaNode
         }, beforeNode);
 
         this.sortChildren(parentNode, false);
@@ -473,6 +475,12 @@ define(['js/logger',
         if (objDescriptor.hasOwnProperty('metaType') && objDescriptor.metaType !== node.data.metaType) {
             node.data.metaType = objDescriptor.metaType;
             node.tooltip = '<<' + objDescriptor.metaType + '>>';
+            //mark that change happened
+            nodeDataChanged = true;
+        }
+
+        if (objDescriptor.hasOwnProperty('isMetaNode') && objDescriptor.isMetaNode !== node.data.isMetaNode) {
+            node.data.isMetaNode = objDescriptor.isMetaNode;
             //mark that change happened
             nodeDataChanged = true;
         }
@@ -1034,6 +1042,20 @@ define(['js/logger',
             });
 
             addToggleBtn('hideLibraries', 'libraries', '<i class="fa gme-library"/>');
+        }
+
+        if (typeof options.hideMetaNodes === 'boolean') {
+            self._currentFilters.hideMetaNodes = options.hideMetaNodes;
+            self._filterFunctions.push(function (node) {
+                // Filter out library nodes.
+                if (self._currentFilters.hideMetaNodes === true) {
+                    return node.data.isMetaNode !== true;
+                } else {
+                    return true;
+                }
+            });
+
+            addToggleBtn('hideMetaNodes', 'meta nodes', '<i class="fa gme-meta-node"/>');
         }
 
         if (buttonGroupSpan) {
