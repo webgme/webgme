@@ -116,6 +116,25 @@ define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS)
         return iconName ?  '/assets/DecoratorSVG/' + iconName : null;
     };
 
+    ObjectBrowserControlBase.prototype.getMetaInfo = function (nodeObj) {
+        var id = nodeObj.getId(),
+            metaId = nodeObj.getMetaTypeId(),
+            result = {
+                name: '',
+                isMetaNode: false
+            };
+
+        if (id === metaId) {
+            result.isMetaNode = true;
+        }
+
+        if (metaId && this._client.getNode(metaId)) {
+            result.name = this._client.getNode(metaId).getFullyQualifiedName();
+        }
+
+        return result;
+    };
+
     ObjectBrowserControlBase.prototype._makeNodeSelected = function (nodeId) {
         WebGMEGlobal.State.registerActiveSelection([nodeId]);
     };

@@ -90,6 +90,10 @@ ul.fancytree-container span.gme-root span.fancytree-icon {
   background-position: -80px 0 !important; }
 ul.fancytree-container span.gme-library span.fancytree-icon {
   background-position: -0px 0 !important; }
+ul.fancytree-container span.gme-meta-node span.fancytree-icon {
+  background-position: -96px 0 !important; }
+ul.fancytree-container span.gme-meta-node span.fancytree-title {
+  font-weight: bold !important; }
 
 i.gme-connection {
   background: url("../img/gmeicons.png") 0 0;
@@ -108,3 +112,11 @@ i.gme-library {
   background-position: -0px 0 !important;
   width: 16px;
   height: 16px; }
+
+i.gme-meta-node {
+  background: url("../img/gmeicons.png") 0 0;
+  background-position: -96px 0 !important;
+  width: 16px;
+  height: 16px; }
+
+/*# sourceMappingURL=webgme_fancytree_overrides.css.map */

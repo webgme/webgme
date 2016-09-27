@@ -30,6 +30,7 @@ define(['js/logger',
         GME_ROOT_ICON = 'gme-root',
         GME_ASPECT_ICON = 'gme-aspect',
         GME_LIBRARY_ICON = 'gme-library',
+        GME_META_NODE_ICON = 'gme-meta-node',
         CROSSCUT_VISUALIZER = 'Crosscut',
         SET_VISUALIZER = 'SetEditor',
         TREE_ROOT = CONSTANTS.PROJECT_ROOT_ID;
@@ -48,7 +49,6 @@ define(['js/logger',
             initialized = false,
             self = this,
             getNodeClass,
-            getMetaTypeName,
             getLibraryInfo;
 
         //get logger instance for this component
@@ -135,7 +135,7 @@ define(['js/logger',
             }
         };
 
-        getNodeClass = function (nodeObj) {
+        getNodeClass = function (nodeObj, isMetaNode) {
             var objID = nodeObj.getId(),
                 c = GME_ATOM_CLASS; //by default everyone is represented with the atom class
 
@@ -144,6 +144,8 @@ define(['js/logger',
                 c = GME_ROOT_ICON;
             } else if (nodeObj.isLibraryRoot()) {
                 c = GME_LIBRARY_ICON;
+            } else if (isMetaNode) {
+                c = GME_META_NODE_ICON;
             } else if (nodeObj.getCrosscutsInfo().length > 0) {
                 c = GME_ASPECT_ICON;
             } else if (nodeObj.getValidSetNames().length > 0) {
@@ -158,16 +160,7 @@ define(['js/logger',
 
             return c;
         };
-        getMetaTypeName = function (nodeObj) {
-            var id = nodeObj.getMetaTypeId();
 
-            if (id && client.getNode(id)) {
-                return client.getNode(id).getFullyQualifiedName();
-            } else {
-                return '';
-            }
-
-        };
         getLibraryInfo = function (nodeObj) {
             var info;
 
@@ -192,6 +185,7 @@ define(['js/logger',
             //first create dummy elements under the parent representing the childrend being loaded
             var parent = client.getNode(nodeId),
                 childrenDescriptors = [],
+                metaTypeInfo,
                 newNodes,
                 parentNode,
                 childrenIDs,
@@ -218,18 +212,19 @@ define(['js/logger',
 
                     //check if the node could be retreived from the client
                     if (childNode) {
+                        metaTypeInfo = self.getMetaInfo(childNode);
                         //the node was present on the client side, render ist full data
                         childrenDescriptors.push({
                             id: currentChildId,
                             name: childNode.getFullyQualifiedName(),
                             hasChildren: (childNode.getChildrenIds()).length > 0,
-                            class: getNodeClass(childNode),
+                            class: getNodeClass(childNode, metaTypeInfo.isMetaNode),
                             icon: self.getIcon(childNode),
                             isConnection: childNode.isConnection(),
                             isAbstract: childNode.isAbstract(),
                             isLibrary: childNode.isLibraryRoot() || childNode.isLibraryElement(),
                             isLibraryRoot: childNode.isLibraryRoot(),
-                            metaType: getMetaTypeName(childNode),
+                            metaType: metaTypeInfo.name,
                             libraryInfo: getLibraryInfo(childNode),
                             // Data used locally here.
                             STATE: stateLoaded,
@@ -568,6 +563,7 @@ define(['js/logger',
                 deleteNodeAndChildrenFromLocalHash,
                 childrenAdded,
                 childNode,
+                metaTypeInfo,
                 childTreeNode;
 
             logger.debug('Refresh event \'' + eventType + '\', with objectId: \'' + objectId + '\'');
@@ -604,9 +600,9 @@ define(['js/logger',
                         if (nodes[objectId].state === stateLoading) {
                             //if the object is in "loading" state, meaning we were waiting for it
                             //render it's real data
-
+                            metaTypeInfo = self.getMetaInfo(updatedObject);
                             //specify the icon for the treenode
-                            objType = getNodeClass(updatedObject);
+                            objType = getNodeClass(updatedObject, metaTypeInfo.isMetaNode);
 
                             //create the node's descriptor for the tree-browser widget
                             nodeDescriptor = {
@@ -619,7 +615,7 @@ define(['js/logger',
                                 isLibrary: updatedObject.isLibraryRoot() || updatedObject.isLibraryElement(),
                                 isLibraryRoot: updatedObject.isLibraryRoot(),
                                 libraryInfo: getLibraryInfo(updatedObject),
-                                metaType: getMetaTypeName(updatedObject)
+                                metaType: metaTypeInfo.name
                             };
 
                             //update the node's representation in the tree
@@ -634,7 +630,8 @@ define(['js/logger',
                             //object is already loaded here, let's see what changed in it
 
                             //specify the icon for the treenode
-                            objType = getNodeClass(updatedObject);
+                            metaTypeInfo = self.getMetaInfo(updatedObject);
+                            objType = getNodeClass(updatedObject, metaTypeInfo.isMetaNode);
 
                             //create the node's descriptor for the treebrowser widget
                             nodeDescriptor = {
@@ -647,7 +644,7 @@ define(['js/logger',
                                 isLibrary: updatedObject.isLibraryRoot() || updatedObject.isLibraryElement(),
                                 isLibraryRoot: updatedObject.isLibraryRoot(),
                                 libraryInfo: getLibraryInfo(updatedObject),
-                                metaType: getMetaTypeName(updatedObject)
+                                metaType: metaTypeInfo.name
                             };
 
                             oldChildren = nodes[objectId].children;
@@ -709,6 +706,7 @@ define(['js/logger',
                                     currentChildId = childrenAdded[j];
 
                                     childNode = client.getNode(currentChildId);
+                                    metaTypeInfo = self.getMetaInfo(childNode);
 
                                     //local variable for the created treenode of the child node (loading or full)
                                     childTreeNode = null;
@@ -720,14 +718,14 @@ define(['js/logger',
                                             id: currentChildId,
                                             name: childNode.getFullyQualifiedName(),
                                             hasChildren: (childNode.getChildrenIds()).length > 0,
-                                            class: getNodeClass(childNode),
+                                            class: getNodeClass(childNode, metaTypeInfo.isMetaNode),
                                             icon: self.getIcon(childNode),
                                             isConnection: childNode.isConnection(),
                                             isAbstract: childNode.isAbstract(),
                                             isLibrary: childNode.isLibraryRoot() || childNode.isLibraryElement(),
                                             isLibraryRoot: childNode.isLibraryRoot(),
                                             libraryInfo: getLibraryInfo(childNode),
-                                            metaType: getMetaTypeName(childNode)
+                                            metaType: metaTypeInfo.name
                                         });
 
                                         //store the node's info in the local hashmap
