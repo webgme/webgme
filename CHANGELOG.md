@@ -1,7 +1,63 @@
 # Change Log
 
-## [v.2.4.1](https://github.com/webgme/webgme/tree/v.2.4.1) (2016-09-01)
-[Full Changelog](https://github.com/webgme/webgme/compare/v2.4.0...v.2.4.1)
+## [v2.5.0](https://github.com/webgme/webgme/tree/v2.5.0) (2016-09-26)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.4.1...v2.5.0)
+
+**Implemented enhancements:**
+
+- Should be able to execute client side plugin while AHEAD [\#1162](https://github.com/webgme/webgme/issues/1162)
+- Export Branch Progress Bar \(from tree browser export\) [\#1160](https://github.com/webgme/webgme/issues/1160)
+- Should "Follow library" take you to the branch or commit? [\#1158](https://github.com/webgme/webgme/issues/1158)
+- Generate unit test file\(s\) for rest routers [\#1146](https://github.com/webgme/webgme/issues/1146)
+- Enhanced base matching for model sharing. [\#1185](https://github.com/webgme/webgme/pull/1185) ([kecso](https://github.com/kecso))
+- Do not only rely on clearOutput-timer when clearing output for a CANCELED job before restart. [\#1184](https://github.com/webgme/webgme/pull/1184) ([pmeijer](https://github.com/pmeijer))
+- Prohibit and deal with invalid regexps for string attributes [\#1182](https://github.com/webgme/webgme/pull/1182) ([pmeijer](https://github.com/pmeijer))
+- Group tree browser's context menu and add actions to inheritance and crosscut tree [\#1179](https://github.com/webgme/webgme/pull/1179) ([pmeijer](https://github.com/pmeijer))
+- Improve visual feedback and control for invalid attribute values [\#1176](https://github.com/webgme/webgme/pull/1176) ([pmeijer](https://github.com/pmeijer))
+- Expose grid layout buttons. Hide connection bumps. [\#1174](https://github.com/webgme/webgme/pull/1174) ([pmeijer](https://github.com/pmeijer))
+- Update from file [\#1170](https://github.com/webgme/webgme/pull/1170) ([kecso](https://github.com/kecso))
+- Added rest router unit test generation. Fixes \#1146 [\#1166](https://github.com/webgme/webgme/pull/1166) ([brollb](https://github.com/brollb))
+- Closes \#1160 Progress notifications from tree browser exports [\#1164](https://github.com/webgme/webgme/pull/1164) ([pmeijer](https://github.com/pmeijer))
+- Only check if AHEAD for server plugins. Fixes \#1162 [\#1163](https://github.com/webgme/webgme/pull/1163) ([brollb](https://github.com/brollb))
+- Add feature to set connection label placement. [\#1159](https://github.com/webgme/webgme/pull/1159) ([pmeijer](https://github.com/pmeijer))
+- Npm packages update [\#1154](https://github.com/webgme/webgme/pull/1154) ([pmeijer](https://github.com/pmeijer))
+- Bump user-management page to 0.2.1. [\#1153](https://github.com/webgme/webgme/pull/1153) ([pmeijer](https://github.com/pmeijer))
+- Publish bower\_components at npm. [\#1152](https://github.com/webgme/webgme/pull/1152) ([pmeijer](https://github.com/pmeijer))
+- Order valid visualizers and create custom control for setting the value. [\#1150](https://github.com/webgme/webgme/pull/1150) ([pmeijer](https://github.com/pmeijer))
+- Set logger to use provided router name. Fixes \#1147 [\#1148](https://github.com/webgme/webgme/pull/1148) ([brollb](https://github.com/brollb))
+
+**Fixed bugs:**
+
+- Meta rules checker does not account for mixed types [\#1171](https://github.com/webgme/webgme/issues/1171)
+- You can move objects even though you're in read-only mode for checked out commits [\#1157](https://github.com/webgme/webgme/issues/1157)
+- SplitPanel blocks certain mouse events, don't call event.stopPropagation\(\) [\#1151](https://github.com/webgme/webgme/issues/1151)
+- Register active visualizer at panel switch in split panel view. [\#1183](https://github.com/webgme/webgme/pull/1183) ([pmeijer](https://github.com/pmeijer))
+- Update download to disk since API changed in CRM3 [\#1181](https://github.com/webgme/webgme/pull/1181) ([pmeijer](https://github.com/pmeijer))
+- Fixes for \#1177 relid collisions from base class [\#1180](https://github.com/webgme/webgme/pull/1180) ([pmeijer](https://github.com/pmeijer))
+- Inherited child relation removal [\#1178](https://github.com/webgme/webgme/pull/1178) ([kecso](https://github.com/kecso))
+- Fixes potential relid collisions when creating children in bases [\#1177](https://github.com/webgme/webgme/pull/1177) ([kecso](https://github.com/kecso))
+- Fixes error in webgme.classes build due to missing chance. [\#1175](https://github.com/webgme/webgme/pull/1175) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1171 in meta-rules make sure to include mixins too. [\#1173](https://github.com/webgme/webgme/pull/1173) ([pmeijer](https://github.com/pmeijer))
+- Nodes unloaded/loaded need to be potential updates too. [\#1172](https://github.com/webgme/webgme/pull/1172) ([pmeijer](https://github.com/pmeijer))
+- Restrict the usage of pointers named member [\#1168](https://github.com/webgme/webgme/pull/1168) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1157 Respect read-only at commit in url [\#1165](https://github.com/webgme/webgme/pull/1165) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1151 Allow the mousedown event to propagate from split panel [\#1156](https://github.com/webgme/webgme/pull/1156) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Can't delete nodes that aren't loaded w/ the client [\#1161](https://github.com/webgme/webgme/issues/1161)
+- Generated router uses incorrect logger name [\#1147](https://github.com/webgme/webgme/issues/1147)
+- executor worker info [\#1144](https://github.com/webgme/webgme/issues/1144)
+- autoMerge fails: Maximum call stack exceeded [\#1117](https://github.com/webgme/webgme/issues/1117)
+
+**Merged pull requests:**
+
+- Share models [\#1167](https://github.com/webgme/webgme/pull/1167) ([kecso](https://github.com/kecso))
+- Bower module updates [\#1155](https://github.com/webgme/webgme/pull/1155) ([pmeijer](https://github.com/pmeijer))
+- Core performance enhancements [\#1149](https://github.com/webgme/webgme/pull/1149) ([pmeijer](https://github.com/pmeijer))
+
+## [v2.4.1](https://github.com/webgme/webgme/tree/v2.4.1) (2016-09-01)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.4.0...v2.4.1)
 
 **Implemented enhancements:**
 
