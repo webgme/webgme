@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, console*/
 /*jshint browser: true*/
 /**
  * @author kecso / https://github.com/kecso
@@ -7,9 +7,13 @@ define([], function () {
     'use strict';
     function gmeNodeSetter(logger, state, saveRoot, storeNode, printCoreError) {
 
+        function _logDeprecated(oldFn, newFn) {
+            console.warn('gmeClient "' + oldFn + '" is deprecated and will eventually be removed, use "' + newFn + '" instead.');
+        }
+
         function _getNode(path) {
             if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                return state.nodes[path];
+                return state.nodes[path].node;
             }
         }
 
@@ -33,7 +37,7 @@ define([], function () {
             }
         }
 
-        function setAttributes(path, name, value, msg) {
+        function setAttribute(path, name, value, msg) {
             var error,
                 node = _getNode(path);
 
@@ -48,7 +52,7 @@ define([], function () {
             }
         }
 
-        function delAttributes(path, name, msg) {
+        function delAttribute(path, name, msg) {
             var error,
                 node = _getNode(path);
 
@@ -390,19 +394,19 @@ define([], function () {
             return newID;
         }
 
-        function makePointer(path, name, to, msg) {
+        function setPointer(path, name, target, msg) {
             var node = _getNode(path),
-                target;
+                targetNode;
 
             if (node) {
-                if (to === null) {
-                    state.core.setPointer(node, name, to);
-                } else {
-                    target = _getNode(to);
+                if (target === null) {
                     state.core.setPointer(node, name, target);
+                } else {
+                    targetNode = _getNode(target);
+                    state.core.setPointer(node, name, targetNode);
                 }
 
-                saveRoot(msg || 'setPointer(' + path + ',' + name + ',' + to + ')');
+                saveRoot(msg || 'setPointer(' + path + ',' + name + ',' + target + ')');
             }
         }
 
@@ -410,7 +414,7 @@ define([], function () {
             var node = _getNode(path);
 
             if (node) {
-                state.core.deletePointer(node, name);
+                state.core.delPointer(node, name);
                 saveRoot(msg || 'delPointer(' + path + ',' + name + ')');
             }
         }
@@ -482,18 +486,18 @@ define([], function () {
             }
         }
 
-        function deleteSet(path, setId, msg) {
+        function delSet(path, setId, msg) {
             var node = _getNode(path),
                 error;
 
             if (node) {
-                error = state.core.deleteSet(node, setId);
+                error = state.core.delSet(node, setId);
                 if (error instanceof Error) {
                     printCoreError(error);
                     return;
                 }
 
-                saveRoot(msg || 'deleteSet(' + path + ',' + setId + ')');
+                saveRoot(msg || 'delSet(' + path + ',' + setId + ')');
             }
         }
 
@@ -525,7 +529,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'moveBase(' + path + ',' + parentPath + ')');
+                saveRoot(msg || 'moveNode(' + path + ',' + parentPath + ')');
             }
         }
 
@@ -707,19 +711,19 @@ define([], function () {
             }
         }
 
-        function updateValidChildrenItem(path, newTypeObj, msg) {
+        function setChildMeta(path, childPath, min, max, msg) {
             var node = _getNode(path),
-                childNode = _getNode(newTypeObj && newTypeObj.id),
+                childNode = _getNode(childPath),
                 error;
 
             if (childNode && node) {
-                error = state.core.setChildMeta(node, childNode, newTypeObj.min, newTypeObj.max);
+                error = state.core.setChildMeta(node, childNode, min, max);
                 if (error instanceof Error) {
                     printCoreError(error);
                     return;
                 }
 
-                saveRoot(msg ||'Meta.updateValidChildrenItem(' + path + ', ' + newTypeObj.id + ')');
+                saveRoot(msg ||'setChildMeta(' + path + ', ' + childPath + ',' + min || -1 + ',' + max || -1 +')');
             }
         }
 
@@ -738,7 +742,7 @@ define([], function () {
             }
         }
 
-        function setAttributeSchema(path, name, schema, msg) {
+        function setAttributeMeta(path, name, schema, msg) {
             var node = _getNode(path),
                 error;
 
@@ -749,11 +753,11 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'Meta.setAttributeSchema(' + path + ', ' + name + ')');
+                saveRoot(msg || 'setAttributeMeta(' + path + ', ' + name + ')');
             }
         }
 
-        function removeAttributeSchema(path, name, msg) {
+        function delAttributeMeta(path, name, msg) {
             var node = _getNode(path),
                 error;
 
@@ -764,7 +768,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'Meta.removeAttributeSchema(' + path + ', ' + name + ')');
+                saveRoot(msg || 'delAttributeMeta(' + path + ', ' + name + ')');
             }
         }
 
@@ -799,7 +803,7 @@ define([], function () {
             }
         }
 
-        function deleteMetaPointer(path, name, msg) {
+        function delPointerMeta(path, name, msg) {
             var node = _getNode(path),
                 error;
 
@@ -921,8 +925,17 @@ define([], function () {
         }
 
         return {
-            setAttributes: setAttributes,
-            delAttributes: delAttributes,
+            setAttribute: setAttribute,
+            setAttributes: function() {
+                _logDeprecated('setAttributes', 'setAttribute');
+                setAttribute.apply(null, arguments);
+            },
+
+            delAttribute: delAttribute,
+            delAttributes: function() {
+            _logDeprecated('delAttributes', 'delAttribute');
+                delAttribute.apply(null, arguments);
+            },
             setRegistry: setRegistry,
             delRegistry: delRegistry,
 
@@ -933,8 +946,11 @@ define([], function () {
             createChild: createChild,
             createChildren: createChildren,
 
-            makePointer: makePointer,
-            setPointer: makePointer,
+            setPointer: setPointer,
+            makePointer: function() {
+                _logDeprecated('makePointer', 'setPointer');
+                setPointer.apply(null, arguments);
+            },
             delPointer: delPointer,
             deletePointer: delPointer,
 
@@ -945,7 +961,8 @@ define([], function () {
             setMemberRegistry: setMemberRegistry,
             delMemberRegistry: delMemberRegistry,
             createSet: createSet,
-            deleteSet: deleteSet,
+            delSet: delSet,
+            deleteSet: delSet,
 
             setBase: setBase,
             delBase: delBase,
@@ -956,18 +973,37 @@ define([], function () {
             // containment
             setChildrenMeta: setChildrenMeta,
             setChildrenMetaAttribute: setChildrenMetaAttribute,
-            updateValidChildrenItem: updateValidChildrenItem,
+            setChildMeta: setChildMeta,
+            updateValidChildrenItem: function (path, newTypeObj, msg) {
+                _logDeprecated('updateValidChildrenItem(path, newTypeObj, msg)',
+                    'setChildMeta(path, childPath, min, max, msg)');
+                newTypeObj = newTypeObj || {};
+                setChildMeta(path, newTypeObj.id, newTypeObj.min, newTypeObj.max, msg);
+            },
+
             removeValidChildrenItem: removeValidChildrenItem,
 
             // attribute
-            setAttributeSchema: setAttributeSchema,
-            removeAttributeSchema: removeAttributeSchema,
+            setAttributeMeta: setAttributeMeta,
+            setAttributeSchema: function() {
+                _logDeprecated('setAttributeSchema', 'setAttributeMeta');
+                setAttributeMeta.apply(null, arguments);
+            },
+            delAttributeMeta: delAttributeMeta,
+            removeAttributeSchema: function() {
+                _logDeprecated('removeAttributeSchema', 'delAttributeMeta');
+                delAttributeMeta.apply(null, arguments);
+            },
 
             // pointer
             setPointerMeta: setPointerMeta,
             updateValidTargetItem: updateValidTargetItem,
             removeValidTargetItem: removeValidTargetItem,
-            deleteMetaPointer: deleteMetaPointer,
+            delPointerMeta: delPointerMeta,
+            deleteMetaPointer: function() {
+                _logDeprecated('deleteMetaPointer', 'delPointerMeta');
+                delPointerMeta.apply(null, arguments);
+            },
 
             // aspect
             setMetaAspect: setMetaAspect,

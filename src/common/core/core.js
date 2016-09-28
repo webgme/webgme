@@ -461,7 +461,7 @@ define([
          * @return {undefined|Error} If the operation is not allowed it returns an error.
          * @func
          */
-        this.deleteNode = core.deleteNode;
+        this.deleteNode = this.delNode = core.deleteNode;
 
         /**
          * Copies the given node into parent.
@@ -643,7 +643,7 @@ define([
          *
          * @func
          */
-        this.deletePointer = core.deletePointer;
+        this.deletePointer = this.delPointer = core.deletePointer;
 
         /**
          * Sets the target of the pointer of the node.
