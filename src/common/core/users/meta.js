@@ -357,7 +357,6 @@ define([], function () {
             return null;
         }
 
-
         function getAspectTerritoryPattern(path, name) {
             var aspect = getMetaAspect(path, name);
 

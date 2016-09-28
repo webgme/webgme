@@ -89,6 +89,7 @@ define([
             pluginManager,
             nodeSetterFunctions,
             coreLibraryFunctions,
+            ROOT_PATH = '',
             //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
         //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
@@ -1202,7 +1203,6 @@ define([
         };
 
         // Internal functions
-        var ROOT_PATH = ''; //FIXME: This should come from constants..
 
         function COPY(object) {
             if (object) {
@@ -1232,12 +1232,6 @@ define([
 
             return [];
         };
-
-        function getStringHash(/* node */) {
-            //TODO there is a memory issue with the huge strings so we have to replace it with something
-            state.gHash += 1;
-            return state.gHash;
-        }
 
         function addLoadUnloadPathToUpdates(paths) {
             var i,

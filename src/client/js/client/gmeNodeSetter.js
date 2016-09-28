@@ -19,6 +19,7 @@ define([], function () {
 
         function _setAttrAndRegistry(node, desc) {
             var name;
+            desc = desc || {};
 
             if (desc.attributes) {
                 for (name in desc.attributes) {
@@ -34,66 +35,6 @@ define([], function () {
                         state.core.setRegistry(node, name, desc.registry[name]);
                     }
                 }
-            }
-        }
-
-        function setAttribute(path, name, value, msg) {
-            var error,
-                node = _getNode(path);
-
-            if (node) {
-                error = state.core.setAttribute(node, name, value);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-
-                saveRoot(msg || 'setAttribute(' + path + ',' + name + ',' + JSON.stringify(value) + ')');
-            }
-        }
-
-        function delAttribute(path, name, msg) {
-            var error,
-                node = _getNode(path);
-
-            if (node) {
-                error = state.core.delAttribute(node, name);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-
-                saveRoot(msg || 'delAttribute(' + path + ',' + name + ')');
-            }
-        }
-
-        function setRegistry(path, name, value, msg) {
-            var error,
-                node = _getNode(path);
-
-            if (node) {
-                error = state.core.setRegistry(node, name, value);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-
-                saveRoot(msg || 'setRegistry(' + path + ',' + name + ',' + JSON.stringify(value) + ')');
-            }
-        }
-
-        function delRegistry(path, name, msg) {
-            var error,
-                node = _getNode(path);
-
-            if (node) {
-                error = state.core.delRegistry(node, name);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-
-                saveRoot(msg || 'delRegistry(' + path + ',' + name + ')');
             }
         }
 
@@ -168,7 +109,7 @@ define([], function () {
                 for (i = 0; i < childrenRelIds.length; i += 1) {
                     if (subPathArray[childrenRelIds[i]]) {
                         childNode = state.core.getChild(tempTo, childrenRelIds[i]);
-                        newNode = state.core.moveNode(childNode, parent);
+                        newNode = state.core.moveNode(childNode, parentNode);
                         storeNode(newNode);
                         result[subPathArray[state.core.getRelid(childNode)]] = newNode;
                     } else {
@@ -183,13 +124,91 @@ define([], function () {
             return result;
         }
 
+        function setAttribute(path, name, value, msg) {
+            var error,
+                node = _getNode(path);
+
+            if (node) {
+                error = state.core.setAttribute(node, name, value);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'setAttribute(' + path + ',' + name + ',' + JSON.stringify(value) + ')');
+            }
+        }
+
+        function delAttribute(path, name, msg) {
+            var error,
+                node = _getNode(path);
+
+            if (node) {
+                error = state.core.delAttribute(node, name);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delAttribute(' + path + ',' + name + ')');
+            }
+        }
+
+        function setRegistry(path, name, value, msg) {
+            var error,
+                node = _getNode(path);
+
+            if (node) {
+                error = state.core.setRegistry(node, name, value);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'setRegistry(' + path + ',' + name + ',' + JSON.stringify(value) + ')');
+            }
+        }
+
+        function delRegistry(path, name, msg) {
+            var error,
+                node = _getNode(path);
+
+            if (node) {
+                error = state.core.delRegistry(node, name);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delRegistry(' + path + ',' + name + ')');
+            }
+        }
+
+        function copyNode(path, parentPath, desc, msg) {
+            var node = _getNode(path),
+                parentNode = _getNode(parentPath),
+                newNode;
+
+            if (node && parentNode) {
+                newNode = state.core.copyNode(node, parentNode);
+
+                if (newNode instanceof Error) {
+                    printCoreError(newNode);
+                    return;
+                }
+
+                _setAttrAndRegistry(newNode, desc);
+                storeNode(newNode);
+
+                saveRoot(msg || 'copyNode(' + path + ', ' + parentPath + ', ' + JSON.stringify(desc) + ')');
+            }
+        }
+
         function copyMoreNodes(parameters, msg) {
             var pathsToCopy = [],
                 parentNode = _getNode(parameters.parentId),
-                orgNode,
                 nodePath,
-                newNodes,
-                newNode;
+                newNodes;
 
             if (parentNode) {
                 for (nodePath in parameters) {
@@ -198,25 +217,12 @@ define([], function () {
                     }
                 }
 
-                msg || 'copyMoreNodes(' + JSON.stringify(pathsToCopy) + ',' + parameters.parentId + ')'
+                msg = msg || 'copyMoreNodes(' + JSON.stringify(pathsToCopy) + ',' + parameters.parentId + ')';
 
                 if (pathsToCopy.length < 1) {
                     // empty on purpose
                 } else if (pathsToCopy.length === 1) {
-                    orgNode = _getNode(pathsToCopy[0]);
-
-                    if (orgNode) {
-                        newNode = state.core.copyNode(orgNode, parentNode);
-
-                        if (newNode instanceof Error) {
-                            printCoreError(newNode);
-                            return;
-                        }
-
-                        storeNode(newNode);
-                        _setAttrAndRegistry(newNode, parameters[pathsToCopy[0]]);
-                        saveRoot(msg);
-                    }
+                    copyNode(pathsToCopy[0], parameters.parentId, parameters[pathsToCopy[0]], msg);
                 } else {
                     newNodes = _copyMultipleNodes(pathsToCopy, parentNode);
 
@@ -421,6 +427,7 @@ define([], function () {
 
         //MGAlike - set functions
         function addMember(path, memberPath, setId, msg) {
+            // FIXME: This will have to break due to switched arguments
             var node = _getNode(path),
                 memberNode = _getNode(memberPath);
 
@@ -431,6 +438,7 @@ define([], function () {
         }
 
         function removeMember(path, memberPath, setId, msg) {
+            // FIXME: This will have to break due to switched arguments
             var node = _getNode(path);
 
             if (node) {
@@ -440,6 +448,7 @@ define([], function () {
         }
 
         function setMemberAttribute(path, memberPath, setId, name, value, msg) {
+            // FIXME: This will have to break due to switched arguments
             var node = _getNode(path);
 
             if (node) {
@@ -450,6 +459,7 @@ define([], function () {
         }
 
         function delMemberAttribute(path, memberPath, setId, name, msg) {
+            // FIXME: This will have to break due to switched arguments
             var node = _getNode(path);
 
             if (node) {
@@ -459,6 +469,7 @@ define([], function () {
         }
 
         function setMemberRegistry(path, memberPath, setId, name, value, msg) {
+            // FIXME: This will have to break due to switched arguments
             var node = _getNode(path);
 
             if (node) {
@@ -469,6 +480,7 @@ define([], function () {
         }
 
         function delMemberRegistry(path, memberPath, setId, name, msg) {
+            // FIXME: This will have to break due to switched arguments
             var node = _getNode(path);
 
             if (node) {
@@ -727,7 +739,36 @@ define([], function () {
             }
         }
 
-        function removeValidChildrenItem(path, typeId, msg) {
+        function setChildrenMeta(path, meta, msg) {
+            var node = _getNode(path),
+                target,
+                error,
+                i;
+
+            if (meta && meta.items && node) {
+                for (i = 0; i < meta.items.length; i += 1) {
+                    target = _getNode(meta.items[i].id);
+                    if (target) {
+                        error = state.core.setChildMeta(node, target, meta.items[i].min, meta.items[i].max);
+                        if (error instanceof Error) {
+                            printCoreError(error);
+                            return;
+                        }
+                    }
+                }
+
+                error = state.core.setChildrenMetaLimits(node, meta.min, meta.max);
+
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'Meta.setChildrenMeta(' + path + ')');
+            }
+        }
+
+        function delChildMeta(path, typeId, msg) {
             var node = _getNode(path),
                 error;
 
@@ -738,7 +779,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'Meta.removeValidChildrenItem(' + path + ', ' + typeId + ')');
+                saveRoot(msg || 'delChildMeta(' + path + ', ' + typeId + ')');
             }
         }
 
@@ -772,34 +813,35 @@ define([], function () {
             }
         }
 
-        function updateValidTargetItem(path, name, targetObj, msg) {
+        function setPointerMetaTarget(path, name, targetPath, min, max, msg) {
             var node = _getNode(path),
-                targetNode = _getNode(targetObj && targetObj.id),
+                targetNode = _getNode(targetPath),
                 error;
 
             if (node && targetNode) {
-                error = state.core.setPointerMetaTarget(node, name, targetNode, targetObj.min, targetObj.max);
+                error = state.core.setPointerMetaTarget(node, name, targetNode, min, max);
                 if (error instanceof Error) {
                     printCoreError(error);
                     return;
                 }
 
-                saveRoot(msg || 'Meta.updateValidTargetItem(' + path + ', ' + name + ', ' + targetObj.id + ')');
+                saveRoot(msg || 'setPointerMetaTarget(' + path + ', ' + name + ', ' + targetPath + ',' +
+                    min || -1 + ',' + max || -1 + ')');
             }
         }
 
-        function removeValidTargetItem(path, name, targetId, msg) {
+        function delPointerMetaTarget(path, name, targetPath, msg) {
             var node = _getNode(path),
                 error;
 
             if (node) {
-                error = state.core.delPointerMetaTarget(node, name, targetId);
+                error = state.core.delPointerMetaTarget(node, name, targetPath);
                 if (error instanceof Error) {
                     printCoreError(error);
                     return;
                 }
 
-                saveRoot(msg || 'Meta.removeValidTargetItem(' + path + ', ' + name + ', ' + targetId + ')');
+                saveRoot(msg || 'delPointerMetaTarget(' + path + ', ' + name + ', ' + targetPath + ')');
             }
         }
 
@@ -814,7 +856,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'Meta.deleteMetaPointer(' + path + ', ' + name + ')');
+                saveRoot(msg || 'delPointerMeta(' + path + ', ' + name + ')');
             }
         }
 
@@ -848,40 +890,42 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'Meta.setPointerMeta(' + path + ', ' + name + ')');
+                saveRoot(msg || 'setPointerMeta(' + path + ', ' + name + ')');
             }
         }
 
-        function setChildrenMeta(path, meta, msg) {
+        function setAspectMetaTarget(path, name, targetPath, msg) {
             var node = _getNode(path),
-                target,
-                error,
-                i;
+                targetNode = _getNode(targetPath),
+                error;
 
-            if (meta && meta.items && node) {
-                for (i = 0; i < meta.items.length; i += 1) {
-                    target = _getNode(meta.items[i].id);
-                    if (target) {
-                        error = state.core.setChildMeta(node, target, meta.items[i].min, meta.items[i].max);
-                        if (error instanceof Error) {
-                            printCoreError(error);
-                            return;
-                        }
-                    }
-                }
-
-                error = state.core.setChildrenMetaLimits(node, meta.min, meta.max);
-
+            if (node && targetNode) {
+                error = state.core.setAspectMetaTarget(node, name, targetNode);
                 if (error instanceof Error) {
                     printCoreError(error);
                     return;
                 }
 
-                saveRoot(msg || 'Meta.setChildrenMeta(' + path + ')');
+                saveRoot(msg || 'setAspectMetaTarget(' + path + ', ' + name + ',' + targetPath + ')');
             }
         }
 
-        function setMetaAspect(path, name, aspect, msg) {
+        function delAspectMetaTarget(path, name, targetPath, msg) {
+            var node = _getNode(path),
+                error;
+
+            if (node) {
+                error = state.core.delAspectMetaTarget(node, name, targetPath);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delAspectMeta(' + path + ', ' + name + ')');
+            }
+        }
+
+        function setAspectMetaTargets(path, name, targetPaths, msg) {
             var node = _getNode(path),
                 i,
                 target,
@@ -894,8 +938,8 @@ define([], function () {
                     return;
                 }
 
-                for (i = 0; i < aspect.length; i += 1) {
-                    target = _getNode(aspect[i]);
+                for (i = 0; i < targetPaths.length; i += 1) {
+                    target = _getNode(targetPaths[i]);
                     if (target) {
                         error = state.core.setAspectMetaTarget(node, name, target);
                         if (error instanceof Error) {
@@ -905,11 +949,11 @@ define([], function () {
                     }
                 }
 
-                saveRoot(msg || 'Meta.setMetaAspect(' + path + ', ' + name + ')');
+                saveRoot(msg || 'setAspectMetaTargets(' + path + ', ' + name + ',' + JSON.stringify(targetPaths) + ')');
             }
         }
 
-        function deleteMetaAspect(path, name, msg) {
+        function delAspectMeta(path, name, msg) {
             var node = _getNode(path),
                 error;
 
@@ -920,7 +964,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'Meta.deleteMetaAspect(' + path + ', ' + name + ')');
+                saveRoot(msg || 'delAspectMeta(' + path + ', ' + name + ')');
             }
         }
 
@@ -939,6 +983,7 @@ define([], function () {
             setRegistry: setRegistry,
             delRegistry: delRegistry,
 
+            copyNode: copyNode,
             copyMoreNodes: copyMoreNodes,
             moveNode: moveNode,
             moveMoreNodes: moveMoreNodes,
@@ -981,7 +1026,11 @@ define([], function () {
                 setChildMeta(path, newTypeObj.id, newTypeObj.min, newTypeObj.max, msg);
             },
 
-            removeValidChildrenItem: removeValidChildrenItem,
+            delChildMeta: delChildMeta,
+            removeValidChildrenItem: function () {
+                _logDeprecated('removeValidChildrenItem', 'delChildMeta');
+                delChildMeta.apply(null, arguments);
+            },
 
             // attribute
             setAttributeMeta: setAttributeMeta,
@@ -997,8 +1046,19 @@ define([], function () {
 
             // pointer
             setPointerMeta: setPointerMeta,
-            updateValidTargetItem: updateValidTargetItem,
-            removeValidTargetItem: removeValidTargetItem,
+            setPointerMetaTarget: setPointerMetaTarget,
+            updateValidTargetItem: function (path, name, targetObj, msg) {
+            _logDeprecated('updateValidTargetItem(path, name, targetObj, msg)',
+                    'setPointerMetaTarget(path, name, targetPath, childPath, min, max, msg)');
+                targetObj = targetObj || {};
+                setPointerMetaTarget(path, name, targetObj.id, targetObj.min, targetObj.max, msg);
+            },
+
+            delPointerMetaTarget: delPointerMetaTarget,
+            removeValidTargetItem:  function() {
+                _logDeprecated('removeValidTargetItem', 'delPointerMetaTarget');
+                delAttributeMeta.apply(null, arguments);
+            },
             delPointerMeta: delPointerMeta,
             deleteMetaPointer: function() {
                 _logDeprecated('deleteMetaPointer', 'delPointerMeta');
@@ -1006,8 +1066,18 @@ define([], function () {
             },
 
             // aspect
-            setMetaAspect: setMetaAspect,
-            deleteMetaAspect: deleteMetaAspect,
+            setAspectMetaTarget: setAspectMetaTarget,
+            setAspectMetaTargets: setAspectMetaTargets,
+            setMetaAspect: function() {
+                _logDeprecated('setMetaAspect', 'setAspectMetaTargets');
+                setAspectMetaTargets.apply(null, arguments);
+            },
+            delAspectMetaTarget: delAspectMetaTarget,
+            delAspectMeta: delAspectMeta,
+            deleteMetaAspect: function() {
+                _logDeprecated('deleteMetaAspect', 'delAspectMeta');
+                delAspectMeta.apply(null, arguments);
+            },
 
             // mixin
             addMixin: addMixin,
