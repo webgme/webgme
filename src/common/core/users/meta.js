@@ -28,7 +28,7 @@ define([], function () {
 
         //getter setter functions
         function getMeta(path) {
-            var node = _state.nodes[path].node,
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 meta = {children: {}, attributes: {}, pointers: {}, aspects: {}};
 
             if (!node) {

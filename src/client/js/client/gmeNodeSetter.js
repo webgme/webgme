@@ -997,7 +997,7 @@ define([], function () {
             },
             createNode: createNode,
             createChild: function (parameters, msg) {
-                createNode(parameters, {
+                return createNode(parameters, {
                     registry: {
                         position: parameters.position
                     }
