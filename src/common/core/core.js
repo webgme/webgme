@@ -461,7 +461,7 @@ define([
          * @return {undefined|Error} If the operation is not allowed it returns an error.
          * @func
          */
-        this.deleteNode = this.delNode = core.deleteNode;
+        this.deleteNode = core.deleteNode;
 
         /**
          * Copies the given node into parent.
@@ -1037,7 +1037,7 @@ define([
          *
          * @func
          */
-        this.deleteSet = core.deleteSet;
+        this.deleteSet = this.delSet = core.deleteSet;
 
         /**
          * Returns all membership information of the given node.

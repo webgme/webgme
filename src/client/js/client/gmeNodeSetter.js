@@ -339,62 +339,64 @@ define([], function () {
             return result;
         }
 
-        function delMoreNodes(paths, msg) {
-            if (state.core) {
-                for (var i = 0; i < paths.length; i++) {
-                    if (state.nodes[paths[i]] && typeof state.nodes[paths[i]].node === 'object') {
-                        state.core.deleteNode(state.nodes[paths[i]].node);
-                        //delete state.nodes[paths[i]];
-                    }
-                }
-                msg = msg || 'delMoreNodes(' + paths + ')';
-                saveRoot(msg);
+        function deleteNode(path, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.deleteNode(node);
+                saveRoot(msg || 'deleteNode(' + path + ')');
             }
         }
 
-        function createChild(parameters, msg) {
+        function deleteNodes(paths, msg) {
+            var didDelete = false,
+                i,
+                node;
+
+            for (i = 0; i < paths.length; i++) {
+                node = _getNode(paths[i]);
+                if (node) {
+                    state.core.deleteNode(node);
+                    didDelete = true;
+                }
+            }
+
+            if (didDelete) {
+                saveRoot(msg || 'deleteNodes(' + paths + ')');
+            }
+        }
+
+        function createNode(parameters, desc, msg) {
             var parentNode = _getNode(parameters.parentId),
                 baseNode = _getNode(parameters.baseId),
-                child,
-                newID,
-                error;
+                newNode,
+                newID;
 
             if (parentNode) {
-                child = state.core.createNode({
+                newNode = state.core.createNode({
                     parent: parentNode,
                     base: baseNode,
                     guid: parameters.guid,
                     relid: parameters.relid
                 });
 
-                if (child instanceof Error) {
-                    printCoreError(child);
+                if (newNode instanceof Error) {
+                    printCoreError(newNode);
                     return;
                 }
 
-                if (parameters.position) {
-                    error = state.core.setRegistry(child,
-                        'position',
-                        {
-                            x: parameters.position.x || 100,
-                            y: parameters.position.y || 100
-                        });
+                // By default the position will be {100, 100}
+                desc = desc || {};
+                desc.registry = desc.registry || {};
+                desc.registry.position = desc.registry.position || {};
+                desc.registry.position.x = desc.registry.position.x || 100;
+                desc.registry.position.y = desc.registry.position.y || 100;
 
-                    if (error instanceof Error) {
-                        printCoreError(error);
-                        return;
-                    }
-                } else {
-                    error = state.core.setRegistry(child, 'position', {x: 100, y: 100});
-                    if (error instanceof Error) {
-                        printCoreError(error);
-                        return;
-                    }
-                }
+                _setAttrAndRegistry(newNode, desc);
 
-                storeNode(child);
-                newID = state.core.getPath(child);
-                saveRoot(msg || 'createChild(' + parameters.parentId + ',' + parameters.baseId + ',' + newID + ')');
+                storeNode(newNode);
+                newID = state.core.getPath(newNode);
+                saveRoot(msg || 'createNode(' + parameters.parentId + ',' + parameters.baseId + ',' + newID + ')');
             }
 
             return newID;
@@ -425,7 +427,7 @@ define([], function () {
             }
         }
 
-        //MGAlike - set functions
+        // Mixed argument methods - START
         function addMember(path, memberPath, setId, msg) {
             // FIXME: This will have to break due to switched arguments
             var node = _getNode(path),
@@ -438,7 +440,7 @@ define([], function () {
         }
 
         function removeMember(path, memberPath, setId, msg) {
-            // FIXME: This will have to break due to switched arguments
+            // FIXME: This will have to break due to switched arguments (sort of)
             var node = _getNode(path);
 
             if (node) {
@@ -488,6 +490,7 @@ define([], function () {
                 saveRoot(msg || 'delMemberRegistry(' + path + ',' + memberPath + ',' + setId + ',' + name + ')');
             }
         }
+        // Mixed argument methods - END
 
         function createSet(path, setId, msg) {
             var node = _getNode(path);
@@ -574,7 +577,6 @@ define([], function () {
             return meta;
         }
 
-        // Meta setters
         function setMeta(path, meta, msg) {
             var node = _getNode(path),
                 otherNode,
@@ -987,8 +989,20 @@ define([], function () {
             copyMoreNodes: copyMoreNodes,
             moveNode: moveNode,
             moveMoreNodes: moveMoreNodes,
-            delMoreNodes: delMoreNodes,
-            createChild: createChild,
+            deleteNode: deleteNode,
+            deleteNodes: deleteNodes,
+            delMoreNodes: function() {
+                _logDeprecated('delMoreNodes', 'deleteNodes');
+                deleteNodes.apply(null, arguments);
+            },
+            createNode: createNode,
+            createChild: function (parameters, msg) {
+                createNode(parameters, {
+                    registry: {
+                        position: parameters.position
+                    }
+                }, msg);
+            },
             createChildren: createChildren,
 
             setPointer: setPointer,
@@ -1057,7 +1071,7 @@ define([], function () {
             delPointerMetaTarget: delPointerMetaTarget,
             removeValidTargetItem:  function() {
                 _logDeprecated('removeValidTargetItem', 'delPointerMetaTarget');
-                delAttributeMeta.apply(null, arguments);
+                delPointerMetaTarget.apply(null, arguments);
             },
             delPointerMeta: delPointerMeta,
             deleteMetaPointer: function() {
