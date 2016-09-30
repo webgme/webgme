@@ -28,7 +28,8 @@
         "hideConnections": false,
         "hideAbstracts": false,
         "hideLeaves": false,
-        "hideLibraries": false
+        "hideLibraries": false,
+        "hideMetaNodes": false
       }
     },
     "treeRoot": "",

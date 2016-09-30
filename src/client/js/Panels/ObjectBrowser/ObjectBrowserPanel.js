@@ -1,4 +1,4 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal, $*/
 /*jshint browser: true*/
 
 /**
@@ -59,9 +59,33 @@ define(['js/PanelBase/PanelBaseWithHeader',
             crosscutTreeBrowserWidget,
             crosscutTreeBrowserControl,
             compositionSettings,
+            // helpIcon,
             compositionEl;
 
         this.$el.addClass(OBJECT_BROWSER_CLASS);
+        // TODO: Add this once we settled on the icons.
+        // helpIcon = $('<div/>', {class: 'helper pull-right', text: 'help'});
+        // this.$panelHeader.append(helpIcon);
+        //
+        // // http://v4-alpha.getbootstrap.com/components/popovers/#usage
+        // helpIcon.popover({
+        //     animation: false,
+        //     placement: 'left',
+        //     trigger: 'click',
+        //     title: 'Icons',
+        //     content: '<ul class="icon-list" href=#>' +
+        //     '<li>Atom - A node that does not have any children</li>' +
+        //     '<li>Model - A node that has children</li>' +
+        //     '<li>Connection - A node representing a connection</li>' +
+        //     '<li>Set - A node that has defined sets (or cross-cuts)</li>' +
+        //     '<li>Meta - A node that defines a meta type</li>' +
+        //     '</ul>',
+        //     html: true
+        // }).on('show.bs.popover', function () {
+        //
+        // }).on('shown.bs.popover', function () {
+        //
+        // });
 
         this.$el.html('<ul class="nav nav-tabs">' +
             '<li class="composition active"><a class="composition-anchor" href="#composition" data-toggle="tab">Composition</a></li>' +
@@ -85,6 +109,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             hideAbstracts: compositionSettings.filters.toggled.hideAbstracts,
             hideLeaves: compositionSettings.filters.toggled.hideLeaves,
             hideLibraries: compositionSettings.filters.toggled.hideLibraries,
+            hideMetaNodes: compositionSettings.filters.toggled.hideMetaNodes,
             titleFilter: {
                 text: '',
                 type: 'caseInsensitive' //caseSensitive, regex
@@ -92,7 +117,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
             metaTypeFilter: {
                 text: '',
                 type: 'caseInsensitive' //caseSensitive, regex
-            },
+            }
         });
         compositionTreeBrowserControl = new TreeBrowserControl(this._client, compositionTreeBrowserWidget,
             compositionSettings);

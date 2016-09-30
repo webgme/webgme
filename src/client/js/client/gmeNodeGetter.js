@@ -386,6 +386,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         }
     };
 
+    GMENode.prototype.isMetaNode = function () {
+        return this._state.core.isMetaNode(this._state.nodes[this._id].node);
+    };
+
     GMENode.prototype.getValidAspectNames = function () {
         return this._state.core.getValidAspectNames(this._state.nodes[this._id].node);
     };
