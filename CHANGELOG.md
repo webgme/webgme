@@ -1,13 +1,21 @@
 # Change Log
 
-## [v2.5.0](https://github.com/webgme/webgme/tree/v2.5.0) (2016-09-26)
+## [v2.5.1](https://github.com/webgme/webgme/tree/v2.5.1) (2016-09-30)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.5.0...v2.5.1)
+
+**Implemented enhancements:**
+
+- Loosen user-mangement version constraint [\#1188](https://github.com/webgme/webgme/pull/1188) ([pmeijer](https://github.com/pmeijer))
+- Color meta nodes in trees [\#1187](https://github.com/webgme/webgme/pull/1187) ([pmeijer](https://github.com/pmeijer))
+
+## [v2.5.0](https://github.com/webgme/webgme/tree/v2.5.0) (2016-09-27)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.4.1...v2.5.0)
 
 **Implemented enhancements:**
 
+- Should "Follow library" take you to the branch or commit? [\#1158](https://github.com/webgme/webgme/issues/1158)
 - Should be able to execute client side plugin while AHEAD [\#1162](https://github.com/webgme/webgme/issues/1162)
 - Export Branch Progress Bar \(from tree browser export\) [\#1160](https://github.com/webgme/webgme/issues/1160)
-- Should "Follow library" take you to the branch or commit? [\#1158](https://github.com/webgme/webgme/issues/1158)
 - Generate unit test file\(s\) for rest routers [\#1146](https://github.com/webgme/webgme/issues/1146)
 - Enhanced base matching for model sharing. [\#1185](https://github.com/webgme/webgme/pull/1185) ([kecso](https://github.com/kecso))
 - Do not only rely on clearOutput-timer when clearing output for a CANCELED job before restart. [\#1184](https://github.com/webgme/webgme/pull/1184) ([pmeijer](https://github.com/pmeijer))
