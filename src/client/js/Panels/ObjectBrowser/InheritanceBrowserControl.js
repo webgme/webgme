@@ -21,7 +21,7 @@ define(['js/logger',
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         GME_ATOM_CLASS = 'gme-atom',
-        GME_META_NODE_ICON = 'gme-meta-node',
+        GME_META_NODE_ICON = 'gme-meta-atom',
         DEFAULT_VISUALIZER = 'ModelEditor',
         STATE_LOADING = 0,
         STATE_LOADED = 1;

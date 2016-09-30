@@ -165,9 +165,36 @@ ul.fancytree-container {
     background-position: -0px 0 !important;
   }
 
-  span.gme-meta-node {
+  span.gme-meta-atom {
     span.fancytree-icon {
       background-position: -96px 0 !important;
+    }
+    span.fancytree-title {
+      text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6);
+    }
+  }
+
+  span.gme-meta-set {
+    span.fancytree-icon {
+      background-position: -112px 0 !important;
+    }
+    span.fancytree-title {
+      text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6);
+    }
+  }
+
+  span.gme-meta-model {
+    span.fancytree-icon {
+      background-position: -128px 0 !important;
+    }
+    span.fancytree-title {
+      text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6);
+    }
+  }
+
+  span.gme-meta-connection {
+    span.fancytree-icon {
+      background-position: -144px 0 !important;
     }
     span.fancytree-title {
       text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6);

@@ -27,10 +27,13 @@ define(['js/logger',
         GME_MODEL_CLASS = 'gme-model',
         GME_ATOM_CLASS = 'gme-atom',
         GME_CONNECTION_CLASS = 'gme-connection',
-        GME_ROOT_ICON = 'gme-root',
-        GME_ASPECT_ICON = 'gme-aspect',
-        GME_LIBRARY_ICON = 'gme-library',
-        GME_META_NODE_ICON = 'gme-meta-node',
+        GME_ROOT_CLASS = 'gme-root',
+        GME_ASPECT_CLASS = 'gme-aspect',
+        GME_LIBRARY_CLASS = 'gme-library',
+        GME_META_ATOM_CLASS = 'gme-meta-atom',
+        GME_META_SET_CLASS = 'gme-meta-set',
+        GME_META_MODEL_CLASS = 'gme-meta-model',
+        GME_META_CONNECTION_CLASS = 'gme-meta-connection',
         CROSSCUT_VISUALIZER = 'Crosscut',
         SET_VISUALIZER = 'SetEditor',
         TREE_ROOT = CONSTANTS.PROJECT_ROOT_ID;
@@ -137,25 +140,24 @@ define(['js/logger',
 
         getNodeClass = function (nodeObj, isMetaNode) {
             var objID = nodeObj.getId(),
-                c = GME_ATOM_CLASS; //by default everyone is represented with the atom class
+                c;
 
             if (objID === CONSTANTS.PROJECT_ROOT_ID) {
                 //if root object
-                c = GME_ROOT_ICON;
+                c = GME_ROOT_CLASS;
             } else if (nodeObj.isLibraryRoot()) {
-                c = GME_LIBRARY_ICON;
-            } else if (isMetaNode) {
-                c = GME_META_NODE_ICON;
-            } else if (nodeObj.getCrosscutsInfo().length > 0) {
-                c = GME_ASPECT_ICON;
-            } else if (nodeObj.getValidSetNames().length > 0) {
-                c = GME_ASPECT_ICON;
+                c = GME_LIBRARY_CLASS;
+            } else if (nodeObj.getCrosscutsInfo().length > 0 || nodeObj.getValidSetNames().length > 0) {
+                c = isMetaNode ? GME_META_SET_CLASS : GME_ASPECT_CLASS;
             } else if (nodeObj.isConnection()) {
                 //if it's a connection, let it have the connection icon
-                c = GME_CONNECTION_CLASS;
+                c = isMetaNode ? GME_META_CONNECTION_CLASS : GME_CONNECTION_CLASS;
             } else if (nodeObj.getChildrenIds().length > 0) {
                 //if it has children, let it have the model icon
-                c = GME_MODEL_CLASS;
+                c = isMetaNode ? GME_META_MODEL_CLASS : GME_MODEL_CLASS;
+            } else {
+                //by default everyone is represented with the atom class
+                c = isMetaNode ? GME_META_ATOM_CLASS :GME_ATOM_CLASS;
             }
 
             return c;

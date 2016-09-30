@@ -90,9 +90,21 @@ ul.fancytree-container span.gme-root span.fancytree-icon {
   background-position: -80px 0 !important; }
 ul.fancytree-container span.gme-library span.fancytree-icon {
   background-position: -0px 0 !important; }
-ul.fancytree-container span.gme-meta-node span.fancytree-icon {
+ul.fancytree-container span.gme-meta-atom span.fancytree-icon {
   background-position: -96px 0 !important; }
-ul.fancytree-container span.gme-meta-node span.fancytree-title {
+ul.fancytree-container span.gme-meta-atom span.fancytree-title {
+  text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6); }
+ul.fancytree-container span.gme-meta-set span.fancytree-icon {
+  background-position: -112px 0 !important; }
+ul.fancytree-container span.gme-meta-set span.fancytree-title {
+  text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6); }
+ul.fancytree-container span.gme-meta-model span.fancytree-icon {
+  background-position: -128px 0 !important; }
+ul.fancytree-container span.gme-meta-model span.fancytree-title {
+  text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6); }
+ul.fancytree-container span.gme-meta-connection span.fancytree-icon {
+  background-position: -144px 0 !important; }
+ul.fancytree-container span.gme-meta-connection span.fancytree-title {
   text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6); }
 
 i.gme-connection {
