@@ -57,7 +57,7 @@
     "socket.io-redis": "1.0.0",
     "superagent": "2.2.0",
     "underscore": "1.8.3",
-    "webgme-user-management-page": "0.2.1",
+    "webgme-user-management-page": "^0.2.0",
     "webgme-webhook-manager": "0.1.0",
     "winston": "2.2.0"
   },
