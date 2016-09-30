@@ -21,6 +21,7 @@ define(['js/logger',
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         GME_ATOM_CLASS = 'gme-atom',
+        GME_META_NODE_ICON = 'gme-meta-atom',
         DEFAULT_VISUALIZER = 'ModelEditor',
         STATE_LOADING = 0,
         STATE_LOADED = 1;
@@ -133,6 +134,7 @@ define(['js/logger',
         //first create dummy elements under the parent representing the children being loaded
         var parent = this._client.getNode(nodeId),
             childrenDescriptors = [],
+            metaTypeInfo,
             newNodes,
             parentNode,
             inheritedIDs,
@@ -161,12 +163,13 @@ define(['js/logger',
 
                 //check if the node could be retreived from the client
                 if (childNode) {
+                    metaTypeInfo = this.getMetaInfo(childNode);
                     //the node was present on the client side, render ist full data
                     childrenDescriptors.push({
                         id: currentChildId,
                         name: childNode.getFullyQualifiedName(),
                         hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                        class: this._getNodeClass(childNode),
+                        class: this._getNodeClass(childNode, metaTypeInfo.isMetaNode),
                         icon: this.getIcon(childNode),
                         // Data used locally here.
                         STATE: STATE_LOADED,
@@ -261,8 +264,8 @@ define(['js/logger',
         WebGMEGlobal.State.set(settings);
     };
 
-    InheritanceBrowserControl.prototype._getNodeClass = function (/*nodeObj*/) {
-        return GME_ATOM_CLASS;
+    InheritanceBrowserControl.prototype._getNodeClass = function (nodeObj, isMetaType) {
+        return isMetaType ? GME_META_NODE_ICON : GME_ATOM_CLASS;
     };
 
     InheritanceBrowserControl.prototype._eventCallback = function (events) {
@@ -296,6 +299,7 @@ define(['js/logger',
             inheritanceAdded,
             childNode,
             childTreeNode,
+            metaTypeInfo,
             client = this._client,
             self = this,
             xx;
@@ -337,14 +341,15 @@ define(['js/logger',
                         //render it's real data
 
                         //specify the icon for the treenode
-                        objType = this._getNodeClass(updatedObject);
+                        metaTypeInfo = this.getMetaInfo(updatedObject);
+                        objType = this._getNodeClass(updatedObject, metaTypeInfo.isMetaNode);
 
                         //create the node's descriptor for the tree-browser widget
                         nodeDescriptor = {
                             name: updatedObject.getFullyQualifiedName(),
                             hasChildren: (updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
                             class: objType,
-                            icon: self.getIcon(updatedObject),
+                            icon: self.getIcon(updatedObject)
                         };
 
                         //update the node's representation in the tree
@@ -359,7 +364,8 @@ define(['js/logger',
                         //object is already loaded here, let's see what changed in it
 
                         //specify the icon for the treenode
-                        objType = this._getNodeClass(updatedObject);
+                        metaTypeInfo = this.getMetaInfo(updatedObject);
+                        objType = this._getNodeClass(updatedObject, metaTypeInfo);
 
                         //create the node's descriptor for the treebrowser widget
                         nodeDescriptor = {
@@ -368,8 +374,6 @@ define(['js/logger',
                             class: objType,
                             icon: self.getIcon(updatedObject)
                         };
-
-
 
                         oldInheritance = this._nodes[objectId].inheritance;
                         currentInheritance = updatedObject.getCollectionPaths(CONSTANTS.POINTER_BASE);
@@ -428,7 +432,8 @@ define(['js/logger',
                                 currentChildId = inheritanceAdded[j];
 
                                 childNode = client.getNode(currentChildId);
-
+                                metaTypeInfo = this.getMetaInfo(updatedObject);
+                                objType = this._getNodeClass(updatedObject, metaTypeInfo);
                                 //local variable for the created treenode of the child node (loading or full)
                                 childTreeNode = null;
 
@@ -439,7 +444,7 @@ define(['js/logger',
                                         id: currentChildId,
                                         name: childNode.getFullyQualifiedName(),
                                         hasChildren: (childNode.getCollectionPaths(CONSTANTS.POINTER_BASE)).length > 0,
-                                        class: this._getNodeClass(childNode),
+                                        class: objType,
                                         icon: this.getIcon(childNode)
                                     });
 

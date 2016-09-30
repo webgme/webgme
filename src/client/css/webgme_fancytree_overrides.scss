@@ -164,6 +164,42 @@ ul.fancytree-container {
   span.gme-library span.fancytree-icon {
     background-position: -0px 0 !important;
   }
+
+  span.gme-meta-atom {
+    span.fancytree-icon {
+      background-position: -96px 0 !important;
+    }
+    span.fancytree-title {
+      text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6);
+    }
+  }
+
+  span.gme-meta-set {
+    span.fancytree-icon {
+      background-position: -112px 0 !important;
+    }
+    span.fancytree-title {
+      text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6);
+    }
+  }
+
+  span.gme-meta-model {
+    span.fancytree-icon {
+      background-position: -128px 0 !important;
+    }
+    span.fancytree-title {
+      text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6);
+    }
+  }
+
+  span.gme-meta-connection {
+    span.fancytree-icon {
+      background-position: -144px 0 !important;
+    }
+    span.fancytree-title {
+      text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6);
+    }
+  }
 }
 
 // This could be dangerous but right now the filter buttons use these too so cannot scope it under fancy tree.
@@ -184,6 +220,13 @@ i.gme-atom {
 i.gme-library {
   background: url("../img/gmeicons.png") 0 0;
   background-position: -0px 0 !important;
+  width: 16px;
+  height: 16px;
+}
+
+i.gme-meta-node {
+  background: url("../img/gmeicons.png") 0 0;
+  background-position: -96px 0 !important;
   width: 16px;
   height: 16px;
 }
