@@ -93,7 +93,7 @@ ul.fancytree-container span.gme-library span.fancytree-icon {
 ul.fancytree-container span.gme-meta-node span.fancytree-icon {
   background-position: -96px 0 !important; }
 ul.fancytree-container span.gme-meta-node span.fancytree-title {
-  font-weight: bold !important; }
+  text-shadow: 1px 0 1px rgba(139, 139, 139, 0.6); }
 
 i.gme-connection {
   background: url("../img/gmeicons.png") 0 0;

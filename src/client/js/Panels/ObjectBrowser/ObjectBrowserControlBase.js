@@ -117,16 +117,11 @@ define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS)
     };
 
     ObjectBrowserControlBase.prototype.getMetaInfo = function (nodeObj) {
-        var id = nodeObj.getId(),
-            metaId = nodeObj.getMetaTypeId(),
+        var metaId = nodeObj.getMetaTypeId(),
             result = {
                 name: '',
-                isMetaNode: false
+                isMetaNode: nodeObj.isMetaNode()
             };
-
-        if (id === metaId) {
-            result.isMetaNode = true;
-        }
 
         if (metaId && this._client.getNode(metaId)) {
             result.name = this._client.getNode(metaId).getFullyQualifiedName();

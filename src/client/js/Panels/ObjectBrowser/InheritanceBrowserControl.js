@@ -157,12 +157,13 @@ define(['js/logger',
                 currentChildId = inheritedIDs[i];
 
                 childNode = this._client.getNode(currentChildId);
-                metaTypeInfo = this.getMetaInfo(childNode);
+
                 //local variable for the created treenode of the child node (loading or full)
                 childTreeNode = null;
 
                 //check if the node could be retreived from the client
                 if (childNode) {
+                    metaTypeInfo = this.getMetaInfo(childNode);
                     //the node was present on the client side, render ist full data
                     childrenDescriptors.push({
                         id: currentChildId,
