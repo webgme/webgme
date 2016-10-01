@@ -95,7 +95,7 @@ define(['js/logger',
 
             // Add the tree-root to the query and update the territory.
             selfPatterns = {};
-            selfPatterns[self._treeRootId] = {children: 2};
+            selfPatterns[self._treeRootId] = {children: 1};
             client.updateTerritory(selfId, selfPatterns);
         }
 
@@ -262,7 +262,7 @@ define(['js/logger',
             }
 
             //need to expand the territory
-            selfPatterns[nodeId] = {children: 2};
+            selfPatterns[nodeId] = {children: 1};
             client.updateTerritory(selfId, selfPatterns);
         };
 
