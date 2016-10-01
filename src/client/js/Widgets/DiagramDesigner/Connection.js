@@ -1683,7 +1683,7 @@ define([
             } else if (alphaBegin > 135 && alphaBegin <= 180) {
                 dx = -1 * this.skinParts.srcText.width();
             } else if (alphaBegin > 180 && alphaBegin <= 225) {
-                dx = -1 * this.skinParts.srcText.width();;
+                dx = -1 * this.skinParts.srcText.width();
                 dy *= -1;
             } else if (alphaBegin > 225 && alphaBegin <= 270) {
                 dy = -3 * TEXT_OFFSET;
@@ -1822,8 +1822,8 @@ define([
 
 
     Connection.prototype._jumpOnCrossings = function (pathDefArray) {
-        var connectionIDs = this.diagramDesigner.connectionIds.slice(0).sort(),
-            selfIdx = connectionIDs.indexOf(this.id),
+        var connectionIDs,
+            selfIdx,
             len,
             otherConn,
             items = this.diagramDesigner.items,
@@ -1848,16 +1848,13 @@ define([
             hDir,
             vDir;
 
-        //no jumps if not set by DiagramDesigner
-        if (this.diagramDesigner._connectionJumpXing !== true) {
+        //no jumps if not set by DiagramDesigner or Bezier curve
+        if (this.diagramDesigner._connectionJumpXing !== true || this.isBezier === true) {
             return pathDefArray;
         }
 
-        //no jump on Bezier curves
-        if (this.isBezier === true) {
-            return pathDefArray;
-        }
-
+        connectionIDs = this.diagramDesigner.connectionIds.slice(0).sort();
+        selfIdx = connectionIDs.indexOf(this.id);
         connectionIDs.splice(selfIdx);
         len = connectionIDs.length;
 
