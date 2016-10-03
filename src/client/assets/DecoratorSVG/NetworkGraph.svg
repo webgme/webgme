@@ -396,13 +396,6 @@
        transform="translate(-4.7131803,-11.78295)"
        style="stroke-width:3;stroke-miterlimit:10;stroke-dasharray:none"
        id="y.node.9">
-      <a
-         xlink:href="graphe injecteur pr  mont  .graphml"
-         style="stroke-width:3;stroke-miterlimit:10;stroke-dasharray:none"
-         target="_blank"
-         xlink:type="simple"
-         xlink:show="new"
-         id="a168">
         <g
            transform="translate(-14,17)"
            id="g170"
@@ -432,7 +425,6 @@
              id="rect182"
              style="fill:none;stroke-width:3;stroke-miterlimit:10;stroke-dasharray:none" />
         </g>
-      </a>
     </g>
     <g
        transform="translate(-4.7131803,-11.78295)"
