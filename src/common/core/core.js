@@ -643,7 +643,7 @@ define([
          *
          * @func
          */
-        this.deletePointer = core.deletePointer;
+        this.deletePointer = this.delPointer = core.deletePointer;
 
         /**
          * Sets the target of the pointer of the node.
@@ -1037,7 +1037,7 @@ define([
          *
          * @func
          */
-        this.deleteSet = core.deleteSet;
+        this.deleteSet = this.delSet = core.deleteSet;
 
         /**
          * Returns all membership information of the given node.

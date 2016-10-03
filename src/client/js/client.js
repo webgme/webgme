@@ -60,8 +60,6 @@ define([
                 users: {},
                 nodes: {},
                 loadNodes: {},
-                // FIXME: This should be the same as nodes (need to make sure they are not modified in meta).
-                metaNodes: {},
 
                 rootHash: null,
                 rootObject: null,
@@ -91,6 +89,7 @@ define([
             pluginManager,
             nodeSetterFunctions,
             coreLibraryFunctions,
+            ROOT_PATH = '',
             //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
         //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
@@ -207,7 +206,7 @@ define([
             //basic = basic || true;
             if (node) {
                 path = state.core.getPath(node);
-                state.metaNodes[path] = node;
+                //state.metaNodes[path] = node;
                 if (state.nodes[path]) {
                     //TODO we try to avoid this
                 } else {
@@ -451,7 +450,7 @@ define([
                     logger: logger.fork('core')
                 });
                 state.projectAccess = access;
-                self.meta.initialize(state.core, state.metaNodes, saveRoot, printCoreError);
+                self.meta.initialize(state.core, state, saveRoot, printCoreError);
                 logState('info', 'projectOpened');
                 logger.debug('projectOpened, branches: ', branches);
                 self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
@@ -1204,7 +1203,6 @@ define([
         };
 
         // Internal functions
-        var ROOT_PATH = ''; //FIXME: This should come from constants..
 
         function COPY(object) {
             if (object) {
@@ -1234,12 +1232,6 @@ define([
 
             return [];
         };
-
-        function getStringHash(/* node */) {
-            //TODO there is a memory issue with the huge strings so we have to replace it with something
-            state.gHash += 1;
-            return state.gHash;
-        }
 
         function addLoadUnloadPathToUpdates(paths) {
             var i,
@@ -1660,6 +1652,7 @@ define([
         };
 
         function refreshMetaNodes(oldSource, newSource) {
+            return;
             var pathsToRemove = [],
                 i,
                 oldPaths = Object.keys(oldSource),

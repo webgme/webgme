@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, console*/
 /*jshint browser: true*/
 /**
  * @author kecso / https://github.com/kecso
@@ -7,8 +7,19 @@ define([], function () {
     'use strict';
     function gmeNodeSetter(logger, state, saveRoot, storeNode, printCoreError) {
 
+        function _logDeprecated(oldFn, newFn) {
+            console.warn('gmeClient "' + oldFn + '" is deprecated and will eventually be removed, use "' + newFn + '" instead.');
+        }
+
+        function _getNode(path) {
+            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
+                return state.nodes[path].node;
+            }
+        }
+
         function _setAttrAndRegistry(node, desc) {
             var name;
+            desc = desc || {};
 
             if (desc.attributes) {
                 for (name in desc.attributes) {
@@ -27,118 +38,13 @@ define([], function () {
             }
         }
 
-        function setAttributes(path, name, value, msg) {
-            var error;
-
-            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                error = state.core.setAttribute(state.nodes[path].node, name, value);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-                msg = msg || 'setAttribute(' + path + ',' + name + ',' + JSON.stringify(value) + ')';
-                saveRoot(msg);
-            }
-        }
-
-        function delAttributes(path, name, msg) {
-            var error;
-
-            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                error = state.core.delAttribute(state.nodes[path].node, name);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-                msg = msg || 'delAttribute(' + path + ',' + name + ')';
-                saveRoot(msg);
-            }
-        }
-
-        function setRegistry(path, name, value, msg) {
-            var error;
-
-            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                error = state.core.setRegistry(state.nodes[path].node, name, value);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-                msg = msg || 'setRegistry(' + path + ',' + name + ',' + JSON.stringify(value) + ')';
-                saveRoot(msg);
-            }
-        }
-
-        function delRegistry(path, name, msg) {
-            var error;
-
-            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                error = state.core.delRegistry(state.nodes[path].node, name);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-                msg = msg || 'delRegistry(' + path + ',' + name + ')';
-                saveRoot(msg);
-            }
-        }
-
-        function copyMoreNodes(parameters, msg) {
-            var pathsToCopy = [],
-                nodePath,
-                newNodes,
-                newNode,
-                error;
-
-            if (typeof parameters.parentId === 'string' && state.nodes[parameters.parentId] &&
-                typeof state.nodes[parameters.parentId].node === 'object') {
-
-                for (nodePath in parameters) {
-                    if (parameters.hasOwnProperty(nodePath) && nodePath !== 'parentId') {
-                        pathsToCopy.push(nodePath);
-                    }
-                }
-
-                msg = msg || 'copyMoreNodes(' + JSON.stringify(pathsToCopy) + ',' + parameters.parentId + ')';
-                if (pathsToCopy.length < 1) {
-                    // empty on purpose
-                } else if (pathsToCopy.length === 1) {
-                    newNode = state.core.copyNode(state.nodes[pathsToCopy[0]].node,
-                        state.nodes[parameters.parentId].node);
-                    if (newNode instanceof Error) {
-                        printCoreError(newNode);
-                        return;
-                    }
-                    storeNode(newNode);
-                    _setAttrAndRegistry(newNode, parameters[pathsToCopy[0]]);
-                    saveRoot(msg);
-                } else {
-                    newNodes = _copyMultipleNodes(pathsToCopy, parameters.parentId);
-                    if (newNodes instanceof Error) {
-                        printCoreError(newNodes);
-                        return;
-                    }
-                    for (nodePath in newNodes) {
-                        if (newNodes.hasOwnProperty(nodePath) && parameters[nodePath]) {
-                            _setAttrAndRegistry(newNodes[nodePath], parameters[nodePath]);
-                        }
-                    }
-
-                    saveRoot(msg);
-                }
-            } else {
-                state.logger.error('wrong parameters for copy operation - denied -');
-            }
-        }
-
-        function _copyMultipleNodes(nodePaths, parentPath) {
+        function _copyMultipleNodes(paths, parentNode) {
             var i,
                 tempContainer,
                 tempFrom,
                 tempTo,
                 helpArray,
                 subPathArray,
-                parent,
                 result = {},
                 childrenRelIds,
                 childNode,
@@ -147,10 +53,11 @@ define([], function () {
                     var i,
                         result = true;
 
-                    for (i = 0; i < nodePaths.length; i += 1) {
-                        result = result && (state.nodes[nodePaths[i]] &&
-                            typeof state.nodes[nodePaths[i]].node === 'object');
+                    for (i = 0; i < paths.length; i += 1) {
+                        result = result && (state.nodes[paths[i]] &&
+                            typeof state.nodes[paths[i]].node === 'object');
                     }
+
                     return result;
                 };
 
@@ -162,15 +69,14 @@ define([], function () {
             // 5) The nodes from tempTo are moved to the targeted parent.
             // 6) tempFrom and tempTo are removed.
 
-            if (state.nodes[parentPath] && typeof state.nodes[parentPath].node === 'object' && checkPaths()) {
+            if (parentNode && checkPaths()) {
                 helpArray = {};
                 subPathArray = {};
-                parent = state.nodes[parentPath].node;
 
                 // 0) create a container for the tempNodes to preserve the relids of the original nodes
                 tempContainer = state.core.createNode({
-                    parent: state.core.getRoot(parent),
-                    base: state.core.getTypeRoot(state.nodes[nodePaths[0]].node)
+                    parent: state.core.getRoot(parentNode),
+                    base: state.core.getTypeRoot(state.nodes[paths[0]].node)
                 });
 
                 // 1) creating the 'from' object
@@ -179,22 +85,22 @@ define([], function () {
                 });
 
                 // 2) and moving every node under it
-                for (i = 0; i < nodePaths.length; i += 1) {
-                    helpArray[nodePaths[i]] = {};
-                    helpArray[nodePaths[i]].origparent = state.core.getParent(state.nodes[nodePaths[i]].node);
-                    helpArray[nodePaths[i]].tempnode = state.core.moveNode(state.nodes[nodePaths[i]].node, tempFrom);
-                    subPathArray[state.core.getRelid(helpArray[nodePaths[i]].tempnode)] = nodePaths[i];
-                    delete state.nodes[nodePaths[i]];
+                for (i = 0; i < paths.length; i += 1) {
+                    helpArray[paths[i]] = {};
+                    helpArray[paths[i]].origparent = state.core.getParent(state.nodes[paths[i]].node);
+                    helpArray[paths[i]].tempnode = state.core.moveNode(state.nodes[paths[i]].node, tempFrom);
+                    subPathArray[state.core.getRelid(helpArray[paths[i]].tempnode)] = paths[i];
+                    delete state.nodes[paths[i]];
                 }
 
                 // 3) do the copy
                 tempTo = state.core.copyNode(tempFrom, tempContainer);
 
                 // 4) moving back the temporary source
-                for (i = 0; i < nodePaths.length; i += 1) {
-                    helpArray[nodePaths[i]].node = state.core.moveNode(helpArray[nodePaths[i]].tempnode,
-                        helpArray[nodePaths[i]].origparent);
-                    storeNode(helpArray[nodePaths[i]].node);
+                for (i = 0; i < paths.length; i += 1) {
+                    helpArray[paths[i]].node = state.core.moveNode(helpArray[paths[i]].tempnode,
+                        helpArray[paths[i]].origparent);
+                    storeNode(helpArray[paths[i]].node);
                 }
 
                 // 5) gathering the destination nodes and move them to targeted parent
@@ -203,7 +109,7 @@ define([], function () {
                 for (i = 0; i < childrenRelIds.length; i += 1) {
                     if (subPathArray[childrenRelIds[i]]) {
                         childNode = state.core.getChild(tempTo, childrenRelIds[i]);
-                        newNode = state.core.moveNode(childNode, parent);
+                        newNode = state.core.moveNode(childNode, parentNode);
                         storeNode(newNode);
                         result[subPathArray[state.core.getRelid(childNode)]] = newNode;
                     } else {
@@ -213,10 +119,129 @@ define([], function () {
 
                 // 6) clean up the temporary container nodes.
                 state.core.deleteNode(tempContainer);
-
             }
 
             return result;
+        }
+
+        function setAttribute(path, name, value, msg) {
+            var error,
+                node = _getNode(path);
+
+            if (node) {
+                error = state.core.setAttribute(node, name, value);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'setAttribute(' + path + ',' + name + ',' + JSON.stringify(value) + ')');
+            }
+        }
+
+        function delAttribute(path, name, msg) {
+            var error,
+                node = _getNode(path);
+
+            if (node) {
+                error = state.core.delAttribute(node, name);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delAttribute(' + path + ',' + name + ')');
+            }
+        }
+
+        function setRegistry(path, name, value, msg) {
+            var error,
+                node = _getNode(path);
+
+            if (node) {
+                error = state.core.setRegistry(node, name, value);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'setRegistry(' + path + ',' + name + ',' + JSON.stringify(value) + ')');
+            }
+        }
+
+        function delRegistry(path, name, msg) {
+            var error,
+                node = _getNode(path);
+
+            if (node) {
+                error = state.core.delRegistry(node, name);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delRegistry(' + path + ',' + name + ')');
+            }
+        }
+
+        function copyNode(path, parentPath, desc, msg) {
+            var node = _getNode(path),
+                parentNode = _getNode(parentPath),
+                newNode;
+
+            if (node && parentNode) {
+                newNode = state.core.copyNode(node, parentNode);
+
+                if (newNode instanceof Error) {
+                    printCoreError(newNode);
+                    return;
+                }
+
+                _setAttrAndRegistry(newNode, desc);
+                storeNode(newNode);
+
+                saveRoot(msg || 'copyNode(' + path + ', ' + parentPath + ', ' + JSON.stringify(desc) + ')');
+            }
+        }
+
+        function copyMoreNodes(parameters, msg) {
+            var pathsToCopy = [],
+                parentNode = _getNode(parameters.parentId),
+                nodePath,
+                newNodes;
+
+            if (parentNode) {
+                for (nodePath in parameters) {
+                    if (parameters.hasOwnProperty(nodePath) && nodePath !== 'parentId') {
+                        pathsToCopy.push(nodePath);
+                    }
+                }
+
+                msg = msg || 'copyMoreNodes(' + JSON.stringify(pathsToCopy) + ',' + parameters.parentId + ')';
+
+                if (pathsToCopy.length < 1) {
+                    // empty on purpose
+                } else if (pathsToCopy.length === 1) {
+                    copyNode(pathsToCopy[0], parameters.parentId, parameters[pathsToCopy[0]], msg);
+                } else {
+                    newNodes = _copyMultipleNodes(pathsToCopy, parentNode);
+
+                    if (newNodes instanceof Error) {
+                        printCoreError(newNodes);
+                        return;
+                    }
+
+                    for (nodePath in newNodes) {
+                        if (newNodes.hasOwnProperty(nodePath) && parameters[nodePath]) {
+                            _setAttrAndRegistry(newNodes[nodePath], parameters[nodePath]);
+                        }
+                    }
+
+                    saveRoot(msg);
+                }
+            } else {
+                state.logger.error('wrong parameters for copy operation - denied -');
+            }
         }
 
         function moveMoreNodes(parameters, msg) {
@@ -251,8 +276,7 @@ define([], function () {
                 }
             }
 
-            msg = msg || 'moveMoreNodes(' + JSON.stringify(returnParams) + ')';
-            saveRoot(msg);
+            saveRoot(msg || 'moveMoreNodes(' + JSON.stringify(returnParams) + ')');
             return returnParams;
         }
 
@@ -315,261 +339,680 @@ define([], function () {
             return result;
         }
 
-        //TODO should be removed as there is no user or public API related to this function
-        //function deleteNode(path, msg) {
-        //  if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-        //    state.core.deleteNode(state.nodes[path].node);
-        //    //delete state.nodes[path];
-        //    msg = msg || 'deleteNode(' + path + ')';
-        //    saveRoot(msg);
-        //  }
-        //}
+        function deleteNode(path, msg) {
+            var node = _getNode(path);
 
-        function delMoreNodes(paths, msg) {
-            if (state.core) {
-                for (var i = 0; i < paths.length; i++) {
-                    if (state.nodes[paths[i]] && typeof state.nodes[paths[i]].node === 'object') {
-                        state.core.deleteNode(state.nodes[paths[i]].node);
-                        //delete state.nodes[paths[i]];
-                    }
-                }
-                msg = msg || 'delMoreNodes(' + paths + ')';
-                saveRoot(msg);
+            if (node) {
+                state.core.deleteNode(node);
+                saveRoot(msg || 'deleteNode(' + path + ')');
             }
         }
 
-        function createChild(parameters, msg) {
-            var newID,
-                error;
+        function deleteNodes(paths, msg) {
+            var didDelete = false,
+                i,
+                node;
 
-            if (state.core) {
-                if (typeof parameters.parentId === 'string' && state.nodes[parameters.parentId] &&
-                    typeof state.nodes[parameters.parentId].node === 'object') {
-                    var baseNode = null;
-                    if (state.nodes[parameters.baseId]) {
-                        baseNode = state.nodes[parameters.baseId].node || baseNode;
-                    }
-                    var child = state.core.createNode({
-                        parent: state.nodes[parameters.parentId].node,
-                        base: baseNode,
-                        guid: parameters.guid,
-                        relid: parameters.relid
-                    });
-                    if (child instanceof Error) {
-                        printCoreError(child);
-                        return;
-                    }
-
-                    if (parameters.position) {
-                        error = state.core.setRegistry(child,
-                            'position',
-                            {
-                                x: parameters.position.x || 100,
-                                y: parameters.position.y || 100
-                            });
-                        if (error instanceof Error) {
-                            printCoreError(error);
-                            return;
-                        }
-                    } else {
-                        error = state.core.setRegistry(child, 'position', {x: 100, y: 100});
-                        if (error instanceof Error) {
-                            printCoreError(error);
-                            return;
-                        }
-                    }
-                    storeNode(child);
-                    newID = state.core.getPath(child);
-                    msg = msg || 'createChild(' + parameters.parentId + ',' + parameters.baseId + ',' + newID + ')';
-                    saveRoot(msg);
+            for (i = 0; i < paths.length; i++) {
+                node = _getNode(paths[i]);
+                if (node) {
+                    state.core.deleteNode(node);
+                    didDelete = true;
                 }
+            }
+
+            if (didDelete) {
+                saveRoot(msg || 'deleteNodes(' + paths + ')');
+            }
+        }
+
+        function createNode(parameters, desc, msg) {
+            var parentNode = _getNode(parameters.parentId),
+                baseNode = _getNode(parameters.baseId),
+                newNode,
+                newID;
+
+            if (parentNode) {
+                newNode = state.core.createNode({
+                    parent: parentNode,
+                    base: baseNode,
+                    guid: parameters.guid,
+                    relid: parameters.relid
+                });
+
+                if (newNode instanceof Error) {
+                    printCoreError(newNode);
+                    return;
+                }
+
+                // By default the position will be {100, 100}
+                desc = desc || {};
+                desc.registry = desc.registry || {};
+                desc.registry.position = desc.registry.position || {};
+                desc.registry.position.x = desc.registry.position.x || 100;
+                desc.registry.position.y = desc.registry.position.y || 100;
+
+                _setAttrAndRegistry(newNode, desc);
+
+                storeNode(newNode);
+                newID = state.core.getPath(newNode);
+                saveRoot(msg || 'createNode(' + parameters.parentId + ',' + parameters.baseId + ',' + newID + ')');
             }
 
             return newID;
         }
 
-        function makePointer(id, name, to, msg) {
-            if (to === null) {
-                state.core.setPointer(state.nodes[id].node, name, to);
-            } else {
+        function setPointer(path, name, target, msg) {
+            var node = _getNode(path),
+                targetNode;
 
-                state.core.setPointer(state.nodes[id].node, name, state.nodes[to].node);
+            if (node) {
+                if (target === null) {
+                    state.core.setPointer(node, name, target);
+                } else {
+                    targetNode = _getNode(target);
+                    state.core.setPointer(node, name, targetNode);
+                }
+
+                saveRoot(msg || 'setPointer(' + path + ',' + name + ',' + target + ')');
             }
-
-            msg = msg || 'makePointer(' + id + ',' + name + ',' + to + ')';
-            saveRoot(msg);
         }
 
         function delPointer(path, name, msg) {
-            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.deletePointer(state.nodes[path].node, name);
-                msg = msg || 'delPointer(' + path + ',' + name + ')';
-                saveRoot(msg);
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.delPointer(node, name);
+                saveRoot(msg || 'delPointer(' + path + ',' + name + ')');
             }
         }
 
-        //MGAlike - set functions
-        function addMember(path, memberpath, setid, msg) {
-            if (state.nodes[path] &&
-                state.nodes[memberpath] &&
-                typeof state.nodes[path].node === 'object' &&
-                typeof state.nodes[memberpath].node === 'object') {
-                state.core.addMember(state.nodes[path].node,
-                    setid, state.nodes[memberpath].node);
-                msg = msg || 'addMember(' + path + ',' + memberpath + ',' + setid + ')';
-                saveRoot(msg);
+        // Mixed argument methods - START
+        function addMember(path, memberPath, setId, msg) {
+            // FIXME: This will have to break due to switched arguments
+            var node = _getNode(path),
+                memberNode = _getNode(memberPath);
+
+            if (node && memberNode) {
+                state.core.addMember(node, setId, memberNode);
+                saveRoot(msg || 'addMember(' + path + ',' + memberPath + ',' + setId + ')');
             }
         }
 
-        function removeMember(path, memberpath, setid, msg) {
-            if (state.nodes[path] &&
-                typeof state.nodes[path].node === 'object') {
-                state.core.delMember(state.nodes[path].node, setid, memberpath);
-                msg = msg || 'removeMember(' + path + ',' + memberpath + ',' + setid + ')';
-                saveRoot(msg);
+        function removeMember(path, memberPath, setId, msg) {
+            // FIXME: This will have to break due to switched arguments (sort of)
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.delMember(node, setId, memberPath);
+                saveRoot(msg || 'removeMember(' + path + ',' + memberPath + ',' + setId + ')');
             }
         }
 
-        function setMemberAttribute(path, memberpath, setid, name, value, msg) {
-            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.setMemberAttribute(state.nodes[path].node, setid, memberpath, name, value);
-                msg = msg ||
-                    'setMemberAttribute(' + path + ',' + memberpath + ',' + setid + ',' + name + ',' + value +
-                    ')';
-                saveRoot(msg);
+        function setMemberAttribute(path, memberPath, setId, name, value, msg) {
+            // FIXME: This will have to break due to switched arguments
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.setMemberAttribute(node, setId, memberPath, name, value);
+                saveRoot(msg || 'setMemberAttribute(' + path + ',' + memberPath + ',' + setId + ',' + name +
+                    ',' + value + ')');
             }
         }
 
-        function delMemberAttribute(path, memberpath, setid, name, msg) {
-            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.delMemberAttribute(state.nodes[path].node, setid, memberpath, name);
-                msg = msg || 'delMemberAttribute(' + path + ',' + memberpath + ',' + setid + ',' + name + ')';
-                saveRoot(msg);
+        function delMemberAttribute(path, memberPath, setId, name, msg) {
+            // FIXME: This will have to break due to switched arguments
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.delMemberAttribute(node, setId, memberPath, name);
+                saveRoot(msg || 'delMemberAttribute(' + path + ',' + memberPath + ',' + setId + ',' + name + ')');
             }
         }
 
-        function setMemberRegistry(path, memberpath, setid, name, value, msg) {
-            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.setMemberRegistry(state.nodes[path].node, setid, memberpath, name, value);
-                msg = msg ||
-                    'setMemberRegistry(' + path + ',' + memberpath + ',' + setid + ',' + name + ',' +
-                    JSON.stringify(value) + ')';
-                saveRoot(msg);
+        function setMemberRegistry(path, memberPath, setId, name, value, msg) {
+            // FIXME: This will have to break due to switched arguments
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.setMemberRegistry(node, setId, memberPath, name, value);
+                saveRoot(msg || 'setMemberRegistry(' + path + ',' + memberPath + ',' + setId + ',' + name + ',' +
+                    JSON.stringify(value) + ')');
             }
         }
 
-        function delMemberRegistry(path, memberpath, setid, name, msg) {
-            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.delMemberRegistry(state.nodes[path].node, setid, memberpath, name);
-                msg = msg || 'delMemberRegistry(' + path + ',' + memberpath + ',' + setid + ',' + name + ')';
-                saveRoot(msg);
+        function delMemberRegistry(path, memberPath, setId, name, msg) {
+            // FIXME: This will have to break due to switched arguments
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.delMemberRegistry(node, setId, memberPath, name);
+                saveRoot(msg || 'delMemberRegistry(' + path + ',' + memberPath + ',' + setId + ',' + name + ')');
+            }
+        }
+        // Mixed argument methods - END
+
+        function createSet(path, setId, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.createSet(node, setId);
+                saveRoot(msg || 'createSet(' + path + ',' + setId + ')');
             }
         }
 
-        function createSet(path, setid, msg) {
-            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                state.core.createSet(state.nodes[path].node, setid);
-                msg = msg || 'createSet(' + path + ',' + setid + ')';
-                saveRoot(msg);
-            }
-        }
+        function delSet(path, setId, msg) {
+            var node = _getNode(path),
+                error;
 
-        function deleteSet(path, setid, msg) {
-            var error;
-            if (state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                error = state.core.deleteSet(state.nodes[path].node, setid);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-                msg = msg || 'deleteSet(' + path + ',' + setid + ')';
-                saveRoot(msg);
-            }
-        }
-
-        function setBase(path, basePath) {
-            var error;
-            if (state.core &&
-                state.nodes[path] &&
-                typeof state.nodes[path].node === 'object' &&
-                state.nodes[basePath] &&
-                typeof state.nodes[basePath].node === 'object') {
-                error = state.core.setBase(state.nodes[path].node, state.nodes[basePath].node);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-                saveRoot('setBase(' + path + ',' + basePath + ')');
-            }
-        }
-
-        function moveNode(path, parentPath) {
-            var error;
-            if (state.core &&
-                state.nodes[path] &&
-                typeof state.nodes[path].node === 'object' &&
-                state.nodes[parentPath] &&
-                typeof state.nodes[parentPath].node === 'object') {
-                error = state.core.moveNode(state.nodes[path].node, state.nodes[parentPath].node);
+            if (node) {
+                error = state.core.delSet(node, setId);
                 if (error instanceof Error) {
                     printCoreError(error);
                     return;
                 }
 
-                saveRoot('moveNode(' + path + ',' + parentPath + ')');
+                saveRoot(msg || 'delSet(' + path + ',' + setId + ')');
             }
         }
 
-        function delBase(path) {
-            var error;
-            if (state.core && state.nodes[path] && typeof state.nodes[path].node === 'object') {
-                error = state.core.setBase(state.nodes[path].node, null);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-                saveRoot('delBase(' + path + ')');
-            }
-        }
+        function setBase(path, basePath, msg) {
+            var node = _getNode(path),
+                baseNode = _getNode(basePath),
+                error;
 
-        function addMixin(nodePath, mixinPath) {
-            var error;
-            if (state.core && state.nodes[nodePath] && typeof state.nodes[nodePath].node === 'object') {
-                error = state.core.addMixin(state.nodes[nodePath].node, mixinPath);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-                saveRoot('addMixin(' + nodePath + ',' + mixinPath + ')');
-            }
-        }
-
-        function delMixin(nodePath, mixinPath) {
-            var error;
-            if (state.core && state.nodes[nodePath] && typeof state.nodes[nodePath].node === 'object') {
-                error = state.core.delMixin(state.nodes[nodePath].node, mixinPath);
+            if (node && baseNode) {
+                error = state.core.setBase(node, baseNode);
                 if (error instanceof Error) {
                     printCoreError(error);
                     return;
                 }
 
-                saveRoot('delMixin(' + nodePath + ',' + mixinPath + ')');
+                saveRoot(msg || 'setBase(' + path + ',' + basePath + ')');
+            }
+        }
+
+        function moveNode(path, parentPath, msg) {
+            var node = _getNode(path),
+                parentNode = _getNode(parentPath),
+                error;
+
+            if (node && parentNode) {
+                error = state.core.moveNode(node, parentNode);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'moveNode(' + path + ',' + parentPath + ')');
+            }
+        }
+
+        function delBase(path, msg) {
+            var node = _getNode(path),
+                error;
+
+            if (node) {
+                error = state.core.setBase(node, null);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delBase(' + path + ')');
+            }
+        }
+
+        // META functions
+        function getMeta(path) {
+            var node = _getNode(path),
+                meta = {children: {}, attributes: {}, pointers: {}, aspects: {}};
+
+            if (!node) {
+                return null;
+            }
+
+            meta = state.core.getJsonMeta(node);
+
+            return meta;
+        }
+
+        function setMeta(path, meta, msg) {
+            var node = _getNode(path),
+                otherNode,
+                name,
+                i,
+                error;
+
+            if (node) {
+                state.core.clearMetaRules(node);
+
+                //children
+                if (meta.children && meta.children.items && meta.children.items.length > 0) {
+                    error = state.core.setChildrenMetaLimits(node, meta.children.min, meta.children.max);
+                    if (error instanceof Error) {
+                        printCoreError(error);
+                        return;
+                    }
+
+                    for (i = 0; i < meta.children.items.length; i += 1) {
+                        otherNode = _getNode(meta.children.items[i]);
+                        if (otherNode) {
+                            error = state.core.setChildMeta(node,
+                                otherNode,
+                                meta.children.minItems[i],
+                                meta.children.maxItems[i]);
+
+                            if (error instanceof Error) {
+                                printCoreError(error);
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                //attributes
+                if (meta.attributes) {
+                    for (i in meta.attributes) {
+                        error = state.core.setAttributeMeta(node, i, meta.attributes[i]);
+                        if (error instanceof Error) {
+                            printCoreError(error);
+                            return;
+                        }
+                    }
+                }
+
+                //pointers and sets
+                if (meta.pointers) {
+                    for (name in meta.pointers) {
+                        if (meta.pointers[name].items && meta.pointers[name].items.length > 0) {
+                            error = state.core.setPointerMetaLimits(node,
+                                name,
+                                meta.pointers[name].min,
+                                meta.pointers[name].max);
+
+                            if (error instanceof Error) {
+                                printCoreError(error);
+                                return;
+                            }
+
+                            for (i = 0; i < meta.pointers[name].items.length; i += 1) {
+                                otherNode = _getNode(meta.pointers[name].items[i]);
+                                if (otherNode) {
+                                    error = state.core.setPointerMetaTarget(node,
+                                        name,
+                                        otherNode,
+                                        meta.pointers[name].minItems[i],
+                                        meta.pointers[name].maxItems[i]);
+                                    if (error instanceof Error) {
+                                        printCoreError(error);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //aspects
+                if (meta.aspects) {
+                    for (name in meta.aspects) {
+                        for (i = 0; i < meta.aspects[name].length; i += 1) {
+                            otherNode = _getNode(meta.aspects[name][i]);
+                            if (otherNode) {
+                                error = state.core.setAspectMetaTarget(node, name, otherNode);
+                                if (error instanceof Error) {
+                                    printCoreError(error);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //constraints
+                if (meta.constraints) {
+                    for (name in meta.constraints) {
+                        if (typeof meta.constraints[name] === 'object') {
+                            error = state.core.setConstraint(node, name, meta.constraints[name]);
+                            if (error instanceof Error) {
+                                printCoreError(error);
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                saveRoot(msg || 'setMeta(' + path + ')');
+            }
+        }
+
+        function addMixin(path, mixinPath, msg) {
+            var error,
+                node = _getNode(path);
+
+            if (node) {
+                error = state.core.addMixin(node, mixinPath);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'addMixin(' + path + ',' + mixinPath + ')');
+            }
+        }
+
+        function delMixin(path, mixinPath, msg) {
+            var error,
+                node = _getNode(path);
+
+            if (node) {
+                error = state.core.delMixin(node, mixinPath);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg, 'delMixin(' + path + ',' + mixinPath + ')');
+            }
+        }
+
+        function setChildrenMetaAttribute(path, attrName, value, msg) {
+            if (attrName !== 'items') {
+                var rawMeta = getMeta(path);
+                rawMeta.children[attrName] = value;
+                setMeta(path, rawMeta, msg);
+            }
+        }
+
+        function setChildMeta(path, childPath, min, max, msg) {
+            var node = _getNode(path),
+                childNode = _getNode(childPath),
+                error;
+
+            if (childNode && node) {
+                error = state.core.setChildMeta(node, childNode, min, max);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg ||'setChildMeta(' + path + ', ' + childPath + ',' + min || -1 + ',' + max || -1 +')');
+            }
+        }
+
+        function setChildrenMeta(path, meta, msg) {
+            var node = _getNode(path),
+                target,
+                error,
+                i;
+
+            if (meta && meta.items && node) {
+                for (i = 0; i < meta.items.length; i += 1) {
+                    target = _getNode(meta.items[i].id);
+                    if (target) {
+                        error = state.core.setChildMeta(node, target, meta.items[i].min, meta.items[i].max);
+                        if (error instanceof Error) {
+                            printCoreError(error);
+                            return;
+                        }
+                    }
+                }
+
+                error = state.core.setChildrenMetaLimits(node, meta.min, meta.max);
+
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'Meta.setChildrenMeta(' + path + ')');
+            }
+        }
+
+        function delChildMeta(path, typeId, msg) {
+            var node = _getNode(path),
+                error;
+
+            if (node) {
+                error = state.core.delChildMeta(node, typeId);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delChildMeta(' + path + ', ' + typeId + ')');
+            }
+        }
+
+        function setAttributeMeta(path, name, schema, msg) {
+            var node = _getNode(path),
+                error;
+
+            if (node) {
+                error = state.core.setAttributeMeta(node, name, schema);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'setAttributeMeta(' + path + ', ' + name + ')');
+            }
+        }
+
+        function delAttributeMeta(path, name, msg) {
+            var node = _getNode(path),
+                error;
+
+            if (node) {
+                error = state.core.delAttributeMeta(node, name);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delAttributeMeta(' + path + ', ' + name + ')');
+            }
+        }
+
+        function setPointerMetaTarget(path, name, targetPath, min, max, msg) {
+            var node = _getNode(path),
+                targetNode = _getNode(targetPath),
+                error;
+
+            if (node && targetNode) {
+                error = state.core.setPointerMetaTarget(node, name, targetNode, min, max);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'setPointerMetaTarget(' + path + ', ' + name + ', ' + targetPath + ',' +
+                    min || -1 + ',' + max || -1 + ')');
+            }
+        }
+
+        function delPointerMetaTarget(path, name, targetPath, msg) {
+            var node = _getNode(path),
+                error;
+
+            if (node) {
+                error = state.core.delPointerMetaTarget(node, name, targetPath);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delPointerMetaTarget(' + path + ', ' + name + ', ' + targetPath + ')');
+            }
+        }
+
+        function delPointerMeta(path, name, msg) {
+            var node = _getNode(path),
+                error;
+
+            if (node) {
+                error = state.core.delPointerMeta(node, name);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delPointerMeta(' + path + ', ' + name + ')');
+            }
+        }
+
+        function setPointerMeta(path, name, meta, msg) {
+            var node = _getNode(path),
+                target,
+                error,
+                i;
+
+            if (meta && meta.items && node) {
+                for (i = 0; i < meta.items.length; i += 1) {
+                    target = _getNode(meta.items[i].id);
+                    if (target) {
+                        error = state.core.setPointerMetaTarget(node,
+                            name,
+                            target,
+                            meta.items[i].min,
+                            meta.items[i].max);
+
+                        if (error instanceof Error) {
+                            printCoreError(error);
+                            return;
+                        }
+                    }
+                }
+
+                error = state.core.setPointerMetaLimits(node, name, meta.min, meta.max);
+
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'setPointerMeta(' + path + ', ' + name + ')');
+            }
+        }
+
+        function setAspectMetaTarget(path, name, targetPath, msg) {
+            var node = _getNode(path),
+                targetNode = _getNode(targetPath),
+                error;
+
+            if (node && targetNode) {
+                error = state.core.setAspectMetaTarget(node, name, targetNode);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'setAspectMetaTarget(' + path + ', ' + name + ',' + targetPath + ')');
+            }
+        }
+
+        function delAspectMetaTarget(path, name, targetPath, msg) {
+            var node = _getNode(path),
+                error;
+
+            if (node) {
+                error = state.core.delAspectMetaTarget(node, name, targetPath);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delAspectMeta(' + path + ', ' + name + ')');
+            }
+        }
+
+        function setAspectMetaTargets(path, name, targetPaths, msg) {
+            var node = _getNode(path),
+                i,
+                target,
+                error;
+
+            if (node) {
+                error = state.core.delAspectMeta(node, name);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                for (i = 0; i < targetPaths.length; i += 1) {
+                    target = _getNode(targetPaths[i]);
+                    if (target) {
+                        error = state.core.setAspectMetaTarget(node, name, target);
+                        if (error instanceof Error) {
+                            printCoreError(error);
+                            return;
+                        }
+                    }
+                }
+
+                saveRoot(msg || 'setAspectMetaTargets(' + path + ', ' + name + ',' + JSON.stringify(targetPaths) + ')');
+            }
+        }
+
+        function delAspectMeta(path, name, msg) {
+            var node = _getNode(path),
+                error;
+
+            if (node) {
+                error = state.core.delAspectMeta(node, name);
+                if (error instanceof Error) {
+                    printCoreError(error);
+                    return;
+                }
+
+                saveRoot(msg || 'delAspectMeta(' + path + ', ' + name + ')');
             }
         }
 
         return {
-            setAttributes: setAttributes,
-            delAttributes: delAttributes,
+            setAttribute: setAttribute,
+            setAttributes: function() {
+                _logDeprecated('setAttributes', 'setAttribute');
+                setAttribute.apply(null, arguments);
+            },
+
+            delAttribute: delAttribute,
+            delAttributes: function() {
+            _logDeprecated('delAttributes', 'delAttribute');
+                delAttribute.apply(null, arguments);
+            },
             setRegistry: setRegistry,
             delRegistry: delRegistry,
+
+            copyNode: copyNode,
             copyMoreNodes: copyMoreNodes,
             moveNode: moveNode,
             moveMoreNodes: moveMoreNodes,
-            delMoreNodes: delMoreNodes,
-            createChild: createChild,
+            deleteNode: deleteNode,
+            deleteNodes: deleteNodes,
+            delMoreNodes: function() {
+                _logDeprecated('delMoreNodes', 'deleteNodes');
+                deleteNodes.apply(null, arguments);
+            },
+            createNode: createNode,
+            createChild: function (parameters, msg) {
+                return createNode(parameters, {
+                    registry: {
+                        position: parameters.position
+                    }
+                }, msg);
+            },
             createChildren: createChildren,
-            makePointer: makePointer,
+
+            setPointer: setPointer,
+            makePointer: function() {
+                _logDeprecated('makePointer', 'setPointer');
+                setPointer.apply(null, arguments);
+            },
             delPointer: delPointer,
+            deletePointer: delPointer,
+
             addMember: addMember,
             removeMember: removeMember,
             setMemberAttribute: setMemberAttribute,
@@ -577,10 +1020,80 @@ define([], function () {
             setMemberRegistry: setMemberRegistry,
             delMemberRegistry: delMemberRegistry,
             createSet: createSet,
-            deleteSet: deleteSet,
+            delSet: delSet,
+            deleteSet: delSet,
 
             setBase: setBase,
             delBase: delBase,
+
+            // --- Meta ---
+            setMeta: setMeta,
+
+            // containment
+            setChildrenMeta: setChildrenMeta,
+            setChildrenMetaAttribute: setChildrenMetaAttribute,
+            setChildMeta: setChildMeta,
+            updateValidChildrenItem: function (path, newTypeObj, msg) {
+                _logDeprecated('updateValidChildrenItem(path, newTypeObj, msg)',
+                    'setChildMeta(path, childPath, min, max, msg)');
+                newTypeObj = newTypeObj || {};
+                setChildMeta(path, newTypeObj.id, newTypeObj.min, newTypeObj.max, msg);
+            },
+
+            delChildMeta: delChildMeta,
+            removeValidChildrenItem: function () {
+                _logDeprecated('removeValidChildrenItem', 'delChildMeta');
+                delChildMeta.apply(null, arguments);
+            },
+
+            // attribute
+            setAttributeMeta: setAttributeMeta,
+            setAttributeSchema: function() {
+                _logDeprecated('setAttributeSchema', 'setAttributeMeta');
+                setAttributeMeta.apply(null, arguments);
+            },
+            delAttributeMeta: delAttributeMeta,
+            removeAttributeSchema: function() {
+                _logDeprecated('removeAttributeSchema', 'delAttributeMeta');
+                delAttributeMeta.apply(null, arguments);
+            },
+
+            // pointer
+            setPointerMeta: setPointerMeta,
+            setPointerMetaTarget: setPointerMetaTarget,
+            updateValidTargetItem: function (path, name, targetObj, msg) {
+            _logDeprecated('updateValidTargetItem(path, name, targetObj, msg)',
+                    'setPointerMetaTarget(path, name, targetPath, childPath, min, max, msg)');
+                targetObj = targetObj || {};
+                setPointerMetaTarget(path, name, targetObj.id, targetObj.min, targetObj.max, msg);
+            },
+
+            delPointerMetaTarget: delPointerMetaTarget,
+            removeValidTargetItem:  function() {
+                _logDeprecated('removeValidTargetItem', 'delPointerMetaTarget');
+                delPointerMetaTarget.apply(null, arguments);
+            },
+            delPointerMeta: delPointerMeta,
+            deleteMetaPointer: function() {
+                _logDeprecated('deleteMetaPointer', 'delPointerMeta');
+                delPointerMeta.apply(null, arguments);
+            },
+
+            // aspect
+            setAspectMetaTarget: setAspectMetaTarget,
+            setAspectMetaTargets: setAspectMetaTargets,
+            setMetaAspect: function() {
+                _logDeprecated('setMetaAspect', 'setAspectMetaTargets');
+                setAspectMetaTargets.apply(null, arguments);
+            },
+            delAspectMetaTarget: delAspectMetaTarget,
+            delAspectMeta: delAspectMeta,
+            deleteMetaAspect: function() {
+                _logDeprecated('deleteMetaAspect', 'delAspectMeta');
+                delAspectMeta.apply(null, arguments);
+            },
+
+            // mixin
             addMixin: addMixin,
             delMixin: delMixin
         };

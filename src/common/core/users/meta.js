@@ -10,7 +10,7 @@ define([], function () {
 
     function metaStorage() {
         var _core = null,
-            _nodes = null,
+            _state = null,
             _saveFunc = function () {
             },
             _errorFunc = function () {
@@ -18,50 +18,18 @@ define([], function () {
             },
             _initialized = false;
 
-        function _save(node, message) {
-            var metaEvent = _core.getRegistry(node, '_meta_event_') || 0;
-            _core.setRegistry(node, '_meta_event_', metaEvent + 1);
-            _saveFunc(message);
-        }
-
-        function initialize(core, nodes, save, printCoreError) {
+        function initialize(core, state, save, printCoreError) {
             _core = core;
-            _nodes = nodes;
+            _state = state;
             _saveFunc = save;
             _errorFunc = printCoreError;
             _initialized = true;
         }
 
-        function isValidMeta(/*meta*/) {
-            //TODO implement it :)
-            return true;
-        }
-
-        //TODO this may change - right now not used internally
-        function pathToRefObject(path) {
-            var ref = {};
-            ref.$ref = path;
-            return ref;
-        }
-
-        //TODO this may change - right now not used internally
-        function refObjectToPath(ref) {
-            if (typeof ref.$ref === 'string') {
-                return ref.$ref/*.substring(1)*/;
-            } else {
-                return null;
-            }
-        }
-
         //getter setter functions
         function getMeta(path) {
-            var node = _nodes[path],
-                meta = {children: {}, attributes: {}, pointers: {}, aspects: {}},
-                temp, i, j;
-
-            if (_nodes === null || _nodes === undefined) {
-                return meta;
-            }
+            var node = _state.nodes[path] && _state.nodes[path].node,
+                meta = {children: {}, attributes: {}, pointers: {}, aspects: {}};
 
             if (!node) {
                 return null;
@@ -72,123 +40,9 @@ define([], function () {
             return meta;
         }
 
-        function setMeta(path, meta) {
-            var i,
-                j,
-                aspectNode,
-                error,
-                targetPath;
-            if (!isValidMeta) {
-                return;
-            }
-            var node = _nodes[path] || null;
-            if (node) {
-                _core.clearMetaRules(node);
-
-                //children
-                if (meta.children && meta.children.items && meta.children.items.length > 0) {
-                    error = _core.setChildrenMetaLimits(node, meta.children.min, meta.children.max);
-                    if (error instanceof Error) {
-                        _errorFunc(error);
-                        return;
-                    }
-                    for (i = 0; i < meta.children.items.length; i += 1) {
-                        if (typeof meta.children.items[i] === 'string' && _nodes[meta.children.items[i]]) {
-                            error = _core.setChildMeta(node,
-                                _nodes[meta.children.items[i]], meta.children.minItems[i], meta.children.maxItems[i]);
-                            if (error instanceof Error) {
-                                _errorFunc(error);
-                                return;
-                            }
-                        }
-                    }
-                }
-
-                //attributes
-                if (meta.attributes) {
-                    for (i in meta.attributes) {
-                        error = _core.setAttributeMeta(node, i, meta.attributes[i]);
-                        if (error instanceof Error) {
-                            _errorFunc(error);
-                            return;
-                        }
-                    }
-                }
-
-                //pointers and sets
-                if (meta.pointers) {
-                    for (i in meta.pointers) {
-                        if (meta.pointers[i].items && meta.pointers[i].items.length > 0) {
-                            error = _core.setPointerMetaLimits(node, i, meta.pointers[i].min, meta.pointers[i].max);
-                            if (error instanceof Error) {
-                                _errorFunc(error);
-                                return;
-                            }
-                            for (j = 0; j < meta.pointers[i].items.length; j += 1) {
-                                if (typeof meta.pointers[i].items[j] === 'string' &&
-                                    _nodes[meta.pointers[i].items[j]]) {
-                                    error = _core.setPointerMetaTarget(node, i, _nodes[meta.pointers[i].items[j]],
-                                        meta.pointers[i].minItems[j], meta.pointers[i].maxItems[j]);
-                                    if (error instanceof Error) {
-                                        _errorFunc(error);
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                //aspects
-                if (meta.aspects) {
-                    for (i in meta.aspects) {
-                        if (meta.aspects[i].length > 0) {
-                            for (j = 0; j < meta.aspects[i].length; j += 1) {
-                                if (typeof meta.aspects[i][j] === 'string' && _nodes[meta.aspects[i][j]]) {
-                                    error = _core.setAspectMetaTarget(node, i, _nodes[meta.aspects[i][j]]);
-                                    if (error instanceof Error) {
-                                        _errorFunc(error);
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                //constraints
-                if (meta.constraints) {
-                    for (i in meta.constraints) {
-                        if (typeof meta.constraints[i] === 'object') {
-                            error = _core.setConstraint(node, i, meta.constraints[i]);
-                            if (error instanceof Error) {
-                                _errorFunc(error);
-                                return;
-                            }
-                        }
-                    }
-                }
-
-                _save(node, 'setMeta(' + path + ')');
-            }
-        }
-
-        //validation functions
-        function getBaseChain(path) {
-            var chain = [];
-            var node = _nodes[path];
-            if (node) {
-                while (node !== null) {
-                    chain.push(_core.getPath(node));
-                    node = _core.getBase(node);
-                }
-            }
-            return chain;
-        }
-
         function isTypeOf(path, typePath) {
-            var node = _nodes[path],
-                typeNode = _nodes[typePath];
+            var node = _state.nodes[path] && _state.nodes[path].node,
+                typeNode = _state.nodes[typePath] && _state.nodes[typePath].node;
 
             if (node && typeNode) {
                 return _core.isTypeOf(node, typeNode);
@@ -197,29 +51,20 @@ define([], function () {
             return false;
         }
 
-        function isValidTypeOfArray(path, typePathArray) {
-            var i = 0,
-                isGood = false;
-            while (i < typePathArray.length && isGood === false) {
-                isGood = isTypeOf(path, typePathArray[i]);
-                i++;
-            }
-            return isGood;
-        }
-
         function isValidChild(path, childPath) {
-            var node = _nodes[path],
-                child = _nodes[childPath];
+            var node = _state.nodes[path] && _state.nodes[path].node,
+                child = _state.nodes[childPath] && _state.nodes[childPath].node;
 
             if (node && child) {
                 return _core.isValidChildOf(child, node);
             }
+
             return false;
         }
 
         function isValidTarget(path, name, targetPath) {
-            var node = _nodes[path],
-                target = _nodes[targetPath];
+            var node = _state.nodes[path] && _state.nodes[path].node,
+                target = _state.nodes[targetPath] && _state.nodes[targetPath].node;
 
             if (node && target) {
                 return _core.isValidTargetOf(target, node, name);
@@ -234,7 +79,7 @@ define([], function () {
         }
 
         function getValidChildrenTypes(path) {
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
 
             if (node) {
                 return _core.getValidChildrenPaths(node);
@@ -244,7 +89,7 @@ define([], function () {
         }
 
         function getValidTargetTypes(path, name) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 meta, i,
                 targets = [];
 
@@ -257,11 +102,12 @@ define([], function () {
                     }
                 }
             }
+
             return targets;
         }
 
         function hasOwnMetaRules(path) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 ownMeta, key;
 
             if (node) {
@@ -297,16 +143,18 @@ define([], function () {
 
         function filterValidTarget(path, name, paths) {
             var targets = [];
+
             for (var i = 0; i < paths.length; i++) {
                 if (isValidTarget(path, name, paths[i])) {
                     targets.push(paths[i]);
                 }
             }
+
             return targets;
         }
 
         function getOwnValidChildrenTypes(path) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 ownMeta;
 
             if (node) {
@@ -321,8 +169,7 @@ define([], function () {
         }
 
         function getOwnValidTargetTypes(path, name) {
-            var node = _nodes[path],
-                i,
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 ownMeta;
 
             if (node) {
@@ -337,7 +184,7 @@ define([], function () {
         }
 
         function getValidAttributeNames(path) {
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
 
             if (node) {
                 return _core.getValidAttributeNames(node);
@@ -347,31 +194,20 @@ define([], function () {
         }
 
         function getOwnValidAttributeNames(path) {
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
 
             if (node) {
                 return _core.getOwnValidAttributeNames(node);
             }
-            return [];
-        }
 
-        function indexOfPathInRefObjArray(array, path) {
-            var index = 0;
-            while (index < array.length) {
-                if (path === refObjectToPath(array[index])) {
-                    return index;
-                }
-                index++;
-            }
-            return -1;
+            return [];
         }
 
         function getChildrenMeta(path) {
             //the returned object structure is : {'min':0,'max':0,'items':[{'id':path,'min':0,'max':0},...]}
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 meta, i,
-                childrenMeta = {items: []},
-                childrenPaths;
+                childrenMeta = {items: []};
 
             if (node) {
                 meta = _core.getChildrenMeta(node);
@@ -387,28 +223,19 @@ define([], function () {
                         }
                     }
                 }
+
                 return childrenMeta;
             }
 
             return null;
         }
 
-        // TODO is it really used?
         function getChildrenMetaAttribute(path/*, attrName*/) {
             var childrenMeta = getChildrenMeta(path);
             if (childrenMeta) {
                 return childrenMeta.attrName;
             }
             return null;
-        }
-
-        // TODO is it really used?
-        function setChildrenMetaAttribute(path, attrName, value) {
-            if (attrName !== 'items') {
-                var rawMeta = getMeta(path);
-                rawMeta.children[attrName] = value;
-                setMeta(path, rawMeta);
-            }
         }
 
         function getValidChildrenItems(path) {
@@ -419,73 +246,12 @@ define([], function () {
             return null;
         }
 
-        function updateValidChildrenItem(path, newTypeObj) {
-            var node = _nodes[path],
-                i,
-                error,
-                child;
-
-            if (newTypeObj && newTypeObj.id && node) {
-                child = _nodes[newTypeObj.id];
-                if (child) {
-                    error = _core.setChildMeta(node, child, newTypeObj.min, newTypeObj.max);
-                    if (error instanceof Error) {
-                        _errorFunc(error);
-                        return;
-                    }
-                    _save(node, 'Meta.updateValidChildrenItem(' + path + ', ' + newTypeObj.id + ')');
-                }
-            }
-        }
-
-        function removeValidChildrenItem(path, typeId) {
-            var node = _nodes[path],
-                error;
-
-            if (node) {
-                error = _core.delChildMeta(node, typeId);
-                if (error instanceof Error) {
-                    _errorFunc(error);
-                    return;
-                }
-                _save(node, 'Meta.removeValidChildrenItem(' + path + ', ' + typeId + ')');
-            }
-        }
-
         function getAttributeSchema(path, name) {
-            return _core.getAttributeMeta(_nodes[path], name);
-        }
-
-        function setAttributeSchema(path, name, schema) {
-            var node = _nodes[path],
-                error;
-
-            if (node) {
-                error = _core.setAttributeMeta(node, name, schema);
-                if (error instanceof Error) {
-                    _errorFunc(error);
-                    return;
-                }
-                _save(node, 'Meta.setAttributeSchema(' + path + ', ' + name + ')');
-            }
-        }
-
-        function removeAttributeSchema(path, name) {
-            var node = _nodes[path],
-                error;
-
-            if (node) {
-                error = _core.delAttributeMeta(node, name);
-                if (error instanceof Error) {
-                    _errorFunc(error);
-                    return;
-                }
-                _save(node, 'Meta.removeAttributeSchema(' + path + ', ' + name + ')');
-            }
+            return _core.getAttributeMeta(_state.nodes[path].node, name);
         }
 
         function getPointerMeta(path, name) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 meta, i,
                 pointerMeta;
 
@@ -513,7 +279,7 @@ define([], function () {
         }
 
         function _getValidTargetItems(path, name, ownOnly) {
-            var node = _nodes[path],
+            var node = _state.nodes[path] && _state.nodes[path].node,
                 meta,
                 paths,
                 items = [],
@@ -527,6 +293,7 @@ define([], function () {
                 } else {
                     paths = [];
                 }
+
                 if (meta && paths.length > 0) {
                     delete meta.min;
                     delete meta.max;
@@ -539,6 +306,7 @@ define([], function () {
                             });
                         }
                     }
+
                     return items;
                 }
             }
@@ -554,106 +322,8 @@ define([], function () {
             return _getValidTargetItems(path, name, true);
         }
 
-        function updateValidTargetItem(path, name, targetObj) {
-            var node = _nodes[path],
-                target,
-                error;
-
-            if (targetObj && targetObj.id && node) {
-                target = _nodes[targetObj.id];
-                if (target) {
-                    error = _core.setPointerMetaTarget(node, name, target, targetObj.min, targetObj.max);
-                    if (error instanceof Error) {
-                        _errorFunc(error);
-                        return;
-                    }
-                    _save(node, 'Meta.updateValidTargetItem(' + path + ', ' + name + ', ' + targetObj.id + ')');
-                }
-            }
-        }
-
-        function removeValidTargetItem(path, name, targetId) {
-            var node = _nodes[path],
-                error;
-
-            if (node) {
-                error = _core.delPointerMetaTarget(node, name, targetId);
-                if (error instanceof Error) {
-                    _errorFunc(error);
-                    return;
-                }
-                _save(node, 'Meta.removeValidTargetItem(' + path + ', ' + name + ', ' + targetId + ')');
-            }
-        }
-
-        function deleteMetaPointer(path, name) {
-            var node = _nodes[path],
-                error;
-
-            if (node) {
-                error = _core.delPointerMeta(node, name);
-                if (error instanceof Error) {
-                    _errorFunc(error);
-                    return;
-                }
-                _save(node, 'Meta.deleteMetaPointer(' + path + ', ' + name + ')');
-            }
-        }
-
-        function setPointerMeta(path, name, meta) {
-            var node = _nodes[path],
-                target,
-                error,
-                i;
-
-            if (meta && meta.items && node) {
-                for (i = 0; i < meta.items.length; i += 1) {
-                    target = _nodes[meta.items[i].id];
-                    if (target) {
-                        error = _core.setPointerMetaTarget(node, name, target, meta.items[i].min, meta.items[i].max);
-                        if (error instanceof Error) {
-                            _errorFunc(error);
-                            return;
-                        }
-                    }
-                }
-                error = _core.setPointerMetaLimits(node, name, meta.min, meta.max);
-                if (error instanceof Error) {
-                    _errorFunc(error);
-                    return;
-                }
-                _save(node, 'Meta.setPointerMeta(' + path + ', ' + name + ')');
-            }
-        }
-
-        function setChildrenMeta(path, meta) {
-            var node = _nodes[path],
-                target,
-                error,
-                i;
-
-            if (meta && meta.items && node) {
-                for (i = 0; i < meta.items.length; i += 1) {
-                    target = _node[meta.items[i].id];
-                    if (target) {
-                        error = _core.setChildMeta(node, target, meta.items[i].min, meta.items[i].max);
-                        if (error instanceof Error) {
-                            _errorFunc(error);
-                            return;
-                        }
-                    }
-                }
-                error = _core.setChildrenMetaLimits(node, meta.min, meta.max);
-                if (error instanceof Error) {
-                    _errorFunc(error);
-                    return;
-                }
-                _save(node, 'Meta.setChildrenMeta(' + path + ')');
-            }
-        }
-
         function getMetaAspectNames(path) {
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
 
             if (node) {
                 return _core.getValidAspectNames(node);
@@ -663,7 +333,7 @@ define([], function () {
         }
 
         function getOwnMetaAspectNames(path) {
-            var node = _nodes[path];
+            var node = _state.nodes[path] && _state.nodes[path].node;
 
             if (node) {
                 return _core.getOwnValidAspectNames(node);
@@ -673,10 +343,8 @@ define([], function () {
         }
 
         function getMetaAspect(path, name) {
-            var node = _nodes[path],
-                meta,
-                aspectMeta,
-                i;
+            var node = _state.nodes[path] && _state.nodes[path].node,
+                meta;
 
             if (node) {
                 meta = _core.getAspectMeta(node, name);
@@ -689,32 +357,6 @@ define([], function () {
             return null;
         }
 
-        function setMetaAspect(path, name, aspect) {
-            var i,
-                target,
-                node = _nodes[path],
-                error;
-
-            if (node) {
-                error = _core.delAspectMeta(node, name);
-                if (error instanceof Error) {
-                    _errorFunc(error);
-                    return;
-                }
-                for (i = 0; i < aspect.length; i += 1) {
-                    target = _nodes[aspect[i]];
-                    if (target) {
-                        error = _core.setAspectMetaTarget(node, name, target);
-                        if (error instanceof Error) {
-                            _errorFunc(error);
-                            return;
-                        }
-                    }
-                }
-                _save(node, 'Meta.setMetaAspect(' + path + ', ' + name + ')');
-            }
-        }
-
         function getAspectTerritoryPattern(path, name) {
             var aspect = getMetaAspect(path, name);
 
@@ -725,71 +367,40 @@ define([], function () {
             return null;
         }
 
-        function deleteMetaAspect(path, name) {
-            var node = _nodes[path],
-                error;
-
-            if (node) {
-                error = _core.delAspectMeta(node, name);
-                if (error instanceof Error) {
-                    _errorFunc(error);
-                    return;
-                }
-                _save(node, 'Meta.deleteMetaAspect(' + path + ', ' + name + ')');
-            }
-        }
-
         return {
-            refObjectToPath: refObjectToPath,
-            pathToRefObject: pathToRefObject,
-
             initialize: initialize,
             getMeta: getMeta,
-            setMeta: setMeta,
             isTypeOf: isTypeOf,
             hasOwnMetaRules: hasOwnMetaRules,
 
             //containment
             isValidChild: isValidChild,
             getChildrenMeta: getChildrenMeta,
-            setChildrenMeta: setChildrenMeta,
             getChildrenMetaAttribute: getChildrenMetaAttribute,
-            setChildrenMetaAttribute: setChildrenMetaAttribute,
             getValidChildrenTypes: getValidChildrenTypes,
             getOwnValidChildrenTypes: getOwnValidChildrenTypes,
             getValidChildrenItems: getValidChildrenItems,
-            updateValidChildrenItem: updateValidChildrenItem,
-            removeValidChildrenItem: removeValidChildrenItem,
 
             //attribute
             isValidAttribute: isValidAttribute,
             getAttributeSchema: getAttributeSchema,
-            setAttributeSchema: setAttributeSchema,
-            removeAttributeSchema: removeAttributeSchema,
             getValidAttributeNames: getValidAttributeNames,
             getOwnValidAttributeNames: getOwnValidAttributeNames,
 
             //pointer
             isValidTarget: isValidTarget,
             getPointerMeta: getPointerMeta,
-            setPointerMeta: setPointerMeta,
             getValidTargetItems: getValidTargetItems,
             getOwnValidTargetItems: getOwnValidTargetItems,
             getValidTargetTypes: getValidTargetTypes,
             getOwnValidTargetTypes: getOwnValidTargetTypes,
             filterValidTarget: filterValidTarget,
-            updateValidTargetItem: updateValidTargetItem,
-            removeValidTargetItem: removeValidTargetItem,
-            deleteMetaPointer: deleteMetaPointer,
 
             //aspect
             getMetaAspectNames: getMetaAspectNames,
             getOwnMetaAspectNames: getOwnMetaAspectNames,
             getMetaAspect: getMetaAspect,
-            setMetaAspect: setMetaAspect,
             getAspectTerritoryPattern: getAspectTerritoryPattern,
-            deleteMetaAspect: deleteMetaAspect
-
         };
     }
 
