@@ -105,6 +105,8 @@ function StandAloneServer(gmeConfig) {
         mainLogger = Logger.createWithGmeConfig('gme', gmeConfig, true);
     }
 
+    mainLogger.info('Node version', process.version);
+
     this.serverUrl = '';
     this.isRunning = false;
 
