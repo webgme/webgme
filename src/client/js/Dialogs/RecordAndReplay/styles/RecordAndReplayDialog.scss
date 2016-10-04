@@ -13,12 +13,20 @@ div.record-and-replay-dialog {
         color: #2a6496;
       }
     }
-    .info-message {
-      display: inline-block;
-      width: 95%;
-      margin-bottom: 2ex;
-      margin-left: 0.5ex;
-      opacity: 0.90;
+    .btn-record {
+      &.recording {
+        color: red;
+      }
+    }
+
+    .modal-footer {
+      .info-message {
+        display: inline-block;
+        width: 95%;
+        margin-bottom: 2ex;
+        margin-left: 0.5ex;
+        opacity: 0.90;
+      }
       &.hidden {
         display: none;
       }

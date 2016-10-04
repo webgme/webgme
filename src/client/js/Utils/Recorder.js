@@ -16,6 +16,9 @@ define(['q'], function (Q) {
 
         this.recording = [];
 
+        this.stateIndex = -1;
+        this.commitIndex = -1;
+
         this.start = function () {
             client.addEventListener(client.CONSTANTS.NEW_COMMIT_STATE, storeCommitState);
         };
@@ -34,219 +37,121 @@ define(['q'], function (Q) {
             self.recording = recording;
         };
 
-        this.play = function (delay) {
-            var i = 0,
-                num = self.recording.length,
-                recDeferred = Q.defer(),
-                commitHash,
-                uiState;
+        function loadState(options, uiState) {
+            var deferred = Q.defer();
 
-            self.recording = [
-                {
-                    "commitObject": {
-                        "root": "#6e726d590ff3103eaf5f573c22b2a41e91c9469c",
-                        "parents": [
-                            "#fdbf4fe0ebfdeda2f5ed5011eccf7091747199fa"
-                        ],
-                        "updater": [
-                            "guest"
-                        ],
-                        "time": 1475190673618,
-                        "message": "[\nsetMemberRegistry(,/175547009,MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866,position,{\"x\":246,\"y\":669})\n]",
-                        "type": "commit",
-                        "_id": "#eed90df09528f05d64375972c053beaf4eccde37"
-                    },
-                    "uiState": {
-                        "activeAspect": "All",
-                        "suppressVisualizerFromNode": false,
-                        "layout": "DefaultLayout",
-                        "activeVisualizer": "METAAspect",
-                        "activeProjectName": "guest+ActivePanels",
-                        "activeObject": "",
-                        "activeBranchName": "master",
-                        "activeCommit": null,
-                        "activeSelection": [
-                            "/175547009"
-                        ],
-                        "activeTab": 0
-                    }
-                },
-                {
-                    "commitObject": {
-                        "root": "#b2308bd33d3878848d8e0427d3ed6c5d0e02ac8b",
-                        "parents": [
-                            "#eed90df09528f05d64375972c053beaf4eccde37"
-                        ],
-                        "updater": [
-                            "guest"
-                        ],
-                        "time": 1475190678689,
-                        "message": "[\nremoveMember(,/U,MetaAspectSet_0fe6dd4c-e307-b3e3-9bff-f30fb55c5866)\nremoveMember(,/U,MetaAspectSet)\nsetMeta(/U)\n]",
-                        "type": "commit",
-                        "_id": "#3b2c1c1e168545b76f2ed3efd1921153f128b3cf"
-                    },
-                    "uiState": {
-                        "activeAspect": "All",
-                        "suppressVisualizerFromNode": false,
-                        "layout": "DefaultLayout",
-                        "activeVisualizer": "METAAspect",
-                        "activeProjectName": "guest+ActivePanels",
-                        "activeObject": "",
-                        "activeBranchName": "master",
-                        "activeCommit": null,
-                        "activeSelection": [
-                            "/U"
-                        ],
-                        "activeTab": 0
-                    }
-                },
-                {
-                    "commitObject": {
-                        "root": "#003d0ba2f8cdfe63438f542df7ad90c38bc35fd2",
-                        "parents": [
-                            "#3b2c1c1e168545b76f2ed3efd1921153f128b3cf"
-                        ],
-                        "updater": [
-                            "guest"
-                        ],
-                        "time": 1475190682672,
-                        "message": "[\nsetRegistry(/i,position,{\"x\":200,\"y\":473})\n]",
-                        "type": "commit",
-                        "_id": "#7f81e770e1ac63e217356f314d0f1fde1c9b6671"
-                    },
-                    "uiState": {
-                        "activeAspect": "All",
-                        "suppressVisualizerFromNode": false,
-                        "layout": "DefaultLayout",
-                        "activeVisualizer": "ModelEditor",
-                        "activeProjectName": "guest+ActivePanels",
-                        "activeObject": "",
-                        "activeBranchName": "master",
-                        "activeCommit": null,
-                        "activeSelection": [
-                            "/i"
-                        ],
-                        "activeTab": 0
-                    }
-                },
-                {
-                    "commitObject": {
-                        "root": "#ae22f13feb58f5ee76c1ab39b7fc41941b89c068",
-                        "parents": [
-                            "#7f81e770e1ac63e217356f314d0f1fde1c9b6671"
-                        ],
-                        "updater": [
-                            "guest"
-                        ],
-                        "time": 1475190687336,
-                        "message": "createChildren({\"/175547009/1817665259\":\"/i/Z\"})",
-                        "type": "commit",
-                        "_id": "#2532b8f6cd069799825d4e557776092a0a5f76e1"
-                    },
-                    "uiState": {
-                        "activeAspect": "All",
-                        "suppressVisualizerFromNode": false,
-                        "layout": "DefaultLayout",
-                        "activeVisualizer": "ModelEditor",
-                        "activeProjectName": "guest+ActivePanels",
-                        "activeObject": "/i",
-                        "activeBranchName": "master",
-                        "activeCommit": null,
-                        "activeSelection": [],
-                        "activeTab": 0
-                    }
-                },
-                {
-                    "commitObject": {
-                        "root": "#124fc963817f3dc78e62be32fa03982315053bc1",
-                        "parents": [
-                            "#2532b8f6cd069799825d4e557776092a0a5f76e1"
-                        ],
-                        "updater": [
-                            "guest"
-                        ],
-                        "time": 1475190689173,
-                        "message": "createChildren({\"/175547009/1104061497\":\"/i/R\"})",
-                        "type": "commit",
-                        "_id": "#a7a2cae7b8d11fb4adc8e1bec57bdb28268c54f0"
-                    },
-                    "uiState": {
-                        "activeAspect": "All",
-                        "suppressVisualizerFromNode": false,
-                        "layout": "DefaultLayout",
-                        "activeVisualizer": "ModelEditor",
-                        "activeProjectName": "guest+ActivePanels",
-                        "activeObject": "/i",
-                        "activeBranchName": "master",
-                        "activeCommit": null,
-                        "activeSelection": [],
-                        "activeTab": 0
-                    }
-                }
-            ];
-            num = self.recording.length;
-            delay = delay || 1000;
+            delete uiState.activeProjectName;
+            delete uiState.layout;
 
-            function switchUiState(uiState) {
-                var deferred = Q.defer();
-                console.log('Switch ui-state', JSON.stringify(uiState, null, 2));
-                WebGMEGlobal.State.set(uiState);
+            delete uiState.activeBranchName;
+            delete uiState.activeCommit;
+
+            uiState.suppressVisualizerFromNode = true;
+            console.log('Switch ui-state', JSON.stringify(uiState, null, 2));
+            WebGMEGlobal.State.set(uiState);
+
+            setTimeout(function () {
                 deferred.resolve();
-                return deferred.promise;
+            }, options.delay || 200);
+
+
+            return deferred.promise;
+        }
+
+        function loadCommit(options, commitHash) {
+            console.log('loading commit', commitHash);
+            return Q.ninvoke(client, 'selectCommit', commitHash);
+        }
+
+        this.stepForwardState = function (options, callback) {
+            var deferred;
+
+            options = options || {};
+
+            self.stateIndex = self.stateIndex += 1;
+
+            if (self.stateIndex >= self.recording.length) {
+                deferred = Q.defer();
+                deferred.reject(new Error('End of recording reached'));
+                return deferred.promise.nodeify(callback);
+            } else {
+                return loadState(options, self.recording[self.stateIndex].uiState);
             }
+        };
 
-            function checkoutCommit(commitHash) {
-                var deferred = Q.defer();
-                setTimeout(function () {
-                    console.log('loading commit', commitHash);
-                    Q.ninvoke(client, 'selectCommit', commitHash)
-                        .then(deferred.resolve)
-                        .catch(deferred.reject);
+        this.stepForwardCommit = function (options, callback) {
+            var deferred;
 
-                }, delay);
+            options = options || {};
 
-                return deferred.promise;
+            self.commitIndex = self.commitIndex += 1;
+
+            if (self.commitIndex >= self.recording.length) {
+                deferred = Q.defer();
+                deferred.reject(new Error('End of recording reached'));
+                return deferred.promise.nodeify(callback);
+            } else {
+                return loadCommit(options,  self.recording[self.commitIndex].commitObject._id);
             }
+        };
+
+        this.stepBackState = function (options, callback) {
+            var deferred;
+
+            options = options || {};
+
+            self.stateIndex = self.stateIndex -= 1;
+
+            if (self.stateIndex < 0) {
+                deferred = Q.defer();
+                deferred.reject(new Error('Beginning of recording reached'));
+                return deferred.promise.nodeify(callback);
+            } else {
+                return loadState(options, self.recording[self.stateIndex].uiState);
+            }
+        };
+
+        this.stepBackCommit = function (options, callback) {
+            var deferred;
+
+            options = options || {};
+
+            self.commitIndex = self.commitIndex -= 1;
+
+            if (self.commitIndex < 0) {
+                deferred = Q.defer();
+                deferred.reject(new Error('Beginning of recording reached'));
+                return deferred.promise.nodeify(callback);
+            } else {
+                return loadCommit(options, self.recording[self.commitIndex].commitObject._id);
+            }
+        };
+
+        this.autoPlay = function (options, callback) {
+            var recDeferred = Q.defer();
+
+            options = options || {};
 
             function playBack() {
-                commitHash = self.recording[i].commitObject._id;
-                uiState = self.recording[i].uiState;
-                // TODO: Ensure we're in the correct project and layout
-                delete uiState.activeProjectName;
-                delete uiState.layout;
-
-                delete uiState.activeBranchName;
-                delete uiState.activeCommit;
-
-                uiState.suppressVisualizerFromNode = true;
-                uiState = self.recording[i].uiState;
-
-                i += 1;
-
-                switchUiState(uiState)
+                self.stepForwardState(options)
                     .then(function () {
-                        return checkoutCommit(commitHash);
+                        return self.stepForwardCommit(options);
                     })
                     .then(function () {
-                        console.log('Loaded commit', commitHash);
-                        if (i < num) {
-                            playBack();
-                        } else {
-                            console.log('done!');
-                            self.recording = [];
+                        playBack();
+                    })
+                    .catch(function (err) {
+                        if (err.message.indexOf('of recording reached') > -1) {
                             recDeferred.resolve();
+                        } else {
+                            recDeferred.reject(err);
                         }
-                    })
-                    .catch(recDeferred.reject);
+                    });
             }
 
-            if (num < 0) {
-                recDeferred.resolve();
-            } else {
-                playBack();
-            }
+            playBack();
 
-            return recDeferred.promise;
+            return recDeferred.promise.nodeify(callback);
         };
 
         this.save = function () {

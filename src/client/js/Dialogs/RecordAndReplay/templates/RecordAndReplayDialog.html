@@ -2,12 +2,37 @@
     <div class="modal-dialog modal-md">
         <div class="modal-content">
             <div class="modal-body">
-                <i class="glyphicon glyphicon-info-sign toggle-info-btn"/>
+                <button type="button" class="btn btn-default btn-record">
+                    <i class="glyphicon glyphicon-record"/>
+                </button>
+                <div class="btn-group replay-btns" role="group">
+                    <button type="button" class="btn btn-default btn-step-back hidden">
+                        <i class="glyphicon glyphicon-step-backward"/>
+                    </button>
+                    <button type="button" class="btn btn-default btn-play">
+                        <i class="glyphicon glyphicon-play"/>
+                    </button>
+                    <button type="button" class="btn btn-default btn-stop hidden">
+                        <i class="glyphicon glyphicon-stop"/>
+                    </button>
+                    <button type="button" class="btn btn-default btn-step-forward hidden">
+                        <i class="glyphicon glyphicon-step-forward"/>
+                    </button>
+                </div>
+                <div class="btn-group load-unload-btns" role="group">
+                    <button type="button" class="btn btn-default btn-load">
+                        <i class="glyphicon glyphicon-floppy-open"/>
+                    </button>
+                    <button type="button" class="btn btn-default">
+                        <i class="glyphicon glyphicon-floppy-save btn-save"/>
+                    </button>
+                </div>
 
-                <span class="info-message hidden">
-                    Here you can record and replay changes in the model.
-                </span>
+                <span class="badge rec-badge">0</span>
+                <i class="glyphicon glyphicon-info-sign toggle-info-btn"/>
                 <button type="button" class="close" data-dismiss="modal">×</button>
+            </div>
+            <div class="modal-footer hidden">Here you can record and replay changes in the model.
             </div>
         </div>
     </div>

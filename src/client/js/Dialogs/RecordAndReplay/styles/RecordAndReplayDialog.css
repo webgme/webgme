@@ -8,11 +8,13 @@ div.record-and-replay-dialog .modal-content .toggle-info-btn {
   color: #333; }
   div.record-and-replay-dialog .modal-content .toggle-info-btn:hover {
     color: #2a6496; }
-div.record-and-replay-dialog .modal-content .info-message {
+div.record-and-replay-dialog .modal-content .btn-record.recording {
+  color: red; }
+div.record-and-replay-dialog .modal-content .modal-footer .info-message {
   display: inline-block;
   width: 95%;
   margin-bottom: 2ex;
   margin-left: 0.5ex;
   opacity: 0.90; }
-  div.record-and-replay-dialog .modal-content .info-message.hidden {
-    display: none; }
+div.record-and-replay-dialog .modal-content .modal-footer.hidden {
+  display: none; }

@@ -1122,7 +1122,7 @@ define(['js/logger',
 
         menuToggleBtn.click(function () {
             var el = $(this);
-            WebGMEGlobal.recorder.play();
+
             if (filterContainer.hasClass('collapsed')) {
                 filterContainer.removeClass('collapsed');
                 el.prop('title', 'Hide filters...');
