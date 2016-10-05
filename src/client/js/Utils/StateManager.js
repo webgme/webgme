@@ -124,7 +124,7 @@ define([
                 logger = Logger.create('gme:Utils:StateManager', WebGMEGlobal.gmeConfig.client.log);
                 _WebGMEState = new WebGMEStateModel();
                 _WebGMEState.registerActiveAspect(CONSTANTS.ASPECT_ALL);
-                _WebGMEState.registerSuppressVisualizerFromNode(false);
+                _WebGMEState.registerSuppressVisualizerFromNode(true);
                 //_WebGMEState.registerActiveTab('0');
                 _WebGMEState.on('change', function (model, options) {
                     logger.debug('', model, options);

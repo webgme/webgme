@@ -265,6 +265,7 @@ define([
             }
 
             function openProjectLoadDialog(connect) {
+                WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
                 initialProject = false;
                 //if initial project openings failed we show the project opening dialog
                 logger.info('init-phase false');
@@ -326,7 +327,6 @@ define([
                         if (events[i].eid === nodePath) {
                             activeNode = client.getNode(nodePath);
                             if (activeNode) {
-                                // First register the activeObject and let it pick the visualizer.
                                 updatedState[CONSTANTS.STATE_ACTIVE_OBJECT] = nodePath;
 
                                 selectionIds = selectionIds || [];
@@ -341,7 +341,7 @@ define([
                                     updatedState[CONSTANTS.STATE_ACTIVE_TAB] = tab;
 
                                     // Suppress the node determining the visualizer.
-                                    updatedState[CONSTANTS.STATE_SUPPRESS_VISUALIZER_FROM_NODE] = true;
+                                    WebGMEGlobal.State.registerActiveVisualizer(vizualizer);
 
                                     // We also have to set the selected aspect according to the selectedTabIndex,
                                     //TODO this is not the best solution,
@@ -359,13 +359,16 @@ define([
                                     }
                                 }
 
-                                WebGMEGlobal.State.set(updatedState);
-                                // After the state has been updated, make sure to allow node look-up again.
-                                WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
+                                setTimeout(function () {
+                                    WebGMEGlobal.State.set(updatedState);
+                                    // After the state has been updated, make sure to allow node look-up again.
+                                    WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
+                                });
                                 break;
                             }
                         }
                     }
+
                     client.removeUI(activeNodeUI);
                 }
 
