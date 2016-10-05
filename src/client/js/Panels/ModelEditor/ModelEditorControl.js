@@ -64,8 +64,10 @@ define(['js/logger',
         }
 
         this._selfPatterns = {};
-        this._GmeID2ComponentID = {};
-        this._ComponentID2GmeID = {};
+
+        // Alias just in case someone is extending this visualizers
+        this._GMEID2ComponentID = this._GmeID2ComponentID = {};
+        this._ComponentID2GMEID = this._ComponentID2GmeID = {};
         this.eventQueue = [];
         this._componentIDPartIDMap = {};
 
@@ -99,8 +101,9 @@ define(['js/logger',
         this._GMEModels = [];
         this._GMEConnections = [];
 
-        this._GmeID2ComponentID = {};
-        this._ComponentID2GmeID = {};
+        // Alias just in case someone is extending this visualizers
+        this._GMEID2ComponentID = this._GmeID2ComponentID = {};
+        this._ComponentID2GMEID = this._ComponentID2GmeID = {};
 
         this._GMEID2Subcomponent = {};
         this._Subcomponent2GMEID = {};
@@ -532,8 +535,8 @@ define(['js/logger',
                     //try to find each object present in the active selection mapped to DiagramDesigner element
                     gmeID = activeSelection[i];
 
-                    if (this._GmeID2ComponentID[gmeID]) {
-                        ddSelection = ddSelection.concat(this._GmeID2ComponentID[gmeID]);
+                    if (this._GMEID2ComponentID[gmeID]) {
+                        ddSelection = ddSelection.concat(this._GMEID2ComponentID[gmeID]);
                     }
                 }
 
@@ -598,7 +601,7 @@ define(['js/logger',
             if (objD) {
                 if (objD.parentId === this.currentNodeInfo.id) {
                     objDesc = _.extend({}, objD);
-                    this._GmeID2ComponentID[gmeID] = [];
+                    this._GMEID2ComponentID[gmeID] = [];
 
                     if (objDesc.kind === 'MODEL') {
 
@@ -615,8 +618,8 @@ define(['js/logger',
 
                         uiComponent = this.designerCanvas.createDesignerItem(objDesc);
 
-                        this._GmeID2ComponentID[gmeID].push(uiComponent.id);
-                        this._ComponentID2GmeID[uiComponent.id] = gmeID;
+                        this._GMEID2ComponentID[gmeID].push(uiComponent.id);
+                        this._ComponentID2GMEID[uiComponent.id] = gmeID;
 
                         getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
 
@@ -652,8 +655,8 @@ define(['js/logger',
                                     this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' +
                                         objDesc.id);
 
-                                    this._GmeID2ComponentID[gmeID].push(uiComponent.id);
-                                    this._ComponentID2GmeID[uiComponent.id] = gmeID;
+                                    this._GMEID2ComponentID[gmeID].push(uiComponent.id);
+                                    this._ComponentID2GMEID[uiComponent.id] = gmeID;
                                 }
                             }
                         } else {
@@ -704,10 +707,10 @@ define(['js/logger',
             if (objDesc) {
                 if (objDesc.parentId === this.currentNodeInfo.id) {
                     if (objDesc.kind === 'MODEL') {
-                        if (this._GmeID2ComponentID[gmeID]) {
-                            len = this._GmeID2ComponentID[gmeID].length;
+                        if (this._GMEID2ComponentID[gmeID]) {
+                            len = this._GMEID2ComponentID[gmeID].length;
                             while (len--) {
-                                componentID = this._GmeID2ComponentID[gmeID][len];
+                                componentID = this._GMEID2ComponentID[gmeID][len];
 
                                 decClass = this._getItemDecorator(objDesc.decorator);
 
@@ -722,7 +725,7 @@ define(['js/logger',
 
                     //there is a connection associated with this GMEID
                     if (this._GMEConnections.indexOf(gmeID) !== -1) {
-                        len = this._GmeID2ComponentID[gmeID].length;
+                        len = this._GMEID2ComponentID[gmeID].length;
                         srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
                         sources = srcDst.sources;
                         destinations = srcDst.destinations;
@@ -744,7 +747,7 @@ define(['js/logger',
                                 delete objDesc.target;
 
                                 if (len >= 0) {
-                                    componentID = this._GmeID2ComponentID[gmeID][len];
+                                    componentID = this._GMEID2ComponentID[gmeID][len];
 
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
                                     this.designerCanvas.updateConnection(componentID, objDesc);
@@ -758,8 +761,8 @@ define(['js/logger',
                                     uiComponent = this.designerCanvas.createConnection(objDesc);
                                     this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' +
                                         objDesc.id);
-                                    this._GmeID2ComponentID[gmeID].push(uiComponent.id);
-                                    this._ComponentID2GmeID[uiComponent.id] = gmeID;
+                                    this._GMEID2ComponentID[gmeID].push(uiComponent.id);
+                                    this._ComponentID2GMEID[uiComponent.id] = gmeID;
                                 }
                             }
                         }
@@ -769,10 +772,10 @@ define(['js/logger',
                             //delete them
                             len += 1;
                             while (len--) {
-                                componentID = this._GmeID2ComponentID[gmeID][len];
+                                componentID = this._GMEID2ComponentID[gmeID][len];
                                 this.designerCanvas.deleteComponent(componentID);
-                                this._GmeID2ComponentID[gmeID].splice(len, 1);
-                                delete this._ComponentID2GmeID[componentID];
+                                this._GMEID2ComponentID[gmeID].splice(len, 1);
+                                delete this._ComponentID2GMEID[componentID];
                             }
                         }
                     }
@@ -826,10 +829,10 @@ define(['js/logger',
                 color: BACKGROUND_TEXT_COLOR
             });
         } else {
-            if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
-                len = this._GmeID2ComponentID[gmeID].length;
+            if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
+                len = this._GMEID2ComponentID[gmeID].length;
                 while (len--) {
-                    componentID = this._GmeID2ComponentID[gmeID][len];
+                    componentID = this._GMEID2ComponentID[gmeID][len];
 
                     if (this.designerCanvas.itemIds.indexOf(componentID) !== -1) {
                         getDecoratorTerritoryQueries(this.designerCanvas.items[componentID]._decoratorInstance);
@@ -837,10 +840,10 @@ define(['js/logger',
 
                     this.designerCanvas.deleteComponent(componentID);
 
-                    delete this._ComponentID2GmeID[componentID];
+                    delete this._ComponentID2GMEID[componentID];
                 }
 
-                delete this._GmeID2ComponentID[gmeID];
+                delete this._GMEID2ComponentID[gmeID];
             } else {
                 //probably a subcomponent has been deleted - will be handled in the decorator
                 this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UNLOAD);
@@ -875,7 +878,7 @@ define(['js/logger',
 
         while (len--) {
             if (this.designerCanvas.connectionIds.indexOf(idList[len]) !== -1) {
-                nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
+                nodeObj = this._client.getNode(this._ComponentID2GMEID[idList[len]]);
 
                 if (nodeObj) {
                     this._client.delRegistry(nodeObj.getId(), REGISTRY_KEYS.LINE_CUSTOM_POINTS);
@@ -891,12 +894,12 @@ define(['js/logger',
             destinations = [],
             i;
 
-        if (this._GmeID2ComponentID.hasOwnProperty(GMESrcId)) {
+        if (this._GMEID2ComponentID.hasOwnProperty(GMESrcId)) {
             //src is a DesignerItem
-            i = this._GmeID2ComponentID[GMESrcId].length;
+            i = this._GMEID2ComponentID[GMESrcId].length;
             while (i--) {
                 sources.push({
-                    objId: this._GmeID2ComponentID[GMESrcId][i],
+                    objId: this._GMEID2ComponentID[GMESrcId][i],
                     subCompId: undefined
                 });
             }
@@ -915,11 +918,11 @@ define(['js/logger',
             }
         }
 
-        if (this._GmeID2ComponentID.hasOwnProperty(GMEDstId)) {
-            i = this._GmeID2ComponentID[GMEDstId].length;
+        if (this._GMEID2ComponentID.hasOwnProperty(GMEDstId)) {
+            i = this._GMEID2ComponentID[GMEDstId].length;
             while (i--) {
                 destinations.push({
-                    objId: this._GmeID2ComponentID[GMEDstId][i],
+                    objId: this._GMEID2ComponentID[GMEDstId][i],
                     subCompId: undefined
                 });
             }
@@ -988,11 +991,11 @@ define(['js/logger',
                 this.logger.debug('NotifyPartDecorator: ' + gmeID + ', componentIDs: ' +
                     JSON.stringify(this._notifyPackage[gmeID]));
 
-                if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
+                if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
                     //src is a DesignerItem
-                    i = this._GmeID2ComponentID[gmeID].length;
+                    i = this._GMEID2ComponentID[gmeID].length;
                     while (i--) {
-                        itemID = this._GmeID2ComponentID[gmeID][i];
+                        itemID = this._GMEID2ComponentID[gmeID][i];
                         this.designerCanvas.notifyItemComponentEvents(itemID, this._notifyPackage[gmeID]);
                     }
                 }
@@ -1151,8 +1154,8 @@ define(['js/logger',
             len = activeSelection.length;
 
         while (len--) {
-            if (this._GmeID2ComponentID.hasOwnProperty(activeSelection[len])) {
-                selectedIDs = selectedIDs.concat(this._GmeID2ComponentID[activeSelection[len]]);
+            if (this._GMEID2ComponentID.hasOwnProperty(activeSelection[len])) {
+                selectedIDs = selectedIDs.concat(this._GMEID2ComponentID[activeSelection[len]]);
             }
         }
 
