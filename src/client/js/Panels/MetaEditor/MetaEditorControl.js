@@ -76,6 +76,9 @@ define(['js/logger',
         this._selectedMetaAspectSheetMembers = [];
         this._selectedSheetID = null;
 
+        this._GMEID2ComponentID = {};
+        this._ComponentID2GMEID = {};
+
         //set default connection type to containment
         this._setNewConnectionType(MetaRelations.META_RELATIONS.CONTAINMENT);
 
@@ -1617,14 +1620,43 @@ define(['js/logger',
             }
         }
     };
+
     /****************************************************************************/
     /*               END OF --- CONNECTION DESTINATION TEXT CHANGE              */
     /****************************************************************************/
 
+    MetaEditorControl.prototype.activeSelectionChanged = function (activeSelection) {
+        var selectedIDs = [],
+            len = activeSelection.length;
+
+        while (len--) {
+            if (this._GMEID2ComponentID.hasOwnProperty(activeSelection[len])) {
+                selectedIDs = selectedIDs.concat(this._GMEID2ComponentID[activeSelection[len]]);
+            }
+        }
+
+        this.diagramDesigner.select(selectedIDs);
+    };
+
+    MetaEditorControl.prototype._stateActiveSelectionChanged = function (model, activeSelection) {
+        if (this._settingActiveSelection !== true) {
+            if (activeSelection) {
+                this.activeSelectionChanged(activeSelection);
+            } else {
+                this.activeSelectionChanged([]);
+            }
+        }
+    };
+
     MetaEditorControl.prototype._attachClientEventListeners = function () {
+        this._detachClientEventListeners();
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged, this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_PROJECT_NAME, this._activeProjectChanged, this);
     };
 
     MetaEditorControl.prototype._detachClientEventListeners = function () {
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_PROJECT_NAME, this._activeProjectChanged, this);
     };
 
     MetaEditorControl.prototype.onActivate = function () {
