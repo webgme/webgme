@@ -22,8 +22,6 @@ function createAPI(app, mountPath, middlewareOpts) {
         router = express.Router(),
 
         Q = require('q'),
-        htmlDoc,
-        htmlDocDeferred = Q.defer(),
         path = require('path'),
         fs = require('fs'),
         apiDocumentationMountPoint = '/developer/api',
@@ -42,35 +40,10 @@ function createAPI(app, mountPath, middlewareOpts) {
         webgmeUtils = require('../../utils'),
 
         versionedAPIPath = mountPath + '/v1',
-        latestAPIPath = mountPath,
+        latestAPIPath = mountPath;
 
-        raml2html,
-        configWithDefaultTemplates;
-
-    if (global.TESTING) {
-        htmlDocDeferred.resolve();
-    } else {
-        // FIXME: this does not work with tests well.
-        // generate api documentation based on raml file when server starts
-        raml2html = require('raml2html');
-        configWithDefaultTemplates = raml2html.getDefaultConfig();
-        //var configWithCustomTemplates = raml2html.getDefaultConfig('my-custom-template.nunjucks', __dirname);
-
-        // source can either be a filename, url, file contents (string) or parsed RAML object
-        raml2html.render(path.join(__dirname, 'webgme-api.raml'), configWithDefaultTemplates).then(function (result) {
-            // Save the result to a file or do something else with the result
-            htmlDoc = result;
-            htmlDocDeferred.resolve();
-        }, function (error) {
-            // Output error
-            htmlDocDeferred.reject(error);
-        });
-    }
-
-    // attach api documentation to the specified path. N.B: this is NOT on the router, it is on the app.
     app.get(apiDocumentationMountPoint, function (req, res) {
-        res.status(200);
-        res.send(htmlDoc);
+        res.sendFile(path.join(__dirname, '..', '..', '..', 'docs', 'REST', 'index.html'));
     });
 
     function getFullUrl(req, name) {
@@ -2113,7 +2086,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     logger.debug('Latest api path: ' + latestAPIPath);
     app.use(latestAPIPath, router);
 
-    return Q.all([htmlDocDeferred.promise]);
+    return Q();
 }
 
 module.exports = {

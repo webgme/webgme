@@ -10,8 +10,12 @@ function prepublish() {
     if (process.env.TEST_FOLDER) {
         console.warn('TEST_FOLDER environment valiable is set, skipping post install script.');
     } else {
-        var webgmeBuild = require('./build/webgme.classes/build_classes.js'),
-            webgmeDist = require('./build/dist/build.js');
+        var raml2html = require('raml2html'),
+            path = require('path'),
+            fs = require('fs'),
+            webgmeBuild = require('./build/webgme.classes/build_classes.js'),
+            webgmeDist = require('./build/dist/build.js'),
+            configWithDefaultTemplates = raml2html.getDefaultConfig();
 
         console.log('Generating webgme.classes.build.js ...');
 
@@ -35,8 +39,18 @@ function prepublish() {
             }
         });
 
+        console.log('Generating REST API docs ...');
+
+        raml2html.render(path.join(__dirname, '..', 'src', 'server', 'api', 'webgme-api.raml'), configWithDefaultTemplates)
+            .then(function (indexHtml) {
+                fs.writeFileSync(path.join(__dirname, '..', 'docs', 'REST', 'index.html'), indexHtml);
+                console.log('Done with REST API docs!');
+            }, function (err) {
+                console.error('Failed generating REST API docs!', err);
+            });
+
         console.log('Generating webgme docs/source ...');
-        require('jsdoc/jsdoc');
+        //require('jsdoc/jsdoc');
         console.log('Done with webgme docs/source!');
     }
 }
