@@ -206,20 +206,20 @@ define([
      * arrowEnd: the Raphael defined line-end arrow at the end of the line
      */
     ConnectionDrawingManager.prototype.setConnectionInDrawProperties = function (params) {
-        this._connectionPathProps.strokeWidth = params[DiagramDesignerWidgetConstants.LINE_WIDTH] ||
-        this._connectionPathProps.strokeWidth;
+        this._connectionPathProps.strokeWidth = typeof params[DiagramDesignerWidgetConstants.LINE_WIDTH] === 'string' ?
+            params[DiagramDesignerWidgetConstants.LINE_WIDTH]: this._connectionPathProps.strokeWidth;
 
-        this._connectionPathProps.strokeColor = params[DiagramDesignerWidgetConstants.LINE_COLOR] ||
-        this._connectionPathProps.strokeColor;
+        this._connectionPathProps.strokeColor = typeof params[DiagramDesignerWidgetConstants.LINE_COLOR] === 'string' ?
+            params[DiagramDesignerWidgetConstants.LINE_COLOR] : this._connectionPathProps.strokeColor;
 
-        this._connectionPathProps.arrowStart = params[DiagramDesignerWidgetConstants.LINE_START_ARROW] ||
-        this._connectionPathProps.arrowStart;
+        this._connectionPathProps.arrowStart = typeof params[DiagramDesignerWidgetConstants.LINE_START_ARROW] === 'string' ?
+            params[DiagramDesignerWidgetConstants.LINE_START_ARROW] : this._connectionPathProps.arrowStart;
 
-        this._connectionPathProps.arrowEnd = params[DiagramDesignerWidgetConstants.LINE_END_ARROW] ||
-        this._connectionPathProps.arrowEnd;
+        this._connectionPathProps.arrowEnd = typeof params[DiagramDesignerWidgetConstants.LINE_END_ARROW] === 'string' ?
+            params[DiagramDesignerWidgetConstants.LINE_END_ARROW] : this._connectionPathProps.arrowEnd;
 
-        this._connectionPathProps.lineType = params[DiagramDesignerWidgetConstants.LINE_PATTERN] ||
-        this._connectionPathProps.lineType;
+        this._connectionPathProps.lineType = typeof params[DiagramDesignerWidgetConstants.LINE_PATTERN] === 'string' ?
+            params[DiagramDesignerWidgetConstants.LINE_PATTERN] : this._connectionPathProps.lineType;
     };
 
 

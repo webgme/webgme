@@ -1116,6 +1116,8 @@ define(['js/logger',
                 connProps[DiagramDesignerWidgetConstants.LINE_END_ARROW] = temp;
             }
 
+            connProps[DiagramDesignerWidgetConstants.LINE_WIDTH] = 2;
+
             this.diagramDesigner.connectionDrawingManager.setConnectionInDrawProperties(connProps);
             this.diagramDesigner.setFilterChecked(this._connType);
         }
