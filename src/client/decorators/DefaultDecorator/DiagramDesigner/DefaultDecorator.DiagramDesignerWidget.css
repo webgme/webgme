@@ -23,7 +23,9 @@
     cursor: pointer;
     border: 1px solid #0000FF;
     z-index: 10;
-    margin-left: -6px;
+    height: 14px;
+    width: 14px;
+    margin-left: -8px;
     left: 50%; }
     .default-decorator .connector:hover {
       border-color: rgba(82, 168, 236, 0.8);
@@ -31,9 +33,9 @@
       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
       box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
     .default-decorator .connector.top {
-      top: -6px; }
+      top: -10px; }
     .default-decorator .connector.bottom {
-      bottom: -6px; }
+      bottom: -10px; }
 
 .selected .default-decorator {
   border: 1px solid #52A8EC;

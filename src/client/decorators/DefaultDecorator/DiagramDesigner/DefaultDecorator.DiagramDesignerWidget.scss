@@ -29,16 +29,17 @@ $selected-border: 1px solid #52A8EC;
 
   .connector {
     @include connector_basics;
-
-    margin-left: $connector-size / -2;
+    height: 14px;
+    width: 14px;
+    margin-left: -8px;
     left: 50%;
 
     &.top {
-      top: $connector-size / -2;
+      top: -10px;
     }
 
     &.bottom {
-      bottom: $connector-size / -2;
+      bottom: -10px;
     }
   }
 }
