@@ -767,6 +767,7 @@ define(['js/logger',
 
             WebGMEGlobal.State.registerActiveTab(tabID);
             this._initializeSelectedSheet();
+            this.diagramDesigner.selectTab(this._selectedSheetID);
         }
     };
 

@@ -342,6 +342,7 @@ define([
 
                                     // Suppress the node determining the visualizer.
                                     WebGMEGlobal.State.registerActiveVisualizer(vizualizer);
+                                    WebGMEGlobal.State.registerActiveTab(tab);
 
                                     // We also have to set the selected aspect according to the selectedTabIndex,
                                     //TODO this is not the best solution,

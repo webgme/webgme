@@ -1648,15 +1648,19 @@ define(['js/logger',
         }
     };
 
+    MetaEditorControl.prototype._stateActiveTabChanged = function (model, tabId) {
+        this._onSelectedTabChanged(tabId);
+    };
+
     MetaEditorControl.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged, this);
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_PROJECT_NAME, this._activeProjectChanged, this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged, this);
     };
 
     MetaEditorControl.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
-        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_PROJECT_NAME, this._activeProjectChanged, this);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged);
     };
 
     MetaEditorControl.prototype.onActivate = function () {
