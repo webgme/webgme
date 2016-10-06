@@ -50,7 +50,7 @@ function prepublish() {
             });
 
         console.log('Generating webgme docs/source ...');
-        //require('jsdoc/jsdoc');
+        require('jsdoc/jsdoc');
         console.log('Done with webgme docs/source!');
     }
 }
