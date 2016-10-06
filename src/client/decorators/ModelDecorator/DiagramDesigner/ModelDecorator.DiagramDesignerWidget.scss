@@ -14,29 +14,31 @@
   .connector {
     @include connector_basics;
 
-    margin-left: $connector-size / -2;
+    height: 14px;
+    width: 14px;
+    margin-left: -8px;
     left: 50%;
 
     &.top {
-      top: $connector-size / -2;
+      top: -10px;
     }
 
     &.bottom {
-      bottom: $connector-size / -2;
+      bottom: -9px;
     }
   }
 
   .ports {
     .port {
       div.connector {
-        top: ($port-height - $connector-size)/2;
+        top: ($port-height - 14)/2;
       }
     }
 
     .left {
       .port {
         .connector {
-          left: -($connector-size/2) - ($padding - 2);
+          left: -7 - ($padding - 2);
         }
       }
     }
@@ -44,7 +46,7 @@
     .right {
       .port {
         .connector {
-          left: $ports-width + ($connector-size/2) + ($padding - 2);
+          left: $ports-width + 9 + ($padding - 2);
         }
       }
     }

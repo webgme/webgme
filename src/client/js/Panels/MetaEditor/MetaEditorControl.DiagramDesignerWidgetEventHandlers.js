@@ -647,8 +647,9 @@ define(['js/logger',
         //this.diagramDesigner.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionTypeSelected);
         //this.diagramDesigner.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionTypeSelected);
         //this.diagramDesigner.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionTypeSelected);
-
+        this._settingActiveSelection = true;
         WebGMEGlobal.State.registerActiveSelection(gmeIDs);
+        this._settingActiveSelection = false;
     };
 
     //adding new meta aspect sheet
@@ -766,6 +767,7 @@ define(['js/logger',
 
             WebGMEGlobal.State.registerActiveTab(tabID);
             this._initializeSelectedSheet();
+            this.diagramDesigner.selectTab(this._selectedSheetID);
         }
     };
 

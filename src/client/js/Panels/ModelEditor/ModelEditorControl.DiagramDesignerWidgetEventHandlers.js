@@ -192,10 +192,10 @@ define(['js/logger',
                 };
 
                 if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
-                    this._client.setRegistry(this._ComponentID2GmeID[id], REGISTRY_KEYS.POSITION, newPos);
+                    this._client.setRegistry(this._ComponentID2GMEID[id], REGISTRY_KEYS.POSITION, newPos);
                 } else {
-                    this._client.addMember(modelId, this._ComponentID2GmeID[id], this._selectedAspect);
-                    this._client.setMemberRegistry(modelId, this._ComponentID2GmeID[id], this._selectedAspect,
+                    this._client.addMember(modelId, this._ComponentID2GMEID[id], this._selectedAspect);
+                    this._client.setMemberRegistry(modelId, this._ComponentID2GMEID[id], this._selectedAspect,
                         REGISTRY_KEYS.POSITION, newPos);
                 }
             }
@@ -214,7 +214,7 @@ define(['js/logger',
         for (id in copyDesc.items) {
             if (copyDesc.items.hasOwnProperty(id)) {
                 desc = copyDesc.items[id];
-                gmeID = this._ComponentID2GmeID[desc.oItemId];
+                gmeID = this._ComponentID2GMEID[desc.oItemId];
 
                 copyOpts[gmeID] = {};
                 copyOpts[gmeID][ATTRIBUTES_STRING] = {};
@@ -231,7 +231,7 @@ define(['js/logger',
         for (id in copyDesc.connections) {
             if (copyDesc.connections.hasOwnProperty(id)) {
                 desc = copyDesc.connections[id];
-                gmeID = this._ComponentID2GmeID[desc.oConnectionId];
+                gmeID = this._ComponentID2GMEID[desc.oConnectionId];
 
                 copyOpts[gmeID] = {};
 
@@ -280,13 +280,13 @@ define(['js/logger',
         if (params.srcSubCompId !== undefined) {
             sourceId = this._Subcomponent2GMEID[params.src][params.srcSubCompId];
         } else {
-            sourceId = this._ComponentID2GmeID[params.src];
+            sourceId = this._ComponentID2GMEID[params.src];
         }
 
         if (params.dstSubCompId !== undefined) {
             targetId = this._Subcomponent2GMEID[params.dst][params.dstSubCompId];
         } else {
-            targetId = this._ComponentID2GmeID[params.dst];
+            targetId = this._ComponentID2GMEID[params.dst];
         }
 
         //get the list of valid connection types
@@ -331,7 +331,7 @@ define(['js/logger',
             objID;
 
         while (i--) {
-            objID = this._ComponentID2GmeID[idList[i]];
+            objID = this._ComponentID2GMEID[idList[i]];
             //temporary fix to not allow deleting ROOT AND FCO
             if (GMEConcepts.canDeleteNode(objID)) {
                 objIdList.pushUnique(objID);
@@ -346,7 +346,7 @@ define(['js/logger',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemDoubleClick = function (id /*, event */) {
-        var gmeID = this._ComponentID2GmeID[id];
+        var gmeID = this._ComponentID2GMEID[id];
 
         if (gmeID) {
             this.logger.debug('Opening model with id "' + gmeID + '"');
@@ -355,7 +355,7 @@ define(['js/logger',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onModifyConnectionEnd = function (params) {
-        var gmeID = this._ComponentID2GmeID[params.id],
+        var gmeID = this._ComponentID2GMEID[params.id],
             oldDesc = params.old,
             newDesc = params.new,
             newEndPointGMEID;
@@ -369,7 +369,7 @@ define(['js/logger',
                 if (newDesc.srcSubCompId !== undefined) {
                     newEndPointGMEID = this._Subcomponent2GMEID[newDesc.srcObjId][newDesc.srcSubCompId];
                 } else {
-                    newEndPointGMEID = this._ComponentID2GmeID[newDesc.srcObjId];
+                    newEndPointGMEID = this._ComponentID2GMEID[newDesc.srcObjId];
                 }
                 this._client.makePointer(gmeID, SRC_POINTER_NAME, newEndPointGMEID);
             }
@@ -380,7 +380,7 @@ define(['js/logger',
                 if (newDesc.dstSubCompId !== undefined) {
                     newEndPointGMEID = this._Subcomponent2GMEID[newDesc.dstObjId][newDesc.dstSubCompId];
                 } else {
-                    newEndPointGMEID = this._ComponentID2GmeID[newDesc.dstObjId];
+                    newEndPointGMEID = this._ComponentID2GMEID[newDesc.dstObjId];
                 }
                 this._client.makePointer(gmeID, DST_POINTER_NAME, newEndPointGMEID);
             }
@@ -725,10 +725,10 @@ define(['js/logger',
                     oldPos = {x: 0, y: 0};
                 }
 
-                if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
-                    len = this._GmeID2ComponentID[gmeID].length;
+                if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
+                    len = this._GMEID2ComponentID[gmeID].length;
                     while (len--) {
-                        componentID = this._GmeID2ComponentID[gmeID][len];
+                        componentID = this._GMEID2ComponentID[gmeID][len];
                         selectedIDs.push(componentID);
                         this.designerCanvas.updateDesignerItem(componentID,
                             {position: {x: dropPosition.x + oldPos.x, y: dropPosition.y + oldPos.y}});
@@ -794,7 +794,7 @@ define(['js/logger',
             onlyConnectionSelected = selectedIds.length > 0;
 
         while (len--) {
-            id = this._ComponentID2GmeID[selectedIds[len]];
+            id = this._ComponentID2GMEID[selectedIds[len]];
             if (id) {
                 gmeIDs.push(id);
 
@@ -822,7 +822,7 @@ define(['js/logger',
             id;
 
         while (len--) {
-            id = this._ComponentID2GmeID[selectedIds[len]];
+            id = this._ComponentID2GMEID[selectedIds[len]];
             if (id) {
                 gmeIDs.push(id);
             }
@@ -842,7 +842,7 @@ define(['js/logger',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onConnectionSegmentPointsChange = function (params) {
         var connID = params.connectionID,
             points = params.points,
-            gmeID = this._ComponentID2GmeID[connID],
+            gmeID = this._ComponentID2GMEID[connID],
             nodeObj;
 
         if (gmeID) {
@@ -867,7 +867,7 @@ define(['js/logger',
             p;
 
         if (params.srcSubCompId === undefined) {
-            sourceId = this._ComponentID2GmeID[params.srcId];
+            sourceId = this._ComponentID2GMEID[params.srcId];
         } else {
             sourceId = this._Subcomponent2GMEID[params.srcId][params.srcSubCompId];
         }
@@ -890,7 +890,7 @@ define(['js/logger',
         while (i--) {
             p = availableConnectionEnds[i];
             if (p.dstSubCompID === undefined) {
-                targetId = this._ComponentID2GmeID[p.dstItemID];
+                targetId = this._ComponentID2GMEID[p.dstItemID];
             } else {
                 targetId = this._Subcomponent2GMEID[p.dstItemID][p.dstSubCompID];
             }
@@ -920,7 +920,7 @@ define(['js/logger',
             result = [],
             newEndPointGMEID,
             oldEndPointGMEID,
-            connectionGMEID = this._ComponentID2GmeID[connID];
+            connectionGMEID = this._ComponentID2GMEID[connID];
 
         if (srcDragged === true) {
             //'src' end of the connection is being dragged
@@ -928,7 +928,7 @@ define(['js/logger',
             if (dstSubCompID !== undefined) {
                 oldEndPointGMEID = this._Subcomponent2GMEID[dstItemID][dstSubCompID];
             } else {
-                oldEndPointGMEID = this._ComponentID2GmeID[dstItemID];
+                oldEndPointGMEID = this._ComponentID2GMEID[dstItemID];
             }
             //need to check for all possible 'src' if the connection's end could be changed to that value
             i = availableConnectionSources.length;
@@ -938,7 +938,7 @@ define(['js/logger',
                 if (srcSubCompID !== undefined) {
                     newEndPointGMEID = this._Subcomponent2GMEID[srcItemID][srcSubCompID];
                 } else {
-                    newEndPointGMEID = this._ComponentID2GmeID[srcItemID];
+                    newEndPointGMEID = this._ComponentID2GMEID[srcItemID];
                 }
 
                 if (GMEConcepts.isValidConnection(newEndPointGMEID, oldEndPointGMEID, connectionGMEID) === true) {
@@ -951,7 +951,7 @@ define(['js/logger',
             if (srcSubCompID !== undefined) {
                 oldEndPointGMEID = this._Subcomponent2GMEID[srcItemID][srcSubCompID];
             } else {
-                oldEndPointGMEID = this._ComponentID2GmeID[srcItemID];
+                oldEndPointGMEID = this._ComponentID2GMEID[srcItemID];
             }
             //need to check for all possible 'dst' if the connection's end could be changed to that value
             i = availableConnectionEnds.length;
@@ -961,7 +961,7 @@ define(['js/logger',
                 if (dstSubCompID !== undefined) {
                     newEndPointGMEID = this._Subcomponent2GMEID[dstItemID][dstSubCompID];
                 } else {
-                    newEndPointGMEID = this._ComponentID2GmeID[dstItemID];
+                    newEndPointGMEID = this._ComponentID2GMEID[dstItemID];
                 }
                 if (GMEConcepts.isValidConnection(oldEndPointGMEID, newEndPointGMEID, connectionGMEID) === true) {
                     result.push(availableConnectionEnds[i]);
@@ -979,7 +979,7 @@ define(['js/logger',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDragStartDesignerItemCopyable = function (itemID) {
-        var nodeObj = this._client.getNode(this._ComponentID2GmeID[itemID]),
+        var nodeObj = this._client.getNode(this._ComponentID2GMEID[itemID]),
             result = true;
 
         if (nodeObj) {
@@ -1005,7 +1005,7 @@ define(['js/logger',
             gmeID;
 
         while (i--) {
-            gmeID = this._ComponentID2GmeID[selectedIds[i]];
+            gmeID = this._ComponentID2GMEID[selectedIds[i]];
             node = this._client.getNode(gmeID);
             if (node) {
                 regDegree = node.getEditableRegistry(REGISTRY_KEYS.ROTATION) || 0;
@@ -1061,7 +1061,7 @@ define(['js/logger',
         };
 
         while (len--) {
-            id = this._ComponentID2GmeID[items[len]];
+            id = this._ComponentID2GMEID[items[len]];
             if (id) {
                 gmeIDs.push(id);
             }
@@ -1099,7 +1099,7 @@ define(['js/logger',
             };
 
         while (i--) {
-            gmeID = this._ComponentID2GmeID[selectedIDs[i]];
+            gmeID = this._ComponentID2GMEID[selectedIDs[i]];
             obj = {
                 ID: gmeID,
                 Name: undefined,
@@ -1176,7 +1176,7 @@ define(['js/logger',
             i = selectedElements.length;
 
         while (i--) {
-            res.push(this._ComponentID2GmeID[selectedElements[i]]);
+            res.push(this._ComponentID2GMEID[selectedElements[i]]);
         }
 
         return res;
@@ -1192,7 +1192,7 @@ define(['js/logger',
 
         for (i in oParams.positions) {
             if (oParams.positions.hasOwnProperty(i)) {
-                params.positions[this._ComponentID2GmeID[i]] = oParams.positions[i];
+                params.positions[this._ComponentID2GMEID[i]] = oParams.positions[i];
             }
         }
 
@@ -1222,7 +1222,7 @@ define(['js/logger',
                 icon: 'glyphicon glyphicon-screenshot'
             };
 
-            if (GMEConcepts.isReplaceable(self._ComponentID2GmeID[selectedIds[0]])) {
+            if (GMEConcepts.isReplaceable(self._ComponentID2GMEID[selectedIds[0]])) {
                 menuItems[MENU_EDIT_REPLACEABLE] = {
                     name: 'Replace base ...',
                     icon: 'glyphicon glyphicon-transfer'
@@ -1248,7 +1248,7 @@ define(['js/logger',
                 };
             }
 
-            node = self._client.getNode(self._ComponentID2GmeID[selectedIds[0]]);
+            node = self._client.getNode(self._ComponentID2GMEID[selectedIds[0]]);
 
             if (node.isLibraryElement() === false && node.isLibraryRoot() === false) {
                 menuItems[MENU_EXPORT_MODELS] = {
@@ -1282,7 +1282,7 @@ define(['js/logger',
             }
 
             for (i = 0; i < selectedIds.length; i += 1) {
-                node = self._client.getNode(self._ComponentID2GmeID[selectedIds[i]]);
+                node = self._client.getNode(self._ComponentID2GMEID[selectedIds[i]]);
                 if (node.isLibraryElement() || node.isLibraryRoot()) {
                     libraryContentSelected = true;
                     break;
@@ -1308,20 +1308,20 @@ define(['js/logger',
                     self._metaRulesCheck(selectedIds, true);
                 } else if (key === UI_EVENTS.LOCATE_NODE) {
                     self._client.dispatchEvent(UI_EVENTS.LOCATE_NODE, {
-                        nodeId: self._ComponentID2GmeID[selectedIds[0]]
+                        nodeId: self._ComponentID2GMEID[selectedIds[0]]
                     });
                 } else if (key === MENU_EDIT_REPLACEABLE) {
-                    self._replaceBaseDialog(self._ComponentID2GmeID[selectedIds[0]]);
+                    self._replaceBaseDialog(self._ComponentID2GMEID[selectedIds[0]]);
                 } else if (key === MENU_EXPORT_MODELS) {
                     paths = [];
                     for (i = 0; i < selectedIds.length; i += 1) {
-                        paths.push(self._ComponentID2GmeID[selectedIds[i]]);
+                        paths.push(self._ComponentID2GMEID[selectedIds[i]]);
                     }
 
                     exporters.exportModels(self._client, self.logger, paths);
                 } else if (key === MENU_IMPORT_MODELS) {
                     var importDialog = new ImportModelDialog(self._client, self._logger.fork('ImportModel'));
-                    importDialog.show(self._ComponentID2GmeID[selectedIds[0]]);
+                    importDialog.show(self._ComponentID2GMEID[selectedIds[0]]);
                 }
             },
             this.designerCanvas.posToPageXY(mousePos.mX,
@@ -1353,7 +1353,7 @@ define(['js/logger',
             gmeIDs = [];
 
         while (i--) {
-            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
+            gmeIDs.push(this._ComponentID2GMEID[selectedIds[i]]);
         }
 
         if (gmeIDs.length > 0) {
@@ -1367,7 +1367,7 @@ define(['js/logger',
             gmeIDs = [];
 
         while (i--) {
-            gmeIDs.push(this._ComponentID2GmeID[selectedIds[i]]);
+            gmeIDs.push(this._ComponentID2GMEID[selectedIds[i]]);
         }
 
         if (gmeIDs.length > 0) {
@@ -1397,7 +1397,7 @@ define(['js/logger',
 
         this._client.startTransaction();
         while (i--) {
-            gmeID = this._ComponentID2GmeID[selectedIds[i]];
+            gmeID = this._ComponentID2GMEID[selectedIds[i]];
 
             if (color) {
                 this._client.setRegistry(gmeID, regKey, color);
@@ -1428,7 +1428,7 @@ define(['js/logger',
 
         // Get the gmeIds and filter out connections.
         selectedIds.forEach(function (id) {
-            var gmeId = self._ComponentID2GmeID[id],
+            var gmeId = self._ComponentID2GMEID[id],
                 objDesc;
             if (self._GMEModels.indexOf(gmeId) > -1) {
                 objDesc = self._getObjectDescriptor(gmeId);

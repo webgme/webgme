@@ -527,7 +527,7 @@ define([
 
         client.startTransaction();
 
-        this.logger.warn('saveAttributeDescriptor: ' + name + ', attrDesc: ' + JSON.stringify(attrDesc));
+        this.logger.debug('saveAttributeDescriptor: ' + attrName + ', attrDesc: ' + JSON.stringify(attrDesc));
 
         if (attrName !== attrDesc.name) {
             //rename an attribute
