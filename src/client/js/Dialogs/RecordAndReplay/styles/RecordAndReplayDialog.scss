@@ -3,6 +3,12 @@
  */
 
 div.record-and-replay-dialog {
+  width: 400px;
+  .modal-dialog {
+    width: 400px;
+    margin: 0;
+  }
+
   .modal-content {
     .toggle-info-btn {
       font-size: 65%;
