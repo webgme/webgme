@@ -75,7 +75,6 @@ describe('Seeds', function () {
         });
     });
 
-
     // get seed designs 'files' and make sure all of them are getting tested
     it('should get all seed project names', function (done) {
         var agent = superagent.agent();
@@ -103,7 +102,8 @@ describe('Seeds', function () {
                     projectName: projectName,
                     branchName: 'master',
                     gmeConfig: gmeConfig,
-                    logger: logger
+                    logger: logger,
+                    doNotLoad: true
                 })
                     .nodeify(done);
             });
@@ -121,7 +121,8 @@ describe('Seeds', function () {
                     projectName: projectName,
                     branchName: 'master',
                     gmeConfig: gmeConfig,
-                    logger: logger
+                    logger: logger,
+                    doNotLoad: true
                 })
                     .then(function (ir) {
                         return testFixture.storageUtil.getProjectJson(ir.project, {commitHash: ir.commitHash});
@@ -148,7 +149,8 @@ describe('Seeds', function () {
                     projectName: projectName,
                     branchName: 'master',
                     gmeConfig: gmeConfig,
-                    logger: logger
+                    logger: logger,
+                    doNotLoad: true
                 })
                     .then(function (ir_) {
                         ir = ir_;

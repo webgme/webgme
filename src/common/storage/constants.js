@@ -69,6 +69,8 @@ define([], function () {
     'use strict';
 
     return {
+        //Version
+        VERSION: '1.0.0',
         // Database related
         MONGO_ID: '_id',
         PROJECT_INFO_ID: '*info*',

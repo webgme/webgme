@@ -1976,7 +1976,7 @@ describe('GME client', function () {
                     expectedEventNodes.push('');
                     // 2. the base of the copied node
                     expectedEventNodes.push('/701504349');
-                    // 3,4. the two memebers of the copied node
+                    // 3,4. the two members of the copied node
                     expectedEventNodes.push('/1697300825');
                     expectedEventNodes.push('/1400778473');
                     // 5. the raw data finds a load event and since the node is already loaded
@@ -2082,6 +2082,7 @@ describe('GME client', function () {
             });
         });
 
+        // TODO redesign the testcase so it could run multiple times...
         it('should dispatch update event when inherited child with data is "removed"', function (done) {
             var testId = 'inheritedChildRemoval',
                 tOneState = 'init',
@@ -2899,10 +2900,11 @@ describe('GME client', function () {
                 }
 
                 if (testState === 'checking') {
-                    //events.forEach(function (e) {
+                    // events.forEach(function (e) {
                     //    console.log(e);
-                    //});
-                    expect(events).to.have.length(7);
+                    // });
+
+                    expect(events).to.have.length(6);
 
                     //find out the new node paths
                     for (i = 1; i < events.length; i++) {

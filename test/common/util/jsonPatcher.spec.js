@@ -124,9 +124,7 @@ describe('jsonPatcher', function () {
                     "_nullptr": {"atr": {"name": "_null_pointer"}},
                     "ovr": {
                         "": {"base": "/_nullptr"},
-                        "/_nullptr": {"base-inv": [""]},
                         "/_sets/MetaAspectSet/356203123": {"member": "/1"},
-                        "/1": {"member-inv": ["/_sets/MetaAspectSet/356203123", "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383", "/_meta/children/_sets/items/1110461788"]},
                         "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383": {"member": "/1"},
                         "/_meta/children/_sets/items/1110461788": {"member": "/1"}
                     },
@@ -154,10 +152,6 @@ describe('jsonPatcher', function () {
                             "": {
                                 "MetaAspectSet": "/_nullptr",
                                 "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": "/_nullptr"
-                            },
-                            "/_nullptr": {
-                                "MetaAspectSet-inv": [""],
-                                "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d-inv": [""]
                             }
                         },
                         "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": {
@@ -178,7 +172,7 @@ describe('jsonPatcher', function () {
                                     "reg": {"_": "_"}
                                 },
                                 "_nullptr": {"atr": {"name": "_null_pointer"}},
-                                "ovr": {"": {"items": "/_nullptr"}, "/_nullptr": {"items-inv": [""]}}
+                                "ovr": {"": {"items": "/_nullptr"}}
                             }, "reg": {"_sets_": 4}
                         }
                     }
@@ -189,9 +183,7 @@ describe('jsonPatcher', function () {
                     "_nullptr": {"atr": {"name": "_null_pointer"}},
                     "ovr": {
                         "": {"base": "/_nullptr"},
-                        "/_nullptr": {"base-inv": [""]},
                         "/_sets/MetaAspectSet/356203123": {"member": "/1"},
-                        "/1": {"member-inv": ["/_sets/MetaAspectSet/356203123", "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383", "/_meta/children/_sets/items/1110461788"]},
                         "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383": {"member": "/1"},
                         "/_meta/children/_sets/items/1110461788": {"member": "/1"}
                     },
@@ -219,10 +211,6 @@ describe('jsonPatcher', function () {
                             "": {
                                 "MetaAspectSet": "/_nullptr",
                                 "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": "/_nullptr"
-                            },
-                            "/_nullptr": {
-                                "MetaAspectSet-inv": [""],
-                                "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d-inv": [""]
                             }
                         },
                         "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": {
@@ -245,7 +233,7 @@ describe('jsonPatcher', function () {
                                     }, "reg": {"_": "_"}
                                 },
                                 "_nullptr": {"atr": {"name": "_null_pointer"}},
-                                "ovr": {"": {"items": "/_nullptr"}, "/_nullptr": {"items-inv": [""]}}
+                                "ovr": {"": {"items": "/_nullptr"}}
                             }, "reg": {"_sets_": 4}
                         }
                     }
@@ -275,9 +263,7 @@ describe('jsonPatcher', function () {
                     "_nullptr": {"atr": {"name": "_null_pointer"}},
                     "ovr": {
                         "": {"base": "/_nullptr"},
-                        "/_nullptr": {"base-inv": [""]},
                         "/_sets/MetaAspectSet/356203123": {"member": "/1"},
-                        "/1": {"member-inv": ["/_sets/MetaAspectSet/356203123", "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383", "/_meta/children/_sets/items/1110461788"]},
                         "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383": {"member": "/1"},
                         "/_meta/children/_sets/items/1110461788": {"member": "/1"}
                     },
@@ -305,10 +291,6 @@ describe('jsonPatcher', function () {
                             "": {
                                 "MetaAspectSet": "/_nullptr",
                                 "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": "/_nullptr"
-                            },
-                            "/_nullptr": {
-                                "MetaAspectSet-inv": [""],
-                                "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d-inv": [""]
                             }
                         },
                         "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": {
@@ -331,7 +313,7 @@ describe('jsonPatcher', function () {
                                     }, "reg": {"_": "_"}
                                 },
                                 "_nullptr": {"atr": {"name": "_null_pointer"}},
-                                "ovr": {"": {"items": "/_nullptr"}, "/_nullptr": {"items-inv": [""]}}
+                                "ovr": {"": {"items": "/_nullptr"}}
                             }, "reg": {"_sets_": 4}
                         }
                     }
@@ -343,18 +325,10 @@ describe('jsonPatcher', function () {
                     "_nullptr": {"atr": {"name": "_null_pointer"}},
                     "ovr": {
                         "": {"base": "/_nullptr"},
-                        "/_nullptr": {"base-inv": [""]},
                         "/_sets/MetaAspectSet/356203123": {"member": "/1"},
-                        "/1": {
-                            "member-inv": ["/_sets/MetaAspectSet/356203123", "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383", "/_meta/children/_sets/items/1110461788"],
-                            "base-inv": ["/1424125309"]
-                        },
                         "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383": {"member": "/1"},
                         "/_meta/children/_sets/items/1110461788": {"member": "/1"},
-                        "/1424125309": {
-                            "base": "/1",
-                            "member-inv": ["/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1338066470", "/_sets/MetaAspectSet/575169369"]
-                        },
+                        "/1424125309": {"base": "/1"},
                         "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1338066470": {"member": "/1424125309"},
                         "/_sets/MetaAspectSet/575169369": {"member": "/1424125309"}
                     },
@@ -383,10 +357,6 @@ describe('jsonPatcher', function () {
                             "": {
                                 "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": "/_nullptr",
                                 "MetaAspectSet": "/_nullptr"
-                            },
-                            "/_nullptr": {
-                                "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d-inv": [""],
-                                "MetaAspectSet-inv": [""]
                             }
                         },
                         "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": {
@@ -409,7 +379,7 @@ describe('jsonPatcher', function () {
                                     }, "reg": {"_": "_"}
                                 },
                                 "_nullptr": {"atr": {"name": "_null_pointer"}},
-                                "ovr": {"": {"items": "/_nullptr"}, "/_nullptr": {"items-inv": [""]}}
+                                "ovr": {"": {"items": "/_nullptr"}}
                             }, "reg": {"_sets_": 4}
                         }
                     }
@@ -432,26 +402,21 @@ describe('jsonPatcher', function () {
                     op: 'add',
                     path: '/ovr/%2f1424125309',
                     value: {
-                        base: '/1', 'member-inv': [
-                            "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1338066470",
-                            "/_sets/MetaAspectSet/575169369"
-                        ]
-                    }
+                        base: '/1'
+                    },
+                    partials:['/1']
                 },
                 {
                     op: 'add',
                     path: '/ovr/%2f_sets%2fMetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d%2f1338066470',
-                    value: {member: '/1424125309'}
+                    value: {member: '/1424125309'},
+                    partials:['/1424125309']
                 },
                 {
                     op: 'add',
                     path: '/ovr/%2f_sets%2fMetaAspectSet%2f575169369',
-                    value: {member: '/1424125309'}
-                },
-                {
-                    op: 'add',
-                    path: '/ovr/%2f1/base-inv',
-                    value: ['/1424125309']
+                    value: {member: '/1424125309'},
+                    partials:['/1424125309']
                 },
                 {
                     op: 'add',
@@ -477,18 +442,10 @@ describe('jsonPatcher', function () {
                     "_nullptr": {"atr": {"name": "_null_pointer"}},
                     "ovr": {
                         "": {"base": "/_nullptr"},
-                        "/_nullptr": {"base-inv": [""]},
                         "/_sets/MetaAspectSet/356203123": {"member": "/1"},
-                        "/1": {
-                            "member-inv": ["/_sets/MetaAspectSet/356203123", "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383", "/_meta/children/_sets/items/1110461788"],
-                            "base-inv": ["/1424125309"]
-                        },
                         "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383": {"member": "/1"},
                         "/_meta/children/_sets/items/1110461788": {"member": "/1"},
-                        "/1424125309": {
-                            "base": "/1",
-                            "member-inv": ["/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1338066470", "/_sets/MetaAspectSet/575169369"]
-                        },
+                        "/1424125309": {"base": "/1"},
                         "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1338066470": {"member": "/1424125309"},
                         "/_sets/MetaAspectSet/575169369": {"member": "/1424125309"}
                     },
@@ -517,10 +474,6 @@ describe('jsonPatcher', function () {
                             "": {
                                 "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": "/_nullptr",
                                 "MetaAspectSet": "/_nullptr"
-                            },
-                            "/_nullptr": {
-                                "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d-inv": [""],
-                                "MetaAspectSet-inv": [""]
                             }
                         },
                         "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": {
@@ -543,7 +496,7 @@ describe('jsonPatcher', function () {
                                     }, "reg": {"_": "_"}
                                 },
                                 "_nullptr": {"atr": {"name": "_null_pointer"}},
-                                "ovr": {"": {"items": "/_nullptr"}, "/_nullptr": {"items-inv": [""]}}
+                                "ovr": {"": {"items": "/_nullptr"}}
                             }, "reg": {"_sets_": 4}
                         }
                     }
@@ -555,18 +508,10 @@ describe('jsonPatcher', function () {
                     "_nullptr": {"atr": {"name": "_null_pointer"}},
                     "ovr": {
                         "": {"base": "/_nullptr"},
-                        "/_nullptr": {"base-inv": [""]},
                         "/_sets/MetaAspectSet/356203123": {"member": "/1"},
-                        "/1": {
-                            "member-inv": ["/_sets/MetaAspectSet/356203123", "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383", "/_meta/children/_sets/items/1110461788"],
-                            "base-inv": ["/1424125309"]
-                        },
                         "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1115143383": {"member": "/1"},
                         "/_meta/children/_sets/items/1110461788": {"member": "/1"},
-                        "/1424125309": {
-                            "base": "/1",
-                            "member-inv": ["/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1338066470", "/_sets/MetaAspectSet/575169369"]
-                        },
+                        "/1424125309": {"base": "/1"},
                         "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/1338066470": {"member": "/1424125309"},
                         "/_sets/MetaAspectSet/575169369": {"member": "/1424125309"}
                     },
@@ -600,11 +545,6 @@ describe('jsonPatcher', function () {
                                 "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": "/_nullptr",
                                 "MetaAspectSet": "/_nullptr",
                                 "MetaAspectSet_4f4febdd-dcc7-8865-7623-7a902a6096f8": "/_nullptr"
-                            },
-                            "/_nullptr": {
-                                "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d-inv": [""],
-                                "MetaAspectSet-inv": [""],
-                                "MetaAspectSet_4f4febdd-dcc7-8865-7623-7a902a6096f8-inv": [""]
                             }
                         },
                         "MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d": {
@@ -628,7 +568,7 @@ describe('jsonPatcher', function () {
                                     }, "reg": {"_": "_"}
                                 },
                                 "_nullptr": {"atr": {"name": "_null_pointer"}},
-                                "ovr": {"": {"items": "/_nullptr"}, "/_nullptr": {"items-inv": [""]}}
+                                "ovr": {"": {"items": "/_nullptr"}}
                             }, "reg": {"_sets_": 4}
                         }
                     }
@@ -666,15 +606,6 @@ describe('jsonPatcher', function () {
                         'MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d': '/_nullptr',
                         MetaAspectSet: '/_nullptr',
                         'MetaAspectSet_4f4febdd-dcc7-8865-7623-7a902a6096f8': '/_nullptr'
-                    }
-                },
-                {
-                    op: 'replace',
-                    path: '/_sets/ovr/%2f_nullptr',
-                    value: {
-                        'MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d-inv': [''],
-                        'MetaAspectSet-inv': [''],
-                        'MetaAspectSet_4f4febdd-dcc7-8865-7623-7a902a6096f8-inv': ['']
                     }
                 }]);
 
@@ -735,15 +666,9 @@ describe('jsonPatcher', function () {
                             "patch": [
                                 {
                                     "op": "add",
-                                    "path": "/ovr/%2f0/pointer-inv",
-                                    "value": [
-                                        "/V/t"
-                                    ]
-                                },
-                                {
-                                    "op": "add",
                                     "path": "/ovr/%2fV%2ft/pointer",
-                                    "value": "/0"
+                                    "value": "/0",
+                                    "partials":["/0"]
                                 }
                             ],
                             "_id": "#133828453a145c33dbf15e575a78fc643769e261"
@@ -792,17 +717,8 @@ describe('jsonPatcher', function () {
                                     "path": "/ovr/%2fz",
                                     "value": {
                                         "base": "/X"
-                                    }
-                                },
-                                {
-                                    "op": "replace",
-                                    "path": "/ovr/%2fX/base-inv",
-                                    "value": [
-                                        "/H",
-                                        "/6",
-                                        "/V/t",
-                                        "/z"
-                                    ]
+                                    },
+                                    "partials":["/X"]
                                 }
                             ],
                             "_id": "#b5531098ab865da6929de708187f4bf069b6bdf1"
@@ -839,17 +755,8 @@ describe('jsonPatcher', function () {
                                     "path": "/ovr/%2fz",
                                     "value": {
                                         "base": "/X"
-                                    }
-                                },
-                                {
-                                    "op": "replace",
-                                    "path": "/ovr/%2fX/base-inv",
-                                    "value": [
-                                        "/H",
-                                        "/6",
-                                        "/V/t",
-                                        "/z"
-                                    ]
+                                    },
+                                    "partials":["/X"]
                                 }
                             ],
                             "_id": "#b5531098ab865da6929de708187f4bf069b6bdf1"
@@ -910,17 +817,8 @@ describe('jsonPatcher', function () {
                                     "path": "/ovr/%2fV%2f0",
                                     "value": {
                                         "base": "/X"
-                                    }
-                                },
-                                {
-                                    "op": "replace",
-                                    "path": "/ovr/%2fX/base-inv",
-                                    "value": [
-                                        "/H",
-                                        "/6",
-                                        "/V/t",
-                                        "/V/0"
-                                    ]
+                                    },
+                                    "partials":["/X"]
                                 }
                             ],
                             "_id": "#086ab52b1eda9e280f7ecad2860d328ef635df04"
@@ -949,20 +847,9 @@ describe('jsonPatcher', function () {
                             "patch": [
                                 {
                                     "op": "replace",
-                                    "path": "/ovr/%2fH/pointer-inv",
-                                    "value": [
-                                        "/X",
-                                        "/V/0/8"
-                                    ]
-                                },
-                                {
-                                    "op": "remove",
-                                    "path": "/ovr/%2fJ/pointer-inv"
-                                },
-                                {
-                                    "op": "replace",
                                     "path": "/ovr/%2fV%2f0%2f8/pointer",
-                                    "value": "/H"
+                                    "value": "/H",
+                                    "partials":["/J","/H"]
                                 }
                             ],
                             "_id": "#560c2be25f858cc2b9847bcf69fff47273bb2a3b"
@@ -1025,14 +912,8 @@ describe('jsonPatcher', function () {
                                     "path": "/ovr/%2fx%2f_sets%2fMYSET%2f1596560450",
                                     "value": {
                                         "member": "/6"
-                                    }
-                                },
-                                {
-                                    "op": "add",
-                                    "path": "/ovr/%2f6/member-inv",
-                                    "value": [
-                                        "/x/_sets/MYSET/1596560450"
-                                    ]
+                                    },
+                                    "partials":["/6"]
                                 }
                             ],
                             "_id": "#a07ec3f1ae81107e65a31b344306b8856c82f92b"
@@ -1094,14 +975,8 @@ describe('jsonPatcher', function () {
                                     "path": "/ovr/%2fx%2f_sets%2fMYSET%2f2107174038",
                                     "value": {
                                         "member": "/s"
-                                    }
-                                },
-                                {
-                                    "op": "add",
-                                    "path": "/ovr/%2fs/member-inv",
-                                    "value": [
-                                        "/x/_sets/MYSET/2107174038"
-                                    ]
+                                    },
+                                    "partials":["/s"]
                                 }
                             ],
                             "_id": "#afc5c6d1102f217bb6691b7ac734050c3a399b13"
@@ -1151,11 +1026,8 @@ describe('jsonPatcher', function () {
                                 },
                                 {
                                     "op": "remove",
-                                    "path": "/ovr/%2fx%2f_sets%2fMYSET%2f2107174038"
-                                },
-                                {
-                                    "op": "remove",
-                                    "path": "/ovr/%2fs/member-inv"
+                                    "path": "/ovr/%2fx%2f_sets%2fMYSET%2f2107174038",
+                                    "partials":["/s"]
                                 }
                             ],
                             "_id": "#16acc59ac9a618367025a1be86c3e5be3d43b170"
@@ -1205,11 +1077,8 @@ describe('jsonPatcher', function () {
                                 },
                                 {
                                     "op": "remove",
-                                    "path": "/ovr/%2fx%2f_sets%2fMYSET%2f1596560450"
-                                },
-                                {
-                                    "op": "remove",
-                                    "path": "/ovr/%2f6/member-inv"
+                                    "path": "/ovr/%2fx%2f_sets%2fMYSET%2f1596560450",
+                                    "partials":["/6"]
                                 }
                             ],
                             "_id": "#3950c5a6f043bac0324a89035631f3060217a779"
@@ -1259,11 +1128,8 @@ describe('jsonPatcher', function () {
                                 },
                                 {
                                     "op": "remove",
-                                    "path": "/ovr/%2fx%2f_sets%2fMYSET%2f1596560450"
-                                },
-                                {
-                                    "op": "remove",
-                                    "path": "/ovr/%2f6/member-inv"
+                                    "path": "/ovr/%2fx%2f_sets%2fMYSET%2f1596560450",
+                                    "partials":["/6"]
                                 }
                             ],
                             "_id": "#3950c5a6f043bac0324a89035631f3060217a779"
@@ -1296,26 +1162,18 @@ describe('jsonPatcher', function () {
                                 },
                                 {
                                     "op": "remove",
-                                    "path": "/ovr/%2ff"
+                                    "path": "/ovr/%2ff",
+                                    "partials":["/x"]
                                 },
                                 {
                                     "op": "remove",
-                                    "path": "/ovr/%2ff%2fb"
+                                    "path": "/ovr/%2ff%2fb",
+                                    "partials":["/5"]
                                 },
                                 {
                                     "op": "remove",
-                                    "path": "/ovr/%2ff%2fb%2fB"
-                                },
-                                {
-                                    "op": "replace",
-                                    "path": "/ovr/%2f5/base-inv",
-                                    "value": [
-                                        "/x"
-                                    ]
-                                },
-                                {
-                                    "op": "remove",
-                                    "path": "/ovr/%2fx/base-inv"
+                                    "path": "/ovr/%2ff%2fb%2fB",
+                                    "partials":["/5"]
                                 }
                             ],
                             "_id": "#95890feca384fcf91ab3882a6af8dc2b3f663560"
@@ -1355,11 +1213,6 @@ describe('jsonPatcher', function () {
                                         "ovr": {
                                             "": {
                                                 "dst": "/_nullptr"
-                                            },
-                                            "/_nullptr": {
-                                                "dst-inv": [
-                                                    ""
-                                                ]
                                             }
                                         },
                                         "_p_dst": {
@@ -1386,11 +1239,6 @@ describe('jsonPatcher', function () {
                                                 "ovr": {
                                                     "": {
                                                         "items": "/_nullptr"
-                                                    },
-                                                    "/_nullptr": {
-                                                        "items-inv": [
-                                                            ""
-                                                        ]
                                                     }
                                                 }
                                             },
@@ -1414,16 +1262,8 @@ describe('jsonPatcher', function () {
                                     "path": "/ovr/",
                                     "value": {
                                         "dst": "/_nullptr"
-                                    }
-                                },
-                                {
-                                    "op": "add",
-                                    "path": "/ovr/%2f_nullptr",
-                                    "value": {
-                                        "dst-inv": [
-                                            ""
-                                        ]
-                                    }
+                                    },
+                                    "partials":["/_nullptr"]
                                 }
                             ],
                             "_id": "#d199d3d4c68aaabef85057ed45543c22ec503e9b"
@@ -1442,16 +1282,8 @@ describe('jsonPatcher', function () {
                                     "path": "/ovr/%2fI%2f_meta%2f_p_dst%2f_sets%2fitems%2f1440215960",
                                     "value": {
                                         "member": "/X"
-                                    }
-                                },
-                                {
-                                    "op": "replace",
-                                    "path": "/ovr/%2fX/member-inv",
-                                    "value": [
-                                        "/_sets/MetaAspectSet_68f8146d-b1b7-6c40-3464-f8c070e97e8d/959350925",
-                                        "/_sets/MetaAspectSet/930819433",
-                                        "/I/_meta/_p_dst/_sets/items/1440215960"
-                                    ]
+                                    },
+                                    "partials":["/X"]
                                 }
                             ],
                             "_id": "#d29851a5740abe0bb15a6c66ae3e4417838c0a6e"
@@ -1483,16 +1315,8 @@ describe('jsonPatcher', function () {
                                     "path": "/ovr/",
                                     "value": {
                                         "dst": "/_nullptr"
-                                    }
-                                },
-                                {
-                                    "op": "add",
-                                    "path": "/ovr/%2f_nullptr",
-                                    "value": {
-                                        "dst-inv": [
-                                            ""
-                                        ]
-                                    }
+                                    },
+                                    "partials":["/_nullptr"]
                                 }
                             ],
                             "_id": "#6e53191b6a8a6fa397d07b7cc4b0fc6d0e3a8a96"
@@ -1532,11 +1356,8 @@ describe('jsonPatcher', function () {
                                 },
                                 {
                                     "op": "remove",
-                                    "path": "/ovr/%2fX/dst-inv"
-                                },
-                                {
-                                    "op": "remove",
-                                    "path": "/ovr/%2fv%2f8%2fp/dst"
+                                    "path": "/ovr/%2fv%2f8%2fp/dst",
+                                    "partials":["/X"]
                                 }
                             ],
                             "_id": "#8db8723681444c52158ef4380806d94f6dae1ee3"
@@ -1565,11 +1386,13 @@ describe('jsonPatcher', function () {
                             "patch": [
                                 {
                                     "op": "remove",
-                                    "path": "/ovr/"
+                                    "path": "/ovr/",
+                                    "partials":[]
                                 },
                                 {
                                     "op": "remove",
-                                    "path": "/ovr/%2f_nullptr"
+                                    "path": "/ovr/%2f_nullptr",
+                                    "partials":[]
                                 }
                             ],
                             "_id": "#e03246442ede7798d74468fd410667e637d067f0"
@@ -1632,22 +1455,9 @@ describe('jsonPatcher', function () {
                             "patch": [
                                 {
                                     "op": "replace",
-                                    "path": "/ovr/%2f1/base-inv",
-                                    "value": [
-                                        "/I"
-                                    ]
-                                },
-                                {
-                                    "op": "add",
-                                    "path": "/ovr/%2fI/base-inv",
-                                    "value": [
-                                        "/X"
-                                    ]
-                                },
-                                {
-                                    "op": "replace",
                                     "path": "/ovr/%2fX/base",
-                                    "value": "/I"
+                                    "value": "/I",
+                                    "partials":["/I","/1"]
                                 }
                             ],
                             "_id": "#e2d5181eb73aec7a337c1968d16d1dfaa0b385f7"

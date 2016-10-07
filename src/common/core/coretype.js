@@ -193,24 +193,11 @@ define([
          */
         function getInheritedCollectionNames(node) {
             var names = [],
-                extendCollectionNames = function (overlay, target) {
-                    var child = overlay[target],
-                        name;
-
-                    if (child) {
-                        for (name in child) {
-                            if (!innerCore.isPointerName(name) && name !== CONSTANTS.MUTABLE_PROPERTY) {
-                                name = name.slice(0, -CONSTANTS.COLLECTION_NAME_SUFFIX.length);
-                                if (names.indexOf(name) < 0) {
-                                    names.push(name);
-                                }
-                            }
-                        }
-                    }
-                },
-                actualNode = node,
                 startNode = node,
+                actualNode = node,
                 endNode,
+                inverseOverlays,
+                name,
                 target;
 
             while (startNode) {
@@ -218,11 +205,16 @@ define([
                 endNode = self.getBase(getInstanceRoot(startNode));
                 target = '';
                 if (actualNode && endNode) {
-                    while (actualNode && self.getPath(actualNode).indexOf(self.getPath(endNode)) === 0) {
-                        extendCollectionNames(
-                            self.getProperty(actualNode, CONSTANTS.OVERLAYS_PROPERTY) || {},
-                            target);
-                        target = '/' + self.getRelid(actualNode) + target;
+                    while (actualNode && actualNode !== self.getParent(endNode)) {
+                        inverseOverlays = innerCore.getInverseOverlayOfNode(actualNode);
+                        if (inverseOverlays[target]) {
+                            for (name in inverseOverlays[target]) {
+                                if (names.indexOf(name) === -1) {
+                                    names.push(name);
+                                }
+                            }
+                        }
+                        target = CONSTANTS.PATH_SEP + self.getRelid(actualNode) + target;
                         actualNode = self.getParent(actualNode);
                     }
                 }
@@ -245,34 +237,29 @@ define([
          * @returns {Array} - list of paths of sources of inherited relations by the given name
          */
         function getInheritedCollectionPaths(node, name) {
-            var sources = [],
-                extendSources = function (overlay, prefixPath, target) {
-                    var items = (overlay[target] || {})[name + CONSTANTS.COLLECTION_NAME_SUFFIX],
-                        i;
-                    if (items) {
-                        ASSERT(Array.isArray(items) && items.length >= 1);
-                        for (i = 0; i < items.length; i += 1) {
-                            sources.push(innerCore.joinPaths(prefixPath, items[i]));
-                        }
-                    }
-                },
-                prefixNode,
-                actualNode = node,
+            var paths = [],
                 startNode = node,
+                actualNode = node,
                 endNode,
+                prefixNode,
+                i,
+                inverseOverlays,
                 target;
 
             while (startNode) {
                 actualNode = self.getBase(startNode);
                 endNode = self.getBase(getInstanceRoot(startNode));
-                prefixNode = node;
                 target = '';
                 if (actualNode && endNode) {
-                    while (actualNode && self.getPath(actualNode).indexOf(self.getPath(endNode)) === 0) {
-                        extendSources(self.getProperty(actualNode, CONSTANTS.OVERLAYS_PROPERTY) || {},
-                            self.getPath(prefixNode),
-                            target);
-                        target = '/' + self.getRelid(actualNode) + target;
+                    prefixNode = node;
+                    while (actualNode && actualNode !== self.getParent(endNode)) {
+                        inverseOverlays = innerCore.getInverseOverlayOfNode(actualNode);
+                        if (inverseOverlays[target] && inverseOverlays[target][name]) {
+                            for (i = 0; i < inverseOverlays[target][name].length; i += 1) {
+                                paths.push(self.joinPaths(self.getPath(prefixNode), inverseOverlays[target][name][i]));
+                            }
+                        }
+                        target = CONSTANTS.PATH_SEP + self.getRelid(actualNode) + target;
                         actualNode = self.getParent(actualNode);
                         prefixNode = self.getParent(prefixNode);
                     }
@@ -280,7 +267,7 @@ define([
                 startNode = self.getBase(startNode);
             }
 
-            return sources;
+            return paths;
         }
 
         function inheritedPointerNames(node) {

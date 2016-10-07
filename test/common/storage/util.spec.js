@@ -48,4 +48,47 @@ describe('storage util', function () {
     it('should return undefined if project projectId is not given for getProjectNameFromProjectId', function () {
         expect(StorageUtil.getProjectNameFromProjectId()).to.equal(undefined);
     });
+
+    it('should patchDataObject leave input intact if non-existing patch patch showing', function () {
+        var rootObject = {
+                __v: '2.0.0',
+                ovr: {
+                    firstPath: {
+                        base: '/1',
+                        'base-inv': 'myself'
+                    },
+                    secondPath: {
+                        otherPtr: '/1',
+                        'other-inv': 'somePath'
+                    }
+                },
+                otherField: ['any', 'thing']
+            },
+            rootCopy = JSON.parse(JSON.stringify(rootObject));
+
+        rootCopy.__v = '1.0.0';
+        StorageUtil.patchDataObject(rootObject);
+        expect(rootCopy).to.eql(rootObject);
+    });
+
+    it('should patchDataObject remove inverse pointer during patch from 0.0.0', function () {
+        var rootObject = {
+                ovr: {
+                    firstPath: {
+                        base: '/1',
+                        'base-inv': 'myself'
+                    },
+                    secondPath: {
+                        otherPtr: '/1',
+                        'other-inv': 'somePath'
+                    }
+                },
+                otherField: ['any', 'thing']
+            },
+            rootCopy = JSON.parse(JSON.stringify(rootObject));
+
+        StorageUtil.patchDataObject(rootObject);
+        expect(rootCopy).not.to.eql(rootObject);
+        expect(rootObject.ovr.firstPath).to.have.keys(['base']);
+    });
 });

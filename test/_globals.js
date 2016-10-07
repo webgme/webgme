@@ -136,7 +136,7 @@ Object.defineProperties(exports, {
     ExecutorClient: {
         get: function () {
             if (!_ExecutorClient) {
-                _ExecutorClient  = requireJS('common/executor/ExecutorClient');
+                _ExecutorClient = requireJS('common/executor/ExecutorClient');
             }
             return _ExecutorClient;
         }
@@ -498,6 +498,9 @@ function importProject(storage, parameters, callback) {
                 })
                 .then(function (result_) {
                     result.status = result_.status;
+                    if (parameters.doNotLoad === true) {
+                        return null;
+                    }
                     return core.loadRoot(result.rootHash);
                 })
                 .then(function (rootNode) {

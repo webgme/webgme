@@ -68,6 +68,7 @@ var path = require('path'),
 
         core: {
             enableCustomConstraints: false,
+            inverseRelationsCacheSize: 10000
         },
 
         debug: false,

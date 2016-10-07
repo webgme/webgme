@@ -12,6 +12,7 @@ describe('storage cache', function () {
         gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
         expect = testFixture.expect,
+        CONSTANTS = testFixture.requirejs('common/storage/constants'),
         Cache = testFixture.requirejs('common/storage/project/cache'),
         MockStorage = function (options) {
             var waitForIt = {};
@@ -79,10 +80,10 @@ describe('storage cache', function () {
             cache = new Cache(mock, projectId, logger, gmeConfig);
 
         Q.allDone([
-                Q.nfcall(cache.loadObject, 'one'),
-                Q.nfcall(cache.loadObject, 'one'),
-                Q.nfcall(cache.loadObject, 'one')
-            ])
+            Q.nfcall(cache.loadObject, 'one'),
+            Q.nfcall(cache.loadObject, 'one'),
+            Q.nfcall(cache.loadObject, 'one')
+        ])
             .then(function (results) {
                 expect(results).to.have.length(3);
                 expect(results).to.eql([object, object, object]);
@@ -196,11 +197,11 @@ describe('storage cache', function () {
         var mock = new MockStorage({}),
             cache = new Cache(mock, 'noId', logger, gmeConfig);
 
-        Q.nfcall(cache.loadPaths,'one',['/one','/two'])
-            .then(function(){
+        Q.nfcall(cache.loadPaths, 'one', ['/one', '/two'])
+            .then(function () {
                 done(new Error('should have failed'));
             })
-            .catch(function(err){
+            .catch(function (err) {
                 expect(err).not.to.equal(null);
                 expect(err.message).to.equal('ouchPaths');
                 done();
