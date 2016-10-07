@@ -22,7 +22,7 @@ define([
         SELECTED_ICON = 'icon-ok',
         DDL_SELECTED_TAB_ICON_BASE = $('<i class="' + SELECTED_ICON + ' glyphicon glyphicon-ok" />'),
         TAB_LI_BASE = $('<li class=""><a href="#" data-toggle="tab"><div class="tab-title"></div></a></li>'),
-        TAB_DELETE_ICON_BASE = $('<i class="glyphicon glyphicon-remove-circle delete-tab-btn"/>');
+        TAB_DELETE_ICON_BASE = $('<i class="glyphicon glyphicon-remove-circle delete-tab-btn hidden"/>');
 
     DiagramDesignerWidgetTabs = function () {
     };
@@ -111,8 +111,9 @@ define([
 
         //tab delete handler
         this.$ulTabTab.on('click.deleteTabClick', 'a > i', function (event) {
-            if (self.getIsReadOnlyMode() !== true) {
-                self.onTabDeleteClicked($(this).parent().parent().data(TAB_ID));
+            var tabEl = $(this).parent().parent();
+            if (self.getIsReadOnlyMode() !== true && tabEl.hasClass('active')) {
+                self.onTabDeleteClicked(tabEl.data(TAB_ID));
             }
             event.stopPropagation();
             event.preventDefault();
@@ -240,6 +241,7 @@ define([
         var liToSelect,
             allLi = this.$ulTabTab.find('li'),
             allDropDownLi = this.$ddlTabsList.el.find('li'),
+            prevActiveTab,
             i,
             li;
 
@@ -254,8 +256,12 @@ define([
             }
 
             if (liToSelect) {
-                this.$ulTabTab.find('li.active').removeClass('active');
+                prevActiveTab = this.$ulTabTab.find('li.active');
+                prevActiveTab.removeClass('active');
+                prevActiveTab.find('.delete-tab-btn').addClass('hidden');
+
                 liToSelect.addClass('active');
+                liToSelect.find('.delete-tab-btn').removeClass('hidden');
                 this._selectedTab = liToSelect.data(TAB_ID);
 
                 this.setBackgroundText(this.$ulTabTab.find('li.active').first().find('.tab-title').text()
