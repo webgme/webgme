@@ -1024,15 +1024,11 @@ define([
                         innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
 
                         for (i = 0; i < nodeChildren.length; i += 1) {
-                            if (baseChildren[nodeChildren[i]]) {
-                                // Deal with relid collisions of the children of the node.
-                                if (childHasSameOrigin(node, base, nodeChildren[i]) === false) {
-                                    // 1. The child is defined in both the node(base chain) and new-base(base chain)
-                                    // -> remove the child.
-                                    innerCore.deleteChild(node, nodeChildren[i]);
-                                } else {
-                                    // 2. The child is defined at a common ancestor -> keep the data as is.
-                                }
+                            if (baseChildren[nodeChildren[i]] && childHasSameOrigin(node, base, nodeChildren[i])) {
+                                // Currently we only keep the children data for children with same origin.
+                                // Meaning we delete all other children (including those that were created in node).
+                            } else {
+                                innerCore.deleteChild(node, nodeChildren[i]);
                             }
                         }
                     } else {
