@@ -241,7 +241,7 @@ define(['js/logger',
                             hasChildren: false,
                             class: NODE_PROGRESS_CLASS,
                             // Data used locally here.
-                            STATE: stateLoaded,
+                            STATE: stateLoading,
                             CHILDREN: []
                         });
                     }
