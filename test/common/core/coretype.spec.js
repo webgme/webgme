@@ -650,7 +650,7 @@ describe('coretype', function () {
         expect(core.isValidNewBase(instance, node)).to.equal(false);
     });
 
-    it('setBase should keep children that are not colliding with children of new base', function () {
+    it('setBase should remove children that are not defined in common ancestor', function () {
         var newBase = core.createNode({parent: root}),
             node = core.createNode({parent: root});
 
@@ -658,7 +658,7 @@ describe('coretype', function () {
         core.createNode({parent: node, relid: 'b'});
 
         core.setBase(node, newBase);
-        expect(core.getChildrenRelids(node)).to.have.members(['a', 'b']);
+        expect(core.getChildrenRelids(node)).to.have.members(['a']);
     });
 
     it('setBase should remove children(data) that are colliding and NOT defined in common ancestor', function (done) {
