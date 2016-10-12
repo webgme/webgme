@@ -1,0 +1,21 @@
+.record-replay-widget.recording button {
+  background-color: lightgrey;
+  animation: myfirst 1s;
+  -moz-animation: myfirst 1s infinite;
+  /* Firefox */
+  -webkit-animation: myfirst 1s infinite;
+  /* Safari and Chrome */ }
+@-moz-keyframes myfirst /* Firefox */ {
+  0% {
+    background-color: lightgrey; }
+  50% {
+    background-color: red; }
+  100% {
+    background-color: lightgrey; } }
+@-webkit-keyframes myfirst /* Safari and Chrome */ {
+  0% {
+    background-color: lightgrey; }
+  50% {
+    background-color: red; }
+  100% {
+    background-color: lightgrey; } }

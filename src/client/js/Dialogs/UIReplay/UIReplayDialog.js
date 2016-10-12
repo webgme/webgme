@@ -8,8 +8,8 @@
  */
 
 define([
-    'text!./templates/RecordAndReplayDialog.html',
-    'css!./styles/RecordAndReplayDialog.css'
+    'text!./templates/UIReplayDialog.html',
+    'css!./styles/UIReplayDialog.css'
 ], function (dialogTemplate) {
     'use strict';
 
@@ -21,14 +21,12 @@ define([
 
         };
 
-    function RecordAndReplayDialog(mainLogger) {
-        this._logger = mainLogger.fork('RecordAndReplayDialog');
+    function UIReplayDialog(mainLogger) {
+        this._logger = mainLogger.fork('UIReplayDialog');
 
         this._dialog = null;
         this._infoBtn = null;
         this._infoFooter = null;
-
-        this._recordBtn = null;
 
         this._stepBackBtn = null;
         this._stepForwardBtn = null;
@@ -40,11 +38,10 @@ define([
 
         this._recBadge = null;
 
-        this._recording = false;
         this._playing = false;
     }
 
-    RecordAndReplayDialog.prototype.show = function (data, fnCallback) {
+    UIReplayDialog.prototype.show = function (data, fnCallback) {
         var self = this;
 
         this._dialog = $(dialogTemplate);
@@ -52,8 +49,6 @@ define([
         this._dialog.draggable({
             handle: '.modal-body'
         });
-
-        this._recordBtn = this._dialog.find('.btn-record');
 
         this._stepBackBtn = this._dialog.find('.btn-step-back');
         this._playBtn = this._dialog.find('.btn-play');
@@ -64,6 +59,7 @@ define([
             this._playBtn.prop('disabled', true);
         }
 
+        this._stopBtn.hide();
         this._loadBtn = this._dialog.find('.btn-load');
         this._saveBtn = this._dialog.find('.btn-save');
 
@@ -74,10 +70,6 @@ define([
         this._infoFooter = this._dialog.find('.modal-footer');
 
         // Set events handlers
-        this._recordBtn.on('click', function () {
-            self.atRecord();
-        });
-
         this._playBtn.on('click', function () {
             self.atPlay();
         });
@@ -107,14 +99,6 @@ define([
             }
         });
 
-        this._infoBtn.on('click', function () {
-            if (self._infoFooter.hasClass('hidden')) {
-                self._infoFooter.removeClass('hidden');
-            } else {
-                self._infoFooter.addClass('hidden');
-            }
-        });
-
         this._dialog.on('hide.bs.modal', function () {
             self._infoBtn.off('click');
             self._dialog.remove();
@@ -126,56 +110,29 @@ define([
         this._dialog.modal('show');
     };
 
-    RecordAndReplayDialog.prototype.atRecord = function () {
-        var recording;
-
-        if (this._recording) {
-            // Stop recording
-            recording = REC.stop();
-            this._recordBtn.removeClass('recording');
-            if (recording.length > 0) {
-                this._playBtn.prop('disabled', false);
-                this._saveBtn.prop('disabled', false);
-            }
-
-            this._recBadge.text(REC.recording.length);
-        } else {
-            // Start recording
-            recording = REC.start();
-            this._playBtn.prop('disabled', true);
-            this.setDisableLoaderSaver(true);
-            this._recordBtn.addClass('recording');
-        }
-
-        this._recording = !this._recording;
-    };
-
-    RecordAndReplayDialog.prototype.atPlay = function () {
+    UIReplayDialog.prototype.atPlay = function () {
         if (this._playing) {
             // Stop playback mode
             REC.stateIndex = -1;
             REC.commitIndex = -1;
-            this._playBtn.removeClass('hidden');
-            this._stopBtn.addClass('hidden');
-            this._stepBackBtn.addClass('hidden');
-            this._stepForwardBtn.addClass('hidden');
+            this._playBtn.show();
+            this._stopBtn.hide();
+            this._stepBackBtn.prop('disabled', true);
+            this._stepForwardBtn.prop('disabled', true);
             this.setDisableLoaderSaver(false);
         } else {
             // Start playback mode
-            this._playBtn.addClass('hidden');
-            this._stopBtn.removeClass('hidden');
-            this._stepBackBtn.removeClass('hidden');
-            this._stepForwardBtn.removeClass('hidden');
+            this._playBtn.hide();
+            this._stopBtn.show();
             this._stepForwardBtn.prop('disabled', false);
             this._stepBackBtn.prop('disabled', true);
             this.setDisableLoaderSaver(true);
         }
 
         this._playing = !this._playing;
-        this._recordBtn.prop('disabled', this._playing);
     };
 
-    RecordAndReplayDialog.prototype.atStep = function (forward) {
+    UIReplayDialog.prototype.atStep = function (forward) {
         var self = this,
             promise;
 
@@ -213,18 +170,18 @@ define([
             });
     };
 
-    RecordAndReplayDialog.prototype.atSave = function () {
+    UIReplayDialog.prototype.atSave = function () {
 
     };
 
-    RecordAndReplayDialog.prototype.atLoad = function () {
+    UIReplayDialog.prototype.atLoad = function () {
 
     };
 
-    RecordAndReplayDialog.prototype.setDisableLoaderSaver = function (disable) {
+    UIReplayDialog.prototype.setDisableLoaderSaver = function (disable) {
         this._loadBtn.disable(disable);
         this._saveBtn.disable(disable);
     };
 
-    return RecordAndReplayDialog;
+    return UIReplayDialog;
 });

@@ -7,11 +7,13 @@
 define(['js/PanelBase/PanelBase',
     'js/Widgets/NetworkStatus/NetworkStatusWidget',
     'js/Widgets/BranchStatus/BranchStatusWidget',
+    'js/Widgets/RecordReplay/RecordReplayWidget',
     'js/Widgets/KeyboardManager/KeyboardManagerWidget',
     'js/Widgets/Notification/NotificationWidget'
 ], function (PanelBase,
              NetworkStatusWidget,
              BranchStatusWidget,
+             RecordReplayWidget,
              KeyboardManagerWidget,
              NotificationWidget) {
 
@@ -87,6 +89,7 @@ define(['js/PanelBase/PanelBase',
         var widgetPlaceHolder = $('<div class="pull-right"></div>'),
             separator = $('<div class="spacer pull-right"></div>'),
             branchStatusEl,
+            recordEl,
             notificationEl,
             networkStatusEl,
             keyBoardManagerEl;
@@ -97,6 +100,10 @@ define(['js/PanelBase/PanelBase',
             new KeyboardManagerWidget(keyBoardManagerEl);
             navBarInner.append(keyBoardManagerEl).append(separator.clone());
         }
+
+        recordEl = widgetPlaceHolder.clone();
+        new RecordReplayWidget(recordEl, this._client);
+        navBarInner.append(recordEl).append(separator.clone());
 
         networkStatusEl = widgetPlaceHolder.clone();
         new NetworkStatusWidget(networkStatusEl, this._client);
