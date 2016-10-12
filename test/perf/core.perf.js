@@ -5,13 +5,14 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 var testFixture = require('../_globals.js'),
-    PROJECT_FILE = 'seeds/ActivePanels.webgmex',
+    PROJECT_FILE = '../projects/Hakan132k.webgmex',
     jsonPatcher = testFixture.requirejs('common/util/jsonPatcher'),
     getPatchObject = testFixture.requirejs('common/storage/util').getPatchObject,
     MetaUser = testFixture.requirejs('common/core/users/meta');
 //"C:\\Users\\Zsolt\\Downloads\\Nagx3.json"
+//"C:\GIT\projects\HakansBigOne.webgmex"
 
-describe.skip('Core Performance test', function () {
+describe('Core Performance test', function () {
     'use strict';
 
     var gmeConfig,
@@ -24,9 +25,8 @@ describe.skip('Core Performance test', function () {
         project,
         projectName = 'CorePerf',
         rootHash,
-        keysCnt,
-        objKeys = Object.keys,
         gmeAuth,
+        tStart,
         timeout = 500000;
 
     before(function (done) {
@@ -73,21 +73,14 @@ describe.skip('Core Performance test', function () {
             globConf: gmeConfig,
             logger: logger
         });
-
-        keysCnt = 0;
-
-        Object.keys = function (obj) {
-            keysCnt += 1;
-            return objKeys.apply(null, arguments);
-        };
+        tStart = Date.now();
     });
 
     afterEach(function () {
-        console.log('\n#Object.keys invocations', keysCnt, '\n');
-        Object.keys = objKeys;
+        console.log('Exec time', Date.now() - tStart, '[ms]');
     });
 
-    it('should traverse the entire-model and get all attributes', function (done) {
+    it.only('should loadTree the entire-model and get all attributes', function (done) {
         var nodeCnt = 0,
             cnt = 0;
         this.timeout(timeout);
@@ -109,7 +102,7 @@ describe.skip('Core Performance test', function () {
             .nodeify(done);
     });
 
-    it('should traverse the entire-model and get all pointer paths', function (done) {
+    it('should loadTree the entire-model and get all pointer paths', function (done) {
         var nodeCnt = 0,
             cnt = 0;
         this.timeout(timeout);
@@ -131,7 +124,7 @@ describe.skip('Core Performance test', function () {
             .nodeify(done);
     });
 
-    it('should traverse the entire-model and get all collections paths', function (done) {
+    it('should loadTree the entire-model and get all collections paths', function (done) {
         var nodeCnt = 0,
             cnt = 0;
         this.timeout(timeout);
@@ -153,7 +146,7 @@ describe.skip('Core Performance test', function () {
             .nodeify(done);
     });
 
-    it('should traverse the entire-model and get set-members paths', function (done) {
+    it('should loadTree the entire-model and get set-members paths', function (done) {
         var nodeCnt = 0,
             cnt = 0;
         this.timeout(timeout);
@@ -175,7 +168,7 @@ describe.skip('Core Performance test', function () {
             .nodeify(done);
     });
 
-    it('should traverse the entire-model and get all meta nodes', function (done) {
+    it('should loadTree the entire-model and get all meta nodes', function (done) {
         var nodeCnt = 0,
             cnt = 0;
         this.timeout(timeout);
@@ -205,6 +198,29 @@ describe.skip('Core Performance test', function () {
             })
             .then(function () {
                 console.log('finished', count);
+            })
+            .nodeify(done);
+    });
+
+    it('should traverse the entire-model and get all pointer paths', function (done) {
+        var nodeCnt = 0,
+            cnt = 0;
+        this.timeout(timeout);
+        core.loadRoot(rootHash)
+            .then(function (root) {
+                return core.traverse(root, {}, function (node, next) {
+                    nodeCnt += 1;
+                    var names = core.getPointerNames(node);
+                    names.forEach(function (name) {
+                        core.getPointerPath(node, name);
+                        cnt += 1;
+                    });
+                    next();
+                });
+            })
+            .then(function () {
+                console.log('#Nodes  ', nodeCnt);
+                console.log('#Cnt', cnt);
             })
             .nodeify(done);
     });
