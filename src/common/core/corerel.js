@@ -319,6 +319,10 @@ define([
                     node = innerCore.createChild(parent, takenRelids);
                 }
 
+                if (parent.childrenRelids) {
+                    parent.childrenRelids.push(innerCore.getRelid(node));
+                }
+
                 innerCore.setHashed(node, true);
             } else {
                 node = innerCore.createRoot();
@@ -344,6 +348,9 @@ define([
         this.deleteChild = function (parent, relid) {
             var prefix = '/' + relid;
             innerCore.deleteProperty(parent, relid);
+            if (parent.childrenRelids) {
+                parent.childrenRelids = null;
+            }
 
             while (parent) {
                 var overlays = innerCore.getChild(parent, CONSTANTS.OVERLAYS_PROPERTY);
@@ -377,6 +384,9 @@ define([
                 newNode = innerCore.createChild(parent, takenRelids);
                 innerCore.setHashed(newNode, true);
                 innerCore.setData(newNode, innerCore.copyData(node));
+                if (parent.childrenRelids) {
+                    parent.childrenRelids.push(innerCore.getRelid(newNode));
+                }
 
                 var ancestorOverlays = innerCore.getChild(ancestor, CONSTANTS.OVERLAYS_PROPERTY);
                 var ancestorNewPath = innerCore.getPath(newNode, ancestor);
@@ -606,7 +616,12 @@ define([
         this.getChildrenRelids = function (node) {
             ASSERT(self.isValidNode(node));
 
-            return innerCore.getKeys(node, self.isValidRelid);
+            // Check if they are already cached by the node
+            if (!node.childrenRelids) {
+                node.childrenRelids = innerCore.getKeys(node, self.isValidRelid);
+            }
+
+            return node.childrenRelids;
         };
 
         this.getChildrenPaths = function (node) {
