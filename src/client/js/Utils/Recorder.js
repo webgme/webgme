@@ -14,6 +14,10 @@ define(['q'], function (Q) {
                 self.recording.push(data);
             };
 
+        function copy(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+
         this.recording = [];
 
         this.stateIndex = -1;
@@ -58,9 +62,14 @@ define(['q'], function (Q) {
             return deferred.promise;
         }
 
-        function loadCommit(options, commitHash) {
+        function loadCommit(options, commitObj) {
+            var commitHash = commitObj._id;
+
             console.log('loading commit', commitHash);
-            return Q.ninvoke(client, 'selectCommit', commitHash);
+            return Q.ninvoke(client, 'selectCommit', commitHash)
+                .then(function () {
+                    return commitObj;
+                });
         }
 
         this.stepForwardState = function (options, callback) {
@@ -75,7 +84,7 @@ define(['q'], function (Q) {
                 deferred.reject(new Error('End of recording reached'));
                 return deferred.promise.nodeify(callback);
             } else {
-                return loadState(options, self.recording[self.stateIndex].uiState);
+                return loadState(options, copy(self.recording[self.stateIndex].uiState));
             }
         };
 
@@ -91,7 +100,7 @@ define(['q'], function (Q) {
                 deferred.reject(new Error('End of recording reached'));
                 return deferred.promise.nodeify(callback);
             } else {
-                return loadCommit(options,  self.recording[self.commitIndex].commitObject._id);
+                return loadCommit(options, self.recording[self.commitIndex].commitObject);
             }
         };
 
