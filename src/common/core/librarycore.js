@@ -960,6 +960,8 @@ define([
                     libraryRelid = RANDOM.generateRelid(root.data);
 
                 innerCore.setProperty(root, libraryRelid, libraryRootHash);
+                root.childrenRelids = null;
+
                 return TASYNC.call(function (newLibraryRoot) {
                     return TASYNC.call(function (libraryNodes) {
                         var inMeta = self.getMemberPaths(newLibraryRoot, CONSTANTS.META_SET_NAME),
@@ -1234,6 +1236,8 @@ define([
                         longestNewRelid = newRelid;
                     }
                 }
+
+                parent.childrenRelids = null;
 
                 // Now processing the new relid creations
                 innerCore.processRelidReservation(parent, longestNewRelid);

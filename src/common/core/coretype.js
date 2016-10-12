@@ -553,21 +553,48 @@ define([
 
         this.getChildrenRelids = function (node, asObject) {
             ASSERT(self.isValidNode(node));
-            var result = {},
-                base = node,
+            var base = node,
                 relids,
                 i;
 
-            while (base) {
-                relids = innerCore.getChildrenRelids(base);
-                for (i = 0; i < relids.length; i += 1) {
-                    result[relids[i]] = true;
+            function basesHaveSameRelids() {
+                var b = node,
+                    cnt = 0,
+                    len = node.allChildrenRelids.bases.length;
+
+                while (b) {
+                    if (cnt === len || b.childrenRelids !== node.allChildrenRelids.bases[cnt]) {
+                        return false;
+                    }
+
+                    b = b.base;
+                    cnt += 1;
                 }
 
-                base = base.base;
+                return true;
             }
 
-            return asObject ? result : Object.keys(result);
+            if (!node.allChildrenRelids || basesHaveSameRelids() === false) {
+                // If there is no cache or the childrenRelids caches are outdated,
+                // rebuild the cache.
+                node.allChildrenRelids = {
+                    cached: {},
+                    bases: []
+                };
+
+                while (base) {
+                    relids = innerCore.getChildrenRelids(base);
+                    node.allChildrenRelids.bases.push(relids);
+
+                    for (i = 0; i < relids.length; i += 1) {
+                        node.allChildrenRelids.cached[relids[i]] = true;
+                    }
+
+                    base = base.base;
+                }
+            }
+
+            return asObject ? node.allChildrenRelids.cached : Object.keys(node.allChildrenRelids.cached);
         };
 
         this.loadChildren = function (node) {
@@ -946,6 +973,7 @@ define([
             var path = self.getPath(node);
 
             var relids = self.getChildrenRelids(node);
+            // Remark: It's fine to mutate this array since we're using Object.keys on the cached object..
             for (var i = 0; i < relids.length; ++i) {
                 relids[i] = path + '/' + relids[i];
             }

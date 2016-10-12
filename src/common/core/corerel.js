@@ -320,7 +320,7 @@ define([
                 }
 
                 if (parent.childrenRelids) {
-                    parent.childrenRelids.push(innerCore.getRelid(node));
+                    parent.childrenRelids = null;
                 }
 
                 innerCore.setHashed(node, true);
@@ -385,7 +385,7 @@ define([
                 innerCore.setHashed(newNode, true);
                 innerCore.setData(newNode, innerCore.copyData(node));
                 if (parent.childrenRelids) {
-                    parent.childrenRelids.push(innerCore.getRelid(newNode));
+                    parent.childrenRelids = null;
                 }
 
                 var ancestorOverlays = innerCore.getChild(ancestor, CONSTANTS.OVERLAYS_PROPERTY);
@@ -627,10 +627,11 @@ define([
         this.getChildrenPaths = function (node) {
             var path = innerCore.getPath(node),
                 relids = self.getChildrenRelids(node),
+                result = [],
                 i;
 
             for (i = 0; i < relids.length; i += 1) {
-                relids[i] = path + '/' + relids[i];
+                result.push(path + '/' + relids[i]);
             }
 
             return relids;
@@ -638,10 +639,11 @@ define([
 
         this.loadChildren = function (node) {
             var children = self.getChildrenRelids(node),
+                result = [],
                 i;
 
             for (i = 0; i < children.length; i += 1) {
-                children[i] = innerCore.loadChild(node, children[i]);
+                result.push(innerCore.loadChild(node, children[i]));
             }
 
             return TASYNC.lift(children);

@@ -12,7 +12,7 @@ var testFixture = require('../_globals.js'),
 //"C:\\Users\\Zsolt\\Downloads\\Nagx3.json"
 //"C:\GIT\projects\HakansBigOne.webgmex"
 
-describe('Core Performance test', function () {
+describe.skip('Core Performance test', function () {
     'use strict';
 
     var gmeConfig,
@@ -80,7 +80,7 @@ describe('Core Performance test', function () {
         console.log('Exec time', Date.now() - tStart, '[ms]');
     });
 
-    it.only('should loadTree the entire-model and get all attributes', function (done) {
+    it('should loadTree the entire-model and get all attributes', function (done) {
         var nodeCnt = 0,
             cnt = 0;
         this.timeout(timeout);

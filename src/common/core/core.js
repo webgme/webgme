@@ -409,6 +409,7 @@ define([
 
         /**
          * Collects the relative ids of all the children of the given node that has some data and not just inherited.
+         * N.B. Do not mutate the returned array!
          * @param {module:Core~Node} parent - the container node in question.
          *
          * @return {string[]} The function returns an array of the relative ids.
