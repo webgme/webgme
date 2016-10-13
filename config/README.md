@@ -166,6 +166,8 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 ##### server
 - `config.server.port = 8888`
  - Port the server is hosted from.
+- `config.server.handle = null`
+ - Optional handle object passed to [server.listen](https://nodejs.org/api/http.html#http_server_listen_handle_callback) (aligning port must still be given).
 - `config.server.maxWorkers = 10`
  - Maximum number of child process spawned for workers.
 - `config.server.log = see config`
