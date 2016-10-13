@@ -214,7 +214,7 @@ function StandAloneServer(gmeConfig) {
             })
             .then(function () {
                 // Finally start listening to the server port.
-                __httpServer.listen(gmeConfig.server.port, function () {
+                __httpServer.listen(gmeConfig.server.handle || gmeConfig.server.port, function () {
                     logger.info('Server is listening ...');
                     serverDeferred.resolve();
                 });
