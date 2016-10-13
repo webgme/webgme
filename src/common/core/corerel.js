@@ -609,6 +609,7 @@ define([
             }
 
             self.deleteNode(oldNode);
+            parent.childrenRelids = null;
 
             return node;
         };
@@ -634,7 +635,7 @@ define([
                 result.push(path + '/' + relids[i]);
             }
 
-            return relids;
+            return result;
         };
 
         this.loadChildren = function (node) {
@@ -646,7 +647,7 @@ define([
                 result.push(innerCore.loadChild(node, children[i]));
             }
 
-            return TASYNC.lift(children);
+            return TASYNC.lift(result);
         };
 
         this.getPointerNames = function (node) {
