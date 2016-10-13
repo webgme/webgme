@@ -987,6 +987,7 @@ define(['common/util/canon',
                     //added node
                     if (diff[relids[i]].hash) {
                         self.setProperty(node, relids[i], diff[relids[i]].hash);
+                        node.childrenRelids = null;
                     }
                 } else {
                     //simple node
