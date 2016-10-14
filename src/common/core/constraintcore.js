@@ -37,16 +37,6 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         logger.debug('initialized ConstraintCore');
 
         //<editor-fold=Helper Functions>
-        function createNewConstraintRelId(constraintsNode) {
-            var max = Math.pow(2, 31);
-            var existingRelIds = innerCore.getChildrenRelids(constraintsNode, true);
-            var relId;
-            do {
-                relId = Math.floor(Math.random() * max);
-            } while (existingRelIds[relId]);
-            return '' + relId;
-        }
-
         function getConstraintRelId(constraintsNode, name) {
             var relIds = innerCore.getChildrenRelids(constraintsNode);
             var relId;
@@ -97,14 +87,16 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         this.setConstraint = function (node, name, constraintObj) {
             ASSERT(innerCore.isValidNode(node));
             ASSERT(typeof constraintObj === 'object' && typeof name === 'string');
-            var constraintsNode = innerCore.getChild(node, CONSTANTS.CONSTRAINTS_RELID);
-            var constRelId = getConstraintRelId(constraintsNode, name);
-            if (!constRelId) {
-                //we should create a new one
-                constRelId = createNewConstraintRelId(constraintsNode);
+            var constraintsNode = innerCore.getChild(node, CONSTANTS.CONSTRAINTS_RELID),
+                constRelId = getConstraintRelId(constraintsNode, name),
+                constraintNode;
+
+            if (constRelId) {
+                constraintNode = innerCore.getChild(constraintsNode, constRelId);
+            } else {
+                constraintNode = innerCore.createChild(constraintsNode);
             }
 
-            var constraintNode = innerCore.getChild(constraintsNode, constRelId);
             constraintObj.priority = constraintObj.priority || CONSTANTS.C_DEF_PRIORITY;
             constraintObj.script = constraintObj.script || 'console.log("empty constraint");';
             constraintObj.info = constraintObj.info || '';
@@ -124,6 +116,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 var constraintNode = innerCore.getChild(constraintsNode, constRelId);
                 innerCore.deleteNode(constraintNode, true);
             }
+
             innerCore.delRegistry(node, getRegConstName(name));
         };
 

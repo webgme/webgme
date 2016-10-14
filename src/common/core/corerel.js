@@ -314,13 +314,10 @@ define([
                         throw new Error('Given relid already used in parent "' + relid + '".');
                     } else {
                         node = innerCore.getChild(parent, relid);
+                        parent.childrenRelids = null;
                     }
                 } else {
-                    node = innerCore.createChild(parent, takenRelids);
-                }
-
-                if (parent.childrenRelids) {
-                    parent.childrenRelids = null;
+                    node = self.createChild(parent, takenRelids);
                 }
 
                 innerCore.setHashed(node, true);
@@ -366,6 +363,14 @@ define([
             }
         };
 
+        this.createChild = function (parent, takenRelids) {
+            var child = innerCore.createChild(parent, takenRelids);
+
+            parent.childrenRelids = null;
+
+            return child;
+        };
+
         this.copyNode = function (node, parent, takenRelids) {
             ASSERT(self.isValidNode(node));
             ASSERT(!parent || self.isValidNode(parent));
@@ -381,12 +386,9 @@ define([
                     return null;
                 }
 
-                newNode = innerCore.createChild(parent, takenRelids);
+                newNode = self.createChild(parent, takenRelids);
                 innerCore.setHashed(newNode, true);
                 innerCore.setData(newNode, innerCore.copyData(node));
-                if (parent.childrenRelids) {
-                    parent.childrenRelids = null;
-                }
 
                 var ancestorOverlays = innerCore.getChild(ancestor, CONSTANTS.OVERLAYS_PROPERTY);
                 var ancestorNewPath = innerCore.getPath(newNode, ancestor);
@@ -531,6 +533,8 @@ define([
                 }
             }
 
+            parent.childrenRelids = null;
+
             innerCore.setHashed(node, true);
             innerCore.setData(node, innerCore.copyData(oldNode));
 
@@ -609,7 +613,6 @@ define([
             }
 
             self.deleteNode(oldNode);
-            parent.childrenRelids = null;
 
             return node;
         };

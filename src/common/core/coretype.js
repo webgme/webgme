@@ -666,6 +666,14 @@ define([
             }, self.loadPaths(rootHash, paths));
         };
 
+        this.createChild = function (parent) {
+            var node = innerCore.createChild(parent, self.getChildrenRelids(parent, true));
+
+            this.processRelidReservation(parent, this.getRelid(node));
+
+            return self.getChild(parent, this.getRelid(node));
+        };
+
         this.createNode = function (parameters) {
             parameters = parameters || {};
             var base = parameters.base || null,

@@ -889,6 +889,7 @@ define(['common/util/canon',
                 for (i = 0; i < relids.length; i += 1) {
                     relidObj[relids[i]] = {};
                 }
+                // TODO: Could this lead to collisions on bases/instances?
                 newRelid = RANDOM.generateRelid(relidObj);
                 newPath = getParentPath(path) + '/' + newRelid;
 
