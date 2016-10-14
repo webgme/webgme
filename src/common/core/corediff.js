@@ -452,6 +452,21 @@ define(['common/util/canon',
                 };
             return TASYNC.call(function (sChildren, tChildren) {
                 ASSERT(sChildren.length >= 0 && tChildren.length >= 0);
+                function compareRelids(a, b) {
+                    var aRel = self.getRelid(a),
+                        bRel = self.getRelid(b);
+
+                    if (aRel < bRel) {
+                        return -1;
+                    } else if (aRel > bRel) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+
+                sChildren.sort(compareRelids);
+                tChildren.sort(compareRelids);
 
                 var i, child, done, tDiff, guid, base,
                     childComputationFinished = function (cDiff, relid/*, d*/) {
@@ -889,6 +904,7 @@ define(['common/util/canon',
                 for (i = 0; i < relids.length; i += 1) {
                     relidObj[relids[i]] = {};
                 }
+                // TODO: Could this lead to collisions on bases/instances?
                 newRelid = RANDOM.generateRelid(relidObj);
                 newPath = getParentPath(path) + '/' + newRelid;
 
@@ -987,6 +1003,7 @@ define(['common/util/canon',
                     //added node
                     if (diff[relids[i]].hash) {
                         self.setProperty(node, relids[i], diff[relids[i]].hash);
+                        node.childrenRelids = null;
                     }
                 } else {
                     //simple node

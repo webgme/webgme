@@ -29,44 +29,6 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 (innerCore.getRegistry(node, CONSTANTS.SET_MODIFIED_REGISTRY) || 0) + 1);
         }
 
-        function relIdSelector(key) {
-            if (key.indexOf('_') !== 0 &&
-                key !== CONSTANTS.REGISTRY_PROPERTY &&
-                key !== CONSTANTS.ATTRIBUTES_PROPERTY &&
-                key !== CONSTANTS.OVERLAYS_PROPERTY) {
-                return true;
-            }
-            return false;
-        }
-
-        //function getMemberPath(node, setElementNode) {
-        //    var ownPath = innerCore.getPath(node),
-        //        memberPath = innerCore.getPointerPath(setElementNode, CONSTANTS.MEMBER_RELATION);
-        //
-        //    //TODO this is a hack and should be solved some other way if possible
-        //    ownPath = ownPath.substring(0, ownPath.indexOf('/_'));
-        //
-        //    if (ownPath !== memberPath) {
-        //        return memberPath;
-        //    }
-        //
-        //    //now we should check who really set this member as its own
-        //    while (innerCore.getBase(node) !== null && innerCore.getBase(setElementNode) !== null &&
-        //    innerCore.getRegistry(innerCore.getBase(setElementNode), '_') === '_') {
-        //
-        //        node = innerCore.getBase(node);
-        //        setElementNode = innerCore.getBase(setElementNode);
-        //        ownPath = innerCore.getPath(node);
-        //
-        //        //TODO this is a hack and should be solved some other way if possible
-        //        ownPath = ownPath.substring(0, ownPath.indexOf('/_'));
-        //    }
-        //    memberPath = innerCore.getPointerPath(setElementNode, CONSTANTS.MEMBER_RELATION);
-        //
-        //    return memberPath;
-        //
-        //}
-
         function getMemberRelId(node, setName, memberPath) {
             var setInfo,
                 keys, i;
@@ -74,11 +36,12 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             do {
                 setInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
                 if (setInfo && setInfo[setName]) {
-                    keys = self.getRawKeys(setInfo[setName], relIdSelector);
+                    keys = self.getRawKeys(setInfo[setName], self.isValidRelid);
                     for (i = 0; i < keys.length; i += 1) {
                         if (innerCore.getPointerPathFrom(node, '/' + CONSTANTS.ALL_SETS_PROPERTY +
                                     '/' + setName + '/' + keys[i], CONSTANTS.MEMBER_RELATION) ===
                             memberPath) {
+
                             return keys[i];
                         }
                     }
@@ -87,16 +50,6 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             } while (node);
 
             return null;
-        }
-
-        function createNewMemberRelid(setNode) {
-            var MAX_RELID = Math.pow(2, 31);
-            var existingRelIds = innerCore.getChildrenRelids(setNode, true);
-            var relid;
-            do {
-                relid = Math.floor(Math.random() * MAX_RELID);
-            } while (existingRelIds[relid]);
-            return '' + relid;
         }
 
         function collectSetNames(node) {
@@ -129,7 +82,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             do {
                 setInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
                 if (setInfo && setInfo[setName]) {
-                    keys = self.getRawKeys(setInfo[setName], relIdSelector);
+                    keys = self.getRawKeys(setInfo[setName], self.isValidRelid);
                     for (i = 0; i < keys.length; i += 1) {
                         if (relids.indexOf(keys[i]) === -1) {
                             relids.push(keys[i]);
@@ -179,7 +132,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                     memberInfo = memberInfo[setName] || {};
                     memberInfo = memberInfo[relId] || {};
                     memberInfo = memberInfo[propertyName] || {};
-                    keys = innerCore.getRawKeys(memberInfo, relIdSelector);
+                    keys = innerCore.getRawKeys(memberInfo, self.isValidRelid);
                     for (i = 0; i < keys.length; i += 1) {
                         if (names.indexOf(keys[i]) === -1) {
                             names.push(keys[i]);
@@ -206,7 +159,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 memberInfo = memberInfo[setName] || {};
                 memberInfo = memberInfo[relId] || {};
                 memberInfo = memberInfo[propertyName] || {};
-                keys = innerCore.getRawKeys(memberInfo, relIdSelector);
+                keys = innerCore.getRawKeys(memberInfo, self.isValidRelid);
                 for (i = 0; i < keys.length; i += 1) {
                     if (names.indexOf(keys[i]) === -1) {
                         names.push(keys[i]);
@@ -306,7 +259,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
         this.getOwnMemberPaths = function (node, setName) {
             var setInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY),
-                relids = setInfo && setInfo[setName] ? self.getRawKeys(setInfo[setName], relIdSelector) : [],
+                relids = setInfo && setInfo[setName] ? self.getRawKeys(setInfo[setName], self.isValidRelid) : [],
                 allPaths = self.getMemberPaths(node, setName),
                 paths = [],
                 i;
@@ -342,24 +295,27 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             ASSERT(typeof setName === 'string');
             var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY),
                 setNode = innerCore.getChild(setsNode, setName),
-                setMemberRelId = getMemberRelId(node, setName, self.getPath(member));
+                setMemberRelId = getMemberRelId(node, setName, self.getPath(member)),
+                setMemberNode;
+
             if (setMemberRelId === null) {
                 createSetOnDemand(node, setName);
-                var setMember = innerCore.getChild(setNode, createNewMemberRelid(setNode));
-                innerCore.setPointer(setMember, CONSTANTS.MEMBER_RELATION, member);
-
-                //TODO hack, somehow the empty children have been removed during persist
-                innerCore.setRegistry(setMember, '_', '_');
-                setModified(node);
+                setMemberNode = innerCore.createChild(setNode);
             } else if (!self.isFullyOverriddenMember(node, setName, self.getPath(member))) {
                 //it was an inherited member, now we override it
-                var newMemberNode = innerCore.copyNode(innerCore.getChild(setNode, setMemberRelId), setNode);
-
+                // TODO: We pin down the expected behavior here..
+                setMemberNode = innerCore.copyNode(innerCore.getChild(setNode, setMemberRelId), setNode);
                 innerCore.deleteNode(innerCore.getChild(setNode, setMemberRelId), true);
-                innerCore.setPointer(newMemberNode, CONSTANTS.MEMBER_RELATION, member);
+            }
+
+            if (setMemberNode) {
+                innerCore.setPointer(setMemberNode, CONSTANTS.MEMBER_RELATION, member);
+
                 //TODO hack, somehow the empty children have been removed during persist
-                innerCore.setRegistry(newMemberNode, '_', '_');
+                innerCore.setRegistry(setMemberNode, '_', '_');
                 setModified(node);
+            } else {
+                logger.warn('member already in set');
             }
         };
 

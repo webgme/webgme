@@ -314,9 +314,10 @@ define([
                         throw new Error('Given relid already used in parent "' + relid + '".');
                     } else {
                         node = innerCore.getChild(parent, relid);
+                        parent.childrenRelids = null;
                     }
                 } else {
-                    node = innerCore.createChild(parent, takenRelids);
+                    node = self.createChild(parent, takenRelids);
                 }
 
                 innerCore.setHashed(node, true);
@@ -344,6 +345,9 @@ define([
         this.deleteChild = function (parent, relid) {
             var prefix = '/' + relid;
             innerCore.deleteProperty(parent, relid);
+            if (parent.childrenRelids) {
+                parent.childrenRelids = null;
+            }
 
             while (parent) {
                 var overlays = innerCore.getChild(parent, CONSTANTS.OVERLAYS_PROPERTY);
@@ -357,6 +361,14 @@ define([
                 prefix = '/' + innerCore.getRelid(parent) + prefix;
                 parent = innerCore.getParent(parent);
             }
+        };
+
+        this.createChild = function (parent, takenRelids) {
+            var child = innerCore.createChild(parent, takenRelids);
+
+            parent.childrenRelids = null;
+
+            return child;
         };
 
         this.copyNode = function (node, parent, takenRelids) {
@@ -374,7 +386,7 @@ define([
                     return null;
                 }
 
-                newNode = innerCore.createChild(parent, takenRelids);
+                newNode = self.createChild(parent, takenRelids);
                 innerCore.setHashed(newNode, true);
                 innerCore.setData(newNode, innerCore.copyData(node));
 
@@ -521,6 +533,8 @@ define([
                 }
             }
 
+            parent.childrenRelids = null;
+
             innerCore.setHashed(node, true);
             innerCore.setData(node, innerCore.copyData(oldNode));
 
@@ -606,30 +620,37 @@ define([
         this.getChildrenRelids = function (node) {
             ASSERT(self.isValidNode(node));
 
-            return innerCore.getKeys(node, self.isValidRelid);
+            // Check if they are already cached by the node
+            if (!node.childrenRelids) {
+                node.childrenRelids = innerCore.getKeys(node, self.isValidRelid);
+            }
+
+            return node.childrenRelids;
         };
 
         this.getChildrenPaths = function (node) {
             var path = innerCore.getPath(node),
                 relids = self.getChildrenRelids(node),
+                result = [],
                 i;
 
             for (i = 0; i < relids.length; i += 1) {
-                relids[i] = path + '/' + relids[i];
+                result.push(path + '/' + relids[i]);
             }
 
-            return relids;
+            return result;
         };
 
         this.loadChildren = function (node) {
             var children = self.getChildrenRelids(node),
+                result = [],
                 i;
 
             for (i = 0; i < children.length; i += 1) {
-                children[i] = innerCore.loadChild(node, children[i]);
+                result.push(innerCore.loadChild(node, children[i]));
             }
 
-            return TASYNC.lift(children);
+            return TASYNC.lift(result);
         };
 
         this.getPointerNames = function (node) {
