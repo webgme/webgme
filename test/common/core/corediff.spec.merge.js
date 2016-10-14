@@ -1174,7 +1174,7 @@ describe('corediff-merge', function () {
         });
 
         //FIXME: This started to fail with webgmex as seed.
-        it('should be able to find the conflict of removing source node even with collision', function (done) {
+        it.only('should be able to find the conflict of removing source node even with collision', function (done) {
             var changeA = {},
                 changeB = {},
                 change = {},

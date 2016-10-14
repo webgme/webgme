@@ -452,6 +452,21 @@ define(['common/util/canon',
                 };
             return TASYNC.call(function (sChildren, tChildren) {
                 ASSERT(sChildren.length >= 0 && tChildren.length >= 0);
+                function compareRelids(a, b) {
+                    var aRel = self.getRelid(a),
+                        bRel = self.getRelid(b);
+
+                    if (aRel < bRel) {
+                        return -1;
+                    } else if (aRel > bRel) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+
+                sChildren.sort(compareRelids);
+                tChildren.sort(compareRelids);
 
                 var i, child, done, tDiff, guid, base,
                     childComputationFinished = function (cDiff, relid/*, d*/) {
