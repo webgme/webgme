@@ -600,7 +600,6 @@ define([
         this.loadChildren = function (node) {
             ASSERT(self.isValidNode(node));
             var relids = self.getChildrenRelids(node);
-            relids = relids.sort(); //TODO this should be temporary
             var children = [];
             for (var i = 0; i < relids.length; i++) {
                 children[i] = self.loadChild(node, relids[i]);
@@ -1122,7 +1121,6 @@ define([
         this.loadOwnChildren = function (node) {
             ASSERT(self.isValidNode(node));
             var relids = self.getOwnChildrenRelids(node);
-            relids = relids.sort(); //TODO this should be temporary
             var children = [];
             for (var i = 0; i < relids.length; i++) {
                 children[i] = self.loadChild(node, relids[i]);
