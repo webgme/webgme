@@ -75,34 +75,6 @@ define(['jquery',
     }
 
     /*
-     * Determines if the given object in the given container can be a valid connection source
-     *
-     * The given parent has a valid children type that has
-     *      CONSTANTS.POINTER_SOURCE and CONSTANTS.POINTER_TARGET pointers
-     * and the given object can be a valid target for CONSTANTS.POINTER_SOURCE
-     */
-    /*var _isValidConnectionSource = function (objID, parentID) {
-     var valid = false,
-     validChildrenTypes,
-     len,
-     childID;
-
-     validChildrenTypes = getMETAAspectMergedValidChildrenTypes(parentID) || [];
-     len = validChildrenTypes.length;
-     while (len--) {
-     childID = validChildrenTypes[len];
-     if (client.getPointerMeta(childID, CONSTANTS.POINTER_SOURCE) &&
-     client.getPointerMeta(childID, CONSTANTS.POINTER_TARGET) &&
-     client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, objID)) {
-     valid = true;
-     break;
-     }
-     }
-
-     return valid;
-     };*/
-
-    /*
      * Determines if a GME Connection can be created between source and target in parent
      */
     function getValidConnectionTypes(sourceID, targetID, parentID) {

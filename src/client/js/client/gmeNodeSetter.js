@@ -7,9 +7,11 @@ define([], function () {
     'use strict';
     function gmeNodeSetter(logger, state, saveRoot, storeNode, printCoreError) {
 
-        function _logDeprecated(oldFn, newFn, isGetter) {
-            console.warn('"gmeClient.' + oldFn + '" is deprecated and will eventually be removed, use "' + 
-                isGetter ? 'gmeNode.' : 'gmeClient.' + newFn + '" instead.');
+        function _logDeprecated(oldFn, newFn, isGetter, comment) {
+            var typeToUse = isGetter ? 'gmeNode.' : 'gmeClient.',
+                commentStr = isGetter ? 'gmeNode.' : 'gmeClient.';
+            console.warn('"gmeClient.' + oldFn + '" is deprecated and will eventually be removed, use "' +
+            typeToUse + newFn + '" instead.' + commentStr);
         }
 
         function _getNode(path) {
@@ -975,8 +977,8 @@ define([], function () {
         // TODO: These should be removed at next version bump.
 
         function isTypeOf(path, typePath) {
-            var node = state.nodes[path] && state.nodes[path].node,
-                typeNode = state.nodes[typePath] && state.nodes[typePath].node;
+            var node = _getNode(path),
+                typeNode = _getNode(typePath);
 
             if (node && typeNode) {
                 return state.core.isTypeOf(node, typeNode);
@@ -985,20 +987,9 @@ define([], function () {
             return false;
         }
 
-        function isValidChild(path, childPath) {
-            var node = state.nodes[path] && state.nodes[path].node,
-                child = state.nodes[childPath] && state.nodes[childPath].node;
-
-            if (node && child) {
-                return state.core.isValidChildOf(child, node);
-            }
-
-            return false;
-        }
-
         function isValidTarget(path, name, targetPath) {
-            var node = state.nodes[path] && state.nodes[path].node,
-                target = state.nodes[targetPath] && state.nodes[targetPath].node;
+            var node = _getNode(path),
+                target = _getNode(targetPath);
 
             if (node && target) {
                 return state.core.isValidTargetOf(target, node, name);
@@ -1007,14 +998,311 @@ define([], function () {
             return false;
         }
 
+        function filterValidTarget(path, name, paths) {
+            var targets = [];
+
+            for (var i = 0; i < paths.length; i++) {
+                if (isValidTarget(path, name, paths[i])) {
+                    targets.push(paths[i]);
+                }
+            }
+
+            return targets;
+        }
+
+        function getValidTargetTypes(path, name) {
+            var node = _getNode(path),
+                meta, i,
+                targets = [];
+
+            if (node) {
+                meta = state.core.getPointerMeta(node, name);
+
+                for (i in meta) {
+                    if (i !== 'min' && i !== 'max') {
+                        targets.push(i);
+                    }
+                }
+            }
+
+            return targets;
+        }
+
+        function getOwnValidTargetTypes(path, name) {
+            var node = _getNode(path),
+                ownMeta;
+
+            if (node) {
+                ownMeta = state.core.getOwnJsonMeta(node);
+                ownMeta.pointers = ownMeta.pointers || {};
+                ownMeta.pointers[name] = ownMeta.pointers[name] || {};
+
+                return ownMeta.pointers[name].items || [];
+            }
+
+            return [];
+        }
+
+        function _getValidTargetItems(path, name, ownOnly) {
+            var node = _getNode(path),
+                meta,
+                paths,
+                items = [],
+                i;
+
+            if (node) {
+                meta = state.core.getPointerMeta(node, name);
+                paths = ownOnly ? state.core.getOwnJsonMeta(node) : state.core.getJsonMeta(node);
+                if (paths && paths.pointers && paths.pointers[name]) {
+                    paths = paths.pointers[name].items || [];
+                } else {
+                    paths = [];
+                }
+
+                if (meta && paths.length > 0) {
+                    delete meta.min;
+                    delete meta.max;
+                    for (i in meta) {
+                        if (paths.indexOf(i) !== -1) {
+                            items.push({
+                                id: i,
+                                min: meta[i].min === -1 ? undefined : meta[i].min,
+                                max: meta[i].max === -1 ? undefined : meta[i].max
+                            });
+                        }
+                    }
+
+                    return items;
+                }
+            }
+
+            return null;
+        }
+
+        function getValidTargetItems(path, name) {
+            return _getValidTargetItems(path, name, false);
+        }
+
+        function getOwnValidTargetItems(path, name) {
+            return _getValidTargetItems(path, name, true);
+        }
+
+        function isValidChild(path, childPath) {
+            var node = _getNode(path),
+                child = _getNode(childPath);
+
+            if (node && child) {
+                return state.core.isValidChildOf(child, node);
+            }
+
+            return false;
+        }
+
         function getValidChildrenTypes(path) {
-            var node = state.nodes[path] && state.nodes[path].node;
+            var node = _getNode(path);
 
             if (node) {
                 return state.core.getValidChildrenPaths(node);
             }
 
             return [];
+        }
+
+        function getValidAttributeNames(path) {
+            var node = _getNode(path);
+
+            if (node) {
+                return state.core.getValidAttributeNames(node);
+            }
+
+            return [];
+        }
+
+        function getOwnValidAttributeNames(path) {
+            var node = _getNode(path);
+
+            if (node) {
+                return state.core.getOwnValidAttributeNames(node);
+            }
+
+            return [];
+        }
+
+        function getPointerMeta(path, name) {
+            var node = _getNode(path),
+                meta,
+                i,
+                pointerMeta;
+
+            if (node) {
+                meta = state.core.getPointerMeta(node, name);
+
+                if (meta) {
+                    pointerMeta = {min: meta.min, max: meta.max, items: []};
+
+                    for (i in meta) {
+                        if (i !== 'min' && i !== 'max') {
+                            pointerMeta.items.push({
+                                id: i,
+                                min: meta[i].min === -1 ? undefined : meta[i].min,
+                                max: meta[i].max === -1 ? undefined : meta[i].max
+                            });
+                        }
+                    }
+
+                    return pointerMeta;
+                }
+            }
+
+            return null;
+        }
+
+        function getAttributeSchema(path, name) {
+            var node = _getNode(path);
+
+            if (node) {
+                return state.core.getAttributeMeta(node, name);
+            }
+
+            return;
+        }
+
+        function getMetaAspectNames(path) {
+            var node = _getNode(path);
+
+            if (node) {
+                return state.core.getValidAspectNames(node);
+            }
+
+            return [];
+        }
+
+        function getOwnMetaAspectNames(path) {
+            var node = _getNode(path);
+
+            if (node) {
+                return state.core.getOwnValidAspectNames(node);
+            }
+
+            return [];
+        }
+
+        function getMetaAspect(path, name) {
+            var node = _getNode(path),
+                meta;
+
+            if (node) {
+                meta = state.core.getAspectMeta(node, name);
+
+                if (meta) {
+                    return {items: meta};
+                }
+            }
+
+            return null;
+        }
+
+        function hasOwnMetaRules(path) {
+            var node = _getNode(path),
+                ownMeta, key;
+
+            if (node) {
+                ownMeta = state.core.getOwnJsonMeta(node);
+
+                //children
+                if (ownMeta.children && ownMeta.children.items && ownMeta.children.items.length > 0) {
+                    return true;
+                }
+
+                //pointers
+                for (key in ownMeta.pointers || {}) {
+                    return true;
+                }
+
+                //attributes
+                for (key in ownMeta.attributes || {}) {
+                    return true;
+                }
+                //aspects
+                for (key in ownMeta.aspects || {}) {
+                    return true;
+                }
+
+                //mixins
+                if (ownMeta.mixins && ownMeta.mixins.length > 0) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function getChildrenMeta(path) {
+            //the returned object structure is : {'min':0,'max':0,'items':[{'id':path,'min':0,'max':0},...]}
+            var node = _getNode(path),
+                meta, i,
+                childrenMeta = {items: []};
+
+            if (node) {
+                meta = state.core.getChildrenMeta(node);
+                if (meta) {
+                    childrenMeta = {min: meta.min, max: meta.max, items: []};
+                    for (i in meta) {
+                        if (i !== 'min' && i !== 'max') {
+                            childrenMeta.items.push({
+                                id: i,
+                                min: meta[i].min === -1 ? undefined : meta[i].min,
+                                max: meta[i].max === -1 ? undefined : meta[i].max
+                            });
+                        }
+                    }
+                }
+
+                return childrenMeta;
+            }
+
+            return null;
+        }
+
+        function getChildrenMetaAttribute(path/*, attrName*/) {
+            var childrenMeta = getChildrenMeta(path);
+            if (childrenMeta) {
+                return childrenMeta.attrName;
+            }
+            return null;
+        }
+
+        function getValidChildrenItems(path) {
+            var childrenMeta = getChildrenMeta(path);
+            if (childrenMeta) {
+                return childrenMeta.items;
+            }
+            return null;
+        }
+
+        function getOwnValidChildrenTypes(path) {
+            var node = _getNode(path),
+                ownMeta;
+
+            if (node) {
+                ownMeta = state.core.getOwnJsonMeta(node);
+
+                if (ownMeta && ownMeta.children && ownMeta.children.items) {
+                    return ownMeta.children.items;
+                }
+            }
+
+            return [];
+        }
+
+        function getAspectTerritoryPattern(path, name) {
+            var aspect = getMetaAspect(path, name);
+
+            if (aspect !== null) {
+                aspect.children = 1; //TODO now it is fixed, maybe we can change that in the future
+                return aspect;
+            }
+            return null;
         }
 
         return {
@@ -1145,26 +1433,100 @@ define([], function () {
             delMixin: delMixin,
 
             // Deprecated meta-getters
+            // TODO: These should be moved to Util/GMEConcepts or removed.
             getMeta: function() {
                 _logDeprecated('getMeta(path)', 'getJsonMeta()', true);
-                getMeta.apply(null, arguments);
+                return getMeta.apply(null, arguments);
             },
             isTypeOf: function() {
                 _logDeprecated('isTypeOf(path, typePath)', 'isTypeOf(typePath)', true);
-                isTypeOf.apply(null, arguments);
-            },
-            isValidChild: function() {
-                _logDeprecated('isValidChild(path, childPath)', 'isValidChildOf(parentPath)', true);
-                isValidChild.apply(null, arguments);
+                return isTypeOf.apply(null, arguments);
             },
             isValidTarget: function() {
                 _logDeprecated('isValidTarget(path, name, targetPath)', 'isValidTargetOf(targetPath, name)', true);
-                isValidTarget.apply(null, arguments);
+                return isValidTarget.apply(null, arguments);
+            },
+            filterValidTarget: function() {
+                // TODO: Should we add a method in GMEConcepts or remove this guy?
+                return filterValidTarget.apply(null, arguments);
+            },
+            getValidTargetTypes: function() {
+                // TODO: Should we add a method in GMEConcepts or remove this guy?
+                return getValidTargetTypes.apply(null, arguments);
+            },
+            getOwnValidTargetTypes: function() {
+                // TODO: Should we add a method in GMEConcepts or remove this guy?
+                return getOwnValidTargetTypes.apply(null, arguments);
+            },
+            getValidTargetItems: function() {
+                // TODO: Should we add a method in GMEConcepts or remove this guy?
+                return getValidTargetItems.apply(null, arguments);
+            },
+            getOwnValidTargetItems: function() {
+                // TODO: Should we add a method in GMEConcepts or remove this guy?
+                return getOwnValidTargetItems.apply(null, arguments);
+            },
+            getPointerMeta: function() {
+                // TODO: Should we add a method in GMEConcepts or remove this guy?
+                return getPointerMeta.apply(null, arguments);
+            },
+            isValidChild: function() {
+                _logDeprecated('isValidChild(path, childPath)', 'isValidChildOf(parentPath)', true);
+                return isValidChild.apply(null, arguments);
             },
             getValidChildrenTypes: function() {
                 _logDeprecated('getValidChildrenTypes(path)', 'getValidChildrenIds()', true);
-                getValidChildrenTypes.apply(null, arguments);
+                return getValidChildrenTypes.apply(null, arguments);
             },
+            getValidAttributeNames: function() {
+                _logDeprecated('getValidAttributeNames(path)', 'getValidAttributeNames()', true);
+                return getValidAttributeNames.apply(null, arguments);
+            },
+            getOwnValidAttributeNames: function() {
+                _logDeprecated('getOwnValidAttributeNames(path)', 'getOwnValidAttributeNames()', true);
+                return getOwnValidAttributeNames.apply(null, arguments);
+            },
+            getAttributeSchema: function() {
+                _logDeprecated('getAttributeSchema(path, name)', 'getAttributeMeta(name)', true);
+                return getAttributeSchema.apply(null, arguments);
+            },
+            getMetaAspectNames: function() {
+                _logDeprecated('getMetaAspectNames(path)', 'getValidAspectNames()', true);
+                return getMetaAspectNames.apply(null, arguments);
+            },
+            getOwnMetaAspectNames: function() {
+                _logDeprecated('getOwnMetaAspectNames(path)', 'getOwnValidAspectNames()', true);
+                return getOwnMetaAspectNames.apply(null, arguments);
+            },
+            getMetaAspect: function() {
+                _logDeprecated('getMetaAspect(path, name)', 'getAspectMeta(name)', true,
+                    ' Returned value is of different structure! {items: meta} vs meta');
+                return getMetaAspect.apply(null, arguments);
+            },
+            hasOwnMetaRules: function() {
+                // TODO: Should we add a method on the core??
+                return hasOwnMetaRules.apply(null, arguments);
+            },
+            getChildrenMeta: function() {
+                // TODO: Should we add a method in GMEConcepts or remove this guy?
+                return getChildrenMeta.apply(null, arguments);
+            },
+            getChildrenMetaAttribute: function() {
+                // TODO: Should we add a method in GMEConcepts or remove this guy?
+                return getChildrenMetaAttribute.apply(null, arguments);
+            },
+            getValidChildrenItems: function() {
+                // TODO: Should we add a method in GMEConcepts or remove this guy?
+                return getValidChildrenItems.apply(null, arguments);
+            },
+            getOwnValidChildrenTypes: function() {
+                // TODO: Should we add a method on the core similar to getValidChildrenTypes?
+                return getOwnValidChildrenTypes.apply(null, arguments);
+            },
+            getAspectTerritoryPattern: function() {
+                // TODO: Should we add a method in GMEConcepts or remove this guy?
+                return getAspectTerritoryPattern.apply(null, arguments);
+            }
         };
     }
 

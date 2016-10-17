@@ -10,7 +10,6 @@ define([
     'common/EventDispatcher',
     'common/core/coreQ',
     'js/client/constants',
-    'common/core/users/meta',
     'common/util/assert',
     'common/core/tasync',
     'common/util/guid',
@@ -27,7 +26,6 @@ define([
              EventDispatcher,
              Core,
              CONSTANTS,
-             META,
              ASSERT,
              TASYNC,
              GUID,
@@ -228,18 +226,6 @@ define([
         this.runServerPlugin = pluginManager.runServerPlugin;
         this.filterPlugins = pluginManager.filterPlugins;
         this.dispatchPluginNotification = pluginManager.dispatchPluginNotification;
-
-        // Meta methods
-        this.meta = new META();
-
-        for (monkeyPatchKey in this.meta) {
-            //TODO: These should be accessed via this.meta.
-            //TODO: e.g. client.meta.getMetaAspectNames(id) instead of client.getMetaAspectNames(id)
-            //TODO: However that will break a lot since it's used all over the place...
-            if (this.meta.hasOwnProperty(monkeyPatchKey)) {
-                self[monkeyPatchKey] = this.meta[monkeyPatchKey];
-            }
-        }
 
         function checkMetaNameCollision(core, rootNode) {
             var names = [],
@@ -450,7 +436,7 @@ define([
                     logger: logger.fork('core')
                 });
                 state.projectAccess = access;
-                self.meta.initialize(state.core, state, saveRoot, printCoreError);
+
                 logState('info', 'projectOpened');
                 logger.debug('projectOpened, branches: ', branches);
                 self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
@@ -549,7 +535,6 @@ define([
                 state.patterns = {};
                 //state.gHash = 0;
                 state.nodes = {};
-                state.metaNodes = {};
                 state.loadNodes = {};
                 state.loadError = 0;
                 state.rootHash = null;
@@ -1213,7 +1198,7 @@ define([
 
         // Node handling
         this.getNode = function (nodePath) {
-            return getNode(nodePath, logger, state, self.meta, storeNode);
+            return getNode(nodePath, logger, state, storeNode);
         };
 
         this.getAllMetaNodes = function () {
@@ -1224,7 +1209,7 @@ define([
                     i;
 
                 for (i = 0; i < keys.length; i += 1) {
-                    gmeNodes.push(this.getNode(storeNode(metaNodes[keys[i]]), logger, state, self.meta, storeNode));
+                    gmeNodes.push(this.getNode(storeNode(metaNodes[keys[i]]), logger, state, storeNode));
                 }
 
                 return gmeNodes;
@@ -1316,7 +1301,7 @@ define([
 
             if (pattern.items && pattern.items.length > 0) {
                 for (i = 0; i < pattern.items.length; i += 1) {
-                    if (self.meta.isTypeOf(path, pattern.items[i])) {
+                    if (self.isTypeOf(path, pattern.items[i])) {
                         return true;
                     }
                 }
@@ -1562,7 +1547,6 @@ define([
                     userId: guid, patterns: patterns, error: error
                 }
             });
-            refreshMetaNodes(state.nodes, state.nodes);
 
             if (state.users[guid]) {
                 state.users[guid].PATTERNS = COPY(patterns);
@@ -1651,28 +1635,6 @@ define([
 
         };
 
-        function refreshMetaNodes(oldSource, newSource) {
-            return;
-            var pathsToRemove = [],
-                i,
-                oldPaths = Object.keys(oldSource),
-                newPaths = Object.keys(newSource);
-
-            for (i = 0; i < oldPaths.length; i += 1) {
-                if (newPaths.indexOf(oldPaths[i]) === -1) {
-                    pathsToRemove.push(oldPaths[i]);
-                }
-            }
-
-            for (i = 0; i < newPaths.length; i += 1) {
-                state.metaNodes[newPaths[i]] = newSource[newPaths[i]].node;
-            }
-
-            for (i = 0; i < pathsToRemove.length; i += 1) {
-                delete state.metaNodes[pathsToRemove[i]];
-            }
-        }
-
         function switchStates() {
             //it is safe now to move the loadNodes into nodes,
             // refresh the metaNodes and generate events - all in a synchronous manner!!!
@@ -1684,7 +1646,6 @@ define([
             logger.debug('switching project state [C#' +
                 state.commitHash + ']->[C#' + state.loading.commitHash + '] : [R#' +
                 state.rootHash + ']->[R#' + state.loading.rootHash + ']');
-            refreshMetaNodes(state.nodes, state.loadNodes);
 
             //console.time('getModifiedNodes');
             modifiedPaths = getModifiedNodes(state.loadNodes);

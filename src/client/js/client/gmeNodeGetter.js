@@ -2,29 +2,29 @@
 /*jshint browser: true*/
 /**
  * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define(['js/RegistryKeys'], function (REG_KEYS) {
     'use strict';
 
-    function _logDeprecated(oldFn, newFn) {
-        console.warn('"gmeNode.' + oldFn + '" is deprecated and will eventually be removed, use "gmeNode.' +
-            newFn + '" instead.');
+    function _logDeprecated(oldFn, newFn, comment) {
+        var commentStr = comment ? comment : '';
+        console.warn('"gmeNode.' + oldFn + '" is deprecated and will eventually be removed, use "gmeNode.' + newFn +
+        '" instead.' + commentStr);
     }
 
     /**
      * @param {string} _id - Path of node.
      * @param {GmeLogger} logger - logger.
      * @param {object} state - state of the client.
-     * @param {object} meta - collected meta nodes.
      * @param {function} storeNode - invoked when storing new nodes.
      * @constructor
      */
-    function GMENode(_id, logger, state, meta, storeNode) {
+    function GMENode(_id, logger, state, storeNode) {
         this._id = _id;
         this._logger = logger;
         this._state = state;
-        this._meta = meta;
         this._storeNode = storeNode;
     }
 
@@ -180,8 +180,20 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getAttributeNames(this._state.nodes[this._id].node);
     };
 
+    GMENode.prototype.getValidAttributeNames = function () {
+        return this._state.core.getValidAttributeNames(this._state.nodes[this._id].node);
+    };
+
     GMENode.prototype.getOwnAttributeNames = function () {
         return this._state.core.getOwnAttributeNames(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getOwnValidAttributeNames = function () {
+        return this._state.core.getOwnValidAttributeNames(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getAttributeMeta = function (name) {
+        return this._state.core.getAttributeMeta(this._state.nodes[this._id].node, name);
     };
 
     GMENode.prototype.getRegistryNames = function () {
@@ -235,8 +247,8 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
 
     //META
     GMENode.prototype.getValidChildrenTypes = function () {
-        //return getMemberIds('ValidChildren');
-        return this._meta.getValidChildrenTypes(this._id);
+        _logDeprecated('getValidChildrenTypes()', 'getValidChildrenIds()');
+        return this.getValidChildrenIds();
     };
 
     GMENode.prototype.getValidAttributeNames = function () {
@@ -385,7 +397,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return validTypes;
     };
 
-    GMENode.prototype.getMetaTypeId = function () {
+    GMENode.prototype.getMetaTypeId = GMENode.prototype.getBaseTypeId = function () {
         var metaType = this._state.core.getMetaType(this._state.nodes[this._id].node);
 
         if (metaType) {
@@ -437,6 +449,14 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getValidAspectNames(this._state.nodes[this._id].node);
     };
 
+    GMENode.prototype.getOwnValidAspectNames = function () {
+        return this._state.core.getOwnValidAspectNames(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getAspectMeta = function (name) {
+        return this._state.core.getAspectMeta(this._state.nodes[this._id].node, name);
+    };
+
     //MIXINS
     GMENode.prototype.getMixinPaths = function () {
         return this._state.core.getMixinPaths(this._state.nodes[this._id].node);
@@ -446,22 +466,14 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.canSetAsMixin(this._state.nodes[this._id].node, mixinPath);
     };
 
-    //Name space
-    /**
-     * @returns {string} - The namespace, i.e., the name of the library this node is in.
-     */
-    GMENode.prototype.getNamespace = function () {
-        return this._state.core.getNamespace(this._state.nodes[this._id].node);
-    };
-
     GMENode.prototype.isReadOnly = function () {
         return this._state.readOnlyProject || this._state.viewer || this.isLibraryRoot() || this.isLibraryElement();
     };
 
     //getNode
-    function getNode(_id, logger, state, meta, storeNode) {
+    function getNode(_id, logger, state, storeNode) {
         if (state.nodes[_id]) {
-            return new GMENode(_id, logger, state, meta, storeNode);
+            return new GMENode(_id, logger, state, storeNode);
 
         } else {
             //logger.warn('Tried to get node with path "' + _id + '" but was not in state.nodes');
