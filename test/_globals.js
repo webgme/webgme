@@ -727,7 +727,6 @@ exports.logIn = logIn;
 exports.openSocketIo = openSocketIo;
 exports.loadRootNodeFromCommit = loadRootNodeFromCommit;
 exports.loadNode = loadNode;
-exports.loadNode = loadNode;
 
 exports.compareWebgmexFiles = compareWebgmexFiles;
 
