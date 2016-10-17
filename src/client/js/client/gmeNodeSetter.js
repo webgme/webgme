@@ -9,7 +9,8 @@ define([], function () {
 
         function _logDeprecated(oldFn, newFn, isGetter, comment) {
             var typeToUse = isGetter ? 'gmeNode.' : 'gmeClient.',
-                commentStr = isGetter ? 'gmeNode.' : 'gmeClient.';
+                commentStr = comment ? comment : '';
+
             console.warn('"gmeClient.' + oldFn + '" is deprecated and will eventually be removed, use "' +
             typeToUse + newFn + '" instead.' + commentStr);
         }
