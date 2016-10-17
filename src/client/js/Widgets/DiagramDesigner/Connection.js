@@ -1514,11 +1514,11 @@ define([
             w = 0,
             h = 0,
             dx = 0,
-            dy = 0;
+            dy = 0,
+            pos;
 
         if (this.skinParts.path) {
-            var len = this.skinParts.path.getTotalLength();
-            var pos = this.skinParts.path.getPointAtLength(len / 2);
+            pos = this._getMidPoint();
 
             this.positionX = 0;
             this.positionY = 0;
@@ -1565,8 +1565,7 @@ define([
 
         this.diagramDesigner.skinParts.$itemsContainer.append(this._connectionConnector);
 
-        var len = this.skinParts.path.getTotalLength();
-        var pos = this.skinParts.path.getPointAtLength(len / 2);
+        var pos = this._getMidPoint();
 
         this._connectionConnector.css({
             left: pos.x,
@@ -1605,8 +1604,7 @@ define([
         }
 
         if (this.skinParts.path && hasConnections) {
-            var len = this.skinParts.path.getTotalLength();
-            var pos = this.skinParts.path.getPointAtLength(len / 2);
+            var pos = this._getMidPoint();
 
             this._connectionAreaMarker = $('<div/>', {class: 'c-area'});
             this.diagramDesigner.skinParts.$itemsContainer.append(this._connectionAreaMarker);
@@ -1630,19 +1628,53 @@ define([
     Connection.prototype._textSrcBase = $('<div class="c-text"><span class="c-src"></span></div>');
     Connection.prototype._textDstBase = $('<div class="c-text"><span class="c-dst"></span></div>');
 
-    Connection.prototype.calcTotalLength = function () {
-        var result = 0,
+    Connection.prototype._getMidPoint = function () {
+        var len = 0,
+            segmentsEnds = [],
+            midLen = 0,
+            alphaRad,
+            point,
             i;
 
         function euclideanDistance(p1, p2) {
             return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
         }
 
-        for (i = 0; i < this._pathPoints.length - 1; i += 1) {
-            result += euclideanDistance(this._pathPoints[i], this._pathPoints[i + 1]);
+        if (this.isBezier) {
+            len = this.skinParts.path.getTotalLength();
+            point = this.skinParts.path.getPointAtLength(len / 2);
+        } else {
+            point = {
+                x: 0,
+                y: 0,
+                alpha: 0
+            };
+
+            for (i = 0; i < this._pathPoints.length - 1; i += 1) {
+                len += euclideanDistance(this._pathPoints[i], this._pathPoints[i + 1]);
+                segmentsEnds.push(len);
+            }
+
+            midLen = len / 2;
+            for (i = 0; i < segmentsEnds.length; i += 1) {
+                if (segmentsEnds[i] >= midLen) {
+
+                    point.alpha = this._calculateSteep(this._pathPoints[i], this._pathPoints[i + 1]);
+                    alphaRad = point.alpha * (Math.PI / 180);
+                    // Get the relative length from point at i
+                    if (i > 0) {
+                        midLen -= segmentsEnds[i - 1];
+                    }
+
+                    point.x = this._pathPoints[i].x + midLen * Math.cos(alphaRad);
+                    point.y = this._pathPoints[i].y + midLen * Math.sin(alphaRad);
+
+                    break;
+                }
+            }
         }
 
-        return result;
+        return point;
     };
 
     Connection.prototype._renderTexts = function () {
@@ -1652,8 +1684,7 @@ define([
         this._hideTexts();
 
         function drawName() {
-            var totalLength = self.calcTotalLength(),
-                pathCenter = self.skinParts.path.getPointAtLength(totalLength / 2);
+            var pathCenter = self._getMidPoint();
 
             self.skinParts.name = self._textNameBase.clone();
             self.skinParts.name.css({
