@@ -576,7 +576,7 @@ describe('coretype', function () {
     it('isValidNewParent should return true when new-parent is root', function () {
         var node = core.createNode({parent: root});
 
-        expect(core.isValidNewParent(root, node)).to.equal(true);
+        expect(core.isValidNewParent(node, root)).to.equal(true);
     });
 
     it('isValidNewParent should return false when new-parent is node', function () {
@@ -589,7 +589,7 @@ describe('coretype', function () {
         var base = core.createNode({parent: root}),
             instance = core.createNode({parent: root, base: base});
 
-        expect(core.isValidNewParent(base, instance)).to.equal(false);
+        expect(core.isValidNewParent(instance, base)).to.equal(false);
     });
 
     it('isValidNewParent should return false when new-parent is child node', function () {
@@ -597,34 +597,34 @@ describe('coretype', function () {
             parent = core.createNode({parent: root, base: fco}),
             node = core.createNode({parent: parent, base: fco});
 
-        expect(core.isValidNewParent(node, parent)).to.equal(false);
+        expect(core.isValidNewParent(parent, node)).to.equal(false);
     });
 
     it('isValidNewParent should return false when new-parent\'s parent is instance of node', function () {
         var base = core.createNode({parent: root}),
             instance = core.createNode({parent: root, base: base});
 
-        expect(core.isValidNewParent(instance, base)).to.equal(false);
+        expect(core.isValidNewParent(base, instance)).to.equal(false);
     });
 
     // Base
     it('isValidNewBase should should return true when new-base is undefined', function () {
         var node = core.createNode({parent: root});
 
-        expect(core.isValidNewBase(undefined, node)).to.equal(true);
+        expect(core.isValidNewBase(node, undefined)).to.equal(true);
     });
 
     it('isValidNewBase should should return true when new-base is null', function () {
         var node = core.createNode({parent: root});
 
-        expect(core.isValidNewBase(null, node)).to.equal(true);
+        expect(core.isValidNewBase(node, null)).to.equal(true);
     });
 
     it('isValidNewBase should should return true when new-base is valid', function () {
         var fco = core.createNode({parent: root}),
             node = core.createNode({parent: root});
 
-        expect(core.isValidNewBase(fco, node)).to.equal(true);
+        expect(core.isValidNewBase(node, fco)).to.equal(true);
     });
 
     it('isValidNewBase should return false when new-base is parent of node', function () {
@@ -632,7 +632,7 @@ describe('coretype', function () {
             parent = core.createNode({parent: root, base: fco}),
             node = core.createNode({parent: parent, base: fco});
 
-        expect(core.isValidNewBase(parent, node)).to.equal(false);
+        expect(core.isValidNewBase(node, parent)).to.equal(false);
     });
 
     it('isValidNewBase should return false when new-base is child of node', function () {
@@ -640,14 +640,14 @@ describe('coretype', function () {
             parent = core.createNode({parent: root, base: fco}),
             node = core.createNode({parent: parent, base: fco});
 
-        expect(core.isValidNewBase(node, parent)).to.equal(false);
+        expect(core.isValidNewBase(parent, node)).to.equal(false);
     });
 
     it('isValidNewBase should return false when new-base is instance of node', function () {
         var node = core.createNode({parent: root}),
             instance = core.createNode({parent: root, base: node});
 
-        expect(core.isValidNewBase(instance, node)).to.equal(false);
+        expect(core.isValidNewBase(node, instance)).to.equal(false);
     });
 
     it('setBase should remove children that are not defined in common ancestor', function () {

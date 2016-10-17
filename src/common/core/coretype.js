@@ -687,7 +687,7 @@ define([
             return node;
         };
 
-        this.isValidNewParent = function (parent, node) {
+        this.isValidNewParent = function (node, parent) {
             ASSERT(self.isValidNode(node) && self.isValidNode(parent));
             var visited = {
                     containment: {},
@@ -707,7 +707,7 @@ define([
         };
 
         this.moveNode = function (node, parent) {
-            ASSERT(self.isValidNewParent(parent, node),
+            ASSERT(self.isValidNewParent(node, parent),
                 'New parent would create loop in containment/inheritance tree.');
             var base = node.base,
                 minRelidLength = innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) || 0,
@@ -1004,7 +1004,7 @@ define([
             return node.base;
         };
 
-        this.isValidNewBase = function (base, node) {
+        this.isValidNewBase = function (node, base) {
             ASSERT(self.isValidNode(node) && (base === undefined || base === null || self.isValidNode(base)));
             var visited = {
                     containment: {},
@@ -1026,7 +1026,7 @@ define([
         };
 
         this.setBase = function (node, base) {
-            ASSERT(self.isValidNewBase(base, node),
+            ASSERT(self.isValidNewBase(node, base),
                 'New base would create loop in containment/inheritance tree.');
 
             if (base) {
