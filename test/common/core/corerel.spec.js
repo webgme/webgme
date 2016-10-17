@@ -20,6 +20,7 @@ describe('corerel', function () {
         },
         projectName = 'coreRelTesting',
         projectId = testFixture.projectName2Id(projectName),
+        project,
         core,
         root,
 
@@ -37,9 +38,9 @@ describe('corerel', function () {
 
     after(function (done) {
         Q.allDone([
-                storage.closeDatabase(),
-                gmeAuth.unload()
-            ])
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
             .nodeify(done);
     });
 
@@ -49,8 +50,9 @@ describe('corerel', function () {
                 return storage.createProject({projectName: projectName});
             })
             .then(function (dbProject) {
-                var child,
-                    project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
+                var child;
+
+                project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
 
                 core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('corerel:core')});
                 root = core.createNode();
@@ -203,5 +205,43 @@ describe('corerel', function () {
         } catch (err) {
             expect(err.message).to.contain('Given relid already used in parent');
         }
+    });
+
+    it('should empty the reverse overlay cache according config settings', function (done) {
+        var myGmeConfig = JSON.parse(JSON.stringify(gmeConfig)),
+            myCore,
+            root,
+            child,
+            otherChild;
+
+        myGmeConfig.core.inverseRelationsCacheSize = 2;
+        myCore = new Core(project, {globConf: myGmeConfig, logger: testFixture.logger.fork('corerel:core')});
+
+        root = myCore.createNode({});
+        child = myCore.createNode({parent: root, relid: 'child'});
+        otherChild = myCore.createNode({parent: root, relid: 'oChild'});
+
+        myCore.setPointer(child, 'ref', root);
+        myCore.setPointer(otherChild, 'ref', root);
+
+        myCore.setAttribute(child, 'child', true);
+
+        expect(myCore.getCollectionPaths(child, 'ref')).to.eql([]);
+        expect(myCore.getCollectionPaths(otherChild, 'ref')).to.eql([]);
+        expect(myCore.getCollectionPaths(root, 'ref')).to.have.members(['/child', '/oChild']);
+        // console.log(myCore._inverseCache);
+
+        myCore.persist(root);
+
+        TASYNC.call(function (newRoot) {
+            TASYNC.call(function (children) {
+                expect(children).to.have.length(2);
+                expect(myCore.getCollectionPaths(children[0], 'ref')).to.eql([]);
+                expect(myCore.getCollectionPaths(children[1], 'ref')).to.eql([]);
+                expect(myCore.getCollectionPaths(newRoot, 'ref')).to.have.members(['/child', '/oChild']);
+                done();
+            }, myCore.loadChildren(newRoot));
+        }, myCore.loadRoot(myCore.getHash(root)));
+
     });
 });
