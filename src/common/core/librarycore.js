@@ -147,73 +147,32 @@ define([
                 //we use that the root of the library is always the first element
             }
 
-            //TODO check if these functions needed on lower layers...
-            function removeRelationFromOverlay(overlay, name, source, target) {
-                var sOvr = JSON.parse(JSON.stringify(self.getProperty(overlay, source))),
-                    tOvr = JSON.parse(JSON.stringify(self.getProperty(overlay, target)));
-
-                if (sOvr[name] && sOvr[name] === target) {
-                    delete sOvr[name];
-                    self.setProperty(overlay, source, sOvr);
-                    if (tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX] &&
-                        tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX].indexOf(source) !== -1) {
-                        tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX]
-                            .splice(tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX].indexOf(source), 1);
-                        if (tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX].length === 0) {
-                            delete tOvr[name + CONSTANTS.COLLECTION_NAME_SUFFIX];
-                        }
-                        self.setProperty(overlay, target, tOvr);
-                    }
-                }
-            }
-
             function removeLibraryRelations(root, path) {
-                var overlay = self.getChild(root, CONSTANTS.OVERLAYS_PROPERTY),
-                    selfOverlays = JSON.parse(JSON.stringify(self.getProperty(overlay, path) || {})),
-                    key, collKey, i;
+                var overlayItems = self.overlayQuery(root, path),
+                    i;
 
-                for (key in selfOverlays) {
-                    if (key.indexOf(CONSTANTS.COLLECTION_NAME_SUFFIX) !== -1) {
-                        collKey = key.substr(0, key.length - CONSTANTS.COLLECTION_NAME_SUFFIX.length);
-                        for (i = 0; i < selfOverlays[key].length; i += 1) {
-                            removeRelationFromOverlay(overlay, collKey, selfOverlays[key][i], path);
-                        }
-                    } else {
-                        removeRelationFromOverlay(overlay, key, path, selfOverlays[key]);
+                for (i = 0; i < overlayItems.length; i += 1) {
+                    if (overlayItems[i].s === path || overlayItems.t === path) {
+                        self.overlayRemove(root, overlayItems[i].s, overlayItems[i].n, overlayItems[i].t);
                     }
                 }
             }
 
             function moveLibraryRelations(root, from, to) {
-                var overlay = self.getChild(root, CONSTANTS.OVERLAYS_PROPERTY),
-                    fromOverlay = JSON.parse(JSON.stringify(self.getProperty(overlay, from))),
-                    tempOverlay,
-                    index,
-                    key, collKey, i;
+                var overlayItems = self.overlayQuery(root, from),
+                    i;
 
-                delete fromOverlay[CONSTANTS.MUTABLE_PROPERTY];
-                for (key in fromOverlay) {
-                    if (key.indexOf(CONSTANTS.COLLECTION_NAME_SUFFIX) !== -1) {
-                        collKey = key.substr(0, key.length - CONSTANTS.COLLECTION_NAME_SUFFIX.length);
-                        for (i = 0; i < fromOverlay[key].length; i += 1) {
-                            tempOverlay = JSON.parse(JSON.stringify(self.getProperty(overlay, fromOverlay[key][i])));
-                            delete tempOverlay[CONSTANTS.MUTABLE_PROPERTY];
-                            tempOverlay[collKey] = to;
-                            self.setProperty(overlay, fromOverlay[key][i], tempOverlay);
-                        }
-                    } else {
-                        tempOverlay = JSON.parse(JSON.stringify(self.getProperty(overlay, fromOverlay[key])));
-                        index = tempOverlay[key + CONSTANTS.COLLECTION_NAME_SUFFIX].indexOf(from);
-                        if (index) {
-                            tempOverlay[key + CONSTANTS.COLLECTION_NAME_SUFFIX] = to;
-                            delete tempOverlay[CONSTANTS.MUTABLE_PROPERTY];
-                            self.setProperty(overlay, fromOverlay[key], tempOverlay);
-                        }
+                for (i = 0; i < overlayItems.length; i += 1) {
+                    if (overlayItems[i].s === from) {
+                        self.overlayRemove(root, overlayItems[i].s, overlayItems[i].n, overlayItems[i].t);
+                        self.overlayInsert(root, to, overlayItems[i].n, overlayItems[i].t);
+
+                    } else if (overlayItems[i].t === from) {
+                        self.overlayRemove(root, overlayItems[i].s, overlayItems[i].n, overlayItems[i].t);
+                        self.overlayInsert(root, overlayItems[i].s, overlayItems[i].n, to);
                     }
                 }
 
-                self.deleteProperty(overlay, from);
-                self.setProperty(overlay, to, fromOverlay);
             }
 
             function isPathInSubTree(fullPath, subTreePath) {

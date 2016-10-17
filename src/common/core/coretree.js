@@ -11,8 +11,9 @@ define([
     'common/core/tasync',
     'common/util/random',
     'common/regexp',
-    'common/core/constants'
-], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS) {
+    'common/core/constants',
+    'common/storage/util'
+], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS, storageUtil) {
 
     'use strict';
 
@@ -233,6 +234,9 @@ define([
                 rootid: ++rootCounter
             };
 
+            // We patch the data here, so we only do upgrade when we actually try to interpret the content
+            storageUtil.patchDataObject(data);
+
             roots.push(root);
 
             __ageRoots();
@@ -248,6 +252,10 @@ define([
             // TODO: this is a hack, we should avoid loading it multiple times
             if (REGEXP.DB_HASH.test(node.data)) {
                 ASSERT(node.data === newdata[ID_NAME]);
+
+                // We patch the data here, so we only do upgrade when we actually try to interpret the content
+                storageUtil.patchDataObject(newdata);
+
                 root.initial[path] = {
                     hash: node.data,
                     data: newdata

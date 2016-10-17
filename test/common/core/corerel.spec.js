@@ -12,7 +12,6 @@ describe('corerel', function () {
         Q = testFixture.Q,
         storage,
         expect = testFixture.expect,
-        __should = testFixture.should,
         Rel = testFixture.requirejs('common/core/corerel'),
         Tree = testFixture.requirejs('common/core/coretree'),
         TASYNC = testFixture.requirejs('common/core/tasync'),
@@ -21,6 +20,7 @@ describe('corerel', function () {
         },
         projectName = 'coreRelTesting',
         projectId = testFixture.projectName2Id(projectName),
+        project,
         core,
         root,
 
@@ -38,9 +38,9 @@ describe('corerel', function () {
 
     after(function (done) {
         Q.allDone([
-                storage.closeDatabase(),
-                gmeAuth.unload()
-            ])
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
             .nodeify(done);
     });
 
@@ -50,8 +50,9 @@ describe('corerel', function () {
                 return storage.createProject({projectName: projectName});
             })
             .then(function (dbProject) {
-                var child,
-                    project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
+                var child;
+
+                project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
 
                 core = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('corerel:core')});
                 root = core.createNode();
@@ -77,7 +78,7 @@ describe('corerel', function () {
 
     it('should load all children', function (done) {
         TASYNC.call(function (children) {
-            children.should.have.length(1);
+            expect(children).to.have.length(1);
             done();
         }, core.loadChildren(root));
     });
@@ -85,7 +86,7 @@ describe('corerel', function () {
     it('child should have pointer and root should not', function (done) {
         TASYNC.call(function (children) {
             var child = children[0];
-            core.getPointerPath(child, 'parent').should.be.eql(core.getPath(root));
+            expect(core.getPointerPath(child, 'parent')).to.be.eql(core.getPath(root));
             expect(core.getPointerPath(root, 'parent')).to.be.equal(undefined);
             done();
         }, core.loadChildren(root));
@@ -94,9 +95,9 @@ describe('corerel', function () {
     it('root should have collection and child should not', function (done) {
         TASYNC.call(function (children) {
             var child = children[0];
-            core.getCollectionNames(child).should.be.empty;
-            core.getCollectionNames(root).should.be.eql(['parent']);
-            core.getCollectionPaths(root, 'parent').should.include.members([core.getPath(child)]);
+            expect(core.getCollectionNames(child)).to.be.empty;
+            expect(core.getCollectionNames(root)).to.be.eql(['parent']);
+            expect(core.getCollectionPaths(root, 'parent')).to.include.members([core.getPath(child)]);
             done();
         }, core.loadChildren(root));
     });
@@ -108,22 +109,22 @@ describe('corerel', function () {
                 copies = core.copyNodes([child, copyOne], root),
                 grandChild = core.copyNode(copyOne, child),
                 grandCopy = core.copyNode(grandChild, root);
-            core.getAttribute(copyOne, 'name').should.be.eql(core.getAttribute(child, 'name'));
+            expect(core.getAttribute(copyOne, 'name')).to.be.eql(core.getAttribute(child, 'name'));
             copies.should.have.length(2);
-            core.getRegistry(copies[0], 'position').should.be.eql(core.getRegistry(copyOne, 'position'));
-            core.getPointerPath(copies[1], 'parent').should.be.eql(core.getPointerPath(copies[0], 'parent'));
-            core.getPointerPath(grandChild, 'parent').should.be.eql(core.getPointerPath(grandCopy, 'parent'));
+            expect(core.getRegistry(copies[0], 'position')).to.be.eql(core.getRegistry(copyOne, 'position'));
+            expect(core.getPointerPath(copies[1], 'parent')).to.be.eql(core.getPointerPath(copies[0], 'parent'));
+            expect(core.getPointerPath(grandChild, 'parent')).to.be.eql(core.getPointerPath(grandCopy, 'parent'));
             done();
         }, core.loadChildren(root));
     });
 
     it('loading collection and pointer', function (done) {
         TASYNC.call(function (children) {
-            children.should.have.length(1);
+            expect(children).to.have.length(1);
             var child = children[0];
-            core.getAttribute(child, 'name').should.be.equal('child');
+            expect(core.getAttribute(child, 'name')).to.be.equal('child');
             TASYNC.call(function (pointer) {
-                pointer.should.be.eql(root);
+                expect(pointer).to.be.eql(root);
                 done();
             }, core.loadPointer(child, 'parent'));
         }, core.loadCollection(root, 'parent'));
@@ -131,7 +132,7 @@ describe('corerel', function () {
 
     it('getting children paths', function (done) {
         TASYNC.call(function (children) {
-            core.getChildrenPaths(root).should.include.members([core.getPath(children[0])]);
+            expect(core.getChildrenPaths(root)).to.include.members([core.getPath(children[0])]);
 
             done();
         }, core.loadChildren(root));
@@ -144,16 +145,16 @@ describe('corerel', function () {
                 relid = core.getRelid(node);
 
             node = core.moveNode(node, child);
-            core.getRelid(node).should.be.eql(relid);
-            core.getPath(node).should.contain(core.getPath(child));
+            expect(core.getRelid(node)).to.be.eql(relid);
+            expect(core.getPath(node)).to.contain(core.getPath(child));
 
             node = core.moveNode(node, root);
-            core.getRelid(node).should.be.eql(relid);
-            core.getPath(node).should.not.contain(core.getPath(child));
+            expect(core.getRelid(node)).to.be.eql(relid);
+            expect(core.getPath(node)).to.not.contain(core.getPath(child));
 
             node = core.moveNode(node, root);
-            core.getRelid(node).should.not.be.eql(relid);
-            core.getPath(node).should.not.contain(core.getPath(child));
+            expect(core.getRelid(node)).to.not.be.eql(relid);
+            expect(core.getPath(node)).to.not.contain(core.getPath(child));
 
             done();
         }, core.loadChildren(root));
@@ -204,5 +205,43 @@ describe('corerel', function () {
         } catch (err) {
             expect(err.message).to.contain('Given relid already used in parent');
         }
+    });
+
+    it('should empty the reverse overlay cache according config settings', function (done) {
+        var myGmeConfig = JSON.parse(JSON.stringify(gmeConfig)),
+            myCore,
+            root,
+            child,
+            otherChild;
+
+        myGmeConfig.core.inverseRelationsCacheSize = 2;
+        myCore = new Core(project, {globConf: myGmeConfig, logger: testFixture.logger.fork('corerel:core')});
+
+        root = myCore.createNode({});
+        child = myCore.createNode({parent: root, relid: 'child'});
+        otherChild = myCore.createNode({parent: root, relid: 'oChild'});
+
+        myCore.setPointer(child, 'ref', root);
+        myCore.setPointer(otherChild, 'ref', root);
+
+        myCore.setAttribute(child, 'child', true);
+
+        expect(myCore.getCollectionPaths(child, 'ref')).to.eql([]);
+        expect(myCore.getCollectionPaths(otherChild, 'ref')).to.eql([]);
+        expect(myCore.getCollectionPaths(root, 'ref')).to.have.members(['/child', '/oChild']);
+        // console.log(myCore._inverseCache);
+
+        myCore.persist(root);
+
+        TASYNC.call(function (newRoot) {
+            TASYNC.call(function (children) {
+                expect(children).to.have.length(2);
+                expect(myCore.getCollectionPaths(children[0], 'ref')).to.eql([]);
+                expect(myCore.getCollectionPaths(children[1], 'ref')).to.eql([]);
+                expect(myCore.getCollectionPaths(newRoot, 'ref')).to.have.members(['/child', '/oChild']);
+                done();
+            }, myCore.loadChildren(newRoot));
+        }, myCore.loadRoot(myCore.getHash(root)));
+
     });
 });

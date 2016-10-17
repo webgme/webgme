@@ -412,7 +412,7 @@ define([
                     commitData.coreObjects[keys[i]] = UTIL.getPatchObject(coreObjects[keys[i]].oldData,
                         coreObjects[keys[i]].newData);
                     //if (keys[i] === rootHash) {
-                        //console.timeEnd('root-patch-computation');
+                    //console.timeEnd('root-patch-computation');
                     //}
                 } else if (coreObjects[keys[i]].newData && coreObjects[keys[i]].newHash) {
                     // A new object with no previous data (send the entire data).
@@ -693,7 +693,8 @@ define([
                     updater: [self.userId],
                     time: (new Date()).getTime(),
                     message: msg,
-                    type: 'commit'
+                    type: 'commit',
+                    __v: CONSTANTS.VERSION
                 },
                 commitHash = '#' + GENKEY(commitObj, gmeConfig);
 

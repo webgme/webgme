@@ -65,7 +65,8 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
                 updater: [user],
                 time: (new Date()).getTime(),
                 message: msg,
-                type: 'commit'
+                type: 'commit',
+                __v: CONSTANTS.VERSION
             },
             commitHash = '#' + GENKEY(commitObj, gmeConfig);
 

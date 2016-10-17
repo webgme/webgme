@@ -43,9 +43,6 @@ define(['common/util/canon',
             this[key] = innerCore[key];
         }
 
-        //we remove some low level functions as they should not be used on high level
-        delete self.overlayInsert;
-
         logger.debug('initialized DiffCore');
 
         //<editor-fold=Helper Functions>
@@ -946,8 +943,7 @@ define(['common/util/canon',
             return TASYNC.call(function (node) {
                 var sourcePath = nodePath.substr(ancestorPath.length),
                     targetPath = basePath.substr(ancestorPath.length);
-                innerCore.overlayInsert(self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
-                    sourcePath, 'base', targetPath);
+                innerCore.overlayInsert(node, sourcePath, 'base', targetPath);
             }, self.loadByPath(root, ancestorPath));
         }
 

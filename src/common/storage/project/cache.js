@@ -11,8 +11,9 @@
 define([
     'common/util/assert',
     'common/storage/constants',
-    'common/util/jsonPatcher'
-], function (ASSERT, CONSTANTS, jsonPatcher) {
+    'common/util/jsonPatcher',
+    'common/storage/util'
+], function (ASSERT, CONSTANTS, jsonPatcher, utils) {
     'use strict';
     function ProjectCache(storage, projectId, mainLogger, gmeConfig) {
         var self = this,

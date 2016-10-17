@@ -28,20 +28,61 @@ define([
         return str.replace(/%2f/g, '/');
     }
 
+    function collectPartials(source, target, key, operation, single) {
+        if (single) {
+            switch (operation) {
+                case 'add':
+                    return [target[key]];
+                case 'replace':
+                    return [source[key], target[key]];
+                case 'remove':
+                    return [source[key]];
+            }
+        } else {
+            var partials = [],
+                collection,
+                item;
+            if (operation === 'add') {
+                collection = target[key];
+            } else {
+                collection = source[key];
+            }
+
+            for (item in collection) {
+                if (partials.indexOf(collection[item])) {
+                    partials.push(collection[item]);
+                }
+            }
+
+            return partials;
+        }
+    }
+
     function create(sourceJson, targetJson) {
         var patch = [],
             diff = function (source, target, basePath, excludeList, noUpdate) {
-                var i;
+                var i,
+                    overlay = basePath === '/ovr/' ? true : false,
+                    inOverlay = basePath.indexOf('/ovr/') === 0 && !overlay ? true : false,
+                    patchItem;
 
                 //add
                 for (i in target) {
                     if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
                         if (!source.hasOwnProperty(i)) {
-                            patch.push({
+                            patchItem = {
                                 op: 'add',
                                 path: basePath + _strEncode(i),
                                 value: target[i]
-                            });
+                            };
+
+                            if (overlay) {
+                                patchItem.partials = collectPartials(source, target, i, 'add', false);
+                            } else if (inOverlay) {
+                                patchItem.partials = collectPartials(source, target, i, 'add', true);
+                            }
+
+                            patch.push(patchItem);
                         }
                     }
                 }
@@ -51,12 +92,18 @@ define([
                     for (i in target) {
                         if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
                             if (source.hasOwnProperty(i) && CANON.stringify(source[i]) !== CANON.stringify(target[i])) {
-                                patch.push({
+                                patchItem = {
                                     op: 'replace',
                                     path: basePath + _strEncode(i),
                                     value: target[i]
                                     //oldValue: source[i]
-                                });
+                                };
+
+                                if (inOverlay) {
+                                    patchItem.partials = collectPartials(source, target, i, 'replace', true);
+                                }
+
+                                patch.push(patchItem);
                             }
                         }
                     }
@@ -66,11 +113,19 @@ define([
                 for (i in source) {
                     if (excludeList.indexOf(i) === -1 && source.hasOwnProperty(i)) {
                         if (!target.hasOwnProperty(i)) {
-                            patch.push({
+                            patchItem = {
                                 op: 'remove',
                                 path: basePath + _strEncode(i)
                                 //oldValue: source[i]
-                            });
+                            };
+
+                            if (overlay) {
+                                patchItem.partials = collectPartials(source, target, i, 'remove', false);
+                            } else if (inOverlay) {
+                                patchItem.partials = collectPartials(source, target, i, 'remove', true);
+                            }
+
+                            patch.push(patchItem);
                         }
                     }
                 }
@@ -273,7 +328,7 @@ define([
 
     function _getChangedNodesRec(patch, res, hash, gmePath) {
         var nodePatches = patch[hash] && patch[hash].patch, // Changes regarding node with hash
-            i,
+            i, j,
             ownChange = false,
             pathPieces,
             relGmePath,
@@ -293,23 +348,17 @@ define([
                 relGmePath = _strDecode(pathPieces[0]);
                 absGmePath = gmePath + relGmePath;
                 if (_isGmePath(relGmePath) && _inLoadOrUnload(res, absGmePath) === false) {
-                    if (pathPieces.length === 1) {
-                        // The entire stored overlay was removed/added - trigger a full event.
-                        // TODO: There are rare cases where only partialUpdates should be triggered.
-                        res.update[absGmePath] = true;
-                    } else if (pathPieces.length === 2) {
-                        if (_endsWith(pathPieces[1], CORE_CONSTANTS.COLLECTION_NAME_SUFFIX)) {
-                            // Target-change - only trigger event for the actual node.
-                            res.partialUpdate[absGmePath] = true;
-                        } else {
-                            // Source-change - trigger full event.
-                            res.update[absGmePath] = true;
-                        }
-                    } else {
-                        throw new Error('pathPieces longer than 2 ' + nodePatches[i]);
-                    }
+                    res.update[absGmePath] = true;
                 } else if (relGmePath === '/_nullptr') {
                     ownChange = true;
+                }
+
+                // Now handle the partial updates
+                for (j = 0; j < nodePatches[i].partials.length; j += 1) {
+                    absGmePath = gmePath + nodePatches[i].partials[j];
+                    if (_isGmePath(nodePatches[i].partials[j]) && _inLoadOrUnload(res, absGmePath) === false) {
+                        res.partialUpdate[absGmePath] = true;
+                    }
                 }
 
             } else if (_isRelid(patchPath) === true) {
@@ -344,6 +393,8 @@ define([
      * @param {object} patch
      * @returns {object}
      */
+    // TODO check if all event related information could be set during patch creation,
+    // so this function would only collect those information.
     function getChangedNodes(patch, rootHash) {
         var res;
 

@@ -14,6 +14,44 @@ define([
 
     'use strict';
 
+    function InverseOverlaysCache(maxSize, logger) {
+        var self = this;
+
+        maxSize = maxSize || 10000;
+        this._backup = {};
+        this._cache = {};
+        this._size = 0;
+
+        this.getItem = function (key) {
+            if (this._cache[key]) {
+                return this._cache[key];
+            }
+
+            if (this._backup[key]) {
+                return this._backup[key];
+            }
+
+            return null;
+
+        };
+
+        this.setItem = function (key, data) {
+            if (!this._cache[key]) {
+                if (this._size === maxSize) {
+                    this._size = 0;
+                    this._backup = this._cache;
+                    this._cache = {};
+                }
+                this._size += 1;
+                this._cache[key] = data;
+
+            } else {
+                logger.warn('trying to add inverse relation object multiple times [#' + key + ']');
+            }
+        };
+
+    }
+
     function CoreRel(innerCore, options) {
         ASSERT(typeof options === 'object');
         ASSERT(typeof options.globConf === 'object');
@@ -27,6 +65,9 @@ define([
             this[key] = innerCore[key];
         }
 
+        this._inverseCache = new InverseOverlaysCache(options.globConf.core.inverseRelationsCacheSize,
+            logger.fork('inverseCache'));
+
         logger.debug('initialized CoreRel');
 
         //<editor-fold=Helper Functions>
@@ -34,93 +75,6 @@ define([
             if (!cond) {
                 throw new Error(text);
             }
-        }
-
-        function overlayRemove(overlays, source, name, target) {
-            ASSERT(self.isValidNode(overlays));
-            ASSERT(innerCore.getRelid(overlays) === CONSTANTS.OVERLAYS_PROPERTY);
-            ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && self.isPointerName(name));
-            ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
-
-            // console.log('remove', overlays.parent.data.atr.name, source, name, target);
-
-            var node = innerCore.getChild(overlays, source);
-            ASSERT(node && innerCore.getProperty(node, name) === target);
-            innerCore.deleteProperty(node, name);
-
-            if (innerCore.getKeys(node).length === 0) {
-                innerCore.deleteProperty(overlays, source);
-            }
-
-            node = innerCore.getChild(overlays, target);
-            ASSERT(node);
-
-            name = name + CONSTANTS.COLLECTION_NAME_SUFFIX;
-
-            var array = innerCore.getProperty(node, name);
-            ASSERT(Array.isArray(array) && array.length >= 1);
-
-            if (array.length === 1) {
-                ASSERT(array[0] === source);
-
-                innerCore.deleteProperty(node, name);
-            } else {
-                var index = array.indexOf(source);
-                ASSERT(index >= 0);
-
-                array = array.slice(0);
-                array.splice(index, 1);
-
-                innerCore.setProperty(node, name, array);
-            }
-
-            if (innerCore.getKeys(node).length === 0) {
-                innerCore.deleteProperty(overlays, target);
-            }
-        }
-
-        function overlayQuery(overlays, prefix) {
-            ASSERT(self.isValidNode(overlays) && innerCore.isValidPath(prefix));
-
-            var prefix2 = prefix + '/';
-            var list = [];
-            var paths = innerCore.getKeys(overlays);
-
-            for (var i = 0; i < paths.length; ++i) {
-                var path = paths[i];
-                if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
-                    var node = innerCore.getChild(overlays, path);
-                    var names = innerCore.getKeys(node);
-
-                    for (var j = 0; j < names.length; ++j) {
-                        var name = names[j];
-                        if (self.isPointerName(name)) {
-                            list.push({
-                                s: path,
-                                n: name,
-                                t: innerCore.getProperty(node, name),
-                                p: true
-                            });
-                        } else {
-                            var array = innerCore.getProperty(node, name);
-                            ASSERT(Array.isArray(array));
-                            name = name.slice(0, -CONSTANTS.COLLECTION_NAME_SUFFIX.length);
-                            for (var k = 0; k < array.length; ++k) {
-                                list.push({
-                                    s: array[k],
-                                    n: name,
-                                    t: path,
-                                    p: false
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-
-            // console.log('query', overlays.parent.data.atr.name, prefix, list);
-
-            return list;
         }
 
         function isObject(node) {
@@ -158,6 +112,18 @@ define([
             };
         }
 
+        function storeNewInverseOverlays(node) {
+            var hash = self.getHash(node),
+                relid;
+
+            if (hash && node.inverseOverlays) {
+                self._inverseCache.setItem(hash, node.inverseOverlays);
+                for (relid in node.children) {
+                    storeNewInverseOverlays(node.children[relid]);
+                }
+            }
+        }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -171,17 +137,74 @@ define([
                 return false;
             }
         };
+
+        this.persist = function (node) {
+            var persisted = innerCore.persist(node);
+
+            storeNewInverseOverlays(self.getRoot(node));
+
+            return persisted;
+        };
         //</editor-fold>
 
         //<editor-fold=Added Methods>
+        this.getInverseOverlayOfNode = function (node) {
+            var hash,
+                inverseOverlays = {},
+                overlay,
+                source,
+                name,
+                target;
+
+            // If the node already has inverse computed we return that
+            if (node.inverseOverlays) {
+                return node.inverseOverlays;
+            }
+
+            // If we find it in the cache we set that and use it
+            hash = self.getHash(node);
+            if (hash) {
+                inverseOverlays = self._inverseCache.getItem(hash);
+                if (inverseOverlays) {
+                    node.inverseOverlays = inverseOverlays;
+                    return node.inverseOverlays;
+                }
+            }
+
+            // Otherwise we have to compute it
+            overlay = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
+            overlay = overlay || {};
+            inverseOverlays = {};
+            for (source in overlay) {
+                for (name in overlay[source]) {
+                    target = overlay[source][name];
+                    inverseOverlays[target] = inverseOverlays[target] || {};
+                    inverseOverlays[target][name] = inverseOverlays[target][name] || [];
+                    inverseOverlays[target][name].push(source);
+                }
+            }
+
+            // If it is an unmodified node, we can store the inverse, otherwise it still can change
+            if (hash) {
+                self._inverseCache.setItem(hash, inverseOverlays);
+            }
+
+            node.inverseOverlays = inverseOverlays;
+
+            return node.inverseOverlays;
+
+        };
+
         this.isPointerName = function (name) {
             ASSERT(typeof name === 'string');
             //TODO this is needed as now we work with modified data as well
             if (name === CONSTANTS.MUTABLE_PROPERTY) {
                 return false;
             }
-            return name.slice(-CONSTANTS.COLLECTION_NAME_SUFFIX.length) !==
-                   CONSTANTS.COLLECTION_NAME_SUFFIX;
+            // return name.slice(-CONSTANTS.COLLECTION_NAME_SUFFIX.length) !==
+            //     CONSTANTS.COLLECTION_NAME_SUFFIX;
+
+            return true;
         };
 
         this.getAttributeNames = function (node) {
@@ -270,33 +293,109 @@ define([
             innerCore.setProperty(node, name, value);
         };
 
-        this.overlayInsert = function (overlays, source, name, target) {
-            ASSERT(self.isValidNode(overlays));
-            ASSERT(innerCore.getRelid(overlays) === CONSTANTS.OVERLAYS_PROPERTY);
+        this.overlayRemove = function (node, source, name, target) {
+            ASSERT(self.isValidNode(node));
             ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && self.isPointerName(name));
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
-            // console.log('insert', overlays.parent.data.atr.name, source, name, target);
+            var overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
+                inverseOverlays = node.inverseOverlays, // we only handle it if it is already computed
+                overlayNode,
+                index;
 
-            var node = innerCore.getChild(overlays, source);
+            overlayNode = innerCore.getChild(overlays, source);
+            ASSERT(overlayNode && innerCore.getProperty(overlayNode, name) === target);
+            innerCore.deleteProperty(overlayNode, name);
 
-            ASSERT(innerCore.getProperty(node, name) === undefined);
-            innerCore.setProperty(node, name, target);
-
-            node = innerCore.getChild(overlays, target);
-            name = name + CONSTANTS.COLLECTION_NAME_SUFFIX;
-
-            var array = innerCore.getProperty(node, name);
-            if (array) {
-                ASSERT(array.indexOf(source) < 0);
-
-                array = array.slice(0);
-                array.push(source);
-            } else {
-                array = [source];
+            if (innerCore.getKeys(overlayNode).length === 0) {
+                innerCore.deleteProperty(overlays, source);
             }
 
-            innerCore.setProperty(node, name, array);
+            //Now we check if some mutation happened
+            if (inverseOverlays && !node.inverseOverlays) {
+                inverseOverlays = JSON.parse(JSON.stringify(inverseOverlays));
+                node.inverseOverlays = inverseOverlays;
+            }
+            if (inverseOverlays && inverseOverlays[target] && inverseOverlays[target][name]) {
+                index = inverseOverlays[target][name].indexOf(source);
+                if (index !== -1) {
+                    inverseOverlays[target][name].splice(index, 1);
+                    if (inverseOverlays[target][name].length === 0) {
+                        delete inverseOverlays[target][name];
+                        if (Object.keys(inverseOverlays[target]).length === 0) {
+                            delete inverseOverlays[target];
+                        }
+                    }
+                }
+            }
+
+        }
+
+        this.overlayQuery = function (node, prefix) {
+            ASSERT(self.isValidNode(node) && innerCore.isValidPath(prefix));
+
+            var overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {},
+                inverseOverlays = self.getInverseOverlayOfNode(node), // We necessarily have to compute at this point,
+                i, path, name, list = [],
+                prefix2 = prefix + CONSTANTS.PATH_SEP;
+
+            for (path in overlays) {
+                if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
+                    for (name in overlays[path]) {
+                        if (self.isPointerName(name)) {
+                            list.push({
+                                s: path,
+                                n: name,
+                                t: overlays[path][name],
+                                p: true
+                            });
+                        }
+                    }
+                }
+            }
+
+            for (path in inverseOverlays) {
+                if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
+                    for (name in inverseOverlays[path]) {
+                        for (i = 0; i < inverseOverlays[path][name].length; i += 1) {
+                            list.push({
+                                s: inverseOverlays[path][name][i],
+                                n: name,
+                                t: path,
+                                p: false
+                            });
+                        }
+                    }
+                }
+            }
+
+            return list;
+        }
+
+        this.overlayInsert = function (node, source, name, target) {
+            ASSERT(self.isValidNode(node));
+            ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && self.isPointerName(name));
+            ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
+
+            var overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
+                inverseOverlays = node.inverseOverlays, // We update it only if it exists
+                overlay = self.getChild(overlays, source);
+
+            // Make sure it is an insert
+            ASSERT(self.getProperty(overlay, name) === undefined);
+            self.setProperty(overlay, name, target);
+
+            // First check if mutation took place.
+            if (inverseOverlays && !node.inverseOverlays) {
+                inverseOverlays = JSON.parse(JSON.stringify(inverseOverlays));
+                node.inverseOverlays = inverseOverlays;
+            }
+
+            if (inverseOverlays) {
+                inverseOverlays[target] = inverseOverlays[target] || {};
+                inverseOverlays[target][name] = inverseOverlays[target][name] || [];
+                inverseOverlays[target][name].push(source);
+            }
         };
 
         this.createNode = function (parameters, takenRelids) {
@@ -325,6 +424,8 @@ define([
                 node = innerCore.createRoot();
             }
 
+            // As we just created the node, we can allocate an empty inverse object, that is appropriate this time
+            node.inverseOverlays = {};
             return node;
         };
 
@@ -350,15 +451,14 @@ define([
             }
 
             while (parent) {
-                var overlays = innerCore.getChild(parent, CONSTANTS.OVERLAYS_PROPERTY);
 
-                var list = overlayQuery(overlays, prefix);
+                var list = self.overlayQuery(parent, prefix);
                 for (var i = 0; i < list.length; ++i) {
                     var entry = list[i];
-                    overlayRemove(overlays, entry.s, entry.n, entry.t);
+                    self.overlayRemove(parent, entry.s, entry.n, entry.t);
                 }
 
-                prefix = '/' + innerCore.getRelid(parent) + prefix;
+                prefix = CONSTANTS.PATH_SEP + innerCore.getRelid(parent) + prefix;
                 parent = innerCore.getParent(parent);
             }
         };
@@ -374,12 +474,27 @@ define([
         this.copyNode = function (node, parent, takenRelids) {
             ASSERT(self.isValidNode(node));
             ASSERT(!parent || self.isValidNode(parent));
+            var newNode,
+                ancestor,
+                ancestorNewPath,
+                nodeToChangeOverlay,
+                base,
+                baseOldPath,
+                aboveAncestor,
+                list,
+                tempAncestor,
+                i,
+                entry,
+                relativePath,
+                source,
+                target,
+                inverseOverlays;
 
             node = innerCore.normalize(node);
-            var newNode;
+            inverseOverlays = node.inverseOverlays;
 
             if (parent) {
-                var ancestor = innerCore.getAncestor(node, parent);
+                ancestor = innerCore.getAncestor(node, parent);
 
                 // cannot copy inside of itself
                 if (ancestor === node) {
@@ -390,46 +505,42 @@ define([
                 innerCore.setHashed(newNode, true);
                 innerCore.setData(newNode, innerCore.copyData(node));
 
-                var ancestorOverlays = innerCore.getChild(ancestor, CONSTANTS.OVERLAYS_PROPERTY);
-                var ancestorNewPath = innerCore.getPath(newNode, ancestor);
+                ancestorNewPath = innerCore.getPath(newNode, ancestor);
 
-                var base = innerCore.getParent(node);
-                var baseOldPath = '/' + innerCore.getRelid(node);
-                var aboveAncestor = 1;
+                base = innerCore.getParent(node);
+                baseOldPath = '/' + innerCore.getRelid(node);
+                aboveAncestor = 1;
 
                 while (base) {
-                    var baseOverlays = innerCore.getChild(base, CONSTANTS.OVERLAYS_PROPERTY);
-                    var list = overlayQuery(baseOverlays, baseOldPath);
-                    var tempAncestor = innerCore.getAncestor(base, ancestor);
+                    list = self.overlayQuery(base, baseOldPath);
+                    tempAncestor = innerCore.getAncestor(base, ancestor);
 
                     aboveAncestor = (base === ancestor ? 0 : tempAncestor === base ? 1 : -1);
 
-                    var relativePath = aboveAncestor < 0 ?
+                    relativePath = aboveAncestor < 0 ?
                         innerCore.getPath(base, ancestor) : innerCore.getPath(ancestor, base);
 
-                    for (var i = 0; i < list.length; ++i) {
-                        var entry = list[i];
+                    for (i = 0; i < list.length; ++i) {
+                        entry = list[i];
 
                         if (entry.p) {
                             ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
                             ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === '/');
 
-                            var source, target, overlays;
-
                             if (aboveAncestor < 0) {
                                 //below ancestor node - further from root
                                 source = ancestorNewPath + entry.s.substr(baseOldPath.length);
                                 target = innerCore.joinPaths(relativePath, entry.t);
-                                overlays = ancestorOverlays;
+                                nodeToChangeOverlay = ancestor;
                             } else if (aboveAncestor === 0) {
                                 //at ancestor node
                                 var data = innerCore.getCommonPathPrefixData(ancestorNewPath, entry.t);
 
-                                overlays = newNode;
+                                nodeToChangeOverlay = newNode;
                                 while (data.firstLength-- > 0) {
-                                    overlays = innerCore.getParent(overlays);
+                                    nodeToChangeOverlay = innerCore.getParent(nodeToChangeOverlay);
                                 }
-                                overlays = innerCore.getChild(overlays, CONSTANTS.OVERLAYS_PROPERTY);
+                                // overlays = innerCore.getChild(overlays, CONSTANTS.OVERLAYS_PROPERTY);
 
                                 source = innerCore.joinPaths(data.first, entry.s.substr(baseOldPath.length));
                                 target = data.second;
@@ -439,10 +550,10 @@ define([
 
                                 source = relativePath + ancestorNewPath + entry.s.substr(baseOldPath.length);
                                 target = entry.t;
-                                overlays = baseOverlays;
+                                nodeToChangeOverlay = base;
                             }
 
-                            self.overlayInsert(overlays, source, entry.n, target);
+                            self.overlayInsert(nodeToChangeOverlay, source, entry.n, target);
                         }
                     }
 
@@ -454,6 +565,9 @@ define([
                 innerCore.setData(newNode, innerCore.copyData(node));
             }
 
+            if (inverseOverlays) {
+                newNode.inverseOverlays = JSON.parse(JSON.stringify(inverseOverlays));
+            }
             return newNode;
         };
 
@@ -462,8 +576,8 @@ define([
             var paths = [],
                 i, j, index, names, pointer, newNode,
                 copiedNodes = [],
-            // Every single element will be an object with the
-            // internally pointing relations and the index of the target.
+                // Every single element will be an object with the
+                // internally pointing relations and the index of the target.
                 internalRelationPaths = [];
 
             for (i = 0; i < nodes.length; i++) {
@@ -505,17 +619,32 @@ define([
         this.moveNode = function (node, parent, takenRelids) {
             ASSERT(self.isValidNode(node) && self.isValidNode(parent));
 
+            var ancestor,
+                base,
+                baseOldPath,
+                aboveAncestor,
+                ancestorNewPath,
+                list,
+                tempAncestor,
+                relativePath,
+                i,
+                source,
+                target,
+                nodeToModifyOverlays,
+                entry,
+                tmp;
+
             node = innerCore.normalize(node);
-            var ancestor = innerCore.getAncestor(node, parent);
+            ancestor = innerCore.getAncestor(node, parent);
 
             // cannot move inside of itself
             if (ancestor === node) {
                 return null;
             }
 
-            var base = innerCore.getParent(node);
-            var baseOldPath = '/' + innerCore.getRelid(node);
-            var aboveAncestor = 1;
+            base = innerCore.getParent(node);
+            baseOldPath = '/' + innerCore.getRelid(node);
+            aboveAncestor = 1;
 
             var oldNode = node;
             if (takenRelids) {
@@ -538,25 +667,22 @@ define([
             innerCore.setHashed(node, true);
             innerCore.setData(node, innerCore.copyData(oldNode));
 
-            var ancestorOverlays = innerCore.getChild(ancestor, CONSTANTS.OVERLAYS_PROPERTY);
-            var ancestorNewPath = innerCore.getPath(node, ancestor);
+            ancestorNewPath = innerCore.getPath(node, ancestor);
 
             while (base) {
-                var baseOverlays = innerCore.getChild(base, CONSTANTS.OVERLAYS_PROPERTY);
-                var list = overlayQuery(baseOverlays, baseOldPath);
-                var tempAncestor = innerCore.getAncestor(base, ancestor);
+                list = self.overlayQuery(base, baseOldPath);
+                tempAncestor = innerCore.getAncestor(base, ancestor);
 
                 aboveAncestor = (base === ancestor ? 0 : tempAncestor === base ? 1 : -1);
 
-                var relativePath = aboveAncestor < 0 ?
+                relativePath = aboveAncestor < 0 ?
                     innerCore.getPath(base, ancestor) : innerCore.getPath(ancestor, base);
 
-                for (var i = 0; i < list.length; ++i) {
-                    var entry = list[i];
+                for (i = 0; i < list.length; ++i) {
+                    entry = list[i];
 
-                    overlayRemove(baseOverlays, entry.s, entry.n, entry.t);
+                    self.overlayRemove(base, entry.s, entry.n, entry.t);
 
-                    var tmp;
                     if (!entry.p) {
                         tmp = entry.s;
                         entry.s = entry.t;
@@ -566,22 +692,20 @@ define([
                     ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
                     ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === '/');
 
-                    var source, target, overlays;
-
                     if (aboveAncestor < 0) {
                         //below ancestor node
                         source = ancestorNewPath + entry.s.substr(baseOldPath.length);
                         target = innerCore.joinPaths(relativePath, entry.t);
-                        overlays = ancestorOverlays;
+                        nodeToModifyOverlays = ancestor;
                     } else if (aboveAncestor === 0) {
                         //at ancestor node
                         var data = innerCore.getCommonPathPrefixData(ancestorNewPath, entry.t);
 
-                        overlays = node;
+                        nodeToModifyOverlays = node;
                         while (data.firstLength-- > 0) {
-                            overlays = innerCore.getParent(overlays);
+                            nodeToModifyOverlays = innerCore.getParent(nodeToModifyOverlays);
                         }
-                        overlays = innerCore.getChild(overlays, CONSTANTS.OVERLAYS_PROPERTY);
+                        // overlays = innerCore.getChild(overlays, CONSTANTS.OVERLAYS_PROPERTY);
 
                         source = innerCore.joinPaths(data.first, entry.s.substr(baseOldPath.length));
                         target = data.second;
@@ -591,7 +715,7 @@ define([
 
                         source = relativePath + ancestorNewPath + entry.s.substr(baseOldPath.length);
                         target = entry.t;
-                        overlays = baseOverlays;
+                        nodeToModifyOverlays = base;
                     }
 
                     if (!entry.p) {
@@ -605,7 +729,7 @@ define([
                     }
 
                     //console.log(source, target);
-                    self.overlayInsert(overlays, source, entry.n, target);
+                    self.overlayInsert(nodeToModifyOverlays, source, entry.n, target);
                 }
 
                 baseOldPath = '/' + innerCore.getRelid(base) + baseOldPath;
@@ -707,88 +831,72 @@ define([
 
         this.getCollectionNames = function (node) {
             ASSERT(self.isValidNode(node));
-
-            var target = '';
-            var names = [];
+            var names = [],
+                target = '',
+                name,
+                inverseOverlays;
 
             do {
-                var child = innerCore.getProperty(innerCore.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
-                    target);
-                if (child) {
-                    for (var name in child) {
-                        if (!self.isPointerName(name) && name !== CONSTANTS.MUTABLE_PROPERTY) {
-                            name = name.slice(0, -CONSTANTS.COLLECTION_NAME_SUFFIX.length);
-                            if (self.isPointerName(name) && names.indexOf(name) < 0) {
-                                names.push(name);
-                            }
+                inverseOverlays = self.getInverseOverlayOfNode(node);
+                if (inverseOverlays[target]) {
+                    for (name in inverseOverlays[target]) {
+                        if (names.indexOf(name) === -1) {
+                            names.push(name);
                         }
                     }
                 }
 
-                target = '/' + innerCore.getRelid(node) + target;
-                node = innerCore.getParent(node);
+                target = CONSTANTS.PATH_SEP + self.getRelid(node) + target;
+                node = self.getParent(node);
             } while (node);
 
             return names;
         };
 
         this.loadCollection = function (node, name) {
-            ASSERT(self.isValidNode(node) && name);
+            ASSERT(self.isValidNode(node) && self.isPointerName(name));
 
-            name += CONSTANTS.COLLECTION_NAME_SUFFIX;
-
-            var collection = [];
-            var target = '';
+            var collection = [],
+                target = '',
+                i,
+                inverseOverlays;
 
             do {
-                var child = innerCore.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
+                inverseOverlays = self.getInverseOverlayOfNode(node);
 
-                child = innerCore.getChild(child, target);
-                if (child) {
-                    var sources = innerCore.getProperty(child, name);
-                    if (sources) {
-                        ASSERT(Array.isArray(sources) && sources.length >= 1);
-
-                        for (var i = 0; i < sources.length; ++i) {
-                            collection.push(innerCore.loadByPath(node, sources[i]));
-                        }
+                if (inverseOverlays[target] && inverseOverlays[target][name]) {
+                    for (i = 0; i < inverseOverlays[target][name].length; i += 1) {
+                        collection.push(self.loadByPath(node, inverseOverlays[target][name][i]));
                     }
                 }
 
-                target = '/' + innerCore.getRelid(node) + target;
-                node = innerCore.getParent(node);
+                target = CONSTANTS.PATH_SEP + self.getRelid(node) + target;
+                node = self.getParent(node);
             } while (node);
 
             return TASYNC.lift(collection);
         };
 
         this.getCollectionPaths = function (node, name) {
-            ASSERT(self.isValidNode(node) && name);
+            ASSERT(self.isValidNode(node) && self.isPointerName(name));
 
-            name += CONSTANTS.COLLECTION_NAME_SUFFIX;
-
-            var result = [];
-            var target = '';
+            var result = [],
+                target = '',
+                inverseOverlays,
+                i,
+                prefix = '';
 
             do {
-                var child = innerCore.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
-
-                child = innerCore.getChild(child, target);
-                if (child) {
-                    var sources = innerCore.getProperty(child, name);
-                    if (sources) {
-                        ASSERT(Array.isArray(sources) && sources.length >= 1);
-
-                        var prefix = innerCore.getPath(node);
-
-                        for (var i = 0; i < sources.length; ++i) {
-                            result.push(innerCore.joinPaths(prefix, sources[i]));
-                        }
+                inverseOverlays = self.getInverseOverlayOfNode(node);
+                if (inverseOverlays[target] && inverseOverlays[target][name]) {
+                    prefix = self.getPath(node);
+                    for (i = 0; i < inverseOverlays[target][name].length; i += 1) {
+                        result.push(prefix + inverseOverlays[target][name][i]);
                     }
                 }
 
-                target = '/' + innerCore.getRelid(node) + target;
-                node = innerCore.getParent(node);
+                target = CONSTANTS.PATH_SEP + self.getRelid(node) + target;
+                node = self.getParent(node);
             } while (node);
 
             return result;
@@ -797,20 +905,17 @@ define([
         this.deletePointer = function (node, name) {
             ASSERT(self.isValidNode(node) && typeof name === 'string');
 
-            var source = '';
+            var source = '',
+                overlays;
 
             do {
-                var overlays = innerCore.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
-                ASSERT(overlays);
-
-                var target = innerCore.getProperty(innerCore.getChild(overlays, source), name);
-                if (target !== undefined) {
-                    overlayRemove(overlays, source, name, target);
-                    return true;
+                overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
+                if (overlays && overlays[source] && overlays[source][name]) {
+                    self.overlayRemove(node, source, name, overlays[source][name]);
                 }
 
-                source = '/' + innerCore.getRelid(node) + source;
-                node = innerCore.getParent(node);
+                source = CONSTANTS.PATH_SEP + self.getRelid(node) + source;
+                node = self.getParent(node);
             } while (node);
 
             return false;
@@ -819,16 +924,19 @@ define([
         this.setPointer = function (node, name, target) {
             ASSERT(self.isValidNode(node) && typeof name === 'string' && (!target || self.isValidNode(target)));
 
+            var ancestor,
+                targetPath,
+                sourcePath;
+
             self.deletePointer(node, name);
 
             if (target) {
-                var ancestor = innerCore.getAncestor(node, target);
+                ancestor = innerCore.getAncestor(node, target);
 
-                var overlays = innerCore.getChild(ancestor, CONSTANTS.OVERLAYS_PROPERTY);
-                var sourcePath = innerCore.getPath(node, ancestor);
-                var targetPath = innerCore.getPath(target, ancestor);
+                sourcePath = innerCore.getPath(node, ancestor);
+                targetPath = innerCore.getPath(target, ancestor);
 
-                self.overlayInsert(overlays, sourcePath, name, targetPath);
+                self.overlayInsert(ancestor, sourcePath, name, targetPath);
             }
         };
 

@@ -64,13 +64,13 @@ function copySvgDirsAndRegenerateSVGList(gmeConfig, logger, callback) {
     ncp.stopOnErr = true;
 
     Q.all(gmeConfig.visualization.svgDirs.map(function (svgDir) {
-            var dirName = path.parse(svgDir).name,
-                destination = path.join(svgAssetDir, dirName);
+        var dirName = path.parse(svgDir).name,
+            destination = path.join(svgAssetDir, dirName);
 
-            logger.info('Custom SVGs will be copied', svgDir, destination);
+        logger.info('Custom SVGs will be copied', svgDir, destination);
 
-            return Q.nfcall(ncp, svgDir, destination);
-        }))
+        return Q.nfcall(ncp, svgDir, destination);
+    }))
         .then(function () {
             return genDecoratorSvgList();
         })
@@ -226,10 +226,9 @@ function getSeedDictionary(config) {
 
                 if (extension.toLowerCase() === '.webgmex') {
                     seedName = path.basename(names[j], extension);
-                }
-
-                if (!result[seedName]) {
-                    result[seedName] = config.seedProjects.basePaths[i] + '/' + seedName + extension;
+                    if (!result[seedName]) {
+                        result[seedName] = config.seedProjects.basePaths[i] + '/' + seedName + extension;
+                    }
                 }
             }
         }

@@ -190,7 +190,7 @@ describe.skip('Core Performance test', function () {
         var count = 0;
         core.loadRoot(rootHash)
             .then(function (root) {
-                return core.traverse(root, {}, function (node,next) {
+                return core.traverse(root, {}, function (node, next) {
                     count += 1;
                     console.log(core.getPath(node), ' - ', count, ' -');
                     next();
@@ -380,7 +380,7 @@ describe.skip('Core Performance test', function () {
                         meta,
                         metaUser = new MetaUser();
 
-                    metaUser.initialize(core, allMetaNodes, function () {
+                    metaUser.initialize(core, {nodes: allMetaNodes}, function () {
                     });
 
                     console.time('getJsonMeta');

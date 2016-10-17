@@ -405,24 +405,23 @@ describe('core.intrapersist', function () {
             examplePrimePath = '/1710723537',
             e1NodePath = '/1736622193/1271963336',
             nodes = null;
-        it('sets the root and commit back to base', function (done) {
+
+        before(function(done){
             core.loadRoot(rootHash, function (err, r) {
                 if (err) {
                     return done(err);
                 }
                 root = r;
-                done();
+                loadNodes([nodePath, specialPath, examplePath, examplePrimePath, e1NodePath], function (err, n) {
+                    if (err) {
+                        return done(err);
+                    }
+                    nodes = n;
+                    done();
+                });
             });
         });
-        it('loads all the nodes for the test', function (done) {
-            loadNodes([nodePath, specialPath, examplePath, examplePrimePath, e1NodePath], function (err, n) {
-                if (err) {
-                    return done(err);
-                }
-                nodes = n;
-                done();
-            });
-        });
+
         it('moved node should be available instantaneously', function () {
             var movedNode = core.moveNode(nodes[e1NodePath], root);
             if (core.getPath(movedNode) !== '/1271963336') {
