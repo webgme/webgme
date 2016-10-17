@@ -7,8 +7,9 @@ define([], function () {
     'use strict';
     function gmeNodeSetter(logger, state, saveRoot, storeNode, printCoreError) {
 
-        function _logDeprecated(oldFn, newFn) {
-            console.warn('gmeClient "' + oldFn + '" is deprecated and will eventually be removed, use "' + newFn + '" instead.');
+        function _logDeprecated(oldFn, newFn, isGetter) {
+            console.warn('"gmeClient.' + oldFn + '" is deprecated and will eventually be removed, use "' + 
+                isGetter ? 'gmeNode.' : 'gmeClient.' + newFn + '" instead.');
         }
 
         function _getNode(path) {
@@ -970,6 +971,52 @@ define([], function () {
             }
         }
 
+        // Deprecated meta-getters from core/users/meta
+        // TODO: These should be removed at next version bump.
+
+        function isTypeOf(path, typePath) {
+            var node = state.nodes[path] && state.nodes[path].node,
+                typeNode = state.nodes[typePath] && state.nodes[typePath].node;
+
+            if (node && typeNode) {
+                return state.core.isTypeOf(node, typeNode);
+            }
+
+            return false;
+        }
+
+        function isValidChild(path, childPath) {
+            var node = state.nodes[path] && state.nodes[path].node,
+                child = state.nodes[childPath] && state.nodes[childPath].node;
+
+            if (node && child) {
+                return state.core.isValidChildOf(child, node);
+            }
+
+            return false;
+        }
+
+        function isValidTarget(path, name, targetPath) {
+            var node = state.nodes[path] && state.nodes[path].node,
+                target = state.nodes[targetPath] && state.nodes[targetPath].node;
+
+            if (node && target) {
+                return state.core.isValidTargetOf(target, node, name);
+            }
+
+            return false;
+        }
+
+        function getValidChildrenTypes(path) {
+            var node = state.nodes[path] && state.nodes[path].node;
+
+            if (node) {
+                return state.core.getValidChildrenPaths(node);
+            }
+
+            return [];
+        }
+
         return {
             setAttribute: setAttribute,
             setAttributes: function() {
@@ -1095,7 +1142,29 @@ define([], function () {
 
             // mixin
             addMixin: addMixin,
-            delMixin: delMixin
+            delMixin: delMixin,
+
+            // Deprecated meta-getters
+            getMeta: function() {
+                _logDeprecated('getMeta(path)', 'getJsonMeta()', true);
+                getMeta.apply(null, arguments);
+            },
+            isTypeOf: function() {
+                _logDeprecated('isTypeOf(path, typePath)', 'isTypeOf(typePath)', true);
+                isTypeOf.apply(null, arguments);
+            },
+            isValidChild: function() {
+                _logDeprecated('isValidChild(path, childPath)', 'isValidChildOf(parentPath)', true);
+                isValidChild.apply(null, arguments);
+            },
+            isValidTarget: function() {
+                _logDeprecated('isValidTarget(path, name, targetPath)', 'isValidTargetOf(targetPath, name)', true);
+                isValidTarget.apply(null, arguments);
+            },
+            getValidChildrenTypes: function() {
+                _logDeprecated('getValidChildrenTypes(path)', 'getValidChildrenIds()', true);
+                getValidChildrenTypes.apply(null, arguments);
+            },
         };
     }
 

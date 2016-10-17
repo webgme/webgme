@@ -26,68 +26,6 @@ define([], function () {
             _initialized = true;
         }
 
-        //getter setter functions
-        function getMeta(path) {
-            var node = _state.nodes[path] && _state.nodes[path].node,
-                meta = {children: {}, attributes: {}, pointers: {}, aspects: {}};
-
-            if (!node) {
-                return null;
-            }
-
-            meta = _core.getJsonMeta(node);
-
-            return meta;
-        }
-
-        function isTypeOf(path, typePath) {
-            var node = _state.nodes[path] && _state.nodes[path].node,
-                typeNode = _state.nodes[typePath] && _state.nodes[typePath].node;
-
-            if (node && typeNode) {
-                return _core.isTypeOf(node, typeNode);
-            }
-
-            return false;
-        }
-
-        function isValidChild(path, childPath) {
-            var node = _state.nodes[path] && _state.nodes[path].node,
-                child = _state.nodes[childPath] && _state.nodes[childPath].node;
-
-            if (node && child) {
-                return _core.isValidChildOf(child, node);
-            }
-
-            return false;
-        }
-
-        function isValidTarget(path, name, targetPath) {
-            var node = _state.nodes[path] && _state.nodes[path].node,
-                target = _state.nodes[targetPath] && _state.nodes[targetPath].node;
-
-            if (node && target) {
-                return _core.isValidTargetOf(target, node, name);
-            }
-
-            return false;
-        }
-
-        function isValidAttribute(/*path, name, attribute*/) {
-            //TODO we should check against schema
-            return true;
-        }
-
-        function getValidChildrenTypes(path) {
-            var node = _state.nodes[path] && _state.nodes[path].node;
-
-            if (node) {
-                return _core.getValidChildrenPaths(node);
-            }
-
-            return [];
-        }
-
         function getValidTargetTypes(path, name) {
             var node = _state.nodes[path] && _state.nodes[path].node,
                 meta, i,
@@ -369,26 +307,20 @@ define([], function () {
 
         return {
             initialize: initialize,
-            getMeta: getMeta,
-            isTypeOf: isTypeOf,
             hasOwnMetaRules: hasOwnMetaRules,
 
             //containment
-            isValidChild: isValidChild,
             getChildrenMeta: getChildrenMeta,
             getChildrenMetaAttribute: getChildrenMetaAttribute,
-            getValidChildrenTypes: getValidChildrenTypes,
             getOwnValidChildrenTypes: getOwnValidChildrenTypes,
             getValidChildrenItems: getValidChildrenItems,
 
             //attribute
-            isValidAttribute: isValidAttribute,
             getAttributeSchema: getAttributeSchema,
             getValidAttributeNames: getValidAttributeNames,
             getOwnValidAttributeNames: getOwnValidAttributeNames,
 
             //pointer
-            isValidTarget: isValidTarget,
             getPointerMeta: getPointerMeta,
             getValidTargetItems: getValidTargetItems,
             getOwnValidTargetItems: getOwnValidTargetItems,
