@@ -149,7 +149,7 @@ define([
 
         //<editor-fold=Added Methods>
         this.getInverseOverlayOfNode = function (node) {
-            var hash = self.getHash(node),
+            var hash,
                 inverseOverlays = {},
                 overlay,
                 source,
@@ -162,6 +162,7 @@ define([
             }
 
             // If we find it in the cache we set that and use it
+            hash = self.getHash(node);
             if (hash) {
                 inverseOverlays = self._inverseCache.getItem(hash);
                 if (inverseOverlays) {

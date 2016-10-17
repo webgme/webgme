@@ -393,6 +393,8 @@ define([
      * @param {object} patch
      * @returns {object}
      */
+    // TODO check if all event related information could be set during patch creation,
+    // so this function would only collect those information.
     function getChangedNodes(patch, rootHash) {
         var res;
 

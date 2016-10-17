@@ -7,10 +7,10 @@
 define([
     'common/storage/constants',
     'common/util/jsonPatcher',
-    './dataPatches',
+    './dataConverters',
     'q',
     'common/regexp'
-], function (CONSTANTS, jsonPatcher, dataPatches, Q, REGEXP) {
+], function (CONSTANTS, jsonPatcher, dataConverters, Q, REGEXP) {
     'use strict';
 
     function _getRootHash(project, parameters) {
@@ -161,8 +161,8 @@ define([
         var dataVersion = dataObject.__v || '0.0.0',
             myVersion = CONSTANTS.VERSION || '0.0.0';
 
-        if (dataPatches[dataVersion] && typeof dataPatches[dataVersion][myVersion] === 'function') {
-            dataPatches[dataVersion][myVersion](dataObject);
+        if (dataConverters[dataVersion] && typeof dataConverters[dataVersion][myVersion] === 'function') {
+            dataConverters[dataVersion][myVersion](dataObject);
         }
 
         dataObject.__v = myVersion;
