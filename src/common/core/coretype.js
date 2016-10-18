@@ -1169,17 +1169,12 @@ define([
             var instances = [],
                 directCollectionPaths,
                 relPath = '',
-                path,
                 i;
 
             while (node) {
                 directCollectionPaths = innerCore.getCollectionPaths(node, CONSTANTS.BASE_POINTER);
                 for (i = 0; i < directCollectionPaths.length; i += 1) {
-                    path = directCollectionPaths[i] + relPath;
-                    //TODO it should not be necessary as it is very unlikely to have two
-                    if (instances.indexOf(path) === -1) {
-                        instances.push(path);
-                    }
+                    instances.push(directCollectionPaths[i] + relPath);
                 }
                 relPath = CONSTANTS.PATH_SEP + innerCore.getRelid(node) + relPath;
                 node = innerCore.getParent(node);
@@ -1192,7 +1187,7 @@ define([
             ASSERT(self.isValidNode(node));
 
             var instancesPaths = self.getInstancesPaths(node),
-                instances,
+                instances = [],
                 root = self.getRoot(node),
                 i;
 

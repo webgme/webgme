@@ -274,7 +274,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     GMENode.prototype.getInstancesPaths = function () {
         return this._state.core.getInstancesPaths(this._state.nodes[this._id].node);
     };
-    
+
     //adding functionality to get rid of GMEConcepts
     GMENode.prototype.isConnection = function () {
         return this._state.core.isConnection(this._state.nodes[this._id].node);
