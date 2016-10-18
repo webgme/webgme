@@ -1997,7 +1997,6 @@ define([
             command.branchName = branchName;
             command.commitHash = commitHash;
             command.withAssets = withAssets;
-            //command.fileName = fileName || projectId + '__' + (branchName || commitHash);
             logger.debug('exportProjectToFile, command', command);
             if (command.projectId && (command.branchName || commitHash)) {
                 storage.simpleRequest(command, function (err, result) {
