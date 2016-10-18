@@ -123,6 +123,7 @@ var path = require('path'),
         server: {
             port: 8888,
             handle: null,
+            timeout: 0,
             maxWorkers: 10,
             log: {
                 //patterns: ['gme:server:*', '-gme:server:standalone*'],

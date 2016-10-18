@@ -148,6 +148,10 @@ function StandAloneServer(gmeConfig) {
 
         __httpServer = Http.createServer(__app);
 
+        if (gmeConfig.server.timeout > 0) {
+            __httpServer.timeout = gmeConfig.server.timeout;
+        }
+
         function handleNewConnection(socket) {
             var socketId = socket.remoteAddress + ':' + socket.remotePort;
 

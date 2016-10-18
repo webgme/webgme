@@ -192,6 +192,7 @@ function validateConfig(configOrFileName) {
     expectedKeys.push('server');
     assertObject('config.server', config.server);
     assertNumber('config.server.port', config.server.port);
+    assertNumber('config.server.timeout', config.server.timeout);
     assertObject('config.server.handle', config.server.handle);
     assertNumber('config.server.maxWorkers', config.server.maxWorkers);
     warnDeprecated('config.server.sessionStore', config.server.sessionStore,
