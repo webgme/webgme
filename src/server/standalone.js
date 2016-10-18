@@ -148,7 +148,7 @@ function StandAloneServer(gmeConfig) {
 
         __httpServer = Http.createServer(__app);
 
-        if (gmeConfig.server.timeout > 0) {
+        if (gmeConfig.server.timeout > -1) {
             __httpServer.timeout = gmeConfig.server.timeout;
         }
 
