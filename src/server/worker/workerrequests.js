@@ -610,7 +610,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 var output = rawJson,
                     blobClient = getBlobClient(webgmeToken),
                     deferred = Q.defer(),
-                    filename = output.projectId + '_' + (output.branchName || output.commitHash) + '.webgmex';
+                    filename = output.projectId + '_' + output.commitHash.substr(1, 6) + '.webgmex';
 
                 blobUtil.buildProjectPackage(logger.fork('blobUtil'),
                     blobClient,

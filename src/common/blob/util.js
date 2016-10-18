@@ -175,7 +175,7 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
             deferred = Q.defer();
 
         artie.descriptor.name = filename || (jsonExport.projectId +
-            '_' + (jsonExport.branchName || jsonExport.commitHash) + '.webgmex');
+            '_' + jsonExport.commitHash.substr(1, 6) + '.webgmex');
 
         if (!addAssets) {
             assets = [];
