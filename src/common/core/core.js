@@ -2010,6 +2010,25 @@ define([
 
         this.getClosureInformation = core.getClosureInformation;
         this.importClosure = core.importClosure;
+
+        /**
+         * Collects the paths of all the instances of the given node.
+         * @param {module:Core~Node} node - the node in question.
+         *
+         *@return {string[]} The function returns an array of the absolute paths of the instances.
+         *
+         * @func
+         */
+        this.getInstancesPaths = core.getInstancesPaths;
+
+        /**
+         * Loads all the instances of the given node.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {function(string, module:Core~Node[])} callback
+         *
+         * @func
+         */
+        this.loadInstances = core.loadInstances;
     }
 
     return Core;

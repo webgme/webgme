@@ -1214,6 +1214,21 @@ define([
 
             return instances;
         };
+
+        this.loadInstances = function (node) {
+            ASSERT(self.isValidNode(node));
+
+            var instancesPaths = self.getInstancesPaths(node),
+                instances,
+                root = self.getRoot(node),
+                i;
+
+            for (i = 0; i < instancesPaths.length; i += 1) {
+                instances[i] = self.loadByPath(root, instancesPaths[i]);
+            }
+
+            return TASYNC.lift(instances);
+        };
         //</editor-fold>
     };
 
