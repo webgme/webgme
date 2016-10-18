@@ -26,6 +26,7 @@ define([
      * @alias BlobClient
      */
     var BlobClient = function (parameters) {
+        var self = this;
         this.artifacts = [];
         if (parameters && parameters.logger) {
             this.logger = parameters.logger;
@@ -41,6 +42,14 @@ define([
                 error: doLog
             };
             console.warn('Since v1.3.0 BlobClient requires a logger, falling back on console.log.');
+        }
+
+        if (parameters && parameters.uploadProgressHandler) {
+            this.uploadProgressHandler = parameters.uploadProgressHandler;
+        } else {
+            this.uploadProgressHandler = function (fName, e) {
+                self.logger.debug('File upload of', fName, e.percent, '%');
+            };
         }
 
         this.logger.debug('ctor', {metadata: parameters});
@@ -191,6 +200,9 @@ define([
 
         req.set('Content-Type', 'application/octet-stream')
             .send(data)
+            .on('progress', function (event) {
+                self.uploadProgressHandler(name, event);
+            })
             .end(function (err, res) {
                 if (err || res.status > 399) {
                     deferred.reject(err || new Error(res.status));

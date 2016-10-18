@@ -20,6 +20,7 @@ define([
         INPUT_FILE_UPLOAD = $('<input type="file" />'),
         //MAX_FILE_SIZE = 100000000,
         ASSET_WIDGET_BASE = $('<div class="asset-widget" />'),
+        ASSET_PROGRESS_BASE = $('<div class="upload-progress-bar" />'),
         ASSET_LINK = $('<a class="blob-download-link" href="" target="_self"/>');
 
     AssetWidget = function (propertyDesc) {
@@ -29,6 +30,10 @@ define([
 
         this.__el = ASSET_WIDGET_BASE.clone();
         this.el.append(this.__el);
+
+        this.__progressBar = ASSET_PROGRESS_BASE.clone();
+        this.__el.append(this.__progressBar);
+        this.__progressBar.hide();
 
         this.__assetLink = ASSET_LINK.clone();
         this.__el.append(this.__assetLink);
@@ -41,6 +46,8 @@ define([
         this.__fileUploadInput = INPUT_FILE_UPLOAD.clone();
 
         this.__files = [];
+
+        this.__timeoutId = null;
 
         this._attachFileDropHandlers();
 
@@ -152,16 +159,61 @@ define([
 
     AssetWidget.prototype._fileSelectHandler = function (event) {
         var self = this,
-            blobClient = new BlobClient({logger: this._logger.fork('BlobClient')}),
+            blobClient,
             i,
             file,
-
             files,
             afName,
             artifact,
             remainingFiles,
-
             addedFileAsSoftLink;
+
+        function uploadProgressHandler(fName, e) {
+            var currentFile = self.__progressBar.text();
+            if (self.__timeoutId) {
+                return;
+            }
+
+            if (currentFile === '' || currentFile === fName) {
+                if (typeof e.percent === 'number' && e.percent !== 100) {
+                    self.__progressBar.width(e.percent + '%');
+                    self.__progressBar.text(fName);
+                } else {
+                    self.__progressBar.text('');
+                }
+            } else if (e.percent === 100) {
+                self.__progressBar.width(e.percent + '%');
+                self.__progressBar.text(fName);
+                self.__timeoutId = setTimeout(function () {
+                    if (self.__progressBar) {
+                        self.__progressBar.text('');
+                        self.__progressBar.width(0);
+                    }
+                    self.__timeoutId = null;
+                }, 500);
+            }
+        }
+
+        function afterUpload(err, hash) {
+            self.__assetLink.show();
+            self.__progressBar.width(0);
+            self.__progressBar.text('');
+            self.__progressBar.hide();
+            self.__timeoutId = null;
+
+            if (err) {
+                self._logger.error(err);
+            } else {
+                self.setValue(hash);
+                self.fireFinishChange();
+                self._attachFileDropHandlers(false);
+            }
+        }
+
+        blobClient = new BlobClient({
+            logger: this._logger.fork('BlobClient'),
+            uploadProgressHandler: uploadProgressHandler
+        });
 
         // cancel event and hover styling
         event.stopPropagation();
@@ -174,6 +226,8 @@ define([
         if (files && files.length > 0) {
             this.__files = files;
             this._detachFileDropHandlers(true);
+            this.__assetLink.hide();
+            this.__progressBar.show();
 
             afName = self.propertyName;
             artifact = blobClient.createArtifact(afName);
@@ -192,15 +246,10 @@ define([
                 if (remainingFiles === 0) {
                     if (files.length > 1) {
                         artifact.save(function (err, artifactHash) {
-                            self.setValue(artifactHash);
-                            self.fireFinishChange();
-                            self._attachFileDropHandlers(false);
+                            afterUpload(err, artifactHash);
                         });
-
                     } else {
-                        self.setValue(hash);
-                        self.fireFinishChange();
-                        self._attachFileDropHandlers(false);
+                        afterUpload(err, hash);
                     }
                 }
             };
@@ -263,6 +312,7 @@ define([
 
     AssetWidget.prototype.destroy = function () {
         this._detachFileDropHandlers();
+        clearTimeout(this.__timeoutId);
         WidgetBase.prototype.destroy.call(this);
     };
 
