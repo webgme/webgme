@@ -168,7 +168,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Port the server is hosted from.
 - `config.server.handle = null`
  - Optional handle object passed to [server.listen](https://nodejs.org/api/http.html#http_server_listen_handle_callback) (aligning port must still be given).
-- `config.server.timeout = 0`
+- `config.server.timeout = -1`
  - If greater than -1 will set the [timeout property of the http-server](https://nodejs.org/api/http.html#http_server_timeout). (This can be used to enable large, > 1Gb, file uploads.)
 - `config.server.maxWorkers = 10`
  - Maximum number of child process spawned for workers.
