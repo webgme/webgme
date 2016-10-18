@@ -50,29 +50,6 @@ define([
             return node;
         }
 
-        function refreshChildrenRelids(node) {
-            // We have just loaded the node, we want to update relid informations
-            var relids = self.getChildrenRelids(node, true),
-                ownRelids = self.getOwnChildrenRelids(node),
-                base = self.getBase(node),
-                basePath,
-                relid;
-            for (relid in relids) {
-                if (ownRelids.indexOf(relid) !== -1) {
-                    // Own child, has to have a base pointer
-                    basePath = self.getPointerPathFrom(node,
-                        CONSTANTS.PATH_SEP + relid, CONSTANTS.BASE_POINTER);
-                    if (basePath === undefined || basePath === null) {
-                        innerCore.deleteChild(node, relid);
-                    }
-                } else {
-                    if (base && self.getChildrenRelids(base, true)[relid] !== true) {
-                        innerCore.deleteChild(node, relid);
-                    }
-                }
-            }
-        }
-
         function loadChild(node, relid) {
             var child = null,
                 base = self.getBase(node),
@@ -90,14 +67,12 @@ define([
                         if (c) {
                             child = c;
                             child.base = b;
-                            refreshChildrenRelids(child);
                             return child;
                         } else {
                             child = innerCore.getChild(n, r);
                             self.setHashed(child, true, true);
                             child.base = b;
 
-                            refreshChildrenRelids(child);
                             return child;
                         }
                     }, basechild, child, node, relid);
@@ -120,14 +95,14 @@ define([
                     //empty nodes do not have a base
                     node.base = null;
                     return node;
-                    /*} else if (isFalseNode(node)) {
-                     innerCore.deleteNode(node);
-                     //core.persist(core.getRoot(node));
-                     //TODO a notification should be generated towards the user
-                     logger.warn('node [' + path + '] removed due to missing base');
+                } else if (isFalseNode(node)) {
+                    innerCore.deleteNode(node);
+                    //core.persist(core.getRoot(node));
+                    //TODO a notification should be generated towards the user
+                    logger.warn('node [' + path + '] removed due to missing base');
 
-                     //TODO check if some identification can be passed
-                     return null;*/
+                    //TODO check if some identification can be passed
+                    return null;
                 } else {
                     var basePath = innerCore.getPointerPath(node, CONSTANTS.BASE_POINTER);
                     ASSERT(basePath !== undefined);
@@ -154,7 +129,6 @@ define([
             if (typeof node.base !== null && typeof node.base === 'object' &&
                 (innerCore.getPath(node.base) === innerCore.getPath(target))) {
                 //TODO somehow the object already loaded properly and we do no know about it!!!
-                refreshChildrenRelids(node);
                 return node;
             } else {
                 ASSERT(node.base === undefined || node.base === null); //kecso
@@ -170,7 +144,6 @@ define([
 
                 node.base = target;
 
-                refreshChildrenRelids(node);
                 return node;
             }
         }
