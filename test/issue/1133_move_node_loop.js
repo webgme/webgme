@@ -55,7 +55,7 @@ describe('issue1133', function () {
             context.core.loadByPath(context.rootNode, NEW_PARENT_ID)
         ])
             .then(function (res) {
-                expect(context.core.isValidNewParent(res[1], res[0])).to.equal(false);
+                expect(context.core.isValidNewParent(res[0], res[1])).to.equal(false);
             })
             .nodeify(done);
     });

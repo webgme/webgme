@@ -174,7 +174,7 @@ describe('GME client', function () {
                 'getOwnValidTargetTypes',
                 'isValidChild',
                 'isValidTarget',
-                'isValidAttribute',
+                //'isValidAttribute',
                 'getValidChildrenTypes',
                 'getValidTargetTypes',
                 'hasOwnMetaRules',
