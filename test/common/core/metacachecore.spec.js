@@ -58,9 +58,9 @@ describe('meta cache core', function () {
 
     after(function (done) {
         Q.allDone([
-                storage.closeDatabase(),
-                gmeAuth.unload()
-            ])
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
             .nodeify(done);
     });
 
@@ -250,7 +250,7 @@ describe('meta cache core', function () {
 
                 return core.loadRoot(core.getHash(root_));
             })
-            .then(function(root_){
+            .then(function (root_) {
                 expect(Object.keys(core.getAllMetaNodes(root_))).to.have.length(1);
             })
             .nodeify(done);

@@ -143,6 +143,7 @@ define([
                 }
 
                 node.base = target;
+
                 return node;
             }
         }
@@ -1163,8 +1164,42 @@ define([
         this.processRelidReservation = function (node, relid) {
             processNewRelidLength(node, relid.length + 1);
         };
+
+        this.getInstancePaths = function (node) {
+            var instances = [],
+                directCollectionPaths,
+                relPath = '',
+                i;
+
+            while (node) {
+                directCollectionPaths = innerCore.getCollectionPaths(node, CONSTANTS.BASE_POINTER);
+                for (i = 0; i < directCollectionPaths.length; i += 1) {
+                    instances.push(directCollectionPaths[i] + relPath);
+                }
+                relPath = CONSTANTS.PATH_SEP + innerCore.getRelid(node) + relPath;
+                node = innerCore.getParent(node);
+            }
+
+            return instances;
+        };
+
+        this.loadInstances = function (node) {
+            ASSERT(self.isValidNode(node));
+
+            var instancePaths = self.getInstancePaths(node),
+                instances = [],
+                root = self.getRoot(node),
+                i;
+
+            for (i = 0; i < instancePaths.length; i += 1) {
+                instances[i] = self.loadByPath(root, instancePaths[i]);
+            }
+
+            return TASYNC.lift(instances);
+        };
         //</editor-fold>
     };
 
     return CoreType;
-});
+})
+;

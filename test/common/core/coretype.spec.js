@@ -1121,4 +1121,51 @@ describe('coretype', function () {
 
         }, core.loadChildren(inst));
     });
+
+    it('should gather correctly all instances', function () {
+        var root = core.createNode({}),
+            base = core.createNode({parent: root, relid: 'base'}),
+            container = core.createNode({parent: root, base: base, relid: 'template'}),
+            child = core.createNode({parent: container, base: base, relid: 'child'}),
+            instance = core.createNode({parent: root, base: container, relid: 'instance'});
+
+        expect(core.getInstancePaths(root)).to.have.length(0);
+        expect(core.getInstancePaths(base)).to.have.members(['/template', '/template/child']);
+        expect(core.getInstancePaths(container)).to.have.members(['/instance']);
+        expect(core.getInstancePaths(child)).to.have.members(['/instance/child']);
+
+    });
+
+    it('should load all instances correctly', function (done) {
+        var root = core.createNode({}),
+            base = core.createNode({parent: root, relid: 'base'}),
+            container = core.createNode({parent: root, base: base, relid: 'template'}),
+            child = core.createNode({parent: container, base: base, relid: 'child'}),
+            instance = core.createNode({parent: root, base: container, relid: 'instance'}),
+            neededChecks = 2;
+
+        core.persist(root);
+        TASYNC.call(function (newRoot) {
+            TASYNC.call(function (newChild) {
+                TASYNC.call(function (instances) {
+                    expect(instances).to.have.length(1);
+                    expect(core.getPath(instances[0])).to.equal('/instance/child');
+                    if(--neededChecks === 0){
+                        done();
+                    }
+                }, core.loadInstances(newChild));
+                TASYNC.call(function (instances) {
+                    var paths = [];
+                    expect(instances).to.have.length(2);
+
+                    paths.push(core.getPath(instances[0]));
+                    paths.push(core.getPath(instances[1]));
+                    expect(paths).to.have.members(['/template', '/template/child']);
+                    if(--neededChecks === 0){
+                        done();
+                    }
+                }, core.loadInstances(core.getBase(newChild)));
+            }, core.loadByPath(newRoot, '/template/child'));
+        }, core.loadRoot(core.getHash(root)));
+    });
 });

@@ -212,7 +212,7 @@ define(['common/core/core', 'q'], function (Core, Q) {
             });
 
             return deferred.promise.nodeify(callback);
-        }
+        };
 
         var traverseOrg = this.traverse;
         this.traverse = function (node, options, visitFn, callback) {
@@ -225,7 +225,21 @@ define(['common/core/core', 'q'], function (Core, Q) {
                 }
             });
             return deferred.promise.nodeify(callback);
-        }
+        };
+
+        var loadInstancesOrg = this.loadInstances;
+        this.loadInstances = function (node, callback) {
+            var deferred = Q.defer();
+            loadInstancesOrg(node, function (err, res) {
+                if (err) {
+                    deferred.reject(err instanceof Error ? err : new Error(err));
+                } else {
+                    deferred.resolve(res);
+                }
+            });
+
+            return deferred.promise.nodeify(callback);
+        };
     }
 
     CoreQ.prototype = Object.create(Core.prototype);

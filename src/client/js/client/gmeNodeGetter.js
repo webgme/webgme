@@ -150,7 +150,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         }
         return {to: this._state.core.getPointerPath(this._state.nodes[this._id].node, name), from: []};
     };
-    
+
     GMENode.prototype.getPointerId = function (name) {
         return this.getPointer(name).to;
     };
@@ -158,7 +158,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     GMENode.prototype.getOwnPointer = function (name) {
         return {to: this._state.core.getOwnPointerPath(this._state.nodes[this._id].node, name), from: []};
     };
-    
+
     GMENode.prototype.getOwnPointerId = function (name) {
         return this.getOwnPointer(name).to;
     };
@@ -269,6 +269,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
 
     GMENode.prototype.getCollectionPaths = function (name) {
         return this._state.core.getCollectionPaths(this._state.nodes[this._id].node, name);
+    };
+
+    GMENode.prototype.getInstancePaths = function () {
+        return this._state.core.getInstancePaths(this._state.nodes[this._id].node);
     };
 
     //adding functionality to get rid of GMEConcepts

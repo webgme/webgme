@@ -94,6 +94,12 @@ define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
         core.addLibrary = TASYNC.unwrap(innercore.addLibrary);
         core.updateLibrary = TASYNC.unwrap(innercore.updateLibrary);
 
+        // core.loadInstances = TASYNC.unwrap(oldcore.loadInstances);
+        core.loadInstances = TASYNC.unwrap(function (node) {
+            return TASYNC.call(checkNodes, innercore.loadInstances(node));
+        });
+
+
         return core;
     };
 
