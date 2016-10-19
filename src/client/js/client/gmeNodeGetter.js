@@ -1,25 +1,30 @@
-/*globals define*/
+/*globals define, console*/
 /*jshint browser: true*/
 /**
  * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define(['js/RegistryKeys'], function (REG_KEYS) {
     'use strict';
 
+    function _logDeprecated(oldFn, newFn, comment) {
+        var commentStr = comment ? comment : '';
+        console.warn('"gmeNode.' + oldFn + '" is deprecated and will eventually be removed, use "gmeNode.' + newFn +
+        '" instead.' + commentStr);
+    }
+
     /**
      * @param {string} _id - Path of node.
      * @param {GmeLogger} logger - logger.
      * @param {object} state - state of the client.
-     * @param {object} meta - collected meta nodes.
      * @param {function} storeNode - invoked when storing new nodes.
      * @constructor
      */
-    function GMENode(_id, logger, state, meta, storeNode) {
+    function GMENode(_id, logger, state, storeNode) {
         this._id = _id;
         this._logger = logger;
         this._state = state;
-        this._meta = meta;
         this._storeNode = storeNode;
     }
 
@@ -62,11 +67,11 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         if (typeof basePath === 'string') {
             base = this._state.nodes[basePath].node;
             if (base) {
-                return this._state.core.isValidNewBase(base, this._state.nodes[this._id].node);
+                return this._state.core.isValidNewBase(this._state.nodes[this._id].node, base);
             } else {
                 return false;
             }
-        } else if (basePath === undefined || basePath || null) {
+        } else if (basePath === undefined || basePath === null) {
             return true;
         } else {
             return false;
@@ -78,7 +83,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         if (typeof parentPath === 'string') {
             parent = this._state.nodes[parentPath].node;
             if (parent) {
-                return this._state.core.isValidNewParent(parent, this._state.nodes[this._id].node);
+                return this._state.core.isValidNewParent(this._state.nodes[this._id].node, parent);
             } else {
                 return false;
             }
@@ -175,8 +180,20 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getAttributeNames(this._state.nodes[this._id].node);
     };
 
+    GMENode.prototype.getValidAttributeNames = function () {
+        return this._state.core.getValidAttributeNames(this._state.nodes[this._id].node);
+    };
+
     GMENode.prototype.getOwnAttributeNames = function () {
         return this._state.core.getOwnAttributeNames(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getOwnValidAttributeNames = function () {
+        return this._state.core.getOwnValidAttributeNames(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getAttributeMeta = function (name) {
+        return this._state.core.getAttributeMeta(this._state.nodes[this._id].node, name);
     };
 
     GMENode.prototype.getRegistryNames = function () {
@@ -188,40 +205,40 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     //SET
-    GMENode.prototype.getMemberIds = function (setid) {
-        return this._state.core.getMemberPaths(this._state.nodes[this._id].node, setid);
+    GMENode.prototype.getMemberIds = function (setId) {
+        return this._state.core.getMemberPaths(this._state.nodes[this._id].node, setId);
     };
 
     GMENode.prototype.getSetNames = function () {
         return this._state.core.getSetNames(this._state.nodes[this._id].node);
     };
 
-    GMENode.prototype.getMemberAttributeNames = function (setid, memberid) {
-        return this._state.core.getMemberAttributeNames(this._state.nodes[this._id].node, setid, memberid);
+    GMENode.prototype.getMemberAttributeNames = function (setId, memberId) {
+        return this._state.core.getMemberAttributeNames(this._state.nodes[this._id].node, setId, memberId);
     };
 
-    GMENode.prototype.getMemberAttribute = function (setid, memberid, name) {
-        return this._state.core.getMemberAttribute(this._state.nodes[this._id].node, setid, memberid, name);
+    GMENode.prototype.getMemberAttribute = function (setId, memberId, name) {
+        return this._state.core.getMemberAttribute(this._state.nodes[this._id].node, setId, memberId, name);
     };
 
-    GMENode.prototype.getEditableMemberAttribute = function (setid, memberid, name) {
-        var attr = this._state.core.getMemberAttribute(this._state.nodes[this._id].node, setid, memberid, name);
+    GMENode.prototype.getEditableMemberAttribute = function (setId, memberId, name) {
+        var attr = this._state.core.getMemberAttribute(this._state.nodes[this._id].node, setId, memberId, name);
         if (attr !== null && attr !== undefined) {
             return JSON.parse(JSON.stringify(attr));
         }
         return null;
     };
 
-    GMENode.prototype.getMemberRegistryNames = function (setid, memberid) {
-        return this._state.core.getMemberRegistryNames(this._state.nodes[this._id].node, setid, memberid);
+    GMENode.prototype.getMemberRegistryNames = function (setId, memberId) {
+        return this._state.core.getMemberRegistryNames(this._state.nodes[this._id].node, setId, memberId);
     };
 
-    GMENode.prototype.getMemberRegistry = function (setid, memberid, name) {
-        return this._state.core.getMemberRegistry(this._state.nodes[this._id].node, setid, memberid, name);
+    GMENode.prototype.getMemberRegistry = function (setId, memberId, name) {
+        return this._state.core.getMemberRegistry(this._state.nodes[this._id].node, setId, memberId, name);
     };
 
-    GMENode.prototype.getEditableMemberRegistry = function (setid, memberid, name) {
-        var attr = this._state.core.getMemberRegistry(this._state.nodes[this._id].node, setid, memberid, name);
+    GMENode.prototype.getEditableMemberRegistry = function (setId, memberId, name) {
+        var attr = this._state.core.getMemberRegistry(this._state.nodes[this._id].node, setId, memberId, name);
         if (attr !== null && attr !== undefined) {
             return JSON.parse(JSON.stringify(attr));
         }
@@ -230,8 +247,8 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
 
     //META
     GMENode.prototype.getValidChildrenTypes = function () {
-        //return getMemberIds('ValidChildren');
-        return this._meta.getValidChildrenTypes(this._id);
+        _logDeprecated('getValidChildrenTypes()', 'getValidChildrenIds()');
+        return this.getValidChildrenIds();
     };
 
     GMENode.prototype.getValidAttributeNames = function () {
@@ -380,7 +397,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return validTypes;
     };
 
-    GMENode.prototype.getMetaTypeId = function () {
+    GMENode.prototype.getMetaTypeId = GMENode.prototype.getBaseTypeId = function () {
         var metaType = this._state.core.getMetaType(this._state.nodes[this._id].node);
 
         if (metaType) {
@@ -394,8 +411,50 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.isMetaNode(this._state.nodes[this._id].node);
     };
 
+    GMENode.prototype.isTypeOf = function (typePath) {
+        var typeNode = this._state.nodes[typePath].node;
+
+        if (typeNode) {
+            return this._state.core.isTypeOf(this._state.nodes[this._id].node, typeNode);
+        } else {
+            return false;
+        }
+    };
+
+    GMENode.prototype.isValidChildOf = function (parentPath) {
+        var parentNode = this._state.nodes[parentPath].node;
+
+        if (parentNode) {
+            return this._state.core.isValidChildOf(this._state.nodes[this._id].node, parentNode);
+        } else {
+            return false;
+        }
+    };
+
+    GMENode.prototype.getValidChildrenIds = function () {
+        return this._state.core.getValidChildrenPaths(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.isValidTargetOf = function (targetPath, name) {
+        var targetNode = this._state.nodes[targetPath].node;
+
+        if (targetNode) {
+            return this._state.core.isValidTargetOf(this._state.nodes[this._id].node, targetNode, name);
+        } else {
+            return false;
+        }
+    };
+
     GMENode.prototype.getValidAspectNames = function () {
         return this._state.core.getValidAspectNames(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getOwnValidAspectNames = function () {
+        return this._state.core.getOwnValidAspectNames(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getAspectMeta = function (name) {
+        return this._state.core.getAspectMeta(this._state.nodes[this._id].node, name);
     };
 
     //MIXINS
@@ -407,22 +466,14 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.canSetAsMixin(this._state.nodes[this._id].node, mixinPath);
     };
 
-    //Name space
-    /**
-     * @returns {string} - The namespace, i.e., the name of the library this node is in.
-     */
-    GMENode.prototype.getNamespace = function () {
-        return this._state.core.getNamespace(this._state.nodes[this._id].node);
-    };
-
     GMENode.prototype.isReadOnly = function () {
         return this._state.readOnlyProject || this._state.viewer || this.isLibraryRoot() || this.isLibraryElement();
     };
 
     //getNode
-    function getNode(_id, logger, state, meta, storeNode) {
+    function getNode(_id, logger, state, storeNode) {
         if (state.nodes[_id]) {
-            return new GMENode(_id, logger, state, meta, storeNode);
+            return new GMENode(_id, logger, state, storeNode);
 
         } else {
             //logger.warn('Tried to get node with path "' + _id + '" but was not in state.nodes');
