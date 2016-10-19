@@ -208,7 +208,7 @@ define(['js/logger',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveTabChanged = function (model, tabId) {
-        if (this._selectedMemberListID !== this._tabIDMemberListID[tabId]) {
+        if (this._tabIDMemberListID && this._selectedMemberListID !== this._tabIDMemberListID[tabId]) {
             this._widget.selectTab(tabId + '');
         }
     };

@@ -263,11 +263,9 @@ define(['js/logger',
         return result;
     };
 
-
     CrosscutController.prototype.getMemberListSetsRegistryKey = function () {
         return REGISTRY_KEYS.CROSSCUTS;
     };
-
 
     CrosscutController.prototype.getNewSetNamePrefixDesc = function () {
         return {
@@ -283,7 +281,6 @@ define(['js/logger',
         this._widget.setBackgroundText('No crosscuts defined yet. Press the + button in the top-left corner to ' +
             'create one...');
     };
-
 
     /**********************************************************/
     /*         HANDLE OBJECT DRAG & DROP ACCEPTANCE           */
@@ -346,6 +343,28 @@ define(['js/logger',
         //we are interested in the load of member items and their custom territory involvement
         if (this._selectedMemberListMembers.indexOf(gmeID) !== -1 &&
             this._GMEID2ComponentID[gmeID]) {
+
+            // TODO this is not a full solution, the whole crosscut and the underlying multi-tab needs refactoring!!!
+            // First we should check if a connection changes from box or to box due to the update
+            if (desc.isConnection) {
+                if (this._GMEID2ComponentID[gmeID].length > 0 &&
+                    this._GMEID2ComponentID[gmeID][0].indexOf('C_') === 0 &&
+                    (!desc.srcID || !desc.dstID)) {
+                    // one endpoint value was removed - but not necessarily the item itself
+                    this._onUnload(gmeID);
+                    this._onLoad(gmeID, desc);
+                    return;
+                }
+
+                if (this._GMEID2ComponentID[gmeID].length > 0 &&
+                    this._GMEID2ComponentID[gmeID][0].indexOf('C_') !== 0 &&
+                    desc.srcID && desc.dstID) {
+                    // one endpoint value was removed - but not necessarily the item itself
+                    this._onUnload(gmeID);
+                    this._onLoad(gmeID, desc);
+                    return;
+                }
+            }
             DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onUpdate.call(this, gmeID, desc);
 
             //if (!node.isConnection()) {
@@ -481,7 +500,6 @@ define(['js/logger',
         delete this._nodeSets[gmeID];
         //}
 
-
         return territoryChanged;
     };
 
@@ -544,7 +562,6 @@ define(['js/logger',
 
         return result;
     };
-
 
     /*******************************************************************************/
     /*  DISPLAY META POINTER RELATIONS AS A CONNECTION FROM CONTAINER TO CONTAINED */
@@ -629,7 +646,6 @@ define(['js/logger',
                 };
             }
 
-
             pointerTo = node.getBaseId();
             if (typeof pointerTo === 'string') {
                 combinedName = gmeID + '_' + CONSTANTS.POINTER_BASE + '_' + pointerTo;
@@ -642,7 +658,6 @@ define(['js/logger',
                 };
             }
         }
-
 
         //compute deleted pointers
         diff = _.difference(oldPointers.combinedNames, newPointers.combinedNames);
@@ -681,7 +696,6 @@ define(['js/logger',
     /******************************************************************************************/
     /*  END OF --- DISPLAY META POINTER RELATIONS AS A CONNECTION FROM CONTAINER TO CONTAINED */
     /******************************************************************************************/
-
 
     CrosscutController.prototype._processConnectionWaitingList = function (gmeID) {
         var len,
@@ -748,7 +762,6 @@ define(['js/logger',
     /*  END OF --- HANDLE OBJECT LOAD DISPLAY IT WITH ALL THE POINTERS / ...  */
     /**************************************************************************/
 
-
     /****************************************************************************/
     /*  CREATE A SPECIFIC TYPE OF CONNECTION BETWEEN 2 GME OBJECTS              */
     /****************************************************************************/
@@ -814,7 +827,6 @@ define(['js/logger',
         }
     };
 
-
     CrosscutController.prototype._saveConnectionToWaitingList = function (gmeSrcId, gmeDstId, connType, connTexts) {
         var scrDisplayed = this._GMEID2ComponentID[gmeSrcId] && this._GMEID2ComponentID[gmeSrcId].length > 0,
             dstDisplayed = this._GMEID2ComponentID[gmeDstId] && this._GMEID2ComponentID[gmeDstId].length > 0;
@@ -841,7 +853,6 @@ define(['js/logger',
             //this.logger.error('_saveConnectionToWaitingList both gmeSrcId and gmeDstId is undefined...');
         }
     };
-
 
     CrosscutController.prototype._saveConnection = function (gmeSrcId, gmeDstId, connType, connComponentId, connTexts) {
         //save by SRC
@@ -877,7 +888,6 @@ define(['js/logger',
     /****************************************************************************/
     /*  END OF --- CREATE A SPECIFIC TYPE OF CONNECTION BETWEEN 2 GME OBJECTS   */
     /****************************************************************************/
-
 
     /****************************************************************************/
     /*  REMOVES A SPECIFIC TYPE OF CONNECTION FROM 2 GME OBJECTS                */
@@ -936,7 +946,6 @@ define(['js/logger',
     /****************************************************************************/
     /*  END OF --- REMOVES A SPECIFIC TYPE OF CONNECTION FROM 2 GME OBJECTS     */
     /****************************************************************************/
-
 
     /*************************************************************/
     /*  HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
@@ -1012,7 +1021,6 @@ define(['js/logger',
     /************************************************************************/
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /************************************************************************/
-
 
     CrosscutController.prototype._onFilterNewConnectionDroppableEnds = function (params) {
         var availableConnectionEnds = params.availableConnectionEnds,
@@ -1098,7 +1106,6 @@ define(['js/logger',
 
         return result;
     };
-
 
     CrosscutController.prototype._onCreateNewConnection = function (params) {
         var sourceId,
@@ -1391,7 +1398,6 @@ define(['js/logger',
         return res;
     };
 
-
     CrosscutController.prototype._attachClientEventListeners = function () {
         DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachClientEventListeners.call(this);
     };
@@ -1399,7 +1405,6 @@ define(['js/logger',
     CrosscutController.prototype._detachClientEventListeners = function () {
         DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._detachClientEventListeners.call(this);
     };
-
 
     //FILTER
     /****************************************************************************/
@@ -1522,7 +1527,6 @@ define(['js/logger',
             i, crosscutId = Number(this._activeCrosscutId),
             filter = [];
 
-
         for (i = 0; i < regItem.length; i += 1) {
             if (regItem[i].order === crosscutId) {
                 filter = regItem[i].filter || [];
@@ -1547,7 +1551,7 @@ define(['js/logger',
         for (i = 0; i < filter.length; i += 1) {
             this._widget.setChecked(filter[i], false);
         }
-        
+
         this._initActiveTab = false;
     };
 
