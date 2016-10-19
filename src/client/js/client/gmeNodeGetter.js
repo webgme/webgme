@@ -271,8 +271,8 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getCollectionPaths(this._state.nodes[this._id].node, name);
     };
 
-    GMENode.prototype.getInstancesPaths = function () {
-        return this._state.core.getInstancesPaths(this._state.nodes[this._id].node);
+    GMENode.prototype.getInstancePaths = function () {
+        return this._state.core.getInstancePaths(this._state.nodes[this._id].node);
     };
 
     //adding functionality to get rid of GMEConcepts

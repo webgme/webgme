@@ -1165,7 +1165,7 @@ define([
             processNewRelidLength(node, relid.length + 1);
         };
 
-        this.getInstancesPaths = function (node) {
+        this.getInstancePaths = function (node) {
             var instances = [],
                 directCollectionPaths,
                 relPath = '',
@@ -1186,13 +1186,13 @@ define([
         this.loadInstances = function (node) {
             ASSERT(self.isValidNode(node));
 
-            var instancesPaths = self.getInstancesPaths(node),
+            var instancePaths = self.getInstancePaths(node),
                 instances = [],
                 root = self.getRoot(node),
                 i;
 
-            for (i = 0; i < instancesPaths.length; i += 1) {
-                instances[i] = self.loadByPath(root, instancesPaths[i]);
+            for (i = 0; i < instancePaths.length; i += 1) {
+                instances[i] = self.loadByPath(root, instancePaths[i]);
             }
 
             return TASYNC.lift(instances);

@@ -2019,7 +2019,7 @@ define([
          *
          * @func
          */
-        this.getInstancesPaths = core.getInstancesPaths;
+        this.getInstancePaths = core.getInstancePaths;
 
         /**
          * Loads all the instances of the given node.

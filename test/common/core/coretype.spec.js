@@ -1129,10 +1129,10 @@ describe('coretype', function () {
             child = core.createNode({parent: container, base: base, relid: 'child'}),
             instance = core.createNode({parent: root, base: container, relid: 'instance'});
 
-        expect(core.getInstancesPaths(root)).to.have.length(0);
-        expect(core.getInstancesPaths(base)).to.have.members(['/template', '/template/child']);
-        expect(core.getInstancesPaths(container)).to.have.members(['/instance']);
-        expect(core.getInstancesPaths(child)).to.have.members(['/instance/child']);
+        expect(core.getInstancePaths(root)).to.have.length(0);
+        expect(core.getInstancePaths(base)).to.have.members(['/template', '/template/child']);
+        expect(core.getInstancePaths(container)).to.have.members(['/instance']);
+        expect(core.getInstancePaths(child)).to.have.members(['/instance/child']);
 
     });
 

@@ -149,7 +149,7 @@ define(['js/logger',
             parentNode = this._nodes[nodeId].treeNode;
 
             //get the children IDs of the parent
-            inheritedIDs = parent.getInstancesPaths();
+            inheritedIDs = parent.getInstancePaths();
 
             this._treeBrowser.enableUpdate(false);
 
@@ -168,12 +168,12 @@ define(['js/logger',
                     childrenDescriptors.push({
                         id: currentChildId,
                         name: childNode.getFullyQualifiedName(),
-                        hasChildren: (childNode.getInstancesPaths()).length > 0,
+                        hasChildren: (childNode.getInstancePaths()).length > 0,
                         class: this._getNodeClass(childNode, metaTypeInfo.isMetaNode),
                         icon: this.getIcon(childNode),
                         // Data used locally here.
                         STATE: STATE_LOADED,
-                        INHERITANCE: childNode.getInstancesPaths(),
+                        INHERITANCE: childNode.getInstancePaths(),
                     });
                 } else {
                     //the node is not present on the client side, render a loading node instead
@@ -347,7 +347,7 @@ define(['js/logger',
                         //create the node's descriptor for the tree-browser widget
                         nodeDescriptor = {
                             name: updatedObject.getFullyQualifiedName(),
-                            hasChildren: (updatedObject.getInstancesPaths()).length > 0,
+                            hasChildren: (updatedObject.getInstancePaths()).length > 0,
                             class: objType,
                             icon: self.getIcon(updatedObject)
                         };
@@ -356,7 +356,7 @@ define(['js/logger',
                         this._treeBrowser.updateNode(this._nodes[objectId].treeNode, nodeDescriptor);
 
                         //update the object's children list in the local hashmap
-                        this._nodes[objectId].inheritance = updatedObject.getInstancesPaths();
+                        this._nodes[objectId].inheritance = updatedObject.getInstancePaths();
 
                         //finally update the object's state showing loaded
                         this._nodes[objectId].state = STATE_LOADED;
@@ -370,13 +370,13 @@ define(['js/logger',
                         //create the node's descriptor for the treebrowser widget
                         nodeDescriptor = {
                             name: updatedObject.getFullyQualifiedName(),
-                            hasChildren: (updatedObject.getInstancesPaths()).length > 0,
+                            hasChildren: (updatedObject.getInstancePaths()).length > 0,
                             class: objType,
                             icon: self.getIcon(updatedObject)
                         };
 
                         oldInheritance = this._nodes[objectId].inheritance;
-                        currentInheritance = updatedObject.getInstancesPaths();
+                        currentInheritance = updatedObject.getInstancePaths();
 
                         //the concrete child deletion is important only if the node is open in the tree
                         if (this._treeBrowser.isExpanded(this._nodes[objectId].treeNode)) {
@@ -443,7 +443,7 @@ define(['js/logger',
                                     childTreeNode = this._treeBrowser.createNode(this._nodes[objectId].treeNode, {
                                         id: currentChildId,
                                         name: childNode.getFullyQualifiedName(),
-                                        hasChildren: (childNode.getInstancesPaths()).length > 0,
+                                        hasChildren: (childNode.getInstancePaths()).length > 0,
                                         class: objType,
                                         icon: this.getIcon(childNode)
                                     });
@@ -451,7 +451,7 @@ define(['js/logger',
                                     //store the node's info in the local hashmap
                                     this._nodes[currentChildId] = {
                                         treeNode: childTreeNode,
-                                        inheritance: childNode.getInstancesPaths(),
+                                        inheritance: childNode.getInstancePaths(),
                                         state: STATE_LOADED
                                     };
                                 } else {
@@ -474,7 +474,7 @@ define(['js/logger',
                             }
                         }
 
-                        this._nodes[objectId].inheritance = updatedObject.getInstancesPaths();
+                        this._nodes[objectId].inheritance = updatedObject.getInstancePaths();
 
                         //update the node's representation in the tree
                         this._treeBrowser.updateNode(this._nodes[objectId].treeNode, nodeDescriptor);
