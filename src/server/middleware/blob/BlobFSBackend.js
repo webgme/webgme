@@ -31,7 +31,6 @@ BlobFSBackend.prototype = Object.create(BlobBackendBase.prototype);
 BlobFSBackend.prototype.constructor = BlobFSBackend;
 
 BlobFSBackend.prototype.putObject = function (readStream, bucket, callback) {
-    // TODO generate a GUID or something for the temporary filename to allow parallel functioning
     var self = this,
     // TODO: create this in the system temp folder
         tempName = path.join(self.blobDir, self.tempBucket, GUID() + '.tbf'),
@@ -84,7 +83,9 @@ BlobFSBackend.prototype.putObject = function (readStream, bucket, callback) {
                 });
             });
         });
+
         writeStream.on('error', function (err) {
+            self.logger.error(err);
             callback(err);
         });
 
