@@ -978,7 +978,7 @@ define(['js/logger',
                 if (GMEConcepts.isConnection(gmeID) && gmeObj.getParentId() === memberListContainerID) {
                     if (GMEConcepts.canDeleteNode(gmeID)) {
                         logger.debug('deleting connection from crosscut hierarchy too gmeID: ' + gmeID);
-                        client.delMoreNodes([gmeID]);
+                        client.deleteNodes([gmeID]);
                     } else {
                         client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
                     }
@@ -1123,7 +1123,7 @@ define(['js/logger',
 
         function createPointer(srcId, dstId, ptrName) {
             logger.debug('createPointer srcId: ' + srcId + ', dstId: ' + dstId + ', ptrName: ' + ptrName);
-            client.makePointer(srcId, ptrName, dstId);
+            client.setPointer(srcId, ptrName, dstId);
         }
 
         function addToSet(containerId, objId, setName) {
@@ -1143,8 +1143,8 @@ define(['js/logger',
             newConnID = client.createChild({parentId: parentId, baseId: connType});
 
             //set source and target pointers
-            client.makePointer(newConnID, CONSTANTS.POINTER_SOURCE, srcId);
-            client.makePointer(newConnID, CONSTANTS.POINTER_TARGET, dstId);
+            client.setPointer(newConnID, CONSTANTS.POINTER_SOURCE, srcId);
+            client.setPointer(newConnID, CONSTANTS.POINTER_TARGET, dstId);
 
             //add new object to the current aspect ans store coordinate
             client.addMember(parentId, newConnID, aspect);
@@ -1360,7 +1360,7 @@ define(['js/logger',
                 } else {
                     newEndPointGMEID = this._ComponentID2GMEID[newDesc.srcObjId];
                 }
-                this._client.makePointer(gmeID, 'src', newEndPointGMEID);
+                this._client.setPointer(gmeID, 'src', newEndPointGMEID);
             }
 
             //update connection endpoint - TARGET
@@ -1371,7 +1371,7 @@ define(['js/logger',
                 } else {
                     newEndPointGMEID = this._ComponentID2GMEID[newDesc.dstObjId];
                 }
-                this._client.makePointer(gmeID, 'dst', newEndPointGMEID);
+                this._client.setPointer(gmeID, 'dst', newEndPointGMEID);
             }
 
             this._client.completeTransaction();

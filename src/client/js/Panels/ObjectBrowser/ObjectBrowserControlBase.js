@@ -69,7 +69,7 @@ define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS)
         this._treeBrowser.onNodeTitleChanged = function (nodeId, oldText, newText) {
 
             //send name update to the server
-            client.setAttributes(nodeId, 'name', newText);
+            client.setAttribute(nodeId, 'name', newText);
 
             //reject name change on client side - need server roundtrip to notify about the name change
             return false;
@@ -89,7 +89,7 @@ define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS)
                 }
             }
 
-            client.delMoreNodes(selectedIds);
+            client.deleteNodes(selectedIds);
         };
     }
 

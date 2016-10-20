@@ -25,8 +25,9 @@ define(['js/Constants', 'js/Utils/GMEConcepts'], function (CONSTANTS, GMEConcept
         var territoryRule = {},
             gmeID = this._metaInfo[CONSTANTS.GME_ID],
             client = this._control._client,
+            nodeObj,
             hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL &&
-                client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
+                nodeObj.getValidAspectNames().indexOf(this._aspect) !== -1;
 
         if (hasAspect) {
             territoryRule[gmeID] = client.getAspectTerritoryPattern(gmeID, this._aspect);
@@ -97,7 +98,7 @@ define(['js/Constants', 'js/Utils/GMEConcepts'], function (CONSTANTS, GMEConcept
             len,
             gmeID = this._metaInfo[CONSTANTS.GME_ID],
             hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL &&
-                client.getMetaAspectNames(gmeID).indexOf(this._aspect) !== -1;
+                nodeObj.getValidAspectNames().indexOf(this._aspect) !== -1;
 
         if (nodeObj) {
             childrenIDs = nodeObj.getChildrenIds().slice(0);

@@ -361,7 +361,7 @@ define([
     ModelDecoratorDiagramDesignerWidget.prototype.__onNodeTitleChanged = function (oldValue, newValue) {
         var client = this._control._client;
 
-        client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], nodePropertyNames.Attributes.name, newValue);
+        client.setAttribute(this._metaInfo[CONSTANTS.GME_ID], nodePropertyNames.Attributes.name, newValue);
     };
 
     ModelDecoratorDiagramDesignerWidget.prototype.__onPointerDblClick = function (mousePos) {

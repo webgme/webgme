@@ -131,7 +131,7 @@ define([
             ptrVal = nodeObj.getPointer(ptrName);
 
         if (ptrVal !== targetID) {
-            client.makePointer(gmeID, ptrName, targetID);
+            client.setPointer(gmeID, ptrName, targetID);
         }
     };
 

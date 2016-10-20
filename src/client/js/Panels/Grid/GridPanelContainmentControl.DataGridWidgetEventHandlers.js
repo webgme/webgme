@@ -124,7 +124,7 @@ define(['js/NodePropertyNames',
     };
 
     GridPanelContainmentControlEventHandlers.prototype._onRowDelete = function (id /*, aData */) {
-        this._client.delMoreNodes([id]);
+        this._client.deleteNodes([id]);
     };
 
     GridPanelContainmentControlEventHandlers.prototype._onRowEdit = function (/*id, oData, nData */) {

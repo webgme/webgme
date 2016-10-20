@@ -128,10 +128,11 @@ define(['js/logger',
             }
 
             this._refreshBtnModelHierarchyUp();
+            node = this._client.getNode(nodeId);
 
             if (this._selectedAspect !== CONSTANTS.ASPECT_ALL) {
                 //make sure that the selectedAspect exist in the node, otherwise fallback to All
-                var aspectNames = this._client.getMetaAspectNames(nodeId) || [];
+                var aspectNames = node ? node.getValidAspectNames() : [];
                 if (aspectNames.indexOf(this._selectedAspect) === -1) {
                     this.logger.warn('The currently selected aspect "' + this._selectedAspect +
                         '" does not exist in the object "' + nodeName + ' (' + nodeId +
@@ -159,7 +160,7 @@ define(['js/logger',
                 color: BACKGROUND_TEXT_COLOR
             });
 
-            node = this._client.getNode(nodeId);
+
             if (node && !this._client.isProjectReadOnly() && !this._client.isCommitReadOnly()) {
                 this.designerCanvas.setReadOnly(node.isLibraryRoot() || node.isLibraryElement());
                 this.setReadOnly(node.isLibraryRoot() || node.isLibraryElement());
@@ -1163,7 +1164,8 @@ define(['js/logger',
     };
 
     ModelEditorControl.prototype._updateAspects = function () {
-        var objId = this.currentNodeInfo.id,
+        var nodeId = this.currentNodeInfo.id,
+            nodeObj = this._client.getNode(nodeId),
             aspects,
             tabID,
             i,
@@ -1179,8 +1181,8 @@ define(['js/logger',
             this._selectedAspect = WebGMEGlobal.State.getActiveAspect();
         }
 
-        if (objId || objId === CONSTANTS.PROJECT_ROOT_ID) {
-            aspects = this._client.getMetaAspectNames(objId) || [];
+        if (nodeId || nodeId === CONSTANTS.PROJECT_ROOT_ID) {
+            aspects = nodeObj ? nodeObj.getValidAspectNames() : [];
 
             aspects.sort(function (a, b) {
                 var an = a.toLowerCase(),
@@ -1219,7 +1221,6 @@ define(['js/logger',
 
         //check if the node's aspect rules has changed or not, and if so, initialize with that
         if (this._selectedAspect !== CONSTANTS.ASPECT_ALL) {
-            var nodeId = this.currentNodeInfo.id;
             var newAspectRules = this._client.getAspectTerritoryPattern(nodeId, this._selectedAspect);
             var aspectRulesChanged = false;
 

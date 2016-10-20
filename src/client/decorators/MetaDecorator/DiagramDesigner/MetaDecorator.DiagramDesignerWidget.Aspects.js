@@ -82,7 +82,8 @@ define([
     MetaDecoratorDiagramDesignerWidgetAspects.prototype._updateAspects = function () {
         var client = this._control._client,
             objId = this._metaInfo[CONSTANTS.GME_ID],
-            newAspects = client.getOwnMetaAspectNames(objId) || [],
+            nodeObj = client.getNode(objId),
+            newAspects = nodeObj? nodeObj.getOwnValidAspectNames() : [],
             len,
             displayedAspects = this._aspectNames.slice(0),
             diff,
@@ -235,12 +236,12 @@ define([
 
         if (cName !== cDesc.name) {
             //name has changed --> delete the descriptor with the old name
-            client.deleteMetaAspect(objID, cName);
+            client.delAspectMeta(objID, cName);
             client.deleteSet(objID, cName);
         }
 
         //set meta aspect first
-        client.setMetaAspect(objID, cDesc.name, cDesc.items || []);
+        client.setAspectMetaTargets(objID, cDesc.name, cDesc.items || []);
         client.createSet(objID, cDesc.name);
 
         client.completeTransaction();
@@ -252,7 +253,7 @@ define([
 
         client.startTransaction();
 
-        client.deleteMetaAspect(objID, cName);
+        client.delAspectMeta(objID, cName);
         client.deleteSet(objID, cName);
 
         client.completeTransaction();

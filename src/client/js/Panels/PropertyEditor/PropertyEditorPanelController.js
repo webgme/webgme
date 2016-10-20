@@ -141,7 +141,8 @@ define(['js/logger',
     PropertyEditorController.prototype._getCommonPropertiesForSelection = function (selectedObjIDs) {
         var self = this,
             propList = {},
-            selectionLength = selectedObjIDs.length,
+            isFirstNode = true,
+            selectedNodes = [],
             cNode,
             metaTypeId,
             i,
@@ -185,32 +186,32 @@ define(['js/logger',
 
         //get all attributes
         //get all registry elements
-        i = selectionLength;
+        i = selectedObjIDs.length;
         while (--i >= 0) {
             cNode = this._client.getNode(selectedObjIDs[i]);
 
             if (cNode) {
+                selectedNodes.push(cNode);
                 flattenedAttrs = this._getNodeAttributeValues(cNode);
-                this._buildCommonAttrMeta(commonAttrMeta, cNode, i === selectionLength - 1);
-                this._filterCommon(commonAttrMeta, commonAttrs, flattenedAttrs, i === selectionLength - 1);
+                this._buildCommonAttrMeta(commonAttrMeta, cNode, isFirstNode);
+                this._filterCommon(commonAttrMeta, commonAttrs, flattenedAttrs, isFirstNode);
 
                 flattenedPreferences = this._getNodeRegistryValues(cNode, PREFERENCES_REGISTRY_KEYS);
-                this._filterCommon(commonAttrMeta, commonPreferences, flattenedPreferences,
-                    i === selectionLength - 1);
+                this._filterCommon(commonAttrMeta, commonPreferences, flattenedPreferences, isFirstNode);
 
                 flattenedMeta = this._getNodeRegistryValues(cNode, META_REGISTRY_KEYS);
-                this._filterCommon(commonAttrMeta, commonMeta, flattenedMeta, i === selectionLength - 1);
+                this._filterCommon(commonAttrMeta, commonMeta, flattenedMeta, isFirstNode);
 
                 flattenedPointers = self._getPointerInfo(cNode);
-                this._filterCommon(commonAttrMeta, commonPointers, flattenedPointers, i === selectionLength - 1);
+                this._filterCommon(commonAttrMeta, commonPointers, flattenedPointers, isFirstNode);
             }
         }
 
         if (selectedObjIDs.length === 1) {
-            propList[' ID'] = {
+            propList[' ID/Path'] = {
                 name: 'ID',
                 value: selectedObjIDs[0],
-                valueType: typeof selectedObjIDs[0],
+                valueType: 'string',
                 isCommon: true,
                 readOnly: true
             };
@@ -220,7 +221,7 @@ define(['js/logger',
                 propList[' GUID'] = {
                     name: 'GUID',
                     value: cNode.getGuid(),
-                    valueType: typeof selectedObjIDs[0],
+                    valueType: 'string',
                     isCommon: true,
                     readOnly: true
                 };
@@ -229,7 +230,7 @@ define(['js/logger',
                     propList[' GUIDl'] = {
                         name: 'GUID (library)',
                         value: cNode.getLibraryGuid(),
-                        valueType: typeof selectedObjIDs[0],
+                        valueType: 'string',
                         isCommon: true,
                         readOnly: true
                     };
@@ -256,7 +257,7 @@ define(['js/logger',
                 isFolder: true
             };
 
-            this._addItemsToResultList(selectedObjIDs, commonAttrMeta, decoratorNames,
+            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
                 commonAttrs, CONSTANTS.PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
         }
 
@@ -273,7 +274,7 @@ define(['js/logger',
                 delete commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
             }
 
-            this._addItemsToResultList(selectedObjIDs, commonAttrMeta, decoratorNames,
+            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
                 commonPreferences, CONSTANTS.PROPERTY_GROUP_PREFERENCES, propList, false, true, false);
         }
 
@@ -285,7 +286,7 @@ define(['js/logger',
                 isFolder: true
             };
 
-            this._addItemsToResultList(selectedObjIDs, commonAttrMeta, decoratorNames,
+            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
                 commonMeta, CONSTANTS.PROPERTY_GROUP_META, propList, false, true, false);
         }
 
@@ -297,18 +298,19 @@ define(['js/logger',
                 isFolder: true
             };
 
-            this._addItemsToResultList(selectedObjIDs, commonAttrMeta, decoratorNames,
+            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
                 commonPointers, CONSTANTS.PROPERTY_GROUP_POINTERS, propList, false, false, true);
         }
 
         return propList;
     };
 
-    PropertyEditorController.prototype._addItemsToResultList = function (selectedObjIDs, commonAttrMeta, decoratorNames,
+    PropertyEditorController.prototype._addItemsToResultList = function (selectedNodes, commonAttrMeta, decoratorNames,
                                                                          src, prefix, dst,
                                                                          isAttribute, isRegistry, isPointer) {
-        var onlyRootSelected = selectedObjIDs.length === 1 && selectedObjIDs[0] === CONSTANTS.PROJECT_ROOT_ID,
+        var onlyRootSelected = selectedNodes.length === 1 && selectedNodes[0].getId() === CONSTANTS.PROJECT_ROOT_ID,
             keys = Object.keys(src),
+
             canBeReplaceable,
             key,
             range,
@@ -362,16 +364,16 @@ define(['js/logger',
 
             if (isAttribute === true) {
                 //is it inherited??? if so, it can be reseted to the inherited value
-                if (this._isResettableAttribute(selectedObjIDs, keyParts[0])) {
+                if (this._isResettableAttribute(selectedNodes, keyParts[0])) {
                     dst[extKey].options = dst[extKey].options || {};
                     dst[extKey].options.resetable = true;
                 }
 
                 //if it is an attribute it might be invalid according the current meta rules
-                if (this._isInvalidAttribute(selectedObjIDs, keyParts[0])) {
+                if (this._isInvalidAttribute(selectedNodes, keyParts[0])) {
                     dst[extKey].options = dst[extKey].options || {};
                     dst[extKey].options.invalid = true;
-                } else if (this._isInvalidAttributeValue(selectedObjIDs, keyParts[0])) {
+                } else if (this._isInvalidAttributeValue(selectedNodes, keyParts[0])) {
                     dst[extKey].options = dst[extKey].options || {};
                     dst[extKey].options.invalidValue = true;
                 }
@@ -384,13 +386,13 @@ define(['js/logger',
 
                 // Get the min max for floats and integers
                 if (dst[extKey].valueType === 'float' || dst[extKey].valueType === 'integer') {
-                    range = this._getAttributeRange(selectedObjIDs, keyParts[0]);
+                    range = this._getAttributeRange(selectedNodes, keyParts[0]);
                     dst[extKey].minValue = range.min;
                     dst[extKey].maxValue = range.max;
                 }
             } else if (isRegistry === true) {
                 //is it inherited??? if so, it can be reseted to the inherited value
-                if (this._isResettableRegistry(selectedObjIDs, keyParts[0])) {
+                if (this._isResettableRegistry(selectedNodes, keyParts[0])) {
                     dst[extKey].options = dst[extKey].options || {};
                     dst[extKey].options.resetable = true;
                 }
@@ -422,7 +424,7 @@ define(['js/logger',
                             dst[repKey] = dst[extKey];
                             delete dst[extKey];
 
-                            canBeReplaceable = this._canBeReplaceable(selectedObjIDs);
+                            canBeReplaceable = this._canBeReplaceable(selectedNodes);
                             dst[repKey].value = (!dst[repKey].value || canBeReplaceable === false) ? false : true;
                             dst[repKey].valueType = 'boolean';
                             if (canBeReplaceable === false) {
@@ -444,10 +446,10 @@ define(['js/logger',
                                 };
 
                                 dst[cbyKey].options.resetable =
-                                    this._isResettablePointer(selectedObjIDs, CONSTANTS.POINTER_CONSTRAINED_BY);
+                                    this._isResettablePointer(selectedNodes, CONSTANTS.POINTER_CONSTRAINED_BY);
 
                                 dst[cbyKey].options.invalid =
-                                    this._isInvalidPointer(selectedObjIDs, CONSTANTS.POINTER_CONSTRAINED_BY);
+                                    this._isInvalidPointer(selectedNodes, CONSTANTS.POINTER_CONSTRAINED_BY);
 
                                 if (dst[repKey].value === false && !dst[cbyKey].options.resetable &&
                                     !dst[cbyKey].options.invalid) {
@@ -497,9 +499,9 @@ define(['js/logger',
 
                 // What is non-invalid cannot be reset
                 dst[extKey].options.resetable = NON_INVALID_PTRS.indexOf(keyParts[0]) === -1 &&
-                    this._isResettablePointer(selectedObjIDs, keyParts[0]);
+                    this._isResettablePointer(selectedNodes, keyParts[0]);
 
-                dst[extKey].options.invalid = this._isInvalidPointer(selectedObjIDs, keyParts[0]);
+                dst[extKey].options.invalid = this._isInvalidPointer(selectedNodes, keyParts[0]);
 
                 //pointers have a custom widget that allows following the pointer
                 dst[extKey].widget = PROPERTY_GRID_WIDGETS.POINTER_WIDGET;
@@ -551,32 +553,29 @@ define(['js/logger',
         return util.flattenObject(result);
     };
 
-    PropertyEditorController.prototype._isInvalidAttribute = function (selectedObjIDs, attrName) {
-        var i = selectedObjIDs.length,
+    PropertyEditorController.prototype._isInvalidAttribute = function (selectedNodes, attrName) {
+        var i = selectedNodes.length,
             node,
             validNames;
 
         while (i--) {
-            node = this._client.getNode(selectedObjIDs[i]);
-            if (node) {
-                validNames = node.getValidAttributeNames();
-
-                if (validNames.indexOf(attrName) !== -1) {
-                    return false;
-                }
+            node = selectedNodes[i];
+            validNames = selectedNodes[i].getValidAttributeNames();
+            if (validNames.indexOf(attrName) !== -1) {
+                return false;
             }
         }
 
         return true;
     };
 
-    PropertyEditorController.prototype._isInvalidAttributeValue = function (selectedObjIDs, attrName) {
+    PropertyEditorController.prototype._isInvalidAttributeValue = function (selectedNodes, attrName) {
         var result = false,
             attrValue,
             node;
 
-        if (selectedObjIDs.length === 1) {
-            node = this._client.getNode(selectedObjIDs[0]);
+        if (selectedNodes.length === 1) {
+            node = selectedNodes[0];
             if (node) {
                 attrValue = node.getAttribute(attrName);
                 try {
@@ -596,13 +595,15 @@ define(['js/logger',
         return result;
     };
 
-    PropertyEditorController.prototype._getAttributeRange = function (selectedObjIDs, attrName) {
-        var i = selectedObjIDs.length,
+    PropertyEditorController.prototype._getAttributeRange = function (selectedNodes, attrName) {
+        var i = selectedNodes.length,
             range = {},
+            nodeObj,
             schema;
 
         while (i--) {
-            schema = this._client.getAttributeSchema(selectedObjIDs[i], attrName);
+            nodeObj = selectedNodes[i];
+            schema = nodeObj.getAttributeMeta(attrName);
             if (schema.hasOwnProperty('min')) {
                 if (range.hasOwnProperty('min')) {
                     range.min = schema.min > range.min ? schema.min : range.min;
@@ -623,13 +624,13 @@ define(['js/logger',
         return range;
     };
 
-    PropertyEditorController.prototype._isInvalidPointer = function (selectedObjIDs, pointerName) {
-        var i = selectedObjIDs.length,
+    PropertyEditorController.prototype._isInvalidPointer = function (selectedNodes, pointerName) {
+        var i = selectedNodes.length,
             node,
             validNames;
 
         while (i--) {
-            node = this._client.getNode(selectedObjIDs[i]);
+            node = selectedNodes[i];
             if (node) {
                 validNames = node.getValidPointerNames();
 
@@ -642,15 +643,15 @@ define(['js/logger',
         return true;
     };
 
-    PropertyEditorController.prototype._isResettableRegistry = function (selectedObjIDs, regName) {
-        var i = selectedObjIDs.length,
+    PropertyEditorController.prototype._isResettableRegistry = function (selectedNodes, regName) {
+        var i = selectedNodes.length,
             ownRegistryNames,
             baseRegistryNames,
             node,
             baseNode;
 
         while (i--) {
-            node = this._client.getNode(selectedObjIDs[i]);
+            node = selectedNodes[i];
 
             if (node) {
                 baseNode = this._client.getNode(node.getBaseId());
@@ -670,8 +671,8 @@ define(['js/logger',
         return true;
     };
 
-    PropertyEditorController.prototype._isResettableAttribute = function (selectedObjIDs, attrName) {
-        var i = selectedObjIDs.length,
+    PropertyEditorController.prototype._isResettableAttribute = function (selectedNodes, attrName) {
+        var i = selectedNodes.length,
             ownAttrNames,
             validNames,
             baseValidNames,
@@ -679,12 +680,12 @@ define(['js/logger',
             baseNode;
 
         while (i--) {
-            node = this._client.getNode(selectedObjIDs[i]);
+            node = selectedNodes[i];
 
             if (node) {
                 baseNode = this._client.getNode(node.getBaseId());
-                validNames = this._client.getValidAttributeNames(selectedObjIDs[i]);
-                baseValidNames = baseNode === null ? [] : this._client.getValidAttributeNames(baseNode.getId());
+                validNames = node.getValidAttributeNames();
+                baseValidNames = baseNode === null ? [] : baseNode.getValidAttributeNames();
                 ownAttrNames = node.getOwnAttributeNames();
 
                 if (ownAttrNames.indexOf(attrName) === -1) {
@@ -700,8 +701,8 @@ define(['js/logger',
         return true;
     };
 
-    PropertyEditorController.prototype._isResettablePointer = function (selectedObjIDs, pointerName) {
-        var i = selectedObjIDs.length,
+    PropertyEditorController.prototype._isResettablePointer = function (selectedNodes, pointerName) {
+        var i = selectedNodes.length,
             ownPointerNames,
             node,
             validNames,
@@ -709,7 +710,7 @@ define(['js/logger',
             baseNode;
 
         while (i--) {
-            node = this._client.getNode(selectedObjIDs[i]);
+            node = selectedNodes[i];
 
             if (node) {
                 baseNode = this._client.getNode(node.getBaseId());
@@ -731,11 +732,11 @@ define(['js/logger',
         return true;
     };
 
-    PropertyEditorController.prototype._canBeReplaceable = function (selectedObjIDs) {
-        var i = selectedObjIDs.length;
+    PropertyEditorController.prototype._canBeReplaceable = function (selectedNodes) {
+        var i = selectedNodes.length;
 
         while (i--) {
-            if (GMEConcepts.canBeReplaceable(selectedObjIDs[i])) {
+            if (GMEConcepts.canBeReplaceable(selectedNodes[i].getId())) {
                 // continue
             } else {
                 return false;
@@ -785,8 +786,7 @@ define(['js/logger',
     };
 
     PropertyEditorController.prototype._buildCommonAttrMeta = function (commonAttrMeta, node, initPhase) {
-        var nodeId = node.getId(),
-            nodeAttributeNames = _.union(node.getAttributeNames() || [], node.getValidAttributeNames() || []),
+        var nodeAttributeNames = _.union(node.getAttributeNames() || [], node.getValidAttributeNames() || []),
             len = nodeAttributeNames.length,
             attrMetaDescriptor,
             attrName,
@@ -810,7 +810,7 @@ define(['js/logger',
         //if type is enum, the common types should be the intersection of the individual enum types
         while (len--) {
             attrName = nodeAttributeNames[len];
-            attrMetaDescriptor = this._client.getAttributeSchema(nodeId, attrName) || {type: 'string'};
+            attrMetaDescriptor = node.getAttributeMeta(attrName) || {type: 'string'};
             if (commonAttrMeta.hasOwnProperty(attrName)) {
                 isCommon = true;
                 //this attribute already exist in the attribute meta map
@@ -897,13 +897,13 @@ define(['js/logger',
                 setterFn = 'setRegistry';
                 getterFn = 'getEditableRegistry';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS) {
-                this._client.makePointer(gmeID, keyArr[1], args.newValue);
+                this._client.setPointer(gmeID, keyArr[1], args.newValue);
             } else if (keyArr[0] === TEMPLATING_SUB_GROUP) {
                 if (keyArr[1] === REGISTRY_KEYS.REPLACEABLE) {
                     setterFn = 'setRegistry';
                     getterFn = 'getEditableRegistry';
                 } else if (keyArr[1] === CONSTANTS.POINTER_CONSTRAINED_BY) {
-                    this._client.makePointer(gmeID, keyArr[1], args.newValue);
+                    this._client.setPointer(gmeID, keyArr[1], args.newValue);
                 }
             }
 

@@ -216,8 +216,8 @@ define(['jquery',
             //END OF --- FILTER OUT ABSTRACTS
 
             //Check #1: Global children number multiplicity
+            parentNode = client.getNode(parentId);
             if (result === true) {
-                parentNode = client.getNode(parentId);
                 childrenIDs = parentNode.getChildrenIds();
                 childrenMeta = client.getChildrenMeta(parentId);
                 if (childrenMeta.max !== undefined &&
@@ -228,7 +228,7 @@ define(['jquery',
             }
 
             //Check #2: is each single baseId a valid child of parentId
-            validChildrenTypes = client.getValidChildrenTypes(parentId);
+            validChildrenTypes = parentNode.getValidChildrenIds();
             i = validChildrenTypes.length;
 
             validChildrenTypeMap = {};
@@ -302,7 +302,8 @@ define(['jquery',
 
     function getMETAAspectMergedValidChildrenTypes(objID) {
         var metaNodes = client.getAllMetaNodes() || [],
-            validChildrenTypes = client.getValidChildrenTypes(objID),
+            nodeObj = client.getNode(objID),
+            validChildrenTypes = nodeObj ? nodeObj.getValidChildrenIds() : [],
             len = metaNodes.length,
             id;
 
@@ -695,7 +696,7 @@ define(['jquery',
     function getSets(objID) {
         var obj = client.getNode(objID),
             setNames = obj.getSetNames() || [],
-            aspects = client.getMetaAspectNames(objID) || [],
+            aspects = obj.getValidAspectNames() || [],
             crossCuts = getCrosscuts(objID),
             crossCutNames = [];
 
