@@ -890,7 +890,7 @@ define(['js/logger',
             setterFn = undefined;
             getterFn = undefined;
             if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
-                setterFn = 'setAttributes';
+                setterFn = 'setAttribute';
                 getterFn = 'getEditableAttribute';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES ||
                 keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {

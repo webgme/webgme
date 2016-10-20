@@ -811,7 +811,7 @@ define([
         };
 
         this.downloadCommitQueue = function () {
-            var commitQueue = this.getCommitQueue();
+            var commitQueue = self.getCommitQueue();
 
             if (commitQueue.length > 0) {
                 stateLogHelpers.downloadCommitQueue(self, commitQueue);
@@ -1209,7 +1209,7 @@ define([
                     i;
 
                 for (i = 0; i < keys.length; i += 1) {
-                    gmeNodes.push(this.getNode(storeNode(metaNodes[keys[i]]), logger, state, storeNode));
+                    gmeNodes.push(self.getNode(storeNode(metaNodes[keys[i]]), logger, state, storeNode));
                 }
 
                 return gmeNodes;

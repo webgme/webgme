@@ -174,6 +174,7 @@ define(['jquery',
             counter,
             childrenMeta,
             baseId,
+            baseNode,
             j,
             node,
             validChildrenTypes,
@@ -238,8 +239,10 @@ define(['jquery',
             if (result === true) {
                 i = baseIdList.length;
                 while (i--) {
+
                     baseId = baseIdList[i];
-                    if (!client.isValidChild(parentId, baseId)) {
+                    baseNode = client.getNode(baseId);
+                    if (!baseNode || !baseNode.isValidChildOf(parentId)) {
                         result = false;
                         break;
                     } else {
@@ -305,12 +308,14 @@ define(['jquery',
             nodeObj = client.getNode(objID),
             validChildrenTypes = nodeObj ? nodeObj.getValidChildrenIds() : [],
             len = metaNodes.length,
-            id;
+            id,
+            metaNode;
 
         while (len--) {
-            id = metaNodes[len].getId();
+            metaNode = metaNodes[len];
+            id = metaNode.getId();
             if (validChildrenTypes.indexOf(id) === -1) {
-                if (client.isValidChild(objID, id)) {
+                if (metaNode.isValidChildOf(objID)) {
                     validChildrenTypes.push(id);
                 }
             }
@@ -437,18 +442,17 @@ define(['jquery',
 
     function canCreateChildrenInAspect(parentId, baseIdList, aspectName) {
         var canCreateInAspect = true,
+            parentNode = client.getNode(parentId),
             i,
             j,
-            metaAspectDesc,
             aspectTypes;
 
-        if (aspectName) {
+        if (aspectName && parentNode) {
             if (aspectName !== CONSTANTS.ASPECT_ALL) {
                 //need to check in aspect
-                metaAspectDesc = client.getMetaAspect(parentId, aspectName);
-                if (metaAspectDesc) {
-                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                    aspectTypes = metaAspectDesc.items || [];
+                aspectTypes = parentNode.getAspectMeta(parentId, aspectName);
+                if (aspectTypes) {
+                    //aspectTypes contains the children types the user specified to participate in this aspect
 
                     if (aspectTypes.length > 0) {
                         //each item in baseIdList has to be a descendant of any item in aspectTypes
@@ -473,7 +477,7 @@ define(['jquery',
                 }
             }
         } else {
-            //not a valid aspect name
+            //not a valid aspect name nor valid node for parent
             canCreateInAspect = false;
         }
 
@@ -489,19 +493,18 @@ define(['jquery',
      */
     function getValidConnectionTypesFromSourceInAspect(sourceID, parentID, aspectName) {
         var validTypes = [],
+            parentNode = client.getNode(parentID),
             i,
             j,
             canCreateInAspect,
-            metaAspectDesc,
             aspectTypes;
 
-        if (aspectName) {
+        if (aspectName && parentNode) {
             if (aspectName !== CONSTANTS.ASPECT_ALL) {
                 //need to check in aspect
-                metaAspectDesc = client.getMetaAspect(parentID, aspectName);
-                if (metaAspectDesc) {
-                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                    aspectTypes = metaAspectDesc.items || [];
+                aspectTypes = parentNode.getAspectMeta(aspectName);
+                if (aspectTypes) {
+                    //aspectTypes contains the children types the user specified to participate in this aspect
 
                     if (aspectTypes.length > 0) {
                         validTypes = getValidConnectionTypesFromSource(sourceID, parentID);
@@ -536,19 +539,18 @@ define(['jquery',
      */
     function getValidConnectionTypesInAspect(sourceID, targetID, parentID, aspectName) {
         var validTypes = [],
+            parentNode = client.getNode(parentID),
             canCreateInAspect,
             i,
             j,
-            metaAspectDesc,
             aspectTypes;
 
-        if (aspectName) {
+        if (aspectName && parentNode) {
             if (aspectName !== CONSTANTS.ASPECT_ALL) {
                 //need to check in aspect
-                metaAspectDesc = client.getMetaAspect(parentID, aspectName);
-                if (metaAspectDesc) {
-                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                    aspectTypes = metaAspectDesc.items || [];
+                aspectTypes = parentNode.getAspectMeta(aspectName);
+                if (aspectTypes) {
+                    //aspectTypes contains the children types the user specified to participate in this aspect
 
                     if (aspectTypes.length > 0) {
                         validTypes = getValidConnectionTypes(sourceID, targetID, parentID);
@@ -604,12 +606,14 @@ define(['jquery',
         //Check if each single baseId is a valid children type of parentId
         var i,
             result = true,
+            baseNode,
             baseId;
 
         i = baseIdList.length;
         while (i--) {
             baseId = baseIdList[i];
-            if (!client.isValidChild(parentId, baseId)) {
+            baseNode = client.getNode(baseId);
+            if (!baseNode || baseNode.isValidChildOf(parentId)) {
                 result = false;
                 break;
             }

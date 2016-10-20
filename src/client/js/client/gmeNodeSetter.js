@@ -1088,12 +1088,12 @@ define([], function () {
             return _getValidTargetItems(path, name, true);
         }
 
-        function isValidChild(path, childPath) {
+        function isValidChild(parentPath, path) {
             var node = _getNode(path),
-                child = _getNode(childPath);
+                parentNode = _getNode(parentPath);
 
-            if (node && child) {
-                return state.core.isValidChildOf(child, node);
+            if (node && parentNode) {
+                return state.core.isValidChildOf(node, parentNode);
             }
 
             return false;

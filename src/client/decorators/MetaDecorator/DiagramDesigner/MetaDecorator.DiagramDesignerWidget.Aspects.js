@@ -36,7 +36,9 @@ define([
                     node = client.getNode(objId),
                     aspectNames = node.getSetNames(),
                     dialog = new AspectDetailsDialog(),
-                    aspectDesc = client.getMetaAspect(objId, aspectName);
+                    aspectDesc = {
+                        items: node.getAspectMeta(aspectName)
+                    };
 
                 aspectDesc.name = aspectName;
                 aspectDesc.validChildrenTypes = self._getAspectDescriptorValidChildrenTypes();
@@ -123,9 +125,13 @@ define([
     MetaDecoratorDiagramDesignerWidgetAspects.prototype._addAspect = function (cName) {
         var client = this._control._client,
             objId = this._metaInfo[CONSTANTS.GME_ID],
-            aspect = client.getMetaAspect(objId, cName);
+            nodeObj = client.getNode(objId),
+            aspect = nodeObj && nodeObj.getAspectMeta(cName);
 
         if (aspect) {
+            aspect = {
+                items: aspect
+            };
             aspect.name = cName;
             this._aspects[cName] = new Aspect(aspect);
             this._aspectNames.push(cName);
@@ -135,9 +141,13 @@ define([
     MetaDecoratorDiagramDesignerWidgetAspects.prototype._updateAspect = function (cName) {
         var client = this._control._client,
             objId = this._metaInfo[CONSTANTS.GME_ID],
-            aspect = client.getMetaAspect(objId, cName);
+            nodeObj = client.getNode(objId),
+            aspect = nodeObj && nodeObj.getAspectMeta(cName);
 
         if (aspect) {
+            aspect = {
+                items: aspect
+            };
             aspect.name = cName;
             this._aspects[cName].update(aspect);
         }
