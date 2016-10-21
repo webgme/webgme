@@ -208,7 +208,7 @@ define(['js/logger',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveTabChanged = function (model, tabId) {
-        if (this._selectedMemberListID !== this._tabIDMemberListID[tabId]) {
+        if (this._tabIDMemberListID && this._selectedMemberListID !== this._tabIDMemberListID[tabId]) {
             this._widget.selectTab(tabId + '');
         }
     };
@@ -565,7 +565,6 @@ define(['js/logger',
     /*  END OF --- HANDLE OBJECT DRAG & DROP ACCEPTANCE       */
     /**********************************************************/
 
-
     /**********************************************************/
     /*  HANDLE OBJECT DRAG & DROP TO SHEET                    */
     /**********************************************************/
@@ -791,7 +790,6 @@ define(['js/logger',
         });
     };
 
-
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._dispatchEvents = function (events) {
         var i,
             e,
@@ -868,16 +866,19 @@ define(['js/logger',
             }
 
             for (i = 0; i < this._delayedConnections.length; i += 1) {
-                orderedConnectionEvents.push({
-                    etype: CONSTANTS.TERRITORY_EVENT_LOAD,
-                    eid: this._delayedConnections[i].ID,
-                    desc: this._delayedConnections[i].desc
-                });
+                if (this._delayedConnections[i].desc.src && this._delayedConnections[i].desc.dst) {
+                    //otherwise there is no possible way for this box to became a connection...
+                    orderedConnectionEvents.push({
+                        etype: CONSTANTS.TERRITORY_EVENT_LOAD,
+                        eid: this._delayedConnections[i].ID,
+                        desc: this._delayedConnections[i].desc
+                    });
 
-                //TODO: connection as box
-                //remove the box that represents this connections
-                this._widget.deleteComponent(this._delayedConnectionsAsItems[this._delayedConnections[i].ID]);
-                delete this._delayedConnectionsAsItems[this._delayedConnections[i].ID];
+                    //TODO: connection as box
+                    //remove the box that represents this connections
+                    this._widget.deleteComponent(this._delayedConnectionsAsItems[this._delayedConnections[i].ID]);
+                    delete this._delayedConnectionsAsItems[this._delayedConnections[i].ID];
+                }
             }
         }
 
@@ -1036,7 +1037,6 @@ define(['js/logger',
 
         return territoryChanged;
     };
-
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._getItemDecorator = function (decorator) {
         var result;
@@ -1238,7 +1238,6 @@ define(['js/logger',
             destinations,
             connVisualProperties,
             uiComponent;
-
 
         //component updated
         //we are interested in the load of member items and their custom territory involvement
@@ -1569,7 +1568,6 @@ define(['js/logger',
         }
     };
 
-
     /*
      TAB REORDER EVENT HANDLER
      */
@@ -1615,11 +1613,9 @@ define(['js/logger',
                 }
             });
 
-
             this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
         }
     };
-
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onTabDeleteClicked = function (tabID) {
         var memberListContainerID = this._memberListContainerID,
@@ -1747,7 +1743,6 @@ define(['js/logger',
         return result;
     };
 
-
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionChanged = function (selectedIds) {
         var gmeIDs = [],
             len = selectedIds.length,
@@ -1775,7 +1770,6 @@ define(['js/logger',
             this._widget.setTitle(memberListContainerObj.getAttribute(nodePropertyNames.Attributes.name));
         }
     };
-
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionSetColor = function (selectedIds, color,
                                                                                                      regKey) {
@@ -1818,7 +1812,6 @@ define(['js/logger',
 
         return connVisualProperties;
     };
-
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onConnectionSegmentPointsChange = function (params) {
         var connID = params.connectionID,
@@ -1900,7 +1893,7 @@ define(['js/logger',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionAlignMenu = function (selectedIds,
-                                                                                                    mousePos) {
+                                                                                                      mousePos) {
         var menuPos = this._widget.posToPageXY(mousePos.mX, mousePos.mY),
             self = this;
 
