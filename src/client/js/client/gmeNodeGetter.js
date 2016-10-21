@@ -292,7 +292,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getInstancePaths(this._state.nodes[this._id].node);
     };
 
-    //adding functionality to get rid of GMEConcepts
+    GMENode.prototype.getJsonMeta = function () {
+        return this._state.core.getJsonMeta(this._state.nodes[this._id].node);
+    };
+
     GMENode.prototype.isConnection = function () {
         return this._state.core.isConnection(this._state.nodes[this._id].node);
     };

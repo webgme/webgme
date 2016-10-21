@@ -138,7 +138,7 @@ define([
                     attrNames,
                     dialog = new AttributeDetailsDialog(),
                     nodeObj = client.getNode(self._metaInfo[CONSTANTS.GME_ID]),
-                    attrMeta = nodeObj.getAttributeMeta(attrName),
+                    attrMeta = nodeObj.getAttributeMeta(attrName) || {},
                     attrValue = nodeObj.getAttribute(attrName);
 
                 var desc = _.extend({}, {
@@ -330,7 +330,7 @@ define([
             attrMeta;
 
         if (nodeObj) {
-            attrMeta = nodeObj.getAttributeMeta(attrName);
+            attrMeta = nodeObj.getAttributeMeta(attrName) || {};
         }
 
         if (attrMeta) {

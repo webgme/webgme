@@ -1440,7 +1440,7 @@ define([], function () {
                 return getMeta.apply(null, arguments);
             },
             isTypeOf: function() {
-                _logDeprecated('isTypeOf(path, typePath)', 'isTypeOf(typePath)', true);
+                //_logDeprecated('isTypeOf(path, typePath)', 'isTypeOf(typePath)', true);
                 return isTypeOf.apply(null, arguments);
             },
             isValidTarget: function() {

@@ -509,7 +509,7 @@ define(['js/logger',
                 dst[extKey].client = this._client;
             }
 
-            if (!dst[extKey] || dst[extKey].value === undefined) {
+            if (!dst[extKey]) {
                 delete dst[extKey];
             }
         }
@@ -521,7 +521,7 @@ define(['js/logger',
             len = attrNames.length;
 
         while (--len >= 0) {
-            result[attrNames[len]] = node.getAttribute(attrNames[len]) || '';
+            result[attrNames[len]] = node.getAttribute(attrNames[len]);
         }
 
         return util.flattenObject(result);
@@ -578,6 +578,12 @@ define(['js/logger',
             node = selectedNodes[0];
             if (node) {
                 attrValue = node.getAttribute(attrName);
+
+                // We should not complain when there is no value at all.
+                if (typeof attrValue === 'undefined') {
+                    return false;
+                }
+
                 try {
                     result = !node.isValidAttributeValueOf(attrName, attrValue);
                 } catch (e) {
@@ -603,7 +609,7 @@ define(['js/logger',
 
         while (i--) {
             nodeObj = selectedNodes[i];
-            schema = nodeObj.getAttributeMeta(attrName);
+            schema = nodeObj.getAttributeMeta(attrName) || {};
             if (schema.hasOwnProperty('min')) {
                 if (range.hasOwnProperty('min')) {
                     range.min = schema.min > range.min ? schema.min : range.min;

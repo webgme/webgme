@@ -25,7 +25,7 @@ define(['js/Constants', 'js/Utils/GMEConcepts'], function (CONSTANTS, GMEConcept
         var territoryRule = {},
             gmeID = this._metaInfo[CONSTANTS.GME_ID],
             client = this._control._client,
-            nodeObj,
+            nodeObj =  client.getNode(gmeID),
             hasAspect = this._aspect && this._aspect !== CONSTANTS.ASPECT_ALL &&
                 nodeObj.getValidAspectNames().indexOf(this._aspect) !== -1;
 
