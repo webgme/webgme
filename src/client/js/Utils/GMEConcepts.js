@@ -80,10 +80,11 @@ define(['jquery',
     function getValidConnectionTypes(sourceID, targetID, parentID) {
         var validTypes = [],
             validChildrenTypes = getValidConnectionTypesFromSource(sourceID, parentID),
+            targetNode = client.getNode(targetID),
             len = validChildrenTypes.length;
 
-        while (len--) {
-            if (client.isValidTarget(validChildrenTypes[len], CONSTANTS.POINTER_TARGET, targetID)) {
+        while (len-- && targetNode) {
+            if (targetNode.isValidTargetOf(validChildrenTypes[len], CONSTANTS.POINTER_TARGET)) {
                 validTypes.push(validChildrenTypes[len]);
             }
         }
@@ -96,6 +97,7 @@ define(['jquery',
      */
     function getValidConnectionTypesFromSource(sourceID, parentID) {
         var validTypes = [],
+            sourceNode = client.getNode(sourceID),
             validChildrenTypes,
             len,
             childID;
@@ -103,10 +105,10 @@ define(['jquery',
         validChildrenTypes = getMETAAspectMergedValidChildrenTypes(parentID) || [];
 
         len = validChildrenTypes.length;
-        while (len--) {
+        while (len-- && sourceNode) {
             childID = validChildrenTypes[len];
-            if (isConnectionType(childID) &&
-                client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID)) {
+            if (sourceNode && isConnectionType(childID) &&
+                sourceNode.isValidTargetOf(childID, CONSTANTS.POINTER_SOURCE)) {
                 validTypes.push(childID);
             }
         }
@@ -118,11 +120,13 @@ define(['jquery',
      * Determines if a GME Connection is valid by META between source and destination
      */
     function isValidConnection(sourceID, targetID, connectionID) {
-        var valid = false;
+        var valid = false,
+            sourceNode = client.getNode(sourceID),
+            targetNode = client.getNode(targetID);
 
-        if (sourceID !== undefined && targetID !== undefined && connectionID !== undefined) {
-            if (client.isValidTarget(connectionID, CONSTANTS.POINTER_SOURCE, sourceID) &&
-                client.isValidTarget(connectionID, CONSTANTS.POINTER_TARGET, targetID)) {
+        if (sourceNode && targetNode && connectionID) {
+            if (sourceNode.isValidTargetOf(connectionID, CONSTANTS.POINTER_SOURCE) &&
+                targetNode.isValidTargetOf(connectionID, CONSTANTS.POINTER_TARGET)) {
                 valid = true;
             }
         }
@@ -330,6 +334,7 @@ define(['jquery',
             members = obj.getMemberIds(setName) || [],
             result = true,
             i,
+            itemNode,
             baseId,
             maxPerType;
 
@@ -343,7 +348,8 @@ define(['jquery',
         //check #2: is every item a valid target of the pointer list
         if (result === true) {
             for (i = 0; i < itemIDList.length; i += 1) {
-                if (!client.isValidTarget(objID, setName, itemIDList[i])) {
+                itemNode = client.getNode(itemIDList[i]);
+                if (!(itemNode && itemNode.isValidTargetOf(objID, setName))) {
                     result = false;
                     break;
                 }
@@ -411,6 +417,7 @@ define(['jquery',
 
     function getValidPointerTypes(parentId, targetId) {
         var validChildrenTypes = getMETAAspectMergedValidChildrenTypes(parentId),
+            targetNode = client.getNode(targetId),
             i,
             childObj,
             ptrNames,
@@ -418,14 +425,14 @@ define(['jquery',
             validPointerTypes = [];
 
         i = validChildrenTypes.length;
-        while (i--) {
+        while (i-- && targetNode) {
             if (canCreateChild(parentId, validChildrenTypes[i])) {
                 childObj = client.getNode(validChildrenTypes[i]);
                 if (childObj) {
                     ptrNames = _.difference(childObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
                     j = ptrNames.length;
                     while (j--) {
-                        if (client.isValidTarget(validChildrenTypes[i], ptrNames[j], targetId)) {
+                        if (targetNode.isValidTargetOf(validChildrenTypes[i], ptrNames[j])) {
                             validPointerTypes.push({
                                 baseId: validChildrenTypes[i],
                                 pointer: ptrNames[j]
@@ -652,12 +659,13 @@ define(['jquery',
     function getValidPointerTypesFromSourceToTarget(sourceId, targetId) {
         var result = [],
             EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE],
-            nodeObj = client.getNode(sourceId),
-            pointerNames = _.difference(nodeObj.getPointerNames(), EXCLUDED_POINTERS),
+            sourceNode = client.getNode(sourceId),
+            targetNode = client.getNode(targetId),
+            pointerNames = _.difference(sourceNode.getPointerNames(), EXCLUDED_POINTERS),
             len = pointerNames.length;
 
-        while (len--) {
-            if (client.isValidTarget(sourceId, pointerNames[len], targetId)) {
+        while (len-- && targetNode) {
+            if (targetNode.isValidTargetOf(sourceId, pointerNames[len])) {
                 result.push(pointerNames[len]);
             }
         }

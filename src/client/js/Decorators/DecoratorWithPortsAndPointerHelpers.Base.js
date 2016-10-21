@@ -44,11 +44,12 @@ define([
             ptrNames = this._getPointerNames(),
             len = ptrNames.length,
             validPtrNames = [],
+            targetNode = client.getNode(targetId),
             p;
 
-        while (len--) {
+        while (len-- && targetNode) {
             p = ptrNames[len];
-            if (client.isValidTarget(gmeID, p, targetId)) {
+            if (targetNode.isValidTargetOf(gmeID, p)) {
                 validPtrNames.push(p);
             }
         }

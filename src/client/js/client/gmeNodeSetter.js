@@ -1444,7 +1444,7 @@ define([], function () {
                 return isTypeOf.apply(null, arguments);
             },
             isValidTarget: function() {
-                _logDeprecated('isValidTarget(path, name, targetPath)', 'isValidTargetOf(targetPath, name)', true);
+                _logDeprecated('isValidTarget(path, name, targetPath)', 'isValidTargetOf(sourcePath, name)', true);
                 return isValidTarget.apply(null, arguments);
             },
             filterValidTarget: function() {

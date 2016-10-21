@@ -864,6 +864,7 @@ define(['js/logger',
             parentID = this.currentNodeInfo.id,
             client = this._client,
             aspect = this._selectedAspect,
+            targetNode,
             p;
 
         if (params.srcSubCompId === undefined) {
@@ -896,8 +897,9 @@ define(['js/logger',
             }
 
             j = validConnectionTypes.length;
+            targetNode = this._client.getNode(targetId);
             while (j--) {
-                if (client.isValidTarget(validConnectionTypes[j], CONSTANTS.POINTER_TARGET, targetId)) {
+                if (targetNode && targetNode.isValidTargetOf(validConnectionTypes[j], CONSTANTS.POINTER_TARGET)) {
                     result.push(availableConnectionEnds[i]);
                     break;
                 }
