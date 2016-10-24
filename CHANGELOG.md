@@ -1,5 +1,52 @@
 # Change Log
 
+## [v2.6.0](https://github.com/webgme/webgme/tree/v2.6.0) (2016-10-24)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.5.1...v2.6.0)
+
+**Implemented enhancements:**
+
+- Harmonize relid generation in core layers [\#1207](https://github.com/webgme/webgme/issues/1207)
+- Enable webGME to run under systemd control [\#1205](https://github.com/webgme/webgme/issues/1205)
+- API documentation should be created on prepublish [\#1197](https://github.com/webgme/webgme/issues/1197)
+- Large file \(asset\) upload for plugins fails [\#1145](https://github.com/webgme/webgme/issues/1145)
+- New connections in meta-editor are dashed which make it hard to distinguish between inheritance and mixins. [\#964](https://github.com/webgme/webgme/issues/964)
+- Symmetric "Plug-in Architectural Programmer's Guide" and "Annotated Examples" [\#883](https://github.com/webgme/webgme/issues/883)
+- Tutorials [\#117](https://github.com/webgme/webgme/issues/117)
+- Client gme node getters api [\#1215](https://github.com/webgme/webgme/pull/1215) ([pmeijer](https://github.com/pmeijer))
+- Allow for upload of large blob files and give progress feed-back on UI. [\#1213](https://github.com/webgme/webgme/pull/1213) ([pmeijer](https://github.com/pmeijer))
+- Collect instances [\#1212](https://github.com/webgme/webgme/pull/1212) ([kecso](https://github.com/kecso))
+- Remove reverse overlay [\#1209](https://github.com/webgme/webgme/pull/1209) ([kecso](https://github.com/kecso))
+- Closes \#1205 by adding optional server.handle to be passed from config. [\#1206](https://github.com/webgme/webgme/pull/1206) ([pmeijer](https://github.com/pmeijer))
+- In setBase only keep children data that have common origin. [\#1202](https://github.com/webgme/webgme/pull/1202) ([pmeijer](https://github.com/pmeijer))
+- Add generation of REST api docs to prepublish [\#1199](https://github.com/webgme/webgme/pull/1199) ([pmeijer](https://github.com/pmeijer))
+- Meta editor should react on state changes w.r.t. tab and selection. [\#1195](https://github.com/webgme/webgme/pull/1195) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Error: tried to insert existing hash - the two objects were NOT equal [\#1218](https://github.com/webgme/webgme/issues/1218)
+- Removing meta-sheet that's not active does not clear out the meta-rules [\#1198](https://github.com/webgme/webgme/issues/1198)
+- Server start crashes on Mac w/ node v6.2.0 [\#1196](https://github.com/webgme/webgme/issues/1196)
+- Standardized export file name [\#1189](https://github.com/webgme/webgme/issues/1189)
+- Exception when setting pointer [\#975](https://github.com/webgme/webgme/issues/975)
+- Fixes \#1218 Error: tried to insert existing hash - the two objects were NOT equal [\#1219](https://github.com/webgme/webgme/pull/1219) ([kecso](https://github.com/kecso))
+- Fixes \#975 Exception when setting pointer [\#1216](https://github.com/webgme/webgme/pull/1216) ([kecso](https://github.com/kecso))
+- Fixes \#1189 Standardized export file name [\#1214](https://github.com/webgme/webgme/pull/1214) ([kecso](https://github.com/kecso))
+- Fix never ending loading of nodes in composition tree [\#1201](https://github.com/webgme/webgme/pull/1201) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1198 Hide delete-btn for non-active tabs. [\#1200](https://github.com/webgme/webgme/pull/1200) ([pmeijer](https://github.com/pmeijer))
+- Clicking on anchors inside svgs triggers events now so they need to be removed [\#1193](https://github.com/webgme/webgme/pull/1193) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Unnecessary forking with automerge [\#1135](https://github.com/webgme/webgme/issues/1135)
+
+**Merged pull requests:**
+
+- Do not use raphael api to get length and bboxes for connections. [\#1211](https://github.com/webgme/webgme/pull/1211) ([pmeijer](https://github.com/pmeijer))
+- Cache the computed relids in the core. [\#1208](https://github.com/webgme/webgme/pull/1208) ([pmeijer](https://github.com/pmeijer))
+- Only compute data when needed in jump on crossings [\#1192](https://github.com/webgme/webgme/pull/1192) ([pmeijer](https://github.com/pmeijer))
+- Reduce preloaded children from 2 to 1 in tree browser. [\#1191](https://github.com/webgme/webgme/pull/1191) ([pmeijer](https://github.com/pmeijer))
+- Do not keep two sets of the nodes in the client and get rid of meta.js [\#1190](https://github.com/webgme/webgme/pull/1190) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.5.1](https://github.com/webgme/webgme/tree/v2.5.1) (2016-09-30)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.5.0...v2.5.1)
 
@@ -13,9 +60,10 @@
 
 **Implemented enhancements:**
 
-- Should "Follow library" take you to the branch or commit? [\#1158](https://github.com/webgme/webgme/issues/1158)
 - Should be able to execute client side plugin while AHEAD [\#1162](https://github.com/webgme/webgme/issues/1162)
 - Export Branch Progress Bar \(from tree browser export\) [\#1160](https://github.com/webgme/webgme/issues/1160)
+- Should "Follow library" take you to the branch or commit? [\#1158](https://github.com/webgme/webgme/issues/1158)
+- Generated router uses incorrect logger name [\#1147](https://github.com/webgme/webgme/issues/1147)
 - Generate unit test file\(s\) for rest routers [\#1146](https://github.com/webgme/webgme/issues/1146)
 - Enhanced base matching for model sharing. [\#1185](https://github.com/webgme/webgme/pull/1185) ([kecso](https://github.com/kecso))
 - Do not only rely on clearOutput-timer when clearing output for a CANCELED job before restart. [\#1184](https://github.com/webgme/webgme/pull/1184) ([pmeijer](https://github.com/pmeijer))
@@ -53,9 +101,6 @@
 
 **Closed issues:**
 
-- Can't delete nodes that aren't loaded w/ the client [\#1161](https://github.com/webgme/webgme/issues/1161)
-- Generated router uses incorrect logger name [\#1147](https://github.com/webgme/webgme/issues/1147)
-- executor worker info [\#1144](https://github.com/webgme/webgme/issues/1144)
 - autoMerge fails: Maximum call stack exceeded [\#1117](https://github.com/webgme/webgme/issues/1117)
 
 **Merged pull requests:**
@@ -89,7 +134,6 @@
 
 - getAttribute from rootNode fails [\#1131](https://github.com/webgme/webgme/issues/1131)
 - Uncaught exception on executor [\#1110](https://github.com/webgme/webgme/issues/1110)
-- Future times in the project history [\#1103](https://github.com/webgme/webgme/issues/1103)
 
 ## [v2.4.0](https://github.com/webgme/webgme/tree/v2.4.0) (2016-08-29)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.3.1...v2.4.0)
