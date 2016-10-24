@@ -1150,7 +1150,7 @@ describe('coretype', function () {
                 TASYNC.call(function (instances) {
                     expect(instances).to.have.length(1);
                     expect(core.getPath(instances[0])).to.equal('/instance/child');
-                    if(--neededChecks === 0){
+                    if (--neededChecks === 0) {
                         done();
                     }
                 }, core.loadInstances(newChild));
@@ -1161,11 +1161,30 @@ describe('coretype', function () {
                     paths.push(core.getPath(instances[0]));
                     paths.push(core.getPath(instances[1]));
                     expect(paths).to.have.members(['/template', '/template/child']);
-                    if(--neededChecks === 0){
+                    if (--neededChecks === 0) {
                         done();
                     }
                 }, core.loadInstances(core.getBase(newChild)));
             }, core.loadByPath(newRoot, '/template/child'));
         }, core.loadRoot(core.getHash(root)));
     });
+
+    it('should remove atr and reg field of an instance during persist', function (done) {
+        var ancestor = core.createNode({parent: root, relid: 'theAncestor'}),
+            node = core.createNode({parent: root, base: ancestor, relid: 'theNode'});
+
+        core.persist(root);
+        TASYNC.call(function (newRoot) {
+            TASYNC.call(function (newNode) {
+                core.setAttribute(newNode, 'one', 'value');
+                core.delAttribute(newNode, 'one');
+                core.setRegistry(newNode, 'two', 'values');
+                core.delRegistry(newNode, 'two');
+                core.persist(newRoot);
+                expect(newNode.data).not.to.have.keys(['atr', 'reg']);
+                done();
+            }, core.loadByPath(newRoot, '/theNode'));
+        }, core.loadRoot(core.getHash(root)));
+    });
+
 });
