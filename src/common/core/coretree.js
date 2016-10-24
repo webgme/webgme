@@ -165,18 +165,19 @@ define([
             ASSERT(__isMutableData(data));
 
             var done = __getEmptyData(),
-                keys = Object.keys(data),
+                keys,
                 key,
                 i, child, sub, hash;
 
             delete data[CONSTANTS.MUTABLE_PROPERTY];
+            keys = Object.keys(data);
 
             for (i = 0; i < keys.length; i++) {
                 key = keys[i];
                 child = data[key];
                 if (__isMutableData(child)) {
                     sub = __saveData(child, root, path + '/' + key);
-                    if (sub === __getEmptyData()) {
+                    if (JSON.stringify(sub) === JSON.stringify(__getEmptyData())) {
                         delete data[key];
                     } else {
                         done = sub;
