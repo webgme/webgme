@@ -7,8 +7,7 @@
 var testFixture = require('../_globals.js'),
     PROJECT_FILE = '../projects/Hakan132k.webgmex',
     jsonPatcher = testFixture.requirejs('common/util/jsonPatcher'),
-    getPatchObject = testFixture.requirejs('common/storage/util').getPatchObject,
-    MetaUser = testFixture.requirejs('common/core/users/meta');
+    getPatchObject = testFixture.requirejs('common/storage/util').getPatchObject;
 //"C:\\Users\\Zsolt\\Downloads\\Nagx3.json"
 //"C:\GIT\projects\HakansBigOne.webgmex"
 
@@ -377,11 +376,7 @@ describe.skip('Core Performance test', function () {
                 .then(function (root) {
                     var allMetaNodes = core.getAllMetaNodes(root),
                         i,
-                        meta,
-                        metaUser = new MetaUser();
-
-                    metaUser.initialize(core, {nodes: allMetaNodes}, function () {
-                    });
+                        meta;
 
                     console.time('getJsonMeta');
                     for (i in allMetaNodes) {
@@ -394,13 +389,6 @@ describe.skip('Core Performance test', function () {
                         meta = core.getOwnJsonMeta(allMetaNodes[i]);
                     }
                     console.timeEnd('getOwnJsonMeta');
-
-                    console.time('getMeta');
-                    for (i in allMetaNodes) {
-                        meta = metaUser.getMeta(i);
-                    }
-                    console.timeEnd('getMeta');
-
                 })
                 .nodeify(done);
         });
