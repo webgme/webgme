@@ -14,6 +14,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         '" instead.' + commentStr);
     }
 
+    function _getNode(nodes, path) {
+        return nodes[path] && nodes[path].node;
+    }
+
     /**
      * @param {string} _id - Path of node.
      * @param {GmeLogger} logger - logger.
@@ -65,7 +69,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     GMENode.prototype.isValidNewBase = function (basePath) {
         var base;
         if (typeof basePath === 'string') {
-            base = this._state.nodes[basePath].node;
+            base = _getNode(this._state.nodes, basePath);
             if (base) {
                 return this._state.core.isValidNewBase(this._state.nodes[this._id].node, base);
             } else {
@@ -81,7 +85,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     GMENode.prototype.isValidNewParent = function (parentPath) {
         var parent;
         if (typeof parentPath === 'string') {
-            parent = this._state.nodes[parentPath].node;
+            parent = _getNode(this._state.nodes, parentPath);
             if (parent) {
                 return this._state.core.isValidNewParent(this._state.nodes[this._id].node, parent);
             } else {
@@ -292,7 +296,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getInstancePaths(this._state.nodes[this._id].node);
     };
 
-    //adding functionality to get rid of GMEConcepts
+    GMENode.prototype.getJsonMeta = function () {
+        return this._state.core.getJsonMeta(this._state.nodes[this._id].node);
+    };
+
     GMENode.prototype.isConnection = function () {
         return this._state.core.isConnection(this._state.nodes[this._id].node);
     };
@@ -412,7 +419,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.isTypeOf = function (typePath) {
-        var typeNode = this._state.nodes[typePath].node;
+        var typeNode = _getNode(this._state.nodes, typePath);
 
         if (typeNode) {
             return this._state.core.isTypeOf(this._state.nodes[this._id].node, typeNode);
@@ -435,11 +442,11 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getValidChildrenPaths(this._state.nodes[this._id].node);
     };
 
-    GMENode.prototype.isValidTargetOf = function (targetPath, name) {
-        var targetNode = this._state.nodes[targetPath].node;
+    GMENode.prototype.isValidTargetOf = function (sourcePath, name) {
+        var sourceNode = _getNode(this._state.nodes, sourcePath);
 
-        if (targetNode) {
-            return this._state.core.isValidTargetOf(this._state.nodes[this._id].node, targetNode, name);
+        if (sourceNode) {
+            return this._state.core.isValidTargetOf(this._state.nodes[this._id].node, sourceNode, name);
         } else {
             return false;
         }

@@ -1160,7 +1160,7 @@ define(['js/logger',
             objectNode = this._client.getNode(objectID);
 
         if (containerNode && objectNode) {
-            this._client.updateValidChildrenItem(containerID, {id: objectID});
+            this._client.setChildMeta(containerID, objectID);
         }
     };
 
@@ -1169,7 +1169,7 @@ define(['js/logger',
             objectNode = this._client.getNode(objectID);
 
         if (containerNode && objectNode) {
-            this._client.removeValidChildrenItem(containerID, objectID);
+            this._client.delChildMeta(containerID, objectID);
         }
     };
 
@@ -1186,7 +1186,7 @@ define(['js/logger',
             if (isSet === true) {
                 //this is a pointer list
                 existingPointerNames = _.difference(sourceNode.getSetNames() || [],
-                    this._client.getMetaAspectNames(sourceID));
+                    sourceNode.getValidAspectNames());
             } else {
                 //this is a single pointer
                 //get the list of existing pointers and show them in a dialog so the user can choose
@@ -1223,7 +1223,7 @@ define(['js/logger',
                                     }
                                 ]
                             });
-                            self._client.makePointer(sourceID, userSelectedPointerName, null);
+                            self._client.setPointer(sourceID, userSelectedPointerName, null);
                         } else {
                             //pointer list
                             self._client.setPointerMeta(sourceID, userSelectedPointerName, {
@@ -1238,15 +1238,18 @@ define(['js/logger',
                     } else {
                         if (isSet !== true) {
                             //single pointer
-                            self._client.updateValidTargetItem(sourceID,
+                            self._client.setPointerMetaTarget(sourceID,
                                 userSelectedPointerName,
-                                {
-                                    id: targetID,
-                                    max: 1
-                                });
+                                targetID,
+                                -1,
+                                1);
                         } else {
                             //pointer list
-                            self._client.updateValidTargetItem(sourceID, userSelectedPointerName, {id: targetID});
+                            self._client.setPointerMetaTarget(sourceID,
+                                userSelectedPointerName,
+                                targetID,
+                                -1,
+                                -1);
                         }
                     }
 
@@ -1263,16 +1266,16 @@ define(['js/logger',
         //NOTE: this method is called from inside a transaction, don't need to start/complete one
 
         if (sourceNode && targetNode) {
-            this._client.removeValidTargetItem(sourceID, pointerName, targetID);
+            this._client.delPointerMetaTarget(sourceID, pointerName, targetID);
             pointerMetaDescriptor = this._client.getValidTargetItems(sourceID, pointerName);
             if (!pointerMetaDescriptor || pointerMetaDescriptor.length === 0) {
                 if (isSet === false) {
                     //single pointer
-                    this._client.deleteMetaPointer(sourceID, pointerName);
+                    this._client.delPointerMeta(sourceID, pointerName);
                     this._client.delPointer(sourceID, pointerName);
                 } else {
                     //pointer list
-                    this._client.deleteMetaPointer(sourceID, pointerName);
+                    this._client.delPointerMeta(sourceID, pointerName);
                     this._client.deleteSet(sourceID, pointerName);
                 }
             }
@@ -1514,10 +1517,7 @@ define(['js/logger',
         if (containerNode && objectNode) {
             multiplicity = multiplicityValid(newValue);
             if (multiplicity) {
-
-                multiplicity.id = objectID;
-
-                this._client.updateValidChildrenItem(containerID, multiplicity);
+                this._client.setChildMeta(containerID, objectID, multiplicity.min, multiplicity.max);
             } else {
                 this._updateConnectionText(containerID, objectID, MetaRelations.META_RELATIONS.CONTAINMENT, {
                     dstText: oldValue,
@@ -1559,8 +1559,7 @@ define(['js/logger',
         if (sourceNode && targetNode) {
             multiplicity = multiplicityValid(newValue);
             if (multiplicity) {
-                multiplicity.id = targetID;
-                this._client.updateValidTargetItem(sourceID, pointerName, multiplicity);
+                this._client.setPointerMetaTarget(sourceID, pointerName, targetID, multiplicity.min, multiplicity.max);
             } else {
                 this._updateConnectionText(sourceID, targetID, MetaRelations.META_RELATIONS.POINTER, {
                     name: pointerName,
@@ -1611,8 +1610,7 @@ define(['js/logger',
         if (sourceNode && targetNode) {
             multiplicity = multiplicityValid(newValue);
             if (multiplicity) {
-                multiplicity.id = targetID;
-                this._client.updateValidTargetItem(sourceID, pointerName, multiplicity);
+                this._client.setPointerMetaTarget(sourceID, pointerName, targetID, multiplicity.min, multiplicity.max);
             } else {
                 this._updateConnectionText(sourceID, targetID, MetaRelations.META_RELATIONS.SET, {
                     name: pointerName,

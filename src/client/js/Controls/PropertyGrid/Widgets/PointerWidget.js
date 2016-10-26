@@ -121,11 +121,11 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
     PointerWidget.prototype._isValidPointerDrop = function (dragInfo) {
         var self = this,
             result = false,
-            draggedNodePath;
+            draggedNode;
 
         if (dragInfo[DROP_CONSTANTS.DRAG_ITEMS].length === 1 && this._gmeNodeId) {
-            draggedNodePath = dragInfo[DROP_CONSTANTS.DRAG_ITEMS][0];
-            result = self._client.isValidTarget(this._gmeNodeId, this.propertyName, draggedNodePath);
+            draggedNode = self._client.getNode(dragInfo[DROP_CONSTANTS.DRAG_ITEMS][0]);
+            result = draggedNode && draggedNode.isValidTargetOf(this._gmeNodeId, this.propertyName);
         }
 
         return result;

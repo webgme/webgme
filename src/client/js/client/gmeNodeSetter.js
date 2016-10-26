@@ -1088,12 +1088,12 @@ define([], function () {
             return _getValidTargetItems(path, name, true);
         }
 
-        function isValidChild(path, childPath) {
+        function isValidChild(parentPath, path) {
             var node = _getNode(path),
-                child = _getNode(childPath);
+                parentNode = _getNode(parentPath);
 
-            if (node && child) {
-                return state.core.isValidChildOf(child, node);
+            if (node && parentNode) {
+                return state.core.isValidChildOf(node, parentNode);
             }
 
             return false;
@@ -1440,11 +1440,11 @@ define([], function () {
                 return getMeta.apply(null, arguments);
             },
             isTypeOf: function() {
-                _logDeprecated('isTypeOf(path, typePath)', 'isTypeOf(typePath)', true);
+                //_logDeprecated('isTypeOf(path, typePath)', 'isTypeOf(typePath)', true);
                 return isTypeOf.apply(null, arguments);
             },
             isValidTarget: function() {
-                _logDeprecated('isValidTarget(path, name, targetPath)', 'isValidTargetOf(targetPath, name)', true);
+                _logDeprecated('isValidTarget(path, name, targetPath)', 'isValidTargetOf(sourcePath, name)', true);
                 return isValidTarget.apply(null, arguments);
             },
             filterValidTarget: function() {

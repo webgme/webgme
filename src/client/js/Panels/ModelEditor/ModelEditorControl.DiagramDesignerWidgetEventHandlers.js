@@ -270,8 +270,8 @@ define(['js/logger',
                 newConnID = _client.createChild({parentId: parentId, baseId: connTypeToCreate});
 
                 //set source and target pointers
-                _client.makePointer(newConnID, CONSTANTS.POINTER_SOURCE, sourceId);
-                _client.makePointer(newConnID, CONSTANTS.POINTER_TARGET, targetId);
+                _client.setPointer(newConnID, CONSTANTS.POINTER_SOURCE, sourceId);
+                _client.setPointer(newConnID, CONSTANTS.POINTER_TARGET, targetId);
 
                 _client.completeTransaction();
             }
@@ -341,7 +341,7 @@ define(['js/logger',
         }
 
         if (objIdList.length > 0) {
-            this._client.delMoreNodes(objIdList);
+            this._client.deleteNodes(objIdList);
         }
     };
 
@@ -371,7 +371,7 @@ define(['js/logger',
                 } else {
                     newEndPointGMEID = this._ComponentID2GMEID[newDesc.srcObjId];
                 }
-                this._client.makePointer(gmeID, SRC_POINTER_NAME, newEndPointGMEID);
+                this._client.setPointer(gmeID, SRC_POINTER_NAME, newEndPointGMEID);
             }
 
             //update connection endpoint - TARGET
@@ -382,7 +382,7 @@ define(['js/logger',
                 } else {
                     newEndPointGMEID = this._ComponentID2GMEID[newDesc.dstObjId];
                 }
-                this._client.makePointer(gmeID, DST_POINTER_NAME, newEndPointGMEID);
+                this._client.setPointer(gmeID, DST_POINTER_NAME, newEndPointGMEID);
             }
 
             this._client.completeTransaction();
@@ -685,14 +685,14 @@ define(['js/logger',
                     });
 
                     //set reference
-                    this._client.makePointer(gmeID, dropAction.pointer, items[0]);
+                    this._client.setPointer(gmeID, dropAction.pointer, items[0]);
 
                     //try to set name
                     origNode = this._client.getNode(items[0]);
                     if (origNode) {
                         ptrName = origNode.getAttribute(nodePropertyNames.Attributes.name) + '-' +
                             dropAction.pointer;
-                        this._client.setAttributes(gmeID, nodePropertyNames.Attributes.name, ptrName);
+                        this._client.setAttribute(gmeID, nodePropertyNames.Attributes.name, ptrName);
                     }
                 }
 
@@ -864,6 +864,7 @@ define(['js/logger',
             parentID = this.currentNodeInfo.id,
             client = this._client,
             aspect = this._selectedAspect,
+            targetNode,
             p;
 
         if (params.srcSubCompId === undefined) {
@@ -896,8 +897,9 @@ define(['js/logger',
             }
 
             j = validConnectionTypes.length;
+            targetNode = this._client.getNode(targetId);
             while (j--) {
-                if (client.isValidTarget(validConnectionTypes[j], CONSTANTS.POINTER_TARGET, targetId)) {
+                if (targetNode && targetNode.isValidTargetOf(validConnectionTypes[j], CONSTANTS.POINTER_TARGET)) {
                     result.push(availableConnectionEnds[i]);
                     break;
                 }

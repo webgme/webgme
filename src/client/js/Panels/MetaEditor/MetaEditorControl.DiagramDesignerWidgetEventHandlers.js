@@ -376,7 +376,7 @@ define(['js/logger',
                     origNode = _client.getNode(componentID);
                     if (origNode) {
                         newName = origNode.getAttribute(nodePropertyNames.Attributes.name) + '_instance';
-                        _client.setAttributes(newGmeID, nodePropertyNames.Attributes.name, newName);
+                        _client.setAttribute(newGmeID, nodePropertyNames.Attributes.name, newName);
                     }
 
                     _client.addMember(aspectNodeID, newGmeID, this._selectedMetaAspectSet);

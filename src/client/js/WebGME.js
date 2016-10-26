@@ -348,7 +348,7 @@ define([
                                     //TODO this is not the best solution,
                                     // but as the node always orders the aspects based on their names, it is fine.
                                     if (vizualizer === 'ModelEditor') {
-                                        aspectNames = client.getMetaAspectNames(nodePath);
+                                        aspectNames = activeNode.getValidAspectNames();
                                         aspectNames.sort(function (a, b) {
                                             var an = a.toLowerCase(),
                                                 bn = b.toLowerCase();
