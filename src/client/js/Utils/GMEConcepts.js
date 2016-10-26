@@ -80,10 +80,11 @@ define(['jquery',
     function getValidConnectionTypes(sourceID, targetID, parentID) {
         var validTypes = [],
             validChildrenTypes = getValidConnectionTypesFromSource(sourceID, parentID),
+            targetNode = client.getNode(targetID),
             len = validChildrenTypes.length;
 
-        while (len--) {
-            if (client.isValidTarget(validChildrenTypes[len], CONSTANTS.POINTER_TARGET, targetID)) {
+        while (len-- && targetNode) {
+            if (targetNode.isValidTargetOf(validChildrenTypes[len], CONSTANTS.POINTER_TARGET)) {
                 validTypes.push(validChildrenTypes[len]);
             }
         }
@@ -96,6 +97,7 @@ define(['jquery',
      */
     function getValidConnectionTypesFromSource(sourceID, parentID) {
         var validTypes = [],
+            sourceNode = client.getNode(sourceID),
             validChildrenTypes,
             len,
             childID;
@@ -103,10 +105,10 @@ define(['jquery',
         validChildrenTypes = getMETAAspectMergedValidChildrenTypes(parentID) || [];
 
         len = validChildrenTypes.length;
-        while (len--) {
+        while (len-- && sourceNode) {
             childID = validChildrenTypes[len];
-            if (isConnectionType(childID) &&
-                client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID)) {
+            if (sourceNode && isConnectionType(childID) &&
+                sourceNode.isValidTargetOf(childID, CONSTANTS.POINTER_SOURCE)) {
                 validTypes.push(childID);
             }
         }
@@ -118,11 +120,13 @@ define(['jquery',
      * Determines if a GME Connection is valid by META between source and destination
      */
     function isValidConnection(sourceID, targetID, connectionID) {
-        var valid = false;
+        var valid = false,
+            sourceNode = client.getNode(sourceID),
+            targetNode = client.getNode(targetID);
 
-        if (sourceID !== undefined && targetID !== undefined && connectionID !== undefined) {
-            if (client.isValidTarget(connectionID, CONSTANTS.POINTER_SOURCE, sourceID) &&
-                client.isValidTarget(connectionID, CONSTANTS.POINTER_TARGET, targetID)) {
+        if (sourceNode && targetNode && connectionID) {
+            if (sourceNode.isValidTargetOf(connectionID, CONSTANTS.POINTER_SOURCE) &&
+                targetNode.isValidTargetOf(connectionID, CONSTANTS.POINTER_TARGET)) {
                 valid = true;
             }
         }
@@ -174,6 +178,7 @@ define(['jquery',
             counter,
             childrenMeta,
             baseId,
+            baseNode,
             j,
             node,
             validChildrenTypes,
@@ -216,8 +221,8 @@ define(['jquery',
             //END OF --- FILTER OUT ABSTRACTS
 
             //Check #1: Global children number multiplicity
+            parentNode = client.getNode(parentId);
             if (result === true) {
-                parentNode = client.getNode(parentId);
                 childrenIDs = parentNode.getChildrenIds();
                 childrenMeta = client.getChildrenMeta(parentId);
                 if (childrenMeta.max !== undefined &&
@@ -228,7 +233,7 @@ define(['jquery',
             }
 
             //Check #2: is each single baseId a valid child of parentId
-            validChildrenTypes = client.getValidChildrenTypes(parentId);
+            validChildrenTypes = parentNode.getValidChildrenIds();
             i = validChildrenTypes.length;
 
             validChildrenTypeMap = {};
@@ -238,8 +243,10 @@ define(['jquery',
             if (result === true) {
                 i = baseIdList.length;
                 while (i--) {
+
                     baseId = baseIdList[i];
-                    if (!client.isValidChild(parentId, baseId)) {
+                    baseNode = client.getNode(baseId);
+                    if (!baseNode || !baseNode.isValidChildOf(parentId)) {
                         result = false;
                         break;
                     } else {
@@ -302,14 +309,17 @@ define(['jquery',
 
     function getMETAAspectMergedValidChildrenTypes(objID) {
         var metaNodes = client.getAllMetaNodes() || [],
-            validChildrenTypes = client.getValidChildrenTypes(objID),
+            nodeObj = client.getNode(objID),
+            validChildrenTypes = nodeObj ? nodeObj.getValidChildrenIds() : [],
             len = metaNodes.length,
-            id;
+            id,
+            metaNode;
 
         while (len--) {
-            id = metaNodes[len].getId();
+            metaNode = metaNodes[len];
+            id = metaNode.getId();
             if (validChildrenTypes.indexOf(id) === -1) {
-                if (client.isValidChild(objID, id)) {
+                if (metaNode.isValidChildOf(objID)) {
                     validChildrenTypes.push(id);
                 }
             }
@@ -324,6 +334,7 @@ define(['jquery',
             members = obj.getMemberIds(setName) || [],
             result = true,
             i,
+            itemNode,
             baseId,
             maxPerType;
 
@@ -337,7 +348,8 @@ define(['jquery',
         //check #2: is every item a valid target of the pointer list
         if (result === true) {
             for (i = 0; i < itemIDList.length; i += 1) {
-                if (!client.isValidTarget(objID, setName, itemIDList[i])) {
+                itemNode = client.getNode(itemIDList[i]);
+                if (!(itemNode && itemNode.isValidTargetOf(objID, setName))) {
                     result = false;
                     break;
                 }
@@ -405,6 +417,7 @@ define(['jquery',
 
     function getValidPointerTypes(parentId, targetId) {
         var validChildrenTypes = getMETAAspectMergedValidChildrenTypes(parentId),
+            targetNode = client.getNode(targetId),
             i,
             childObj,
             ptrNames,
@@ -412,14 +425,14 @@ define(['jquery',
             validPointerTypes = [];
 
         i = validChildrenTypes.length;
-        while (i--) {
+        while (i-- && targetNode) {
             if (canCreateChild(parentId, validChildrenTypes[i])) {
                 childObj = client.getNode(validChildrenTypes[i]);
                 if (childObj) {
                     ptrNames = _.difference(childObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
                     j = ptrNames.length;
                     while (j--) {
-                        if (client.isValidTarget(validChildrenTypes[i], ptrNames[j], targetId)) {
+                        if (targetNode.isValidTargetOf(validChildrenTypes[i], ptrNames[j])) {
                             validPointerTypes.push({
                                 baseId: validChildrenTypes[i],
                                 pointer: ptrNames[j]
@@ -436,18 +449,17 @@ define(['jquery',
 
     function canCreateChildrenInAspect(parentId, baseIdList, aspectName) {
         var canCreateInAspect = true,
+            parentNode = client.getNode(parentId),
             i,
             j,
-            metaAspectDesc,
             aspectTypes;
 
-        if (aspectName) {
+        if (aspectName && parentNode) {
             if (aspectName !== CONSTANTS.ASPECT_ALL) {
                 //need to check in aspect
-                metaAspectDesc = client.getMetaAspect(parentId, aspectName);
-                if (metaAspectDesc) {
-                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                    aspectTypes = metaAspectDesc.items || [];
+                aspectTypes = parentNode.getAspectMeta(parentId, aspectName);
+                if (aspectTypes) {
+                    //aspectTypes contains the children types the user specified to participate in this aspect
 
                     if (aspectTypes.length > 0) {
                         //each item in baseIdList has to be a descendant of any item in aspectTypes
@@ -472,7 +484,7 @@ define(['jquery',
                 }
             }
         } else {
-            //not a valid aspect name
+            //not a valid aspect name nor valid node for parent
             canCreateInAspect = false;
         }
 
@@ -488,19 +500,18 @@ define(['jquery',
      */
     function getValidConnectionTypesFromSourceInAspect(sourceID, parentID, aspectName) {
         var validTypes = [],
+            parentNode = client.getNode(parentID),
             i,
             j,
             canCreateInAspect,
-            metaAspectDesc,
             aspectTypes;
 
-        if (aspectName) {
+        if (aspectName && parentNode) {
             if (aspectName !== CONSTANTS.ASPECT_ALL) {
                 //need to check in aspect
-                metaAspectDesc = client.getMetaAspect(parentID, aspectName);
-                if (metaAspectDesc) {
-                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                    aspectTypes = metaAspectDesc.items || [];
+                aspectTypes = parentNode.getAspectMeta(aspectName);
+                if (aspectTypes) {
+                    //aspectTypes contains the children types the user specified to participate in this aspect
 
                     if (aspectTypes.length > 0) {
                         validTypes = getValidConnectionTypesFromSource(sourceID, parentID);
@@ -535,19 +546,18 @@ define(['jquery',
      */
     function getValidConnectionTypesInAspect(sourceID, targetID, parentID, aspectName) {
         var validTypes = [],
+            parentNode = client.getNode(parentID),
             canCreateInAspect,
             i,
             j,
-            metaAspectDesc,
             aspectTypes;
 
-        if (aspectName) {
+        if (aspectName && parentNode) {
             if (aspectName !== CONSTANTS.ASPECT_ALL) {
                 //need to check in aspect
-                metaAspectDesc = client.getMetaAspect(parentID, aspectName);
-                if (metaAspectDesc) {
-                    //metaAspectDesc.items contains the children types the user specified to participate in this aspect
-                    aspectTypes = metaAspectDesc.items || [];
+                aspectTypes = parentNode.getAspectMeta(aspectName);
+                if (aspectTypes) {
+                    //aspectTypes contains the children types the user specified to participate in this aspect
 
                     if (aspectTypes.length > 0) {
                         validTypes = getValidConnectionTypes(sourceID, targetID, parentID);
@@ -603,12 +613,14 @@ define(['jquery',
         //Check if each single baseId is a valid children type of parentId
         var i,
             result = true,
+            baseNode,
             baseId;
 
         i = baseIdList.length;
         while (i--) {
             baseId = baseIdList[i];
-            if (!client.isValidChild(parentId, baseId)) {
+            baseNode = client.getNode(baseId);
+            if (!baseNode || baseNode.isValidChildOf(parentId)) {
                 result = false;
                 break;
             }
@@ -647,12 +659,13 @@ define(['jquery',
     function getValidPointerTypesFromSourceToTarget(sourceId, targetId) {
         var result = [],
             EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE],
-            nodeObj = client.getNode(sourceId),
-            pointerNames = _.difference(nodeObj.getPointerNames(), EXCLUDED_POINTERS),
+            sourceNode = client.getNode(sourceId),
+            targetNode = client.getNode(targetId),
+            pointerNames = _.difference(sourceNode.getPointerNames(), EXCLUDED_POINTERS),
             len = pointerNames.length;
 
-        while (len--) {
-            if (client.isValidTarget(sourceId, pointerNames[len], targetId)) {
+        while (len-- && targetNode) {
+            if (targetNode.isValidTargetOf(sourceId, pointerNames[len])) {
                 result.push(pointerNames[len]);
             }
         }
@@ -695,7 +708,7 @@ define(['jquery',
     function getSets(objID) {
         var obj = client.getNode(objID),
             setNames = obj.getSetNames() || [],
-            aspects = client.getMetaAspectNames(objID) || [],
+            aspects = obj.getValidAspectNames() || [],
             crossCuts = getCrosscuts(objID),
             crossCutNames = [];
 

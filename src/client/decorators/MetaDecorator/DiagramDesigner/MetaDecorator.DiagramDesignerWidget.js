@@ -137,8 +137,10 @@ define([
                 var attrName = $(this).find('.n').text().replace(':', ''),
                     attrNames,
                     dialog = new AttributeDetailsDialog(),
-                    attrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID], attrName),
-                    attrValue = client.getNode(self._metaInfo[CONSTANTS.GME_ID]).getAttribute(attrName);
+                    nodeObj = client.getNode(self._metaInfo[CONSTANTS.GME_ID]),
+                    attrMeta = nodeObj.getAttributeMeta(attrName) || {},
+                    attrValue = nodeObj.getAttribute(attrName);
+
                 var desc = _.extend({}, {
                     name: attrName,
                     type: attrMeta.type,
@@ -164,7 +166,7 @@ define([
                 }
 
                 //pass all the other attribute names to the dialog
-                attrNames = client.getOwnValidAttributeNames(self._metaInfo[CONSTANTS.GME_ID]);
+                attrNames = nodeObj.getOwnValidAttributeNames();
                 attrNames.splice(attrNames.indexOf(attrName), 1);
 
                 dialog.show(desc, attrNames, function (attrDesc) {
@@ -291,7 +293,8 @@ define([
     /***************  CUSTOM DECORATOR PART ****************************/
     MetaDecoratorDiagramDesignerWidget.prototype._updateAttributes = function () {
         var client = this._control._client,
-            newAttributes = client.getOwnValidAttributeNames(this._metaInfo[CONSTANTS.GME_ID]),
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            newAttributes = nodeObj ? nodeObj.getOwnValidAttributeNames() : [],
             len,
             displayedAttributes = this._attributeNames.slice(0),
             attrLIBase = $('<li/>'),
@@ -323,13 +326,18 @@ define([
 
     MetaDecoratorDiagramDesignerWidget.prototype._addAttribute = function (attrName) {
         var client = this._control._client,
-            attrMetaDescriptor = client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID], attrName) ? {
-                name: attrName,
-                type: client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID], attrName).type || 'null'
-            } : null;
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            attrMeta;
 
-        if (attrMetaDescriptor) {
-            this._attributes[attrName] = new Attribute(attrMetaDescriptor);
+        if (nodeObj) {
+            attrMeta = nodeObj.getAttributeMeta(attrName) || {};
+        }
+
+        if (attrMeta) {
+            this._attributes[attrName] = new Attribute({
+                name: attrName,
+                type: attrMeta.type || 'null'
+            });
             this._attributeNames.push(attrName);
         }
     };
@@ -356,7 +364,7 @@ define([
     MetaDecoratorDiagramDesignerWidget.prototype._onNodeTitleChanged = function (oldValue, newValue) {
         var client = this._control._client;
 
-        client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], nodePropertyNames.Attributes.name, newValue);
+        client.setAttribute(this._metaInfo[CONSTANTS.GME_ID], nodePropertyNames.Attributes.name, newValue);
     };
 
     /**************** END OF - EDIT NODE TITLE ************************/
@@ -365,8 +373,11 @@ define([
 
     MetaDecoratorDiagramDesignerWidget.prototype._onNewAttributeClick = function () {
         var client = this._control._client,
-            objId = this._metaInfo[CONSTANTS.GME_ID];
-        this._onNewClick(client.getOwnValidAttributeNames(objId), this._skinParts.$attributesContainer,
+            objId = this._metaInfo[CONSTANTS.GME_ID],
+            nodeObj = client.getNode(objId),
+            attrs = nodeObj ? nodeObj.getOwnValidAttributeNames() : [];
+
+        this._onNewClick(attrs, this._skinParts.$attributesContainer,
             this._skinParts.$addAttributeContainer, this._skinParts.$attributesTitle, this._onNewAttributeCreate);
     };
 
@@ -531,8 +542,8 @@ define([
 
         if (attrName !== attrDesc.name) {
             //rename an attribute
-            client.removeAttributeSchema(objID, attrName);
-            client.delAttributes(objID, attrName);
+            client.delAttributeMeta(objID, attrName);
+            client.delAttribute(objID, attrName);
 
         }
 
@@ -541,8 +552,8 @@ define([
             attrSchema.enum = attrDesc.enumValues;
         }
 
-        client.setAttributeSchema(objID, attrDesc.name, attrSchema);
-        client.setAttributes(objID, attrDesc.name, attrDesc.defaultValue);
+        client.setAttributeMeta(objID, attrDesc.name, attrSchema);
+        client.setAttribute(objID, attrDesc.name, attrDesc.defaultValue);
 
         client.completeTransaction();
     };
@@ -557,8 +568,8 @@ define([
         //TODO: just because of this hack, make sure that the name is not overwritten
         //TODO: just because of this hack, delete the alibi attribute as well
         if (attrName !== nodePropertyNames.Attributes.name) {
-            client.removeAttributeSchema(objID, attrName);
-            client.delAttributes(objID, attrName);
+            client.delAttributeMeta(objID, attrName);
+            client.delAttribute(objID, attrName);
         }
 
         client.completeTransaction();
@@ -672,7 +683,8 @@ define([
         var client = this._control._client,
             dialog = new MetaTextEditorDialog(),
             gmeId = this._metaInfo[CONSTANTS.GME_ID],
-            metaObj = client.getMeta(gmeId),
+            nodeObj = client.getNode(gmeId),
+            metaObj = nodeObj.getJsonMeta(gmeId),
             self = this;
 
         dialog.show(client.getNode(gmeId), JSON.stringify(metaObj, undefined, 2));
