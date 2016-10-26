@@ -620,7 +620,7 @@ define(['jquery',
         while (i--) {
             baseId = baseIdList[i];
             baseNode = client.getNode(baseId);
-            if (!baseNode || baseNode.isValidChildOf(parentId)) {
+            if (!baseNode || !baseNode.isValidChildOf(parentId)) {
                 result = false;
                 break;
             }
@@ -756,7 +756,7 @@ define(['jquery',
             parentNode,
             parentBaseNode;
 
-        if (!node.getBaseId() || node.getMetaTypeId() === node.getId()) {
+        if (!node || !node.getBaseId() || node.getMetaTypeId() === node.getId()) {
             // Root-node and FCO cannot be replaceable, nor can meta-nodes.
             result = false;
         } else {
