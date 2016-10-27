@@ -96,7 +96,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.control.onActivate();
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
         WebGMEGlobal.Toolbar.refresh();
-        console.log('active!');
     };
 
     /* override IActivePanel.prototype.onDeactivate */

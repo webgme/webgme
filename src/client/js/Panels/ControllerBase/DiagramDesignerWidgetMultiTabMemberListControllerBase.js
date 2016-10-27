@@ -1162,7 +1162,6 @@ define(['js/logger',
                     setID: this._selectedMemberListID
                 }]);
 
-                console.log('Creating desingerItem');
                 uiComponent = this._widget.createDesignerItem(objDesc);
 
                 this._GMEID2ComponentID[gmeID] = this._GMEID2ComponentID[gmeID] || [];
