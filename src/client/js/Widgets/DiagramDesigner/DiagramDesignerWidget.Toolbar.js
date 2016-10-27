@@ -57,34 +57,38 @@ define([
             this.toolbarItems.gridSeparator = toolbar.addSeparator();
 
             /************** ROUTING MANAGER SELECTION **************************/
-            this.toolbarItems.radioButtonGroupRouteManager = toolbar.addRadioButtonGroup(function (data) {
-                self._onConnectionRouteManagerChanged(data.type);
-            });
+            if (!this._disableConnectionRendering) {
+                this.toolbarItems.radioButtonGroupRouteManager = toolbar.addRadioButtonGroup(function (data) {
+                    self._onConnectionRouteManagerChanged(data.type);
+                });
 
 
-            this.toolbarItems.radioButtonGroupRouteManager.addButton({
-                title: 'Basic route manager',
-                icon: btnIconBase.clone().addClass('gme icon-gme_diagonal-arrow'),
-                selected: this._defaultConnectionRouteManagerType === 'basic',
-                data: {type: 'basic'}
-            });
+                this.toolbarItems.radioButtonGroupRouteManager.addButton({
+                    title: 'Basic route manager',
+                    icon: btnIconBase.clone().addClass('gme icon-gme_diagonal-arrow'),
+                    selected: this._defaultConnectionRouteManagerType === 'basic',
+                    data: {type: 'basic'}
+                });
 
-            this.toolbarItems.radioButtonGroupRouteManager.addButton({
-                title: 'Basic+ route manager',
-                icon: btnIconBase.clone().addClass('gme icon-gme_broken-arow'),
-                selected: this._defaultConnectionRouteManagerType === 'basic2',
-                data: {type: 'basic2'}
-            });
+                this.toolbarItems.radioButtonGroupRouteManager.addButton({
+                    title: 'Basic+ route manager',
+                    icon: btnIconBase.clone().addClass('gme icon-gme_broken-arow'),
+                    selected: this._defaultConnectionRouteManagerType === 'basic2',
+                    data: {type: 'basic2'}
+                });
 
-            this.toolbarItems.radioButtonGroupRouteManager.addButton({
-                title: 'AutoRouter',
-                icon: btnIconBase.clone().addClass('gme icon-gme_broken-arrow-with-box'),
-                selected: this._defaultConnectionRouteManagerType === 'basic3',
-                data: {type: 'basic3'}
-            });
+                if (!this._disableAutoRouterOption) {
+                    this.toolbarItems.radioButtonGroupRouteManager.addButton({
+                        title: 'AutoRouter',
+                        icon: btnIconBase.clone().addClass('gme icon-gme_broken-arrow-with-box'),
+                        selected: this._defaultConnectionRouteManagerType === 'basic3',
+                        data: {type: 'basic3'}
+                    });
+                }
+
+                this.toolbarItems.routingManagerSeparator = toolbar.addSeparator();
+            }
             /************** END OF - ROUTING MANAGER SELECTION **************************/
-
-            this.toolbarItems.routingManagerSeparator = toolbar.addSeparator();
 
             this.toolbarItems.radioButtonGroupOperatingMode = toolbar.addRadioButtonGroup(function (data) {
                 self.setOperatingMode(data.mode);
@@ -356,9 +360,9 @@ define([
         this._toolbarInitialized = true;
     };
 
-    DiagramDesignerWidgetToolbar.prototype._displayToolbarItems = function () {
+    DiagramDesignerWidgetToolbar.prototype._displayToolbarItems = function (options) {
         if (this._toolbarInitialized !== true) {
-            this._initializeToolbar();
+            this._initializeToolbar(options);
         } else {
             for (var i in this.toolbarItems) {
                 if (this.toolbarItems.hasOwnProperty(i)) {
