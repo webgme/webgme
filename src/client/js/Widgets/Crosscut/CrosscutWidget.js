@@ -29,9 +29,10 @@ define([
         params.reorderTabs = true;
         params.lineStyleControls = false;
         params.defaultConnectionRouteManagerType = 'basic2';
+        params.disableAutoRouterOption = true;
 
         DiagramDesignerWidget.call(this, container, params);
-        this._onConnectionRouteManagerChanged('basic2');
+        //this._onConnectionRouteManagerChanged('basic2');
         this.logger.debug('CrosscutWidget ctor');
     };
 

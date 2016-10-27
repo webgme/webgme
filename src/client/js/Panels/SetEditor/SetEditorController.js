@@ -26,6 +26,9 @@ define(['js/Utils/GMEConcepts',
         options = options || {};
         options.loggerName = 'gme:Panels:SetEditor:SetEditorController';
 
+        // Set-editor should not render connections in a special way.
+        options.disableConnectionRendering = true;
+
         DiagramDesignerWidgetMultiTabMemberListControllerBase.call(this, options);
 
         this.logger.debug('SetEditorController ctor finished');
