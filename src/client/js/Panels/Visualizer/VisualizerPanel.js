@@ -441,7 +441,9 @@ define(['js/logger',
                 delete this._ul2;
             }
 
-            WebGMEGlobal.State.registerActiveObject(this._currentNodeID);
+            if (typeof this._currentNodeID === 'string') {
+                WebGMEGlobal.State.registerActiveObject(this._currentNodeID);
+            }
         }
 
         this.updateContainerSize();

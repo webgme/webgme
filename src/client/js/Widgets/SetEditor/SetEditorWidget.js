@@ -24,6 +24,8 @@ define(['js/DragDrop/DragHelper',
         params.reorderTabs = false;
         params.lineStyleControls = false;
         params.enableConnectionDrawing = false;
+        params.defaultConnectionRouteManagerType = 'basic';
+        params.disableConnectionRendering = true;
 
         DiagramDesignerWidget.call(this, container, params);
 

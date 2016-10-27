@@ -42,6 +42,8 @@ define(['js/logger',
 
         this._client = options.client;
 
+        this.disableConnectionRendering = options.disableConnectionRendering;
+
         //initialize core collections and variables
         this._widget = options.widget;
 
@@ -417,7 +419,7 @@ define(['js/logger',
                 //only items are interesting since only those position is stored in the container's set's registry
                 //connections are interesting too since their color or segment points could have changed
                 // which is set specific
-                if (GMEConcepts.isConnection(diff[len]) === false) {
+                if (this.disableConnectionRendering || GMEConcepts.isConnection(diff[len]) === false) {
                     this._onUpdate(diff[len], {isConnection: false});
                 } else {
                     if (this._delayedConnectionsAsItems[diff[len]]) {
@@ -760,7 +762,9 @@ define(['js/logger',
 
                 obj = client.getNode(events[len].eid);
 
-                events[len].desc = {isConnection: GMEConcepts.isConnection(events[len].eid)};
+                events[len].desc = {
+                    isConnection: !this.disableConnectionRendering && GMEConcepts.isConnection(events[len].eid)
+                };
 
                 if (obj) {
                     //if it is a connection find src and dst and do not care about decorator
@@ -1124,9 +1128,10 @@ define(['js/logger',
             alreadySaved,
             len;
 
-        //component loaded
-        //we are interested in the load of member items and their custom territory involvement
-        if (this._selectedMemberListMembers.indexOf(gmeID) !== -1) {
+        // component loaded
+        // we are interested in the load of member items and their custom territory involvement
+        // check if the decorator is available before drawing
+        if (this._selectedMemberListMembers.indexOf(gmeID) !== -1 && desc.decorator) {
 
             if (desc.isConnection === false) {
 

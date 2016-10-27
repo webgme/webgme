@@ -119,15 +119,18 @@ define([
 
         //if the widget supports search functionality
         this._defaultSearchUI = true;
-        if (params && params.hasOwnProperty('defaultSearchUI')) {
+        if (params.hasOwnProperty('defaultSearchUI')) {
             this._defaultSearchUI = params.defaultSearchUI;
         }
 
         //if the widget needs lineStyleControls
         this._lineStyleControls = true;
-        if (params && params.hasOwnProperty('lineStyleControls')) {
+        if (params.hasOwnProperty('lineStyleControls')) {
             this._lineStyleControls = params.lineStyleControls;
         }
+
+        this._disableConnectionRendering = params.disableConnectionRendering;
+        this._disableAutoRouterOption = params.disableAutoRouterOption;
 
         //by default tabs are not enabled
         this._tabsEnabled = false;
