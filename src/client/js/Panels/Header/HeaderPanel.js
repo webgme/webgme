@@ -36,19 +36,24 @@ define([
             'gme.ui.ProjectNavigator'
         ]).run(['$rootScope', '$location', function ($rootScope, $location) {
             // FIXME: this might not be the best place to put it...
+            var prevQuery;
             if (WebGMEGlobal && WebGMEGlobal.State) {
                 WebGMEGlobal.State.on('change', function () {
                     var searchQuery = WebGMEUrlManager.serializeStateToUrl();
+                    if (prevQuery !== searchQuery) {
+                        // set the state that gets pushed into the history
+                        $location.state(WebGMEGlobal.State.toJSON());
 
-                    // set the state that gets pushed into the history
-                    $location.state(WebGMEGlobal.State.toJSON());
+                        // setting the search query based on the state
+                        $location.search(searchQuery);
 
-                    // setting the search query based on the state
-                    $location.search(searchQuery);
+                        // store the previous for next update
+                        prevQuery = searchQuery;
 
-                    // forcing the update
-                    if (!$rootScope.$$phase) {
-                        $rootScope.$apply();
+                        // forcing the update
+                        if (!$rootScope.$$phase) {
+                            $rootScope.$apply();
+                        }
                     }
                 });
             } else {
