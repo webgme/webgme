@@ -47,7 +47,7 @@ describe('StorageHelpers', function () {
         var commit = {_id: '#1', time: 1, parents: ['#doesNotExist']},
             project = new ProjectMock([commit]);
 
-        storageHelpers.loadHistory(project, 10, [commit])
+        storageHelpers.loadHistory(project, 10, null, [commit])
             .then(function () {
                 throw new Error('should have failed');
             })
@@ -91,7 +91,7 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
                 })
@@ -103,7 +103,7 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 2, heads)
+            storageHelpers.loadHistory(project, 2, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(2);
                     expect(result[0]).to.deep.equal(chain[0]);
@@ -117,7 +117,7 @@ describe('StorageHelpers', function () {
                 chain[1]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(2);
                     expect(result[0]).to.deep.equal(chain[1]);
@@ -132,7 +132,7 @@ describe('StorageHelpers', function () {
                 chain[1]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
                 })
@@ -145,9 +145,31 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
+                })
+                .nodeify(done);
+        });
+
+        it('should start from top and stop at target', function (done) {
+            var heads = [chain[0]];
+
+            storageHelpers.loadHistory(project, 10, '#2', heads)
+                .then(function (result) {
+                    expect(result).to.have.length(2);
+                    expect(result[1]._id).to.equal(chain[1]._id);
+                })
+                .nodeify(done);
+        });
+
+        it('should start from top and stop before target', function (done) {
+            var heads = [chain[0]];
+
+            storageHelpers.loadHistory(project, 2, '#1', heads)
+                .then(function (result) {
+                    expect(result).to.have.length(2);
+                    expect(result[1]._id).to.equal(chain[1]._id);
                 })
                 .nodeify(done);
         });
@@ -188,7 +210,7 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(2);
                     expect(result[0]).to.deep.equal(chain[0]);
@@ -202,7 +224,7 @@ describe('StorageHelpers', function () {
                 chain[1]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(2);
                     expect(result[0]).to.deep.equal(chain[1]);
@@ -217,9 +239,20 @@ describe('StorageHelpers', function () {
                 chain[0],
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
+                })
+                .nodeify(done);
+        });
+
+        it('should start from 3 return everything except 2', function (done) {
+            var heads = [chain[0]];
+
+            storageHelpers.loadHistory(project, -1, '#2', heads)
+                .then(function (result) {
+                    expect(result).to.have.length(2);
+                    expect(result[1]._id).to.equal(chain[2]._id);
                 })
                 .nodeify(done);
         });
@@ -266,7 +299,7 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(2);
                     expect(result[0]).to.deep.equal(chain[0]);
@@ -281,7 +314,7 @@ describe('StorageHelpers', function () {
                 chain[1]
             ];
 
-            storageHelpers.loadHistory(project, 3, heads)
+            storageHelpers.loadHistory(project, 3, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(3);
                     expect(result[0]).to.deep.equal(chain[0]);
@@ -297,9 +330,20 @@ describe('StorageHelpers', function () {
                 chain[0],
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
+                })
+                .nodeify(done);
+        });
+
+        it('should start from 3 and 2 and stop at target', function (done) {
+            var heads = [chain[0],chain[1]];
+
+            storageHelpers.loadHistory(project, -1, '#1', heads)
+                .then(function (result) {
+                    expect(result).to.have.length(3);
+                    expect(result[2]._id).to.equal(chain[2]._id);
                 })
                 .nodeify(done);
         });
@@ -346,7 +390,7 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(3);
                     expect(result[0]).to.deep.equal(chain[0]);
@@ -362,7 +406,7 @@ describe('StorageHelpers', function () {
                 chain[2]
             ];
 
-            storageHelpers.loadHistory(project, 2, heads)
+            storageHelpers.loadHistory(project, 2, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(2);
                     expect(result[0]).to.deep.equal(chain[0]);
@@ -415,7 +459,7 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
                 })
@@ -428,7 +472,7 @@ describe('StorageHelpers', function () {
                 chain[1]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
                 })
@@ -441,7 +485,7 @@ describe('StorageHelpers', function () {
                 chain[2]
             ];
 
-            storageHelpers.loadHistory(project, 2, heads)
+            storageHelpers.loadHistory(project, 2, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(2);
                     expect(result[0]).to.deep.equal(chain[0]);
@@ -456,12 +500,34 @@ describe('StorageHelpers', function () {
                 chain[1]
             ];
 
-            storageHelpers.loadHistory(project, 3, heads)
+            storageHelpers.loadHistory(project, 3, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(3);
                     expect(result[0]).to.deep.equal(chain[0]);
                     expect(result[1]).to.deep.equal(chain[1]);
                     expect(result[2]).to.deep.equal(chain[2]);
+                })
+                .nodeify(done);
+        });
+
+        it('should start from 3 and stop at 1', function (done) {
+            var heads = [chain[0]];
+
+            storageHelpers.loadHistory(project, -1, '#1', heads)
+                .then(function (result) {
+                    expect(result).to.have.length(3);
+                    expect(result[2]._id).to.equal(chain[2]._id);
+                })
+                .nodeify(done);
+        });
+
+        it('should start from 3 and stop at 2', function (done) {
+            var heads = [chain[0]];
+
+            storageHelpers.loadHistory(project, -1, '#2', heads)
+                .then(function (result) {
+                    expect(result).to.have.length(2);
+                    expect(result[1]._id).to.equal(chain[1]._id);
                 })
                 .nodeify(done);
         });
@@ -561,7 +627,7 @@ describe('StorageHelpers', function () {
                 chain[1]
             ];
 
-            storageHelpers.loadHistory(project, 100, heads)
+            storageHelpers.loadHistory(project, 100, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
                 })
@@ -573,7 +639,7 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 100, heads)
+            storageHelpers.loadHistory(project, 100, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(11);
                     expect(result[0]).to.deep.equal(chain[0]);
@@ -587,6 +653,17 @@ describe('StorageHelpers', function () {
                     expect(result[8]).to.deep.equal(chain[9]);
                     expect(result[9]).to.deep.equal(chain[10]);
                     expect(result[10]).to.deep.equal(chain[11]);
+                })
+                .nodeify(done);
+        });
+
+        it('should start from 11 and stop at 2', function (done) {
+            var heads = [chain[0]];
+
+            storageHelpers.loadHistory(project, -1, '#2', heads)
+                .then(function (result) {
+                    expect(result).to.have.length(9);
+                    expect(result[8]._id).to.equal(chain[9]._id);
                 })
                 .nodeify(done);
         });
@@ -626,7 +703,7 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
                 })
@@ -638,7 +715,7 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 2, heads)
+            storageHelpers.loadHistory(project, 2, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(2);
                     expect(result[0]).to.deep.equal(chain[0]);
@@ -652,7 +729,7 @@ describe('StorageHelpers', function () {
                 chain[1]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result.length).to.equal(2);
                     expect(result[0]).to.deep.equal(chain[1]);
@@ -667,7 +744,7 @@ describe('StorageHelpers', function () {
                 chain[1]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
                 })
@@ -680,7 +757,7 @@ describe('StorageHelpers', function () {
                 chain[0]
             ];
 
-            storageHelpers.loadHistory(project, 10, heads)
+            storageHelpers.loadHistory(project, 10, null, heads)
                 .then(function (result) {
                     expect(result).to.deep.equal(chain);
                 })

@@ -36,7 +36,6 @@ describe('SafeStorage', function () {
             .nodeify(done);
     });
 
-
     describe('Projects', function () {
         var safeStorage,
             importResult,
@@ -1104,7 +1103,6 @@ describe('SafeStorage', function () {
                         return;
                     }
 
-
                     expect(eventData.changedNodes !== null && typeof eventData.changedNodes === 'object')
                         .to.equal(true);
                     safeStorage.clearAllEvents();
@@ -1492,7 +1490,7 @@ describe('SafeStorage', function () {
                         newRoot[CONSTANTS.MONGO_ID],
                         coreObjects,
                         'patchRootSent'
-                        )
+                    )
                         .catch(done);
                 })
                 .catch(done);
@@ -1550,7 +1548,7 @@ describe('SafeStorage', function () {
                         newRoot[CONSTANTS.MONGO_ID],
                         coreObjects,
                         'patchRootSent'
-                        )
+                    )
                         .catch(done);
                 })
                 .catch(done);
@@ -1655,7 +1653,7 @@ describe('SafeStorage', function () {
                         newRoot[CONSTANTS.MONGO_ID],
                         coreObjects,
                         'patchRootSent'
-                        )
+                    )
                         .catch(function (err) {
                             expect(err.message).to.contain('object does not exist ' + newRoot[CONSTANTS.MONGO_ID]);
                             done();
@@ -2851,4 +2849,175 @@ describe('SafeStorage', function () {
                 .catch(done);
         });
     });
-});
+
+    describe.only('squashCommits', function () {
+        var safeStorage,
+            projectId,
+            rootHash,
+            project,
+            commitHashes = [];
+
+        /*
+         * #4 - master
+         * | \
+         * #2#3
+         * | |
+         * #1|
+         * | /
+         * #0
+         * */
+
+        before(function (done) {
+            safeStorage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+
+            safeStorage.openDatabase()
+                .then(function () {
+                    return testFixture.importProject(safeStorage, {
+                        projectSeed: 'seeds/EmptyProject.webgmex',
+                        projectName: 'squashCommits',
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (result) {
+                    projectId = result.project.projectId;
+                    commitHashes.push(result.commitHash);
+                    rootHash = result.rootHash;
+                    project = result.project;
+
+                    return project.makeCommit(null, [commitHashes[0]], rootHash, [], '#1');
+                })
+                .then(function (result) {
+                    commitHashes.push(result.hash);
+                    return project.makeCommit(null, [result.hash], rootHash, [], '#2');
+                })
+                .then(function (result) {
+                    commitHashes.push(result.hash);
+                    return project.makeCommit(null, [commitHashes[0]], rootHash, [], '#3');
+                })
+                .then(function (result) {
+                    commitHashes.push(result.hash);
+                    return project.makeCommit(null, [commitHashes[2], commitHashes[3]], rootHash, [], '#4');
+                })
+                .then(function (result) {
+                    commitHashes.push(result.hash);
+                    return project.setBranchHash('master', commitHashes[4], commitHashes[0]);
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            safeStorage.closeDatabase(done);
+        });
+
+        it('should squash commits 0->1', function (done) {
+            var data = {
+                    projectId: projectId,
+                    fromCommit: commitHashes[0],
+                    toCommitOrBranch: commitHashes[1]
+                },
+                commitHash;
+
+            safeStorage.squashCommits(data)
+                .then(function (result) {
+                    expect(result).to.have.keys(['hash']);
+                    commitHash = result.hash;
+                    return safeStorage.loadObjects({
+                        projectId: projectId,
+                        hashes: [commitHash]
+                    });
+                })
+                .then(function (commitObjects) {
+                    expect(commitObjects).not.to.eql(null);
+                    expect(commitObjects).to.have.keys([commitHash]);
+                    expect(commitObjects[commitHash].parents).to.have.length(1);
+                    expect(commitObjects[commitHash].parents[0]).to.equal(commitHashes[0]);
+                    expect(commitObjects[commitHash].message).to.contain(commitHashes[1]);
+                })
+                .nodeify(done);
+        });
+
+        it('should squash commits 1->4', function (done) {
+            var data = {
+                    projectId: projectId,
+                    fromCommit: commitHashes[1],
+                    toCommitOrBranch: commitHashes[4]
+                },
+                commitHash;
+
+            safeStorage.squashCommits(data)
+                .then(function (result) {
+                    expect(result).to.have.keys(['hash']);
+                    commitHash = result.hash;
+                    return safeStorage.loadObjects({
+                        projectId: projectId,
+                        hashes: [commitHash]
+                    });
+                })
+                .then(function (commitObjects) {
+                    expect(commitObjects).not.to.eql(null);
+                    expect(commitObjects).to.have.keys([commitHash]);
+                    expect(commitObjects[commitHash].parents).to.have.length(1);
+                    expect(commitObjects[commitHash].parents[0]).to.equal(commitHashes[1]);
+                    expect(commitObjects[commitHash].message).not.to.contain(commitHashes[3]);
+                })
+                .nodeify(done);
+        });
+
+        it('should squash commits 0->4', function (done) {
+            var data = {
+                    projectId: projectId,
+                    fromCommit: commitHashes[0],
+                    toCommitOrBranch: commitHashes[4]
+                },
+                commitHash;
+
+            safeStorage.squashCommits(data)
+                .then(function (result) {
+                    expect(result).to.have.keys(['hash']);
+                    commitHash = result.hash;
+                    return safeStorage.loadObjects({
+                        projectId: projectId,
+                        hashes: [commitHash]
+                    });
+                })
+                .then(function (commitObjects) {
+                    expect(commitObjects).not.to.eql(null);
+                    expect(commitObjects).to.have.keys([commitHash]);
+                    expect(commitObjects[commitHash].parents).to.have.length(1);
+                    expect(commitObjects[commitHash].parents[0]).to.equal(commitHashes[0]);
+                    expect(commitObjects[commitHash].message).to.contain(commitHashes[3]);
+                })
+                .nodeify(done);
+        });
+
+        it('should squash commits 0->4 and update master', function (done) {
+            var data = {
+                    projectId: projectId,
+                    fromCommit: commitHashes[0],
+                    toCommitOrBranch: 'master'
+                },
+                commitHash;
+
+            safeStorage.squashCommits(data)
+                .then(function (result) {
+                    expect(result).to.have.keys(['hash','status']);
+                    console.log(result);
+                    commitHash = result.hash;
+                    return safeStorage.loadObjects({
+                        projectId: projectId,
+                        hashes: [commitHash]
+                    });
+                })
+                .then(function (commitObjects) {
+                    expect(commitObjects).not.to.eql(null);
+                    expect(commitObjects).to.have.keys([commitHash]);
+                    expect(commitObjects[commitHash].parents).to.have.length(1);
+                    expect(commitObjects[commitHash].parents[0]).to.equal(commitHashes[0]);
+                    expect(commitObjects[commitHash].message).to.contain(commitHashes[3]);
+                })
+                .nodeify(done);
+        });
+    });
+})
+;

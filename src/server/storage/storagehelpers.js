@@ -7,7 +7,7 @@
 
 var Q = require('q');
 
-function _loadHistoryRec(dbProject, nbr, result, added, heads) {
+function _loadHistoryRec(dbProject, nbr, target, result, added, heads) {
     var latest,
         i;
 
@@ -37,7 +37,7 @@ function _loadHistoryRec(dbProject, nbr, result, added, heads) {
     result.push(latest);
     added[latest._id] = true;
 
-    if (result.length === nbr) {
+    if (result.length === nbr || target === latest._id) {
         return Q(result);
     }
 
@@ -55,7 +55,7 @@ function _loadHistoryRec(dbProject, nbr, result, added, heads) {
                     throw new Error('parent does not exist: ' + JSON.stringify(latest));
                 }
             }
-            return _loadHistoryRec(dbProject, nbr, result, added, heads);
+            return _loadHistoryRec(dbProject, nbr, target, result, added, heads);
         });
 }
 
@@ -63,12 +63,13 @@ function _loadHistoryRec(dbProject, nbr, result, added, heads) {
  *
  * @param project
  * @param {number} nbr
+ * @param {string} target
  * @param {string[]} heads
  * @returns {*}
  * @ignore
  */
-function loadHistory(dbProject, nbr, heads) {
-    return _loadHistoryRec(dbProject, nbr, [], {}, heads);
+function loadHistory(dbProject, nbr, target, heads) {
+    return _loadHistoryRec(dbProject, nbr, target, [], {}, heads);
 }
 
 /**
@@ -124,7 +125,6 @@ function loadPath(dbProject, rootHash, loadedObjects, path, excludeParents) {
     loadParent(rootHash, pathArray.shift());
     return deferred.promise;
 }
-
 
 function filterArray(arr) {
     var i,
