@@ -24,6 +24,13 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         logger.debug('initialized SetCore');
 
         //<editor-fold=Helper Functions>
+        function getSetNodeByName(node, setName) {
+            ASSERT(typeof setName === 'string');
+            var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY);
+
+            return innerCore.getChild(setsNode, setName);
+        }
+
         function setModified(node) {
             innerCore.setRegistry(node, CONSTANTS.SET_MODIFIED_REGISTRY,
                 (innerCore.getRegistry(node, CONSTANTS.SET_MODIFIED_REGISTRY) || 0) + 1);
@@ -457,6 +464,18 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 return true;
             }
             return false;
+        };
+
+        this.getSetRegistryNames = function (node, setName) {
+            return self.getRegistryNames(getSetNodeByName(node, setName));
+        };
+
+        this.getSetRegistry = function (node, setName, regName) {
+            return self.getRegistry(getSetNodeByName(node, setName), regName);
+        };
+
+        this.setSetRegistry = function (node, setName, regName, regValue) {
+            return self.setRegistry(getSetNodeByName(node, setName), regName, regValue);
         };
         //</editor-fold>
     }

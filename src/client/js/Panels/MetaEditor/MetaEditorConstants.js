@@ -14,6 +14,7 @@ define(['js/Constants'], function (CONSTANTS) {
         META_ASPECT_SET_NAME: 'MetaAspectSet',
         RESERVED_POINTER_NAMES: [CONSTANTS.POINTER_BASE],
         META_ASPECT_CONTAINER_ID: CONSTANTS.PROJECT_ROOT_ID,
-        META_ASPECT_SHEET_NAME_PREFIX: 'MetaAspectSet_'
+        META_ASPECT_SHEET_NAME_PREFIX: 'MetaAspectSet_',
+        META_DOC_REGISTRY_PREFIX: 'meta_doc_'
     };
 });

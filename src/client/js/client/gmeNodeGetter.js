@@ -209,44 +209,52 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     //SET
-    GMENode.prototype.getMemberIds = function (setId) {
-        return this._state.core.getMemberPaths(this._state.nodes[this._id].node, setId);
+    GMENode.prototype.getMemberIds = function (setName) {
+        return this._state.core.getMemberPaths(this._state.nodes[this._id].node, setName);
     };
 
     GMENode.prototype.getSetNames = function () {
         return this._state.core.getSetNames(this._state.nodes[this._id].node);
     };
 
-    GMENode.prototype.getMemberAttributeNames = function (setId, memberId) {
-        return this._state.core.getMemberAttributeNames(this._state.nodes[this._id].node, setId, memberId);
+    GMENode.prototype.getMemberAttributeNames = function (setName, memberId) {
+        return this._state.core.getMemberAttributeNames(this._state.nodes[this._id].node, setName, memberId);
     };
 
-    GMENode.prototype.getMemberAttribute = function (setId, memberId, name) {
-        return this._state.core.getMemberAttribute(this._state.nodes[this._id].node, setId, memberId, name);
+    GMENode.prototype.getMemberAttribute = function (setName, memberId, attrName) {
+        return this._state.core.getMemberAttribute(this._state.nodes[this._id].node, setName, memberId, attrName);
     };
 
-    GMENode.prototype.getEditableMemberAttribute = function (setId, memberId, name) {
-        var attr = this._state.core.getMemberAttribute(this._state.nodes[this._id].node, setId, memberId, name);
+    GMENode.prototype.getEditableMemberAttribute = function (setName, memberId, attrName) {
+        var attr = this._state.core.getMemberAttribute(this._state.nodes[this._id].node, setName, memberId, attrName);
         if (attr !== null && attr !== undefined) {
             return JSON.parse(JSON.stringify(attr));
         }
         return null;
     };
 
-    GMENode.prototype.getMemberRegistryNames = function (setId, memberId) {
-        return this._state.core.getMemberRegistryNames(this._state.nodes[this._id].node, setId, memberId);
+    GMENode.prototype.getMemberRegistryNames = function (setName, memberId) {
+        return this._state.core.getMemberRegistryNames(this._state.nodes[this._id].node, setName, memberId);
     };
 
-    GMENode.prototype.getMemberRegistry = function (setId, memberId, name) {
-        return this._state.core.getMemberRegistry(this._state.nodes[this._id].node, setId, memberId, name);
+    GMENode.prototype.getMemberRegistry = function (setName, memberId, regName) {
+        return this._state.core.getMemberRegistry(this._state.nodes[this._id].node, setName, memberId, regName);
     };
 
-    GMENode.prototype.getEditableMemberRegistry = function (setId, memberId, name) {
-        var attr = this._state.core.getMemberRegistry(this._state.nodes[this._id].node, setId, memberId, name);
+    GMENode.prototype.getEditableMemberRegistry = function (setName, memberId, regName) {
+        var attr = this._state.core.getMemberRegistry(this._state.nodes[this._id].node, setName, memberId, regName);
         if (attr !== null && attr !== undefined) {
             return JSON.parse(JSON.stringify(attr));
         }
         return null;
+    };
+
+    GMENode.prototype.getSetRegistry = function (setName, regName) {
+        return this._state.core.getSetRegistry(this._state.nodes[this._id].node, setName, regName);
+    };
+
+    GMENode.prototype.getSetRegistryNames = function (setName) {
+        return this._state.core.getSetRegistryNames(this._state.nodes[this._id].node, setName);
     };
 
     //META

@@ -485,6 +485,16 @@ define([], function () {
             }
         }
 
+        function setSetRegistry(path, setName, regName, regValue, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.setSetRegistry(node, setName, regName, regValue);
+                saveRoot(msg || 'setSetRegistry(' + path + ',' + setName + ',' + regName + ',' +
+                    JSON.stringify(regValue) + ')');
+            }
+        }
+
         function delMemberRegistry(path, memberPath, setId, name, msg) {
             // FIXME: This will have to break due to switched arguments
             var node = _getNode(path);
@@ -1355,6 +1365,7 @@ define([], function () {
             delMemberAttribute: delMemberAttribute,
             setMemberRegistry: setMemberRegistry,
             delMemberRegistry: delMemberRegistry,
+            setSetRegistry: setSetRegistry,
             createSet: createSet,
             delSet: delSet,
             deleteSet: delSet,
