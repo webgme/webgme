@@ -1820,6 +1820,24 @@ define([
             });
         };
 
+        this.updateProjectFromFile = function (blobHash, callback) {
+            var parameters = {
+                command: 'updateProjectFromFile',
+                blobHash: blobHash,
+                projectId: state.project.projectId,
+                branchName: state.branchName
+            };
+
+            logger.debug('creating project from package', parameters);
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
+            });
+        };
+
         //meta rules checking
         /**
          *

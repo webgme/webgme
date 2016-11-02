@@ -30,6 +30,7 @@ module.exports = {
         executePlugin: 'executePlugin',
         seedProject: 'seedProject',
         autoMerge: 'autoMerge',
+        squash: 'squash',
         resolve: 'resolve',
         checkConstraints: 'checkConstraints',
 
@@ -39,6 +40,7 @@ module.exports = {
         updateLibrary: 'updateLibrary',
         exportSelectionToFile: 'exportSelectionToFile',
         importSelectionFromFile: 'importSelectionFromFile',
+        updateProjectFromFile: 'updateProjectFromFile',
 
         // AddOn related
         connectedWorkerStart: 'connectedWorkerStart',
