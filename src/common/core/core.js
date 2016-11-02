@@ -832,6 +832,50 @@ define([
         this.getSetNames = core.getSetNames;
 
         /**
+         * Returns the names of the sets of the node.
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string[]} Returns an array of set names that the node has.
+         *
+         * @func
+         */
+        this.getOwnSetNames = core.getOwnSetNames;
+
+        /**
+         * Creates a set for the node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} name - the name of the set.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
+         * @func
+         */
+        this.createSet = core.createSet;
+
+        /**
+         * Removes a set from the node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} name - the name of the set.
+         *
+         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
+         * an error.
+         *
+         * @func
+         */
+        this.deleteSet = this.delSet = core.deleteSet;
+
+        this.getSetRegistryNames = core.getSetRegistryNames;
+
+        this.getOwnSetRegistryNames = core.getOwnSetRegistryNames;
+
+        this.getSetRegistry = core.getSetRegistry;
+
+        this.setSetRegistry = core.setSetRegistry;
+
+        this.delSetRegistry = core.delSetRegistry;
+
+        /**
          * Returns the list of absolute paths of the members of the given set of the given node.
          * @param {module:Core~Node} node - the set owner.
          * @param {string} name - the name of the set.
@@ -1015,30 +1059,6 @@ define([
          * @func
          */
         this.delMemberRegistry = core.delMemberRegistry;
-
-        /**
-         * Creates a set for the node.
-         * @param {module:Core~Node} node - the owner of the set.
-         * @param {string} name - the name of the set.
-         *
-         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
-         * an error.
-         *
-         * @func
-         */
-        this.createSet = core.createSet;
-
-        /**
-         * Removes a set from the node.
-         * @param {module:Core~Node} node - the owner of the set.
-         * @param {string} name - the name of the set.
-         *
-         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
-         * an error.
-         *
-         * @func
-         */
-        this.deleteSet = this.delSet = core.deleteSet;
 
         /**
          * Returns all membership information of the given node.

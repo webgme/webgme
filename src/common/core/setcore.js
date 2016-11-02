@@ -470,13 +470,26 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return self.getRegistryNames(getSetNodeByName(node, setName));
         };
 
+        this.getOwnSetRegistryNames = function (node, setName, regName) {
+            return self.getOwnRegistryNames(getSetNodeByName(node, setName), regName);
+        };
+
         this.getSetRegistry = function (node, setName, regName) {
             return self.getRegistry(getSetNodeByName(node, setName), regName);
         };
 
-        this.setSetRegistry = function (node, setName, regName, regValue) {
-            return self.setRegistry(getSetNodeByName(node, setName), regName, regValue);
+        this.getOwnSetRegistry = function (node, setName, regName) {
+            return self.getOwnRegistry(getSetNodeByName(node, setName), regName);
         };
+
+        this.setSetRegistry = function (node, setName, regName, regValue) {
+            self.setRegistry(getSetNodeByName(node, setName), regName, regValue);
+        };
+
+        this.delSetRegistry = function (node, setName, regName) {
+            self.delRegistry(getSetNodeByName(node, setName), regName);
+        };
+
         //</editor-fold>
     }
 
