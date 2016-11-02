@@ -422,7 +422,7 @@ Storage.prototype.squashCommits = function (data, callback) {
                     branchName: branchName,
                     projectId: data.projectId,
                     commitObject: {},
-                    oldHash: branchName ? fromCommit : null
+                    oldHash: branchName ? toCommit : null
                 },
                 commitObj = {
                     root: rootHash,

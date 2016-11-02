@@ -116,6 +116,25 @@ describe('import CLI tests', function () {
             .done();
     });
 
+    it('should fail if commit parameter is wrong format', function (done) {
+        projectName = null;
+        projectId = null;
+
+        importCLI.main(['node', filename,
+            importPath,
+            '-p', 'someProject',
+            '-c', '#wrongCommitFormat'])
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err).not.to.equal(null);
+                expect(err.message).to.contain('invalid argument');
+                done();
+            })
+            .done();
+    });
+
     it('should fail to import if wrong owner is given', function (done) {
         projectName = null;
         projectId = null;
@@ -261,6 +280,90 @@ describe('import CLI tests', function () {
                 expect(commitObject.parents).to.eql([oldCommitHash]);
             })
             .nodeify(done);
+    });
+
+    it('should import into existing project as an update to the given commit', function (done) {
+        var oldCommitHash;
+
+        projectName = null;
+        projectId = null;
+
+        storage.getProjects({branches: true})
+            .then(function (projects) {
+                var i, found = false;
+
+                expect(projects).not.to.equal(null);
+                for (i = 0; i < projects.length; i += 1) {
+                    if (projects[i]._id === existingProjectId) {
+                        found = true;
+                        expect(projects[i].branches).to.include.keys(['master']);
+                        oldCommitHash = projects[i].branches.master;
+                    }
+                }
+
+                expect(found).to.equal(true);
+
+                return importCLI.main(['node', filename,
+                    importPath,
+                    '-m', gmeConfig.mongo.uri,
+                    '-p', existingProjectName,
+                    '-o', gmeConfig.authentication.guestAccount,
+                    '-c', oldCommitHash
+                ]);
+            })
+            .then(function () {
+                return storage.getProjects({branches: true});
+            })
+            .then(function (projects) {
+                var i;
+
+                expect(projects).not.to.equal(null);
+                for (i = 0; i < projects.length; i += 1) {
+                    if (projects[i]._id === existingProjectId) {
+                        expect(projects[i].branches).to.include.keys(['master']);
+                        expect(projects[i].branches.master).to.equal(oldCommitHash);
+                        return storage.openProject({projectId: existingProjectId});
+                    }
+                }
+
+                throw new Error('project was not found after importing new version');
+
+            })
+            .then(function (project) {
+                return storage.getCommits({
+                    projectId: existingProjectId,
+                    before: Date.now(),
+                    number: 2
+                });
+            })
+            .then(function (commits) {
+                expect(commits).to.have.length(2);
+                expect(commits[0]._id).not.to.equal(oldCommitHash);
+                expect(commits[0].parents[0]).to.equal(oldCommitHash);
+                expect(commits[1]._id).to.equal(oldCommitHash);
+            })
+            .nodeify(done);
+    });
+
+    it('should fail if commit does not exist', function (done) {
+        projectName = null;
+        projectId = null;
+
+        importCLI.main(['node', filename,
+            importPath,
+            '-m', gmeConfig.mongo.uri,
+            '-p', existingProjectName,
+            '-o', gmeConfig.authentication.guestAccount,
+            '-c', '#00009fd10000a0ed000012ea000033750000c336'])
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err).not.to.equal(null);
+                expect(err.message).to.contain('unknown commit');
+                done();
+            })
+            .done();
     });
 
 });

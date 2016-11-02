@@ -2850,7 +2850,7 @@ describe('SafeStorage', function () {
         });
     });
 
-    describe.only('squashCommits', function () {
+    describe('squashCommits', function () {
         var safeStorage,
             projectId,
             rootHash,
@@ -3002,7 +3002,7 @@ describe('SafeStorage', function () {
             safeStorage.squashCommits(data)
                 .then(function (result) {
                     expect(result).to.have.keys(['hash','status']);
-                    console.log(result);
+                    expect(result.status).to.equal('SYNCED');
                     commitHash = result.hash;
                     return safeStorage.loadObjects({
                         projectId: projectId,

@@ -529,7 +529,7 @@ SafeStorage.prototype.getBranches = function (data, callback) {
  * @param {object} data - input parameters
  * @param {string} data.projectId - identifier for project.
  * @param {number} data.number - maximum number of commits to load.
- * @param {string|number} data.before - timestamp or commitHash to load history from. When number given it will load
+ * @param {number|string} data.before - timestamp or commitHash to load history from. When number given it will load
  *  data.number of commits strictly before data.before, when commitHash is given it will return that commit too.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {function} [callback]
