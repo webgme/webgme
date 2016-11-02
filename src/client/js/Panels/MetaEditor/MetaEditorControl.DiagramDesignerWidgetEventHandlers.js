@@ -229,22 +229,34 @@ define(['js/logger',
         this.logger.debug('attachDesignerCanvasEventHandlers finished');
     };
 
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype.__getDocItem = function (docId) {
+        return this._metaDocItemsPerSheet[this._selectedMetaAspectSet][docId];
+    };
+
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
-        var id;
+        var id,
+            posX,
+            posY,
+            docItem;
 
         this._client.startTransaction();
         for (id in repositionDesc) {
-            if (repositionDesc.hasOwnProperty(id)) {
+            posX = repositionDesc[id].x;
+            posY = repositionDesc[id].y;
+
+            if (this._ComponentID2GMEID[id]) {
                 this._client.setMemberRegistry(this.metaAspectContainerNodeID,
                     this._ComponentID2GMEID[id],
                     this._selectedMetaAspectSet,
                     REGISTRY_KEYS.POSITION,
-                    {
-                        x: repositionDesc[id].x,
-                        y: repositionDesc[id].y
-                    });
+                    {x: posX, y: posY}
+                );
+            } else if (this._ComponentID2DocItemID[id]) {
+                docItem = this.__getDocItem(this._ComponentID2DocItemID[id]);
+                docItem.setProperty('position', {x: posX, y: posY});
             }
         }
+
         this._client.completeTransaction();
     };
 
@@ -297,14 +309,15 @@ define(['js/logger',
             aspectNodeID = this.metaAspectContainerNodeID,
             gmeIDList = DragHelper.getDragItems(dragInfo),
             params = DragHelper.getDragParams(dragInfo),
+            dragEffects = DragHelper.getDragEffects(dragInfo),
+            gmeOrDocId,
             i,
             selectedIDs = [],
             componentID,
             posX,
             posY,
-            dragEffects = DragHelper.getDragEffects(dragInfo),
             createParams,
-
+            docItem,
             newGmeID,
             origNode,
             newName;
@@ -320,24 +333,33 @@ define(['js/logger',
             _client.startTransaction();
             this.diagramDesigner.beginUpdate();
 
-            for (i in params.positions) {
-                if (params.positions.hasOwnProperty(i)) {
+            for (gmeOrDocId in params.positions) {
+                if (params.positions.hasOwnProperty(gmeOrDocId)) {
 
-                    posX = position.x + params.positions[i].x;
-                    posY = position.y + params.positions[i].y;
-                    _client.setMemberRegistry(aspectNodeID,
-                        i,
-                        this._selectedMetaAspectSet,
-                        REGISTRY_KEYS.POSITION,
-                        {
-                            x: posX,
-                            y: posY
-                        });
+                    posX = position.x + params.positions[gmeOrDocId].x;
+                    posY = position.y + params.positions[gmeOrDocId].y;
 
-                    componentID = this._GMEID2ComponentID[i];
+                    if (this._GMEID2ComponentID[gmeOrDocId]) {
+                        componentID = this._GMEID2ComponentID[gmeOrDocId];
 
-                    selectedIDs.push(componentID);
-                    this.diagramDesigner.updateDesignerItem(componentID, {position: {x: posX, y: posY}});
+                        _client.setMemberRegistry(aspectNodeID,
+                            gmeOrDocId,
+                            this._selectedMetaAspectSet,
+                            REGISTRY_KEYS.POSITION,
+                            {
+                                x: posX,
+                                y: posY
+                            });
+                    } else if (this._DocItemID2ComponentID[gmeOrDocId]) {
+                        componentID = this._DocItemID2ComponentID[gmeOrDocId];
+                        docItem = this.__getDocItem(gmeOrDocId);
+                        docItem.setProperty('position', {x: posX, y: posY});
+                    }
+
+                    if (componentID) {
+                        selectedIDs.push(componentID);
+                        this.diagramDesigner.updateDesignerItem(componentID, {position: {x: posX, y: posY}});
+                    }
                 }
             }
 
@@ -588,6 +610,7 @@ define(['js/logger',
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /************************************************************************/
 
+
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragParams = function (selectedElements, event) {
         var oParams = this._oGetDragParams.call(this.diagramDesigner, selectedElements, event),
             params = {positions: {}},
@@ -598,7 +621,7 @@ define(['js/logger',
 
         for (i in oParams.positions) {
             if (oParams.positions.hasOwnProperty(i)) {
-                params.positions[this._ComponentID2GMEID[i]] = oParams.positions[i];
+                params.positions[this._ComponentID2GMEID[i] || this._ComponentID2DocItemID[i]] = oParams.positions[i];
             }
         }
 
@@ -616,6 +639,8 @@ define(['js/logger',
             gmeID = this._ComponentID2GMEID[selectedElements[len]];
             if (this._GMENodes.indexOf(gmeID) !== -1) {
                 draggedItems.push(gmeID);
+            } else if (this._ComponentID2DocItemID[selectedElements[len]]) {
+                draggedItems.push(this._ComponentID2DocItemID[selectedElements[len]]);
             }
         }
 
@@ -941,25 +966,36 @@ define(['js/logger',
     MetaEditorControlDiagramDesignerWidgetEventHandlers
         .prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
         var i = selectedIds.length,
+            docItem,
             gmeID;
 
         this._client.startTransaction();
         while (i--) {
             gmeID = this._ComponentID2GMEID[selectedIds[i]];
 
-            if (color) {
-                this._client.setMemberRegistry(this.metaAspectContainerNodeID,
-                    gmeID,
-                    MetaEditorConstants.META_ASPECT_SET_NAME,
-                    regKey,
-                    color);
-            } else {
-                this._client.delMemberRegistry(this.metaAspectContainerNodeID,
-                    gmeID,
-                    MetaEditorConstants.META_ASPECT_SET_NAME,
-                    regKey);
+            if (gmeID) {
+                if (color) {
+                    this._client.setMemberRegistry(this.metaAspectContainerNodeID,
+                        gmeID,
+                        MetaEditorConstants.META_ASPECT_SET_NAME,
+                        regKey,
+                        color);
+                } else {
+                    this._client.delMemberRegistry(this.metaAspectContainerNodeID,
+                        gmeID,
+                        MetaEditorConstants.META_ASPECT_SET_NAME,
+                        regKey);
+                }
+            } else if (this._ComponentID2DocItemID[selectedIds[i]]) {
+                docItem = this.__getDocItem(this._ComponentID2DocItemID[selectedIds[i]]);
+                if (color) {
+                    docItem.setProperty(regKey, color);
+                } else {
+                    docItem.deleteProperty(regKey);
+                }
             }
         }
+
         this._client.completeTransaction();
     };
 

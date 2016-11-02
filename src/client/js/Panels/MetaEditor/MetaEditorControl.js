@@ -14,6 +14,7 @@ define(['js/logger',
     './MetaEditorControl.DiagramDesignerWidgetEventHandlers',
     './MetaRelations',
     './MetaEditorConstants',
+    './MetaDocItem',
     'js/Utils/PreferencesHelper',
     'js/Controls/AlignMenu'
 ], function (Logger,
@@ -26,6 +27,7 @@ define(['js/logger',
              MetaEditorControlDiagramDesignerWidgetEventHandlers,
              MetaRelations,
              MetaEditorConstants,
+             MetaDocItem,
              PreferencesHelper,
              AlignMenu) {
 
@@ -33,6 +35,7 @@ define(['js/logger',
 
     var MetaEditorControl,
         META_DECORATOR = 'MetaDecorator',
+        DOCUMENT_DECORATOR= 'DocumentDecorator',
         WIDGET_NAME = 'DiagramDesigner',
         META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID;
 
@@ -75,6 +78,11 @@ define(['js/logger',
         this._metaAspectMembersCoordinatesPerSheet = {};
         this._selectedMetaAspectSheetMembers = [];
         this._selectedSheetID = null;
+
+        this._metaDocItemsPerSheet = {};
+
+        this._ComponentID2DocItemID = {};
+        this._DocItemID2ComponentID = {};
 
         this._GMEID2ComponentID = {};
         this._ComponentID2GMEID = {};
@@ -221,13 +229,13 @@ define(['js/logger',
     MetaEditorControl.prototype._processMetaAspectContainerNode = function () {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
+            metaAspectSetMembers = aspectNode.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
+            territoryChanged = false,
             len,
             diff,
             objDesc,
             componentID,
             gmeID,
-            metaAspectSetMembers = aspectNode.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
-            territoryChanged = false,
             selectedSheetMembers,
             positionsUpdated;
 
@@ -248,14 +256,6 @@ define(['js/logger',
         //this._selectedMetaAspectSet
         //process the sheets
         positionsUpdated = this._processMetaAspectSheetsRegistry();
-
-        this.logger.debug('_metaAspectMembersAll: \n' + JSON.stringify(this._metaAspectMembersAll));
-        this.logger.debug('_metaAspectMembersCoordinatesGlobal: \n' +
-            JSON.stringify(this._metaAspectMembersCoordinatesGlobal));
-
-        this.logger.debug('_metaAspectMembersPerSheet: \n' + JSON.stringify(this._metaAspectMembersPerSheet));
-        this.logger.debug('_metaAspectMembersCoordinatesPerSheet: \n' +
-            JSON.stringify(this._metaAspectMembersCoordinatesPerSheet));
 
         //check to see if the territory needs to be changed
         //the territory contains the nodes that are on the currently opened sheet
@@ -300,6 +300,8 @@ define(['js/logger',
 
         this._selectedMetaAspectSheetMembers = selectedSheetMembers.slice(0);
 
+        this._processMetaDocItems();
+
         //there was change in the territory
         if (territoryChanged === true) {
             this._client.updateTerritory(this._metaAspectMembersTerritoryId, this._metaAspectMemberPatterns);
@@ -308,6 +310,56 @@ define(['js/logger',
     /**********************************************************************/
     /*  END OF --- PROCESS CURRENT NODE TO HANDLE ADDED / REMOVED ELEMENT */
     /**********************************************************************/
+
+    MetaEditorControl.prototype._processMetaDocItems = function () {
+        var docItemsInRegistry,
+            docItemId,
+            decClass,
+            uiComponent,
+            componentId,
+            objDesc;
+
+        this.diagramDesigner.beginUpdate();
+
+        if (this._selectedMetaAspectSet && this._metaDocItemsPerSheet[this._selectedMetaAspectSet]) {
+            docItemsInRegistry = this._metaDocItemsPerSheet[this._selectedMetaAspectSet];
+        } else {
+            docItemsInRegistry = {};
+        }
+
+        for (docItemId in this._DocItemID2ComponentID) {
+            if (docItemsInRegistry.hasOwnProperty(docItemId) === false) {
+                // "unload"
+                this.diagramDesigner.deleteComponent(this._DocItemID2ComponentID[docItemId]);
+
+                componentId = this._DocItemID2ComponentID[docItemId];
+                delete this._ComponentID2DocItemID[componentId];
+                delete this._DocItemID2ComponentID[docItemId];
+            }
+        }
+
+        for (docItemId in docItemsInRegistry) {
+            if (this._DocItemID2ComponentID.hasOwnProperty(docItemId)) {
+                // "update"
+                objDesc = docItemsInRegistry[docItemId].position;
+                componentId = this._DocItemID2ComponentID[docItemId];
+                // FIXME: Color's are not updated correctly.
+                this.diagramDesigner.updateDesignerItem(componentId, objDesc);
+            } else {
+                // "load"
+                decClass = this._client.decoratorManager.getDecoratorForWidget(DOCUMENT_DECORATOR, WIDGET_NAME);
+                objDesc = docItemsInRegistry[docItemId].getObjectDescriptor(decClass);
+
+                uiComponent = this.diagramDesigner.createDesignerItem(objDesc);
+
+                this._DocItemID2ComponentID[docItemId] = uiComponent.id;
+                this._ComponentID2DocItemID[uiComponent.id] = docItemId;
+            }
+        }
+
+        this.diagramDesigner.endUpdate();
+
+    };
 
     /**************************************************************************/
     /*  HANDLE OBJECT LOAD  --- DISPLAY IT WITH ALL THE POINTERS / SETS / ETC */
@@ -1625,6 +1677,9 @@ define(['js/logger',
     /*               END OF --- CONNECTION DESTINATION TEXT CHANGE              */
     /****************************************************************************/
 
+    // Documentation items
+
+
     MetaEditorControl.prototype.activeSelectionChanged = function (activeSelection) {
         var selectedIDs = [],
             len = activeSelection.length;
@@ -1809,6 +1864,7 @@ define(['js/logger',
     MetaEditorControl.prototype._processMetaAspectSheetsRegistry = function () {
         var aspectNode = this._client.getNode(this.metaAspectContainerNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
+            docItemsIds,
             i,
             len,
             sheetID,
@@ -1825,6 +1881,7 @@ define(['js/logger',
         this._metaAspectMembersCoordinatesPerSheet = {};
         this.diagramDesigner.clearTabs();
         this._metaAspectSheetsPerMember = {};
+        this._metaDocItemsPerSheet = {};
 
         metaAspectSheetsRegistry.sort(function (a, b) {
             if (a.order < b.order) {
@@ -1846,6 +1903,21 @@ define(['js/logger',
 
             //get the most up-to-date member list for each set
             this._metaAspectMembersPerSheet[setName] = aspectNode.getMemberIds(setName);
+
+            // Gather the documentation items for each sheet
+            this._metaDocItemsPerSheet[setName] = {};
+            docItemsIds = aspectNode.getSetRegistryNames(setName);
+
+            for (j = 0; j < docItemsIds.length; j += 1) {
+                if (docItemsIds[j].indexOf(MetaEditorConstants.META_DOC_REGISTRY_PREFIX) === 0) {
+                    this._metaDocItemsPerSheet[setName][docItemsIds[j]] = new MetaDocItem(
+                        this._client,
+                        aspectNode.getId(),
+                        setName,
+                        docItemsIds[j],
+                        aspectNode.getSetRegistry(setName, docItemsIds[j]));
+                }
+            }
 
             //TODO: debug check to see if root for any reason is present among the members list
             //TODO: remove, not needed, just for DEGUG reasons...
@@ -1872,6 +1944,7 @@ define(['js/logger',
                 selectedSheetID = sheetID;
             }
         }
+
         this.diagramDesigner.addMultipleTabsEnd();
 
         //figure out whose position has changed
@@ -1932,11 +2005,14 @@ define(['js/logger',
         //delete everything from model editor
         this.diagramDesigner.clear();
 
-        //clean up local hash map
+        //clean up local hash maps
         this._GMENodes = [];
 
         this._GMEID2ComponentID = {};
         this._ComponentID2GMEID = {};
+
+        this._ComponentID2DocItemID = {};
+        this._DocItemID2ComponentID = {};
 
         this._connectionWaitingListByDstGMEID = {};
         this._connectionWaitingListBySrcGMEID = {};
@@ -1980,6 +2056,8 @@ define(['js/logger',
                 {children: 0};
             }
         }
+
+        this._processMetaDocItems();
 
         this._metaAspectMembersTerritoryId = this._client.addUI(this, function (events) {
             self._eventCallback(events);
