@@ -9,6 +9,10 @@
   .webgme-toolbar-ext .toolbar-button {
     display: inline-block;
     position: relative; }
+  .webgme-toolbar .toolbar-drag-item,
+  .webgme-toolbar-ext .toolbar-drag-item {
+    display: inline-block;
+    position: relative; }
   .webgme-toolbar .separator,
   .webgme-toolbar-ext .separator {
     margin-left: 0;

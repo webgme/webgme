@@ -275,9 +275,10 @@ define(['js/logger',
             //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
             if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID)) {
                 accept = true;
+            } else if (params === MetaEditorConstants.CREATE_META_DOC) {
+                accept = true;
             } else {
-                if (dragEffects.length === 1 &&
-                    dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
+                if (dragEffects.length === 1 && dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
                     //dragging from PartBrowser
                     accept = true;
                 } else {
@@ -323,7 +324,9 @@ define(['js/logger',
             newName;
 
         //check to see it self drop and reposition or dropping from somewhere else
-        if (params &&
+        if (params === MetaEditorConstants.CREATE_META_DOC) {
+            console.log('create meta doc');
+        } else if (params &&
             params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) &&
             params[DRAG_PARAMS_META_CONTAINER_ID] === aspectNodeID &&
             params[DRAG_PARAMS_ACTIVE_META_ASPECT] === this._selectedMetaAspectSet) {

@@ -1806,6 +1806,15 @@ define(['js/logger',
             icon: MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.SET)
         });
 
+        this._toolbarItems.push(toolBar.addSeparator());
+        this._toolbarItems.push(toolBar.addDragItem({
+            icon: 'fa fa-file-text-o',
+            title: 'Drag to create Meta Documentation',
+            dragParams: function () {
+                return MetaEditorConstants.CREATE_META_DOC;
+            }
+        }));
+
         /************** END OF - CREATE META RELATION CONNECTION TYPES *****************/
 
         /************** PRINT NODE DATA *****************/
