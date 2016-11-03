@@ -676,6 +676,20 @@ define([
                 return innerCore.deleteSet(node, name);
             };
 
+            this.setSetRegistry = function (node, setName, regName, regValue) {
+                if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
+                    return new Error('Not allowed to modify library elements.');
+                }
+                return innerCore.setSetRegistry(node, setName, regName, regValue);
+            };
+
+            this.delSetRegistry = function (node, setName, regName) {
+                if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
+                    return new Error('Not allowed to modify library elements.');
+                }
+                return innerCore.delSetRegistry(node, setName, regName);
+            };
+
             this.setGuid = function (node, guid) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
                     //FIXME cannot return any error in async functions :/

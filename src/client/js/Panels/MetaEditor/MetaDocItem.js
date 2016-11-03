@@ -31,21 +31,12 @@ define(['./MetaEditorConstants', 'common/util/random'], function (META_EDITOR_CO
             }
         });
 
-        console.log('excludeList', JSON.stringify(excludeList));
-
         newId = META_EDITOR_CONSTANTS.META_DOC_REGISTRY_PREFIX + RANDOM.generateRelid(excludeList);
 
         position = position || {};
 
         position.x = typeof position.x === 'number' ? position.x : 100;
         position.y = typeof position.y === 'number' ? position.y : 100;
-
-        console.log('Will setSetRegistry', nodeId, setName, newId, {
-            name: DEFAULT_NAME,
-            position: position,
-            color: DEFAULT_COLOR,
-            documentation: DEFAULT_DOCUMENTATION
-        });
 
         client.setSetRegistry(nodeId, setName, newId, {
             name: DEFAULT_NAME,
@@ -133,7 +124,6 @@ define(['./MetaEditorConstants', 'common/util/random'], function (META_EDITOR_CO
         this[name] = value;
 
         var regValue = this.getPersistEntry();
-        console.log('setSetRegistry', this._nodeId, this._setName, this._id, regValue);
         this._client.setSetRegistry(this._nodeId, this._setName, this._id, regValue);
     };
 
@@ -141,7 +131,6 @@ define(['./MetaEditorConstants', 'common/util/random'], function (META_EDITOR_CO
         delete this[name];
 
         var regValue = this.getPersistEntry();
-        console.log('setSetRegistry', this._nodeId, this._setName, this._id, regValue);
         this._client.setSetRegistry(this._nodeId, this._setName, this._id, regValue);
     };
 
