@@ -1873,6 +1873,8 @@ define(['js/logger',
     MetaEditorControl.prototype._processMetaAspectSheetsRegistry = function () {
         var aspectNode = this._client.getNode(this.metaAspectContainerNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
+            docItem,
+            prevDocItemsPerSheet,
             docItemsIds,
             i,
             len,
@@ -1890,6 +1892,8 @@ define(['js/logger',
         this._metaAspectMembersCoordinatesPerSheet = {};
         this.diagramDesigner.clearTabs();
         this._metaAspectSheetsPerMember = {};
+        prevDocItemsPerSheet = this._metaDocItemsPerSheet;
+
         this._metaDocItemsPerSheet = {};
 
         metaAspectSheetsRegistry.sort(function (a, b) {
@@ -1919,12 +1923,17 @@ define(['js/logger',
 
             for (j = 0; j < docItemsIds.length; j += 1) {
                 if (docItemsIds[j].indexOf(MetaEditorConstants.META_DOC_REGISTRY_PREFIX) === 0) {
-                    this._metaDocItemsPerSheet[setName][docItemsIds[j]] = new MetaDocItem(
-                        this._client,
-                        aspectNode.getId(),
-                        setName,
-                        docItemsIds[j],
-                        aspectNode.getSetRegistry(setName, docItemsIds[j]));
+                    // Check if the doc item object already existed..
+                    if (prevDocItemsPerSheet[setName] && prevDocItemsPerSheet[setName][docItemsIds[j]]) {
+                        // if so update with the new data..
+                        docItem = prevDocItemsPerSheet[setName][docItemsIds[j]];
+                        docItem.update();
+                    } else {
+                        // if not we create a new item.
+                        docItem = new MetaDocItem(this._client, aspectNode.getId(), setName, docItemsIds[j]);
+                    }
+
+                    this._metaDocItemsPerSheet[setName][docItemsIds[j]] = docItem;
                 }
             }
 

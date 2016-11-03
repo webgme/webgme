@@ -10,20 +10,13 @@ define(['./MetaEditorConstants', 'common/util/random'], function (META_EDITOR_CO
         DEFAULT_COLOR = '#ffffff', // White
         DEFAULT_DOCUMENTATION = 'Edit documentation ...';
 
-    function MetaDocItem(client, nodeId, setName, id, data) {
+    function MetaDocItem(client, nodeId, setName, id) {
         this._id = id;
         this._setName = setName;
         this._nodeId = nodeId;
         this._client = client;
 
-        this.name = data.name;
-        this.documentation = data.documentation;
-        this.position = {};
-        this.position.x = (data.position && typeof data.position.x === 'number') ? data.position.x : 100;
-        this.position.y = (data.position && typeof data.position.y === 'number') ? data.position.y : 100;
-        this.color = data.color;
-        this.borderColor = data.borderColor;
-        this.textColor = data.textColor;
+        this.update();
     }
 
     MetaDocItem.addNew = function (client, nodeId, setName, position) {
@@ -64,6 +57,20 @@ define(['./MetaEditorConstants', 'common/util/random'], function (META_EDITOR_CO
 
     MetaDocItem.delete = function (client, nodeId, setName, id) {
         client.delSetRegistry(nodeId, setName, id);
+    };
+
+    MetaDocItem.prototype.update = function () {
+        var nodeObj = this._client.getNode(this._nodeId),
+            data = nodeObj.getSetRegistry(this._setName, this._id);
+
+        this.name = data.name;
+        this.documentation = data.documentation;
+        this.position = {};
+        this.position.x = (data.position && typeof data.position.x === 'number') ? data.position.x : 100;
+        this.position.y = (data.position && typeof data.position.y === 'number') ? data.position.y : 100;
+        this.color = data.color;
+        this.borderColor = data.borderColor;
+        this.textColor = data.textColor;
     };
 
     MetaDocItem.prototype.getObjectDescriptor = function (decoratorClass) {
