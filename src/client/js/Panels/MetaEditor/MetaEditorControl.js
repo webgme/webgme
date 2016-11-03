@@ -341,9 +341,9 @@ define(['js/logger',
         for (docItemId in docItemsInRegistry) {
             if (this._DocItemID2ComponentID.hasOwnProperty(docItemId)) {
                 // "update"
-                objDesc = docItemsInRegistry[docItemId].position;
+                objDesc = {};
+                objDesc.position = docItemsInRegistry[docItemId].position;
                 componentId = this._DocItemID2ComponentID[docItemId];
-                // FIXME: Color's are not updated correctly.
                 this.diagramDesigner.updateDesignerItem(componentId, objDesc);
             } else {
                 // "load"
