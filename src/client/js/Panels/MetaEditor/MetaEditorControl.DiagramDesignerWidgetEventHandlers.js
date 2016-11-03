@@ -13,6 +13,7 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     './MetaRelations',
     './MetaEditorConstants',
+    './MetaDocItem',
     'js/DragDrop/DragHelper',
     'js/Controls/Dialog'
 ], function (Logger,
@@ -24,6 +25,7 @@ define(['js/logger',
              GMEConcepts,
              MetaRelations,
              MetaEditorConstants,
+             MetaDocItem,
              DragHelper,
              dialog) {
 
@@ -306,7 +308,7 @@ define(['js/logger',
     /**********************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo,
                                                                                                 position) {
-        var _client = this._client,
+        var client = this._client,
             aspectNodeID = this.metaAspectContainerNodeID,
             gmeIDList = DragHelper.getDragItems(dragInfo),
             params = DragHelper.getDragParams(dragInfo),
@@ -325,7 +327,13 @@ define(['js/logger',
 
         //check to see it self drop and reposition or dropping from somewhere else
         if (params === MetaEditorConstants.CREATE_META_DOC) {
-            console.log('create meta doc');
+            if (this._selectedMetaAspectSet) {
+                client.startTransaction();
+                MetaDocItem.addNew(client, aspectNodeID, this._selectedMetaAspectSet, position);
+                setTimeout(function () {
+                    client.completeTransaction();
+                }, 10);
+            }
         } else if (params &&
             params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) &&
             params[DRAG_PARAMS_META_CONTAINER_ID] === aspectNodeID &&
@@ -333,7 +341,7 @@ define(['js/logger',
 
             //params.position holds the old coordinates of the items being dragged
             //update UI
-            _client.startTransaction();
+            client.startTransaction();
             this.diagramDesigner.beginUpdate();
 
             for (gmeOrDocId in params.positions) {
@@ -345,7 +353,7 @@ define(['js/logger',
                     if (this._GMEID2ComponentID[gmeOrDocId]) {
                         componentID = this._GMEID2ComponentID[gmeOrDocId];
 
-                        _client.setMemberRegistry(aspectNodeID,
+                        client.setMemberRegistry(aspectNodeID,
                             gmeOrDocId,
                             this._selectedMetaAspectSet,
                             REGISTRY_KEYS.POSITION,
@@ -370,7 +378,7 @@ define(['js/logger',
             this.diagramDesigner.select(selectedIDs);
 
             setTimeout(function () {
-                _client.completeTransaction();
+                client.completeTransaction();
             }, 10);
         } else {
             if (dragEffects.length === 1 &&
@@ -379,7 +387,7 @@ define(['js/logger',
                 //dragging from PartBrowser
                 //create instance of the dragged item with the parent being the MetaContainer,
                 //  and add it to the current metasheet + allmetasheet
-                _client.startTransaction();
+                client.startTransaction();
 
                 //if the item is not currently in the current META Aspect sheet, add it
                 componentID = gmeIDList[0];
@@ -388,24 +396,24 @@ define(['js/logger',
                     baseId: componentID
                 };
 
-                newGmeID = _client.createChild(createParams);
+                newGmeID = client.createChild(createParams);
 
                 if (newGmeID) {
                     //store new position
-                    _client.setRegistry(newGmeID, REGISTRY_KEYS.POSITION, {
+                    client.setRegistry(newGmeID, REGISTRY_KEYS.POSITION, {
                         x: position.x,
                         y: position.y
                     });
 
                     //try to set name
-                    origNode = _client.getNode(componentID);
+                    origNode = client.getNode(componentID);
                     if (origNode) {
                         newName = origNode.getAttribute(nodePropertyNames.Attributes.name) + '_instance';
-                        _client.setAttribute(newGmeID, nodePropertyNames.Attributes.name, newName);
+                        client.setAttribute(newGmeID, nodePropertyNames.Attributes.name, newName);
                     }
 
-                    _client.addMember(aspectNodeID, newGmeID, this._selectedMetaAspectSet);
-                    _client.setMemberRegistry(aspectNodeID,
+                    client.addMember(aspectNodeID, newGmeID, this._selectedMetaAspectSet);
+                    client.setMemberRegistry(aspectNodeID,
                         newGmeID,
                         this._selectedMetaAspectSet,
                         REGISTRY_KEYS.POSITION,
@@ -415,8 +423,8 @@ define(['js/logger',
                         });
 
                     //this item has not been part of the META Aspect at all, add it
-                    _client.addMember(aspectNodeID, newGmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                    _client.setMemberRegistry(aspectNodeID,
+                    client.addMember(aspectNodeID, newGmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                    client.setMemberRegistry(aspectNodeID,
                         newGmeID,
                         MetaEditorConstants.META_ASPECT_SET_NAME,
                         REGISTRY_KEYS.POSITION,
@@ -426,10 +434,10 @@ define(['js/logger',
                         });
                 }
 
-                _client.completeTransaction();
+                client.completeTransaction();
             } else {
                 //dragging from not the PartBrowser
-                _client.startTransaction();
+                client.startTransaction();
 
                 //if the item is not currently in the current META Aspect sheet, add it
                 if (gmeIDList.length > 0) {
@@ -458,8 +466,8 @@ define(['js/logger',
                                 position.y += 20;
                             }
 
-                            _client.addMember(aspectNodeID, componentID, this._selectedMetaAspectSet);
-                            _client.setMemberRegistry(aspectNodeID,
+                            client.addMember(aspectNodeID, componentID, this._selectedMetaAspectSet);
+                            client.setMemberRegistry(aspectNodeID,
                                 componentID,
                                 this._selectedMetaAspectSet,
                                 REGISTRY_KEYS.POSITION,
@@ -470,8 +478,8 @@ define(['js/logger',
 
                             //if this item has not been part of the META Aspect at all, add it
                             if (this._metaAspectMembersAll.indexOf(componentID) === -1) {
-                                _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                                _client.setMemberRegistry(aspectNodeID,
+                                client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                                client.setMemberRegistry(aspectNodeID,
                                     componentID,
                                     MetaEditorConstants.META_ASPECT_SET_NAME,
                                     REGISTRY_KEYS.POSITION,
@@ -485,7 +493,7 @@ define(['js/logger',
                 }
 
                 setTimeout(function () {
-                    _client.completeTransaction();
+                    client.completeTransaction();
                 }, 10);
             }
         }
@@ -498,7 +506,7 @@ define(['js/logger',
     /*  HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /*************************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
-        var _client = this._client,
+        var client = this._client,
             aspectNodeID = this.metaAspectContainerNodeID,
             len,
             gmeID,
@@ -531,24 +539,29 @@ define(['js/logger',
         };
 
         doDelete = function (itemsToDelete) {
-            _client.startTransaction();
+            client.startTransaction();
 
             len = itemsToDelete.length;
             while (len--) {
                 gmeID = self._ComponentID2GMEID[itemsToDelete[len]];
+                if (!gmeID && self._ComponentID2DocItemID[itemsToDelete[len]] && self._selectedMetaAspectSet) {
+                    MetaDocItem.delete(client, aspectNodeID, self._selectedMetaAspectSet,
+                        self._ComponentID2DocItemID[itemsToDelete[len]]);
+                    continue;
+                }
                 idx = self._GMENodes.indexOf(gmeID);
                 if (idx !== -1) {
                     //entity is a box --> delete GME object from the aspect's members list
-                    _client.removeMember(aspectNodeID, gmeID, self._selectedMetaAspectSet);
+                    client.removeMember(aspectNodeID, gmeID, self._selectedMetaAspectSet);
 
                     //if the items is not present anywhere else, remove it from the META's global sheet too
                     if (self._metaAspectSheetsPerMember[gmeID].length === 1) {
-                        nodeObj = _client.getNode(gmeID);
+                        nodeObj = client.getNode(gmeID);
                         if (nodeObj && (nodeObj.isLibraryElement() || nodeObj.isLibraryRoot())) {
                             //library elements will not be lost at all
                         } else {
-                            _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                            _client.setMeta(gmeID, {});
+                            client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                            client.setMeta(gmeID, {});
                         }
                     }
                 } else if (self._connectionListByID.hasOwnProperty(itemsToDelete[len])) {
@@ -557,7 +570,7 @@ define(['js/logger',
                 }
             }
 
-            _client.completeTransaction();
+            client.completeTransaction();
         };
 
         //first figure out if the deleted-to-be items are present in any other meta sheet
@@ -570,7 +583,7 @@ define(['js/logger',
                 //entity is a box
                 //check to see if this gmeID is present on any other sheet at all
                 if (this._metaAspectSheetsPerMember[gmeID].length === 1) {
-                    nodeObj = _client.getNode(gmeID);
+                    nodeObj = client.getNode(gmeID);
                     if (nodeObj && (nodeObj.isLibraryElement() || nodeObj.isLibraryRoot())) {
                         //library elements will not be lost at all
                     } else {
@@ -588,7 +601,7 @@ define(['js/logger',
             len = metaInfoToBeLost.length;
             while (len--) {
                 gmeID = metaInfoToBeLost[len];
-                nodeObj = _client.getNode(gmeID);
+                nodeObj = client.getNode(gmeID);
                 if (nodeObj) {
                     itemNames.push(nodeObj.getAttribute(nodePropertyNames.Attributes.name));
                 } else {

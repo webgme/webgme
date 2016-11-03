@@ -3,8 +3,12 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['./MetaEditorConstants'], function (META_EDITOR_CONSTANTS) {
+define(['./MetaEditorConstants', 'common/util/random'], function (META_EDITOR_CONSTANTS, RANDOM) {
     'use strict';
+
+    var DEFAULT_NAME = 'Doc',
+        DEFAULT_COLOR = '#ffffff', // White
+        DEFAULT_DOCUMENTATION = 'Edit documentation ...';
 
     function MetaDocItem(client, nodeId, setName, id, data) {
         this._id = id;
@@ -21,6 +25,46 @@ define(['./MetaEditorConstants'], function (META_EDITOR_CONSTANTS) {
         this.borderColor = data.borderColor;
         this.textColor = data.textColor;
     }
+
+    MetaDocItem.addNew = function (client, nodeId, setName, position) {
+        var nodeObj = client.getNode(nodeId),
+            currentIds = nodeObj.getSetRegistryNames(setName),
+            excludeList = {},
+            newId;
+
+        currentIds.forEach(function (id) {
+            if (id.indexOf(META_EDITOR_CONSTANTS.META_DOC_REGISTRY_PREFIX) === 0) {
+                excludeList[id.replace(META_EDITOR_CONSTANTS.META_DOC_REGISTRY_PREFIX, '')] = true;
+            }
+        });
+
+        console.log('excludeList', JSON.stringify(excludeList));
+
+        newId = META_EDITOR_CONSTANTS.META_DOC_REGISTRY_PREFIX + RANDOM.generateRelid(excludeList);
+
+        position = position || {};
+
+        position.x = typeof position.x === 'number' ? position.x : 100;
+        position.y = typeof position.y === 'number' ? position.y : 100;
+
+        console.log('Will setSetRegistry', nodeId, setName, newId, {
+            name: DEFAULT_NAME,
+            position: position,
+            color: DEFAULT_COLOR,
+            documentation: DEFAULT_DOCUMENTATION
+        });
+
+        client.setSetRegistry(nodeId, setName, newId, {
+            name: DEFAULT_NAME,
+            position: position,
+            color: DEFAULT_COLOR,
+            documentation: DEFAULT_DOCUMENTATION
+        });
+    };
+
+    MetaDocItem.delete = function (client, nodeId, setName, id) {
+        client.delSetRegistry(nodeId, setName, id);
+    };
 
     MetaDocItem.prototype.getObjectDescriptor = function (decoratorClass) {
         var self = this,
