@@ -327,6 +327,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return getPropertyValue(node, CONSTANTS.ATTRIBUTES_PROPERTY, attrName, setName, memberPath);
         };
 
+        this.getMemberOwnAttribute = function (node, setName, memberPath, attrName) {
+            ASSERT(typeof memberPath === 'string');
+            return getOwnPropertyValue(node, CONSTANTS.ATTRIBUTES_PROPERTY, attrName, setName, memberPath);
+        };
+
         this.setMemberAttribute = function (node, setName, memberPath, attrName, attrValue) {
             ASSERT(attrValue !== undefined);
             var setMemberNode = getSetMemberNode(node, setName, memberPath);
@@ -359,6 +364,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         this.getMemberRegistry = function (node, setName, memberPath, regName) {
             ASSERT(typeof memberPath === 'string');
             return getPropertyValue(node, CONSTANTS.REGISTRY_PROPERTY, regName, setName, memberPath);
+        };
+
+        this.getMemberOwnRegistry = function (node, setName, memberPath, regName) {
+            ASSERT(typeof memberPath === 'string');
+            return getOwnPropertyValue(node, CONSTANTS.REGISTRY_PROPERTY, regName, setName, memberPath);
         };
 
         this.setMemberRegistry = function (node, setName, memberPath, regName, regValue) {
@@ -453,11 +463,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         };
 
         this.getSetRegistry = function (node, setName, regName) {
-            return self.getRegistry(getSetNodeByName(node, setName), regName);
+            return getPropertyValue(node, CONSTANTS.REGISTRY_PROPERTY, regName, setName);
         };
 
         this.getOwnSetRegistry = function (node, setName, regName) {
-            return self.getOwnRegistry(getSetNodeByName(node, setName), regName);
+            return getOwnPropertyValue(node, CONSTANTS.REGISTRY_PROPERTY, regName, setName);
         };
 
         this.setSetRegistry = function (node, setName, regName, regValue) {

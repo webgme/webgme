@@ -2,11 +2,12 @@
 
 /**
  * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 var testFixture = require('../../_globals.js');
 
-describe('set core', function () {
+describe.only('set core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -327,5 +328,78 @@ describe('set core', function () {
             core.getPath(propertyOverriddenMember),
             core.getPath(newMember)
         ]);
+    });
+
+
+    it('setMemberRegistry should not modify the set if path not a member', function () {
+        var setType = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.setMemberRegistry(setType, 'set', 'doesNotExist', 'myReg', 'myValue');
+
+        expect(core.getMemberPaths(setType, 'set')).to.deep.equal([]);
+    });
+
+    it('getMemberRegistry/Names and getMemberOwnRegistry/Names should return appropriate', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root}),
+            mPath = core.getPath(member);
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+
+        core.setMemberRegistry(setType, 'set', mPath, 'baseReg', 'myValue1');
+        core.setMemberRegistry(setInstance, 'set', mPath, 'instanceReg', 'myValue2');
+
+        expect(core.getMemberRegistryNames(setType, 'set', mPath)).to.deep.equal(['baseReg']);
+        expect(core.getMemberRegistryNames(setInstance, 'set', mPath)).to.have.members(['baseReg', 'instanceReg']);
+        expect(core.getMemberOwnRegistryNames(setInstance, 'set', mPath)).to.have.members(['instanceReg']);
+
+        expect(core.getMemberRegistry(setType, 'set', mPath, 'baseReg')).to.deep.equal('myValue1');
+        expect(core.getMemberRegistry(setType, 'set', mPath, 'instanceReg')).to.deep.equal(undefined);
+        expect(core.getMemberRegistry(setInstance, 'set', mPath, 'baseReg')).to.deep.equal('myValue1');
+        expect(core.getMemberOwnRegistry(setInstance, 'set', mPath, 'baseReg')).to.equal(undefined);
+        expect(core.getMemberRegistry(setInstance, 'set', mPath, 'instanceReg')).to.equal('myValue2');
+        expect(core.getMemberOwnRegistry(setInstance, 'set', mPath, 'instanceReg')).to.equal('myValue2');
+    });
+
+    it('getMemberAttribute/Names and getAttributeOwnRegistry/Names should return appropriate', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root}),
+            mPath = core.getPath(member);
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+
+        core.setMemberAttribute(setType, 'set', mPath, 'baseAttr', 'myValue1');
+        core.setMemberAttribute(setInstance, 'set', mPath, 'instanceAttr', 'myValue2');
+
+        expect(core.getMemberAttributeNames(setType, 'set', mPath)).to.deep.equal(['baseAttr']);
+        expect(core.getMemberAttributeNames(setInstance, 'set', mPath)).to.have.members(['baseAttr', 'instanceAttr']);
+        expect(core.getMemberOwnAttributeNames(setInstance, 'set', mPath)).to.have.members(['instanceAttr']);
+
+        expect(core.getMemberAttribute(setType, 'set', mPath, 'baseAttr')).to.deep.equal('myValue1');
+        expect(core.getMemberAttribute(setType, 'set', mPath, 'instanceAttr')).to.deep.equal(undefined);
+        expect(core.getMemberAttribute(setInstance, 'set', mPath, 'baseAttr')).to.deep.equal('myValue1');
+        expect(core.getMemberOwnAttribute(setInstance, 'set', mPath, 'baseAttr')).to.equal(undefined);
+        expect(core.getMemberAttribute(setInstance, 'set', mPath, 'instanceAttr')).to.equal('myValue2');
+        expect(core.getMemberOwnAttribute(setInstance, 'set', mPath, 'instanceAttr')).to.equal('myValue2');
+    });
+
+    it.skip('getMemberRegistryNames and dgetMemberOwnRegistry should return appropriate', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root}),
+            instanceMember = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.addMember(setInstance, 'set', instanceMember);
+        core.setMemberRegistry(setInstance, 'set', core.getPath(member), 'myReg', 'myValue');
+        core.setMemberRegistry(setInstance, 'set', core.getPath(member), 'myReg', 'myValue');
+
+        expect(core.getMemberPaths(setInstance, 'set')).to.have.members([core.getPath(instanceMember)]);
     });
 });

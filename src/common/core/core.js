@@ -954,12 +954,26 @@ define([
          * @param {string} memberPath - the absolute path of the member node.
          * @param {string} attrName - the name of the attribute.
          *
-         * @return {object|primitive|null|undefined} Return teh value of the attribute. If it is undefined, than there
+         * @return {object|primitive|null|undefined} Return the value of the attribute. If it is undefined, than there
          * is no such attributed connected to the given set membership.
          *
          * @func
          */
         this.getMemberAttribute = core.getMemberAttribute;
+
+        /**
+         * Get the value of the attribute for the set membership specifically defined to the member node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} setName - the name of the set.
+         * @param {string} memberPath - the absolute path of the member node.
+         * @param {string} attrName - the name of the attribute.
+         *
+         * @return {object|primitive|null|undefined} Return the value of the attribute. If it is undefined, than there
+         * is no such attributed connected to the given set membership.
+         *
+         * @func
+         */
+        this.getMemberOwnAttribute = core.getMemberOwnAttribute;
 
         /**
          * Sets the attribute value which represents a property of the membership.
@@ -1024,12 +1038,26 @@ define([
          * @param {string} memberPath - the absolute path of the member node.
          * @param {string} regName - the name of the registry entry.
          *
-         * @return {object|primitive|null|undefined} Return teh value of the attribute. If it is undefined, than there
+         * @return {object|primitive|null|undefined} Return the value of the attribute. If it is undefined, than there
          * is no such attributed connected to the given set membership.
          *
          * @func
          */
         this.getMemberRegistry = core.getMemberRegistry;
+
+        /**
+         * Get the value of the registry entry for the set membership specifically defined to the member node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} setName - the name of the set.
+         * @param {string} memberPath - the absolute path of the member node.
+         * @param {string} regName - the name of the registry entry.
+         *
+         * @return {object|primitive|null|undefined} Return teh value of the attribute. If it is undefined, than there
+         * is no such attributed connected to the given set membership.
+         *
+         * @func
+         */
+        this.getMemberOwnRegistry = core.getMemberOwnRegistry;
 
         /**
          * Sets the registry entry value which represents a property of the membership.
