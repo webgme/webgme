@@ -1173,7 +1173,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 }
 
                 storage = storage_;
-                return _getCoreAndRootNode(storage, parameters.projectId, branchName, commitHash);
+                return _getCoreAndRootNode(storage, parameters.projectId, commitHash, branchName);
             })
             .then(function (context_) {
                 context = context_;
