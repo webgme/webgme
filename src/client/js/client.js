@@ -1828,7 +1828,7 @@ define([
                 branchName: state.branchName
             };
 
-            logger.debug('creating project from package', parameters);
+            logger.debug('updating project from package', parameters);
 
             storage.simpleRequest(parameters, function (err, result) {
                 if (err) {
@@ -2065,6 +2065,24 @@ define([
 
         this.registerUIStateGetter = function (uiStateGetter) {
             self.uiStateGetter = uiStateGetter;
+        };
+
+        this.squashBranchFromCommit = function (branchName, commitHash, callback) {
+            var parameters = {
+                command: 'squashCommits',
+                projectId: state.project.projectId,
+                toCommitOrBranch: branchName,
+                fromCommit: commitHash
+            };
+
+            logger.debug('squashing latest commits of branch: ', parameters);
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
+            });
         };
 
         this.gmeConfig = gmeConfig;

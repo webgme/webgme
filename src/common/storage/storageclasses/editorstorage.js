@@ -464,6 +464,17 @@ define([
             }
         };
 
+        this.squashCommits = function (projectId, fromCommit, toCommitOrBranch, msg, callback) {
+            var squashData = {
+                projectId: projectId,
+                fromCommit: fromCommit,
+                toCommitOrBranch: toCommitOrBranch,
+                message: msg
+            };
+
+            webSocket.squashCommits(squashData, callback);
+        };
+
         this.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {
             var project = projects[projectId],
                 branch;
@@ -693,7 +704,7 @@ define([
                     updater: [self.userId],
                     time: (new Date()).getTime(),
                     message: msg,
-                    type: 'commit',
+                    type: CONSTANTS.COMMIT_TYPE,
                     __v: CONSTANTS.VERSION
                 },
                 commitHash = '#' + GENKEY(commitObj, gmeConfig);

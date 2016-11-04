@@ -410,7 +410,7 @@ Storage.prototype.squashCommits = function (data, callback) {
 
             return project.loadObject(toCommit);
         })
-        .then(function(toCommitObject){
+        .then(function (toCommitObject) {
             return storageHelpers.loadHistory(project, -1, fromCommit, [toCommitObject]);
         })
         .then(function (historyItems) {
@@ -430,7 +430,7 @@ Storage.prototype.squashCommits = function (data, callback) {
                     updater: [data.username],
                     time: (new Date()).getTime(),
                     message: data.message || msg,
-                    type: CONSTANTS.COMMIT,
+                    type: CONSTANTS.COMMIT_TYPE,
                     __v: CONSTANTS.VERSION
                 },
                 commitHash = '#' + GENKEY(commitObj, self.gmeConfig);
@@ -553,7 +553,7 @@ Storage.prototype.getCommits = function (data, callback) {
                 self.logger.debug('commitHash was given will load commit', data.before);
                 project.loadObject(data.before)
                     .then(function (commitObject) {
-                        if (commitObject.type !== 'commit') {
+                        if (commitObject.type !== CONSTANTS.COMMIT_TYPE) {
                             throw new Error('Commit object does not exist ' + data.before);
                         }
                         if (data.number === 1) {

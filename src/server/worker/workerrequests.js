@@ -8,6 +8,7 @@
 var Core = requireJS('common/core/coreQ'),
     Storage = requireJS('common/storage/nodestorage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
+    REGEXP = requireJS('common/regexp'),
     merger = requireJS('common/core/users/merge'),
     BlobClientClass = requireJS('blob/BlobClient'),
     blobUtil = requireJS('blob/util'),
@@ -1156,8 +1157,34 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param parameters
      * @param callback
      */
-    function squash(webgmeToken, parameters, callback) {
+    function squashCommits(webgmeToken, parameters, callback) {
+        var jsonProject,
+            context,
+            storage,
+            blobClient = getBlobClient(webgmeToken);
 
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                var branchName = parameters.toCommitOrBranch,
+                    commitHash = parameters.toCommitOrBranch;
+
+                if (REGEXP.DB_HASH.test(commitHash)) {
+                    branchName = null;
+                }
+
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, branchName, commitHash);
+            })
+            .then(function (context_) {
+                context = context_;
+                return context.project.squashCommits(parameters.fromCommit,
+                    parameters.toCommitOrBranch, parameters.message);
+            })
+            .catch(function (err) {
+                logger.error('squash failed with error', err);
+                throw err;
+            })
+            .nodeify(callback);
     }
 
     return {
@@ -1175,7 +1202,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         addLibrary: addLibrary,
         updateLibrary: updateLibrary,
         updateProjectFromFile: updateProjectFromFile,
-        squash: squash
+        squashCommits: squashCommits
     };
 }
 

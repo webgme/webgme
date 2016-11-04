@@ -23,12 +23,12 @@ define([
         this._size = 0;
 
         this.getItem = function (key) {
-            if (this._cache[key]) {
-                return this._cache[key];
+            if (self._cache[key]) {
+                return self._cache[key];
             }
 
-            if (this._backup[key]) {
-                return this._backup[key];
+            if (self._backup[key]) {
+                return self._backup[key];
             }
 
             return null;
@@ -36,14 +36,14 @@ define([
         };
 
         this.setItem = function (key, data) {
-            if (!this._cache[key]) {
-                if (this._size === maxSize) {
-                    this._size = 0;
-                    this._backup = this._cache;
-                    this._cache = {};
+            if (!self._cache[key]) {
+                if (self._size === maxSize) {
+                    self._size = 0;
+                    self._backup = self._cache;
+                    self._cache = {};
                 }
-                this._size += 1;
-                this._cache[key] = data;
+                self._size += 1;
+                self._cache[key] = data;
 
             } else {
                 logger.warn('trying to add inverse relation object multiple times [#' + key + ']');

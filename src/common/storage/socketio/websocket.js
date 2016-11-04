@@ -238,6 +238,11 @@ define([
             self.socket.emit('getBranchHash', data, wrapError(callback));
         };
 
+        this.squashCommits = function (data, callback) {
+            data.webgmeToken = ioClient.getToken();
+            self.socket.emit('squashCommits', data, wrapError(callback));
+        };
+
         // REST like functions
         this.getProjects = function (data, callback) {
             data.webgmeToken = ioClient.getToken();
