@@ -676,6 +676,20 @@ define([
                 return innerCore.deleteSet(node, name);
             };
 
+            this.setSetAttribute = function (node, setName, regName, regValue) {
+                if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
+                    return new Error('Not allowed to modify library elements.');
+                }
+                return innerCore.setSetAttribute(node, setName, regName, regValue);
+            };
+
+            this.delSetAttribute = function (node, setName, regName) {
+                if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
+                    return new Error('Not allowed to modify library elements.');
+                }
+                return innerCore.delSetAttribute(node, setName, regName);
+            };
+
             this.setSetRegistry = function (node, setName, regName, regValue) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
                     return new Error('Not allowed to modify library elements.');

@@ -832,10 +832,11 @@ define([
         this.getSetNames = core.getSetNames;
 
         /**
-         * Returns the names of the sets of the node.
+         * Returns the names of the sets created specifically at the node.
+         * N.B. When adding a member to a set of a node, the set is automatically created at the node.
          * @param {module:Core~Node} node - the node in question.
          *
-         * @return {string[]} Returns an array of set names that the node has.
+         * @return {string[]} Returns an array of set names that were specifically created at the node.
          *
          * @func
          */
@@ -865,14 +866,156 @@ define([
          */
         this.deleteSet = this.delSet = core.deleteSet;
 
+        /**
+         * Return the names of the attribute entries for the set.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} name - the name of the set.
+         *
+         * @return {string[]} Returns the array of names of attribute entries in the set.
+         *
+         * @func
+         */
+        this.getSetAttributeNames = core.getSetAttributeNames;
+
+        /**
+         * Return the names of the attribute entries specifically set for the set at the node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} name - the name of the set.
+         *
+         * @return {string[]} Returns the array of names of attribute entries defined in the set at the node.
+         *
+         * @func
+         */
+        this.getOwnSetAttributeNames = core.getOwnSetAttributeNames;
+
+        /**
+         * Get the value of the attribute entry in the set.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} setName - the name of the set.
+         * @param {string} attrName - the name of the attribute entry.
+         *
+         * @return {object|primitive|null|undefined} Return the value of the attribute. If it is undefined, than there
+         * is no such attribute at the set.
+         *
+         * @func
+         */
+        this.getSetAttribute = core.getSetAttribute;
+
+        /**
+         * Get the value of the attribute entry specifically set for the set at the node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} setName - the name of the set.
+         * @param {string} attrName - the name of the attribute entry.
+         *
+         * @return {object|primitive|null|undefined} Return the value of the attribute. If it is undefined, than there
+         * is no such attribute at the set.
+         *
+         * @func
+         */
+        this.getOwnSetAttribute = core.getOwnSetAttribute;
+
+        /**
+         * Sets the attribute entry value for the set at the node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} setName - the name of the set.
+         * @param {string} attrName - the name of the attribute entry.
+         * @param {object|primitive|null} value - the new value of the attribute.
+         *
+         * @return {undefined | Error} If the set is not allowed to be modified, the function returns
+         * an error.
+         *
+         * @func
+         */
+        this.setSetAttribute = core.setSetAttribute;
+
+        /**
+         * Removes the attribute entry for the set at the node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} setName - the name of the set.
+         * @param {string} attrName - the name of the attribute entry.
+         *
+         * @return {undefined | Error} If the set is not allowed to be modified, the function returns
+         * an error.
+         *
+         * @func
+         */
+        this.delSetAttribute = core.delSetAttribute;
+
+        //Regs
+
+        /**
+         * Return the names of the registry entries for the set.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} name - the name of the set.
+         *
+         * @return {string[]} Returns the array of names of registry entries in the set.
+         *
+         * @func
+         */
         this.getSetRegistryNames = core.getSetRegistryNames;
 
+        /**
+         * Return the names of the registry entries specifically set for the set at the node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} name - the name of the set.
+         *
+         * @return {string[]} Returns the array of names of registry entries defined in the set at the node.
+         *
+         * @func
+         */
         this.getOwnSetRegistryNames = core.getOwnSetRegistryNames;
 
+        /**
+         * Get the value of the registry entry in the set.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} setName - the name of the set.
+         * @param {string} regName - the name of the registry entry.
+         *
+         * @return {object|primitive|null|undefined} Return the value of the registry. If it is undefined, than there
+         * is no such registry at the set.
+         *
+         * @func
+         */
         this.getSetRegistry = core.getSetRegistry;
 
+        /**
+         * Get the value of the registry entry specifically set for the set at the node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} setName - the name of the set.
+         * @param {string} regName - the name of the registry entry.
+         *
+         * @return {object|primitive|null|undefined} Return the value of the registry. If it is undefined, than there
+         * is no such registry at the set.
+         *
+         * @func
+         */
+        this.getOwnSetRegistry = core.getOwnSetRegistry;
+
+        /**
+         * Sets the registry entry value for the set at the node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} setName - the name of the set.
+         * @param {string} regName - the name of the registry entry.
+         * @param {object|primitive|null} value - the new value of the registry.
+         *
+         * @return {undefined | Error} If the set is not allowed to be modified, the function returns
+         * an error.
+         *
+         * @func
+         */
         this.setSetRegistry = core.setSetRegistry;
 
+        /**
+         * Removes the registry entry for the set at the node.
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} setName - the name of the set.
+         * @param {string} regName - the name of the registry entry.
+         *
+         * @return {undefined | Error} If the set is not allowed to be modified, the function returns
+         * an error.
+         *
+         * @func
+         */
         this.delSetRegistry = core.delSetRegistry;
 
         /**
@@ -1038,8 +1181,8 @@ define([
          * @param {string} memberPath - the absolute path of the member node.
          * @param {string} regName - the name of the registry entry.
          *
-         * @return {object|primitive|null|undefined} Return the value of the attribute. If it is undefined, than there
-         * is no such attributed connected to the given set membership.
+         * @return {object|primitive|null|undefined} Return the value of the registry. If it is undefined, than there
+         * is no such registry connected to the given set membership.
          *
          * @func
          */
@@ -1052,8 +1195,8 @@ define([
          * @param {string} memberPath - the absolute path of the member node.
          * @param {string} regName - the name of the registry entry.
          *
-         * @return {object|primitive|null|undefined} Return teh value of the attribute. If it is undefined, than there
-         * is no such attributed connected to the given set membership.
+         * @return {object|primitive|null|undefined} Return the value of the registry. If it is undefined, than there
+         * is no such registry connected to the given set membership.
          *
          * @func
          */
@@ -1065,7 +1208,7 @@ define([
          * @param {string} setName - the name of the set.
          * @param {string} memberPath - the absolute path of the member node.
          * @param {string} regName - the name of the registry entry.
-         * @param {object|primitive|null} value - the new value of the attribute.
+         * @param {object|primitive|null} value - the new value of the registry.
          *
          * @return {undefined | Error} If the set is not allowed to be modified, the function returns
          * an error.
@@ -1718,7 +1861,7 @@ define([
          * @param {string} memberPath - the path of the member in question.
          *
          * @return {bool} Returns true if the member exists in the base of the set, but was
-         * added to the given set as well, which means a complete override. If the set do not exist
+         * added to the given set as well, which means a complete override. If the set does not exist
          * or the member do not have a 'base' member or just some property was overridden, the function returns
          * false.
          *

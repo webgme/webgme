@@ -72,24 +72,40 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 (innerCore.getRegistry(node, CONSTANTS.SET_MODIFIED_REGISTRY) || 0) + 1);
         }
 
-        function collectSetNames(node) {
+        function collectOwnSetNames(node) {
             var sets = [],
                 setsInfo,
                 keys,
                 i;
 
+            setsInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
+            if (setsInfo &&
+                setsInfo[CONSTANTS.OVERLAYS_PROPERTY] &&
+                setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']) {
+
+                keys = Object.keys(setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']);
+
+                for (i = 0; i < keys.length; i += 1) {
+                    if (keys[i] !== CONSTANTS.MUTABLE_PROPERTY && sets.indexOf(keys[i]) === -1) {
+                        sets.push(keys[i]);
+                    }
+                }
+            }
+
+            return sets;
+        }
+
+        function collectSetNames(node) {
+            var sets = [],
+                keys,
+                i;
+
             do {
-                setsInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
-                if (setsInfo &&
-                    setsInfo[CONSTANTS.OVERLAYS_PROPERTY] &&
-                    setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']) {
+                keys = collectOwnSetNames(node);
 
-                    keys = Object.keys(setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']);
-
-                    for (i = 0; i < keys.length; i += 1) {
-                        if (keys[i] !== CONSTANTS.MUTABLE_PROPERTY && sets.indexOf(keys[i]) === -1) {
-                            sets.push(keys[i]);
-                        }
+                for (i = 0; i < keys.length; i += 1) {
+                    if (sets.indexOf(keys[i]) === -1) {
+                        sets.push(keys[i]);
                     }
                 }
 
@@ -241,8 +257,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
         //<editor-fold=Added Methods>
         this.getSetNames = function (node) {
-            //return innerCore.getPointerNames(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY)) || [];
             return collectSetNames(node);
+        };
+
+        this.getOwnSetNames = function (node) {
+            return collectOwnSetNames(node);
         };
 
         this.getMemberPaths = function (node, setName) {
@@ -393,7 +412,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         this.createSet = function (node, setName) {
             var setNode = getSetNodeByName(node, setName);
 
-            //FIXME: hack, somehow the empty children have been removed during persist
+            //FIXME: hack, this is needed since otherwise the set will be removed if empty object.
             innerCore.setRegistry(setNode, '_', '_');
 
             innerCore.setPointer(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName, null);
@@ -452,6 +471,30 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             }
 
             return false;
+        };
+
+        this.getSetAttributeNames = function (node, setName) {
+            return collectPropertyNames(node, CONSTANTS.ATTRIBUTES_PROPERTY, setName);
+        };
+
+        this.getOwnSetAttributeNames = function (node, setName) {
+            return collectOwnPropertyNames(node, CONSTANTS.ATTRIBUTES_PROPERTY, setName);
+        };
+
+        this.getSetAttribute = function (node, setName, attrName) {
+            return getPropertyValue(node, CONSTANTS.ATTRIBUTES_PROPERTY, attrName, setName);
+        };
+
+        this.getOwnSetAttribute = function (node, setName, attrName) {
+            return getOwnPropertyValue(node, CONSTANTS.ATTRIBUTES_PROPERTY, attrName, setName);
+        };
+
+        this.setSetAttribute = function (node, setName, attrName, attrValue) {
+            self.setAttribute(getSetNodeByName(node, setName), attrName, attrValue);
+        };
+
+        this.delSetAttribute = function (node, setName, attrName) {
+            self.delAttribute(getSetNodeByName(node, setName), attrName);
         };
 
         this.getSetRegistryNames = function (node, setName) {
