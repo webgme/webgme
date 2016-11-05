@@ -35,29 +35,40 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return setsInfo && setsInfo[setName];
         }
 
-        function getMemberRelId(node, setName, memberPath) {
+        function getOwnMemberRelId(node, setName, memberPath) {
             var setInfo,
                 keys,
                 i;
 
-            do {
-                setInfo = getSetInfoByName(node, setName);
-                if (setInfo) {
-                    keys = self.getRawKeys(setInfo, self.isValidRelid);
-                    for (i = 0; i < keys.length; i += 1) {
-                        if (innerCore.getPointerPathFrom(node,
-                                '/' + CONSTANTS.ALL_SETS_PROPERTY + '/' + setName + '/' + keys[i],
-                                CONSTANTS.MEMBER_RELATION) === memberPath) {
+            setInfo = getSetInfoByName(node, setName);
+            if (setInfo) {
+                keys = self.getRawKeys(setInfo, self.isValidRelid);
+                for (i = 0; i < keys.length; i += 1) {
+                    if (innerCore.getPointerPathFrom(node,
+                            '/' + CONSTANTS.ALL_SETS_PROPERTY + '/' + setName + '/' + keys[i],
+                            CONSTANTS.MEMBER_RELATION) === memberPath) {
 
-                            return keys[i];
-                        }
+                        return keys[i];
                     }
+                }
+            }
+
+            return null;
+        }
+
+        function getMemberRelId(node, setName, memberPath) {
+            var relid = null;
+
+            do {
+                relid = getOwnMemberRelId(node, setName, memberPath);
+                if (relid) {
+                    return relid;
                 }
 
                 node = self.getBase(node);
             } while (node);
 
-            return null;
+            return relid;
         }
 
         function getSetMemberNode(node, setName, memberPath) {
@@ -66,10 +77,10 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return typeof memberRelId === 'string' && innerCore.getChild(getSetNodeByName(node, setName), memberRelId);
         }
 
-        function setModified(node) {
-            // TODO: Do we really need this?
-            innerCore.setRegistry(node, CONSTANTS.SET_MODIFIED_REGISTRY,
-                (innerCore.getRegistry(node, CONSTANTS.SET_MODIFIED_REGISTRY) || 0) + 1);
+        function getOwnSetMemberNode(node, setName, memberPath) {
+            var memberRelId = getOwnMemberRelId(node, setName, memberPath);
+
+            return typeof memberRelId === 'string' && innerCore.getChild(getSetNodeByName(node, setName), memberRelId);
         }
 
         function collectOwnSetNames(node) {
@@ -297,10 +308,9 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         this.delMember = function (node, setName, memberPath) {
             var setMemberNode;
 
-            setMemberNode = getSetMemberNode(node, setName, memberPath);
+            setMemberNode = getOwnSetMemberNode(node, setName, memberPath);
             if (setMemberNode) {
                 innerCore.deleteNode(setMemberNode, true);
-                setModified(node);
             }
         };
 
@@ -323,9 +333,8 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             if (setMemberNode) {
                 innerCore.setPointer(setMemberNode, CONSTANTS.MEMBER_RELATION, member);
 
-                //TODO hack, somehow the empty children have been removed during persist
+                //TODO hack, somehow we need the registry entry
                 innerCore.setRegistry(setMemberNode, '_', '_');
-                setModified(node);
             } else {
                 logger.warn('member already in set');
             }
@@ -357,16 +366,14 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
             if (setMemberNode) {
                 innerCore.setAttribute(setMemberNode, attrName, attrValue);
-                setModified(node);
             }
         };
 
         this.delMemberAttribute = function (node, setName, memberPath, attrName) {
-            var setMemberNode = getSetMemberNode(node, setName, memberPath);
+            var setMemberNode = getOwnSetMemberNode(node, setName, memberPath);
 
             if (setMemberNode) {
                 innerCore.delAttribute(setMemberNode, attrName);
-                setModified(node);
             }
         };
 
@@ -396,27 +403,20 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
             if (setMemberNode) {
                 innerCore.setRegistry(setMemberNode, regName, regValue);
-                setModified(node);
             }
         };
 
         this.delMemberRegistry = function (node, setName, memberPath, regName) {
-            var setMemberNode = getSetMemberNode(node, setName, memberPath);
+            var setMemberNode = getOwnSetMemberNode(node, setName, memberPath);
 
             if (setMemberNode) {
                 innerCore.delRegistry(setMemberNode, regName);
-                setModified(node);
             }
         };
 
         this.createSet = function (node, setName) {
-            var setNode = getSetNodeByName(node, setName);
-
-            //FIXME: hack, this is needed since otherwise the set will be removed if empty object.
-            innerCore.setRegistry(setNode, '_', '_');
-
+            getSetNodeByName(node, setName);
             innerCore.setPointer(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName, null);
-            setModified(node);
         };
 
         this.deleteSet = function (node, setName) {
@@ -425,7 +425,6 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
             innerCore.deletePointer(setsNode, setName);
             innerCore.deleteNode(setNode, true);
-            setModified(node);
         };
 
         this.isMemberOf = function (node) {

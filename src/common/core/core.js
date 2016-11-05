@@ -818,9 +818,6 @@ define([
          */
         this.getTypeRoot = core.getTypeRoot;
 
-        //TODO check if the whole function could be removed
-        //this.getSetNumbers = core.getSetNumbers;
-
         /**
          * Returns the names of the sets of the node.
          * @param {module:Core~Node} node - the node in question.
@@ -1035,7 +1032,7 @@ define([
          * @param {string} name - the name of the set.
          *
          * @return {string[]} Returns an array of absolute path strings of the member nodes of the set that has
-         * information on the node's inharitance level.
+         * information on the node's inheritance level.
          * @func
          */
         this.getOwnMemberPaths = core.getOwnMemberPaths;

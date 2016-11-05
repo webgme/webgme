@@ -699,6 +699,37 @@ function compareWebgmexFiles(file1, file2, logger, gmeConfigParameter, callback)
         .nodeify(callback);
 }
 
+function getChangedNodesFromPersisted(persisted, printPatches) {
+    var storageUtil = requireJS('common/storage/util'),
+        keys = Object.keys(persisted.objects),
+        i,
+        coreObjects = {};
+
+    for (i = 0; i < keys.length; i += 1) {
+        if (storageUtil.coreObjectHasOldAndNewData(persisted.objects[keys[i]])) {
+            coreObjects[keys[i]] = storageUtil.getPatchObject(persisted.objects[keys[i]].oldData,
+                persisted.objects[keys[i]].newData);
+        } else {
+            coreObjects[keys[i]] = persisted.objects[keys[i]].newData;
+        }
+    }
+
+    if (printPatches) {
+        keys = Object.keys(coreObjects);
+        for (i = 0; i < keys.length; i += 1) {
+            console.log('############## ' + keys[i].substring(0, 7) + ' ###################');
+            if (coreObjects[keys[i]].type === 'patch') {
+                console.log(JSON.stringify(coreObjects[keys[i]].patch, null, 2));
+            } else {
+                coreObjects[keys[i]] = persisted.objects[keys[i]].newData;
+                console.log('New data');
+            }
+        }
+    }
+
+    return storageUtil.getChangedNodes(coreObjects, persisted.rootHash);
+}
+
 WebGME.addToRequireJsPaths(gmeConfig);
 
 // This is for the client side test-cases (only add paths here!)
@@ -729,5 +760,6 @@ exports.loadRootNodeFromCommit = loadRootNodeFromCommit;
 exports.loadNode = loadNode;
 
 exports.compareWebgmexFiles = compareWebgmexFiles;
+exports.getChangedNodesFromPersisted = getChangedNodesFromPersisted;
 
 module.exports = exports;

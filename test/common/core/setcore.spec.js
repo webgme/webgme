@@ -289,7 +289,11 @@ describe('set core', function () {
         expect(core.getMemberAttribute(setInstance, 'set', core.getPath(member), 'attribute')).to.equal('value');
         expect(core.getMemberRegistry(setInstance, 'set', core.getPath(member), 'registry')).to.equal('regValue');
 
+        //now delete the base-member
+        core.delMember(setType, 'set', core.getPath(member));
 
+        // instance should still have the member
+        expect(core.getMemberPaths(setInstance, 'set')).to.deep.equal([core.getPath(member)]);
     });
 
     it('should return all member as own, that has new information', function () {
@@ -508,5 +512,169 @@ describe('set core', function () {
         expect(core.getSetNames(setType, 'set')).to.have.members(['set']);
         expect(core.getSetNames(setInstance, 'set')).to.have.members(['set', 'setInstance']);
         expect(core.getOwnSetNames(setInstance, 'set')).to.have.members(['setInstance']);
+    });
+
+    it('isFullyOverriddenMember should return false if no set', function () {
+        var setType = core.createNode({parent: root});
+
+        expect(core.isFullyOverriddenMember(setType, 'set', 'dummyMemberPath')).to.equal(false);
+    });
+
+    it('isFullyOverriddenMember should return false if no set', function () {
+        var setType = core.createNode({parent: root});
+
+        expect(core.isFullyOverriddenMember(setType, 'set', 'dummyMemberPath')).to.equal(false);
+    });
+
+    it('isFullyOverriddenMember should return false if no base', function () {
+        var setType = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+
+        expect(core.isFullyOverriddenMember(setType, 'set', 'dummyMemberPath')).to.equal(false);
+    });
+
+    it('isFullyOverriddenMember should return false if base does not have set', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root}),
+            memberPath = core.getPath(member);
+
+        core.createSet(setInstance, 'set');
+        core.addMember(setInstance, 'set', member);
+
+        expect(core.isFullyOverriddenMember(setInstance, 'set', memberPath)).to.equal(false);
+    });
+
+    it('isFullyOverriddenMember should return false if base has member and instance on modified data', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root}),
+            memberPath = core.getPath(member);
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.setMemberRegistry(setInstance, 'set', member, 'reg', 'regValue');
+
+        expect(core.isFullyOverriddenMember(setInstance, 'set', memberPath)).to.equal(false);
+    });
+
+    it('isFullyOverriddenMember should return if base has member and instance has added member', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root}),
+            memberPath = core.getPath(member);
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.addMember(setInstance, 'set', member);
+
+        expect(core.isFullyOverriddenMember(setInstance, 'set', memberPath)).to.equal(true);
+    });
+
+    it('isMemberOf should return both base and instance membership if added to both', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root}),
+            compareObj = {};
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.addMember(setInstance, 'set', member);
+
+        compareObj[core.getPath(setType)] = ['set'];
+        compareObj[core.getPath(setInstance)] = ['set'];
+        expect(core.isMemberOf(member)).to.deep.equal(compareObj);
+    });
+
+    it('isMemberOf should return only base membership if not isFullyOverriddenMember in instance', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root}),
+            compareObj = {};
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.setMemberRegistry(setInstance, 'set', member, 'reg', 'regValue');
+
+        compareObj[core.getPath(setType)] = ['set'];
+        expect(core.isMemberOf(member)).to.deep.equal(compareObj);
+    });
+
+    it('getCollectionNames should exclude member(ships)', function () {
+        var setType = core.createNode({parent: root}),
+            member = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.setMemberRegistry(setType, 'set', member, 'reg', 'regValue');
+        core.setPointer(setType, 'ptr', member);
+
+        expect(core.getCollectionNames(member)).to.deep.equal(['ptr']);
+    });
+
+    // FIXME: This must be resolved
+    it.skip('should addMember twice with no duplication', function () {
+        var setType = core.createNode({parent: root}),
+            member = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.persist(root);
+        core.addMember(setType, 'set', member);
+        expect(core.getMemberPaths(setType, 'set')).to.deep.equal([core.getPath(member)]);
+        expect(core.persist(root).objects).to.deep.equal({});
+    });
+
+    it('should addMember twice with no duplication on instance', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.addMember(setInstance, 'set', member);
+        expect(core.getMemberPaths(setInstance, 'set')).to.deep.equal([core.getPath(member)]);
+    });
+
+    it('should not delete inherited member', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.persist(root);
+        core.delMember(setInstance, 'set', core.getPath(member));
+        expect(core.getMemberPaths(setInstance, 'set')).to.deep.equal([core.getPath(member)]);
+        expect(core.persist(root).objects).to.deep.equal({});
+    });
+
+    it('should not delete inherited member registry', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.setMemberRegistry(setType, 'set', core.getPath(member), 'regName', 'regVal');
+        core.persist(root);
+        core.delMemberRegistry(setInstance, 'set', core.getPath(member), 'regName');
+        expect(core.getMemberRegistry(setInstance, 'set', core.getPath(member), 'regName')).to.equal('regVal');
+        expect(core.persist(root).objects).to.deep.equal({});
+    });
+
+    it('should not delete inherited member attribute', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            member = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.setMemberAttribute(setType, 'set', core.getPath(member), 'attrName', 'attrVal');
+        core.persist(root);
+        core.delMemberAttribute(setInstance, 'set', core.getPath(member), 'attrName');
+        expect(core.getMemberAttribute(setInstance, 'set', core.getPath(member), 'attrName')).to.equal('attrVal');
+        expect(core.persist(root).objects).to.deep.equal({});
     });
 });
