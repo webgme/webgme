@@ -222,7 +222,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         function getOwnPropertyValue(node,  propertyCollectionName, propertyName, setName, memberPath) {
             var propertyCollectionInfo = getPropertyCollectionInfo(node, propertyCollectionName, setName, memberPath);
 
-            return propertyCollectionInfo && propertyCollectionInfo[propertyName];
+            return propertyCollectionInfo ? propertyCollectionInfo[propertyName] : undefined;
         }
 
         function getPropertyValue(node,  propertyCollectionName, propertyName, setName, memberPath) {
