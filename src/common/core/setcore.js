@@ -275,6 +275,66 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return collectOwnSetNames(node);
         };
 
+        this.createSet = function (node, setName) {
+            var setNode = getSetNodeByName(node, setName);
+            innerCore.setPointer(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName, null);
+            // Ensure the set-node is not deleted at persist.
+            innerCore.setRegistry(setNode, '_', '_');
+        };
+
+        this.deleteSet = function (node, setName) {
+            var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY),
+                setNode = innerCore.getChild(setsNode, setName);
+
+            innerCore.deletePointer(setsNode, setName);
+            innerCore.deleteNode(setNode, true);
+        };
+
+        this.isMemberOf = function (node) {
+            //TODO we should find a proper way to do this - or at least some support from lower layers would be fine
+            var coll = self.getCollectionPaths(node, CONSTANTS.MEMBER_RELATION);
+            var sets = {};
+            for (var i = 0; i < coll.length; i++) {
+                var pathArray = coll[i].split('/');
+                if (pathArray.indexOf(CONSTANTS.META_NODE) === -1) {
+                    //now we simply skip META sets...
+                    var index = pathArray.indexOf(CONSTANTS.ALL_SETS_PROPERTY);
+                    if (index > 0 && pathArray.length > index + 1) {
+                        //otherwise it is not a real set
+                        var ownerPath = pathArray.slice(0, index).join('/');
+                        if (sets[ownerPath] === undefined) {
+                            sets[ownerPath] = [];
+                        }
+                        sets[ownerPath].push(pathArray[index + 1]);
+                    }
+                }
+            }
+            return sets;
+        };
+
+        this.isFullyOverriddenMember = function (node, setName, memberPath) {
+            var setNames = collectSetNames(node),
+                ownRelId,
+                baseRelId;
+
+            if (setNames.indexOf(setName) === -1) {
+                return false;
+            }
+
+            if (innerCore.getBase(node) === null) {
+                return false;
+            }
+
+            ownRelId = getMemberRelId(node, setName, memberPath);
+            baseRelId = getMemberRelId(innerCore.getBase(node), setName, memberPath);
+
+            if (ownRelId && baseRelId && ownRelId !== baseRelId) {
+                return true;
+            }
+
+            return false;
+        };
+
         this.getMemberPaths = function (node, setName) {
             var memberRelids = collectInternalMemberRelids(node, setName),
                 //pathPrefix = '/' + CONSTANTS.ALL_SETS_PROPERTY + '/' + setName + '/',
@@ -333,7 +393,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             if (setMemberNode) {
                 innerCore.setPointer(setMemberNode, CONSTANTS.MEMBER_RELATION, member);
 
-                //TODO hack, somehow we need the registry entry
+                // Ensure the member-node entry is not deleted at persist.
                 innerCore.setRegistry(setMemberNode, '_', '_');
             } else {
                 logger.warn('member already in set');
@@ -412,64 +472,6 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             if (setMemberNode) {
                 innerCore.delRegistry(setMemberNode, regName);
             }
-        };
-
-        this.createSet = function (node, setName) {
-            getSetNodeByName(node, setName);
-            innerCore.setPointer(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName, null);
-        };
-
-        this.deleteSet = function (node, setName) {
-            var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY),
-                setNode = innerCore.getChild(setsNode, setName);
-
-            innerCore.deletePointer(setsNode, setName);
-            innerCore.deleteNode(setNode, true);
-        };
-
-        this.isMemberOf = function (node) {
-            //TODO we should find a proper way to do this - or at least some support from lower layers would be fine
-            var coll = self.getCollectionPaths(node, CONSTANTS.MEMBER_RELATION);
-            var sets = {};
-            for (var i = 0; i < coll.length; i++) {
-                var pathArray = coll[i].split('/');
-                if (pathArray.indexOf(CONSTANTS.META_NODE) === -1) {
-                    //now we simply skip META sets...
-                    var index = pathArray.indexOf(CONSTANTS.ALL_SETS_PROPERTY);
-                    if (index > 0 && pathArray.length > index + 1) {
-                        //otherwise it is not a real set
-                        var ownerPath = pathArray.slice(0, index).join('/');
-                        if (sets[ownerPath] === undefined) {
-                            sets[ownerPath] = [];
-                        }
-                        sets[ownerPath].push(pathArray[index + 1]);
-                    }
-                }
-            }
-            return sets;
-        };
-
-        this.isFullyOverriddenMember = function (node, setName, memberPath) {
-            var setNames = collectSetNames(node),
-                ownRelId,
-                baseRelId;
-
-            if (setNames.indexOf(setName) === -1) {
-                return false;
-            }
-
-            if (innerCore.getBase(node) === null) {
-                return false;
-            }
-
-            ownRelId = getMemberRelId(node, setName, memberPath);
-            baseRelId = getMemberRelId(innerCore.getBase(node), setName, memberPath);
-
-            if (ownRelId && baseRelId && ownRelId !== baseRelId) {
-                return true;
-            }
-
-            return false;
         };
 
         this.getSetAttributeNames = function (node, setName) {

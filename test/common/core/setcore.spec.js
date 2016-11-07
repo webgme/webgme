@@ -678,6 +678,17 @@ describe('set core', function () {
         expect(core.persist(root).objects).to.deep.equal({});
     });
 
+    it('should persist when creating empty set', function () {
+        var setType = core.createNode({parent: root}),
+            persisted;
+
+        core.createSet(setType, 'set');
+        core.persist(root);
+        core.createSet(setType, 'set2');
+        persisted = core.persist(root).objects;
+        expect(Object.keys(persisted)).to.equal(2);
+    });
+
     it('issue #1228 should return all member attribute names although not valid relid', function () {
         var setType = core.createNode({parent: root}),
             member = core.createNode({parent: root});
