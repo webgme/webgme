@@ -29,19 +29,30 @@ define([
     }
 
     function collectPartials(source, target, key, operation, single) {
+        var partials = [],
+            collection,
+            item;
+
         if (single) {
             switch (operation) {
                 case 'add':
-                    return [target[key]];
+                    if (typeof target[key] === 'string') {
+                        partials.push(target[key]);
+                    }
+                    break;
                 case 'replace':
-                    return [source[key], target[key]];
+                    if (typeof target[key] === 'string' && typeof source[key] === 'string') {
+                        partials.push(target[key]);
+                        partials.push(source[key]);
+                    }
+                    break;
                 case 'remove':
-                    return [source[key]];
+                    if (typeof source[key] === 'string') {
+                        partials.push(source[key]);
+                    }
+                    break;
             }
         } else {
-            var partials = [],
-                collection,
-                item;
             if (operation === 'add') {
                 collection = target[key];
             } else {
@@ -49,13 +60,13 @@ define([
             }
 
             for (item in collection) {
-                if (partials.indexOf(collection[item])) {
+                if (typeof collection[item] === 'string' && partials.indexOf(collection[item]) === -1) {
                     partials.push(collection[item]);
                 }
             }
-
-            return partials;
         }
+
+        return partials;
     }
 
     function create(sourceJson, targetJson) {
