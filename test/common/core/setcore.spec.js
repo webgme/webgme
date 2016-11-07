@@ -686,7 +686,7 @@ describe('set core', function () {
         core.persist(root);
         core.createSet(setType, 'set2');
         persisted = core.persist(root).objects;
-        expect(Object.keys(persisted)).to.equal(2);
+        expect(Object.keys(persisted).length).to.equal(2);
     });
 
     it('issue #1228 should return all member attribute names although not valid relid', function () {
