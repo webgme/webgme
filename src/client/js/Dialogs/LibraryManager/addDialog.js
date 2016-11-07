@@ -101,20 +101,16 @@ define(['js/Loader/LoaderCircles',
 
         this._btnUpdate.on('click', function () {
             if (self.canStartUpdate()) {
-                self._client.updateProjectFromFile(self.assetWidget.propertyValue, function (err, result) {
-                    console.log(result);
-                    self._dialog.modal('hide');
-                });
-                // self._client.addLibrary(self._libraryName.val(),
-                //     self.assetWidget.propertyValue || self._urlProjectInfo,
-                //     function (err) {
-                //         if (err) {
-                //             self.setError('unable to add library: ' + err);
-                //         } else {
-                //             self._dialog.modal('hide');
-                //         }
-                //     }
-                // );
+                self._client.addLibrary(self._libraryName.val(),
+                    self.assetWidget.propertyValue || self._urlProjectInfo,
+                    function (err) {
+                        if (err) {
+                            self.setError('unable to add library: ' + err);
+                        } else {
+                            self._dialog.modal('hide');
+                        }
+                    }
+                );
             }
         });
     };
