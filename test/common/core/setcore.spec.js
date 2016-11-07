@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('set core', function () {
+describe.only('set core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -676,5 +676,41 @@ describe('set core', function () {
         core.delMemberAttribute(setInstance, 'set', core.getPath(member), 'attrName');
         expect(core.getMemberAttribute(setInstance, 'set', core.getPath(member), 'attrName')).to.equal('attrVal');
         expect(core.persist(root).objects).to.deep.equal({});
+    });
+
+    it('issue #1228 should return all member attribute names although not valid relid', function () {
+        var setType = core.createNode({parent: root}),
+            member = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.setMemberAttribute(setType, 'set', core.getPath(member), 'attr_name', 'attrVal');
+        expect(core.getMemberAttributeNames(setType, 'set', core.getPath(member))).to.deep.equal(['attr_name']);
+    });
+
+    it('issue #1228 should return all member registry names although not valid relid', function () {
+        var setType = core.createNode({parent: root}),
+            member = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member);
+        core.setMemberRegistry(setType, 'set', core.getPath(member), 'reg_name', 'regVal');
+        expect(core.getMemberRegistryNames(setType, 'set', core.getPath(member))).to.deep.equal(['reg_name']);
+    });
+
+    it('issue #1228 should return all set attribute names although not valid relid', function () {
+        var setType = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.setSetAttribute(setType, 'set', 'attr_name', 'attrVal');
+        expect(core.getSetAttributeNames(setType, 'set')).to.deep.equal(['attr_name']);
+    });
+
+    it('issue #1228 should return all set registry names although not valid relid', function () {
+        var setType = core.createNode({parent: root});
+
+        core.createSet(setType, 'set');
+        core.setSetRegistry(setType, 'set', 'reg_name', 'regVal');
+        expect(core.getSetRegistryNames(setType, 'set')).to.deep.equal(['reg_name']);
     });
 });
