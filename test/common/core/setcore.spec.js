@@ -724,4 +724,54 @@ describe('set core', function () {
         core.setSetRegistry(setType, 'set', 'reg_name', 'regVal');
         expect(core.getSetRegistryNames(setType, 'set')).to.deep.equal(['reg_name']);
     });
+
+    it('setSetAttribute/Registry should not alter data when hasSet is false', function () {
+        var setType = core.createNode({parent: root}),
+            persisted;
+
+        core.persist(root);
+        core.setSetAttribute(setType, 'set', 'someName', 'someVal');
+        core.setSetRegistry(setType, 'set', 'someName', 'someVal');
+        persisted = core.persist(root).objects;
+        expect(persisted).to.deep.equal({});
+    });
+
+    it('setSetAttribute/Registry should alter data when base has set', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            persisted;
+
+        core.createSet(setType, 'set');
+        core.persist(root);
+        core.setSetAttribute(setInstance, 'set', 'someName', 'someVal');
+        core.setSetRegistry(setInstance, 'set', 'someName', 'someVal');
+        persisted = core.persist(root).objects;
+        expect(Object.keys(persisted).length).to.equal(2);
+    });
+
+    it('delSetAttribute/Registry should not alter data when there is no data', function () {
+        var setType = core.createNode({parent: root}),
+            persisted;
+
+        core.persist(root);
+        core.delSetAttribute(setType, 'set', 'someName');
+        core.delSetRegistry(setType, 'set', 'someName');
+        persisted = core.persist(root).objects;
+        expect(persisted).to.deep.equal({});
+    });
+
+    it('delSetAttribute/Registry should not alter data when base has set and props', function () {
+        var setType = core.createNode({parent: root}),
+            setInstance = core.createNode({parent: root, base: setType}),
+            persisted;
+
+        core.createSet(setType, 'set');
+        core.setSetAttribute(setType, 'set', 'someName', 'someVal');
+        core.setSetRegistry(setType, 'set', 'someName', 'someVal');
+        core.persist(root);
+        core.delSetAttribute(setInstance, 'set', 'someName', 'someVal');
+        core.delSetRegistry(setInstance, 'set', 'someName', 'someVal');
+        persisted = core.persist(root).objects;
+        expect(persisted).to.deep.equal({});
+    });
 });

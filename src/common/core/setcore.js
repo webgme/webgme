@@ -126,6 +126,32 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return sets;
         }
 
+        function hasOwnSet(node, setName) {
+            ASSERT(typeof setName === 'string');
+            var setsInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
+            if (setsInfo &&
+                setsInfo[CONSTANTS.OVERLAYS_PROPERTY] &&
+                setsInfo[CONSTANTS.OVERLAYS_PROPERTY][''] &&
+                setsInfo[CONSTANTS.OVERLAYS_PROPERTY][''][setName]) {
+
+                return true;
+            }
+
+            return false;
+        }
+
+        function hasSet(node, setName) {
+            do {
+                if (hasOwnSet(node, setName)) {
+                    return true;
+                }
+
+                node = self.getBase(node);
+            } while (node);
+
+            return false;
+        }
+
         function collectInternalMemberRelids(node, setName) {
             var setInfo,
                 relids = [],
@@ -491,11 +517,16 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         };
 
         this.setSetAttribute = function (node, setName, attrName, attrValue) {
-            self.setAttribute(getSetNodeByName(node, setName), attrName, attrValue);
+            if (hasSet(node, setName)) {
+                self.setAttribute(getSetNodeByName(node, setName), attrName, attrValue);
+            }
         };
 
         this.delSetAttribute = function (node, setName, attrName) {
-            self.delAttribute(getSetNodeByName(node, setName), attrName);
+            var setInfo = getSetInfoByName(node, setName);
+            if (setInfo) {
+                self.delAttribute(getSetNodeByName(node, setName), attrName);
+            }
         };
 
         this.getSetRegistryNames = function (node, setName) {
@@ -515,11 +546,16 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         };
 
         this.setSetRegistry = function (node, setName, regName, regValue) {
-            self.setRegistry(getSetNodeByName(node, setName), regName, regValue);
+            if (hasSet(node, setName)) {
+                self.setRegistry(getSetNodeByName(node, setName), regName, regValue);
+            }
         };
 
         this.delSetRegistry = function (node, setName, regName) {
-            self.delRegistry(getSetNodeByName(node, setName), regName);
+            var setInfo = getSetInfoByName(node, setName);
+            if (setInfo) {
+                self.delRegistry(getSetNodeByName(node, setName), regName);
+            }
         };
 
         //</editor-fold>
