@@ -8,10 +8,12 @@
 define([
     'js/util',
     'js/Constants',
+    'common/regexp',
     'text!./templates/MetaEditorPointerNamesDialog.html',
     'css!./styles/MetaEditorPointerNamesDialog.css'
 ], function (util,
              CONSTANTS,
+             REGEXP,
              metaEditorPointerNamesDialogTemplate) {
 
     'use strict';
@@ -26,12 +28,6 @@ define([
     MetaEditorPointerNamesDialog.prototype.show = function (existingPointerNames, notAllowedPointerNames,
                                                             isSet, callback) {
         var self = this;
-
-        if (isSet) {
-            //we have to avoid using 'scr' and 'dst' as set names
-            notAllowedPointerNames.push('src');
-            notAllowedPointerNames.push('dst');
-        }
 
         this._initDialog(existingPointerNames, notAllowedPointerNames, isSet, callback);
 
@@ -56,8 +52,7 @@ define([
             i,
             len = existingPointerNames.length,
             closeAndCallback,
-            popularsAdded,
-            isValidPointerName;
+            popularsAdded;
 
         closeAndCallback = function (selectedName) {
             self._dialog.modal('hide');
@@ -67,10 +62,51 @@ define([
             }
         };
 
-        isValidPointerName = function (name) {
-            return !(name === '' || existingPointerNames.indexOf(name) !== -1 ||
-            notAllowedPointerNames.indexOf(name) !== -1);
-        };
+        function _endsWith(str, pattern) {
+            var d = str.length - pattern.length;
+            return d >= 0 && str.lastIndexOf(pattern) === d;
+        }
+
+        function validateName(name) {
+            var result = {
+                hasViolation: false,
+                message: ''
+            };
+
+            if (name === '') {
+                result.hasViolation = true;
+                result.message = (isSet ? 'Set' : 'Pointer') + ' must have a non-empty name.';
+            } else if (notAllowedPointerNames.indexOf(name) > -1) {
+                result.hasViolation = true;
+                result.message = 'Name "' + name + '" is already used for a ' + (isSet ? 'pointer' : 'set') + ' or ' +
+                'an aspect.';
+            } else if (REGEXP.DOCUMENT_KEY.test(name) === false) {
+                result.hasViolation = true;
+                result.message = 'Name "' + name + '" contains illegal characters, it may not contain "." ' +
+                    'or start with "$".';
+            } else if (!isSet) {
+                if (_endsWith(name, CONSTANTS.CORE.COLLECTION_NAME_SUFFIX)) {
+                    result.hasViolation = true;
+                    result.message = 'Name "' + name + '" ends with "' + CONSTANTS.CORE.COLLECTION_NAME_SUFFIX + '", ' +
+                        'which could lead to collisions with data stored for inverse pointers.';
+                } else if (name === CONSTANTS.CORE.BASE_POINTER) {
+                    result.hasViolation = true;
+                    result.message = 'Pointer "' + CONSTANTS.CORE.BASE_POINTER  + '" is reserved for base/instance ' +
+                        'relationship.';
+                } else if (name === CONSTANTS.CORE.MEMBER_RELATION) {
+                    result.hasViolation = true;
+                    result.message = 'Pointer "' + CONSTANTS.CORE.MEMBER_RELATION  + '" is reserved for ' +
+                        'set membership.';
+                }
+            } else if (isSet) {
+                if (name === 'src' || name === 'dst') {
+                    result.hasViolation = true;
+                    result.message = 'Name "' + name + '" can only be used for pointer names and not for sets.';
+                }
+            }
+
+            return result;
+        }
 
         this._dialog = $(metaEditorPointerNamesDialogTemplate);
 
@@ -87,6 +123,8 @@ define([
         this._el = this._dialog.find('.modal-body').first();
         this._btnGroup = this._el.find('.btn-group-existing').first();
         this._btnGroupPopular = this._dialog.find('.btn-group-popular').first();
+        this._alertDiv = this._dialog.find('.message-badge').first();
+        this._hideAlert();
 
         //fill pointer names
         existingPointerNames.sort();
@@ -96,16 +134,17 @@ define([
             this._btnGroup.empty();
 
             for (i = 0; i < len; i += 1) {
-                this._btnGroup.append($('<button class="btn btn-default">' +
-                    util.toSafeString(existingPointerNames[i]) + '</button>'));
+                if (existingPointerNames[i] !== CONSTANTS.CORE.BASE_POINTER) {
+                    this._btnGroup.append($('<button class="btn btn-default">' +
+                        util.toSafeString(existingPointerNames[i]) + '</button>'));
+                }
             }
-
         } else {
 
             if (isSet === true) {
-                this._btnGroup.html('<span class="empty-message">No exisiting sets defined yet...</i>');
+                this._btnGroup.html('<span class="empty-message">No existing sets defined yet...</i>');
             } else {
-                this._btnGroup.html('<span class="empty-message">No exisiting pointers defined yet...</i>');
+                this._btnGroup.html('<span class="empty-message">No existing pointers defined yet...</i>');
             }
         }
 
@@ -154,14 +193,17 @@ define([
         });
 
         this._txtNewPointerName.on('keyup', function () {
-            var val = self._txtNewPointerName.val();
+            var val = self._txtNewPointerName.val(),
+                validationResult = validateName(val);
 
-            if (!isValidPointerName(val)) {
+            if (validationResult.hasViolation) {
                 self._panelCreateNew.addClass('has-error');
+                self._showAlert(validationResult.message);
                 self._btnCreateNew.disable(true);
             } else {
                 self._panelCreateNew.removeClass('has-error');
                 self._btnCreateNew.disable(false);
+                self._hideAlert();
             }
         });
 
@@ -169,7 +211,7 @@ define([
             var enterPressed = event.which === 13,
                 selectedPointerName = self._txtNewPointerName.val();
 
-            if (enterPressed && isValidPointerName(selectedPointerName)) {
+            if (enterPressed && validateName(selectedPointerName).hasViolation === false) {
                 closeAndCallback(selectedPointerName);
 
                 event.stopPropagation();
@@ -187,6 +229,15 @@ define([
                 closeAndCallback(selectedPointerName);
             }
         });
+    };
+
+    MetaEditorPointerNamesDialog.prototype._showAlert = function (msg) {
+        this._alertDiv.text(msg);
+        this._alertDiv.show();
+    };
+
+    MetaEditorPointerNamesDialog.prototype._hideAlert = function () {
+        this._alertDiv.hide();
     };
 
     return MetaEditorPointerNamesDialog;

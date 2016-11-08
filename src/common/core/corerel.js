@@ -370,7 +370,7 @@ define([
             }
 
             return list;
-        }
+        };
 
         this.overlayInsert = function (node, source, name, target) {
             ASSERT(self.isValidNode(node));
