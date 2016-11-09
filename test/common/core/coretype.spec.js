@@ -12,7 +12,7 @@ describe('coretype', function () {
         Q = testFixture.Q,
         logger = testFixture.logger.fork('coretype.spec'),
         storage,
-        // Has to be in sync with relidPool in util/random.js
+    // Has to be in sync with relidPool in util/random.js
         RELID_POOL = '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'.split(''),
         expect = testFixture.expect,
         __should = testFixture.should,
@@ -1009,6 +1009,76 @@ describe('coretype', function () {
 
         child = core.createNode({parent: proto});
         expect(core.getRelid(child)).to.have.length(2);
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when setting an attribute of inherited child', function (done) {
+        var proto = core.createNode({parent: root, relid: 'p'}),
+            derived = core.createNode({parent: root, base: proto, relid: 'd'});
+
+        core.createNode({parent: proto, relid: 'c'});
+
+        TASYNC.call(function (children) {
+            var newChild;
+            expect(children.length).to.equal(1);
+            expect(core.getRelid(children[0])).to.equal('c');
+            core.setAttribute(children[0], 'someName', 'someVal');
+            newChild = core.createNode({parent: proto});
+            expect(core.getRelid(newChild).length > 1).to.equal(true);
+            done();
+        }, core.loadChildren(derived));
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when setting a registry of inherited child', function (done) {
+        var proto = core.createNode({parent: root, relid: 'p'}),
+            derived = core.createNode({parent: root, base: proto, relid: 'd'});
+
+        core.createNode({parent: proto, relid: 'c'});
+
+        TASYNC.call(function (children) {
+            var newChild;
+            expect(children.length).to.equal(1);
+            expect(core.getRelid(children[0])).to.equal('c');
+            core.setRegistry(children[0], 'someName', 'someVal');
+            newChild = core.createNode({parent: proto});
+            expect(core.getRelid(newChild).length > 1).to.equal(true);
+            done();
+        }, core.loadChildren(derived));
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when setting pointer OF inherited child', function (done) {
+        var proto = core.createNode({parent: root, relid: 'p'}),
+            derived = core.createNode({parent: root, base: proto, relid: 'd'}),
+            target = core.createNode({parent: root});
+
+        core.createNode({parent: proto, relid: 'c'});
+
+        TASYNC.call(function (children) {
+            var newChild;
+            expect(children.length).to.equal(1);
+            expect(core.getRelid(children[0])).to.equal('c');
+            core.setPointer(children[0], 'someName', target);
+            newChild = core.createNode({parent: proto});
+            expect(core.getRelid(newChild).length > 1).to.equal(true);
+            done();
+        }, core.loadChildren(derived));
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when setting pointer TO inherited child', function (done) {
+        var proto = core.createNode({parent: root, relid: 'p'}),
+            derived = core.createNode({parent: root, base: proto, relid: 'd'}),
+            pointer = core.createNode({parent: root});
+
+        core.createNode({parent: proto, relid: 'c'});
+
+        TASYNC.call(function (children) {
+            var newChild;
+            expect(children.length).to.equal(1);
+            expect(core.getRelid(children[0])).to.equal('c');
+            core.setPointer(pointer, 'someName', children[0]);
+            newChild = core.createNode({parent: proto});
+            expect(core.getRelid(newChild).length > 1).to.equal(true);
+            done();
+        }, core.loadChildren(derived));
     });
 
     it('should only update MINIMAL_RELID_LENGTH_PROPERTY up to MAXIMUM_STARTING_RELID_LENGTH at setBase', function () {

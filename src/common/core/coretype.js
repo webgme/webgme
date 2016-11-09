@@ -604,13 +604,19 @@ define([
         };
 
         this.setPointer = function (node, name, target) {
+            var parent;
             innerCore.setPointer(node, name, target);
+
             if (isInheritedChild(node)) {
-                this.setProperty(node, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
+                self.setProperty(node, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
+                parent = self.getParent(node);
+                self.processRelidReservation(parent, self.getRelid(node));
             }
 
             if (isInheritedChild(target)) {
-                this.setProperty(target, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
+                self.setProperty(target, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
+                parent = self.getParent(target);
+                self.processRelidReservation(parent, self.getRelid(target));
             }
         };
 
@@ -975,6 +981,35 @@ define([
 
             return relids;
         };
+
+        this.setAttribute = function (node, name, value) {
+            var parent;
+
+            innerCore.setAttribute(node, name, value);
+
+            if (isInheritedChild(node)) {
+                // If the node is an inherited child - data is now stored for it.
+                // And to prevent application of this data after deletion and creation of
+                // new nodes at the base - we process the relid.
+                parent = self.getParent(node);
+                self.processRelidReservation(parent, self.getRelid(node));
+            }
+        };
+
+        this.setRegistry = function (node, name, value) {
+            var parent;
+
+            innerCore.setRegistry(node, name, value);
+
+            if (isInheritedChild(node)) {
+                // If the node is an inherited child - data is now stored for it.
+                // And to prevent application of this data after deletion and creation of
+                // new nodes at the base - we process the relid.
+                parent = self.getParent(node);
+                self.processRelidReservation(parent, self.getRelid(node));
+            }
+        };
+
         //</editor-fold>
 
         //<editor-fold=Added Methods>
