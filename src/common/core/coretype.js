@@ -604,19 +604,19 @@ define([
         };
 
         this.setPointer = function (node, name, target) {
-            var parent;
             innerCore.setPointer(node, name, target);
 
             if (isInheritedChild(node)) {
                 self.setProperty(node, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
-                parent = self.getParent(node);
-                self.processRelidReservation(parent, self.getRelid(node));
+                // #1232
+
+                self.processRelidReservation(self.getParent(node), self.getRelid(node));
             }
 
             if (isInheritedChild(target)) {
                 self.setProperty(target, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
-                parent = self.getParent(target);
-                self.processRelidReservation(parent, self.getRelid(target));
+                // #1232
+                self.processRelidReservation(self.getParent(target), self.getRelid(target));
             }
         };
 
@@ -983,30 +983,20 @@ define([
         };
 
         this.setAttribute = function (node, name, value) {
-            var parent;
-
             innerCore.setAttribute(node, name, value);
 
+            // #1232
             if (isInheritedChild(node)) {
-                // If the node is an inherited child - data is now stored for it.
-                // And to prevent application of this data after deletion and creation of
-                // new nodes at the base - we process the relid.
-                parent = self.getParent(node);
-                self.processRelidReservation(parent, self.getRelid(node));
+                self.processRelidReservation(self.getParent(node), self.getRelid(node));
             }
         };
 
         this.setRegistry = function (node, name, value) {
-            var parent;
-
             innerCore.setRegistry(node, name, value);
 
+            // #1232
             if (isInheritedChild(node)) {
-                // If the node is an inherited child - data is now stored for it.
-                // And to prevent application of this data after deletion and creation of
-                // new nodes at the base - we process the relid.
-                parent = self.getParent(node);
-                self.processRelidReservation(parent, self.getRelid(node));
+                self.processRelidReservation(self.getParent(node), self.getRelid(node));
             }
         };
 
@@ -1197,7 +1187,10 @@ define([
         };
 
         this.processRelidReservation = function (node, relid) {
-            processNewRelidLength(node, relid.length + 1);
+            if (!CONSTANTS.DOES_NOT_HAVE_RELID_CHILDREN[self.getRelid(node)] && innerCore.isValidRelid(relid)) {
+                // We do not process relids for e.g. _sets and _meta.
+                processNewRelidLength(node, relid.length + 1);
+            }
         };
 
         this.getInstancePaths = function (node) {
