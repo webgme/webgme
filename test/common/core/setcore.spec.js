@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('set core', function () {
+describe.only('set core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -93,7 +93,6 @@ describe('set core', function () {
             expect(err).to.equal(null);
             expect(children.length).to.equal(1);
             expect(core.getRelid(children[0])).to.equal('c');
-            core.createSet(children[0], 'set');
             newChild = core.createNode({parent: proto});
             expect(core.getRelid(newChild).length > 1).to.equal(true);
             done();
@@ -141,6 +140,49 @@ describe('set core', function () {
                 expect(children.length).to.equal(1);
                 expect(core.getRelid(children[0])).to.equal('c');
                 core.setMemberRegistry(children[0], 'set', core.getPath(member), 'someName', 'someVal');
+                newChild = core.createNode({parent: proto});
+                expect(core.getRelid(newChild).length > 1).to.equal(true);
+                done();
+            });
+        }
+    );
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when setting set registry of inherited set in inherited child',
+        function (done) {
+            var proto = core.createNode({parent: root, relid: 'p'}),
+                derived = core.createNode({parent: root, base: proto, relid: 'd'}),
+                child = core.createNode({parent: proto, relid: 'c'});
+
+            core.createSet(child, 'set');
+
+            core.loadChildren(derived, function (err, children) {
+                var newChild;
+                expect(err).to.equal(null);
+                expect(children.length).to.equal(1);
+                expect(core.getRelid(children[0])).to.equal('c');
+                core.setSetRegistry(children[0], 'set', 'someName', 'someVal');
+                newChild = core.createNode({parent: proto});
+                expect(core.getRelid(newChild).length > 1).to.equal(true);
+                done();
+            });
+        }
+    );
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when setting set attribute of inherited set in inherited child',
+        function (done) {
+            var proto = core.createNode({parent: root, relid: 'p'}),
+                derived = core.createNode({parent: root, base: proto, relid: 'd'}),
+                child = core.createNode({parent: proto, relid: 'c'});
+
+            core.createSet(child, 'set');
+
+            core.loadChildren(derived, function (err, children) {
+                var newChild;
+                expect(err).to.equal(null);
+                expect(children.length).to.equal(1);
+                expect(core.getRelid(children[0])).to.equal('c');
+                core.createSet(children[0], 'set');
+                core.setSetAttribute(children[0], 'set', 'someName', 'someVal');
                 newChild = core.createNode({parent: proto});
                 expect(core.getRelid(newChild).length > 1).to.equal(true);
                 done();
