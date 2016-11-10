@@ -61,6 +61,92 @@ describe('set core', function () {
             .nodeify(done);
     });
 
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when adding inherited child to a set', function (done) {
+        var proto = core.createNode({parent: root, relid: 'p'}),
+            derived = core.createNode({parent: root, base: proto, relid: 'd'}),
+            setNode = core.createNode({parent: root});
+
+        core.createNode({parent: proto, relid: 'c'});
+        core.createSet(setNode, 'set');
+
+        core.loadChildren(derived, function (err, children) {
+            var newChild;
+            expect(err).to.equal(null);
+            expect(children.length).to.equal(1);
+            expect(core.getRelid(children[0])).to.equal('c');
+            core.addMember(setNode, 'set', children[0]);
+            newChild = core.createNode({parent: proto});
+            expect(core.getRelid(newChild).length > 1).to.equal(true);
+            done();
+        });
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when adding set to inherited child', function (done) {
+        var proto = core.createNode({parent: root, relid: 'p'}),
+            derived = core.createNode({parent: root, base: proto, relid: 'd'});
+
+        core.createNode({parent: proto, relid: 'c'});
+
+        core.loadChildren(derived, function (err, children) {
+            var newChild;
+            expect(err).to.equal(null);
+            expect(children.length).to.equal(1);
+            expect(core.getRelid(children[0])).to.equal('c');
+            core.createSet(children[0], 'set');
+            newChild = core.createNode({parent: proto});
+            expect(core.getRelid(newChild).length > 1).to.equal(true);
+            done();
+        });
+    });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when setting attribute of inherited member in inherited child',
+        function (done) {
+            var proto = core.createNode({parent: root, relid: 'p'}),
+                derived = core.createNode({parent: root, base: proto, relid: 'd'}),
+                child = core.createNode({parent: proto, relid: 'c'}),
+                member = core.createNode({parent: root});
+
+
+            core.createSet(child, 'set');
+            core.addMember(child, 'set', member);
+
+            core.loadChildren(derived, function (err, children) {
+                var newChild;
+                expect(err).to.equal(null);
+                expect(children.length).to.equal(1);
+                expect(core.getRelid(children[0])).to.equal('c');
+                core.setMemberAttribute(children[0], 'set', core.getPath(member), 'someName', 'someVal');
+                newChild = core.createNode({parent: proto});
+                expect(core.getRelid(newChild).length > 1).to.equal(true);
+                done();
+            });
+        }
+    );
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when setting registry of inherited member in inherited child',
+        function (done) {
+            var proto = core.createNode({parent: root, relid: 'p'}),
+                derived = core.createNode({parent: root, base: proto, relid: 'd'}),
+                child = core.createNode({parent: proto, relid: 'c'}),
+                member = core.createNode({parent: root});
+
+
+            core.createSet(child, 'set');
+            core.addMember(child, 'set', member);
+
+            core.loadChildren(derived, function (err, children) {
+                var newChild;
+                expect(err).to.equal(null);
+                expect(children.length).to.equal(1);
+                expect(core.getRelid(children[0])).to.equal('c');
+                core.setMemberRegistry(children[0], 'set', core.getPath(member), 'someName', 'someVal');
+                newChild = core.createNode({parent: proto});
+                expect(core.getRelid(newChild).length > 1).to.equal(true);
+                done();
+            });
+        }
+    );
+
     it('set members should be inherited as well', function () {
         var setType = core.createNode({parent: root}),
             setInstance = core.createNode({parent: root, base: setType}),

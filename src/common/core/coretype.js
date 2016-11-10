@@ -456,8 +456,13 @@ define([
         function processNewRelidLength(node, newMinLength) {
             var currMinLength;
 
-            newMinLength = newMinLength > CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH ?
-                CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH : newMinLength;
+            if (newMinLength > CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH + 1) {
+                logger.debug('Minimum relid length surpassed threshold, not propagating at all', newMinLength);
+                return;
+            } else if (newMinLength > CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH) {
+                newMinLength = CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH;
+                logger.debug('Minimum relid length reached threshold, only propagating threshold', newMinLength);
+            }
 
             node = node.base;
             while (node) {
@@ -605,12 +610,18 @@ define([
 
         this.setPointer = function (node, name, target) {
             innerCore.setPointer(node, name, target);
+
             if (isInheritedChild(node)) {
-                this.setProperty(node, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
+                self.setProperty(node, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
+                // #1232
+
+                self.processRelidReservation(self.getParent(node), self.getRelid(node));
             }
 
             if (isInheritedChild(target)) {
-                this.setProperty(target, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
+                self.setProperty(target, CONSTANTS.INHERITED_CHILD_HAS_OWN_RELATION_PROPERTY, true);
+                // #1232
+                self.processRelidReservation(self.getParent(target), self.getRelid(target));
             }
         };
 
@@ -653,30 +664,31 @@ define([
             }, self.loadPaths(rootHash, paths));
         };
 
-        this.createChild = function (parent) {
-            var node = innerCore.createChild(parent, self.getChildrenRelids(parent, true));
+        this.createChild = function (parent, relidLength) {
+            var node = innerCore.createChild(parent, self.getChildrenRelids(parent, true), relidLength);
 
             this.processRelidReservation(parent, this.getRelid(node));
 
             return self.getChild(parent, this.getRelid(node));
         };
 
-        this.createNode = function (parameters) {
+        this.createNode = function (parameters, relidLength) {
             parameters = parameters || {};
             var base = parameters.base || null,
                 parent = parameters.parent,
                 node,
-                relids;
+                takenRelids;
 
             ASSERT(!parent || self.isValidNode(parent));
             ASSERT(!base || self.isValidNode(base));
             ASSERT(!base || self.getPath(base) !== self.getPath(parent));
 
             if (parent) {
-                relids = self.getChildrenRelids(parent, true);
+                takenRelids = self.getChildrenRelids(parent, true);
+                relidLength = relidLength || innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
             }
 
-            node = innerCore.createNode(parameters, relids);
+            node = innerCore.createNode(parameters, takenRelids, relidLength);
             node.base = base;
             innerCore.setPointer(node, CONSTANTS.BASE_POINTER, base);
 
@@ -706,19 +718,22 @@ define([
             return result;
         };
 
-        this.moveNode = function (node, parent) {
+        this.moveNode = function (node, parent, relidLength) {
             ASSERT(self.isValidNewParent(node, parent),
                 'New parent would create loop in containment/inheritance tree.');
-            var base = node.base,
-                minRelidLength = innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY) || 0,
+            var minRelidLength = innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY),
                 takenRelids = self.getChildrenRelids(parent, true),
+                currRelid = this.getRelid(node),
+                base = node.base,
                 moved;
 
-            if (this.getRelid(node).length < minRelidLength) {
-                takenRelids[this.getRelid(node)] = true;
+            if (typeof minRelidLength === 'number' && currRelid.length < minRelidLength){
+                takenRelids[currRelid] = true;
+            } else if (typeof relidLength === 'number' && currRelid.length < relidLength){
+                takenRelids[currRelid] = true;
             }
 
-            moved = innerCore.moveNode(node, parent, takenRelids);
+            moved = innerCore.moveNode(node, parent, takenRelids, relidLength || minRelidLength);
             moved.base = base;
 
             this.processRelidReservation(parent, this.getRelid(moved));
@@ -726,13 +741,17 @@ define([
             return moved;
         };
 
-        this.copyNode = function (node, parent) {
+        this.copyNode = function (node, parent, relidLength) {
             ASSERT(!node.base || self.getPath(node.base) !== self.getPath(parent));
             var base = node.base,
-                newnode = innerCore.copyNode(node, parent, self.getChildrenRelids(parent, true));
+                newnode;
 
+            relidLength = relidLength || innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
+            newnode = innerCore.copyNode(node, parent, self.getChildrenRelids(parent, true), relidLength);
             newnode.base = base;
             innerCore.setPointer(newnode, CONSTANTS.BASE_POINTER, base);
+
+            // The copy does not have any instances at this point -> reset the property.
             innerCore.deleteProperty(newnode, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
 
             this.processRelidReservation(parent, this.getRelid(newnode));
@@ -740,7 +759,7 @@ define([
             return newnode;
         };
 
-        this.copyNodes = function (nodes, parent) {
+        this.copyNodes = function (nodes, parent, relidLength) {
             var copiedNodes,
                 i, j, index, base,
                 relations = [],
@@ -765,8 +784,9 @@ define([
                 relations.push(pointer);
             }
 
+            relidLength = relidLength || innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
             //making the actual copy
-            copiedNodes = innerCore.copyNodes(nodes, parent, self.getChildrenRelids(parent, true));
+            copiedNodes = innerCore.copyNodes(nodes, parent, self.getChildrenRelids(parent, true), relidLength);
 
             //setting internal-inherited relations
             for (i = 0; i < nodes.length; i++) {
@@ -975,6 +995,25 @@ define([
 
             return relids;
         };
+
+        this.setAttribute = function (node, name, value) {
+            innerCore.setAttribute(node, name, value);
+
+            // #1232
+            if (isInheritedChild(node)) {
+                self.processRelidReservation(self.getParent(node), self.getRelid(node));
+            }
+        };
+
+        this.setRegistry = function (node, name, value) {
+            innerCore.setRegistry(node, name, value);
+
+            // #1232
+            if (isInheritedChild(node)) {
+                self.processRelidReservation(self.getParent(node), self.getRelid(node));
+            }
+        };
+
         //</editor-fold>
 
         //<editor-fold=Added Methods>
@@ -1162,7 +1201,10 @@ define([
         };
 
         this.processRelidReservation = function (node, relid) {
-            processNewRelidLength(node, relid.length + 1);
+            if (!CONSTANTS.DOES_NOT_HAVE_RELID_CHILDREN[self.getRelid(node)] && innerCore.isValidRelid(relid)) {
+                // We do not process relids for e.g. _sets and _meta.
+                processNewRelidLength(node, relid.length + 1);
+            }
         };
 
         this.getInstancePaths = function (node) {

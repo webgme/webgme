@@ -94,7 +94,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             if (constRelId) {
                 constraintNode = innerCore.getChild(constraintsNode, constRelId);
             } else {
-                constraintNode = innerCore.createChild(constraintsNode);
+                constraintNode = innerCore.createChild(constraintsNode, CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH + 1);
             }
 
             constraintObj.priority = constraintObj.priority || CONSTANTS.C_DEF_PRIORITY;
