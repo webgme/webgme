@@ -702,6 +702,41 @@ describe('coretype', function () {
         }, core.loadChildren(node, '/n'));
     });
 
+    it('new node should have relidLength when createNode with relidLength', function () {
+        var newNode = core.createNode({parent: root}, 7);
+        expect(core.getRelid(newNode)).to.have.length(7);
+    });
+
+    it('new node should have relidLength when createChild with relidLength', function () {
+        var parent = core.createNode({parent: root}),
+            newNode = core.createChild(parent, 7);
+        expect(core.getRelid(newNode)).to.have.length(7);
+    });
+
+    it('new node should have relidLength when copyNode with relidLength', function () {
+        var parent = core.createNode({parent: root}),
+            copy = core.createNode({parent: root}),
+            newNode = core.copyNode(copy, parent, 7);
+
+        expect(core.getRelid(newNode)).to.have.length(7);
+    });
+
+    it('new node should have relidLength when copyNodes with relidLength', function () {
+        var parent = core.createNode({parent: root}),
+            copy = core.createNode({parent: root}),
+            newNode = core.copyNodes([copy], parent, 7)[0];
+
+        expect(core.getRelid(newNode)).to.have.length(7);
+    });
+
+    it('moved node should have relidLength when moveNode with relidLength', function () {
+        var parent = core.createNode({parent: root}),
+            toMove = core.createNode({parent: root}),
+            movedNode = core.moveNode(toMove, parent, 7);
+
+        expect(core.getRelid(movedNode)).to.have.length(7);
+    });
+
     // Relids collision
     it('creating node with explicitly set relid should ASSERT if already exists', function () {
         core.createNode({parent: root, relid: 'taken'});
