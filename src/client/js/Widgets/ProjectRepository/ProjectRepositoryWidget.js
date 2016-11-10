@@ -46,7 +46,7 @@ define(['js/logger',
         TAG_LABEL_CLASS = 'tag-label',
         COMMON_LABEL_CLASS = 'common-label',
         BTN_LOAD_COMMIT_CLASS = 'btnLoadCommit',
-        COMMIT_IT = 'commitId',
+        COMMIT_ID = 'commitId',
         MESSAGE_DIV_CLASS = 'commit-message',
         USER_TO_AVATAR_PATH = {};
 
@@ -289,7 +289,7 @@ define(['js/logger',
         /*********** HOOK UP EVENT HANDLERS ***********/
         this._el.on('click.' + BTN_LOAD_COMMIT_CLASS, '.' + BTN_LOAD_COMMIT_CLASS, function () {
             var btn = $(this),
-                commitId = btn.data(COMMIT_IT);
+                commitId = btn.data(COMMIT_ID);
 
             self.onLoadCommit({id: commitId});
         });
@@ -535,7 +535,8 @@ define(['js/logger',
     };
 
     ProjectRepositoryWidget.prototype._branchLabelDOMBase = $(
-        '<span class="label"><span class="label-name select-branch-in-text" title="Select branch"></span><i data-branch="" ' +
+        '<span class="label">' +
+        '<span class="label-name select-branch-in-text" title="Select branch"></span><i data-branch="" ' +
         'class="glyphicon glyphicon-remove icon-white remove-branch-button" title="Delete branch"></i></span>'
     );
 
@@ -718,7 +719,7 @@ define(['js/logger',
         $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id.substr(0, 7));
         $(tr[0].cells[this._tableCellCommitIDIndex]).attr('title', 'Select commit ' + params.id);
         $(tr[0].cells[this._tableCellCommitIDIndex]).addClass(BTN_LOAD_COMMIT_CLASS);
-        $(tr[0].cells[this._tableCellCommitIDIndex]).data(COMMIT_IT, params.id);
+        $(tr[0].cells[this._tableCellCommitIDIndex]).data(COMMIT_ID, params.id);
         $(tr[0].cells[this._tableCellMessageIndex]).find('div.' + MESSAGE_DIV_CLASS).text(params.message);
 
         if (USER_TO_AVATAR_PATH.hasOwnProperty(userId) === false) {
@@ -746,7 +747,7 @@ define(['js/logger',
 
         //generate 'Create branch from here' button
         btn = this._createBranchBtnDOMBase.clone();
-        btn.data(COMMIT_IT, params.id);
+        btn.data(COMMIT_ID, params.id);
         if (this._projectAccess.write === false) {
             btn.disable(true);
         }
@@ -755,7 +756,7 @@ define(['js/logger',
 
         //generate 'Create tag here' button
         btn = this._createTagBtnDOMBase.clone();
-        btn.data(COMMIT_IT, params.id);
+        btn.data(COMMIT_ID, params.id);
         if (this._projectAccess.write === false) {
             btn.disable(true);
         }
@@ -769,7 +770,7 @@ define(['js/logger',
         //generate 'Squash branch' button
         if (params.singleBranch) {
             btn = this._squashBtnDOMBase.clone();
-            btn.data(COMMIT_IT, params.id);
+            btn.data(COMMIT_ID, params.id);
             if (this._projectAccess.write === false) {
                 btn.disable(true);
             }
@@ -784,7 +785,7 @@ define(['js/logger',
 
     //ProjectRepositoryWidget.prototype._generateLoadCommitBtnForCommit = function (commitId) {
     //    var btn = this._loadCommitBtnDOMBase.clone();
-    //    btn.data(COMMIT_IT, commitId);
+    //    btn.data(COMMIT_ID, commitId);
     //
     //    return btn;
     //};
@@ -819,7 +820,8 @@ define(['js/logger',
             this._commits[idx].ui.addClass(ACTUAL_COMMIT_CLASS);
 
             //remove 'LoadCommit' button from that row
-            $(this._tBody.children()[idx].cells[this._tableCellActionsIndex]).find('.' + BTN_LOAD_COMMIT_CLASS).remove();
+            $(this._tBody.children()[idx]
+                .cells[this._tableCellActionsIndex]).find('.' + BTN_LOAD_COMMIT_CLASS).remove();
         }
     };
 
@@ -972,7 +974,7 @@ define(['js/logger',
         if (isSquash) {
             self.onSquashFromCommit({
                 branchName: this._start,
-                commitId: btn.data(COMMIT_IT)
+                commitId: btn.data(COMMIT_ID)
             });
             return;
         }
@@ -1046,12 +1048,12 @@ define(['js/logger',
                 td.children().css('display', 'inline-block');
                 if (isBranch) {
                     self.onCreateBranchFromCommit({
-                        commitId: btn.data(COMMIT_IT),
+                        commitId: btn.data(COMMIT_ID),
                         name: newName
                     });
                 } else {
                     self.onCreateTagFromCommit({
-                        commitId: btn.data(COMMIT_IT),
+                        commitId: btn.data(COMMIT_ID),
                         name: newName
                     });
                 }

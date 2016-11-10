@@ -787,7 +787,11 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
 
 /**
  * Authorization: write access for data.projectId
- * @param data
+ * @param {object} data - input parameters
+ * @param {string} data.projectId - identifier for project.
+ * @param {string} data.fromCommit - starting point of the squash.
+ * @param {string} data.toCommitOrBranch - branch or commit where the endpoint of squash can be found.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param callback
  * @returns {*}
  */

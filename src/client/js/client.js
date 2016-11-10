@@ -2085,6 +2085,18 @@ define([
             });
         };
 
+        //generic notification
+        this.notifyUser = function (notification) {
+            notification.severity = notification.severity || 'info';
+
+            if (notification.message) {
+                logger.debug('generic notification', notification);
+                self.dispatchEvent(self.CONSTANTS.NOTIFICATION, notification);
+            } else {
+                logger.debug('cannot set empty notification');
+            }
+        };
+        
         this.gmeConfig = gmeConfig;
 
         window.addEventListener('error', function (evt) {

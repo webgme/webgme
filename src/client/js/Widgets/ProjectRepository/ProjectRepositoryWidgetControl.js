@@ -94,10 +94,13 @@ define(['js/logger'], function (Logger) {
                     if (err) {
                         self._logger.error(err);
                     }
-                    console.log(result);
                     if (result.status === 'SYNCED') {
                         self._view._dialog.setSelectorValue(params.branchName);
                     } else {
+                        self._client.notifyUser({
+                            severity: 'info',
+                            message: 'squashing branch \'' + params.branchName + '\' forked [' + result.hash + ']'
+                        });
                         self._view._dialog.setSelectorValue();
                     }
                 });

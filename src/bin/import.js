@@ -119,7 +119,7 @@ main = function (argv) {
         .option('-b, --branch [branch]',
             'the branch that should be created with the imported data [by default it is the \'master\']')
         .option('-w --overwrite [boolean]', 'if a project exist it will be deleted and created again')
-        .option('-c --commit [string]', 'if given, the commit will be updated with the import')
+        .option('-c --commit [string]', 'if given, the import will be a descendant of it')
         .parse(argv);
 
     if (program.mongoDatabaseUri) {
