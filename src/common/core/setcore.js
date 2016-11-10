@@ -300,11 +300,12 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
             if (setMemberRelId === null) {
                 createSetOnDemand(node, setName);
-                setMemberNode = innerCore.createChild(setNode);
+                setMemberNode = innerCore.createChild(setNode, CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH + 1);
             } else if (!self.isFullyOverriddenMember(node, setName, self.getPath(member))) {
                 //it was an inherited member, now we override it
                 // TODO: We pin down the expected behavior here..
-                setMemberNode = innerCore.copyNode(innerCore.getChild(setNode, setMemberRelId), setNode);
+                setMemberNode = innerCore.copyNode(innerCore.getChild(setNode, setMemberRelId),
+                    setNode, CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH + 1);
                 innerCore.deleteNode(innerCore.getChild(setNode, setMemberRelId), true);
             }
 

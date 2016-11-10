@@ -398,7 +398,7 @@ define([
             }
         };
 
-        this.createNode = function (parameters, takenRelids) {
+        this.createNode = function (parameters, takenRelids, relidLength) {
             parameters = parameters || {};
             var relid = parameters.relid,
                 parent = parameters.parent;
@@ -416,7 +416,7 @@ define([
                         parent.childrenRelids = null;
                     }
                 } else {
-                    node = self.createChild(parent, takenRelids);
+                    node = self.createChild(parent, takenRelids, relidLength);
                 }
 
                 innerCore.setHashed(node, true);
@@ -463,15 +463,15 @@ define([
             }
         };
 
-        this.createChild = function (parent, takenRelids) {
-            var child = innerCore.createChild(parent, takenRelids);
+        this.createChild = function (parent, takenRelids, relidLength) {
+            var child = innerCore.createChild(parent, takenRelids, relidLength);
 
             parent.childrenRelids = null;
 
             return child;
         };
 
-        this.copyNode = function (node, parent, takenRelids) {
+        this.copyNode = function (node, parent, takenRelids, relidLength) {
             ASSERT(self.isValidNode(node));
             ASSERT(!parent || self.isValidNode(parent));
             var newNode,
@@ -501,7 +501,7 @@ define([
                     return null;
                 }
 
-                newNode = self.createChild(parent, takenRelids);
+                newNode = self.createChild(parent, takenRelids, relidLength);
                 innerCore.setHashed(newNode, true);
                 innerCore.setData(newNode, innerCore.copyData(node));
 
@@ -571,7 +571,7 @@ define([
             return newNode;
         };
 
-        this.copyNodes = function (nodes, parent, takenRelids) {
+        this.copyNodes = function (nodes, parent, takenRelids, relidLength) {
             //copying multiple nodes at once for keeping their internal relations
             var paths = [],
                 i, j, index, names, pointer, newNode,
@@ -598,7 +598,7 @@ define([
 
             //now we use our simple copy
             for (i = 0; i < nodes.length; i++) {
-                newNode = self.copyNode(nodes[i], parent, takenRelids);
+                newNode = self.copyNode(nodes[i], parent, takenRelids, relidLength);
                 copiedNodes.push(newNode);
                 if (takenRelids) {
                     takenRelids[self.getRelid(newNode)] = true;
@@ -616,7 +616,7 @@ define([
             return copiedNodes;
         };
 
-        this.moveNode = function (node, parent, takenRelids) {
+        this.moveNode = function (node, parent, takenRelids, relidLength) {
             ASSERT(self.isValidNode(node) && self.isValidNode(parent));
 
             var ancestor,
@@ -649,7 +649,7 @@ define([
             var oldNode = node;
             if (takenRelids) {
                 if (takenRelids[innerCore.getRelid(oldNode)]) {
-                    node = innerCore.createChild(parent, takenRelids);
+                    node = innerCore.createChild(parent, takenRelids, relidLength);
                 } else {
                     node = innerCore.getChild(parent, innerCore.getRelid(oldNode));
                 }

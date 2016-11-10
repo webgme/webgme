@@ -561,16 +561,13 @@ define([
             return child;
         };
 
-        this.createChild = function (node, takenRelids) {
-            var minimumLength;
-
+        this.createChild = function (node, takenRelids, minimumLength) {
             node = self.normalize(node);
 
             if (typeof node.data !== 'object' || node.data === null) {
                 throw new Error('invalid node data');
             }
 
-            minimumLength = this.getProperty(node, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
             return self.getChild(node, RANDOM.generateRelid(takenRelids || node.data, minimumLength));
         };
 

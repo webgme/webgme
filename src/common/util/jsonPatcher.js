@@ -378,7 +378,7 @@ define([
                     default:
                         throw new Error('Unexpected patch operation ' + nodePatches[i]);
                 }
-            } else if (patchPath !== MIN_RELID_LENGTH_PATH) {
+            } else if (_endsWith(patchPath, MIN_RELID_LENGTH_PATH) === false) {
                 ownChange = true;
             }
         }
