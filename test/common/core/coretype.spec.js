@@ -856,14 +856,28 @@ describe('coretype', function () {
         expect(core.getRelid(protoChild)).to.have.length(4);
     });
 
-    it('should not generate longer relid than allowed even if instance has child with longer relid', function () {
-        var longrelid = 'thisIsWayTooLong',
+    it('should not generate longer relid if instance has child with relid longer than max', function () {
+        var longrelid = 'HasSix',
             proto = core.createNode({parent: root, relid: 'theAncestor'}),
             inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
             child = core.createNode({parent: inst, relid: longrelid}),
             protoChild = core.createNode({parent: proto});
 
         expect(core.getRelid(child)).to.have.length(longrelid.length);
+        expect(core.getRelid(protoChild)).to.have.length(1);
+    });
+
+    it('should not generate longer relid than max if instance has child with relid longer than max', function () {
+        var longrelid = 'five',
+            evenLonger = 'HasSix',
+            proto = core.createNode({parent: root, relid: 'theAncestor'}),
+            inst = core.createNode({parent: root, base: proto, relid: 'theInstance'}),
+            child = core.createNode({parent: inst, relid: longrelid}),
+            child2 = core.createNode({parent: inst, relid: evenLonger}),
+            protoChild = core.createNode({parent: proto});
+
+        expect(core.getRelid(child)).to.have.length(longrelid.length);
+        expect(core.getRelid(child2)).to.have.length(evenLonger.length);
         expect(core.getRelid(protoChild)).to.have.length(CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH);
     });
 
