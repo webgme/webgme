@@ -1408,7 +1408,6 @@ describe('SafeStorage', function () {
                 newRoot,
                 coreObjects = {};
 
-            parameters.gmeConfig.storage.patchRootCommunicationEnabled = false;
             initTest(parameters)
                 .then(function () {
                     var commitData = {};
@@ -1465,7 +1464,6 @@ describe('SafeStorage', function () {
                 newRoot,
                 coreObjects = {};
 
-            parameters.gmeConfig.storage.patchRootCommunicationEnabled = true;
             initTest(parameters)
                 .then(function () {
                     patchRoot = {
@@ -1558,7 +1556,6 @@ describe('SafeStorage', function () {
                 .catch(done);
         });
 
-
         it('should fail to handle faulty patch root object', function (done) {
             var parameters = {
                     projectName: 'patchOnFaultyPatch',
@@ -1613,7 +1610,6 @@ describe('SafeStorage', function () {
                 })
                 .catch(done);
         });
-
 
         it('should fail to handle patch root object with faulty base', function (done) {
             var parameters = {

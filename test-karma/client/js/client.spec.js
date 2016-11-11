@@ -2561,7 +2561,7 @@ describe('GME client', function () {
             });
         });
 
-        it('should set the given pointer of the node to the specified target', function (done) {
+        it.only('should set the given pointer of the node to the specified target', function (done) {
             var testState = 'init',
                 testId = 'basicMakePointer',
                 branchStatusHandler = function (status /*, commitQueue, updateQueue*/) {
@@ -2584,7 +2584,7 @@ describe('GME client', function () {
                         node = client.getNode(events[1].eid);
                         expect(node).not.to.equal(null);
 
-                        client.makePointer('/323573539', 'ptr', '/1', 'basic make pointer test');
+                        client.setPointer('/323573539', 'ptr', '/1', 'set pointer test');
                         return;
                     }
 
