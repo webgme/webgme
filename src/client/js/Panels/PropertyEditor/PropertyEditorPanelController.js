@@ -40,13 +40,17 @@ define(['js/logger',
             REGISTRY_KEYS.VALID_DECORATORS
         ],
         TEMPLATING_SUB_GROUP = 'Templating',
-        PREFERENCES_REGISTRY_KEYS = [REGISTRY_KEYS.DECORATOR,
+        PREFERENCES_REGISTRY_KEYS = [
+            REGISTRY_KEYS.DECORATOR,
             REGISTRY_KEYS.DISPLAY_FORMAT,
             REGISTRY_KEYS.SVG_ICON,
             REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON,
             REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON,
             REGISTRY_KEYS.SVG_ICON,
             REGISTRY_KEYS.PORT_SVG_ICON,
+            REGISTRY_KEYS.COLOR,
+            REGISTRY_KEYS.TEXT_COLOR,
+            REGISTRY_KEYS.BORDER_COLOR,
             REGISTRY_KEYS.REPLACEABLE
         ],
         NON_INVALID_PTRS = [CONSTANTS.POINTER_BASE];
@@ -338,6 +342,13 @@ define(['js/logger',
                 }
             }
 
+            //if only the root is selected we hide anything in preferences but tree icons
+            if (onlyRootSelected && prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.' &&
+                key !== REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON &&
+                key !== REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) {
+                continue;
+            }
+
             extKey = prefix + key;
             keyParts = key.split('.');
 
@@ -398,76 +409,68 @@ define(['js/logger',
                 }
 
                 if (prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.') {
-                    if (onlyRootSelected === false) {
-                        //decorator value should be rendered as an option list
-                        if (key === REGISTRY_KEYS.DECORATOR) {
-                            //dstList[extKey].valueType = "option";
-                            //FIXME: only the decorators for DiagramDesigner are listed so far
-                            dst[extKey].valueItems = decoratorNames;
-                        } else if (key === REGISTRY_KEYS.SVG_ICON || key === REGISTRY_KEYS.PORT_SVG_ICON ||
-                            key === REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON ||
-                            key === REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) {
+                    //decorator value should be rendered as an option list
+                    if (key === REGISTRY_KEYS.DECORATOR) {
+                        //dstList[extKey].valueType = "option";
+                        //FIXME: only the decorators for DiagramDesigner are listed so far
+                        dst[extKey].valueItems = decoratorNames;
+                    } else if (key === REGISTRY_KEYS.SVG_ICON || key === REGISTRY_KEYS.PORT_SVG_ICON ||
+                        key === REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON ||
+                        key === REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) {
 
-                            dst[extKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
-                            dst[extKey].dialog = DecoratorSVGExplorerDialog;
-                            dst[extKey].value = dst[extKey].value === undefined ?
-                                '' : dst[extKey].value;
-                        } else if (key === REGISTRY_KEYS.REPLACEABLE) {
-                            dst[TEMPLATING_SUB_GROUP] = {
-                                name: TEMPLATING_SUB_GROUP,
-                                text: TEMPLATING_SUB_GROUP,
-                                value: undefined,
-                                isFolder: true
+                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
+                        dst[extKey].dialog = DecoratorSVGExplorerDialog;
+                        dst[extKey].value = dst[extKey].value === undefined ?
+                            '' : dst[extKey].value;
+                    } else if (key === REGISTRY_KEYS.COLOR || key === REGISTRY_KEYS.BORDER_COLOR ||
+                        key === REGISTRY_KEYS.TEXT_COLOR) {
+                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.COLOR_PICKER;
+                    } else if (key === REGISTRY_KEYS.REPLACEABLE) {
+                        dst[TEMPLATING_SUB_GROUP] = {
+                            name: TEMPLATING_SUB_GROUP,
+                            text: TEMPLATING_SUB_GROUP,
+                            value: undefined,
+                            isFolder: true
+                        };
+
+                        repKey = TEMPLATING_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        delete dst[extKey];
+
+                        canBeReplaceable = this._canBeReplaceable(selectedNodes);
+                        dst[repKey].value = (!dst[repKey].value || canBeReplaceable === false) ? false : true;
+                        dst[repKey].valueType = 'boolean';
+                        if (canBeReplaceable === false) {
+                            dst[repKey].readOnly = true;
+                            dst[repKey].alwaysReadOnly = true;
+                            dst[repKey].title = 'Meta nodes or inherited children cannot be templates.';
+                        }
+
+                        if (keys.indexOf(CONSTANTS.POINTER_CONSTRAINED_BY) > -1) {
+                            cbyKey = TEMPLATING_SUB_GROUP + '.' + CONSTANTS.POINTER_CONSTRAINED_BY;
+
+                            dst[cbyKey] = {
+                                name: CONSTANTS.POINTER_CONSTRAINED_BY,
+                                value: src[CONSTANTS.POINTER_CONSTRAINED_BY].value,
+                                valueType: src[CONSTANTS.POINTER_CONSTRAINED_BY].valueType,
+                                options: src[CONSTANTS.POINTER_CONSTRAINED_BY].options || {},
+                                widget: PROPERTY_GRID_WIDGETS.POINTER_WIDGET,
+                                client: this._client
                             };
 
-                            repKey = TEMPLATING_SUB_GROUP + '.' + key;
-                            dst[repKey] = dst[extKey];
-                            delete dst[extKey];
+                            dst[cbyKey].options.resetable =
+                                this._isResettablePointer(selectedNodes, CONSTANTS.POINTER_CONSTRAINED_BY);
 
-                            canBeReplaceable = this._canBeReplaceable(selectedNodes);
-                            dst[repKey].value = (!dst[repKey].value || canBeReplaceable === false) ? false : true;
-                            dst[repKey].valueType = 'boolean';
-                            if (canBeReplaceable === false) {
-                                dst[repKey].readOnly = true;
-                                dst[repKey].alwaysReadOnly = true;
-                                dst[repKey].title = 'Meta nodes or inherited children cannot be templates.';
+                            dst[cbyKey].options.invalid =
+                                this._isInvalidPointer(selectedNodes, CONSTANTS.POINTER_CONSTRAINED_BY);
+
+                            if (dst[repKey].value === false && !dst[cbyKey].options.resetable && !dst[cbyKey].options.invalid) {
+                                // In this case it is only clutter to display this pointer widget.
+                                delete dst[cbyKey];
                             }
-
-                            if (keys.indexOf(CONSTANTS.POINTER_CONSTRAINED_BY) > -1) {
-                                cbyKey = TEMPLATING_SUB_GROUP + '.' + CONSTANTS.POINTER_CONSTRAINED_BY;
-
-                                dst[cbyKey] = {
-                                    name: CONSTANTS.POINTER_CONSTRAINED_BY,
-                                    value: src[CONSTANTS.POINTER_CONSTRAINED_BY].value,
-                                    valueType: src[CONSTANTS.POINTER_CONSTRAINED_BY].valueType,
-                                    options: src[CONSTANTS.POINTER_CONSTRAINED_BY].options || {},
-                                    widget: PROPERTY_GRID_WIDGETS.POINTER_WIDGET,
-                                    client: this._client
-                                };
-
-                                dst[cbyKey].options.resetable =
-                                    this._isResettablePointer(selectedNodes, CONSTANTS.POINTER_CONSTRAINED_BY);
-
-                                dst[cbyKey].options.invalid =
-                                    this._isInvalidPointer(selectedNodes, CONSTANTS.POINTER_CONSTRAINED_BY);
-
-                                if (dst[repKey].value === false && !dst[cbyKey].options.resetable &&
-                                    !dst[cbyKey].options.invalid) {
-                                    // In this case it is only clutter to display this pointer widget.
-                                    delete dst[cbyKey];
-                                }
-                            }
-                        } else if (key === CONSTANTS.POINTER_CONSTRAINED_BY) {
-                            // This is handled by the REPLACEABLE above.
                         }
-                    } else {
-                        if (key === REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON ||
-                            key === REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) {
-                            dst[extKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
-                            dst[extKey].dialog = DecoratorSVGExplorerDialog;
-                            dst[extKey].value = dst[extKey].value === undefined ?
-                                '' : dst[extKey].value;
-                        }
+                    } else if (key === CONSTANTS.POINTER_CONSTRAINED_BY) {
+                        // This is handled by the REPLACEABLE above.
                     }
                 } else if (prefix === CONSTANTS.PROPERTY_GROUP_META + '.') {
                     if (key === REGISTRY_KEYS.VALID_VISUALIZERS) {
@@ -888,6 +891,12 @@ define(['js/logger',
             gmeID,
             path;
 
+        if (args.newValue === undefined) {
+            //cannot set value to undefined, so we handle as removal
+            this._onReset(args.id);
+            return;
+        }
+
         this._client.startTransaction();
         while (--i >= 0) {
             gmeID = selectedObjIDs[i];
@@ -1004,6 +1013,6 @@ define(['js/logger',
         this._propertyGrid.setReadOnly(isReadOnly);
         this.setReadOnly(isReadOnly);
     };
-    
+
     return PropertyEditorController;
 });
