@@ -8,8 +8,9 @@ define([
     'common/storage/constants',
     'common/util/jsonPatcher',
     'q',
-    'common/regexp'
-], function (CONSTANTS, jsonPatcher, Q, REGEXP) {
+    'common/regexp',
+    'common/util/key'
+], function (CONSTANTS, jsonPatcher, Q, REGEXP, GENKEY) {
     'use strict';
 
     function _getRootHash(project, parameters) {
@@ -200,6 +201,19 @@ define([
         },
         getChangedNodes: jsonPatcher.getChangedNodes,
         applyPatch: jsonPatcher.apply,
+        checkHashConsistency: function (gmeConfig, dataObj, hash) {
+            var result;
+
+            if (gmeConfig.storage.keyType === 'rand160Bits') {
+                // Random hashes should not be checked..
+                result = true;
+            } else {
+                dataObj[CONSTANTS.MONGO_ID] = '';
+                result = hash === '#' + GENKEY(dataObj, gmeConfig);
+            }
+
+            return result;
+        },
 
         /**
          * Extracts a serializable json representation of a project tree.
