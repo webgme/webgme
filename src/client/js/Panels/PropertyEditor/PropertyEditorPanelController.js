@@ -11,6 +11,7 @@ define(['js/logger',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Constants',
+    'assets/line/lineSvgs',
     'js/Utils/GMEConcepts',
     'js/Utils/DisplayFormat',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
@@ -21,6 +22,7 @@ define(['js/logger',
              nodePropertyNames,
              REGISTRY_KEYS,
              CONSTANTS,
+             LINE_SVG_DIRECTORY,
              GMEConcepts,
              displayFormat,
              DecoratorSVGExplorerDialog,
@@ -51,6 +53,11 @@ define(['js/logger',
             REGISTRY_KEYS.COLOR,
             REGISTRY_KEYS.TEXT_COLOR,
             REGISTRY_KEYS.BORDER_COLOR,
+            REGISTRY_KEYS.LINE_STYLE,
+            REGISTRY_KEYS.LINE_START_ARROW,
+            REGISTRY_KEYS.LINE_END_ARROW,
+            REGISTRY_KEYS.LINE_WIDTH,
+            REGISTRY_KEYS.LINE_LABEL_PLACEMENT,
             REGISTRY_KEYS.REPLACEABLE
         ],
         NON_INVALID_PTRS = [CONSTANTS.POINTER_BASE];
@@ -425,6 +432,22 @@ define(['js/logger',
                     } else if (key === REGISTRY_KEYS.COLOR || key === REGISTRY_KEYS.BORDER_COLOR ||
                         key === REGISTRY_KEYS.TEXT_COLOR) {
                         dst[extKey].widget = PROPERTY_GRID_WIDGETS.COLOR_PICKER;
+                    } else if (key === REGISTRY_KEYS.LINE_STYLE) {
+                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
+                        dst[extKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_STYLE];
+                        dst[extKey].value = dst[extKey].value || CONSTANTS.LINE_STYLE.PATTERNS.SOLID;
+                    } else if (key === REGISTRY_KEYS.LINE_START_ARROW || key === REGISTRY_KEYS.LINE_END_ARROW) {
+                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
+                        dst[extKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_START_ARROW];
+                        dst[extKey].value = dst[extKey].value || CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
+                    } else if (key === REGISTRY_KEYS.LINE_WIDTH) {
+                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
+                        dst[extKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_WIDTH];
+                        dst[extKey].value = dst[extKey].value || 1;
+                    } else if (key === REGISTRY_KEYS.LINE_LABEL_PLACEMENT) {
+                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
+                        dst[extKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_LABEL_PLACEMENT];
+                        dst[extKey].value = dst[extKey].value || CONSTANTS.LINE_STYLE.LABEL_PLACEMENTS.MIDDLE;
                     } else if (key === REGISTRY_KEYS.REPLACEABLE) {
                         dst[TEMPLATING_SUB_GROUP] = {
                             name: TEMPLATING_SUB_GROUP,
