@@ -205,7 +205,10 @@ define([
             var result;
 
             if (gmeConfig.storage.keyType === 'rand160Bits') {
-                // Random hashes should not be checked..
+                // Random hashes should not be checked.
+                result = true;
+            } else if (gmeConfig.storage.disableHashChecks === true) {
+                // Configured to not check.
                 result = true;
             } else {
                 dataObj[CONSTANTS.MONGO_ID] = '';

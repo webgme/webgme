@@ -9,6 +9,7 @@ var testFixture = require('../../_globals.js');
 describe('storage util', function () {
     'use strict';
     var StorageUtil = testFixture.requirejs('common/storage/util'),
+        gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect;
 
     it('should get the full name from project Id', function () {
@@ -47,5 +48,24 @@ describe('storage util', function () {
 
     it('should return undefined if project projectId is not given for getProjectNameFromProjectId', function () {
         expect(StorageUtil.getProjectNameFromProjectId()).to.equal(undefined);
+    });
+
+    it('checkHashConsistency should return false if hash does not match object', function () {
+        expect(StorageUtil.checkHashConsistency(gmeConfig, {_id: '#somehash', 'atr': {'name': 'FCO'}}), '#hash')
+            .to.equal(false);
+    });
+
+    it('checkHashConsistency should return true if config.storage.disableHashChecks = true', function () {
+        var gmeConfigCopy = JSON.parse(JSON.stringify(gmeConfig));
+        gmeConfigCopy.storage.disableHashChecks = true;
+        expect(StorageUtil.checkHashConsistency(gmeConfigCopy, {_id: '#somehash', 'atr': {'name': 'FCO'}}), '#hash')
+            .to.equal(true);
+    });
+
+    it('checkHashConsistency should return true if config.storage.keyType = "rand160Bits"', function () {
+        var gmeConfigCopy = JSON.parse(JSON.stringify(gmeConfig));
+        gmeConfigCopy.storage.keyType = 'rand160Bits';
+        expect(StorageUtil.checkHashConsistency(gmeConfigCopy, {_id: '#somehash', 'atr': {'name': 'FCO'}}), '#hash')
+            .to.equal(true);
     });
 });

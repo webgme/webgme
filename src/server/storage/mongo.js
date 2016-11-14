@@ -102,8 +102,8 @@ function Mongo(mainLogger, gmeConfig) {
                                     errMsg = 'tried to insert existing hash - the two objects were NOT equal ';
                                     logger.error(errMsg, {
                                         metadata: {
-                                            newObject: CANON.stringify(object),
-                                            oldObject: CANON.stringify(data)
+                                            newObject: object,
+                                            oldObject: data
                                         }
                                     });
                                     deferred.reject(new Error(errMsg + object._id));

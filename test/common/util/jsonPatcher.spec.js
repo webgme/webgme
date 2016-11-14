@@ -606,6 +606,9 @@ describe('jsonPatcher', function () {
                 expect(changedNodes).to.deep.equal(getChangedNodesObj([pathM], [path]));
             });
 
+            // TODO: At some point we might have to consider changing this behavior.
+            // TODO: That is that purely inherited children are treated as load,
+            // TODO: (however the client converts these to updates too).
             it('in inherited child, setting attr should put it in update' + suffix, function (done) {
                 var node = core.createNode({parent: isRoot ? root : parent}),
                     child = core.createNode({parent: node}),
@@ -631,7 +634,7 @@ describe('jsonPatcher', function () {
 
             });
 
-            it('in purley inherited child, setting attr should put it in load' + suffix, function (done) {
+            it('in purely inherited child, setting attr should put it in load' + suffix, function (done) {
                 var node = core.createNode({parent: isRoot ? root : parent}),
                     child = core.createNode({parent: node}),
                     instance = core.createNode({parent: isRoot ? root : parent, base: node}),
@@ -677,6 +680,104 @@ describe('jsonPatcher', function () {
                 });
 
             });
+
+            it('in inherited child, setting null ptr should put it in update' + suffix, function (done) {
+                var node = core.createNode({parent: isRoot ? root : parent}),
+                    child = core.createNode({parent: node}),
+                    instance = core.createNode({parent: isRoot ? root : parent, base: node}),
+                    pathI = core.getPath(instance),
+                    childRelid = core.getRelid(child),
+                    pathIC = pathI + '/' + childRelid,
+                    changedNodes;
+
+                core.setAttribute(child, 'name', 'child');
+                core.persist(root);
+
+                core.loadByPath(root, pathIC, function (err, childInstance) {
+                    expect(core.getAttribute(childInstance, 'name')).to.equal('child');
+                    core.setAttribute(childInstance, 'name', 'preName');
+                    core.persist(root);
+
+                    core.setPointer(childInstance, 'ptr', null);
+                    changedNodes = persistAndGetPatchData();
+                    expect(changedNodes).to.deep.equal(getChangedNodesObj([], [pathIC]));
+                    done();
+                });
+            });
+
+            it('in purely inherited child, setting null ptr should put it in load' + suffix, function (done) {
+                var node = core.createNode({parent: isRoot ? root : parent}),
+                    child = core.createNode({parent: node}),
+                    instance = core.createNode({parent: isRoot ? root : parent, base: node}),
+                    pathI = core.getPath(instance),
+                    childRelid = core.getRelid(child),
+                    pathIC = pathI + '/' + childRelid,
+                    changedNodes;
+
+                core.setAttribute(child, 'name', 'child');
+                core.persist(root);
+
+                core.loadByPath(root, pathIC, function (err, childInstance) {
+                    expect(core.getAttribute(childInstance, 'name')).to.equal('child');
+
+                    core.setPointer(childInstance, 'ptr', null);
+                    changedNodes = persistAndGetPatchData();
+                    expect(changedNodes).to.deep.equal(getChangedNodesObj([], [], [pathIC]));
+                    done();
+                });
+            });
+
+            it('in inherited child, setting ptr should put it in update and target in partial' + suffix,
+                function (done) {
+                    var node = core.createNode({parent: isRoot ? root : parent}),
+                        child = core.createNode({parent: node}),
+                        instance = core.createNode({parent: isRoot ? root : parent, base: node}),
+                        path = core.getPath(node),
+                        pathI = core.getPath(instance),
+                        childRelid = core.getRelid(child),
+                        pathIC = pathI + '/' + childRelid,
+                        changedNodes;
+
+                    core.setAttribute(child, 'name', 'child');
+                    core.persist(root);
+
+                    core.loadByPath(root, pathIC, function (err, childInstance) {
+                        expect(core.getAttribute(childInstance, 'name')).to.equal('child');
+                        core.setAttribute(childInstance, 'name', 'preName');
+                        core.persist(root);
+
+                        core.setPointer(childInstance, 'ptr', node);
+                        changedNodes = persistAndGetPatchData();
+                        expect(changedNodes).to.deep.equal(getChangedNodesObj([path], [pathIC]));
+                        done();
+                    });
+                }
+            );
+
+            it('in purely inherited child, setting ptr should put it in load and target in partial' + suffix,
+                function (done) {
+                    var node = core.createNode({parent: isRoot ? root : parent}),
+                        child = core.createNode({parent: node}),
+                        instance = core.createNode({parent: isRoot ? root : parent, base: node}),
+                        path = core.getPath(node),
+                        pathI = core.getPath(instance),
+                        childRelid = core.getRelid(child),
+                        pathIC = pathI + '/' + childRelid,
+                        changedNodes;
+
+                    core.setAttribute(child, 'name', 'child');
+                    core.persist(root);
+
+                    core.loadByPath(root, pathIC, function (err, childInstance) {
+                        expect(core.getAttribute(childInstance, 'name')).to.equal('child');
+
+                        core.setPointer(childInstance, 'ptr', node);
+                        changedNodes = persistAndGetPatchData();
+                        expect(changedNodes).to.deep.equal(getChangedNodesObj([path], [], [pathIC]));
+                        done();
+                    });
+                }
+            );
         }
 
         createTests(true, ' parent is root.');
