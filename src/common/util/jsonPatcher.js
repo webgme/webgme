@@ -94,21 +94,19 @@ define([
                         patchItem.partialUpdates = [];
                         patchItem.updates = [];
                         if (inOverlay) {
-                            path = i;
                             if (_isGmePath(innerPath)) {
                                 patchItem.updates.push(innerPath);
                             }
 
-                            if (_isGmePath(target[path])) {
-                                patchItem.partialUpdates.push(target[path]);
-                            } else if (target[path] === '/_nullptr') {
+                            if (_isGmePath(target[i])) {
+                                patchItem.partialUpdates.push(target[i]);
+                            } else if (target[i] === '/_nullptr') {
                                 patchItem.updates.push('');
                             }
                         } else {
                             for (path in target[i]) {
-                                console.log(path);
-                                if (_isGmePath(path)) {
-                                    patchItem.updates.push(path);
+                                if (_isGmePath(i)) {
+                                    patchItem.updates.push(i);
                                 }
 
                                 if (_isGmePath(target[i][path])) {
@@ -138,17 +136,21 @@ define([
                         };
 
                         if (inOverlay) {
-                            path = i;
-
                             patchItem.partialUpdates = [];
                             patchItem.updates = [];
                             if (_isGmePath(innerPath)) {
                                 patchItem.updates.push(innerPath);
                             }
 
-                            if (_isGmePath(target[path])) {
-                                patchItem.partialUpdates.push(target[path]);
-                            } else if (target[path] === '/_nullptr') {
+                            if (_isGmePath(target[i])) {
+                                patchItem.partialUpdates.push(target[i]);
+                            } else if (target[i] === '/_nullptr') {
+                                patchItem.updates.push('');
+                            }
+
+                            if (_isGmePath(source[i])) {
+                                patchItem.partialUpdates.push(source[i]);
+                            } else if (source[i] === '/_nullptr') {
                                 patchItem.updates.push('');
                             }
                         }
@@ -173,20 +175,19 @@ define([
                         patchItem.partialUpdates = [];
                         patchItem.updates = [];
                         if (inOverlay) {
-                            path = i;
                             if (_isGmePath(innerPath)) {
                                 patchItem.updates.push(innerPath);
                             }
 
-                            if (_isGmePath(source[path])) {
-                                patchItem.partialUpdates.push(source[path]);
-                            } else if (source[path] === '/_nullptr') {
+                            if (_isGmePath(source[i])) {
+                                patchItem.partialUpdates.push(source[i]);
+                            } else if (source[i] === '/_nullptr') {
                                 patchItem.updates.push('');
                             }
                         } else {
                             for (path in source[i]) {
-                                if (_isGmePath(path)) {
-                                    patchItem.updates.push(path);
+                                if (_isGmePath(i)) {
+                                    patchItem.updates.push(i);
                                 }
 
                                 if (_isGmePath(source[i][path])) {
@@ -514,7 +515,7 @@ define([
         } else {
             res = null;
         }
-        debugger;
+
         return res;
     }
 

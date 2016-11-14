@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('jsonPatcher', function () {
+describe.only('jsonPatcher', function () {
     'use strict';
     var patcher = testFixture.requirejs('common/util/jsonPatcher'),
         expect = testFixture.expect;
@@ -613,6 +613,364 @@ describe('jsonPatcher', function () {
             patchRoot.result._id = tRootData._id;
             expect(patchRoot.result).to.eql(tRootData);
         });
+    });
+
+    describe.only('core changes', function () {
+        var gmeConfig = testFixture.getGmeConfig(),
+            Q = testFixture.Q,
+            logger = testFixture.logger.fork('jsonPatcher.core.changes.spec'),
+            storageUtil = requireJS('common/storage/util'),
+            storage,
+            projectName = 'coreChanges',
+            projectId = testFixture.projectName2Id(projectName),
+            core,
+            root,
+            parent,
+            parentIsRoot,
+            gmeAuth;
+
+        before(function (done) {
+            testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                    return storage.openDatabase();
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            Q.allDone([
+                storage.closeDatabase(),
+                gmeAuth.unload()
+            ])
+                .nodeify(done);
+        });
+
+        afterEach(function (done) {
+            storage.deleteProject({projectId: projectId})
+                .then(function () {
+                    return storage.closeDatabase();
+                })
+                .nodeify(done);
+        });
+
+        function persistAndGetPatchData() {
+            var pData = core.persist(root),
+                coreObjects = pData.objects,
+                keys = Object.keys(coreObjects),
+                oldData,
+                patchResult,
+                i;
+
+            for (i = 0; i < keys.length; i += 1) {
+                if (storageUtil.coreObjectHasOldAndNewData(coreObjects[keys[i]])) {
+                    // Patch type object.
+                    oldData = coreObjects[keys[i]].oldData;
+                    coreObjects[keys[i]] = storageUtil.getPatchObject(oldData, coreObjects[keys[i]].newData);
+
+                    // Check if the created patch is correct.
+                    patchResult = storageUtil.applyPatch(oldData, coreObjects[keys[i]].patch);
+                    if (patchResult.status !== 'success') {
+                        throw new Error('patching failed' + JSON.stringify(patchResult));
+                    } else if (storageUtil.checkHashConsistency(gmeConfig, patchResult.result, keys[i]) === false) {
+                        throw new Error('patching did not create consistent hash!');
+                    }
+                } else if (coreObjects[keys[i]].newData && coreObjects[keys[i]].newHash) {
+                    // A new object with no previous data (send the entire data).
+                    coreObjects[keys[i]] = coreObjects[keys[i]].newData;
+                } else {
+                    // A regular object.
+                    coreObjects[keys[i]] = coreObjects[keys[i]];
+                }
+            }
+
+            return storageUtil.getChangedNodes(coreObjects, pData.rootHash);
+        };
+
+        function getChangedNodesObj(partialUpdate, update, load, unload) {
+            var result = {
+                load: {},
+                unload: {},
+                update: {},
+                partialUpdate: {}
+            };
+
+            function addToObject(arr, name) {
+                arr = arr || [];
+                arr.forEach(function (path) {
+                    result[name][path] = true;
+                });
+            }
+
+            addToObject(load, 'load');
+            addToObject(unload, 'unload');
+            addToObject(update, 'update');
+            addToObject(partialUpdate, 'partialUpdate');
+
+            return result;
+        }
+
+        function createTests(isRoot, suffix) {
+
+            beforeEach(function (done) {
+                storage.openDatabase()
+                    .then(function () {
+                        return storage.createProject({projectName: projectName});
+                    })
+                    .then(function (dbProject) {
+                        var project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
+                        core = new testFixture.WebGME.core(project, {
+                            globConf: gmeConfig,
+                            logger: testFixture.logger.fork('meta-core:core')
+                        });
+                        root = core.createNode();
+                        if (isRoot) {
+                            parent = root;
+                        } else {
+                            parent = core.createNode({parent: root});
+                        }
+                    })
+                    .nodeify(done);
+            });
+
+            it('setting attribute should put node in update' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    changedNodes;
+
+                core.persist(root);
+
+                core.setAttribute(node, 'name', 'hello');
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([], [path]));
+            });
+
+            it('setting attribute should put node in update 2' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    changedNodes;
+
+                core.setAttribute(node, 'name2', 'hello');
+                core.persist(root);
+
+                core.setAttribute(node, 'name', 'hello');
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([], [path]));
+            });
+
+            it('del attribute should put node in update' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    changedNodes;
+
+                core.setAttribute(node, 'name', 'hello');
+                core.persist(root);
+
+                core.delAttribute(node, 'name');
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([], [path]));
+            });
+
+            it('del attribute should put node in update 2' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    changedNodes;
+
+                core.setAttribute(node, 'name', 'hello');
+                core.setAttribute(node, 'name2', 'hello');
+                core.persist(root);
+
+                core.delAttribute(node, 'name');
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([], [path]));
+            });
+
+            it('setting attribute of instance should put it in update' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    instance = core.createNode({parent: parent, base: node}),
+                    path = core.getPath(instance),
+                    changedNodes;
+
+                core.persist(root);
+
+                core.setAttribute(instance, 'name', 'hello');
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([], [path]));
+            });
+
+            it('setting pointer should put node in update and target in partial' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    target = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    pathT = core.getPath(target),
+                    changedNodes;
+
+                core.persist(root);
+
+                core.setPointer(node, 'ptt', target);
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([pathT], [path]));
+            });
+
+            it('setting pointer should put node in update and target in partial 2' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    target = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    pathT = core.getPath(target),
+                    changedNodes;
+
+                core.setPointer(node, 'ptt2', target);
+
+                core.persist(root);
+
+                core.setPointer(node, 'ptt', target);
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([pathT], [path]));
+            });
+
+            it('setting pointer should put node in update, oldTarget and newTarget in partials' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    target = core.createNode({parent: parent}),
+                    targetNew = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    pathT = core.getPath(target),
+                    pathTN = core.getPath(targetNew),
+                    changedNodes;
+
+                core.setPointer(node, 'ptt', target);
+
+                core.persist(root);
+
+                core.setPointer(node, 'ptt', targetNew);
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([pathT, pathTN], [path]));
+            });
+
+            it('setting pointer to null should put node in update' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    target = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    changedNodes;
+
+                core.persist(root);
+
+                core.setPointer(node, 'ptt', null);
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([], [path]));
+            });
+
+            it('setting pointer to null should put node in update and previous target to partial' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    target = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    pathT = core.getPath(target),
+                    changedNodes;
+
+                core.setPointer(node, 'ptt', target);
+
+                core.persist(root);
+
+                core.setPointer(node, 'ptt', null);
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([pathT], [path]));
+            });
+
+            it('del pointer should put node in update and target in partial' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    target = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    pathT = core.getPath(target),
+                    changedNodes;
+
+                core.setPointer(node, 'ptt', target);
+                core.persist(root);
+
+                core.delPointer(node, 'ptt');
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([pathT], [path]));
+            });
+
+            it('del pointer should put node in update and target in partial 2' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    target = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    pathT = core.getPath(target),
+                    changedNodes;
+
+                core.setPointer(node, 'ptt', target);
+                core.setPointer(node, 'ptt2', target);
+                core.persist(root);
+
+                core.delPointer(node, 'ptt');
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([pathT], [path]));
+            });
+
+            it('creating set should put node in update' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    changedNodes;
+
+                core.persist(root);
+
+                core.createSet(node, 'set');
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([], [path]));
+            });
+
+            it('adding member should put node in update and member in partial' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    member = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    pathM = core.getPath(member),
+                    changedNodes;
+
+                core.createSet(node, 'set');
+                core.persist(root);
+
+                core.addMember(node, 'set', member);
+
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([pathM], [path]));
+            });
+
+            it('adding additional member should put node in update and member in partial' + suffix, function () {
+                var node = core.createNode({parent: parent}),
+                    member = core.createNode({parent: parent}),
+                    member2 = core.createNode({parent: parent}),
+                    path = core.getPath(node),
+                    pathM = core.getPath(member),
+                    changedNodes;
+
+                core.createSet(node, 'set');
+                core.addMember(node, 'set', member2);
+                core.persist(root);
+
+                core.addMember(node, 'set', member);
+
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([pathM], [path]));
+            });
+        }
+
+        createTests(true, ' parent is root.');
+        //createTests(false, ' parent is NOT root.');
     });
 
     describe('getChangedNodes', function () {

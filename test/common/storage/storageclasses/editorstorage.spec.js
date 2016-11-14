@@ -482,124 +482,126 @@ describe('storage storageclasses editorstorage', function () {
         // jshint ignore:start
         // jscs:disable
         var commitQueueDump = {
-            "webgmeVersion": "1.7.0-beta1",
+            "webgmeVersion": "2.7.0-beta1",
             "projectId": "guest+StorageProject",
             "branchName": "master",
             "branchStatus": "AHEAD_SYNC",
             "commitQueue": [
                 {
-                    "rootHash": "#03e07581e39ebc0518cf9fa8559f8038a1c831ae",
+                    "rootHash": "#28eb77c985afe9baa9c7968013286bea84cbc49d",
                     "projectId": "guest+StorageProject",
                     "commitObject": {
-                        "root": "#03e07581e39ebc0518cf9fa8559f8038a1c831ae",
+                        "root": "#28eb77c985afe9baa9c7968013286bea84cbc49d",
                         "parents": [
-                            importResult.commitHash
+                            "#94e13e7feaa0b722b28f385b6ce9ce842c7d9448"
                         ],
                         "updater": [
                             "guest"
                         ],
-                        "time": 1460046151041,
-                        "message": "createChildren({\"/1\":\"/6\"})",
+                        "time": 1479140927645,
+                        "message": "[\nsetAttribute(/1,name,\"FCO1\")\n]",
                         "type": "commit",
-                        "_id": "#7a8194dbf8bae42c9a096ab924dfef7dc3ceaa98"
+                        "__v": "1.1.0",
+                        "_id": "#bca2a7ca0ce7ddb16aa7ff3a9c561e9945a70f93"
                     },
                     "coreObjects": {
-                        "#ac3ade88c1e50e32061480a9ab7c5731dbeca3c5": {
-                            "_id": "#ac3ade88c1e50e32061480a9ab7c5731dbeca3c5",
-                            "atr": {
-                                "_relguid": "a99a761cba000eeba6365007e6ce1f6d"
-                            },
-                            "reg": {
-                                "position": {
-                                    "x": 101,
-                                    "y": 408
-                                }
-                            }
-                        },
-                        "#03e07581e39ebc0518cf9fa8559f8038a1c831ae": {
-                            "type": "patch",
-                            "base": importResult.rootHash,
-                            "patch": [
-                                {
-                                    "op": "add",
-                                    "path": "/6",
-                                    "value": "#ac3ade88c1e50e32061480a9ab7c5731dbeca3c5"
-                                },
-                                {
-                                    "op": "add",
-                                    "path": "/ovr/%2f6",
-                                    "value": {
-                                        "base": "/1"
-                                    }
-                                },
-                                {
-                                    "op": "add",
-                                    "path": "/ovr/%2f1/base-inv",
-                                    "value": [
-                                        "/6"
-                                    ]
-                                }
-                            ],
-                            "_id": "#03e07581e39ebc0518cf9fa8559f8038a1c831ae"
-                        }
-                    },
-                    "changedNodes": {
-                        "load": {
-                            "/6": true
-                        },
-                        "unload": {},
-                        "update": {
-                            "": true
-                        },
-                        "partialUpdate": {
-                            "/1": true
-                        }
-                    },
-                    "branchName": "master"
-                },
-                {
-                    "rootHash": "#7d91031d0cba01e4f987e8e856d8c00b9c28255e",
-                    "projectId": "guest+StorageProject",
-                    "commitObject": {
-                        "root": "#7d91031d0cba01e4f987e8e856d8c00b9c28255e",
-                        "parents": [
-                            "#7a8194dbf8bae42c9a096ab924dfef7dc3ceaa98"
-                        ],
-                        "updater": [
-                            "guest"
-                        ],
-                        "time": 1460046153051,
-                        "message": "[\nsetRegistry(/1,,position,[object Object])\n]",
-                        "type": "commit",
-                        "_id": "#e15e9b56e0c16ca08358cef9913aca4677abb549"
-                    },
-                    "coreObjects": {
-                        "#63c1fb91ed4a68a9970653750f992cb082638287": {
+                        "#84268a8fd43f17641d2ffa3ed0d4caa9c69878c0": {
                             "type": "patch",
                             "base": "#7f9626a859234e2a6948b3dd925fcd48ebc0a46e",
                             "patch": [
                                 {
+                                    "op": "add",
+                                    "path": "/__v",
+                                    "value": "1.1.0"
+                                },
+                                {
                                     "op": "replace",
-                                    "path": "/reg/position",
-                                    "value": {
-                                        "x": 473,
-                                        "y": 100
-                                    }
+                                    "path": "/atr/name",
+                                    "value": "FCO1"
+                                },
+                                {
+                                    "op": "remove",
+                                    "path": "/ovr/%2f_nullptr",
+                                    "partialUpdates": [],
+                                    "updates": []
                                 }
                             ],
-                            "_id": "#63c1fb91ed4a68a9970653750f992cb082638287"
+                            "_id": "#84268a8fd43f17641d2ffa3ed0d4caa9c69878c0"
                         },
-                        "#7d91031d0cba01e4f987e8e856d8c00b9c28255e": {
+                        "#28eb77c985afe9baa9c7968013286bea84cbc49d": {
                             "type": "patch",
-                            "base": "#03e07581e39ebc0518cf9fa8559f8038a1c831ae",
+                            "base": "#ed2a98991739bbfb4fc93dee191e388ea7caf20b",
                             "patch": [
+                                {
+                                    "op": "add",
+                                    "path": "/__v",
+                                    "value": "1.1.0"
+                                },
                                 {
                                     "op": "replace",
                                     "path": "/1",
-                                    "value": "#63c1fb91ed4a68a9970653750f992cb082638287"
+                                    "value": "#84268a8fd43f17641d2ffa3ed0d4caa9c69878c0"
+                                },
+                                {
+                                    "op": "replace",
+                                    "path": "/_meta",
+                                    "value": {
+                                        "atr": {
+                                            "name": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "children": {
+                                            "_sets": {
+                                                "items": {
+                                                    "302362349": {
+                                                        "reg": {
+                                                            "_": "_"
+                                                        },
+                                                        "atr": {
+                                                            "min": -1,
+                                                            "max": -1
+                                                        }
+                                                    },
+                                                    "reg": {
+                                                        "_": "_"
+                                                    }
+                                                },
+                                                "_nullptr": {
+                                                    "atr": {
+                                                        "name": "_null_pointer"
+                                                    }
+                                                },
+                                                "ovr": {
+                                                    "": {
+                                                        "items": "/_nullptr"
+                                                    }
+                                                }
+                                            },
+                                            "reg": {
+                                                "_sets_": 4
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "op": "remove",
+                                    "path": "/_sets/ovr/%2f_nullptr"
+                                },
+                                {
+                                    "op": "remove",
+                                    "path": "/ovr/%2f_nullptr",
+                                    "partialUpdates": [],
+                                    "updates": []
+                                },
+                                {
+                                    "op": "remove",
+                                    "path": "/ovr/%2f1",
+                                    "partialUpdates": [],
+                                    "updates": []
                                 }
                             ],
-                            "_id": "#7d91031d0cba01e4f987e8e856d8c00b9c28255e"
+                            "_id": "#28eb77c985afe9baa9c7968013286bea84cbc49d"
                         }
                     },
                     "changedNodes": {
@@ -610,6 +612,75 @@ describe('storage storageclasses editorstorage', function () {
                             "": true
                         },
                         "partialUpdate": {}
+                    },
+                    "branchName": "master"
+                },
+                {
+                    "rootHash": "#093f0af14cd4055ccbddef339004471cfc347226",
+                    "projectId": "guest+StorageProject",
+                    "commitObject": {
+                        "root": "#093f0af14cd4055ccbddef339004471cfc347226",
+                        "parents": [
+                            "#bca2a7ca0ce7ddb16aa7ff3a9c561e9945a70f93"
+                        ],
+                        "updater": [
+                            "guest"
+                        ],
+                        "time": 1479140931928,
+                        "message": "createChildren({\"/1\":\"/J\"})",
+                        "type": "commit",
+                        "__v": "1.1.0",
+                        "_id": "#2e43e5700e6412c7ded6740e8b58f5ca3137ba3f"
+                    },
+                    "coreObjects": {
+                        "#bbd60515aa7af9e305f5aacbd31a4a803ab2c551": {
+                            "_id": "#bbd60515aa7af9e305f5aacbd31a4a803ab2c551",
+                            "atr": {
+                                "_relguid": "b307518fa1b9fd841628f2c5172c91ca"
+                            },
+                            "reg": {
+                                "position": {
+                                    "x": 105,
+                                    "y": 240
+                                }
+                            }
+                        },
+                        "#093f0af14cd4055ccbddef339004471cfc347226": {
+                            "type": "patch",
+                            "base": "#28eb77c985afe9baa9c7968013286bea84cbc49d",
+                            "patch": [
+                                {
+                                    "op": "add",
+                                    "path": "/J",
+                                    "value": "#bbd60515aa7af9e305f5aacbd31a4a803ab2c551"
+                                },
+                                {
+                                    "op": "add",
+                                    "path": "/ovr/%2fJ",
+                                    "value": {
+                                        "base": "/1"
+                                    },
+                                    "partialUpdates": [
+                                        "/1"
+                                    ],
+                                    "updates": []
+                                }
+                            ],
+                            "_id": "#093f0af14cd4055ccbddef339004471cfc347226"
+                        }
+                    },
+                    "changedNodes": {
+                        "load": {
+                            "/J": true
+                        },
+                        "unload": {},
+                        "update": {
+                            "": true,
+                            "/J": true
+                        },
+                        "partialUpdate": {
+                            "/1": true
+                        }
                     },
                     "branchName": "master"
                 }
