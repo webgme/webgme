@@ -79,7 +79,6 @@ define([
             inOverlay = true;
         }
 
-        //TODO: Handle inv ovr removal.
         //add
         for (i in target) {
             if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
@@ -94,23 +93,21 @@ define([
                         patchItem.partialUpdates = [];
                         patchItem.updates = [];
                         if (inOverlay) {
-                            if (_isGmePath(innerPath)) {
-                                patchItem.updates.push(innerPath);
-                            }
-
                             if (_isGmePath(target[i])) {
                                 patchItem.partialUpdates.push(target[i]);
+                                if (_isGmePath(innerPath)) {
+                                    patchItem.updates.push(innerPath);
+                                }
                             } else if (target[i] === '/_nullptr') {
                                 patchItem.updates.push('');
                             }
                         } else {
                             for (path in target[i]) {
-                                if (_isGmePath(i)) {
-                                    patchItem.updates.push(i);
-                                }
-
                                 if (_isGmePath(target[i][path])) {
                                     patchItem.partialUpdates.push(target[i][path]);
+                                    if (_isGmePath(i)) {
+                                        patchItem.updates.push(i);
+                                    }
                                 } else if (target[i][path] === '/_nullptr') {
                                     patchItem.updates.push('');
                                 }
@@ -138,12 +135,12 @@ define([
                         if (inOverlay) {
                             patchItem.partialUpdates = [];
                             patchItem.updates = [];
-                            if (_isGmePath(innerPath)) {
-                                patchItem.updates.push(innerPath);
-                            }
 
                             if (_isGmePath(target[i])) {
                                 patchItem.partialUpdates.push(target[i]);
+                                if (_isGmePath(innerPath)) {
+                                    patchItem.updates.push(innerPath);
+                                }
                             } else if (target[i] === '/_nullptr') {
                                 patchItem.updates.push('');
                             }
@@ -175,23 +172,21 @@ define([
                         patchItem.partialUpdates = [];
                         patchItem.updates = [];
                         if (inOverlay) {
-                            if (_isGmePath(innerPath)) {
-                                patchItem.updates.push(innerPath);
-                            }
-
                             if (_isGmePath(source[i])) {
                                 patchItem.partialUpdates.push(source[i]);
+                                if (_isGmePath(innerPath)) {
+                                    patchItem.updates.push(innerPath);
+                                }
                             } else if (source[i] === '/_nullptr') {
                                 patchItem.updates.push('');
                             }
                         } else {
                             for (path in source[i]) {
-                                if (_isGmePath(i)) {
-                                    patchItem.updates.push(i);
-                                }
-
                                 if (_isGmePath(source[i][path])) {
                                     patchItem.partialUpdates.push(source[i][path]);
+                                    if (_isGmePath(i)) {
+                                        patchItem.updates.push(i);
+                                    }
                                 } else if (source[i][path] === '/_nullptr') {
                                     patchItem.updates.push('');
                                 }
@@ -483,7 +478,7 @@ define([
                     default:
                         throw new Error('Unexpected patch operation ' + nodePatches[i]);
                 }
-            } else if (_endsWith(patchPath, MIN_RELID_LENGTH_PATH) === false) {
+            } else if (patchPath !== MIN_RELID_LENGTH_PATH && patchPath !== '/__v') {
                 ownChange = true;
             }
         }
