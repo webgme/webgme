@@ -85,8 +85,6 @@ define(['./MetaEditorConstants', 'common/util/random'], function (META_EDITOR_CO
                         setAttribute: function (_id, name, value) {
                             if (name === 'documentation' || name === 'name') {
                                 self.setProperty(name, value);
-                            } else {
-                                console.warn('unexpected attribute in MetaDocItem', name, value);
                             }
                         }
                     }
