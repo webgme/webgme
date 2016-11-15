@@ -163,6 +163,7 @@ define([
 
         function __saveData(data, root, path) {
             ASSERT(__isMutableData(data));
+            var cleanData;
 
             var done = __getEmptyData(),
                 keys,
@@ -195,22 +196,25 @@ define([
                 ASSERT(hash === '' || hash === undefined);
 
                 if (hash === '') {
-                    hash = '#' + GENKEY(data, gmeConfig);
+                    //TODO: This is a temporary fix. We should modify CANON.
+                    cleanData = JSON.parse(JSON.stringify(data));
+                    hash = '#' + GENKEY(cleanData, gmeConfig);
                     data[ID_NAME] = hash;
+                    cleanData[ID_NAME] = hash;
 
-                    done = data;
+                    done = cleanData;
 
-                    storage.insertObject(data, stackedObjects);
+                    storage.insertObject(cleanData, stackedObjects);
                     stackedObjects[hash] = {
                         newHash: hash,
-                        newData: data,
+                        newData: cleanData,
                         oldHash: root.initial[path] && root.initial[path].hash,
                         oldData: root.initial[path] && root.initial[path].data
                     };
 
                     root.initial[path] = {
                         hash: hash,
-                        data: data
+                        data: cleanData
                     };
                     //stackedObjects[hash] = data;
                 }
