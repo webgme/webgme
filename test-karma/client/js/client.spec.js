@@ -4341,6 +4341,23 @@ describe('GME client', function () {
             });
         });
 
+        it('should setAttributeMeta with undefined and still persist correctly node', function (done) {
+            var branchStatusHandler = function (status/*, commitQueue, updateQueue*/) {
+                if (status === client.CONSTANTS.BRANCH_STATUS.SYNC) {
+                    done();
+                } else if (status === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
+                    //locally updating..
+                } else {
+                    done(new Error(status));
+                }
+            };
+            prepareBranchForTest('setMeta', branchStatusHandler, function (err) {
+                expect(err).to.equal(null);
+                var attrSchema = {type: 'string', min: undefined, max: undefined, regexp: undefined};
+                client.setAttributeMeta('/1730437907', 'newAttribute', attrSchema);
+            });
+        });
+
         it.skip('should return the \'children\' portion of the meta rules of the node', function () {
             // getChildrenMeta
 

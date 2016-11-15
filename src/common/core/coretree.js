@@ -195,7 +195,8 @@ define([
                 ASSERT(hash === '' || hash === undefined);
 
                 if (hash === '') {
-                    hash = '#' + GENKEY(data, gmeConfig);
+                    //TODO: This is a temporary fix. We should modify CANON.
+                    hash = '#' + GENKEY(JSON.parse(JSON.stringify(data)), gmeConfig);
                     data[ID_NAME] = hash;
 
                     done = data;
