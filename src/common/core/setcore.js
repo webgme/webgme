@@ -24,6 +24,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         logger.debug('initialized SetCore');
 
         //<editor-fold=Helper Functions>
+        function setModified(node) {
+            innerCore.setRegistry(node, CONSTANTS.SET_MODIFIED_REGISTRY,
+                (innerCore.getRegistry(node, CONSTANTS.SET_MODIFIED_REGISTRY) || 0) + 1);
+        }
+
         function getSetNodeByName(node, setName) {
             return innerCore.getChild(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName);
         }
@@ -306,6 +311,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             innerCore.setPointer(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName, null);
             // Ensure the set-node is not deleted at persist.
             innerCore.setRegistry(setNode, '_', '_');
+            setModified(node);
         };
 
         this.deleteSet = function (node, setName) {
@@ -421,6 +427,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
                 // Ensure the member-node entry is not deleted at persist.
                 innerCore.setRegistry(setMemberNode, '_', '_');
+                setModified(node);
             } else {
                 logger.warn('member already in set');
             }
@@ -452,6 +459,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
             if (setMemberNode) {
                 innerCore.setAttribute(setMemberNode, attrName, attrValue);
+                setModified(node);
             }
         };
 
@@ -489,6 +497,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
             if (setMemberNode) {
                 innerCore.setRegistry(setMemberNode, regName, regValue);
+                setModified(node);
             }
         };
 
@@ -519,6 +528,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         this.setSetAttribute = function (node, setName, attrName, attrValue) {
             if (hasSet(node, setName)) {
                 self.setAttribute(getSetNodeByName(node, setName), attrName, attrValue);
+                setModified(node);
             }
         };
 
@@ -548,6 +558,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
         this.setSetRegistry = function (node, setName, regName, regValue) {
             if (hasSet(node, setName)) {
                 self.setRegistry(getSetNodeByName(node, setName), regName, regValue);
+                setModified(node);
             }
         };
 

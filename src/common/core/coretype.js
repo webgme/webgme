@@ -694,6 +694,11 @@ define([
 
             if (parent) {
                 this.processRelidReservation(parent, this.getRelid(node));
+
+                // Addition to #1232
+                if (isInheritedChild(parent)) {
+                    self.processRelidReservation(self.getParent(parent), self.getRelid(parent));
+                }
             }
 
             return node;
@@ -738,6 +743,11 @@ define([
 
             this.processRelidReservation(parent, this.getRelid(moved));
 
+            // Addition to #1232
+            if (isInheritedChild(parent)) {
+                self.processRelidReservation(self.getParent(parent), self.getRelid(parent));
+            }
+
             return moved;
         };
 
@@ -755,6 +765,11 @@ define([
             innerCore.deleteProperty(newnode, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
 
             this.processRelidReservation(parent, this.getRelid(newnode));
+
+            // Addition to #1232
+            if (isInheritedChild(parent)) {
+                self.processRelidReservation(self.getParent(parent), self.getRelid(parent));
+            }
 
             return newnode;
         };
@@ -813,6 +828,11 @@ define([
             }
 
             this.processRelidReservation(parent, longestNewRelid);
+
+            // Addition to #1232
+            if (isInheritedChild(parent)) {
+                self.processRelidReservation(self.getParent(parent), self.getRelid(parent));
+            }
 
             return copiedNodes;
         };

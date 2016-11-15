@@ -6,7 +6,7 @@
  */
 var testFixture = require('../../_globals.js');
 
-describe.only('coretype', function () {
+describe('coretype', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,

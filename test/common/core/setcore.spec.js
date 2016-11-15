@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.only('set core', function () {
+describe('set core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -93,11 +93,54 @@ describe.only('set core', function () {
             expect(err).to.equal(null);
             expect(children.length).to.equal(1);
             expect(core.getRelid(children[0])).to.equal('c');
+            core.createSet(children[0], 'set');
             newChild = core.createNode({parent: proto});
             expect(core.getRelid(newChild).length > 1).to.equal(true);
             done();
         });
     });
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when adding member to inherited child',
+        function (done) {
+            var proto = core.createNode({parent: root, relid: 'p'}),
+                derived = core.createNode({parent: root, base: proto, relid: 'd'}),
+                child = core.createNode({parent: proto, relid: 'c'}),
+                member = core.createNode({parent: root});
+
+            core.loadChildren(derived, function (err, children) {
+                var newChild;
+                expect(err).to.equal(null);
+                expect(children.length).to.equal(1);
+                expect(core.getRelid(children[0])).to.equal('c');
+                core.addMember(children[0], 'set', member);
+                newChild = core.createNode({parent: proto});
+                expect(core.getRelid(newChild).length > 1).to.equal(true);
+                done();
+            });
+        }
+    );
+
+    it('should update MINIMAL_RELID_LENGTH_PROPERTY when adding member to inherited child with set on base',
+        function (done) {
+            var proto = core.createNode({parent: root, relid: 'p'}),
+                derived = core.createNode({parent: root, base: proto, relid: 'd'}),
+                child = core.createNode({parent: proto, relid: 'c'}),
+                member = core.createNode({parent: root});
+
+            core.createSet(child, 'set');
+
+            core.loadChildren(derived, function (err, children) {
+                var newChild;
+                expect(err).to.equal(null);
+                expect(children.length).to.equal(1);
+                expect(core.getRelid(children[0])).to.equal('c');
+                core.addMember(children[0], 'set', member);
+                newChild = core.createNode({parent: proto});
+                expect(core.getRelid(newChild).length > 1).to.equal(true);
+                done();
+            });
+        }
+    );
 
     it('should update MINIMAL_RELID_LENGTH_PROPERTY when setting attribute of inherited member in inherited child',
         function (done) {
