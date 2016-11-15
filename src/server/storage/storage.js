@@ -186,14 +186,22 @@ Storage.prototype.makeCommit = function (data, callback) {
                     return project.loadObject(data.coreObjects[hash].base)
                         .then(function (base) {
                             var patchResult = UTIL.applyPatch(base, data.coreObjects[hash].patch);
-
                             if (patchResult.status === 'success') {
                                 // Overwrite the id of the generated result
+                                if (UTIL.checkHashConsistency(self.gmeConfig, patchResult.result, hash) === false) {
+                                    self.logger.error('checkHashConsistency returned false for',
+                                        'base:\n', JSON.stringify(base, null, 2),
+                                        '\npatch:\n', JSON.stringify(data.coreObjects[hash], null, 2),
+                                        '\nresult:\n', JSON.stringify(patchResult.result, null, 2)
+                                    );
+                                    throw new Error('Inconsistent hash after patching!');
+                                }
+
                                 patchResult.result[CONSTANTS.MONGO_ID] = hash;
                                 return project.insertObject(patchResult.result);
                             } else {
                                 self.logger.error('failed patching', patchResult);
-                                throw new Error('error during patch application', hash);
+                                throw new Error('error during patch application' + hash);
                             }
                         });
                 } else if (data.coreObjects[hash][CONSTANTS.MONGO_ID]) {

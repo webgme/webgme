@@ -9,6 +9,7 @@ var testFixture = require('../../_globals.js');
 describe('storage util', function () {
     'use strict';
     var StorageUtil = testFixture.requirejs('common/storage/util'),
+        gmeConfig = testFixture.getGmeConfig(),
         expect = testFixture.expect;
 
     it('should get the full name from project Id', function () {
@@ -49,46 +50,22 @@ describe('storage util', function () {
         expect(StorageUtil.getProjectNameFromProjectId()).to.equal(undefined);
     });
 
-    it('should patchDataObject leave input intact if non-existing patch patch showing', function () {
-        var rootObject = {
-                __v: '2.0.0',
-                ovr: {
-                    firstPath: {
-                        base: '/1',
-                        'base-inv': 'myself'
-                    },
-                    secondPath: {
-                        otherPtr: '/1',
-                        'other-inv': 'somePath'
-                    }
-                },
-                otherField: ['any', 'thing']
-            },
-            rootCopy = JSON.parse(JSON.stringify(rootObject));
-
-        rootCopy.__v = '1.0.0';
-        StorageUtil.patchDataObject(rootObject);
-        expect(rootCopy).to.eql(rootObject);
+    it('checkHashConsistency should return false if hash does not match object', function () {
+        expect(StorageUtil.checkHashConsistency(gmeConfig, {_id: '#somehash', 'atr': {'name': 'FCO'}}), '#hash')
+            .to.equal(false);
     });
 
-    it('should patchDataObject remove inverse pointer during patch from 0.0.0', function () {
-        var rootObject = {
-                ovr: {
-                    firstPath: {
-                        base: '/1',
-                        'base-inv': 'myself'
-                    },
-                    secondPath: {
-                        otherPtr: '/1',
-                        'other-inv': 'somePath'
-                    }
-                },
-                otherField: ['any', 'thing']
-            },
-            rootCopy = JSON.parse(JSON.stringify(rootObject));
+    it('checkHashConsistency should return true if config.storage.disableHashChecks = true', function () {
+        var gmeConfigCopy = JSON.parse(JSON.stringify(gmeConfig));
+        gmeConfigCopy.storage.disableHashChecks = true;
+        expect(StorageUtil.checkHashConsistency(gmeConfigCopy, {_id: '#somehash', 'atr': {'name': 'FCO'}}), '#hash')
+            .to.equal(true);
+    });
 
-        StorageUtil.patchDataObject(rootObject);
-        expect(rootCopy).not.to.eql(rootObject);
-        expect(rootObject.ovr.firstPath).to.have.keys(['base']);
+    it('checkHashConsistency should return true if config.storage.keyType = "rand160Bits"', function () {
+        var gmeConfigCopy = JSON.parse(JSON.stringify(gmeConfig));
+        gmeConfigCopy.storage.keyType = 'rand160Bits';
+        expect(StorageUtil.checkHashConsistency(gmeConfigCopy, {_id: '#somehash', 'atr': {'name': 'FCO'}}), '#hash')
+            .to.equal(true);
     });
 });

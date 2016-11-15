@@ -200,6 +200,8 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Time in milliseconds (after a new bucket has been created) before triggering a load of objects from the server.
 - `config.storage.keyType = 'plainSha'`
  - Algorithm used when hashing the objects in the database, can be `'plainSHA1'`, `'rand160Bits'` or `'ZSSHA'`.
+- `config.storage.disableHashChecks = false`
+ - Since v2.6.2 patched objects on the server are being checked for consistency w.r.t. the provided hash before insertion into database. If true, no checking will take place.
 - `config.storage.autoMerge.enable = false`
  - (N.B. Experimental feature) If enable, incoming commits to branches that initially were `FORKED` will be attempted to be merged with the head of the branch. Use with caution as larger (+100k nodes) projects can slow down the commit rate.
 - `config.storage.database.type = 'mongo'`

@@ -228,6 +228,7 @@ function validateConfig(configOrFileName) {
     assertObject('config.storage.database', config.storage.database);
     assertEnum('config.storage.database.type', config.storage.database.type.toLowerCase(), 'mongo', 'redis', 'memory');
     assertObject('config.storage.database.options', config.storage.database.options);
+    assertBoolean('config.storage.disableHashChecks', config.storage.disableHashChecks);
 
     //visualization
     expectedKeys.push('visualization');

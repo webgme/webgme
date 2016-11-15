@@ -11,9 +11,8 @@
 define([
     'common/util/assert',
     'common/storage/constants',
-    'common/util/jsonPatcher',
     'common/storage/util'
-], function (ASSERT, CONSTANTS, jsonPatcher, utils) {
+], function (ASSERT, CONSTANTS, UTIL) {
     'use strict';
     function ProjectCache(storage, projectId, mainLogger, gmeConfig) {
         var self = this,
@@ -269,7 +268,7 @@ define([
                 base = getFromCache(obj.base);
 
                 if (base) {
-                    patch = jsonPatcher.apply(base, obj.patch);
+                    patch = UTIL.applyPatch(base, obj.patch);
                     if (patch.status === 'success') {
                         patch.result[CONSTANTS.MONGO_ID] = key;
                         this.insertObject(patch.result);
