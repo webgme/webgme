@@ -51,6 +51,125 @@ define(['js/Constants', 'js/RegistryKeys'], function (CONSTANTS, REGISTRY_KEYS) 
         '<path fill="none" stroke="#000000" d="M5,10.5L45,10.5" stroke-width="1" stroke-dasharray="3,1,1,1,1,1" ' +
         'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path></svg>';
 
+    line_svg_directory[REGISTRY_KEYS.LINE_END_ARROW] = {};
+    line_svg_directory[REGISTRY_KEYS.LINE_END_ARROW][CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE] =
+        '<svg height="20" version="1.1" width="50" xmlns="http://www.w3.org/2000/svg" ' +
+        'style="overflow: hidden; position: relative;">' +
+        '<desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Raphaël 2.1.2</desc>' +
+        '<defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></defs>' +
+        '<path fill="none" stroke="#000000" d="M5,10.5L45,10.5" stroke-width="1" stroke-dasharray="0" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path></svg>';
+    line_svg_directory[REGISTRY_KEYS.LINE_END_ARROW][CONSTANTS.LINE_STYLE.LINE_ARROWS.DIAMOND + arrowExtra] =
+        '<svg height="20" version="1.1" width="50" xmlns="http://www.w3.org/2000/svg" ' +
+        'style="overflow: hidden; position: relative;">' +
+        '<desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Raphaël 2.1.2</desc>' +
+        '<defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">' +
+        '<path stroke-linecap="round" d="M2.5,0 5,2.5 2.5,5 0,2.5z" id="raphael-marker-diamond-RaphaelSVG_4_0" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>' +
+        '<marker id="raphael-marker-enddiamond-RaphaelSVG_4-99#000000" markerHeight="9" markerWidth="9" ' +
+        'orient="auto" refX="4.5" refY="4.5" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">' +
+        '<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#raphael-marker-diamond-RaphaelSVG_4_0" ' +
+        'transform="rotate(180 4.5 4.5) scale(1.8,1.8)" stroke-width="0.5556" fill="#000000" stroke="none" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use></marker></defs><path fill="none" ' +
+        'stroke="#000000" d="M5,10.5C5,10.5,30.05913734436035,10.5,40.508601842448115,10.5" ' +
+        'marker-end="url(#raphael-marker-enddiamond-RaphaelSVG_4-99#000000)" stroke-width="1" ' +
+        'stroke-dasharray="0" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path></svg>';
+    line_svg_directory[REGISTRY_KEYS.LINE_END_ARROW][CONSTANTS.LINE_STYLE.LINE_ARROWS.BLOCK + arrowExtra] =
+        '<svg height="20" version="1.1" width="50" xmlns="http://www.w3.org/2000/svg" ' +
+        'style="overflow: hidden; position: relative;"><' +
+        'desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Raphaël 2.1.2</desc>' +
+        '<defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><path stroke-linecap="round" ' +
+        'd="M5,0 0,2.5 5,5z" id="raphael-marker-block-RaphaelSVG_6_0" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>' +
+        '<marker id="raphael-marker-endblock-RaphaelSVG_6-99#000000" markerHeight="9" markerWidth="9" ' +
+        'orient="auto" refX="4.5" refY="4.5" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">' +
+        '<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#raphael-marker-block-RaphaelSVG_6_0" ' +
+        'transform="rotate(180 4.5 4.5) scale(1.8,1.8)" stroke-width="0.5556" fill="#000000" stroke="none" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use></marker></defs><path fill="none" ' +
+        'stroke="#000000" d="M5,10.5C5,10.5,30.05913734436035,10.5,40.508601842448115,10.5" ' +
+        'marker-end="url(#raphael-marker-endblock-RaphaelSVG_6-99#000000)" stroke-width="1" ' +
+        'stroke-dasharray="0" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path></svg>';
+    line_svg_directory[REGISTRY_KEYS.LINE_END_ARROW][CONSTANTS.LINE_STYLE.LINE_ARROWS.CLASSIC + arrowExtra] =
+        '<svg height="20" version="1.1" width="50" xmlns="http://www.w3.org/2000/svg" ' +
+        'style="overflow: hidden; position: relative;">' +
+        '<desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Raphaël 2.1.2</desc>' +
+        '<defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">' +
+        '<path stroke-linecap="round" d="M5,0 0,2.5 5,5 3.5,3 3.5,2z" id="raphael-marker-classic-RaphaelSVG_8_0" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>' +
+        '<marker id="raphael-marker-endclassic-RaphaelSVG_8-99#000000" markerHeight="9" markerWidth="9" ' +
+        'orient="auto" refX="4.5" refY="4.5" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">' +
+        '<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#raphael-marker-classic-RaphaelSVG_8_0" ' +
+        'transform="rotate(180 4.5 4.5) scale(1.8,1.8)" stroke-width="0.5556" fill="#000000" stroke="none" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use></marker></defs><path fill="none" ' +
+        'stroke="#000000" d="M5,10.5C5,10.5,30.05913734436035,10.5,40.508601842448115,10.5" ' +
+        'marker-end="url(#raphael-marker-endclassic-RaphaelSVG_8-99#000000)" stroke-width="1" ' +
+        'stroke-dasharray="0" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path></svg>';
+    line_svg_directory[REGISTRY_KEYS.LINE_END_ARROW][CONSTANTS.LINE_STYLE.LINE_ARROWS.OPEN + arrowExtra] =
+        '<svg height="20" version="1.1" width="50" xmlns="http://www.w3.org/2000/svg" ' +
+        'style="overflow: hidden; position: relative;">' +
+        '<desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Raphaël 2.1.2</desc>' +
+        '<defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><path stroke-linecap="round" ' +
+        'd="M4.5,0.5 0.5,2.5 3.5,2.5 0.5,2.5 4.5,4.5" id="raphael-marker-open-RaphaelSVG_10_0" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>' +
+        '<marker id="raphael-marker-endopen-RaphaelSVG_10-99#000000" markerHeight="9" markerWidth="9" ' +
+        'orient="auto" refX="4.5" refY="4.5" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">' +
+        'use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#raphael-marker-open-RaphaelSVG_10_0" ' +
+        'transform="rotate(180 4.5 4.5) scale(1.8,1.8)" stroke-width="0.5556" fill="none" stroke="#000000" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use></marker></defs><path fill="none" ' +
+        'stroke="#000000" d="M5,10.5C5,10.5,30.05913734436035,10.5,40.508601842448115,10.5" ' +
+        'marker-end="url(#raphael-marker-endopen-RaphaelSVG_10-99#000000)" stroke-width="1" ' +
+        'stroke-dasharray="0" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path></svg>';
+    line_svg_directory[REGISTRY_KEYS.LINE_END_ARROW][CONSTANTS.LINE_STYLE.LINE_ARROWS.OVAL + arrowExtra] =
+        '<svg height="20" version="1.1" width="50" xmlns="http://www.w3.org/2000/svg" ' +
+        'style="overflow: hidden; position: relative;">' +
+        '<desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Raphaël 2.1.2</desc>' +
+        '<defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><path stroke-linecap="round" ' +
+        'd="M2.5,0A2.5,2.5,0,0,1,2.5,5 2.5,2.5,0,0,1,2.5,0z" id="raphael-marker-oval-RaphaelSVG_12_0" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>' +
+        '<marker id="raphael-marker-endoval-RaphaelSVG_12-99#000000" markerHeight="9" markerWidth="9" ' +
+        'orient="auto" refX="4.5" refY="4.5" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">' +
+        '<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#raphael-marker-oval-RaphaelSVG_12_0" ' +
+        'transform="rotate(180 4.5 4.5) scale(1.8,1.8)" stroke-width="0.5556" fill="#000000" stroke="none" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use></marker></defs><path fill="none" ' +
+        'stroke="#000000" d="M5,10.5C5,10.5,30.05913734436035,10.5,40.508601842448115,10.5" ' +
+        'marker-end="url(#raphael-marker-endoval-RaphaelSVG_12-99#000000)" stroke-width="1" ' +
+        'stroke-dasharray="0" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path></svg>';
+    line_svg_directory[REGISTRY_KEYS.LINE_END_ARROW][CONSTANTS.LINE_STYLE.LINE_ARROWS.DIAMOND2 + arrowExtra] =
+        '<svg height="20" version="1.1" width="50" xmlns="http://www.w3.org/2000/svg" ' +
+        'style="overflow: hidden; position: relative;">' +
+        '<desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Raphaël 2.1.2</desc>' +
+        '<defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">' +
+        '<path stroke-linecap="round" d="M2.5,1 5,2.5 2.5,4 0,2.5z" id="raphael-marker-diamond2-RaphaelSVG_14_0" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>' +
+        '<marker id="raphael-marker-enddiamond2-RaphaelSVG_14-99#000000" markerHeight="9" markerWidth="9" ' +
+        'orient="auto" refX="4.5" refY="4.5" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">' +
+        '<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#raphael-marker-diamond2-RaphaelSVG_14_0" ' +
+        'transform="rotate(180 4.5 4.5) scale(1.8,1.8)" stroke-width="0.5556" fill="#000000" stroke="none" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use></marker></defs><path fill="none" ' +
+        'stroke="#000000" d="M5,10.5C5,10.5,30.05913734436035,10.5,40.508601842448115,10.5" ' +
+        'marker-end="url(#raphael-marker-enddiamond2-RaphaelSVG_14-99#000000)" stroke-width="1" ' +
+        'stroke-dasharray="0" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path></svg>';
+    line_svg_directory[REGISTRY_KEYS.LINE_END_ARROW][CONSTANTS.LINE_STYLE.LINE_ARROWS.INHERITANCE + arrowExtra] =
+        '<svg height="20" version="1.1" width="50" xmlns="http://www.w3.org/2000/svg" ' +
+        'style="overflow: hidden; position: relative;">' +
+        '<desc style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">Created with Raphaël 2.1.2</desc>' +
+        '<defs style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"><path stroke-linecap="round" ' +
+        'd="M5,0 0,2.5 5,5z" id="raphael-marker-inheritance-RaphaelSVG_16_0" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>' +
+        '<path stroke-linecap="round" d="M4.7,0.4 0.5,2.5 4.7,4.6 z" id="raphael-marker-inheritance-RaphaelSVG_16_1" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>' +
+        '<marker id="raphael-marker-endinheritance-RaphaelSVG_16-99#000000" markerHeight="9" markerWidth="9" ' +
+        'orient="auto" refX="4.5" refY="4.5" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);">' +
+        '<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#raphael-marker-inheritance-RaphaelSVG_16_0" ' +
+        'transform="rotate(180 4.5 4.5) scale(1.8,1.8)" stroke-width="0.5556" fill="#000000" stroke="none" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use>' +
+        '<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#raphael-marker-inheritance-RaphaelSVG_16_1" ' +
+        'transform="rotate(180 4.5 4.5) scale(1.8,1.8)" stroke-width="0.5556" fill="#FFFFFF" stroke="none" ' +
+        'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></use></marker></defs>' +
+        '<path fill="none" stroke="#000000" d="M5,10.5C5,10.5,30.05913734436035,10.5,40.508601842448115,10.5" ' +
+        'marker-end="url(#raphael-marker-endinheritance-RaphaelSVG_16-99#000000)" ' +
+        'stroke-width="1" stroke-dasharray="0" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path></svg>';
+
     line_svg_directory[REGISTRY_KEYS.LINE_START_ARROW] = {};
     line_svg_directory[REGISTRY_KEYS.LINE_START_ARROW][CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE] =
         '<svg height="20" version="1.1" width="50" xmlns="http://www.w3.org/2000/svg" ' +

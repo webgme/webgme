@@ -438,7 +438,7 @@ define(['js/logger',
                         dst[extKey].value = dst[extKey].value || CONSTANTS.LINE_STYLE.PATTERNS.SOLID;
                     } else if (key === REGISTRY_KEYS.LINE_START_ARROW || key === REGISTRY_KEYS.LINE_END_ARROW) {
                         dst[extKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
-                        dst[extKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_START_ARROW];
+                        dst[extKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_END_ARROW];
                         dst[extKey].value = dst[extKey].value || CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
                     } else if (key === REGISTRY_KEYS.LINE_WIDTH) {
                         dst[extKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
