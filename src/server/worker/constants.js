@@ -30,7 +30,6 @@ module.exports = {
         executePlugin: 'executePlugin',
         seedProject: 'seedProject',
         autoMerge: 'autoMerge',
-        squashCommits: 'squashCommits',
         resolve: 'resolve',
         checkConstraints: 'checkConstraints',
 

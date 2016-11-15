@@ -808,10 +808,10 @@ SafeStorage.prototype.squashCommits = function (data, callback) {
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
         check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
 
-        check(data.fromCommit !== null && typeof data.fromCommit === 'string', deferred,
+        check(typeof data.fromCommit === 'string', deferred,
             'data.fromCommit not a string.') ||
         check(REGEXP.HASH.test(data.fromCommit), deferred, 'data.fromCommit failed regexp: ' + data.fromCommit) ||
-        check(data.toCommitOrBranch !== null && typeof data.toCommitOrBranch === 'string', deferred,
+        check(typeof data.toCommitOrBranch === 'string', deferred,
             'data.toCommitOrBranch not a string.');
 
     if (data.hasOwnProperty('username')) {

@@ -87,10 +87,8 @@ define(['js/logger'], function (Logger) {
 
         self._view.onSquashFromCommit = function (params) {
             var projectName = self._client.getActiveProjectId();
-            self._client.squashBranchFromCommit(
-                params.branchName,
-                params.commitId,
-                function (err, result) {
+            self._client.squashCommits(self._client.getActiveProjectId(),
+                params.commitId, params.branchName, null, function (err, result) {
                     if (err) {
                         self._logger.error(err);
                     }

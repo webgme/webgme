@@ -1151,42 +1151,6 @@ function WorkerRequests(mainLogger, gmeConfig) {
             .nodeify(callback);
     }
 
-    /**
-     *
-     * @param webgmeToken
-     * @param parameters
-     * @param callback
-     */
-    function squashCommits(webgmeToken, parameters, callback) {
-        var jsonProject,
-            context,
-            storage,
-            blobClient = getBlobClient(webgmeToken);
-
-        getConnectedStorage(webgmeToken)
-            .then(function (storage_) {
-                var branchName = parameters.toCommitOrBranch,
-                    commitHash = parameters.toCommitOrBranch;
-
-                if (REGEXP.DB_HASH.test(commitHash)) {
-                    branchName = null;
-                }
-
-                storage = storage_;
-                return _getCoreAndRootNode(storage, parameters.projectId, commitHash, branchName);
-            })
-            .then(function (context_) {
-                context = context_;
-                return context.project.squashCommits(parameters.fromCommit,
-                    parameters.toCommitOrBranch, parameters.message);
-            })
-            .catch(function (err) {
-                logger.error('squash failed with error', err);
-                throw err;
-            })
-            .nodeify(callback);
-    }
-
     return {
         executePlugin: executePlugin,
         seedProject: seedProject,
@@ -1201,8 +1165,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         importSelectionFromFile: importSelectionFromFile,
         addLibrary: addLibrary,
         updateLibrary: updateLibrary,
-        updateProjectFromFile: updateProjectFromFile,
-        squashCommits: squashCommits
+        updateProjectFromFile: updateProjectFromFile
     };
 }
 
