@@ -227,4 +227,13 @@ BlobFSBackend.prototype._readDir = function (start, callback) {
     });
 };
 
+// Util methods for clean up
+BlobFSBackend.prototype.__deleteObject = function (bucket, hash, callback) {
+    var self = this,
+        fPath = path.join(self.blobDir, bucket, self._getObjectRelativeLocation(hash));
+
+    console.log(fPath);
+    fs.unlink(fPath, callback);
+};
+
 module.exports = BlobFSBackend;

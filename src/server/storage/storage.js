@@ -871,4 +871,12 @@ Storage.prototype.openProject = function (data, callback) {
     return this.database.openProject(data.projectId).nodeify(callback);
 };
 
+Storage.prototype.traverse = function (data, callback) {
+    return this.database.openProject(data.projectId)
+        .then(function (project) {
+            return project.traverse(data.visitFn);
+        })
+        .nodeify(callback);
+};
+
 module.exports = Storage;
