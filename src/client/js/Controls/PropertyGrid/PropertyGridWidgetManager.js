@@ -70,6 +70,9 @@ define([
                 case PROPERTY_GRID_WIDGETS.MULTI_SELECT_WIDGET:
                     widget = new MultiSelectWidget(propDesc);
                     break;
+                case PROPERTY_GRID_WIDGETS.COLOR_PICKER:
+                    widget = new ColorPickerWidget(propDesc);
+                    break;
                 default:
                     widget = new SpecificWidget(propDesc);
                     break;
