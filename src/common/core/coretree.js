@@ -12,8 +12,8 @@ define([
     'common/util/random',
     'common/regexp',
     'common/core/constants',
-    'common/storage/util'
-], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS, storageUtil) {
+    'common/core/convertData'
+], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS, convertData) {
 
     'use strict';
 
@@ -225,7 +225,7 @@ define([
                 relid: null,
                 age: 0,
                 children: {},
-                data: data,
+                data: null,
                 initial: {
                     '': {
                         hash: data[storage.ID_NAME],
@@ -235,8 +235,8 @@ define([
                 rootid: ++rootCounter
             };
 
-            // We patch the data here, so we only do upgrade when we actually try to interpret the content
-            storageUtil.patchDataObject(data);
+            // Ensure we get the correct version of the data.
+            root.data = convertData(data);
 
             roots.push(root);
 
@@ -254,14 +254,13 @@ define([
             if (REGEXP.DB_HASH.test(node.data)) {
                 ASSERT(node.data === newdata[ID_NAME]);
 
-                // We patch the data here, so we only do upgrade when we actually try to interpret the content
-                storageUtil.patchDataObject(newdata);
-
                 root.initial[path] = {
                     hash: node.data,
                     data: newdata
                 };
-                node.data = newdata;
+
+                // Ensure we get the correct version of the data.
+                node.data = convertData(newdata);
                 __reloadChildrenData(node);
             } else {
                 // TODO: if this bites you, use the Cache

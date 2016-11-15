@@ -7,10 +7,10 @@
 define([
     'common/storage/constants',
     'common/util/jsonPatcher',
-    './dataConverters',
     'q',
-    'common/regexp'
-], function (CONSTANTS, jsonPatcher, dataConverters, Q, REGEXP) {
+    'common/regexp',
+    'common/util/key'
+], function (CONSTANTS, jsonPatcher, Q, REGEXP, GENKEY) {
     'use strict';
 
     function _getRootHash(project, parameters) {
@@ -150,24 +150,6 @@ define([
         return deferred.promise;
     }
 
-    /**
-     * Patches a data object to the currently used version. The source version is stored inside the dataObject,
-     * and the target version is coming from the storage constants. If no patch found,
-     * nothing will happen to the object.
-     *
-     * @param {Object} dataObject
-     */
-    function patchDataObject(dataObject) {
-        var dataVersion = dataObject.__v || '0.0.0',
-            myVersion = CONSTANTS.VERSION || '0.0.0';
-
-        if (dataConverters[dataVersion] && typeof dataConverters[dataVersion][myVersion] === 'function') {
-            dataConverters[dataVersion][myVersion](dataObject);
-        }
-
-        dataObject.__v = myVersion;
-    }
-
     return {
         CONSTANTS: CONSTANTS,
         getProjectFullNameFromProjectId: function (projectId) {
@@ -219,6 +201,22 @@ define([
         },
         getChangedNodes: jsonPatcher.getChangedNodes,
         applyPatch: jsonPatcher.apply,
+        checkHashConsistency: function (gmeConfig, dataObj, hash) {
+            var result;
+
+            if (gmeConfig.storage.keyType === 'rand160Bits') {
+                // Random hashes should not be checked.
+                result = true;
+            } else if (gmeConfig.storage.disableHashChecks === true) {
+                // Configured to not check.
+                result = true;
+            } else {
+                dataObj[CONSTANTS.MONGO_ID] = '';
+                result = hash === '#' + GENKEY(dataObj, gmeConfig);
+            }
+
+            return result;
+        },
 
         /**
          * Extracts a serializable json representation of a project tree.
@@ -296,8 +294,6 @@ define([
                 .catch(deferred.reject);
 
             return deferred.promise.nodeify(callback);
-        },
-
-        patchDataObject: patchDataObject
+        }
     };
 });

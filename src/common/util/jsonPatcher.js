@@ -28,140 +28,277 @@ define([
         return str.replace(/%2f/g, '/');
     }
 
-    function collectPartials(source, target, key, operation, single) {
-        if (single) {
-            switch (operation) {
-                case 'add':
-                    return [target[key]];
-                case 'replace':
-                    return [source[key], target[key]];
-                case 'remove':
-                    return [source[key]];
-            }
-        } else {
-            var partials = [],
-                collection,
-                item;
-            if (operation === 'add') {
-                collection = target[key];
-            } else {
-                collection = source[key];
-            }
+    function _endsWith(str, pattern) {
+        var d = str.length - pattern.length;
+        return d >= 0 && str.lastIndexOf(pattern) === d;
+    }
 
-            for (item in collection) {
-                if (partials.indexOf(collection[item])) {
-                    partials.push(collection[item]);
+    function _startsWith(str, pattern) {
+        return str.indexOf(pattern) === 0;
+    }
+
+    function _isOvr(path) {
+        return path.indexOf('/ovr') === 0;
+    }
+
+    function _isRelid(path) {
+        return RANDOM.isValidRelid(path.substring(1));
+    }
+
+    function _isGmePath(path) {
+        if (typeof path !== 'string') {
+            return false;
+        }
+
+        var relIds = path.split('/'),
+            result = false,
+            i;
+
+        for (i = 1; i < relIds.length; i += 1) {
+            if (RANDOM.isValidRelid(relIds[i]) === false) {
+                return false;
+            } else {
+                result = true;
+            }
+        }
+
+        return result;
+    }
+
+    function diff(source, target, basePath, excludeList, noUpdate, innerPath) {
+        var result = [],
+            overlay = false,
+            inOverlay = false,
+            patchItem,
+            path,
+            i;
+
+        if (basePath === '/ovr/') {
+            overlay = true;
+        } else if (_startsWith(basePath, '/ovr/')) {
+            inOverlay = true;
+        }
+
+        //add
+        for (i in target) {
+            if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
+                if (!source.hasOwnProperty(i)) {
+                    patchItem = {
+                        op: 'add',
+                        path: basePath + _strEncode(i),
+                        value: target[i]
+                    };
+
+                    if (inOverlay || overlay) {
+                        patchItem.partialUpdates = [];
+                        patchItem.updates = [];
+                        if (inOverlay) {
+                            if (_isGmePath(target[i])) {
+                                patchItem.partialUpdates.push(target[i]);
+                                if (_isGmePath(innerPath)) {
+                                    patchItem.updates.push(innerPath);
+                                }
+                            } else if (target[i] === '/_nullptr') {
+                                patchItem.updates.push('');
+                            }
+                        } else {
+                            for (path in target[i]) {
+                                if (_isGmePath(target[i][path])) {
+                                    patchItem.partialUpdates.push(target[i][path]);
+                                    if (_isGmePath(i)) {
+                                        patchItem.updates.push(i);
+                                    }
+                                } else if (target[i][path] === '/_nullptr') {
+                                    patchItem.updates.push('');
+                                }
+                            }
+                        }
+                    }
+
+                    result.push(patchItem);
                 }
             }
-
-            return partials;
         }
+
+        //replace
+        if (!noUpdate) {
+            for (i in target) {
+                if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
+                    if (source.hasOwnProperty(i) && CANON.stringify(source[i]) !== CANON.stringify(target[i])) {
+                        patchItem = {
+                            op: 'replace',
+                            path: basePath + _strEncode(i),
+                            value: target[i]
+                            //oldValue: source[i]
+                        };
+
+                        if (inOverlay) {
+                            patchItem.partialUpdates = [];
+                            patchItem.updates = [];
+
+                            if (_isGmePath(target[i])) {
+                                patchItem.partialUpdates.push(target[i]);
+                                if (_isGmePath(innerPath)) {
+                                    patchItem.updates.push(innerPath);
+                                }
+                            } else if (target[i] === '/_nullptr') {
+                                patchItem.updates.push('');
+                            }
+
+                            if (_isGmePath(source[i])) {
+                                patchItem.partialUpdates.push(source[i]);
+                            } else if (source[i] === '/_nullptr') {
+                                patchItem.updates.push('');
+                            }
+                        }
+
+                        result.push(patchItem);
+                    }
+                }
+            }
+        }
+
+        //remove
+        for (i in source) {
+            if (excludeList.indexOf(i) === -1 && source.hasOwnProperty(i)) {
+                if (!target.hasOwnProperty(i)) {
+                    patchItem = {
+                        op: 'remove',
+                        path: basePath + _strEncode(i)
+                        //oldValue: source[i]
+                    };
+
+                    if (inOverlay || overlay) {
+                        patchItem.partialUpdates = [];
+                        patchItem.updates = [];
+                        if (inOverlay) {
+                            if (_isGmePath(source[i])) {
+                                patchItem.partialUpdates.push(source[i]);
+                                if (_isGmePath(innerPath)) {
+                                    patchItem.updates.push(innerPath);
+                                }
+                            } else if (source[i] === '/_nullptr') {
+                                patchItem.updates.push('');
+                            }
+                        } else {
+                            for (path in source[i]) {
+                                if (_isGmePath(source[i][path])) {
+                                    patchItem.partialUpdates.push(source[i][path]);
+                                    if (_isGmePath(i)) {
+                                        patchItem.updates.push(i);
+                                    }
+                                } else if (source[i][path] === '/_nullptr') {
+                                    patchItem.updates.push('');
+                                }
+                            }
+                        }
+                    }
+
+                    result.push(patchItem);
+                }
+            }
+        }
+
+        return result;
     }
 
     function create(sourceJson, targetJson) {
-        var patch = [],
-            diff = function (source, target, basePath, excludeList, noUpdate) {
-                var i,
-                    overlay = basePath === '/ovr/' ? true : false,
-                    inOverlay = basePath.indexOf('/ovr/') === 0 && !overlay ? true : false,
-                    patchItem;
-
-                //add
-                for (i in target) {
-                    if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
-                        if (!source.hasOwnProperty(i)) {
-                            patchItem = {
-                                op: 'add',
-                                path: basePath + _strEncode(i),
-                                value: target[i]
-                            };
-
-                            if (overlay) {
-                                patchItem.partials = collectPartials(source, target, i, 'add', false);
-                            } else if (inOverlay) {
-                                patchItem.partials = collectPartials(source, target, i, 'add', true);
-                            }
-
-                            patch.push(patchItem);
-                        }
-                    }
-                }
-
-                //replace
-                if (!noUpdate) {
-                    for (i in target) {
-                        if (excludeList.indexOf(i) === -1 && target.hasOwnProperty(i)) {
-                            if (source.hasOwnProperty(i) && CANON.stringify(source[i]) !== CANON.stringify(target[i])) {
-                                patchItem = {
-                                    op: 'replace',
-                                    path: basePath + _strEncode(i),
-                                    value: target[i]
-                                    //oldValue: source[i]
-                                };
-
-                                if (inOverlay) {
-                                    patchItem.partials = collectPartials(source, target, i, 'replace', true);
-                                }
-
-                                patch.push(patchItem);
-                            }
-                        }
-                    }
-                }
-
-                //remove
-                for (i in source) {
-                    if (excludeList.indexOf(i) === -1 && source.hasOwnProperty(i)) {
-                        if (!target.hasOwnProperty(i)) {
-                            patchItem = {
-                                op: 'remove',
-                                path: basePath + _strEncode(i)
-                                //oldValue: source[i]
-                            };
-
-                            if (overlay) {
-                                patchItem.partials = collectPartials(source, target, i, 'remove', false);
-                            } else if (inOverlay) {
-                                patchItem.partials = collectPartials(source, target, i, 'remove', true);
-                            }
-
-                            patch.push(patchItem);
-                        }
-                    }
-                }
-            },
+        var patch,
+            patchItem,
+            diffRes,
+            i,
             key;
 
         //main level diff
-        diff(sourceJson, targetJson, '/', ['_id', '_nullptr', 'ovr', 'atr', 'reg', '_sets'], false);
+        patch = diff(sourceJson, targetJson, '/', ['_id', 'ovr', 'atr', 'reg', '_sets'], false);
 
         //atr
-        diff(sourceJson.atr || {}, targetJson.atr || {}, '/atr/', [], false);
-
-        //reg
-        diff(sourceJson.reg || {}, targetJson.reg || {}, '/reg/', [], false);
-
-        //ovr add+remove
-        diff(sourceJson.ovr || {}, targetJson.ovr || {}, '/ovr/', [], true);
-
-        if (targetJson.hasOwnProperty('ovr') && sourceJson.hasOwnProperty('ovr')) {
-            for (key in targetJson.ovr) {
-                if (targetJson.ovr.hasOwnProperty(key) && sourceJson.ovr.hasOwnProperty(key)) {
-                    diff(sourceJson.ovr[key], targetJson.ovr[key], '/ovr/' + _strEncode(key) + '/', [], false);
-                }
-            }
+        if (sourceJson.atr && targetJson.atr) {
+            patch = patch.concat(diff(sourceJson.atr, targetJson.atr, '/atr/', [], false));
+        } else if (sourceJson.atr) {
+            patch.push({
+                op: 'remove',
+                path: '/atr'
+            });
+        } else if (targetJson.atr) {
+            patch.push({
+                op: 'add',
+                path: '/atr',
+                value: targetJson.atr
+            });
         }
 
-        //complete set addition or removal
-        diff(sourceJson._sets || {}, targetJson._sets || {}, '/_sets/', [], true);
+        //reg
+        if (sourceJson.reg && targetJson.reg) {
+            patch = patch.concat(diff(sourceJson.reg, targetJson.reg, '/reg/', [], false));
+        } else if (sourceJson.reg) {
+            patch.push({
+                op: 'remove',
+                path: '/reg'
+            });
+        } else if (targetJson.reg) {
+            patch.push({
+                op: 'add',
+                path: '/reg',
+                value: targetJson.reg
+            });
+        }
 
-        //update done set-by-set
-        if (targetJson.hasOwnProperty('_sets') && sourceJson.hasOwnProperty('_sets')) {
-            for (key in sourceJson._sets) {
-                if (targetJson._sets.hasOwnProperty(key)) {
-                    diff(sourceJson._sets[key], targetJson._sets[key], '/_sets/' + _strEncode(key) + '/', [], false);
+        //_sets
+        if (sourceJson._sets && targetJson._sets) {
+            patch = patch.concat(diff(sourceJson._sets, targetJson._sets, '/_sets/', [], true));
+            for (key in targetJson._sets) {
+                if (sourceJson._sets[key]) {
+                    patch = patch.concat(
+                        diff(sourceJson._sets[key], targetJson._sets[key], '/_sets/' + _strEncode(key) + '/', [], false)
+                    );
                 }
             }
+        } else if (sourceJson._sets) {
+            patch.push({
+                op: 'remove',
+                path: '/_sets'
+            });
+        } else if (targetJson._sets) {
+            patch.push({
+                op: 'add',
+                path: '/_sets',
+                value: targetJson._sets
+            });
+        }
+
+        //ovr
+        if (sourceJson.ovr && targetJson.ovr) {
+            patch = patch.concat(diff(sourceJson.ovr, targetJson.ovr, '/ovr/', [], true));
+            for (key in targetJson.ovr) {
+                if (sourceJson.ovr[key]) {
+                    patch = patch.concat(
+                        diff(sourceJson.ovr[key], targetJson.ovr[key], '/ovr/' + _strEncode(key) + '/', [], false, key)
+                    );
+                }
+            }
+        } else if (sourceJson.ovr || targetJson.ovr) {
+            patchItem = {
+                path: '/ovr',
+                partialUpdates: [],
+                updates: []
+            };
+
+            if (sourceJson.ovr) {
+                patchItem.op = 'remove';
+            } else {
+                patchItem.op = 'add';
+                patchItem.value = targetJson.ovr;
+            }
+
+            // For ovr removal/addition we need to compute updates/partialUpdates
+            diffRes = diff(sourceJson.ovr || {}, targetJson.ovr || {}, '/ovr/', [], true);
+            for (i = 0; i < diffRes.length; i += 1) {
+                patchItem.partialUpdates = patchItem.partialUpdates.concat(diffRes[i].partialUpdates);
+                patchItem.updates = patchItem.updates.concat(diffRes[i].updates);
+            }
+
+            patch.push(patchItem);
         }
 
         return patch;
@@ -256,39 +393,6 @@ define([
         return result;
     }
 
-    function _endsWith(str, pattern) {
-        var d = str.length - pattern.length;
-        return d >= 0 && str.lastIndexOf(pattern) === d;
-    }
-
-    function _startsWith(str, pattern) {
-        return str.indexOf(pattern) === 0;
-    }
-
-    function _isOvr(path) {
-        return path.indexOf('/ovr/') === 0;
-    }
-
-    function _isRelid(path) {
-        return RANDOM.isValidRelid(path.substring(1));
-    }
-
-    function _isGmePath(path) {
-        var relIds = path.split('/'),
-            result = false,
-            i;
-
-        for (i = 1; i < relIds.length; i += 1) {
-            if (RANDOM.isValidRelid(relIds[i]) === false) {
-                return false;
-            } else {
-                result = true;
-            }
-        }
-
-        return result;
-    }
-
     function _inLoadOrUnload(res, gmePath) {
         var pathPieces = gmePath.split('/'),
             parentPath;
@@ -330,8 +434,6 @@ define([
         var nodePatches = patch[hash] && patch[hash].patch, // Changes regarding node with hash
             i, j,
             ownChange = false,
-            pathPieces,
-            relGmePath,
             absGmePath,
             patchPath;
 
@@ -344,20 +446,18 @@ define([
             patchPath = nodePatches[i].path;
 
             if (_isOvr(patchPath) === true) {
-                pathPieces = patchPath.substring('/ovr/'.length).split('/');
-                relGmePath = _strDecode(pathPieces[0]);
-                absGmePath = gmePath + relGmePath;
-                if (_isGmePath(relGmePath) && _inLoadOrUnload(res, absGmePath) === false) {
-                    res.update[absGmePath] = true;
-                } else if (relGmePath === '/_nullptr') {
-                    ownChange = true;
+                // Now handle the updates
+                for (j = 0; j < nodePatches[i].partialUpdates.length; j += 1) {
+                    absGmePath = gmePath + nodePatches[i].partialUpdates[j];
+                    if (_inLoadOrUnload(res, absGmePath) === false) {
+                        res.partialUpdate[absGmePath] = true;
+                    }
                 }
 
-                // Now handle the partial updates
-                for (j = 0; j < nodePatches[i].partials.length; j += 1) {
-                    absGmePath = gmePath + nodePatches[i].partials[j];
-                    if (_isGmePath(nodePatches[i].partials[j]) && _inLoadOrUnload(res, absGmePath) === false) {
-                        res.partialUpdate[absGmePath] = true;
+                for (j = 0; j < nodePatches[i].updates.length; j += 1) {
+                    absGmePath = gmePath + nodePatches[i].updates[j];
+                    if (_inLoadOrUnload(res, absGmePath) === false) {
+                        res.update[absGmePath] = true;
                     }
                 }
 
@@ -378,7 +478,7 @@ define([
                     default:
                         throw new Error('Unexpected patch operation ' + nodePatches[i]);
                 }
-            } else if (_endsWith(patchPath, MIN_RELID_LENGTH_PATH) === false) {
+            } else if (patchPath !== MIN_RELID_LENGTH_PATH && patchPath !== '/__v') {
                 ownChange = true;
             }
         }
