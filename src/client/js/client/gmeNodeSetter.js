@@ -485,6 +485,36 @@ define([], function () {
             }
         }
 
+        function delMemberRegistry(path, memberPath, setId, name, msg) {
+            // FIXME: This will have to break due to switched arguments
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.delMemberRegistry(node, setId, memberPath, name);
+                saveRoot(msg || 'delMemberRegistry(' + path + ',' + memberPath + ',' + setId + ',' + name + ')');
+            }
+        }
+        // Mixed argument methods - END
+
+        function setSetAttribute(path, setName, attrName, attrValue, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.setSetAttribute(node, setName, attrName, attrValue);
+                saveRoot(msg || 'setSetAttribute(' + path + ',' + setName + ',' + attrName + ',' +
+                    JSON.stringify(attrValue) + ')');
+            }
+        }
+
+        function delSetAttribute(path, setName, attrName, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.delSetAttribute(node, setName, attrName);
+                saveRoot(msg || 'delSetAttribute(' + path + ',' + setName + ',' + attrName + ')');
+            }
+        }
+
         function setSetRegistry(path, setName, regName, regValue, msg) {
             var node = _getNode(path);
 
@@ -503,17 +533,6 @@ define([], function () {
                 saveRoot(msg || 'delSetRegistry(' + path + ',' + setName + ',' + regName + ')');
             }
         }
-
-        function delMemberRegistry(path, memberPath, setId, name, msg) {
-            // FIXME: This will have to break due to switched arguments
-            var node = _getNode(path);
-
-            if (node) {
-                state.core.delMemberRegistry(node, setId, memberPath, name);
-                saveRoot(msg || 'delMemberRegistry(' + path + ',' + memberPath + ',' + setId + ',' + name + ')');
-            }
-        }
-        // Mixed argument methods - END
 
         function createSet(path, setId, msg) {
             var node = _getNode(path);
@@ -1374,6 +1393,8 @@ define([], function () {
             delMemberAttribute: delMemberAttribute,
             setMemberRegistry: setMemberRegistry,
             delMemberRegistry: delMemberRegistry,
+            setSetAttribute: setSetAttribute,
+            delSetAttribute: delSetAttribute,
             setSetRegistry: setSetRegistry,
             delSetRegistry: delSetRegistry,
             createSet: createSet,

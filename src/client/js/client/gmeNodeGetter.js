@@ -257,6 +257,14 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getSetRegistryNames(this._state.nodes[this._id].node, setName);
     };
 
+    GMENode.prototype.getSetAttribute = function (setName, attrName) {
+        return this._state.core.getSetAttribute(this._state.nodes[this._id].node, setName, attrName);
+    };
+
+    GMENode.prototype.getSetAttributeNames = function (setName) {
+        return this._state.core.getSetAttributeNames(this._state.nodes[this._id].node, setName);
+    };
+
     //META
     GMENode.prototype.getValidChildrenTypes = function () {
         _logDeprecated('getValidChildrenTypes()', 'getValidChildrenIds()');
