@@ -16,6 +16,7 @@ define(['js/logger',
     './ToolbarCheckBox',
     './ToolbarDropDownButton',
     './ToolbarColorPicker',
+    './ToolbarDragItem',
     'css!./styles/Toolbar.css'
 ], function (Logger,
              ToolbarButton,
@@ -26,7 +27,8 @@ define(['js/logger',
              ToolbarLabel,
              ToolbarCheckBox,
              ToolbarDropDownButton,
-             ToolbarColorPicker) {
+             ToolbarColorPicker,
+             ToolbarDragItem) {
 
     'use strict';
 
@@ -134,6 +136,12 @@ define(['js/logger',
         var btn = new ToolbarColorPicker(params);
         this.add(btn);
         return btn;
+    };
+
+    Toolbar.prototype.addDragItem = function (params) {
+        var dragItem = new ToolbarDragItem(params);
+        this.add(dragItem);
+        return dragItem;
     };
 
     Toolbar.prototype.refresh = function () {

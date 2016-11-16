@@ -496,6 +496,44 @@ define([], function () {
         }
         // Mixed argument methods - END
 
+        function setSetAttribute(path, setName, attrName, attrValue, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.setSetAttribute(node, setName, attrName, attrValue);
+                saveRoot(msg || 'setSetAttribute(' + path + ',' + setName + ',' + attrName + ',' +
+                    JSON.stringify(attrValue) + ')');
+            }
+        }
+
+        function delSetAttribute(path, setName, attrName, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.delSetAttribute(node, setName, attrName);
+                saveRoot(msg || 'delSetAttribute(' + path + ',' + setName + ',' + attrName + ')');
+            }
+        }
+
+        function setSetRegistry(path, setName, regName, regValue, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.setSetRegistry(node, setName, regName, regValue);
+                saveRoot(msg || 'setSetRegistry(' + path + ',' + setName + ',' + regName + ',' +
+                    JSON.stringify(regValue) + ')');
+            }
+        }
+
+        function delSetRegistry(path, setName, regName, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                state.core.delSetRegistry(node, setName, regName);
+                saveRoot(msg || 'delSetRegistry(' + path + ',' + setName + ',' + regName + ')');
+            }
+        }
+
         function createSet(path, setId, msg) {
             var node = _getNode(path);
 
@@ -1355,6 +1393,10 @@ define([], function () {
             delMemberAttribute: delMemberAttribute,
             setMemberRegistry: setMemberRegistry,
             delMemberRegistry: delMemberRegistry,
+            setSetAttribute: setSetAttribute,
+            delSetAttribute: delSetAttribute,
+            setSetRegistry: setSetRegistry,
+            delSetRegistry: delSetRegistry,
             createSet: createSet,
             delSet: delSet,
             deleteSet: delSet,

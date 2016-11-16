@@ -21,6 +21,11 @@ $webgme-toolbar-ext-toggle-hover-background-color: #E6E6E6;
 
   }
 
+  .toolbar-drag-item {
+    display: inline-block;
+    position: relative;
+  }
+
   .separator {
     margin-left: $toolbar-separator-margin;
     margin-right: $toolbar-separator-margin;

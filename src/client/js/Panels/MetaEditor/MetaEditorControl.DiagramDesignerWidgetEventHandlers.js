@@ -13,6 +13,7 @@ define(['js/logger',
     'js/Utils/GMEConcepts',
     './MetaRelations',
     './MetaEditorConstants',
+    './MetaDocItem',
     'js/DragDrop/DragHelper',
     'js/Controls/Dialog'
 ], function (Logger,
@@ -24,6 +25,7 @@ define(['js/logger',
              GMEConcepts,
              MetaRelations,
              MetaEditorConstants,
+             MetaDocItem,
              DragHelper,
              dialog) {
 
@@ -229,22 +231,34 @@ define(['js/logger',
         this.logger.debug('attachDesignerCanvasEventHandlers finished');
     };
 
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype.__getDocItem = function (docId) {
+        return this._metaDocItemsPerSheet[this._selectedMetaAspectSet][docId];
+    };
+
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
-        var id;
+        var id,
+            posX,
+            posY,
+            docItem;
 
         this._client.startTransaction();
         for (id in repositionDesc) {
-            if (repositionDesc.hasOwnProperty(id)) {
+            posX = repositionDesc[id].x;
+            posY = repositionDesc[id].y;
+
+            if (this._ComponentID2GMEID[id]) {
                 this._client.setMemberRegistry(this.metaAspectContainerNodeID,
                     this._ComponentID2GMEID[id],
                     this._selectedMetaAspectSet,
                     REGISTRY_KEYS.POSITION,
-                    {
-                        x: repositionDesc[id].x,
-                        y: repositionDesc[id].y
-                    });
+                    {x: posX, y: posY}
+                );
+            } else if (this._ComponentID2DocItemID[id]) {
+                docItem = this.__getDocItem(this._ComponentID2DocItemID[id]);
+                docItem.setProperty('position', {x: posX, y: posY});
             }
         }
+
         this._client.completeTransaction();
     };
 
@@ -263,9 +277,10 @@ define(['js/logger',
             //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
             if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID)) {
                 accept = true;
+            } else if (params === MetaEditorConstants.CREATE_META_DOC) {
+                accept = true;
             } else {
-                if (dragEffects.length === 1 &&
-                    dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
+                if (dragEffects.length === 1 && dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
                     //dragging from PartBrowser
                     accept = true;
                 } else {
@@ -293,51 +308,69 @@ define(['js/logger',
     /**********************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo,
                                                                                                 position) {
-        var _client = this._client,
+        var client = this._client,
             aspectNodeID = this.metaAspectContainerNodeID,
             gmeIDList = DragHelper.getDragItems(dragInfo),
             params = DragHelper.getDragParams(dragInfo),
+            dragEffects = DragHelper.getDragEffects(dragInfo),
+            gmeOrDocId,
             i,
             selectedIDs = [],
             componentID,
             posX,
             posY,
-            dragEffects = DragHelper.getDragEffects(dragInfo),
             createParams,
-
+            docItem,
             newGmeID,
             origNode,
             newName;
 
         //check to see it self drop and reposition or dropping from somewhere else
-        if (params &&
+        if (params === MetaEditorConstants.CREATE_META_DOC) {
+            if (this._selectedMetaAspectSet) {
+                client.startTransaction();
+                MetaDocItem.addNew(client, aspectNodeID, this._selectedMetaAspectSet, position);
+                setTimeout(function () {
+                    client.completeTransaction();
+                }, 10);
+            }
+        } else if (params &&
             params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) &&
             params[DRAG_PARAMS_META_CONTAINER_ID] === aspectNodeID &&
             params[DRAG_PARAMS_ACTIVE_META_ASPECT] === this._selectedMetaAspectSet) {
 
             //params.position holds the old coordinates of the items being dragged
             //update UI
-            _client.startTransaction();
+            client.startTransaction();
             this.diagramDesigner.beginUpdate();
 
-            for (i in params.positions) {
-                if (params.positions.hasOwnProperty(i)) {
+            for (gmeOrDocId in params.positions) {
+                if (params.positions.hasOwnProperty(gmeOrDocId)) {
 
-                    posX = position.x + params.positions[i].x;
-                    posY = position.y + params.positions[i].y;
-                    _client.setMemberRegistry(aspectNodeID,
-                        i,
-                        this._selectedMetaAspectSet,
-                        REGISTRY_KEYS.POSITION,
-                        {
-                            x: posX,
-                            y: posY
-                        });
+                    posX = position.x + params.positions[gmeOrDocId].x;
+                    posY = position.y + params.positions[gmeOrDocId].y;
 
-                    componentID = this._GMEID2ComponentID[i];
+                    if (this._GMEID2ComponentID[gmeOrDocId]) {
+                        componentID = this._GMEID2ComponentID[gmeOrDocId];
 
-                    selectedIDs.push(componentID);
-                    this.diagramDesigner.updateDesignerItem(componentID, {position: {x: posX, y: posY}});
+                        client.setMemberRegistry(aspectNodeID,
+                            gmeOrDocId,
+                            this._selectedMetaAspectSet,
+                            REGISTRY_KEYS.POSITION,
+                            {
+                                x: posX,
+                                y: posY
+                            });
+                    } else if (this._DocItemID2ComponentID[gmeOrDocId]) {
+                        componentID = this._DocItemID2ComponentID[gmeOrDocId];
+                        docItem = this.__getDocItem(gmeOrDocId);
+                        docItem.setProperty('position', {x: posX, y: posY});
+                    }
+
+                    if (componentID) {
+                        selectedIDs.push(componentID);
+                        this.diagramDesigner.updateDesignerItem(componentID, {position: {x: posX, y: posY}});
+                    }
                 }
             }
 
@@ -345,7 +378,7 @@ define(['js/logger',
             this.diagramDesigner.select(selectedIDs);
 
             setTimeout(function () {
-                _client.completeTransaction();
+                client.completeTransaction();
             }, 10);
         } else {
             if (dragEffects.length === 1 &&
@@ -354,7 +387,7 @@ define(['js/logger',
                 //dragging from PartBrowser
                 //create instance of the dragged item with the parent being the MetaContainer,
                 //  and add it to the current metasheet + allmetasheet
-                _client.startTransaction();
+                client.startTransaction();
 
                 //if the item is not currently in the current META Aspect sheet, add it
                 componentID = gmeIDList[0];
@@ -363,24 +396,24 @@ define(['js/logger',
                     baseId: componentID
                 };
 
-                newGmeID = _client.createChild(createParams);
+                newGmeID = client.createChild(createParams);
 
                 if (newGmeID) {
                     //store new position
-                    _client.setRegistry(newGmeID, REGISTRY_KEYS.POSITION, {
+                    client.setRegistry(newGmeID, REGISTRY_KEYS.POSITION, {
                         x: position.x,
                         y: position.y
                     });
 
                     //try to set name
-                    origNode = _client.getNode(componentID);
+                    origNode = client.getNode(componentID);
                     if (origNode) {
                         newName = origNode.getAttribute(nodePropertyNames.Attributes.name) + '_instance';
-                        _client.setAttribute(newGmeID, nodePropertyNames.Attributes.name, newName);
+                        client.setAttribute(newGmeID, nodePropertyNames.Attributes.name, newName);
                     }
 
-                    _client.addMember(aspectNodeID, newGmeID, this._selectedMetaAspectSet);
-                    _client.setMemberRegistry(aspectNodeID,
+                    client.addMember(aspectNodeID, newGmeID, this._selectedMetaAspectSet);
+                    client.setMemberRegistry(aspectNodeID,
                         newGmeID,
                         this._selectedMetaAspectSet,
                         REGISTRY_KEYS.POSITION,
@@ -390,8 +423,8 @@ define(['js/logger',
                         });
 
                     //this item has not been part of the META Aspect at all, add it
-                    _client.addMember(aspectNodeID, newGmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                    _client.setMemberRegistry(aspectNodeID,
+                    client.addMember(aspectNodeID, newGmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                    client.setMemberRegistry(aspectNodeID,
                         newGmeID,
                         MetaEditorConstants.META_ASPECT_SET_NAME,
                         REGISTRY_KEYS.POSITION,
@@ -401,10 +434,10 @@ define(['js/logger',
                         });
                 }
 
-                _client.completeTransaction();
+                client.completeTransaction();
             } else {
                 //dragging from not the PartBrowser
-                _client.startTransaction();
+                client.startTransaction();
 
                 //if the item is not currently in the current META Aspect sheet, add it
                 if (gmeIDList.length > 0) {
@@ -433,8 +466,8 @@ define(['js/logger',
                                 position.y += 20;
                             }
 
-                            _client.addMember(aspectNodeID, componentID, this._selectedMetaAspectSet);
-                            _client.setMemberRegistry(aspectNodeID,
+                            client.addMember(aspectNodeID, componentID, this._selectedMetaAspectSet);
+                            client.setMemberRegistry(aspectNodeID,
                                 componentID,
                                 this._selectedMetaAspectSet,
                                 REGISTRY_KEYS.POSITION,
@@ -445,8 +478,8 @@ define(['js/logger',
 
                             //if this item has not been part of the META Aspect at all, add it
                             if (this._metaAspectMembersAll.indexOf(componentID) === -1) {
-                                _client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                                _client.setMemberRegistry(aspectNodeID,
+                                client.addMember(aspectNodeID, componentID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                                client.setMemberRegistry(aspectNodeID,
                                     componentID,
                                     MetaEditorConstants.META_ASPECT_SET_NAME,
                                     REGISTRY_KEYS.POSITION,
@@ -460,7 +493,7 @@ define(['js/logger',
                 }
 
                 setTimeout(function () {
-                    _client.completeTransaction();
+                    client.completeTransaction();
                 }, 10);
             }
         }
@@ -473,7 +506,7 @@ define(['js/logger',
     /*  HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /*************************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
-        var _client = this._client,
+        var client = this._client,
             aspectNodeID = this.metaAspectContainerNodeID,
             len,
             gmeID,
@@ -506,24 +539,29 @@ define(['js/logger',
         };
 
         doDelete = function (itemsToDelete) {
-            _client.startTransaction();
+            client.startTransaction();
 
             len = itemsToDelete.length;
             while (len--) {
                 gmeID = self._ComponentID2GMEID[itemsToDelete[len]];
+                if (!gmeID && self._ComponentID2DocItemID[itemsToDelete[len]] && self._selectedMetaAspectSet) {
+                    MetaDocItem.delete(client, aspectNodeID, self._selectedMetaAspectSet,
+                        self._ComponentID2DocItemID[itemsToDelete[len]]);
+                    continue;
+                }
                 idx = self._GMENodes.indexOf(gmeID);
                 if (idx !== -1) {
                     //entity is a box --> delete GME object from the aspect's members list
-                    _client.removeMember(aspectNodeID, gmeID, self._selectedMetaAspectSet);
+                    client.removeMember(aspectNodeID, gmeID, self._selectedMetaAspectSet);
 
                     //if the items is not present anywhere else, remove it from the META's global sheet too
                     if (self._metaAspectSheetsPerMember[gmeID].length === 1) {
-                        nodeObj = _client.getNode(gmeID);
+                        nodeObj = client.getNode(gmeID);
                         if (nodeObj && (nodeObj.isLibraryElement() || nodeObj.isLibraryRoot())) {
                             //library elements will not be lost at all
                         } else {
-                            _client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                            _client.setMeta(gmeID, {});
+                            client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
+                            client.setMeta(gmeID, {});
                         }
                     }
                 } else if (self._connectionListByID.hasOwnProperty(itemsToDelete[len])) {
@@ -532,7 +570,7 @@ define(['js/logger',
                 }
             }
 
-            _client.completeTransaction();
+            client.completeTransaction();
         };
 
         //first figure out if the deleted-to-be items are present in any other meta sheet
@@ -545,7 +583,7 @@ define(['js/logger',
                 //entity is a box
                 //check to see if this gmeID is present on any other sheet at all
                 if (this._metaAspectSheetsPerMember[gmeID].length === 1) {
-                    nodeObj = _client.getNode(gmeID);
+                    nodeObj = client.getNode(gmeID);
                     if (nodeObj && (nodeObj.isLibraryElement() || nodeObj.isLibraryRoot())) {
                         //library elements will not be lost at all
                     } else {
@@ -563,7 +601,7 @@ define(['js/logger',
             len = metaInfoToBeLost.length;
             while (len--) {
                 gmeID = metaInfoToBeLost[len];
-                nodeObj = _client.getNode(gmeID);
+                nodeObj = client.getNode(gmeID);
                 if (nodeObj) {
                     itemNames.push(nodeObj.getAttribute(nodePropertyNames.Attributes.name));
                 } else {
@@ -588,6 +626,7 @@ define(['js/logger',
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /************************************************************************/
 
+
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragParams = function (selectedElements, event) {
         var oParams = this._oGetDragParams.call(this.diagramDesigner, selectedElements, event),
             params = {positions: {}},
@@ -598,7 +637,7 @@ define(['js/logger',
 
         for (i in oParams.positions) {
             if (oParams.positions.hasOwnProperty(i)) {
-                params.positions[this._ComponentID2GMEID[i]] = oParams.positions[i];
+                params.positions[this._ComponentID2GMEID[i] || this._ComponentID2DocItemID[i]] = oParams.positions[i];
             }
         }
 
@@ -616,6 +655,8 @@ define(['js/logger',
             gmeID = this._ComponentID2GMEID[selectedElements[len]];
             if (this._GMENodes.indexOf(gmeID) !== -1) {
                 draggedItems.push(gmeID);
+            } else if (this._ComponentID2DocItemID[selectedElements[len]]) {
+                draggedItems.push(this._ComponentID2DocItemID[selectedElements[len]]);
             }
         }
 
@@ -941,25 +982,36 @@ define(['js/logger',
     MetaEditorControlDiagramDesignerWidgetEventHandlers
         .prototype._onSelectionSetColor = function (selectedIds, color, regKey) {
         var i = selectedIds.length,
+            docItem,
             gmeID;
 
         this._client.startTransaction();
         while (i--) {
             gmeID = this._ComponentID2GMEID[selectedIds[i]];
 
-            if (color) {
-                this._client.setMemberRegistry(this.metaAspectContainerNodeID,
-                    gmeID,
-                    MetaEditorConstants.META_ASPECT_SET_NAME,
-                    regKey,
-                    color);
-            } else {
-                this._client.delMemberRegistry(this.metaAspectContainerNodeID,
-                    gmeID,
-                    MetaEditorConstants.META_ASPECT_SET_NAME,
-                    regKey);
+            if (gmeID) {
+                if (color) {
+                    this._client.setMemberRegistry(this.metaAspectContainerNodeID,
+                        gmeID,
+                        MetaEditorConstants.META_ASPECT_SET_NAME,
+                        regKey,
+                        color);
+                } else {
+                    this._client.delMemberRegistry(this.metaAspectContainerNodeID,
+                        gmeID,
+                        MetaEditorConstants.META_ASPECT_SET_NAME,
+                        regKey);
+                }
+            } else if (this._ComponentID2DocItemID[selectedIds[i]]) {
+                docItem = this.__getDocItem(this._ComponentID2DocItemID[selectedIds[i]]);
+                if (color) {
+                    docItem.setProperty(regKey, color);
+                } else {
+                    docItem.deleteProperty(regKey);
+                }
             }
         }
+
         this._client.completeTransaction();
     };
 

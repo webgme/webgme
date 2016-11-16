@@ -6,7 +6,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['./ButtonBase', './ToolbarItemBase'], function (buttonBase, ToolbarItemBase) {
+define(['./ToolbarItemBase'], function (ToolbarItemBase) {
 
     'use strict';
 

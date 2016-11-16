@@ -460,7 +460,6 @@ define([
                         res.update[absGmePath] = true;
                     }
                 }
-
             } else if (_isRelid(patchPath) === true) {
                 // There was a change in one of the children..
                 switch (nodePatches[i].op) {

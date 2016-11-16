@@ -29,66 +29,153 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                 (innerCore.getRegistry(node, CONSTANTS.SET_MODIFIED_REGISTRY) || 0) + 1);
         }
 
-        function getMemberRelId(node, setName, memberPath) {
+        function getSetNodeByName(node, setName) {
+            return innerCore.getChild(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName);
+        }
+
+        function getSetInfoByName(node, setName) {
+            ASSERT(typeof setName === 'string');
+            var setsInfo = innerCore.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
+
+            return setsInfo && setsInfo[setName];
+        }
+
+        function getOwnMemberRelId(node, setName, memberPath) {
             var setInfo,
-                keys, i;
+                keys,
+                i;
 
-            do {
-                setInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
-                if (setInfo && setInfo[setName]) {
-                    keys = self.getRawKeys(setInfo[setName], self.isValidRelid);
-                    for (i = 0; i < keys.length; i += 1) {
-                        if (innerCore.getPointerPathFrom(node, '/' + CONSTANTS.ALL_SETS_PROPERTY +
-                                    '/' + setName + '/' + keys[i], CONSTANTS.MEMBER_RELATION) ===
-                            memberPath) {
+            setInfo = getSetInfoByName(node, setName);
+            if (setInfo) {
+                keys = self.getRawKeys(setInfo, self.isValidRelid);
+                for (i = 0; i < keys.length; i += 1) {
+                    if (innerCore.getPointerPathFrom(node,
+                            '/' + CONSTANTS.ALL_SETS_PROPERTY + '/' + setName + '/' + keys[i],
+                            CONSTANTS.MEMBER_RELATION) === memberPath) {
 
-                            return keys[i];
-                        }
+                        return keys[i];
                     }
                 }
-                node = self.getBase(node);
-            } while (node);
+            }
 
             return null;
         }
 
-        function collectSetNames(node) {
+        function getMemberRelId(node, setName, memberPath) {
+            var relid = null;
+
+            do {
+                relid = getOwnMemberRelId(node, setName, memberPath);
+                if (relid) {
+                    return relid;
+                }
+
+                node = self.getBase(node);
+            } while (node);
+
+            return relid;
+        }
+
+        function getSetMemberNode(node, setName, memberPath) {
+            var memberRelId = getMemberRelId(node, setName, memberPath);
+
+            return typeof memberRelId === 'string' && innerCore.getChild(getSetNodeByName(node, setName), memberRelId);
+        }
+
+        function getOwnSetMemberNode(node, setName, memberPath) {
+            var memberRelId = getOwnMemberRelId(node, setName, memberPath);
+
+            return typeof memberRelId === 'string' && innerCore.getChild(getSetNodeByName(node, setName), memberRelId);
+        }
+
+        function collectOwnSetNames(node) {
             var sets = [],
                 setsInfo,
-                keys, i;
-            do {
-                setsInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
-                if (setsInfo &&
-                    setsInfo[CONSTANTS.OVERLAYS_PROPERTY] &&
-                    setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']) {
-                    keys = Object.keys(setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']);
-                    for (i = 0; i < keys.length; i += 1) {
-                        if (keys[i] !== CONSTANTS.MUTABLE_PROPERTY && sets.indexOf(keys[i]) === -1) {
-                            sets.push(keys[i]);
-                        }
+                keys,
+                i;
+
+            setsInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
+            if (setsInfo &&
+                setsInfo[CONSTANTS.OVERLAYS_PROPERTY] &&
+                setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']) {
+
+                keys = Object.keys(setsInfo[CONSTANTS.OVERLAYS_PROPERTY]['']);
+
+                for (i = 0; i < keys.length; i += 1) {
+                    if (keys[i] !== CONSTANTS.MUTABLE_PROPERTY && sets.indexOf(keys[i]) === -1) {
+                        sets.push(keys[i]);
                     }
                 }
+            }
+
+            return sets;
+        }
+
+        function collectSetNames(node) {
+            var sets = [],
+                keys,
+                i;
+
+            do {
+                keys = collectOwnSetNames(node);
+
+                for (i = 0; i < keys.length; i += 1) {
+                    if (sets.indexOf(keys[i]) === -1) {
+                        sets.push(keys[i]);
+                    }
+                }
+
                 node = self.getBase(node);
             } while (node);
 
             return sets;
         }
 
+        function hasOwnSet(node, setName) {
+            ASSERT(typeof setName === 'string');
+            var setsInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
+            if (setsInfo &&
+                setsInfo[CONSTANTS.OVERLAYS_PROPERTY] &&
+                setsInfo[CONSTANTS.OVERLAYS_PROPERTY][''] &&
+                setsInfo[CONSTANTS.OVERLAYS_PROPERTY][''][setName]) {
+
+                return true;
+            }
+
+            return false;
+        }
+
+        function hasSet(node, setName) {
+            do {
+                if (hasOwnSet(node, setName)) {
+                    return true;
+                }
+
+                node = self.getBase(node);
+            } while (node);
+
+            return false;
+        }
+
         function collectInternalMemberRelids(node, setName) {
             var setInfo,
                 relids = [],
-                keys, i;
+                keys,
+                i;
 
             do {
-                setInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY);
-                if (setInfo && setInfo[setName]) {
-                    keys = self.getRawKeys(setInfo[setName], self.isValidRelid);
+                setInfo = getSetInfoByName(node, setName);
+                if (setInfo) {
+
+                    keys = self.getRawKeys(setInfo, self.isValidRelid);
+
                     for (i = 0; i < keys.length; i += 1) {
                         if (relids.indexOf(keys[i]) === -1) {
                             relids.push(keys[i]);
                         }
                     }
                 }
+
                 node = self.getBase(node);
             } while (node);
 
@@ -102,7 +189,7 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
         function collectMemberPath(node, setName, innerRelid) {
             var source = '/' + CONSTANTS.ALL_SETS_PROPERTY + '/' + setName + '/' + innerRelid,
-                path = undefined,//jshint ignore: line
+                path,
                 tempPath;
 
             do {
@@ -113,103 +200,76 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
                         break;
                     }
                 }
+
                 node = self.getBase(node);
             } while (node);
 
             return path;
         }
 
-        function collectPropertyNames(node, setName, memberPath, propertyName) {
-            var relId,
-                names = [],
-                memberInfo,
-                keys, i;
+        function getPropertyCollectionInfo(node, propertyCollectionName, setName, memberPath) {
+            var setInfo = getSetInfoByName(node, setName),
+                propertyCollectionInfo,
+                relid;
 
-            do {
-                relId = getMemberRelId(node, setName, memberPath);
-                if (relId) {
-                    memberInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY) || {};
-                    memberInfo = memberInfo[setName] || {};
-                    memberInfo = memberInfo[relId] || {};
-                    memberInfo = memberInfo[propertyName] || {};
-                    keys = innerCore.getRawKeys(memberInfo, self.isValidRelid);
-                    for (i = 0; i < keys.length; i += 1) {
-                        if (names.indexOf(keys[i]) === -1) {
-                            names.push(keys[i]);
-                        }
-                    }
+            if (setInfo) {
+                if (typeof memberPath === 'string') {
+                    relid = getMemberRelId(node, setName, memberPath);
+                    propertyCollectionInfo = relid && setInfo[relid] && setInfo[relid][propertyCollectionName];
                 } else {
-                    return names; //because there is no more relation towards the given path
+                    propertyCollectionInfo = setInfo[propertyCollectionName];
                 }
-                node = self.getBase(node);
-            } while (node);
+            }
 
-            return names;
+            return propertyCollectionInfo;
         }
 
-        function collectOwnPropertyNames(node, setName, memberPath, propertyName) {
-            var relId,
-                names = [],
-                memberInfo,
-                keys, i;
+        function collectOwnPropertyNames(node, propertyCollectionName, setName, memberPath) {
+            var propertyCollectionInfo = getPropertyCollectionInfo(node, propertyCollectionName, setName, memberPath);
 
-            relId = getMemberRelId(node, setName, memberPath);
-            if (relId) {
-                memberInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY) || {};
-                memberInfo = memberInfo[setName] || {};
-                memberInfo = memberInfo[relId] || {};
-                memberInfo = memberInfo[propertyName] || {};
-                keys = innerCore.getRawKeys(memberInfo, self.isValidRelid);
+            return propertyCollectionInfo ? innerCore.getRawKeys(propertyCollectionInfo) : [];
+        }
+
+        function collectPropertyNames(node, propertyCollectionName, setName, memberPath) {
+            var names = [],
+                keys,
+                i;
+
+            do {
+                keys = collectOwnPropertyNames(node, propertyCollectionName, setName, memberPath);
+
                 for (i = 0; i < keys.length; i += 1) {
                     if (names.indexOf(keys[i]) === -1) {
                         names.push(keys[i]);
                     }
                 }
-            }
+
+                node = self.getBase(node);
+            } while (node);
 
             return names;
         }
 
-        function getPropertyValue(node, setName, memberPath, propertyCollectionName, propertyName) {
-            var relId,
-                memberInfo,
-                value;
+        function getOwnPropertyValue(node,  propertyCollectionName, propertyName, setName, memberPath) {
+            var propertyCollectionInfo = getPropertyCollectionInfo(node, propertyCollectionName, setName, memberPath);
+
+            return propertyCollectionInfo ? propertyCollectionInfo[propertyName] : undefined;
+        }
+
+        function getPropertyValue(node,  propertyCollectionName, propertyName, setName, memberPath) {
+            var value;
 
             do {
-                relId = getMemberRelId(node, setName, memberPath);
-                if (relId) {
-                    memberInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY) || {};
-                    memberInfo = memberInfo[setName] || {};
-                    memberInfo = memberInfo[relId] || {};
-                    memberInfo = memberInfo[propertyCollectionName] || {};
-                    value = memberInfo[propertyName];
-                    if (value !== undefined) {
-                        return value;
-                    }
-                } else {
-                    return undefined; //because there is no more relation towards the given path
+                value = getOwnPropertyValue(node,  propertyCollectionName, propertyName, setName, memberPath);
+                if (value !== undefined) {
+                    return value;
                 }
+
                 node = self.getBase(node);
             } while (node);
 
             return undefined;
         }
-
-        //function getOwnPropertyValue(node, setName, memberPath, propertyCollectionName, propertyName) {
-        //    var relId,
-        //        memberInfo;
-        //
-        //    relId = getMemberRelId(node, setName, memberPath);
-        //    if (relId) {
-        //        memberInfo = core.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY) || {};
-        //        memberInfo = memberInfo[setName] || {};
-        //        memberInfo = memberInfo[relId] || {};
-        //        memberInfo = memberInfo[propertyCollectionName] || {};
-        //        return memberInfo[propertyName];
-        //    }
-        //
-        //    return undefined;
-        //}
 
         function createSetOnDemand(node, setName) {
             //the function checks if there is no set defined on the node's level and create it
@@ -239,182 +299,27 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
 
         //<editor-fold=Added Methods>
         this.getSetNames = function (node) {
-            //return innerCore.getPointerNames(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY)) || [];
             return collectSetNames(node);
         };
 
-        this.getMemberPaths = function (node, setName) {
-            var memberRelids = collectInternalMemberRelids(node, setName),
-                //pathPrefix = '/' + CONSTANTS.ALL_SETS_PROPERTY + '/' + setName + '/',
-                i, path,
-                memberPaths = [];
-            for (i = 0; i < memberRelids.length; i += 1) {
-                path = collectMemberPath(node, setName, memberRelids[i]);
-                if (path !== undefined && memberPaths.indexOf(path) === -1) { //null and '' are valid targets
-                    memberPaths.push(path);
-                }
-            }
-            return memberPaths;
-        };
-
-        this.getOwnMemberPaths = function (node, setName) {
-            var setInfo = self.getProperty(node, CONSTANTS.ALL_SETS_PROPERTY),
-                relids = setInfo && setInfo[setName] ? self.getRawKeys(setInfo[setName], self.isValidRelid) : [],
-                allPaths = self.getMemberPaths(node, setName),
-                paths = [],
-                i;
-
-            for (i = 0; i < allPaths.length; i += 1) {
-                if (relids.indexOf(getMemberRelId(node, setName, allPaths[i])) !== -1) {
-                    paths.push(allPaths[i]);
-                }
-            }
-
-            return paths;
-        };
-
-        this.delMember = function (node, setName, memberPath) {
-            ASSERT(typeof setName === 'string');
-            //we only need the path of the member so we allow to enter only it
-            if (typeof memberPath !== 'string') {
-                memberPath = innerCore.getPath(memberPath);
-            }
-
-            var setMemberRelId = getMemberRelId(node, setName, memberPath);
-            if (setMemberRelId) {
-                var setMemberNode = innerCore.getChild(
-                    innerCore.getChild(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName),
-                    setMemberRelId);
-
-                innerCore.deleteNode(setMemberNode, true);
-                setModified(node);
-            }
-        };
-
-        this.addMember = function (node, setName, member) {
-            ASSERT(typeof setName === 'string');
-            var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY),
-                setNode = innerCore.getChild(setsNode, setName),
-                setMemberRelId = getMemberRelId(node, setName, self.getPath(member)),
-                setMemberNode;
-
-            if (setMemberRelId === null) {
-                createSetOnDemand(node, setName);
-                setMemberNode = innerCore.createChild(setNode, CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH + 1);
-            } else if (!self.isFullyOverriddenMember(node, setName, self.getPath(member))) {
-                //it was an inherited member, now we override it
-                // TODO: We pin down the expected behavior here..
-                setMemberNode = innerCore.copyNode(innerCore.getChild(setNode, setMemberRelId),
-                    setNode, CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH + 1);
-                innerCore.deleteNode(innerCore.getChild(setNode, setMemberRelId), true);
-            }
-
-            if (setMemberNode) {
-                innerCore.setPointer(setMemberNode, CONSTANTS.MEMBER_RELATION, member);
-
-                //TODO hack, somehow the empty children have been removed during persist
-                innerCore.setRegistry(setMemberNode, '_', '_');
-                setModified(node);
-            } else {
-                logger.warn('member already in set');
-            }
-        };
-
-        this.getMemberAttributeNames = function (node, setName, memberPath) {
-            return collectPropertyNames(node, setName, memberPath, CONSTANTS.ATTRIBUTES_PROPERTY);
-        };
-
-        this.getMemberOwnAttributeNames = function (node, setName, memberPath) {
-            return collectOwnPropertyNames(node, setName, memberPath, CONSTANTS.ATTRIBUTES_PROPERTY);
-        };
-
-        this.getMemberAttribute = function (node, setName, memberPath, attrName) {
-            return getPropertyValue(node, setName, memberPath, CONSTANTS.ATTRIBUTES_PROPERTY, attrName);
-        };
-
-        this.setMemberAttribute = function (node, setName, memberPath, attrName, attrValue) {
-            ASSERT(typeof setName === 'string' && typeof attrName === 'string' && attrValue !== undefined);
-            var memberRelId = getMemberRelId(node, setName, memberPath);
-            if (memberRelId) {
-                var memberNode = innerCore.getChild(
-                    innerCore.getChild(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName),
-                    memberRelId);
-
-                innerCore.setAttribute(memberNode, attrName, attrValue);
-                setModified(node);
-            }
-        };
-
-        this.delMemberAttribute = function (node, setName, memberPath, attrName) {
-            ASSERT(typeof setName === 'string' && typeof attrName === 'string');
-            var memberRelId = getMemberRelId(node, setName, memberPath);
-            if (memberRelId) {
-                var memberNode = innerCore.getChild(
-                    innerCore.getChild(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName),
-                    memberRelId);
-
-                innerCore.delAttribute(memberNode, attrName);
-                setModified(node);
-            }
-        };
-
-        this.getMemberRegistryNames = function (node, setName, memberPath) {
-            return collectPropertyNames(node, setName, memberPath, CONSTANTS.REGISTRY_PROPERTY);
-        };
-
-        this.getMemberOwnRegistryNames = function (node, setName, memberPath) {
-            return collectOwnPropertyNames(node, setName, memberPath, CONSTANTS.REGISTRY_PROPERTY);
-        };
-
-        this.getMemberRegistry = function (node, setName, memberPath, regName) {
-            return getPropertyValue(node, setName, memberPath, CONSTANTS.REGISTRY_PROPERTY, regName);
-        };
-
-        this.setMemberRegistry = function (node, setName, memberPath, regName, regValue) {
-            ASSERT(typeof setName === 'string' && typeof regName === 'string' && regValue !== undefined);
-            var memberRelId = getMemberRelId(node, setName, memberPath);
-            if (memberRelId) {
-                var memberNode = innerCore.getChild(
-                    innerCore.getChild(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName),
-                    memberRelId);
-
-                innerCore.setRegistry(memberNode, regName, regValue);
-                setModified(node);
-            }
-        };
-
-        this.delMemberRegistry = function (node, setName, memberPath, regName) {
-            ASSERT(typeof setName === 'string' && typeof regName === 'string');
-            var memberRelId = getMemberRelId(node, setName, memberPath);
-            if (memberRelId) {
-                var memberNode = innerCore.getChild(
-                    innerCore.getChild(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName),
-                    memberRelId);
-
-                innerCore.delRegistry(memberNode, regName);
-                setModified(node);
-            }
+        this.getOwnSetNames = function (node) {
+            return collectOwnSetNames(node);
         };
 
         this.createSet = function (node, setName) {
-            ASSERT(typeof setName === 'string');
-            var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY),
-                setNode = innerCore.getChild(setsNode, setName);
-
-            //FIXME: hack, somehow the empty children have been removed during persist
-            innerCore.setRegistry(setNode, '_', '_');
-
+            var setNode = getSetNodeByName(node, setName);
             innerCore.setPointer(innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY), setName, null);
+            // Ensure the set-node is not deleted at persist.
+            innerCore.setRegistry(setNode, '_', '_');
             setModified(node);
         };
 
         this.deleteSet = function (node, setName) {
-            ASSERT(typeof setName === 'string');
             var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY),
                 setNode = innerCore.getChild(setsNode, setName);
+
             innerCore.deletePointer(setsNode, setName);
             innerCore.deleteNode(setNode, true);
-            setModified(node);
         };
 
         this.isMemberOf = function (node) {
@@ -443,9 +348,11 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             var setNames = collectSetNames(node),
                 ownRelId,
                 baseRelId;
+
             if (setNames.indexOf(setName) === -1) {
                 return false;
             }
+
             if (innerCore.getBase(node) === null) {
                 return false;
             }
@@ -456,8 +363,212 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             if (ownRelId && baseRelId && ownRelId !== baseRelId) {
                 return true;
             }
+
             return false;
         };
+
+        this.getMemberPaths = function (node, setName) {
+            var memberRelids = collectInternalMemberRelids(node, setName),
+                //pathPrefix = '/' + CONSTANTS.ALL_SETS_PROPERTY + '/' + setName + '/',
+                i, path,
+                memberPaths = [];
+            for (i = 0; i < memberRelids.length; i += 1) {
+                path = collectMemberPath(node, setName, memberRelids[i]);
+                if (path !== undefined && memberPaths.indexOf(path) === -1) { //null and '' are valid targets
+                    memberPaths.push(path);
+                }
+            }
+            return memberPaths;
+        };
+
+        this.getOwnMemberPaths = function (node, setName) {
+            var setInfo = getSetInfoByName(node, setName),
+                relids = setInfo ? self.getRawKeys(setInfo, self.isValidRelid) : [],
+                allPaths = self.getMemberPaths(node, setName),
+                paths = [],
+                i;
+
+            for (i = 0; i < allPaths.length; i += 1) {
+                if (relids.indexOf(getMemberRelId(node, setName, allPaths[i])) !== -1) {
+                    paths.push(allPaths[i]);
+                }
+            }
+
+            return paths;
+        };
+
+        this.delMember = function (node, setName, memberPath) {
+            var setMemberNode;
+
+            setMemberNode = getOwnSetMemberNode(node, setName, memberPath);
+            if (setMemberNode) {
+                innerCore.deleteNode(setMemberNode, true);
+            }
+        };
+
+        this.addMember = function (node, setName, member) {
+            var setNode = getSetNodeByName(node, setName),
+                setMemberRelId = getMemberRelId(node, setName, self.getPath(member)),
+                setMemberNode;
+
+            if (setMemberRelId === null) {
+                createSetOnDemand(node, setName);
+                setMemberNode = innerCore.createChild(setNode, CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH + 1);
+            } else if (!self.isFullyOverriddenMember(node, setName, self.getPath(member))) {
+                //it was an inherited member, now we override it
+                // TODO: We pin down the expected behavior here..
+                setMemberNode = innerCore.copyNode(innerCore.getChild(setNode, setMemberRelId),
+                    setNode, CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH + 1);
+                innerCore.deleteNode(innerCore.getChild(setNode, setMemberRelId), true);
+            }
+
+            if (setMemberNode) {
+                innerCore.setPointer(setMemberNode, CONSTANTS.MEMBER_RELATION, member);
+
+                // Ensure the member-node entry is not deleted at persist.
+                innerCore.setRegistry(setMemberNode, '_', '_');
+                setModified(node);
+            } else {
+                logger.warn('member already in set');
+            }
+        };
+
+        this.getMemberAttributeNames = function (node, setName, memberPath) {
+            ASSERT(typeof memberPath === 'string');
+            return collectPropertyNames(node, CONSTANTS.ATTRIBUTES_PROPERTY, setName, memberPath);
+        };
+
+        this.getMemberOwnAttributeNames = function (node, setName, memberPath) {
+            ASSERT(typeof memberPath === 'string');
+            return collectOwnPropertyNames(node, CONSTANTS.ATTRIBUTES_PROPERTY, setName, memberPath);
+        };
+
+        this.getMemberAttribute = function (node, setName, memberPath, attrName) {
+            ASSERT(typeof memberPath === 'string');
+            return getPropertyValue(node, CONSTANTS.ATTRIBUTES_PROPERTY, attrName, setName, memberPath);
+        };
+
+        this.getMemberOwnAttribute = function (node, setName, memberPath, attrName) {
+            ASSERT(typeof memberPath === 'string');
+            return getOwnPropertyValue(node, CONSTANTS.ATTRIBUTES_PROPERTY, attrName, setName, memberPath);
+        };
+
+        this.setMemberAttribute = function (node, setName, memberPath, attrName, attrValue) {
+            ASSERT(attrValue !== undefined);
+            var setMemberNode = getSetMemberNode(node, setName, memberPath);
+
+            if (setMemberNode) {
+                innerCore.setAttribute(setMemberNode, attrName, attrValue);
+                setModified(node);
+            }
+        };
+
+        this.delMemberAttribute = function (node, setName, memberPath, attrName) {
+            var setMemberNode = getOwnSetMemberNode(node, setName, memberPath);
+
+            if (setMemberNode) {
+                innerCore.delAttribute(setMemberNode, attrName);
+            }
+        };
+
+        this.getMemberRegistryNames = function (node, setName, memberPath) {
+            ASSERT(typeof memberPath === 'string');
+            return collectPropertyNames(node, CONSTANTS.REGISTRY_PROPERTY, setName, memberPath);
+        };
+
+        this.getMemberOwnRegistryNames = function (node, setName, memberPath) {
+            ASSERT(typeof memberPath === 'string');
+            return collectOwnPropertyNames(node, CONSTANTS.REGISTRY_PROPERTY, setName, memberPath);
+        };
+
+        this.getMemberRegistry = function (node, setName, memberPath, regName) {
+            ASSERT(typeof memberPath === 'string');
+            return getPropertyValue(node, CONSTANTS.REGISTRY_PROPERTY, regName, setName, memberPath);
+        };
+
+        this.getMemberOwnRegistry = function (node, setName, memberPath, regName) {
+            ASSERT(typeof memberPath === 'string');
+            return getOwnPropertyValue(node, CONSTANTS.REGISTRY_PROPERTY, regName, setName, memberPath);
+        };
+
+        this.setMemberRegistry = function (node, setName, memberPath, regName, regValue) {
+            ASSERT(regValue !== undefined);
+            var setMemberNode = getSetMemberNode(node, setName, memberPath);
+
+            if (setMemberNode) {
+                innerCore.setRegistry(setMemberNode, regName, regValue);
+                setModified(node);
+            }
+        };
+
+        this.delMemberRegistry = function (node, setName, memberPath, regName) {
+            var setMemberNode = getOwnSetMemberNode(node, setName, memberPath);
+
+            if (setMemberNode) {
+                innerCore.delRegistry(setMemberNode, regName);
+            }
+        };
+
+        this.getSetAttributeNames = function (node, setName) {
+            return collectPropertyNames(node, CONSTANTS.ATTRIBUTES_PROPERTY, setName);
+        };
+
+        this.getOwnSetAttributeNames = function (node, setName) {
+            return collectOwnPropertyNames(node, CONSTANTS.ATTRIBUTES_PROPERTY, setName);
+        };
+
+        this.getSetAttribute = function (node, setName, attrName) {
+            return getPropertyValue(node, CONSTANTS.ATTRIBUTES_PROPERTY, attrName, setName);
+        };
+
+        this.getOwnSetAttribute = function (node, setName, attrName) {
+            return getOwnPropertyValue(node, CONSTANTS.ATTRIBUTES_PROPERTY, attrName, setName);
+        };
+
+        this.setSetAttribute = function (node, setName, attrName, attrValue) {
+            if (hasSet(node, setName)) {
+                self.setAttribute(getSetNodeByName(node, setName), attrName, attrValue);
+                setModified(node);
+            }
+        };
+
+        this.delSetAttribute = function (node, setName, attrName) {
+            var setInfo = getSetInfoByName(node, setName);
+            if (setInfo) {
+                self.delAttribute(getSetNodeByName(node, setName), attrName);
+            }
+        };
+
+        this.getSetRegistryNames = function (node, setName) {
+            return collectPropertyNames(node, CONSTANTS.REGISTRY_PROPERTY, setName);
+        };
+
+        this.getOwnSetRegistryNames = function (node, setName) {
+            return collectOwnPropertyNames(node, CONSTANTS.REGISTRY_PROPERTY, setName);
+        };
+
+        this.getSetRegistry = function (node, setName, regName) {
+            return getPropertyValue(node, CONSTANTS.REGISTRY_PROPERTY, regName, setName);
+        };
+
+        this.getOwnSetRegistry = function (node, setName, regName) {
+            return getOwnPropertyValue(node, CONSTANTS.REGISTRY_PROPERTY, regName, setName);
+        };
+
+        this.setSetRegistry = function (node, setName, regName, regValue) {
+            if (hasSet(node, setName)) {
+                self.setRegistry(getSetNodeByName(node, setName), regName, regValue);
+                setModified(node);
+            }
+        };
+
+        this.delSetRegistry = function (node, setName, regName) {
+            var setInfo = getSetInfoByName(node, setName);
+            if (setInfo) {
+                self.delRegistry(getSetNodeByName(node, setName), regName);
+            }
+        };
+
         //</editor-fold>
     }
 
