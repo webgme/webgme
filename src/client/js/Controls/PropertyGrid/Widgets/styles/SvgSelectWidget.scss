@@ -1,0 +1,42 @@
+/**
+ * @author kecso / https://github.com/kecso
+ */
+
+.svgselect-widget {
+  width: 50px;
+  div.btn-group {
+    width: 100%;
+
+    button.svgselect {
+      font-size: 11px;
+      padding: 6px 0;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+    }
+
+    &open {
+      position: absolute;
+      width: inherit;
+    }
+
+    ul.svgselect-container.dropdown-menu {
+      max-height: 200px;
+      min-width: 0;
+      padding: 0;
+      width: calc(100% - 6px);
+
+      li {
+        font-size: 11px;
+        padding: 0;
+        height: 30px;
+        border-bottom: none;
+
+        a {
+          background-image: none;
+        }
+      }
+    }
+  }
+}

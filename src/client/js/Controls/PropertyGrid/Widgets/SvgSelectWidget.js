@@ -22,6 +22,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         WidgetBase.call(this, propertyDesc);
 
         self._items = propertyDesc.items;
+        self._dropDownItems = [];
         self._value = propertyDesc.value;
         self._dropDown = $('<div class="btn-group"></div>');
         self._dropDownButton = $('<button type="button" class="multiselect dropdown-toggle btn btn-link" ' +
@@ -40,6 +41,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         for (i in self._items) {
             item = $('<li data-value="' + i + '"><a href="#">' + self._items[i] + '</a></li>');
             item.on('click', onClick);
+            self._dropDownItems.push(item);
             self._dropDownList.append(item);
         }
 
@@ -59,6 +61,15 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
     SvgSelectWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
         $(this._dropDownButton).disable(isReadOnly);
+    };
+
+    SvgSelectWidget.prototype.destroy = function () {
+        var i;
+
+        for (i = 0; i < this._dropDownItems.length; i += 1) {
+            this._dropDownItems[i].off('click');
+        }
+        WidgetBase.prototype.destroy.call(this);
     };
 
     return SvgSelectWidget;
