@@ -20,6 +20,7 @@ define([
     'js/Controls/PropertyGrid/Widgets/PointerWidget',
     'js/Controls/PropertyGrid/Widgets/MetaTypeWidget',
     'js/Controls/PropertyGrid/Widgets/MultiSelectWidget',
+    'js/Controls/PropertyGrid/Widgets/SvgSelectWidget',
     './PropertyGridWidgets'
 ], function (StringWidget,
              NumberBoxWidget,
@@ -36,6 +37,7 @@ define([
              PointerWidget,
              MetaTypeWidget,
              MultiSelectWidget,
+             SvgSelectWidget,
              PROPERTY_GRID_WIDGETS) {
 
     'use strict';
@@ -72,6 +74,9 @@ define([
                     break;
                 case PROPERTY_GRID_WIDGETS.COLOR_PICKER:
                     widget = new ColorPickerWidget(propDesc);
+                    break;
+                case PROPERTY_GRID_WIDGETS.SVG_SELECT:
+                    widget = new SvgSelectWidget(propDesc);
                     break;
                 default:
                     widget = new SpecificWidget(propDesc);
