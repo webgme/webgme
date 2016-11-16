@@ -1,6 +1,13 @@
 # Change Log
 
-## [v2.6.2](https://github.com/webgme/webgme/tree/v2.6.2) (2016-11-14)
+## [v2.6.3](https://github.com/webgme/webgme/tree/v2.6.3) (2016-11-15)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.6.2...v2.6.3)
+
+**Fixed bugs:**
+
+- Get rid of undefined before calculating hashes. [\#1239](https://github.com/webgme/webgme/pull/1239) ([pmeijer](https://github.com/pmeijer))
+
+## [v2.6.2](https://github.com/webgme/webgme/tree/v2.6.2) (2016-11-15)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.6.1...v2.6.2)
 
 **Implemented enhancements:**
