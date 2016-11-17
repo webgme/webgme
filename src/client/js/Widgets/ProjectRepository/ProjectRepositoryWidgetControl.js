@@ -6,7 +6,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['js/logger', 'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog'], function (Logger, ConfirmDeleteDialog) {
+define(['js/logger', 'js/Dialogs/Confirm/ConfirmDialog'], function (Logger, ConfirmDialog) {
     'use strict';
 
     var RepositoryLogControl;
@@ -85,8 +85,9 @@ define(['js/logger', 'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog'], function (
                 });
         };
 
-        self._view.onSquashFromCommit = function (params) {
-            var dialog = new ConfirmDeleteDialog();
+        self._view.onSquashFromCommit = function (params, cancelCallback) {
+            var dialog = new ConfirmDialog(),
+                confirmed = false;
             dialog.show({
                 title: 'Squash Commits',
                 iconClass: 'glyphicon glyphicon-compressed',
@@ -97,8 +98,15 @@ define(['js/logger', 'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog'], function (
                     placeHolder: 'Enter optional commit message...',
                     required: false
                 },
-                severity: 'warning'
+                severity: 'warning',
+                onHideFn: function () {
+                    if (!confirmed) {
+                        // The dialog was cancelled so we need to clear the selection
+                        cancelCallback();
+                    }
+                }
             }, function (doNotShow, msg) {
+                confirmed = true;
                 self._client.squashCommits(self._client.getActiveProjectId(),
                     params.commitId, params.branchName, msg || null, function (err, result) {
                         if (err) {

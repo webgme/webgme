@@ -2,25 +2,26 @@
 /*jshint browser: true*/
 
 /**
- * Dialog for confirmation of project deletion.
+ * Dialog for confirmation, with optional input field.
+ * By default it acts as a dialog for confirming deletion.
  *
  * @author pmeijer / https://github.com/pmeijer
  */
 
 define([
-    'text!./templates/ConfirmDeleteDialog.html',
-    'css!./styles/ConfirmDeleteDialog.css'
+    'text!./templates/ConfirmDialog.html',
+    'css!./styles/ConfirmDialog.css'
 ], function (dialogTemplate) {
     'use strict';
 
-    function ConfirmDeleteDialog() {
+    function ConfirmDialog() {
         this._dialog = null;
         this._okBtn = null;
         this._cancelBtn = null;
         this._dontAsk = null;
     }
 
-    ConfirmDeleteDialog.prototype.show = function (params, onOk) {
+    ConfirmDialog.prototype.show = function (params, onOk) {
         var self = this,
             inputChecker,
             value;
@@ -134,15 +135,13 @@ define([
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
-            self.onHide();
+            if (typeof params.onHideFn === 'function') {
+                params.onHideFn();
+            }
         });
 
         this._dialog.modal('show');
     };
 
-    ConfirmDeleteDialog.prototype.onHide = function () {
-        // Not overridden..
-    };
-
-    return ConfirmDeleteDialog;
+    return ConfirmDialog;
 });

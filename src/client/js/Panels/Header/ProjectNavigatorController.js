@@ -1,4 +1,4 @@
-/*globals define, angular, WebGMEGlobal, $*/
+/*globals define, angular, WebGMEGlobal*/
 /*jshint browser: true*/
 /**
  * @author nabana / https://github.com/nabana
@@ -15,7 +15,7 @@ define([
     'js/Dialogs/Merge/MergeDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
     'js/Dialogs/Branches/BranchesDialog',
-    'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
+    'js/Dialogs/Confirm/ConfirmDialog',
     'js/Dialogs/ApplyCommitQueue/ApplyCommitQueueDialog',
     'common/storage/util',
     'js/Utils/SaveToDisk',
@@ -31,7 +31,7 @@ define([
              MergeDialog,
              ProjectRepositoryDialog,
              BranchesDialog,
-             ConfirmDeleteDialog,
+             ConfirmDialog,
              ApplyCommitQueueDialog,
              StorageUtil,
              saveToDisk,
@@ -447,7 +447,7 @@ define([
         };
 
         deleteProject = function (data) {
-            var deleteProjectModal = new ConfirmDeleteDialog();
+            var deleteProjectModal = new ConfirmDialog();
             deleteProjectModal.show({deleteItem: projectDisplayedName}, function () {
                 self.gmeClient.deleteProject(data.projectId, function (err) {
                     if (err) {
@@ -624,7 +624,7 @@ define([
         }
 
         function deleteBranch(data) {
-            var deleteBranchModal = new ConfirmDeleteDialog(),
+            var deleteBranchModal = new ConfirmDialog(),
                 deleteItem = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId) +
                     '  ::  ' + data.branchId;
             deleteBranchModal.show({deleteItem: deleteItem}, function () {

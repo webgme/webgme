@@ -1876,8 +1876,8 @@ define([
         /**
          *
          * @param {string[]} nodePaths - Paths to nodes of which to check.
-         * @param includeChildren
-         * @param callback
+         * @param {boolean} includeChildren - If true will recursively check the children of the nodes to check.
+         * @param {function(Error, Object)} callback
          */
         this.checkCustomConstraints = function (nodePaths, includeChildren, callback) {
             var parameters = {

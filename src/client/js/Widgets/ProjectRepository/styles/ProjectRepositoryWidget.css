@@ -46,6 +46,8 @@
       text-decoration: none; }
   .project-repository-widget table tr {
     height: 25px; }
+    .project-repository-widget table tr.in-selection {
+      background-color: lightskyblue; }
     .project-repository-widget table tr th,
     .project-repository-widget table tr td {
       padding: 0 5px;

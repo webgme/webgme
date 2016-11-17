@@ -1,7 +1,7 @@
 .projects-dialog .modal-content.in-background {
   opacity: 0; }
   .projects-dialog .modal-content.in-background * {
-    opacity: 0; }
+    opacity: 0.4; }
 .projects-dialog .modal-content .modal-header .header-icon {
   height: 28px;
   width: 28px;
