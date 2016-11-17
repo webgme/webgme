@@ -80,6 +80,7 @@ define(['js/Constants'], function (CONSTANTS) {
         }
 
         function openLibraryOriginInNewWindow(libraryRootId, followBranch) {
+            // FIXME: This does not belong here (the client knows nothing about the URL serialization..
             var address,
                 info;
             if (!state.nodes[libraryRootId]) {

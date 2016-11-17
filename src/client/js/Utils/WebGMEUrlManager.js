@@ -15,11 +15,82 @@ define([
 
     'use strict';
 
-    var parseInitialThingsToDoFromUrl,
-        serializeStateToUrl,
-        loadStateFromParsedUrl;
+    function getSearchQuery(stateInfo) {
+        var searchQuery = 'project=' + encodeURIComponent(stateInfo.projectId);
 
-    parseInitialThingsToDoFromUrl = function () {
+        if (stateInfo.branchName) {
+            searchQuery += '&branch=' + stateInfo.branchName;
+        } else if (stateInfo.commitId) {
+            searchQuery += '&commit=' + stateInfo.commitId;
+        }
+
+        if (stateInfo.nodeId) {
+            searchQuery += '&node=' + stateInfo.nodeId;
+        } else if (stateInfo.nodeId === CONSTANTS.PROJECT_ROOT_ID) {
+            searchQuery += '&node=root';
+        }
+
+        if (stateInfo.visualizer) {
+            searchQuery += '&visualizer=' + stateInfo.visualizer;
+        }
+
+        if (stateInfo.tab) {
+            searchQuery += '&tab=' + stateInfo.tab;
+        }
+
+        if (stateInfo.layout) {
+            searchQuery += '&layout=' + stateInfo.layout;
+        }
+
+        // leave this last, url may exceeds the max url limit
+        if (stateInfo.selection) {
+            searchQuery += '&selection=' + stateInfo.selection.join(',');
+        }
+
+        return searchQuery;
+    }
+
+    function serializeStateToUrl() {
+        var stateInfo = {},
+            searchQuery = ''; // default if project is not open
+
+        if (WebGMEGlobal.State.getActiveProjectName()) {
+            stateInfo.projectId = WebGMEGlobal.State.getActiveProjectName();
+
+            if (WebGMEGlobal.State.getActiveBranch()) {
+                stateInfo.branchName = WebGMEGlobal.State.getActiveBranch();
+            } else if (WebGMEGlobal.State.getActiveCommit()) {
+                stateInfo.commitId = WebGMEGlobal.State.getActiveCommit();
+            }
+
+            if (typeof WebGMEGlobal.State.getActiveObject() === 'string') {
+                stateInfo.nodeId = WebGMEGlobal.State.getActiveObject();
+            }
+
+            if (WebGMEGlobal.State.getActiveVisualizer()) {
+                stateInfo.visualizer = WebGMEGlobal.State.getActiveVisualizer();
+            }
+
+            if (WebGMEGlobal.State.getActiveTab() !== null && WebGMEGlobal.State.getActiveTab() !== undefined) {
+                stateInfo.tab = WebGMEGlobal.State.getActiveTab();
+            }
+
+            if (WebGMEGlobal.State.getLayout() !== null && WebGMEGlobal.State.getLayout() !== undefined) {
+                stateInfo.layout = WebGMEGlobal.State.getLayout();
+            }
+
+            // leave this last, url may exceeds the max url limit
+            if (WebGMEGlobal.State.getActiveSelection()) {
+                stateInfo.selection = WebGMEGlobal.State.getActiveSelection();
+            }
+
+            searchQuery = getSearchQuery(stateInfo);
+        }
+
+        return searchQuery;
+    }
+
+    function parseInitialThingsToDoFromUrl() {
         return {
             layoutToLoad: util.getURLParameterByName('layout') || WebGMEGlobal.gmeConfig.visualization.layout.default,
             commitToLoad: util.getURLParameterByName('commit').toLowerCase(),
@@ -43,51 +114,11 @@ define([
         //    createNewProject: queryObj.create === 'true',
         //    branchToLoad: queryObj.branch || ''
         //};
-    };
-
-
-    serializeStateToUrl = function () {
-        var searchQuery = ''; // default if project is not open
-
-        if (WebGMEGlobal.State.getActiveProjectName()) {
-            searchQuery = 'project=' + encodeURIComponent(WebGMEGlobal.State.getActiveProjectName());
-
-            if (WebGMEGlobal.State.getActiveBranch()) {
-                searchQuery += '&branch=' + WebGMEGlobal.State.getActiveBranch();
-            } else if (WebGMEGlobal.State.getActiveCommit()) {
-                searchQuery += '&commit=' + WebGMEGlobal.State.getActiveCommit();
-            }
-
-            if (WebGMEGlobal.State.getActiveObject()) {
-                searchQuery += '&node=' + WebGMEGlobal.State.getActiveObject();
-            } else if (WebGMEGlobal.State.getActiveObject() === CONSTANTS.PROJECT_ROOT_ID) {
-                searchQuery += '&node=root';
-            }
-
-            if (WebGMEGlobal.State.getActiveVisualizer()) {
-                searchQuery += '&visualizer=' + WebGMEGlobal.State.getActiveVisualizer();
-            }
-
-            if (WebGMEGlobal.State.getActiveTab() !== null && WebGMEGlobal.State.getActiveTab() !== undefined) {
-                searchQuery += '&tab=' + WebGMEGlobal.State.getActiveTab();
-            }
-
-            if (WebGMEGlobal.State.getLayout() !== null && WebGMEGlobal.State.getLayout() !== undefined) {
-                searchQuery += '&layout=' + WebGMEGlobal.State.getLayout();
-            }
-
-            // leave this last, url may exceeds the max url limit
-            if (WebGMEGlobal.State.getActiveSelection()) {
-                searchQuery += '&selection=' + WebGMEGlobal.State.getActiveSelection().join(',');
-            }
-        }
-
-        return searchQuery;
-    };
+    }
 
     return {
         parseInitialThingsToDoFromUrl: parseInitialThingsToDoFromUrl,
-        serializeStateToUrl: serializeStateToUrl
+        serializeStateToUrl: serializeStateToUrl,
+        getSearchQuery: getSearchQuery
     };
-
 });
