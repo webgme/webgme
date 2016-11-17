@@ -410,7 +410,20 @@ resourceTypes:
             putDesc: Requires <b>write</b> access for project.
             patchDesc: Requires <b>write</b> access for project.
             deleteDesc: Requires <b>write</b> access for project.
-            
+
+    /squash:
+      put:
+        description: Squash multi commits into a single one. Requires <b>write</b> access for project.
+        securedBy: [ basic ]
+        body:
+          application/json:
+              example: |
+                {
+                    "fromCommit":"#6e41041cf8e6cf3f81039c101b3adfc46ab703d4",
+                    "toCommitOrBranch":"master",
+                    "message":"feature 'A' squashed into a single commit"
+                }
+
 /decorators:
   get:
     description: Returns with all available decorators
