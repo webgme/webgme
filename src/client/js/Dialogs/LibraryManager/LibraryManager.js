@@ -1,4 +1,4 @@
-/*globals define, angular, $, WebGMEGlobal*/
+/*globals define*/
 /*jshint browser: true*/
 /**
  * @author kecso / https://github.com/kecso
@@ -7,14 +7,16 @@
 define(['./addDialog',
     './updateDialog',
     './renameDialog',
-    'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog'
-], function (AddDialog, UpdateDialog, RenameDialog, ConfirmDelete) {
+    'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
+    'common/regexp',
+], function (AddDialog, UpdateDialog, RenameDialog, ConfirmDelete, REGEXP) {
+    'use strict';
 
     var LibraryManager = function (client) {
         this._add = new AddDialog(client);
         this._update = new UpdateDialog(client);
         this._remove = new ConfirmDelete();
-        this._rename = new RenameDialog();
+        this._rename = new ConfirmDelete();
         this._doNotAskRemove = false;
         this._client = client;
     };
@@ -59,7 +61,26 @@ define(['./addDialog',
             ownName = libraryRoot.getFullyQualifiedName();
             forbiddenNames = this._client.getLibraryNames();
             forbiddenNames.splice(forbiddenNames.indexOf(ownName), 1);
-            this._rename.show(forbiddenNames, function (newName) {
+
+
+            this._rename.show({
+                title: 'Rename Library',
+                iconClass: 'glyphicon glyphicon-folder-close',
+                question: 'Would you like to rename "' + ownName + '"?',
+                input: {
+                    label: 'Name',
+                    placeHolder: 'Enter new library name...',
+                    required: true,
+                    checkFn: function (value) {
+                        if (forbiddenNames.indexOf(value) !== -1) {
+                            return false;
+                        }
+
+                        return REGEXP.DOCUMENT_KEY.test(value);
+                    }
+                },
+                severity: 'info'
+            }, function (_dummy, newName) {
                 self._client.renameLibrary(ownName, newName);
             });
         }
