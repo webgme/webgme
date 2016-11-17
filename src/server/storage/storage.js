@@ -391,9 +391,6 @@ Storage.prototype.squashCommits = function (data, callback) {
             }
         })
         .then(function (toCommit_) {
-            if (typeof toCommit_ !== 'string') {
-                throw new Error('cannot get latest commit of given branch [' + data.toCommitOrBranch + '].');
-            }
             toCommit = toCommit_;
 
             return self.getCommonAncestorCommit({
