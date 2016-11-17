@@ -1,53 +1,24 @@
-/*globals define, $, WebGMEGlobal*/
+/*globals define, $*/
 /*jshint browser: true*/
 /**
- * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['js/Loader/LoaderCircles',
-    'common/storage/util',
-    'common/core/constants',
-    'js/Controls/PropertyGrid/Widgets/AssetWidget',
-    'blob/BlobClient',
-    'text!./templates/CreateProjectDialog.html',
-    'css!./styles/CreateProjectDialog.css'
-], function (LoaderCircles, StorageUtil, CORE_CONSTANTS, AssetWidget, BlobClient, dialogTemplate) {
+define([
+    'text!./templates/MultiTabDialogDialog.html',
+    'text!./templates/ModalBodyForm.html',
+    'css!./styles/MultiTabDialog.css'
+], function (dialogTemplate, modalBodyForm) {
 
     'use strict';
 
-    var CreateProjectDialog;
+    var MultiTabDialog;
 
-    /**
-     *
-     * @param client
-     * @param newProjectId
-     * @param {string} initialTab - 'seed', 'import'
-     * @param logger
-     * @constructor
-     */
-    CreateProjectDialog = function (client, newProjectId, initialTab, logger) {
-        this._client = client;
-        this._logger = logger.fork('CreateProjectDialog');
-        this.blobClient = new BlobClient({logger: this._logger.fork('BlobClient')});
+    MultiTabDialog = function () {
 
-        this.newProjectId = newProjectId;
-        this.seedProjectName = WebGMEGlobal.gmeConfig.seedProjects.defaultProject;
-        this.seedProjectType = 'file';
-        this.seedProjectBranch = 'master';
-        this.seedCommitHash = null;
-        this.assetWidget = new AssetWidget({
-            propertyName: 'ImportFile',
-            propertyValue: ''
-        });
-        this.assetWidget.el.addClass('form-control selector pull-left');
-        this.initialTab = initialTab || 'seed';
-
-        this._blobIsPackage = false;
-
-        this._logger.debug('Create form seed ctor');
     };
 
-    CreateProjectDialog.prototype.show = function (fnCallback) {
+    MultiTabDialog.prototype.show = function (fnCallback) {
         var self = this;
 
         this._fnCallback = fnCallback;
@@ -55,21 +26,35 @@ define(['js/Loader/LoaderCircles',
         this._initDialog();
 
         this._dialog.on('hide.bs.modal', function () {
-            self._dialog.find('li.tab').off('click');
-            self._dialog.find('.toggle-info-btn').off('click');
-            self._btnCreateSnapShot.off('click');
-            self._btnCreateBlob.off('click');
-            self._btnDuplicate.off('click');
-            self._dialog.remove();
-            self._dialog.empty();
-            self._dialog = undefined;
+            self._onHide();
         });
 
         this._dialog.modal('show');
     };
 
-    CreateProjectDialog.prototype._initDialog = function () {
-        var self = this;
+    MultiTabDialog.prototype._initDialog = function (parameters) {
+        var self = this,
+            result = [],
+            i;
+
+        this._dialog = $(dialogTemplate);
+        this._dialog.find('.header-icon').addClass(parameters.iconClass);
+        this._dialog.find('.header-title').text(parameters.title);
+
+
+        this._tabsUl = this._dialog.find('ul.nav-tabs');
+        this._modalBody = this._dialog.find('.modal-body');
+        this._modalFooter = this._dialog.find('.modal-footer');
+
+        this._currentTabIndex = 0;
+        this._tabEls = [];
+        this._formEls = [];
+        this._okBtnEls = [];
+
+        for (i = 0; i < parameters.tabs.length; i += 1) {
+            result.push(self._addTab(parameters.tabs[i]));
+        }
+
 
         function toggleActive(tabEl) {
             self._formSnapShot.removeClass('activated');
@@ -92,9 +77,6 @@ define(['js/Loader/LoaderCircles',
                 return;
             }
         }
-
-        this._dialog = $(dialogTemplate);
-        this._dialog.find('.selection-blob').append(this.assetWidget.el);
 
         // Forms
         this._formSnapShot = this._dialog.find('form.snap-shot');
@@ -121,14 +103,7 @@ define(['js/Loader/LoaderCircles',
         this._optGroupDuplicate.children().remove();
         this._selectDuplicate.append(this._optGroupDuplicate);
 
-        this._loader = new LoaderCircles({containerElement: this._dialog});
-
         this._btnCancel = this._dialog.find('.btn-cancel');
-
-        // Tab toggling
-        if (WebGMEGlobal.gmeConfig.seedProjects.allowDuplication === false) {
-            this._dialog.find('li.duplicate').addClass('disabled-from-config');
-        }
 
         if (self.initialTab === 'import') {
             toggleActive(this._dialog.find('li.blob').addClass('active'));
@@ -233,104 +208,55 @@ define(['js/Loader/LoaderCircles',
             }
         });
 
-        // get seed project list
-        self._loader.start();
-        self._client.getProjects({branches: true}, function (err, projectList) {
-            var projectId,
-                displayedProjectName,
-                branchId,
-                projectGroup,
-                i,
-                defaultOption,
-                fileSeeds = WebGMEGlobal.allSeeds || [];
+    };
 
-            for (i = 0; i < fileSeeds.length; i += 1) {
-                self._optGroupFile.append($('<option>', {text: fileSeeds[i], value: 'file:' + fileSeeds[i]}));
-                if (self.seedProjectName === fileSeeds[i]) {
-                    defaultOption = 'file:' + fileSeeds[i];
-                }
-            }
+    MultiTabDialog.prototype._onHide = function () {
+        this._dialog.find('li.tab').off('click');
+        this._dialog.find('.toggle-info-btn').off('click');
+        this._dialog.remove();
+        this._dialog.empty();
+        this._dialog = undefined;
+    };
 
-            if (err) {
-                self.logger.error(err);
-                self._loader.stop();
-                return;
-            }
+    MultiTabDialog.prototype._addTab = function (desc, index) {
+        var self = this,
+            tabEl = $('<li class="tab"><a href="#" data-toggle="tab">' + desc.title + '</a></li>'),
+            formEl = $(modalBodyForm),
+            infoDetails;
 
-            for (i = 0; i < projectList.length; i += 1) {
-                projectId = projectList[i]._id;
-                displayedProjectName = StorageUtil.getProjectDisplayedNameFromProjectId(projectId);
-                self._optGroupDuplicate.append($('<option>', {
-                        text: displayedProjectName,
-                        value: projectId
-                    }
-                ));
+        this._tabsUl.append(tabEl);
 
-                if (Object.keys(projectList[i].branches).length === 1) {
-                    branchId = Object.keys(projectList[i].branches)[0];
-                    self._optGroupDb.append($('<option>', {
-                            text: displayedProjectName + ' (' + branchId + ' ' +
-                            projectList[i].branches[branchId].slice(0, 8) + ')',
-                            value: 'db:' + projectId + projectList[i].branches[branchId]
-                        }
-                    ));
-                    if (!defaultOption && self.seedProjectName === projectId) { //File seed has precedence.
-                        defaultOption = 'db:' + projectId + projectList[i].branches[branchId];
-                    }
-                } else {
-                    // more than one branches
-                    projectGroup = $('<optgroup>', {
-                            label: displayedProjectName
-                        }
-                    );
-                    self._selectSnapShot.append(projectGroup);
-
-                    for (branchId in projectList[i].branches) {
-                        if (projectList[i].branches.hasOwnProperty(branchId)) {
-                            projectGroup.append($('<option>', {
-                                    text: displayedProjectName + ' (' + branchId + ' ' +
-                                    projectList[i].branches[branchId].slice(0, 8) + ')',
-                                    value: 'db:' + projectId +
-                                    projectList[i].branches[branchId]
-                                }
-                            ));
-                        }
-                    }
-
-                    if (projectList[i].branches.hasOwnProperty('master')) {
-                        branchId = 'master';
-                    } else {
-                        branchId = Object.keys(projectList[i].branches)[0];
-                    }
-
-                    if (!defaultOption && self.seedProjectName === projectId) { //File seed has precedence.
-                        defaultOption = 'db:' + projectId + branchId;
-                    }
-                }
-
-            }
-
-            if (defaultOption) {
-                self._selectSnapShot.val(defaultOption);
-            }
-            self._loader.stop();
+        tabEl.on('click', function () {
+            self._tabIndexChanged(index);
         });
 
+        formEl.find('.info-title').text(desc.infoTitle);
+        infoDetails = formEl.find('.info-details');
+        infoDetails.text(desc.infoDetails);
+
+        formEl.find('.toggle-info-btn').on('click', function () {
+            if (infoDetails.hasClass('hidden')) {
+                infoDetails.removeClass('hidden');
+            } else {
+                infoDetails.addClass('hidden');
+            }
+        });
+
+        formEl.find('.form-controller-container').append(desc.formControl);
     };
 
-    CreateProjectDialog.prototype._displayMessage = function (msg, isError) {
-        this._importErrorLabel.removeClass('alert-success').removeClass('alert-danger');
-
-        if (isError === true) {
-            this._importErrorLabel.addClass('alert-danger');
-        } else {
-            this._importErrorLabel.addClass('alert-success');
+    MultiTabDialog.prototype._tabIndexChanged = function (index) {
+        if (this._currentTabIndex === index) {
+            return;
         }
 
-        this._importErrorLabel.html(msg);
-        this._importErrorLabel.hide();
-        this._importErrorLabel.fadeIn();
+        this._formEls[this._currentTabIndex].hide();
+        this._okBtnEls[this._currentTabIndex].hide();
+
+        this._currentTabIndex = index;
+        this._formEls[this._currentTabIndex].show();
+        this._okBtnEls[this._currentTabIndex].show();
     };
 
-    return CreateProjectDialog;
+    return MultiTabDialog;
 });

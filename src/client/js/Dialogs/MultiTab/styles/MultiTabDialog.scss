@@ -1,0 +1,60 @@
+/*
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+div.multi-tab-dialog {
+
+  .modal-content {
+    .modal-header {
+      .header-icon {
+        font-size: 20px;
+        margin-right: 1ex;
+        display: inline-block;
+      }
+      span {
+        font-size: 24px;
+      }
+    }
+    .pre-body {
+      padding: 15px 15px 0 15px;
+
+      .tabContainer {
+        ul.nav.nav-tabs {
+          margin-bottom: 0;
+
+          li {
+            min-width: 86px;
+            text-align: center;
+          }
+        }
+      }
+    }
+    div.modal-body {
+      form.form-horizontal {
+        i.toggle-info-btn {
+          font-size: 65%;
+          vertical-align: top;
+          cursor: pointer;
+          color: #333;
+          &:hover {
+            color: #2a6496;
+          }
+        }
+        span.type-description {
+          display: inline-block;
+          width: 95%;
+          margin-bottom: 2ex;
+          margin-left: 0.5ex;
+          opacity: 0.90;
+          &.hidden {
+            display: none;
+          }
+        }
+      }
+    }
+    div.modal-footer {
+      button.ok-btn {
+      }
+    }
+  }
+}
