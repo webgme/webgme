@@ -18,6 +18,7 @@ var webgme = require('../../webgme'),
     FSBlobClient = require('../../src/server/middleware/blob/BlobClientWithFSBackend'),
     storageUtils = webgme.requirejs('common/storage/util'),
     blobUtil = webgme.requirejs('blob/util'),
+    REGEXP = webgme.requirejs('common/regexp'),
     main;
 
 function _addPackageArtifacts(blobClient, packageHash) {
@@ -118,6 +119,7 @@ main = function (argv) {
         .option('-b, --branch [branch]',
             'the branch that should be created with the imported data [by default it is the \'master\']')
         .option('-w --overwrite [boolean]', 'if a project exist it will be deleted and created again')
+        .option('-c --commit [string]', 'if given, the import will be a descendant of it')
         .parse(argv);
 
     if (program.mongoDatabaseUri) {
@@ -129,6 +131,11 @@ main = function (argv) {
 
     if (!program.projectName) {
         logger.error('project name is a mandatory parameter!');
+        syntaxFailure = true;
+    }
+
+    if (program.commit && !REGEXP.DB_HASH.test(program.commit)) {
+        logger.error('invalid commit format!');
         syntaxFailure = true;
     }
 
@@ -186,11 +193,18 @@ main = function (argv) {
             for (i = 0; i < projects.length; i++) {
                 if (projects[i]._id === params.projectId) {
                     exists = true;
-                    if (!program.overwrite && projects[i].branches.hasOwnProperty(program.branch)) {
-                        makeCommitParams.branch = program.branch;
-                        makeCommitParams.parentCommit = [projects[i].branches[program.branch]];
-                        makeCommitParams.commitMessage = 'Updating branch\'' +
-                            program.branch + '\' from project package.';
+                    if (!program.overwrite) {
+                        if (program.commit) {
+                            makeCommitParams.branch = null;
+                            makeCommitParams.parentCommit = [program.commit];
+                            makeCommitParams.commitMessage = 'Updating commit\'' +
+                                program.commit + '\' from project package.';
+                        } else if (projects[i].branches.hasOwnProperty(program.branch)) {
+                            makeCommitParams.branch = program.branch;
+                            makeCommitParams.parentCommit = [projects[i].branches[program.branch]];
+                            makeCommitParams.commitMessage = 'Updating branch\'' +
+                                program.branch + '\' from project package.';
+                        }
                     }
                     break;
                 }
@@ -216,14 +230,26 @@ main = function (argv) {
 
         })
         .then(function (project_) {
+            var deferred = Q.defer();
             project = project_;
 
             if (program.user) {
                 project.setUser(program.user);
             }
 
-            return storageUtils.insertProjectJson(project, jsonProject, makeCommitParams);
+            if (program.commit) {
+                project.getCommits(program.commit, 1, function (err, commits) {
+                    if (err || commits.length !== 1 || commits[0][STORAGE_CONSTANTS.MONGO_ID] !== program.commit) {
+                        logger.error('unable to find commit [', program.commit, ']');
+                        deferred.reject(new Error('unknown commit was given'));
+                    }
+                    deferred.resolve(storageUtils.insertProjectJson(project, jsonProject, makeCommitParams));
+                });
+            } else {
+                deferred.resolve(storageUtils.insertProjectJson(project, jsonProject, makeCommitParams));
+            }
 
+            return deferred.promise;
         })
         .then(function (commitResult) {
             if (commitResult.status === STORAGE_CONSTANTS.FORKED) {

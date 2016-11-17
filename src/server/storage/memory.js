@@ -9,6 +9,7 @@
 var Q = require('q'),
     REGEXP = requireJS('common/regexp'),
     CANON = requireJS('common/util/canon'),
+    CONSTANT = requireJS('common/storage/constants'),
     TAGS = 'TAGS',
     SEPARATOR = '$';
 
@@ -239,7 +240,7 @@ function Memory(mainLogger, gmeConfig) {
                     item = storage.getItem(storage.key(i));
                     if (typeof item === 'string') {
                         object = JSON.parse(item);
-                        if (object.type === 'commit' && object.time < before) {
+                        if (object.type === CONSTANT.COMMIT_TYPE && object.time < before) {
                             finds.push(object);
                             if (finds.length === number) {
                                 break;

@@ -232,7 +232,6 @@ SafeStorage.prototype.createProject = function (data, callback) {
         },
         rejected = false;
 
-
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
         check(REGEXP.PROJECT_NAME.test(data.projectName), deferred,
@@ -333,7 +332,7 @@ SafeStorage.prototype.transferProject = function (data, callback) {
             })
             .then(function (ownerRights) {
                 if (ownerRights && ownerRights.write !== true) {
-                     throw new Error('Not authorized to transfer project to [' + data.newOwnerId + ']');
+                    throw new Error('Not authorized to transfer project to [' + data.newOwnerId + ']');
                 }
 
                 // Remove old and add new metadata for the project.
@@ -530,7 +529,7 @@ SafeStorage.prototype.getBranches = function (data, callback) {
  * @param {object} data - input parameters
  * @param {string} data.projectId - identifier for project.
  * @param {number} data.number - maximum number of commits to load.
- * @param {string|number} data.before - timestamp or commitHash to load history from. When number given it will load
+ * @param {number|string} data.before - timestamp or commitHash to load history from. When number given it will load
  *  data.number of commits strictly before data.before, when commitHash is given it will return that commit too.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {function} [callback]
@@ -544,7 +543,7 @@ SafeStorage.prototype.getCommits = function (data, callback) {
         },
         rejected = false;
 
-        rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
         check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
         check(typeof data.before === 'number' || typeof data.before === 'string', deferred,
@@ -771,6 +770,61 @@ SafeStorage.prototype.makeCommit = function (data, callback) {
             .then(function (projectAccess) {
                 if (projectAccess && projectAccess.write) {
                     return Storage.prototype.makeCommit.call(self, data);
+                } else {
+                    throw new Error('Not authorized to write project [' + data.projectId + ']');
+                }
+            })
+            .then(function (result) {
+                deferred.resolve(result);
+            })
+            .catch(function (err) {
+                deferred.reject(err);
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
+/**
+ * Authorization: write access for data.projectId
+ * @param {object} data - input parameters
+ * @param {string} data.projectId - identifier for project.
+ * @param {string} data.fromCommit - starting point of the squash.
+ * @param {string} data.toCommitOrBranch - branch or commit where the endpoint of squash can be found.
+ * @param {string} [data.username=gmeConfig.authentication.guestAccount]
+ * @param callback
+ * @returns {*}
+ */
+SafeStorage.prototype.squashCommits = function (data, callback) {
+    var deferred = Q.defer(),
+        self = this,
+        projectAuthParams = {
+            entityType: self.authorizer.ENTITY_TYPES.PROJECT
+        },
+        rejected = false;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+
+        check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+        check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
+
+        check(typeof data.fromCommit === 'string', deferred,
+            'data.fromCommit not a string.') ||
+        check(REGEXP.HASH.test(data.fromCommit), deferred, 'data.fromCommit failed regexp: ' + data.fromCommit) ||
+        check(typeof data.toCommitOrBranch === 'string', deferred,
+            'data.toCommitOrBranch not a string.');
+
+    if (data.hasOwnProperty('username')) {
+        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
+    } else {
+        data.username = this.gmeConfig.authentication.guestAccount;
+    }
+
+    if (rejected === false) {
+        self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
+            .then(function (projectAccess) {
+                if (projectAccess && projectAccess.write) {
+                    return Storage.prototype.squashCommits.call(self, data);
                 } else {
                     throw new Error('Not authorized to write project [' + data.projectId + ']');
                 }
@@ -1018,7 +1072,6 @@ SafeStorage.prototype.deleteBranch = function (data, callback) {
         check(typeof data.branchName === 'string', deferred, 'data.branchName is not a string.') ||
         check(REGEXP.BRANCH.test(data.branchName), deferred, 'data.branchName failed regexp: ' + data.branchName);
 
-
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
     } else {
@@ -1076,7 +1129,6 @@ SafeStorage.prototype.createTag = function (data, callback) {
         check(data.commitHash === '' || REGEXP.HASH.test(data.commitHash), deferred,
             'data.hash is not a valid hash: ' + data.commitHash);
 
-
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
     } else {
@@ -1124,7 +1176,6 @@ SafeStorage.prototype.deleteTag = function (data, callback) {
 
         check(typeof data.tagName === 'string', deferred, 'data.tagName is not a string.') ||
         check(REGEXP.TAG.test(data.tagName), deferred, 'data.tagName failed regexp: ' + data.tagName);
-
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -1372,6 +1423,5 @@ SafeStorage.prototype.loadPaths = function (data, callback) {
 
     return deferred.promise.nodeify(callback);
 };
-
 
 module.exports = SafeStorage;

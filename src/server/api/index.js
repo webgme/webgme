@@ -1770,6 +1770,27 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    // squash
+    router.put('/projects/:ownerId/:projectName/squash', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req),
+            data = {
+                username: userId,
+                projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                fromCommit: req.body.fromCommit,
+                toCommitOrBranch: req.body.toCommitOrBranch,
+                message: req.body.message
+            };
+
+        safeStorage.squashCommits(data)
+            .then(function () {
+                res.sendStatus(201);
+            })
+            .catch(function (err) {
+                next(err);
+            });
+    });
+
     logger.debug('creating list asset rules');
 
     router.get('/decorators', ensureAuthenticated, function (req, res) {

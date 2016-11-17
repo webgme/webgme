@@ -46,7 +46,7 @@ define(['js/logger',
         TAG_LABEL_CLASS = 'tag-label',
         COMMON_LABEL_CLASS = 'common-label',
         BTN_LOAD_COMMIT_CLASS = 'btnLoadCommit',
-        COMMIT_IT = 'commitId',
+        COMMIT_ID = 'commitId',
         MESSAGE_DIV_CLASS = 'commit-message',
         USER_TO_AVATAR_PATH = {};
 
@@ -55,6 +55,7 @@ define(['js/logger',
         this._el = container;
         this._historyType = 'commits';
         this._start = null;
+        this._dialog = params.dialog;
         this._projectAccess = client.getProjectAccess();
         this.clear();
         this._initializeUI();
@@ -206,6 +207,11 @@ define(['js/logger',
             JSON.stringify(params) + '\'');
     };
 
+    ProjectRepositoryWidget.prototype.onSquashFromCommit = function (params) {
+        this._logger.warn('onSquashFromCommit is not overridden in Controller...params: \'' +
+            JSON.stringify(params) + '\'');
+    };
+
     ProjectRepositoryWidget.prototype.onSelectBranch = function (params) {
         this._logger.warn('onSelectBranch is not overridden in Controller...params: \'' +
             JSON.stringify(params) + '\'');
@@ -283,7 +289,7 @@ define(['js/logger',
         /*********** HOOK UP EVENT HANDLERS ***********/
         this._el.on('click.' + BTN_LOAD_COMMIT_CLASS, '.' + BTN_LOAD_COMMIT_CLASS, function () {
             var btn = $(this),
-                commitId = btn.data(COMMIT_IT);
+                commitId = btn.data(COMMIT_ID);
 
             self.onLoadCommit({id: commitId});
         });
@@ -332,7 +338,6 @@ define(['js/logger',
             event.preventDefault();
         });
 
-
         this._el.off('click.btnCreateBranchFromCommit', '.btnCreateBranchFromCommit');
         this._el.on('click.btnCreateBranchFromCommit', '.btnCreateBranchFromCommit', function () {
             self._onCreateFromCommitButtonClick($(this));
@@ -342,8 +347,12 @@ define(['js/logger',
         this._el.on('click.btnCreateTagFromCommit', '.btnCreateTagFromCommit', function () {
             self._onCreateFromCommitButtonClick($(this));
         });
-    };
 
+        this._el.off('click.btnSquashFromCommit', '.btnSquashFromCommit');
+        this._el.on('click.btnSquashFromCommit', '.btnSquashFromCommit', function () {
+            self._onCreateFromCommitButtonClick($(this));
+        });
+    };
 
     ProjectRepositoryWidget.prototype._calculatePositionForCommit = function (cIndex) {
         var trackLen = this._trackEnds.length,
@@ -399,7 +408,6 @@ define(['js/logger',
         //this._logger.debug("commitID: " + cCommit.id + ", X: " + cCommit.x + ", Y: " + cCommit.y);
     };
 
-
     ProjectRepositoryWidget.prototype._render = function () {
         //render commits from this._renderIndex + 1 to lastItem
         var len = this._commits.length,
@@ -433,7 +441,8 @@ define(['js/logger',
                 branch: cCommit[COMMIT_DATA].branch,
                 user: cCommit[COMMIT_DATA].user,
                 timestamp: cCommit[COMMIT_DATA].timestamp,
-                message: cCommit[COMMIT_DATA].message
+                message: cCommit[COMMIT_DATA].message,
+                singleBranch: typeof this._start === 'string'
             });
         }
 
@@ -526,7 +535,8 @@ define(['js/logger',
     };
 
     ProjectRepositoryWidget.prototype._branchLabelDOMBase = $(
-        '<span class="label"><span class="label-name select-branch-in-text" title="Select branch"></span><i data-branch="" ' +
+        '<span class="label">' +
+        '<span class="label-name select-branch-in-text" title="Select branch"></span><i data-branch="" ' +
         'class="glyphicon glyphicon-remove icon-white remove-branch-button" title="Delete branch"></i></span>'
     );
 
@@ -550,7 +560,6 @@ define(['js/logger',
         if (this._projectAccess.write === false) {
             label.addClass('delete-prohibited');
         }
-
 
         td = this._tBody.children()[this._orderedCommitIds.indexOf(commit.id)].cells[this._tableCellMessageIndex];
         div = $(td).find('div.' + MESSAGE_DIV_CLASS)[0];
@@ -657,12 +666,16 @@ define(['js/logger',
         'href="#" title="Create a tag here">' +
         '<i class="glyphicon glyphicon-tags create-tag-icon"></i></button>'
     );
+    ProjectRepositoryWidget.prototype._squashBtnDOMBase = $(
+        '<button class="btn btn-default btn-xs btnSquashFromCommit" ' +
+        'href="#" title="Squash branch from this commit">' +
+        '<i class="glyphicon glyphicon-compressed squash-branch-icon"></i></button>'
+    );
 
     //ProjectRepositoryWidget.prototype._loadCommitBtnDOMBase = $('' +
     //    '<button class="btn btn-default btn-xs ' + BTN_LOAD_COMMIT_CLASS + '" href="#" title="Load this commit">' +
     //    '<i class="glyphicon glyphicon-share"></i></button>'
     //);
-
 
     ProjectRepositoryWidget.prototype._createItem = function (params) {
         var itemObj,
@@ -706,7 +719,7 @@ define(['js/logger',
         $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id.substr(0, 7));
         $(tr[0].cells[this._tableCellCommitIDIndex]).attr('title', 'Select commit ' + params.id);
         $(tr[0].cells[this._tableCellCommitIDIndex]).addClass(BTN_LOAD_COMMIT_CLASS);
-        $(tr[0].cells[this._tableCellCommitIDIndex]).data(COMMIT_IT, params.id);
+        $(tr[0].cells[this._tableCellCommitIDIndex]).data(COMMIT_ID, params.id);
         $(tr[0].cells[this._tableCellMessageIndex]).find('div.' + MESSAGE_DIV_CLASS).text(params.message);
 
         if (USER_TO_AVATAR_PATH.hasOwnProperty(userId) === false) {
@@ -734,7 +747,7 @@ define(['js/logger',
 
         //generate 'Create branch from here' button
         btn = this._createBranchBtnDOMBase.clone();
-        btn.data(COMMIT_IT, params.id);
+        btn.data(COMMIT_ID, params.id);
         if (this._projectAccess.write === false) {
             btn.disable(true);
         }
@@ -743,7 +756,7 @@ define(['js/logger',
 
         //generate 'Create tag here' button
         btn = this._createTagBtnDOMBase.clone();
-        btn.data(COMMIT_IT, params.id);
+        btn.data(COMMIT_ID, params.id);
         if (this._projectAccess.write === false) {
             btn.disable(true);
         }
@@ -754,6 +767,17 @@ define(['js/logger',
         //btn = this._generateLoadCommitBtnForCommit(params.id);
         //tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
 
+        //generate 'Squash branch' button
+        if (params.singleBranch) {
+            btn = this._squashBtnDOMBase.clone();
+            btn.data(COMMIT_ID, params.id);
+            if (this._projectAccess.write === false) {
+                btn.disable(true);
+            }
+
+            tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
+        }
+
         this._tBody.append(tr);
 
         return itemObj;
@@ -761,7 +785,7 @@ define(['js/logger',
 
     //ProjectRepositoryWidget.prototype._generateLoadCommitBtnForCommit = function (commitId) {
     //    var btn = this._loadCommitBtnDOMBase.clone();
-    //    btn.data(COMMIT_IT, commitId);
+    //    btn.data(COMMIT_ID, commitId);
     //
     //    return btn;
     //};
@@ -796,8 +820,8 @@ define(['js/logger',
             this._commits[idx].ui.addClass(ACTUAL_COMMIT_CLASS);
 
             //remove 'LoadCommit' button from that row
-            $(this._tBody.children()[idx].cells[this._tableCellActionsIndex]).
-                find('.' + BTN_LOAD_COMMIT_CLASS).remove();
+            $(this._tBody.children()[idx]
+                .cells[this._tableCellActionsIndex]).find('.' + BTN_LOAD_COMMIT_CLASS).remove();
         }
     };
 
@@ -846,7 +870,6 @@ define(['js/logger',
                 pathDef = ['M', x, y, 'L', x2 - LINE_CORNER_SIZE, y, 'L', x2, y - LINE_CORNER_SIZE, 'L', x2, y2];
             }
         }
-
 
         if (nonVisibleSource === true) {
             if (pathDef) {
@@ -917,7 +940,6 @@ define(['js/logger',
             linearGradient.setAttribute('y2', '100%');
             linearGradient.setAttribute('id', NON_EXISTING_PARENT_LINE_GRADIENT_NAME);
 
-
             stop0 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
             stop0.setAttribute('offset', '0%');
             stop0.setAttribute('style', 'stop-color: ' + LINE_FILL_COLOR);
@@ -939,6 +961,7 @@ define(['js/logger',
         var td = btn.parent(),
             currentBranchCreateCtrl,
             isBranch = btn.hasClass('btnCreateBranchFromCommit'),
+            isSquash = btn.hasClass('btnSquashFromCommit'),
             createBranchHTML = $('<div class="input-group form-group"></div>'),
             txtInput = $('<input class="form-control span2 input-mini" type="text">'),
             btnSave = $('<button class="btn btn-default btn-xs" type="button" title="Create">' +
@@ -947,6 +970,14 @@ define(['js/logger',
                 '<i class="glyphicon glyphicon-remove"></i></button>'),
             self = this;
 
+        //if squash, then show confirm dialog and be done with it
+        if (isSquash) {
+            self.onSquashFromCommit({
+                branchName: this._start,
+                commitId: btn.data(COMMIT_ID)
+            });
+            return;
+        }
         //find already displayed branch create control and 'cancel' it
         currentBranchCreateCtrl = this._tBody.find('.' + CREATE_BRANCH_EDIT_CONTROL_CLASS + ' > .btn');
         if (currentBranchCreateCtrl.length !== 0) {
@@ -1017,12 +1048,12 @@ define(['js/logger',
                 td.children().css('display', 'inline-block');
                 if (isBranch) {
                     self.onCreateBranchFromCommit({
-                        commitId: btn.data(COMMIT_IT),
+                        commitId: btn.data(COMMIT_ID),
                         name: newName
                     });
                 } else {
                     self.onCreateTagFromCommit({
-                        commitId: btn.data(COMMIT_IT),
+                        commitId: btn.data(COMMIT_ID),
                         name: newName
                     });
                 }

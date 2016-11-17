@@ -138,6 +138,7 @@ describe('Simple worker', function () {
                 baseProjectContext.commitHash = result.commitHash;
                 baseProjectContext.id = result.project.projectId;
                 baseProjectContext.rootHash = result.core.getHash(result.rootNode);
+                baseProjectContext.project = result.project;
                 project = result.project;
 
                 return project.createBranch('corruptBranch', result.commitHash);
@@ -183,9 +184,9 @@ describe('Simple worker', function () {
                 logger.error(err);
             }
             return Q.allDone([
-                    storage.closeDatabase(),
-                    gmeAuth.unload()
-                ])
+                storage.closeDatabase(),
+                gmeAuth.unload()
+            ])
                 .nodeify(done);
         });
     });
@@ -308,9 +309,9 @@ describe('Simple worker', function () {
         var worker = getSimpleWorker();
 
         worker.send({
-                command: CONSTANTS.workerCommands.getAllProjectsInfo,
-                userId: 'myUser'
-            })
+            command: CONSTANTS.workerCommands.getAllProjectsInfo,
+            userId: 'myUser'
+        })
             .then(function () {
                 done(new Error('missing error handling'));
             })
@@ -1739,7 +1740,7 @@ describe('Simple worker', function () {
             .then(function (msg) {
                 done(new Error('misisng error handling'));
             })
-            .catch(function(err){
+            .catch(function (err) {
                 expect(err.message).to.include('Invalid or unsupported zip format.');
             })
             .finally(restoreProcessFunctions)
@@ -1874,6 +1875,140 @@ describe('Simple worker', function () {
                 expect(msg.error).equal(null);
 
                 expect(msg.result).to.equal(undefined);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    //updateProjectFromFile
+    it('should update project from a file', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
+            projectId = testFixture.projectName2Id(libraryProjectContext.name);
+
+        blobClient.putFile('sfs.webgmex', fs.readFileSync('./test/server/worker/simpleworker/sfs.webgmex'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.updateProjectFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: projectId,
+                    commitHash: libraryProjectContext.commitHash,
+                    blobHash: blobHash
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.to.equal(undefined);
+                expect(msg.result).not.to.equal(null);
+                expect(msg.result.hash).not.to.equal(libraryProjectContext.commitHash);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should update branch of project from a file', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
+            projectId = testFixture.projectName2Id(libraryProjectContext.name);
+
+        blobClient.putFile('sfs.webgmex', fs.readFileSync('./test/server/worker/simpleworker/sfs.webgmex'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.updateProjectFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: projectId,
+                    branchName: 'master',
+                    blobHash: blobHash
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.to.equal(undefined);
+                expect(msg.result).not.to.equal(null);
+                expect(msg.result.hash).not.to.equal(libraryProjectContext.commitHash);
+                expect(msg.result.status).to.equal('SYNCED');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to update nonexistent branch of project from a file', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
+            projectId = testFixture.projectName2Id(libraryProjectContext.name);
+
+        blobClient.putFile('sfs.webgmex', fs.readFileSync('./test/server/worker/simpleworker/sfs.webgmex'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.updateProjectFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: projectId,
+                    branchName: 'nonexistent',
+                    blobHash: blobHash
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contains('Branch did not exist');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to update project from a bad blobHash', function (done) {
+        var worker = getSimpleWorker(),
+            projectId = testFixture.projectName2Id(libraryProjectContext.name);
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.updateProjectFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: projectId,
+                    branchName: 'master',
+                    blobHash: 'nonexistent'
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);

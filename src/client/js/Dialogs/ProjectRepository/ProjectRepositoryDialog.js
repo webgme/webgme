@@ -113,8 +113,8 @@ define(['js/logger',
             var dialogHeaderH = self._dialog.find('.modal-header').outerHeight(true),
                 dialogFooterH = self._dialog.find('.modal-footer').outerHeight(true),
                 modalBodyVPadding = parseInt(modalBody.css('padding-top'), 10) +
-                                    parseInt(modalBody.css('padding-bottom'), 10),
-            //dW,
+                    parseInt(modalBody.css('padding-bottom'), 10),
+                //dW,
                 dH;
 
             //make it almost full screen
@@ -126,7 +126,7 @@ define(['js/logger',
             modalBody.css(
                 {
                     'max-height': dH - modalBodyVPadding - dialogHeaderH - dialogFooterH,
-                    height:     dH - modalBodyVPadding - dialogHeaderH - dialogFooterH
+                    height: dH - modalBodyVPadding - dialogHeaderH - dialogFooterH
                 }
             );
 
@@ -208,7 +208,8 @@ define(['js/logger',
             {
                 commit_count: 100,
                 historyType: options.historyType,
-                start: options.start
+                start: options.start,
+                dialog: self
             }
         );
 
@@ -224,6 +225,11 @@ define(['js/logger',
         if (wasShown) {
             self._widget.loadMoreCommits(options.start);
         }
+    };
+
+    ProjectRepositoryDialog.prototype.setSelectorValue = function (newValue) {
+        this._selector.val(newValue || '$commits');
+        this._selector.trigger('change');
     };
 
     return ProjectRepositoryDialog;

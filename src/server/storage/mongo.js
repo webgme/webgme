@@ -230,7 +230,7 @@ function Mongo(mainLogger, gmeConfig) {
 
         this.getCommits = function (before, number, callback) {
             var mongoFind = collection.find({
-                type: 'commit',
+                type: CONSTANTS.COMMIT_TYPE,
                 time: {
                     $lt: before
                 }

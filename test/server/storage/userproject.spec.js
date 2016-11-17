@@ -40,7 +40,7 @@ describe('UserProject', function () {
                 return Q.allDone([
                     project.createBranch('b1', result.commitHash),
                     project.createTag('tag', result.commitHash),
-                    ]);
+                ]);
             })
             .nodeify(done);
     });
@@ -194,6 +194,60 @@ describe('UserProject', function () {
             })
             .then(function (tags) {
                 expect(tags).to.deep.equal({tag: importResult.commitHash});
+            })
+            .nodeify(done);
+    });
+
+    it('should squashCommits', function (done) {
+        project.squashCommits(importResult.commitHash, importResult.commitHash, 'testing squash')
+            .nodeify(done);
+    });
+
+    it('should fail to squash commits that are not connected', function (done) {
+        project.makeCommit(null, [], importResult.rootHash, {}, 'new disconnected commit')
+            .then(function (result) {
+                expect(result.hash).to.include('#');
+                return project.squashCommits(importResult.commitHash, result.hash, 'testing squash to fail')
+            })
+            .then(function () {
+                throw new Error('missing error handling during squash');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contains('unable to find common ancestor commit');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to squash commits if the start is not an ancestor of the end', function (done) {
+        var oneCommit, twoCommit;
+        project.makeCommit(null, [importResult.commitHash], importResult.rootHash, {}, 'new commit')
+            .then(function (result) {
+                expect(result.hash).to.include('#');
+                oneCommit = result.hash;
+                return project.makeCommit(
+                    null, [importResult.commitHash], importResult.rootHash, {}, 'other new commit');
+            })
+            .then(function (result) {
+                expect(result.hash).to.include('#');
+                twoCommit = result.hash;
+                return project.squashCommits(oneCommit, twoCommit, 'testing squash to fail');
+            })
+            .then(function () {
+                throw new Error('missing error handling during squash');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contains('is not a descendant of the start-point');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to squash commits of unknown branch', function (done) {
+        project.squashCommits(importResult.commitHash, 'unknown branch', 'testing squash to fail')
+            .then(function () {
+                throw new Error('missing error handling during squash');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contains('Commit object does not exist');
             })
             .nodeify(done);
     });

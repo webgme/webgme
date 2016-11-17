@@ -74,7 +74,7 @@ function Neo4jProject(projectId, adapter, projectNodeId) {
             deferred.reject(new Error('object._id is not a valid hash.'));
         } else {
             labels = adapter.CONSTANTS.DATA_OBJECT_LABEL;
-            if (object.type === 'commit') {
+            if (object.type === CONSTANTS.COMMIT_TYPE) {
                 labels += ':' + adapter.CONSTANTS.COMMIT_OBJECT_LABEL;
             }
             labels += ' ';

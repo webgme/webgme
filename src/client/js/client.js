@@ -1122,6 +1122,11 @@ define([
             }
         };
 
+        this.squashCommits = function(projectId, fromCommit, toCommitOrBranch, msg, callback) {
+            // logger.debug('squashing latest commits of branch: ', parameters);
+            storage.squashCommits(projectId,fromCommit,toCommitOrBranch,msg,callback);
+        };
+
         // Watchers (used in e.g. ProjectNavigator).
         /**
          * Triggers eventHandler(storage, eventData) on PROJECT_CREATED and PROJECT_DELETED.
@@ -1820,6 +1825,24 @@ define([
             });
         };
 
+        this.updateProjectFromFile = function (blobHash, callback) {
+            var parameters = {
+                command: 'updateProjectFromFile',
+                blobHash: blobHash,
+                projectId: state.project.projectId,
+                branchName: state.branchName
+            };
+
+            logger.debug('updating project from package', parameters);
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
+            });
+        };
+
         //meta rules checking
         /**
          *
@@ -2049,6 +2072,18 @@ define([
             self.uiStateGetter = uiStateGetter;
         };
 
+        //generic notification
+        this.notifyUser = function (notification) {
+            notification.severity = notification.severity || 'info';
+
+            if (notification.message) {
+                logger.debug('generic notification', notification);
+                self.dispatchEvent(self.CONSTANTS.NOTIFICATION, notification);
+            } else {
+                logger.debug('cannot set empty notification');
+            }
+        };
+        
         this.gmeConfig = gmeConfig;
 
         window.addEventListener('error', function (evt) {

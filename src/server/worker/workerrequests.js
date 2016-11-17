@@ -8,6 +8,7 @@
 var Core = requireJS('common/core/coreQ'),
     Storage = requireJS('common/storage/nodestorage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
+    REGEXP = requireJS('common/regexp'),
     merger = requireJS('common/core/users/merge'),
     BlobClientClass = requireJS('blob/BlobClient'),
     blobUtil = requireJS('blob/util'),
@@ -1111,6 +1112,45 @@ function WorkerRequests(mainLogger, gmeConfig) {
             .nodeify(callback);
     }
 
+    /**
+     *
+     * @param webgmeToken
+     * @param parameters
+     * @param callback
+     */
+    function updateProjectFromFile(webgmeToken, parameters, callback) {
+        var jsonProject,
+            context,
+            storage,
+            blobClient = getBlobClient(webgmeToken);
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash, parameters.branchName);
+            })
+            .then(function (context_) {
+                context = context_;
+                return _importProjectPackage(blobClient, parameters.blobHash, true);
+            })
+            .then(function (jsonProject_) {
+                jsonProject = jsonProject_;
+
+                return storageUtils.insertProjectJson(context.project,
+                    jsonProject,
+                    {
+                        branch: parameters.branchName,
+                        parentCommit: [context.commitObject[STORAGE_CONSTANTS.MONGO_ID]],
+                        commitMessage: 'update project from file'
+                    });
+            })
+            .catch(function (err) {
+                logger.error('updateProjectFromFile failed with error', err);
+                throw err;
+            })
+            .nodeify(callback);
+    }
+
     return {
         executePlugin: executePlugin,
         seedProject: seedProject,
@@ -1124,7 +1164,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
         exportSelectionToFile: exportSelectionToFile,
         importSelectionFromFile: importSelectionFromFile,
         addLibrary: addLibrary,
-        updateLibrary: updateLibrary
+        updateLibrary: updateLibrary,
+        updateProjectFromFile: updateProjectFromFile
     };
 }
 

@@ -85,6 +85,25 @@ define(['js/logger'], function (Logger) {
                 });
         };
 
+        self._view.onSquashFromCommit = function (params) {
+            var projectName = self._client.getActiveProjectId();
+            self._client.squashCommits(self._client.getActiveProjectId(),
+                params.commitId, params.branchName, null, function (err, result) {
+                    if (err) {
+                        self._logger.error(err);
+                    }
+                    if (result.status === 'SYNCED') {
+                        self._view._dialog.setSelectorValue(params.branchName);
+                    } else {
+                        self._client.notifyUser({
+                            severity: 'info',
+                            message: 'squashing branch \'' + params.branchName + '\' forked [' + result.hash + ']'
+                        });
+                        self._view._dialog.setSelectorValue();
+                    }
+                });
+        };
+
         self._view.onSelectBranch = function (branchName) {
             self._client.selectBranch(branchName, null,
                 function (err) {

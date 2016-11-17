@@ -94,6 +94,11 @@ define([
             return Q.ninvoke(storage, 'getCommonAncestorCommit', self.projectId, commitA, commitB)
                 .nodeify(callback);
         };
+
+        this.squashCommits = function (fromCommit, toCommitOrBranch, message, callback) {
+            return Q.ninvoke(storage, 'squashCommits', self.projectId, fromCommit, toCommitOrBranch, message)
+                .nodeify(callback);
+        };
     }
 
     Project.prototype = Object.create(ProjectInterface.prototype);

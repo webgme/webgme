@@ -964,6 +964,7 @@ describe('PROJECT REST API', function () {
                     });
             });
 
+            //webhooks
             it('should list webhooks of project', function (done) {
                 agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks').end(function (err, res) {
                     expect(res.status).equal(200, err);
@@ -1103,7 +1104,7 @@ describe('PROJECT REST API', function () {
                         expect(res.status).equal(200, err);
 
                         agent.patch(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks/one')
-                            .send({url: newUrl, active:false})
+                            .send({url: newUrl, active: false})
                             .end(function (err, res) {
                                 expect(res.status).equal(200, err);
 
@@ -1136,6 +1137,52 @@ describe('PROJECT REST API', function () {
                     .end(function (err, res) {
                         expect(res.status).equal(404, err);
 
+                        done();
+                    });
+            });
+
+            //squash
+            it('should squash commits', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches')
+                    .end(function (err, res) {
+                        expect(res.body).to.contains.keys['master'];
+                        agent.put(server.getUrl() + '/api/projects/' +
+                            projectName2APIPath(projectName) + '/squash')
+                            .send({
+                                fromCommit: res.body.master,
+                                toCommitOrBranch: res.body.master
+                            })
+                            .end(function (err, res) {
+                                expect(err).to.eql(null);
+                                done();
+                            });
+                    });
+            });
+
+            it('should fail to squash commits with unknown commit info', function (done) {
+                agent.put(server.getUrl() + '/api/projects/' +
+                    projectName2APIPath(projectName) + '/squash')
+                    .send({
+                        fromCommit: '#dd00d66e0022638630af34100cc8f00fd00e1f00',
+                        toCommitOrBranch: 'master'
+                    })
+                    .end(function (err, res) {
+                        expect(res.status).equal(500, err);
+                        expect(res.error.text).to.contains('object does not exist');
+                        done();
+                    });
+            });
+
+            it('should fail to squash commits within unauthorized project', function (done) {
+                agent.put(server.getUrl() + '/api/projects/' +
+                    projectName2APIPath(unauthorizedProjectName) + '/squash')
+                    .send({
+                        fromCommit: '#dd00d66e0022638630af34100cc8f00fd00e1f00',
+                        toCommitOrBranch: 'master'
+                    })
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+                        expect(res.error.text).to.contains('Not authorized');
                         done();
                     });
             });

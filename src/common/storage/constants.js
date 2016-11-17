@@ -73,6 +73,7 @@ define([], function () {
         VERSION: '1.1.0',
         // Database related
         MONGO_ID: '_id',
+        COMMIT_TYPE: 'commit',
         PROJECT_INFO_ID: '*info*',
         EMPTY_PROJECT_DATA: 'empty',
         PROJECT_ID_SEP: '+',

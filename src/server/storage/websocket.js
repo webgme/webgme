@@ -127,7 +127,6 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
                     socket.broadcast.to(roomName).emit(CONSTANTS.NOTIFICATION, eventData);
 
-
                     return Q.ninvoke(workerManager, 'socketRoomChange', workManagerParams);
                 })
                 .then(deferred.resolve)
@@ -874,6 +873,24 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     })
                     .then(function (commonCommitHash) {
                         callback(null, commonCommitHash);
+                    })
+                    .catch(function (err) {
+                        if (gmeConfig.debug) {
+                            callback(err.stack);
+                        } else {
+                            callback(err.message);
+                        }
+                    });
+            });
+
+            socket.on('squashCommits', function (data, callback) {
+                getUserIdFromToken(socket, data && data.webgmeToken)
+                    .then(function (userId) {
+                        data.username = userId;
+                        return storage.squashCommits(data);
+                    })
+                    .then(function (commitResult) {
+                        callback(null, commitResult);
                     })
                     .catch(function (err) {
                         if (gmeConfig.debug) {

@@ -39,6 +39,7 @@ module.exports = {
         updateLibrary: 'updateLibrary',
         exportSelectionToFile: 'exportSelectionToFile',
         importSelectionFromFile: 'importSelectionFromFile',
+        updateProjectFromFile: 'updateProjectFromFile',
 
         // AddOn related
         connectedWorkerStart: 'connectedWorkerStart',

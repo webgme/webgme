@@ -65,7 +65,7 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
                 updater: [user],
                 time: (new Date()).getTime(),
                 message: msg,
-                type: 'commit',
+                type: CONSTANTS.COMMIT_TYPE,
                 __v: CONSTANTS.VERSION
             },
             commitHash = '#' + GENKEY(commitObj, gmeConfig);
@@ -234,6 +234,19 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             commitB: commitB
         };
         return storage.getCommonAncestorCommit(data)
+            .nodeify(callback);
+    };
+
+    this.squashCommits = function (fromCommit, toCommitOrBranch, message, callback) {
+        var data = {
+            username: self.userName,
+            projectId: self.projectId,
+            fromCommit: fromCommit,
+            toCommitOrBranch: toCommitOrBranch,
+            message: message
+        };
+
+        return storage.squashCommits(data)
             .nodeify(callback);
     };
 }

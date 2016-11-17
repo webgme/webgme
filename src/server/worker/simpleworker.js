@@ -142,6 +142,16 @@ process.on('message', function (parameters) {
                     result: result
                 });
             });
+    } else if (parameters.command === CONSTANTS.workerCommands.updateProjectFromFile) {
+        wr.updateProjectFromFile(parameters.webgmeToken, parameters,
+            function (err, result) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.result,
+                    error: err ? err.message : null,
+                    result: result
+                });
+            });
     } else if (parameters.command === CONSTANTS.workerCommands.addLibrary) {
         wr.addLibrary(parameters.webgmeToken, parameters,
             function (err, result) {

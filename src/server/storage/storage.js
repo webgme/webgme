@@ -13,6 +13,7 @@ var Q = require('q'),
     storageHelpers = require('./storagehelpers'),
     EventDispatcher = requireJS('common/EventDispatcher'),
     CONSTANTS = requireJS('common/storage/constants'),
+    GENKEY = requireJS('common/util/key'),
     UTIL = requireJS('common/storage/util');
 
 function Storage(database, logger, gmeConfig) {
@@ -320,6 +321,126 @@ Storage.prototype.makeCommit = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+Storage.prototype.squashCommits = function (data, callback) {
+    //first we should check if the common ancestor is right
+    var self = this,
+        project,
+        deferred = Q.defer(),
+        fromCommit = data.fromCommit,
+        branchName = undefined,
+        rootHash,
+        toCommit,
+        msg,
+        filterBasedOnReach = function (allCommitItems) {
+            var filteredCommits = [],
+                index,
+                hashToIndex = {},
+                reachabilityGraph = {},
+                extendReachability = function (original, extension) {
+                    var key;
+
+                    for (key in extension) {
+                        original[key] = true;
+                    }
+                },
+                i, j;
+
+            for (i = 0; i < allCommitItems.length; i += 1) {
+                hashToIndex[allCommitItems[i][CONSTANTS.MONGO_ID]] = i;
+            }
+
+            //this is the function that fills out the rootHash...
+            rootHash = allCommitItems[hashToIndex[toCommit]].root;
+
+            for (i = 0; i < allCommitItems.length; i += 1) {
+                for (j = 0; j < allCommitItems[i].parents.length; j += 1) {
+                    index = hashToIndex[allCommitItems[i].parents[j]];
+                    reachabilityGraph[index] = reachabilityGraph[index] || {};
+                    reachabilityGraph[index][i] = true;
+                    extendReachability(reachabilityGraph[index], reachabilityGraph[i]);
+
+                }
+            }
+
+            for (index in reachabilityGraph[hashToIndex[fromCommit]]) {
+                filteredCommits.push(allCommitItems[index]);
+            }
+
+            return filteredCommits;
+        },
+        getSumCommitMsg = function (commitItems) {
+            var msg = 'Squashing commits ' + fromCommit + ' -> ' + toCommit + '\n',
+                i;
+
+            for (i = 0; i < commitItems.length; i += 1) {
+                msg += '\n' + commitItems[i][CONSTANTS.MONGO_ID] + ':\n';
+                msg += commitItems[i].message;
+            }
+
+            return msg;
+        };
+
+    return this.database.openProject(data.projectId)
+        .then(function (project_) {
+            project = project_;
+            if (REGEXP.HASH.test(data.toCommitOrBranch)) {
+                return data.toCommitOrBranch;
+            } else {
+                branchName = data.toCommitOrBranch;
+                return project.getBranchHash(data.toCommitOrBranch);
+            }
+        })
+        .then(function (toCommit_) {
+            toCommit = toCommit_;
+
+            return self.getCommonAncestorCommit({
+                projectId: data.projectId,
+                commitA: fromCommit,
+                commitB: toCommit
+            });
+        })
+        .then(function (ancestorCommit) {
+            if (ancestorCommit !== fromCommit) {
+                throw new Error('cannot squash as end-point [' +
+                    toCommit + '] is not a descendant of the start-point [' + fromCommit + '].');
+            }
+
+            return project.loadObject(toCommit);
+        })
+        .then(function (toCommitObject) {
+            return storageHelpers.loadHistory(project, -1, fromCommit, [toCommitObject]);
+        })
+        .then(function (historyItems) {
+            msg = getSumCommitMsg(filterBasedOnReach(historyItems));
+
+            var makeCommitData = {
+                    coreObjects: [],
+                    username: data.username,
+                    branchName: branchName,
+                    projectId: data.projectId,
+                    commitObject: {},
+                    oldHash: branchName ? toCommit : null
+                },
+                commitObj = {
+                    root: rootHash,
+                    parents: [fromCommit],
+                    updater: [data.username],
+                    time: (new Date()).getTime(),
+                    message: data.message || msg,
+                    type: CONSTANTS.COMMIT_TYPE,
+                    __v: CONSTANTS.VERSION
+                },
+                commitHash = '#' + GENKEY(commitObj, self.gmeConfig);
+
+            commitObj[CONSTANTS.MONGO_ID] = commitHash;
+
+            makeCommitData.commitObject = commitObj;
+
+            return self.makeCommit(makeCommitData);
+        })
+        .nodeify(callback);
+};
+
 Storage.prototype.loadObjects = function (data, callback) {
     var self = this,
         deferred = Q.defer();
@@ -429,7 +550,7 @@ Storage.prototype.getCommits = function (data, callback) {
                 self.logger.debug('commitHash was given will load commit', data.before);
                 project.loadObject(data.before)
                     .then(function (commitObject) {
-                        if (commitObject.type !== 'commit') {
+                        if (commitObject.type !== CONSTANTS.COMMIT_TYPE) {
                             throw new Error('Commit object does not exist ' + data.before);
                         }
                         if (data.number === 1) {
@@ -484,7 +605,7 @@ Storage.prototype.getHistory = function (data, callback) {
             }));
         })
         .then(function (heads) {
-            return storageHelpers.loadHistory(project, data.number, storageHelpers.filterArray(heads));
+            return storageHelpers.loadHistory(project, data.number, null, storageHelpers.filterArray(heads));
         })
         .nodeify(callback);
 };
@@ -618,9 +739,9 @@ Storage.prototype.getCommonAncestorCommit = function (data, callback) {
             deferred.resolve(candidate);
         } else {
             Q.all([
-                    loadAncestorsAndGetParents(project, newAncestorsA, ancestorsA),
-                    loadAncestorsAndGetParents(project, newAncestorsB, ancestorsB)
-                ])
+                loadAncestorsAndGetParents(project, newAncestorsA, ancestorsA),
+                loadAncestorsAndGetParents(project, newAncestorsB, ancestorsB)
+            ])
                 .then(function (results) {
                     newAncestorsA = results[0] || [];
                     newAncestorsB = results[1] || [];
@@ -638,8 +759,8 @@ Storage.prototype.getCommonAncestorCommit = function (data, callback) {
 
     function loadAncestorsAndGetParents(project, commits, ancestorsSoFar) {
         return Q.all(commits.map(function (commitHash) {
-                return project.loadObject(commitHash);
-            }))
+            return project.loadObject(commitHash);
+        }))
             .then(function (loadedCommits) {
                 var newCommits = [],
                     i,

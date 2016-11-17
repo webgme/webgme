@@ -11,6 +11,7 @@
 var Q = require('q'),
 
     CANON = requireJS('common/util/canon'),
+    CONSTANTS = requireJS('common/storage/constants'),
     REGEXP = requireJS('common/regexp');
 
 /**
@@ -86,7 +87,7 @@ function RedisProject(projectId, adapter) {
                             })
                             .catch(deferred.reject);
                     } else {
-                        if (object.type === 'commit') {
+                        if (object.type === CONSTANTS.COMMIT_TYPE) {
                             Q.ninvoke(adapter.client, 'hset', projectId + adapter.CONSTANTS.COMMITS,
                                 object._id, object.time)
                                 .then(function () {
