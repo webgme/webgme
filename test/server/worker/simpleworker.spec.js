@@ -1777,7 +1777,7 @@ describe('Simple worker', function () {
                 expect(msg.type).equal(CONSTANTS.msgTypes.result);
                 expect(msg.error).equal(null);
 
-                expect(msg.result).to.equal(undefined);
+                expect(msg.result).to.include.keys('hash', 'status');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
@@ -1848,7 +1848,7 @@ describe('Simple worker', function () {
                 expect(msg.type).equal(CONSTANTS.msgTypes.result);
                 expect(msg.error).equal(null);
 
-                expect(msg.result).to.equal(undefined);
+                expect(msg.result).to.include.keys('hash', 'status');
 
                 return restoreProcessFunctions();
             })
@@ -1874,7 +1874,7 @@ describe('Simple worker', function () {
                 expect(msg.type).equal(CONSTANTS.msgTypes.result);
                 expect(msg.error).equal(null);
 
-                expect(msg.result).to.equal(undefined);
+                expect(msg.result).to.include.keys('hash', 'status');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);

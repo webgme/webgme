@@ -174,9 +174,6 @@ process.on('message', function (parameters) {
             });
     } else if (parameters.command === CONSTANTS.workerCommands.exportSelectionToFile) {
         wr.exportSelectionToFile(parameters.webgmeToken, parameters, function (err, result) {
-                if (err) {
-                    logger.error('FAILED:', err);
-                }
                 safeSend({
                     pid: process.pid,
                     type: CONSTANTS.msgTypes.result,
@@ -187,9 +184,6 @@ process.on('message', function (parameters) {
         );
     } else if (parameters.command === CONSTANTS.workerCommands.importSelectionFromFile) {
         wr.importSelectionFromFile(parameters.webgmeToken, parameters, function (err, result) {
-                if (err) {
-                    logger.error('FAILED:', err);
-                }
                 safeSend({
                     pid: process.pid,
                     type: CONSTANTS.msgTypes.result,

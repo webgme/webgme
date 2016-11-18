@@ -316,7 +316,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         var projectId,
             project;
 
-        Q.ninvoke(storage, 'createProject', projectName, ownerId)
+        return Q.ninvoke(storage, 'createProject', projectName, ownerId)
             .then(function (projectId_) {
                 var deferred = Q.defer();
 
@@ -340,7 +340,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return project.createBranch(branchName, commitResult.hash);
             })
             .then(function () {
-                return (projectId);
+                return projectId;
             })
             .nodeify(callback);
     }
@@ -402,10 +402,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 }
             })
             .then(function (jsonSeed) {
-                _createProjectFromRawJson(storage, projectName, ownerId,
-                    parameters.branchName || 'master', jsonSeed.seed, finish);
+                return _createProjectFromRawJson(storage, projectName, ownerId,
+                    parameters.branchName || 'master', jsonSeed.seed);
             })
-            .catch(finish);
+            .nodeify(finish);
     }
 
     /**
@@ -587,9 +587,25 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {function} callback
      */
     function exportProjectToFile(webgmeToken, parameters, callback) {
+        var storage,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('exportProjectToFile failed with error', err);
+                } else {
+                    logger.debug('exportProjectToFile completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        logger.debug('exportProjectToFile', {metadata: parameters});
+
         getConnectedStorage(webgmeToken)
-            .then(function (storage) {
+            .then(function (storage_) {
                 var deferred = Q.defer();
+                storage = storage_;
                 storage.openProject(parameters.projectId, function (err, project/*, branches, access*/) {
                     if (err) {
                         deferred.reject(err);
@@ -633,14 +649,36 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
                 return deferred.promise;
             })
-            .nodeify(callback);
+            .nodeify(finish);
     }
 
+    /**
+     *
+     * @param webgmeToken
+     * @param parameters
+     * @param callback
+     */
     function exportSelectionToFile(webgmeToken, parameters, callback) {
         var context,
-            closureInformation;
+            storage,
+            closureInformation,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('exportSelectionToFile failed with error', err);
+                } else {
+                    logger.debug('exportSelectionToFile completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        logger.debug('exportSelectionToFile', {metadata: parameters});
+
         getConnectedStorage(webgmeToken)
-            .then(function (storage) {
+            .then(function (storage_) {
+                storage = storage_;
                 return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash, null);
             })
             .then(function (context_) {
@@ -719,7 +757,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
                 return deferred.promise;
             })
-            .nodeify(callback);
+            .nodeify(finish);
 
     }
 
@@ -773,11 +811,30 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise;
     }
 
+    /**
+     *
+     * @param webgmeToken
+     * @param parameters
+     * @param callback
+     */
     function importSelectionFromFile(webgmeToken, parameters, callback) {
         var jsonProject,
             context,
             storage,
-            blobClient = getBlobClient(webgmeToken);
+            blobClient = getBlobClient(webgmeToken),
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('importSelectionFromFile failed with error', err);
+                } else {
+                    logger.debug('importSelectionFromFile completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        logger.debug('importSelectionFromFile', {metadata: parameters});
 
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
@@ -826,22 +883,17 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     [context.commitObject._id],
                     persisted.rootHash,
                     persisted.objects,
-                    'importing models', function (err/*, saveResult*/) {
+                    'importing models', function (err, saveResult) {
                         if (err) {
                             deferred.reject(err);
-                            return;
+                        } else {
+                            deferred.resolve(saveResult);
                         }
-
-                        deferred.resolve();
                     });
 
                 return deferred.promise;
             })
-            .catch(function (err) {
-                logger.error('importSelectionFromFile failed with error', err);
-                throw err;
-            })
-            .nodeify(callback);
+            .nodeify(finish);
     }
 
     /**
@@ -852,7 +904,20 @@ function WorkerRequests(mainLogger, gmeConfig) {
      */
     function importProjectFromFile(webgmeToken, parameters, callback) {
         var storage,
-            blobClient = getBlobClient(webgmeToken);
+            blobClient = getBlobClient(webgmeToken),
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('importProjectFromFile failed with error', err);
+                } else {
+                    logger.debug('importProjectFromFile completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        logger.debug('importProjectFromFile', {metadata: parameters});
 
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
@@ -860,17 +925,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return _importProjectPackage(blobClient, parameters.blobHash, true);
             })
             .then(function (jsonProject) {
-                return Q.nfcall(_createProjectFromRawJson,
-                    storage, parameters.projectName, parameters.ownerId, parameters.branchName, jsonProject);
+                return _createProjectFromRawJson(storage, parameters.projectName, parameters.ownerId,
+                    parameters.branchName, jsonProject);
             })
-            .catch(function (err) {
-                logger.error('importProjectFromFile failed with error', err);
-                if (typeof err === 'string') {
-                    err = new Error(err);
-                }
-                throw err;
-            })
-            .nodeify(callback);
+            .nodeify(finish);
     }
 
     /**
@@ -883,7 +941,20 @@ function WorkerRequests(mainLogger, gmeConfig) {
         var jsonProject,
             context,
             storage,
-            blobClient = getBlobClient(webgmeToken);
+            blobClient = getBlobClient(webgmeToken),
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('addLibrary failed with error', err);
+                } else {
+                    logger.debug('addLibrary completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        logger.debug('addLibrary', {metadata: parameters});
 
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
@@ -971,22 +1042,18 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     [context.commitObject._id],
                     persisted.rootHash,
                     persisted.objects,
-                    message, function (err/*, saveResult*/) {
+                    message, function (err, saveResult) {
                         if (err) {
                             deferred.reject(err);
                             return;
                         }
 
-                        deferred.resolve();
+                        deferred.resolve(saveResult);
                     });
 
                 return deferred.promise;
             })
-            .catch(function (err) {
-                logger.error('addLibrary failed with error', err);
-                throw err;
-            })
-            .nodeify(callback);
+            .nodeify(finish);
     }
 
     /**
@@ -1000,7 +1067,20 @@ function WorkerRequests(mainLogger, gmeConfig) {
             context,
             storage,
             jsonProject,
-            blobClient = getBlobClient(webgmeToken);
+            blobClient = getBlobClient(webgmeToken),
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('updateLibrary failed with error', err);
+                } else {
+                    logger.debug('updateLibrary completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        logger.debug('updateLibrary', {metadata: parameters});
 
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
@@ -1094,22 +1174,18 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     [context.commitObject._id],
                     persisted.rootHash,
                     persisted.objects,
-                    message, function (err/*, saveResult*/) {
+                    message, function (err, commitResult) {
                         if (err) {
                             deferred.reject(err);
                             return;
                         }
 
-                        deferred.resolve();
+                        deferred.resolve(commitResult);
                     });
 
                 return deferred.promise;
             })
-            .catch(function (err) {
-                logger.error('updateLibrary failed with error', err);
-                throw err;
-            })
-            .nodeify(callback);
+            .nodeify(finish);
     }
 
     /**
@@ -1122,7 +1198,20 @@ function WorkerRequests(mainLogger, gmeConfig) {
         var jsonProject,
             context,
             storage,
-            blobClient = getBlobClient(webgmeToken);
+            blobClient = getBlobClient(webgmeToken),
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('updateProjectFromFile failed with error', err);
+                } else {
+                    logger.debug('updateProjectFromFile completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        logger.debug('updateProjectFromFile', {metadata: parameters});
 
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
@@ -1136,6 +1225,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             .then(function (jsonProject_) {
                 jsonProject = jsonProject_;
 
+                // This resolves with commitResult.
                 return storageUtils.insertProjectJson(context.project,
                     jsonProject,
                     {
@@ -1144,11 +1234,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         commitMessage: 'update project from file'
                     });
             })
-            .catch(function (err) {
-                logger.error('updateProjectFromFile failed with error', err);
-                throw err;
-            })
-            .nodeify(callback);
+            .nodeify(finish);
     }
 
     return {
