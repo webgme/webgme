@@ -5,15 +5,15 @@
  */
 
 define(['./addDialog',
-    './updateDialog',
     'js/Dialogs/Confirm/ConfirmDialog',
+    'js/Dialogs/UpdateLibrary/UpdateLibraryDialog',
     'common/regexp',
-], function (AddDialog, UpdateDialog, ConfirmDialog, REGEXP) {
+], function (AddDialog, ConfirmDialog, UpdateLibraryDialog, REGEXP) {
     'use strict';
 
     var LibraryManager = function (client) {
         this._add = new AddDialog(client);
-        this._update = new UpdateDialog(client);
+        this._update = new UpdateLibraryDialog(client);
         this._remove = new ConfirmDialog();
         this._rename = new ConfirmDialog();
         this._doNotAskRemove = false;

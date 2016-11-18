@@ -1,0 +1,9 @@
+.update-library-dialog .asset-widget {
+  width: 100%;
+  height: 100%;
+  padding-top: 0.3ex; }
+  .update-library-dialog .asset-widget a.btn-dialog-open {
+    font-size: 120%;
+    padding-top: 0.6ex; }
+.update-library-dialog .refresh-link {
+  cursor: pointer; }

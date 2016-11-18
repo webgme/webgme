@@ -40,7 +40,7 @@ div.multi-tab-dialog {
             color: #2a6496;
           }
         }
-        span.type-description {
+        span.info-details {
           display: inline-block;
           width: 95%;
           margin-bottom: 2ex;
@@ -51,9 +51,9 @@ div.multi-tab-dialog {
           }
         }
       }
-    }
-    div.modal-footer {
-      button.ok-btn {
+      .error-badge {
+        margin-top: 15px;
+        margin-bottom: 0;
       }
     }
   }

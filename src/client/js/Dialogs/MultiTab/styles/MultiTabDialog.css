@@ -21,11 +21,14 @@ div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal i.toggle
   color: #333; }
   div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal i.toggle-info-btn:hover {
     color: #2a6496; }
-div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal span.type-description {
+div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal span.info-details {
   display: inline-block;
   width: 95%;
   margin-bottom: 2ex;
   margin-left: 0.5ex;
   opacity: 0.90; }
-  div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal span.type-description.hidden {
+  div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal span.info-details.hidden {
     display: none; }
+div.multi-tab-dialog .modal-content div.modal-body .error-badge {
+  margin-top: 15px;
+  margin-bottom: 0; }
