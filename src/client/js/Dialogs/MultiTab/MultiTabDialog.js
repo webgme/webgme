@@ -155,6 +155,8 @@ define([
         this._okBtnEls[this._currentTabIndex].show();
         this._tabEls[this._currentTabIndex].addClass('active');
 
+        // Finally hide the badge if shown.
+        this._errorBadge.hide();
     };
 
     return MultiTabDialog;

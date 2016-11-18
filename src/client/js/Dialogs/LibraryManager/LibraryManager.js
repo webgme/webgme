@@ -4,16 +4,16 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['./addDialog',
+define([
     'js/Dialogs/Confirm/ConfirmDialog',
-    'js/Dialogs/AddOrUpdateLibrary/AddOrUpdateLibrary',
+    'js/Dialogs/AddOrUpdateLibrary/AddOrUpdateLibraryDialog',
     'common/regexp',
-], function (AddDialog, ConfirmDialog, AddOrUpdateLibrary, REGEXP) {
+], function (ConfirmDialog, AddOrUpdateLibraryDialog, REGEXP) {
     'use strict';
 
     var LibraryManager = function (client) {
-        this._add = new AddOrUpdateLibrary(client, true);
-        this._update = new AddOrUpdateLibrary(client);
+        this._add = new AddOrUpdateLibraryDialog(client, true);
+        this._update = new AddOrUpdateLibraryDialog(client);
         this._remove = new ConfirmDialog();
         this._getName = new ConfirmDialog();
         this._doNotAskRemove = false;
@@ -25,12 +25,12 @@ define(['./addDialog',
             forbiddenNames = this._client.getLibraryNames();
 
         this._getName.show({
-            title: 'Rename Library',
+            title: 'Add Library',
             iconClass: 'glyphicon glyphicon-folder-close',
-            question: 'Would you like to rename "' + ownName + '"?',
+            question: 'Give a unique name of the new library..',
             input: {
                 label: 'Name',
-                placeHolder: 'Enter new library name...',
+                placeHolder: 'Enter name of new library...',
                 required: true,
                 checkFn: function (value) {
                     if (forbiddenNames.indexOf(value) !== -1) {
@@ -42,9 +42,8 @@ define(['./addDialog',
             },
             severity: 'info'
         }, function (_dummy, newName) {
-            self._client.renameLibrary(ownName, newName);
+            self._add.show(newName);
         });
-        this._add.show();
     };
 
     LibraryManager.prototype.update = function (nodeId) {
@@ -83,7 +82,6 @@ define(['./addDialog',
             ownName = libraryRoot.getFullyQualifiedName();
             forbiddenNames = this._client.getLibraryNames();
             forbiddenNames.splice(forbiddenNames.indexOf(ownName), 1);
-
 
             this._getName.show({
                 title: 'Rename Library',

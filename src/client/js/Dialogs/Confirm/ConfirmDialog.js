@@ -87,9 +87,13 @@ define([
         }
 
         if (params.severity) {
-            // info, warning
+            // info, warning, danger
             this._contentDiv.addClass(params.severity);
-            this._okBtn.addClass('btn-' + params.severity);
+            if (params.severity === 'info') {
+                this._okBtn.addClass('btn-primary');
+            } else {
+                this._okBtn.addClass('btn-' + params.severity);
+            }
         } else {
             // danger by default
             this._okBtn.addClass('btn-danger');

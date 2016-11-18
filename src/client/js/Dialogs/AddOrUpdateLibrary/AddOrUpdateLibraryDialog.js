@@ -144,12 +144,21 @@ define([
 
         this._urlInputControl = formControl.find('.form-control');
 
-        formControl.on('keyup', function () {
+        this._urlInputControl.on('keyup', function () {
             urlProjectInfo = {
                 projectId: UTILS.getURLParameterByNameFromString(self._urlInputControl.val(), 'project'),
                 branchName: UTILS.getURLParameterByNameFromString(self._urlInputControl.val(), 'branch'),
                 commitHash: UTILS.getURLParameterByNameFromString(self._urlInputControl.val(), 'commit')
             };
+        });
+
+        this._urlInputControl.on('keydown', function (event) {
+            var enterPressed = event.which === 13;
+
+            if (enterPressed) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
         });
 
 

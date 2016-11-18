@@ -4,7 +4,8 @@
 div.multi-tab-dialog .modal-content .modal-header .header-icon {
   font-size: 20px;
   margin-right: 1ex;
-  display: inline-block; }
+  display: inline-block;
+  color: #2e6da4; }
 div.multi-tab-dialog .modal-content .modal-header span {
   font-size: 24px; }
 div.multi-tab-dialog .modal-content .pre-body {
