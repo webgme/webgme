@@ -10,7 +10,7 @@ define([
     'js/Utils/WebGMEUrlManager',
     'common/regexp',
     'js/Dialogs/MultiTab/MultiTabDialog',
-    'css!./styles/UpdateLibraryDialog.css'
+    'css!./styles/AddOrUpdateLibraryDialog.css'
 ], function (CORE_CONSTANTS,
              AssetWidget,
              UTILS,
@@ -20,22 +20,30 @@ define([
 
     'use strict';
 
-    function UpdateLibraryDialog(client) {
+    function AddOrUpdateLibraryDialog(client, addLibrary) {
         this._client = client;
+        this._addLibrary = addLibrary;
     }
 
-    UpdateLibraryDialog.prototype.show = function (libraryId) {
+    AddOrUpdateLibraryDialog.prototype.show = function (libraryIdOrName) {
         var self = this,
             dialog = new MultiTabDialog(),
             parameters = {
-                title: 'Update Library',
-                extraClasses: 'update-library-dialog',
+                title: this._addLibrary ? 'Add Library' : 'Update Library',
+                extraClasses: 'add-or-update-library-dialog',
                 iconClass: 'glyphicon glyphicon-folder-close',
                 activeTabIndex: 0,
                 tabs: []
             },
-            libraryNode = this._client.getNode(libraryId);
+            libraryNode;
 
+        if (this._addLibrary) {
+            this._libraryName = libraryIdOrName;
+        } else {
+            libraryNode = this._client.getNode(libraryIdOrName);
+        }
+
+        // Refresh only applies to update library.
         if (libraryNode) {
             this._libraryName = libraryNode.getFullyQualifiedName();
             this._storedLibraryInfo = this._client.getLibraryInfo(this._libraryName);
@@ -58,7 +66,7 @@ define([
         });
     };
 
-    UpdateLibraryDialog.prototype._getRefreshTab = function () {
+    AddOrUpdateLibraryDialog.prototype._getRefreshTab = function () {
         var self = this,
             linkUrl = '/?' + URL_UTIL.getSearchQuery({
                     projectId: this._storedLibraryInfo.projectId,
@@ -66,9 +74,12 @@ define([
                 });
 
         function onOK(callback) {
-            self._client.updateLibrary(self._libraryName, null, function (err) {
+            self._client.updateLibrary(self._libraryName, null, function (err, result) {
                 if (err) {
                     callback('Failed to refresh library' + err);
+                } else if (result.status !== 'SYNCED') {
+                    callback('Project updated with library at commit ' + result.hash.substring(0, 7) +
+                        ' but could not update branch.');
                 } else {
                     callback();
                 }
@@ -84,11 +95,11 @@ define([
         };
     };
 
-    UpdateLibraryDialog.prototype._getFileTab = function () {
+    AddOrUpdateLibraryDialog.prototype._getFileTab = function () {
         var self = this;
 
         this._assetWidget = new AssetWidget({
-            propertyName: 'UpdateLibrary',
+            propertyName: 'AddOrUpdateLibraryDialog',
             propertyValue: ''
         });
 
@@ -98,13 +109,22 @@ define([
                 return;
             }
 
-            self._client.updateLibrary(self._libraryName, self._assetWidget.propertyValue, function (err) {
+            function resultCallback (err, result) {
                 if (err) {
                     callback('Error getting library from blob' + err);
+                } else if (result.status !== 'SYNCED') {
+                    callback('Project updated with library at commit ' + result.hash.substring(0, 7) +
+                        ' but could not update branch.');
                 } else {
                     callback();
                 }
-            });
+            }
+
+            if (self._addLibrary) {
+                self._client.addLibrary(self._libraryName, self._assetWidget.propertyValue, resultCallback);
+            } else {
+                self._client.updateLibrary(self._libraryName, self._assetWidget.propertyValue, resultCallback);
+            }
         }
 
         return {
@@ -116,10 +136,13 @@ define([
         };
     };
 
-    UpdateLibraryDialog.prototype._getUrlTab = function () {
+    AddOrUpdateLibraryDialog.prototype._getUrlTab = function () {
         var self = this,
-            formControl = $('<input type="text" class="form-control"/>'),
+            formControl = $('<div class="input-group"><span class="input-group-addon">URL</span>' +
+                '<input type="text" class="form-control"></div>'),
             urlProjectInfo = {};
+
+        this._urlInputControl = formControl.find('.form-control');
 
         formControl.on('keyup', function () {
             urlProjectInfo = {
@@ -129,8 +152,6 @@ define([
             };
         });
 
-        this._urlInputControl = formControl;
-
 
         function onOK(callback) {
             if (typeof urlProjectInfo.projectId !== 'string') {
@@ -138,23 +159,32 @@ define([
                 return;
             }
 
-            self._client.updateLibrary(self._libraryName, urlProjectInfo, function (err, result) {
+            function resultCallback (err, result) {
                 if (err) {
                     callback('Error getting library via url' + err);
+                } else if (result.status !== 'SYNCED') {
+                    callback('Project updated with library at commit ' + result.hash.substring(0, 7) +
+                        ' but could not update branch.');
                 } else {
                     callback();
                 }
-            });
+            }
+
+            if (self._addLibrary) {
+                self._client.addLibrary(self._libraryName, urlProjectInfo, resultCallback);
+            } else {
+                self._client.updateLibrary(self._libraryName, urlProjectInfo, resultCallback);
+            }
         }
 
         return {
             title: 'URL',
-            infoTitle: 'Update from intra deployment URL',
+            infoTitle: 'From intra deployment URL',
             infoDetails: 'Use the URL of the project as the source of the library',
             formControl: formControl,
             onOK: onOK
         };
     };
 
-    return UpdateLibraryDialog;
+    return AddOrUpdateLibraryDialog;
 });
