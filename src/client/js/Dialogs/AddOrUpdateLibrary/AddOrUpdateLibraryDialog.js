@@ -4,15 +4,13 @@
  */
 
 define([
-    'common/core/constants',
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
     'js/util',
     'js/Utils/WebGMEUrlManager',
     'common/regexp',
     'js/Dialogs/MultiTab/MultiTabDialog',
     'css!./styles/AddOrUpdateLibraryDialog.css'
-], function (CORE_CONSTANTS,
-             AssetWidget,
+], function (AssetWidget,
              UTILS,
              URL_UTIL,
              REGEXP,
@@ -20,6 +18,12 @@ define([
 
     'use strict';
 
+    /**
+     * 
+     * @param client
+     * @param addLibrary
+     * @constructor
+     */
     function AddOrUpdateLibraryDialog(client, addLibrary) {
         this._client = client;
         this._addLibrary = addLibrary;
@@ -77,7 +81,7 @@ define([
             self._client.updateLibrary(self._libraryName, null, function (err, result) {
                 if (err) {
                     callback('Failed to refresh library' + err);
-                } else if (result.status !== 'SYNCED') {
+                } else if (!self._checkCommitStatus(result.status)) {
                     callback('Project updated with library at commit ' + result.hash.substring(0, 7) +
                         ' but could not update branch.');
                 } else {
@@ -112,7 +116,7 @@ define([
             function resultCallback (err, result) {
                 if (err) {
                     callback('Error getting library from blob' + err);
-                } else if (result.status !== 'SYNCED') {
+                } else if (!self._checkCommitStatus(result.status)) {
                     callback('Project updated with library at commit ' + result.hash.substring(0, 7) +
                         ' but could not update branch.');
                 } else {
@@ -171,7 +175,7 @@ define([
             function resultCallback (err, result) {
                 if (err) {
                     callback('Error getting library via url' + err);
-                } else if (result.status !== 'SYNCED') {
+                } else if (!self._checkCommitStatus(result.status)) {
                     callback('Project updated with library at commit ' + result.hash.substring(0, 7) +
                         ' but could not update branch.');
                 } else {
@@ -193,6 +197,11 @@ define([
             formControl: formControl,
             onOK: onOK
         };
+    };
+
+    AddOrUpdateLibraryDialog.prototype._checkCommitStatus = function (commitStatus) {
+        return commitStatus === this._client.CONSTANTS.STORAGE.SYNCED ||
+                commitStatus === this._client.CONSTANTS.STORAGE.MERGED;
     };
 
     return AddOrUpdateLibraryDialog;

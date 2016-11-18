@@ -1,6 +1,7 @@
 /*globals define*/
 /*jshint browser: true*/
 /**
+ * Provides dialog helpers with backend support for handling libraries.
  * @author kecso / https://github.com/kecso
  */
 

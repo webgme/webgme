@@ -36,19 +36,22 @@ define([
             i;
 
         this._dialog = $(dialogTemplate);
-        this._modalContent = this._dialog.find('.modal-content');
         this._loader = new LoaderCircles({containerElement: this._dialog});
+        this._modalContent = this._dialog.find('.modal-content');
 
-        this._dialog.find('.header-icon').addClass(parameters.iconClass || 'glyphicon glyphicon-comment');
-        this._dialog.find('.header-title').text(parameters.title || 'Missing parameters.title');
+        this._modalHeader = this._modalContent.find('.modal-header');
+        this._preBody = this._modalContent.find('.pre-body');
+        this._modalBody = this._modalContent.find('.modal-body');
+        this._modalFooter = this._modalContent.find('.modal-footer');
+
+        this._modalHeader.find('.header-icon').addClass(parameters.iconClass || 'glyphicon glyphicon-comment');
+        this._modalHeader.find('.header-title').text(parameters.title || 'Missing parameters.title');
 
         if (parameters.extraClasses) {
             this._dialog.addClass(parameters.extraClasses);
         }
 
-        this._tabsUl = this._dialog.find('ul.nav-tabs');
-        this._modalBody = this._dialog.find('.modal-body');
-        this._modalFooter = this._dialog.find('.modal-footer');
+        this._tabsUl = this._preBody.find('ul.nav-tabs');
 
         this._currentTabIndex = parameters.activeTabIndex || 0;
         this._tabEls = [];
@@ -63,6 +66,11 @@ define([
                 this._formEls[i].hide();
                 this._okBtnEls[i].hide();
             }
+        }
+
+        if (parameters.tabs.length === 1) {
+            // Only one tab, hide the entire prebody.
+            this._preBody.hide();
         }
 
         this._errorBadge = $('<div class="alert alert-danger error-badge" role="alert"></div>');

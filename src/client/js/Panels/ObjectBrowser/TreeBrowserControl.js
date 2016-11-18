@@ -3,6 +3,8 @@
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author pmeijer / https://github.com/pmeijer
+ * @author kecso / https://github.com/kecso
  */
 
 define(['js/logger',
@@ -10,7 +12,7 @@ define(['js/logger',
     'js/Constants',
     'js/RegistryKeys',
     './ObjectBrowserControlBase',
-    'js/Dialogs/LibraryManager/LibraryManager',
+    'js/Utils/LibraryManager',
     'js/Dialogs/ImportModel/ImportModelDialog',
     'js/Utils/Exporters'
 ], function (Logger,
