@@ -95,7 +95,7 @@ define([
             title: 'Refresh',
             infoTitle: 'Refresh library from originating project',
             infoDetails: 'Use project package as the source of the library',
-            formControl: $('<a class="refresh-link" href=""' + linkUrl + '" target="_blank">View branch of library</a>'),
+            formControl: $('<a class="refresh-link" href="' + linkUrl + '" target="_blank">View branch of library</a>'),
             onOK: onOK
         };
     };
