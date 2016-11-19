@@ -1,14 +1,6 @@
 .add-or-update-library-dialog {
-  .asset-widget {
-    width: 100%;
-    height: 100%;
-    padding-top: 0.3ex;
-    a.btn-dialog-open {
-      font-size: 120%;
-      padding-top: 0.6ex;
-    }
-  }
   .refresh-link {
-    cursor: pointer
+    font-size: 18px;
+    cursor: pointer;
   }
 }

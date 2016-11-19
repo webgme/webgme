@@ -102,6 +102,17 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
         this.webSocket.getHistory(data, callback);
     };
 
+    StorageSimpleAPI.prototype.squashCommits = function (projectId, fromCommit, toCommitOrBranch, msg, callback) {
+        var data = {
+            projectId: projectId,
+            fromCommit: fromCommit,
+            toCommitOrBranch: toCommitOrBranch,
+            message: msg
+        };
+        this.logger.debug('invoking squashCommits', {metadata: data});
+        this.webSocket.squashCommits(data, callback);
+    };
+
     StorageSimpleAPI.prototype.getTags = function (projectId, callback) {
         var data = {
             projectId: projectId

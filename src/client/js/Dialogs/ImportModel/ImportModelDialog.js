@@ -7,8 +7,7 @@
 
 define([
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
-    'js/Dialogs/MultiTab/MultiTabDialog',
-    'css!./styles/ImportModelDialog.css'
+    'js/Dialogs/MultiTab/MultiTabDialog'
 ], function (AssetWidget,
              MultiTabDialog) {
 
@@ -78,7 +77,7 @@ define([
         return {
             title: 'File',
             infoTitle: 'From webgmexm file',
-            infoDetails: 'The export webgmex file must come from a project that shares the same meta as the current' +
+            infoDetails: 'The export webgmexm file must come from a project that shares the same meta as the current' +
             ' project. Specifically all the meta-types used in model must have matching meta-nodes (w.r.t GUIDs) in' +
             ' this project. In cases where there is an uncertainty, there is no harm in trying to import the model -' +
             ' an error will just be returned.',

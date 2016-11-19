@@ -31,6 +31,26 @@ define([
         this._dialog.modal('show');
     };
 
+    /**
+     * Displays the alert badge.
+     * @param {string} message
+     * @param {string} [severity=danger] - 'success', 'info', 'warning' or 'danger'.
+     */
+    MultiTabDialog.prototype.showAlert = function (message, severity) {
+        severity = severity || 'danger';
+        this._errorBadge.removeClass('alert-success alert-info alert-warning alert-danger');
+        this._errorBadge.addClass('alert-' + severity);
+        this._errorBadge.text(message);
+        this._errorBadge.show();
+    };
+
+    /**
+     * Hides the alert badge.
+     */
+    MultiTabDialog.prototype.hideAlert = function () {
+        this._errorBadge.hide();
+    };
+
     MultiTabDialog.prototype._initDialog = function (parameters) {
         var self = this,
             i;
@@ -133,7 +153,7 @@ define([
                 self._loader.stop();
                 self._modalContent.css('opacity', 1);
                 if (err) {
-                    self._showError(typeof err === 'string' ? err : err.message);
+                    self.showAlert(typeof err === 'string' ? err : err.message);
                 } else {
                     self._dialog.modal('hide');
                 }
@@ -142,11 +162,6 @@ define([
 
         this._okBtnEls.push(buttonEl);
         this._modalFooter.prepend(buttonEl);
-    };
-
-    MultiTabDialog.prototype._showError = function (errMessage) {
-        this._errorBadge.text(errMessage);
-        this._errorBadge.show();
     };
 
     MultiTabDialog.prototype._tabIndexChanged = function (index) {

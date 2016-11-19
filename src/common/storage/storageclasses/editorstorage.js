@@ -464,17 +464,6 @@ define([
             }
         };
 
-        this.squashCommits = function (projectId, fromCommit, toCommitOrBranch, msg, callback) {
-            var squashData = {
-                projectId: projectId,
-                fromCommit: fromCommit,
-                toCommitOrBranch: toCommitOrBranch,
-                message: msg
-            };
-
-            webSocket.squashCommits(squashData, callback);
-        };
-
         this.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {
             var project = projects[projectId],
                 branch;

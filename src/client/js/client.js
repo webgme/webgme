@@ -1825,12 +1825,12 @@ define([
             });
         };
 
-        this.updateProjectFromFile = function (blobHash, callback) {
+        this.updateProjectFromFile = function (projectId, branchName, blobHash, callback) {
             var parameters = {
                 command: 'updateProjectFromFile',
                 blobHash: blobHash,
-                projectId: state.project.projectId,
-                branchName: state.branchName
+                projectId: projectId,
+                branchName: branchName
             };
 
             logger.debug('updating project from package', parameters);

@@ -66,6 +66,7 @@ define([
 
         dialog.show(parameters, function () {
             self._urlInputControl.off('keyup');
+            self._urlInputControl.off('keydown');
             self._assetWidget.destroy();
         });
     };
@@ -94,7 +95,7 @@ define([
             title: 'Refresh',
             infoTitle: 'Refresh library from originating project',
             infoDetails: 'Use project package as the source of the library',
-            formControl: $('<a class="refresh-link" href=""' + linkUrl + '" target="_blank">View branch of library.</a>'),
+            formControl: $('<a class="refresh-link" href=""' + linkUrl + '" target="_blank">View branch of library</a>'),
             onOK: onOK
         };
     };
@@ -164,7 +165,6 @@ define([
                 event.stopPropagation();
             }
         });
-
 
         function onOK(callback) {
             if (typeof urlProjectInfo.projectId !== 'string') {
