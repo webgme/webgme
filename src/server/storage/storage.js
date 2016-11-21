@@ -195,7 +195,10 @@ Storage.prototype.makeCommit = function (data, callback) {
                                         '\npatch:\n', JSON.stringify(data.coreObjects[hash], null, 2),
                                         '\nresult:\n', JSON.stringify(patchResult.result, null, 2)
                                     );
-                                    throw new Error('Inconsistent hash after patching!');
+
+                                    if (self.gmeConfig.storage.requireHashesToMatch) {
+                                        throw new Error('Inconsistent hash after patching!');
+                                    }
                                 }
 
                                 patchResult.result[CONSTANTS.MONGO_ID] = hash;
