@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('Simple worker', function () {
+describe.only('Simple worker', function () {
     'use strict';
 
     var WebGME,
@@ -55,6 +55,13 @@ describe('Simple worker', function () {
             rootHash: '',
             branch: 'master'
         },
+        modelProjectContext = {
+            name: 'ModelProject',
+            id: '',
+            commitHash: '',
+            rootHash: '',
+            branch: 'master'
+        },
         constraintProjectName = 'ConstraintProject',
         constraintProjectImportResult,
         oldSend = process.send,
@@ -87,6 +94,19 @@ describe('Simple worker', function () {
                 return storage.openDatabase();
             })
             .then(function () {
+                return testFixture.importProject(storage,
+                    {
+                        projectSeed: './test/server/worker/simpleworker/export_v110.webgmex',
+                        projectName: modelProjectContext.name,
+                        branchName: modelProjectContext.branch,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+            })
+            .then(function (result) {
+                modelProjectContext.commitHash = result.commitHash;
+                modelProjectContext.id = result.project.projectId;
+
                 return testFixture.importProject(storage,
                     {
                         projectSeed: 'seeds/EmptyProject.webgmex',
@@ -2009,6 +2029,186 @@ describe('Simple worker', function () {
             })
             .catch(function (err) {
                 expect(err.message).not.to.contains('test failed');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    //import/export selection from/to file
+    // ROOT
+    //   /1
+    //   /F
+    //     /5 - Base
+    //     /0 - Instance (of /F/5)
+    it('should exportSelectionToFile /F', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportSelectionToFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    commitHash: modelProjectContext.commitHash,
+                    paths: ['/F']
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(typeof msg.result).to.equal('object');
+                expect(msg.result.downloadUrl).to.include('/rest/blob/download/');
+                expect(typeof msg.result.fileName === 'string' && msg.result.fileName !== '').to.equal(true);
+                expect(typeof msg.result.hash === 'string' && !!msg.result.hash !== '').to.equal(true);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should exportSelectionToFile /F/5', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportSelectionToFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    commitHash: modelProjectContext.commitHash,
+                    paths: ['/F/5']
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(typeof msg.result).to.equal('object');
+                expect(msg.result.downloadUrl).to.include('/rest/blob/download/');
+                expect(typeof msg.result.fileName === 'string' && msg.result.fileName !== '').to.equal(true);
+                expect(typeof msg.result.hash === 'string' && msg.result.hash !== '').to.equal(true);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to exportSelectionToFile with no paths given', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportSelectionToFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    commitHash: modelProjectContext.commitHash,
+                    paths: []
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.include('No paths given');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to exportSelectionToFile /doesNotExist', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportSelectionToFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    commitHash: modelProjectContext.commitHash,
+                    paths: ['/doesNotExist']
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.include('Given path does not exist');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to exportSelectionToFile /F/0 since base not in selection', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportSelectionToFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    commitHash: modelProjectContext.commitHash,
+                    paths: ['/F/0']
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.include('Closure cannot be created');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should exportSelectionToFile [/F/0, /F/5] since base is in selection', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.exportSelectionToFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    commitHash: modelProjectContext.commitHash,
+                    paths: ['/F/5', '/F/0']
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(typeof msg.result).to.equal('object');
+                expect(msg.result.downloadUrl).to.include('/rest/blob/download/');
+                expect(typeof msg.result.fileName === 'string' && msg.result.fileName !== '').to.equal(true);
+                expect(typeof msg.result.hash === 'string' && msg.result.hash !== '').to.equal(true);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);

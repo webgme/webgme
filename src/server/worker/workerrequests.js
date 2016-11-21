@@ -692,11 +692,19 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     return Q.all(promises);
                 }
 
-                throw new Error('no path were given to export!');
+                throw new Error('No paths given to export! parameters: ' +
+                    JSON.stringify(parameters));
             })
             .then(function (baseNodes) {
                 var promises = [],
                     i;
+
+                for (i = 0; i < baseNodes.length; i += 1) {
+                    if (baseNodes[i] === null) {
+                        throw new Error('Given path does not exist [' + parameters.paths[i] + '].');
+                    }
+                }
+
                 closureInformation = context.core.getClosureInformation(baseNodes);
                 if (closureInformation instanceof Error) {
                     throw closureInformation;
