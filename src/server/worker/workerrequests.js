@@ -654,9 +654,13 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param webgmeToken
-     * @param parameters
-     * @param callback
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.commitHash
+     * @param {string[]} parameters.paths
+     * @param {boolean} [parameters.withAssets=false]
+     * @param {function} callback
      */
     function exportSelectionToFile(webgmeToken, parameters, callback) {
         var context,
@@ -692,11 +696,19 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     return Q.all(promises);
                 }
 
-                throw new Error('no path were given to export!');
+                throw new Error('No paths given to export! parameters: ' +
+                    JSON.stringify(parameters));
             })
             .then(function (baseNodes) {
                 var promises = [],
                     i;
+
+                for (i = 0; i < baseNodes.length; i += 1) {
+                    if (baseNodes[i] === null) {
+                        throw new Error('Given path does not exist [' + parameters.paths[i] + '].');
+                    }
+                }
+
                 closureInformation = context.core.getClosureInformation(baseNodes);
                 if (closureInformation instanceof Error) {
                     throw closureInformation;
@@ -813,9 +825,13 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param webgmeToken
-     * @param parameters
-     * @param callback
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.blobHash
+     * @param {string} parameters.parentPath - path to node where the selection should be imported.
+     * @param {function} callback
      */
     function importSelectionFromFile(webgmeToken, parameters, callback) {
         var jsonProject,
@@ -839,6 +855,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
+                if (parameters.hasOwnProperty('parentPath') === false) {
+                    throw new Error('No parentPath given');
+                }
                 return _getCoreAndRootNode(storage, parameters.projectId, null, parameters.branchName);
             })
             .then(function (context_) {
@@ -867,7 +886,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     closureInfo;
 
                 if (parent === null) {
-                    throw new Error('Unable to locate parent node of selection [' + parameters.parent + ']');
+                    throw new Error('Given parentPath does not exist [' + parameters.parentPath + ']');
                 }
 
                 closureInfo = context.core.importClosure(parent, jsonProject.selectionInfo);
@@ -932,10 +951,18 @@ function WorkerRequests(mainLogger, gmeConfig) {
     }
 
     /**
-     *
-     * @param webgmeToken
-     * @param parameters
-     * @param callback
+     * parameters.blobHash or parameters.libraryInfo must be given.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.libraryName
+     * @param {string} [parameters.blobHash] - Add from an uploaded file.
+     * @param {object} [parameters.libraryInfo] - Add from an existing project.
+     * @param {string} [parameters.libraryInfo.projectId] - if libraryInfo, projectId must be given.
+     * @param {string} [parameters.libraryInfo.branchName] - if libraryInfo and not commitHash, it must be given.
+     * @param {string} [parameters.libraryInfo.commitHash] - if libraryInfo and not branchName, it must be given.
+     * @param {function} callback
      */
     function addLibrary(webgmeToken, parameters, callback) {
         var jsonProject,
@@ -975,7 +1002,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         .catch(deferred.reject);
                 } else if (parameters.libraryInfo) {
                     if (parameters.libraryInfo.projectId === parameters.projectId) {
-                        deferred.reject(new Error('It is unsafe to add self as a library!'));
+                        deferred.reject(new Error('Not allowed to add self as a library [' + parameters.projectId + ']'));
                     } else {
                         storage.openProject(parameters.libraryInfo.projectId,
                             function (err, project/*,branches,access*/) {
@@ -1057,10 +1084,19 @@ function WorkerRequests(mainLogger, gmeConfig) {
     }
 
     /**
-     *
-     * @param webgmeToken
-     * @param parameters
-     * @param callback
+     * If blobHash nor libraryInfo is given, will attempt to "refresh" library based on the
+     * libraryInfo stored at the library node.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.libraryName
+     * @param {string} [parameters.blobHash] - Update from an uploaded file.
+     * @param {object} [parameters.libraryInfo] - Update from an existing project.
+     * @param {string} [parameters.libraryInfo.projectId] - if libraryInfo, projectId must be given.
+     * @param {string} [parameters.libraryInfo.branchName] - if libraryInfo and not commitHash, it must be given.
+     * @param {string} [parameters.libraryInfo.commitHash] - if libraryInfo and not branchName, it must be given.
+     * @param {function} callback
      */
     function updateLibrary(webgmeToken, parameters, callback) {
         var projectId = parameters.projectId,
