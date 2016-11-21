@@ -951,10 +951,18 @@ function WorkerRequests(mainLogger, gmeConfig) {
     }
 
     /**
-     *
-     * @param webgmeToken
-     * @param parameters
-     * @param callback
+     * parameters.blobHash or parameters.libraryInfo must be given.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.libraryName
+     * @param {string} [parameters.blobHash] - Add from an uploaded file.
+     * @param {object} [parameters.libraryInfo] - Add from an existing project.
+     * @param {string} [parameters.libraryInfo.projectId] - if libraryInfo, projectId must be given.
+     * @param {string} [parameters.libraryInfo.branchName] - if libraryInfo and not commitHash, it must be given.
+     * @param {string} [parameters.libraryInfo.commitHash] - if libraryInfo and not branchName, it must be given.
+     * @param {function} callback
      */
     function addLibrary(webgmeToken, parameters, callback) {
         var jsonProject,
@@ -994,7 +1002,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         .catch(deferred.reject);
                 } else if (parameters.libraryInfo) {
                     if (parameters.libraryInfo.projectId === parameters.projectId) {
-                        deferred.reject(new Error('It is unsafe to add self as a library!'));
+                        deferred.reject(new Error('Not allowed to add self as a library [' + parameters.projectId + ']'));
                     } else {
                         storage.openProject(parameters.libraryInfo.projectId,
                             function (err, project/*,branches,access*/) {
@@ -1076,14 +1084,15 @@ function WorkerRequests(mainLogger, gmeConfig) {
     }
 
     /**
-     *
+     * If blobHash nor libraryInfo is given, will attempt to "refresh" library based on the
+     * libraryInfo stored at the library node.
      * @param {string} webgmeToken
      * @param {object} parameters
      * @param {string} parameters.projectId
      * @param {string} parameters.branchName
      * @param {string} parameters.libraryName
      * @param {string} [parameters.blobHash] - Update from an uploaded file.
-     * @param {object} [parameters.libraryInfo] - Update from an existing package.
+     * @param {object} [parameters.libraryInfo] - Update from an existing project.
      * @param {string} [parameters.libraryInfo.projectId] - if libraryInfo, projectId must be given.
      * @param {string} [parameters.libraryInfo.branchName] - if libraryInfo and not commitHash, it must be given.
      * @param {string} [parameters.libraryInfo.commitHash] - if libraryInfo and not branchName, it must be given.
