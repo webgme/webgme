@@ -3,11 +3,12 @@
 
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 var testFixture = require('../../_globals.js');
 
-describe.only('Simple worker', function () {
+describe('Simple worker', function () {
     'use strict';
 
     var WebGME,
@@ -107,6 +108,15 @@ describe.only('Simple worker', function () {
                 modelProjectContext.commitHash = result.commitHash;
                 modelProjectContext.id = result.project.projectId;
 
+                return Q.all([
+                    result.project.createBranch('b1', result.commitHash),
+                    result.project.createBranch('b2', result.commitHash),
+                    result.project.createBranch('b3', result.commitHash),
+                    result.project.createBranch('b4', result.commitHash),
+                    result.project.createBranch('b5', result.commitHash)
+                ]);
+            })
+            .then(function () {
                 return testFixture.importProject(storage,
                     {
                         projectSeed: 'seeds/EmptyProject.webgmex',
@@ -1767,6 +1777,40 @@ describe.only('Simple worker', function () {
             .nodeify(done);
     });
 
+    it('should fail to importProjectFromFile if file is an export webgmexm (model).', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
+            projectName = 'badPackageImport',
+            projectId = testFixture.projectName2Id(projectName);
+
+        blobClient.putFile('model.webgmexm', fs.readFileSync('./test/server/worker/simpleworker/export_v110.webgmexm'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.importProjectFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    branchName: 'master',
+                    blobHash: blobHash
+                });
+            })
+            .then(function (msg) {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('given package is not a full project');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
     //addLibrary
     it('should add Library from a file.', function (done) {
         var worker = getSimpleWorker(),
@@ -2209,6 +2253,176 @@ describe.only('Simple worker', function () {
                 expect(msg.result.downloadUrl).to.include('/rest/blob/download/');
                 expect(typeof msg.result.fileName === 'string' && msg.result.fileName !== '').to.equal(true);
                 expect(typeof msg.result.hash === 'string' && msg.result.hash !== '').to.equal(true);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    //importSelectionFromFile
+    it('should importSelectionFromFile under the root-node', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient'));
+
+        blobClient.putFile('export.webgmexm', fs.readFileSync('./test/server/worker/simpleworker/export_v110.webgmexm'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.importSelectionFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    branchName: 'b1',
+                    blobHash: blobHash,
+                    parentPath: ''
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(typeof msg.result).to.equal('object');
+                expect(msg.result.hash).to.include('#');
+                expect(msg.result.hash).to.not.equal(modelProjectContext.commitHash);
+                expect(msg.result.status).to.equal('SYNCED');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to importSelectionFromFile if parentPath /doesNotExist', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient'));
+
+        blobClient.putFile('export.webgmexm', fs.readFileSync('./test/server/worker/simpleworker/export_v110.webgmexm'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.importSelectionFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    branchName: 'b2',
+                    blobHash: blobHash,
+                    parentPath: '/doesNotExist'
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.include('Given parentPath does not exist');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to importSelectionFromFile if parentPath not given', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient'));
+
+        blobClient.putFile('export.webgmexm', fs.readFileSync('./test/server/worker/simpleworker/export_v110.webgmexm'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.importSelectionFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    branchName: 'b3',
+                    blobHash: blobHash
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.include('No parentPath');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to importSelectionFromFile with project given', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient'));
+
+        blobClient.putFile('export.webgmex', fs.readFileSync('./test/server/worker/simpleworker/export_v110.webgmex'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.importSelectionFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    branchName: 'b4',
+                    blobHash: blobHash,
+                    parentPath: ''
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.include('given package contains a full project');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to importSelectionFromFile with faulty hash', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash = 'faulty';
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.importSelectionFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectId: modelProjectContext.id,
+                    branchName: 'b5',
+                    blobHash: blobHash,
+                    parentPath: ''
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                // TODO: Consider a better error message here.
+                expect(err.message).to.include('404');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);

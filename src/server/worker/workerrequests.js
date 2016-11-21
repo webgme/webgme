@@ -654,9 +654,13 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param webgmeToken
-     * @param parameters
-     * @param callback
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.commitHash
+     * @param {string[]} parameters.paths
+     * @param {boolean} [parameters.withAssets=false]
+     * @param {function} callback
      */
     function exportSelectionToFile(webgmeToken, parameters, callback) {
         var context,
@@ -821,9 +825,13 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param webgmeToken
-     * @param parameters
-     * @param callback
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.blobHash
+     * @param {string} parameters.parentPath - path to node where the selection should be imported.
+     * @param {function} callback
      */
     function importSelectionFromFile(webgmeToken, parameters, callback) {
         var jsonProject,
@@ -847,6 +855,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
+                if (parameters.hasOwnProperty('parentPath') === false) {
+                    throw new Error('No parentPath given');
+                }
                 return _getCoreAndRootNode(storage, parameters.projectId, null, parameters.branchName);
             })
             .then(function (context_) {
@@ -875,7 +886,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     closureInfo;
 
                 if (parent === null) {
-                    throw new Error('Unable to locate parent node of selection [' + parameters.parent + ']');
+                    throw new Error('Given parentPath does not exist [' + parameters.parentPath + ']');
                 }
 
                 closureInfo = context.core.importClosure(parent, jsonProject.selectionInfo);
