@@ -35,6 +35,8 @@ BlobFSBackend.prototype.putObject = function (readStream, bucket, callback) {
     // TODO: create this in the system temp folder
         tempName = path.join(self.blobDir, self.tempBucket, GUID() + '.tbf'),
         shasum = crypto.createHash(this.shaMethod),
+        readStreamWasClosed = false,
+        writeStreamWasClosed = false,
         size = 0;
 
     ensureDir(path.dirname(tempName), function (err) {
@@ -46,6 +48,12 @@ BlobFSBackend.prototype.putObject = function (readStream, bucket, callback) {
         var writeStream = fs.createWriteStream(tempName);
 
         writeStream.on('close', function () {
+            writeStreamWasClosed = true;
+            self.logger.debug('writeStream on close, was read closed?', readStreamWasClosed);
+            if (readStreamWasClosed) {
+                callback(new Error('ReadStream was closed while writing file!'));
+                return;
+            }
             // at this point the temporary file have been written out
             // now the file have been written out
             // finalizing hash and moving temporary file..
@@ -95,6 +103,14 @@ BlobFSBackend.prototype.putObject = function (readStream, bucket, callback) {
         readStream.on('data', function (chunk) {
             shasum.update(chunk);
             size += chunk.length; //TODO does it really have a length field always???
+        });
+
+        readStream.on('close', function () {
+            self.logger.error('readStream on close');
+            if (writeStreamWasClosed === false) {
+                readStreamWasClosed = true;
+                writeStream.close();
+            }
         });
     });
 };
