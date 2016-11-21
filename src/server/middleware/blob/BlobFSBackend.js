@@ -112,6 +112,12 @@ BlobFSBackend.prototype.putObject = function (readStream, bucket, callback) {
                 writeStream.close();
             }
         });
+
+        readStream.on('error', function (err) {
+            // TODO: Do we need to handle this or will close take care of it?
+            self.logger.error('readStream on error, rsClosed?', readStreamWasClosed, 'wsClosed?', writeStreamWasClosed,
+                'tempName', tempName, 'err', err);
+        });
     });
 };
 
