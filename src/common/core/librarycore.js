@@ -422,26 +422,13 @@ define([
 
             function addRelation(parent, from, to, name) {
                 var commonAncestor = getAncestor(parent, from, to),
-                    overlay,
-                    collectionName = name + CONSTANTS.COLLECTION_NAME_SUFFIX,
-                    relFrom, relTo,
-                    newEntry;
+                    relFrom, relTo;
 
                 if (commonAncestor) {
-                    overlay = self.getChild(commonAncestor, CONSTANTS.OVERLAYS_PROPERTY);
                     relFrom = from.substr(self.getPath(commonAncestor).length);
                     relTo = to.substr(self.getPath(commonAncestor).length);
 
-                    // First we set the forward direction
-                    newEntry = JSON.parse(JSON.stringify(self.getProperty(overlay, relFrom) || {}));
-                    newEntry[name] = relTo;
-                    self.setProperty(overlay, relFrom, newEntry);
-
-                    // Then the backward direction
-                    newEntry = JSON.parse(JSON.stringify(self.getProperty(overlay, relTo) || {}));
-                    newEntry[collectionName] = newEntry[collectionName] || [];
-                    newEntry[collectionName].push(relFrom);
-                    self.setProperty(overlay, relTo, newEntry);
+                    self.overlayInsert(commonAncestor, relFrom, name, relTo);
                 } else {
                     logger.error('unable to add relation: ' + name + '(' + from + '->' + to + ')');
                 }
