@@ -8,7 +8,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('Simple worker', function () {
+describe.only('Simple worker', function () {
     'use strict';
 
     var WebGME,
@@ -1931,6 +1931,70 @@ describe('Simple worker', function () {
                     libraryName: 'SFS2',
                     branchName: libraryProjectContext.branch,
                     blobHash: blobHash
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).to.include.keys('hash', 'status');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should update Library from an other project.', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
+            projectId = testFixture.projectName2Id(libraryProjectContext.name);
+
+        blobClient.putFile('sfs.webgmex', fs.readFileSync('./test/server/worker/simpleworker/sfs.webgmex'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.addLibrary,
+                    webGMESessionId: webGMESessionId,
+                    projectId: projectId,
+                    libraryName: 'SFS3',
+                    branchName: libraryProjectContext.branch,
+                    blobHash: blobHash
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).to.include.keys('hash', 'status');
+
+                return restoreProcessFunctions();
+            })
+            .then(function () {
+                worker = getSimpleWorker();
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.updateLibrary,
+                    webGMESessionId: webGMESessionId,
+                    projectId: projectId,
+                    libraryName: 'SFS3',
+                    branchName: libraryProjectContext.branch,
+                    libraryInfo: {
+                        projectId: modelProjectContext.id,
+                        commitHash: modelProjectContext.commitHash
+                    }
                 });
             })
             .then(function (msg) {

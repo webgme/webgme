@@ -1077,9 +1077,17 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     /**
      *
-     * @param webgmeToken
-     * @param parameters
-     * @param callback
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.libraryName
+     * @param {string} [parameters.blobHash] - Update from an uploaded file.
+     * @param {object} [parameters.libraryInfo] - Update from an existing package.
+     * @param {string} [parameters.libraryInfo.projectId] - if libraryInfo, projectId must be given.
+     * @param {string} [parameters.libraryInfo.branchName] - if libraryInfo and not commitHash, it must be given.
+     * @param {string} [parameters.libraryInfo.commitHash] - if libraryInfo and not branchName, it must be given.
+     * @param {function} callback
      */
     function updateLibrary(webgmeToken, parameters, callback) {
         var projectId = parameters.projectId,
