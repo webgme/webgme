@@ -12,7 +12,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       text-align: left; }
-    .svgselect-widget div.btn-groupopen {
+    .svgselect-widget div.btn-group.open {
       position: absolute;
       width: inherit; }
     .svgselect-widget div.btn-group ul.svgselect-container.dropdown-menu {
