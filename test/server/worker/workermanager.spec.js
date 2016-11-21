@@ -178,6 +178,7 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
     });
 
     describe('simple request-result handling', function () {
+        var swm;
 
         function exportLibrary(next) {
             swm.request({
@@ -194,8 +195,6 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
                 next();
             });
         }
-
-        var swm;
 
         before(function (done) {
             swm = new ServerWorkerManager(workerManagerParameters);

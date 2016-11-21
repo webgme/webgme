@@ -1084,11 +1084,14 @@ define([
                 ASSERT(typeof oldName === 'string' && typeof newName === 'string' &&
                     oldName.indexOf(CONSTANTS.NAMESPACE_SEPARATOR) === -1 &&
                     newName.indexOf(CONSTANTS.NAMESPACE_SEPARATOR) === -1 &&
-                    root.libraryRoots[oldName] && !root.libraryRoots[newName]);
+                    root.libraryRoots[oldName]);
 
-                innerCore.setAttribute(root.libraryRoots[oldName], 'name', newName);
-                root.libraryRoots[newName] = root.libraryRoots[oldName];
-                delete root.libraryRoots[oldName];
+                if (oldName !== newName) {
+                    ASSERT(!root.libraryRoots[newName], 'Library already exists [' + newName + ']');
+                    innerCore.setAttribute(root.libraryRoots[oldName], 'name', newName);
+                    root.libraryRoots[newName] = root.libraryRoots[oldName];
+                    delete root.libraryRoots[oldName];
+                }
             };
 
             this.getLibraryNames = function (node) {

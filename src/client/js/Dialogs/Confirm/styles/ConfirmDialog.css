@@ -1,0 +1,25 @@
+/*
+ * @author pmeijer / https://github.com/pmeijer
+ */
+div.confirm-dialog .modal-content.info .modal-header .header-icon {
+  color: #2e6da4; }
+div.confirm-dialog .modal-content.warning .modal-header .header-icon {
+  color: #f0ad4e; }
+div.confirm-dialog .modal-content .question-text {
+  font-size: 14px; }
+div.confirm-dialog .modal-content .delete-item {
+  text-align: center;
+  font-size: 20px;
+  margin-top: 14px;
+  font-weight: bold; }
+div.confirm-dialog .modal-content .modal-header .header-icon {
+  font-size: 20px;
+  margin-right: 1ex;
+  display: inline-block;
+  color: #d9534f; }
+div.confirm-dialog .modal-content .modal-header span {
+  font-size: 24px; }
+div.confirm-dialog .modal-footer form .do-not-show {
+  display: none; }
+div.confirm-dialog .modal-footer form label {
+  font-weight: lighter; }

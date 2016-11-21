@@ -12,13 +12,13 @@ define([
     'js/Loader/LoaderCircles',
     'js/Utils/GMEConcepts',
     'js/Dialogs/CreateProject/CreateProjectDialog',
-    'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
+    'js/Dialogs/Confirm/ConfirmDialog',
     'common/storage/util',
     'js/util',
     'common/regexp',
     'text!./templates/ProjectsDialog.html',
     'css!./styles/ProjectsDialog.css'
-], function (Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, ConfirmDeleteDialog,
+], function (Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, ConfirmDialog,
              StorageUtil, clientUtil, REGEXP, projectsDialogTemplate) {
 
     'use strict';
@@ -164,15 +164,14 @@ define([
                     doDelete();
                     return;
                 }
-                deleteProjectModal = new ConfirmDeleteDialog();
-
-                deleteProjectModal.onHide = function () {
-                    self._modalContent.removeClass('in-background');
-                };
+                deleteProjectModal = new ConfirmDialog();
 
                 deleteProjectModal.show({
                         deleteItem: projectDisplayedName,
-                        enableDontAskAgain: true
+                        enableDontAskAgain: true,
+                        onHideFn: function () {
+                            self._modalContent.removeClass('in-background');
+                        }
                     },
                     function (dontAskAgain) {
                         if (dontAskAgain) {

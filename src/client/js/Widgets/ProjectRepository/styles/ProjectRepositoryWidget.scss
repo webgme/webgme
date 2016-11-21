@@ -90,7 +90,9 @@ $table-row-height: 25px;
 
     tr {
       height: $table-row-height;
-
+      &.in-selection {
+        background-color: lightskyblue;
+      }
       th,
       td {
         padding: 0 5px;

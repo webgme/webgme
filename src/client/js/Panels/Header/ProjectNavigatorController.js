@@ -1,4 +1,4 @@
-/*globals define, angular, WebGMEGlobal, $*/
+/*globals define, angular, WebGMEGlobal*/
 /*jshint browser: true*/
 /**
  * @author nabana / https://github.com/nabana
@@ -15,8 +15,8 @@ define([
     'js/Dialogs/Merge/MergeDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
     'js/Dialogs/Branches/BranchesDialog',
-    'js/Dialogs/ConfirmDelete/ConfirmDeleteDialog',
-    'js/Dialogs/ApplyCommitQueue/ApplyCommitQueueDialog',
+    'js/Dialogs/Confirm/ConfirmDialog',
+    'js/Dialogs/AddCommits/AddCommitsDialog',
     'common/storage/util',
     'js/Utils/SaveToDisk',
     'js/Utils/Exporters',
@@ -31,8 +31,8 @@ define([
              MergeDialog,
              ProjectRepositoryDialog,
              BranchesDialog,
-             ConfirmDeleteDialog,
-             ApplyCommitQueueDialog,
+             ConfirmDialog,
+             AddCommitsDialog,
              StorageUtil,
              saveToDisk,
              exporters,
@@ -447,7 +447,7 @@ define([
         };
 
         deleteProject = function (data) {
-            var deleteProjectModal = new ConfirmDeleteDialog();
+            var deleteProjectModal = new ConfirmDialog();
             deleteProjectModal.show({deleteItem: projectDisplayedName}, function () {
                 self.gmeClient.deleteProject(data.projectId, function (err) {
                     if (err) {
@@ -595,7 +595,7 @@ define([
             i,
             deleteBranchItem,
             mergeBranchItem,
-            applyCommitQueueItem,
+            addCommits,
             undoLastCommitItem,
             redoLastUndoItem;
 
@@ -624,7 +624,7 @@ define([
         }
 
         function deleteBranch(data) {
-            var deleteBranchModal = new ConfirmDeleteDialog(),
+            var deleteBranchModal = new ConfirmDialog(),
                 deleteItem = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId) +
                     '  ::  ' + data.branchId;
             deleteBranchModal.show({deleteItem: deleteItem}, function () {
@@ -712,28 +712,20 @@ define([
             }
         };
 
-        applyCommitQueueItem = {
-            id: 'applyCommitQueue',
-            label: 'Apply commit queue ...',
+        addCommits = {
+            id: 'addCommits',
+            label: 'Add external commits ...',
             iconClass: 'glyphicon glyphicon-fast-forward',
             disabled: true,
             action: function (data) {
                 self.gmeClient.getBranches(data.projectId, function (err, branches) {
                     if (err) {
-                        self.logger.error(new Error('Failed getting branches before applying commitQueue'));
+                        self.logger.error(new Error('Failed getting branches before adding commits'));
                         return;
                     }
 
-                    var dialog = new ApplyCommitQueueDialog(self.gmeClient, WebGMEGlobal.gmeConfig, branches);
-                    dialog.show(data, function (commitQueue, opts) {
-                        self.gmeClient.applyCommitQueue(commitQueue, opts, function (err, result) {
-                            if (err) {
-                                self.logger.error(err);
-                            }
-
-                            self.logger.debug('applyCommitQueue results', result);
-                        });
-                    });
+                    var dialog = new AddCommitsDialog(self.gmeClient, WebGMEGlobal.gmeConfig, branches);
+                    dialog.show(data);
                 });
             },
             actionData: {
@@ -821,7 +813,7 @@ define([
                         },
                         deleteBranchItem,
                         mergeBranchItem,
-                        applyCommitQueueItem,
+                        addCommits,
                         {
                             id: 'exportBranch',
                             label: 'Export branch',
@@ -843,7 +835,7 @@ define([
         self.projects[projectId].branches[branchId].mergeBranchItem = mergeBranchItem;
         self.projects[projectId].branches[branchId].undoLastCommitItem = undoLastCommitItem;
         self.projects[projectId].branches[branchId].redoLastUndoItem = redoLastUndoItem;
-        self.projects[projectId].branches[branchId].applyCommitQueueItem = applyCommitQueueItem;
+        self.projects[projectId].branches[branchId].applyCommitQueueItem = addCommits;
 
         for (i = 0; i < self.projects[projectId].menu.length; i += 1) {
 

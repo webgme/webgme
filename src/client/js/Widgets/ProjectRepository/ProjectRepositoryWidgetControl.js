@@ -6,7 +6,7 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['js/logger'], function (Logger) {
+define(['js/logger', 'js/Dialogs/Confirm/ConfirmDialog'], function (Logger, ConfirmDialog) {
     'use strict';
 
     var RepositoryLogControl;
@@ -85,22 +85,43 @@ define(['js/logger'], function (Logger) {
                 });
         };
 
-        self._view.onSquashFromCommit = function (params) {
-            var projectName = self._client.getActiveProjectId();
-            self._client.squashCommits(self._client.getActiveProjectId(),
-                params.commitId, params.branchName, null, function (err, result) {
-                    if (err) {
-                        self._logger.error(err);
+        self._view.onSquashFromCommit = function (params, cancelCallback) {
+            var dialog = new ConfirmDialog(),
+                confirmed = false;
+            dialog.show({
+                title: 'Squash Commits',
+                iconClass: 'glyphicon glyphicon-compressed',
+                question: 'Would you like to squash all commits above ' + params.commitId.substr(0, 7) +
+                ' (not included) into a single commit?',
+                input: {
+                    label: 'Message',
+                    placeHolder: 'Enter optional commit message...',
+                    required: false
+                },
+                severity: 'warning',
+                onHideFn: function () {
+                    if (!confirmed) {
+                        // The dialog was cancelled so we need to clear the selection
+                        cancelCallback();
                     }
-                    if (result.status === 'SYNCED') {
-                        self._view._dialog.setSelectorValue(params.branchName);
-                    } else {
-                        self._client.notifyUser({
-                            severity: 'info',
-                            message: 'squashing branch \'' + params.branchName + '\' forked [' + result.hash + ']'
-                        });
-                        self._view._dialog.setSelectorValue();
-                    }
+                }
+            }, function (doNotShow, msg) {
+                confirmed = true;
+                self._client.squashCommits(self._client.getActiveProjectId(),
+                    params.commitId, params.branchName, msg || null, function (err, result) {
+                        if (err) {
+                            self._logger.error(err);
+                        } else if (result.status === 'SYNCED') {
+                            self._view._dialog.setSelectorValue(params.branchName);
+                        } else {
+                            self._client.notifyUser({
+                                severity: 'info',
+                                message: 'Squashing branch \'' + params.branchName + '\' forked [' +
+                                result.hash + ']'
+                            });
+                            self._view._dialog.setSelectorValue();
+                        }
+                    });
                 });
         };
 

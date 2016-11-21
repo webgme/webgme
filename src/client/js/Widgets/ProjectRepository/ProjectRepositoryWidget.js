@@ -968,13 +968,20 @@ define(['js/logger',
                 '<i class="glyphicon glyphicon-ok"></i></button>'),
             btnCancel = $('<button class="btn btn-default btn-xs" type="button" title="Cancel">' +
                 '<i class="glyphicon glyphicon-remove"></i></button>'),
-            self = this;
+            self = this,
+            idx,
+            commitId;
 
         //if squash, then show confirm dialog and be done with it
         if (isSquash) {
+            commitId = btn.data(COMMIT_ID);
+            idx = this._orderedCommitIds.indexOf(commitId);
+            this._tBody.find('tr:lt(' + idx + ')').addClass('in-selection');
             self.onSquashFromCommit({
                 branchName: this._start,
-                commitId: btn.data(COMMIT_ID)
+                commitId: commitId
+            }, function () {
+                self._tBody.find('tr').removeClass('in-selection');
             });
             return;
         }

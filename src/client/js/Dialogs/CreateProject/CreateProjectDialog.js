@@ -10,13 +10,12 @@ define(['js/Loader/LoaderCircles',
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
     'blob/BlobClient',
     'text!./templates/CreateProjectDialog.html',
-
     'css!./styles/CreateProjectDialog.css'
-], function (LoaderCircles, StorageUtil, CORE_CONSTANTS, AssetWidget, BlobClient, createProjectDialog) {
+], function (LoaderCircles, StorageUtil, CORE_CONSTANTS, AssetWidget, BlobClient, dialogTemplate) {
 
     'use strict';
 
-    var CreateFromSeed;
+    var CreateProjectDialog;
 
     /**
      *
@@ -26,7 +25,7 @@ define(['js/Loader/LoaderCircles',
      * @param logger
      * @constructor
      */
-    CreateFromSeed = function (client, newProjectId, initialTab, logger) {
+    CreateProjectDialog = function (client, newProjectId, initialTab, logger) {
         this._client = client;
         this._logger = logger.fork('CreateProjectDialog');
         this.blobClient = new BlobClient({logger: this._logger.fork('BlobClient')});
@@ -48,7 +47,7 @@ define(['js/Loader/LoaderCircles',
         this._logger.debug('Create form seed ctor');
     };
 
-    CreateFromSeed.prototype.show = function (fnCallback) {
+    CreateProjectDialog.prototype.show = function (fnCallback) {
         var self = this;
 
         this._fnCallback = fnCallback;
@@ -69,7 +68,7 @@ define(['js/Loader/LoaderCircles',
         this._dialog.modal('show');
     };
 
-    CreateFromSeed.prototype._initDialog = function () {
+    CreateProjectDialog.prototype._initDialog = function () {
         var self = this;
 
         function toggleActive(tabEl) {
@@ -94,7 +93,7 @@ define(['js/Loader/LoaderCircles',
             }
         }
 
-        this._dialog = $(createProjectDialog);
+        this._dialog = $(dialogTemplate);
         this._dialog.find('.selection-blob').append(this.assetWidget.el);
 
         // Forms
@@ -319,7 +318,7 @@ define(['js/Loader/LoaderCircles',
 
     };
 
-    CreateFromSeed.prototype._displayMessage = function (msg, isError) {
+    CreateProjectDialog.prototype._displayMessage = function (msg, isError) {
         this._importErrorLabel.removeClass('alert-success').removeClass('alert-danger');
 
         if (isError === true) {
@@ -333,5 +332,5 @@ define(['js/Loader/LoaderCircles',
         this._importErrorLabel.fadeIn();
     };
 
-    return CreateFromSeed;
+    return CreateProjectDialog;
 });

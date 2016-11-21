@@ -1322,7 +1322,7 @@ define(['js/logger',
 
                     exporters.exportModels(self._client, self.logger, paths);
                 } else if (key === MENU_IMPORT_MODELS) {
-                    var importDialog = new ImportModelDialog(self._client, self._logger.fork('ImportModel'));
+                    var importDialog = new ImportModelDialog(self._client, self.logger.fork('ImportModel'));
                     importDialog.show(self._ComponentID2GMEID[selectedIds[0]]);
                 }
             },

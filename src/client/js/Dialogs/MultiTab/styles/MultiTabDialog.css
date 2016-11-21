@@ -1,0 +1,42 @@
+/*
+ * @author pmeijer / https://github.com/pmeijer
+ */
+div.multi-tab-dialog .modal-content .modal-header .header-icon {
+  font-size: 20px;
+  margin-right: 1ex;
+  display: inline-block;
+  color: #2e6da4; }
+div.multi-tab-dialog .modal-content .modal-header span {
+  font-size: 24px; }
+div.multi-tab-dialog .modal-content .pre-body {
+  padding: 15px 15px 0 15px; }
+  div.multi-tab-dialog .modal-content .pre-body .tabContainer ul.nav.nav-tabs {
+    margin-bottom: 0; }
+    div.multi-tab-dialog .modal-content .pre-body .tabContainer ul.nav.nav-tabs li {
+      min-width: 86px;
+      text-align: center; }
+div.multi-tab-dialog .modal-content div.modal-body .asset-widget {
+  width: 100%;
+  height: 100%;
+  padding-top: 0.3ex; }
+  div.multi-tab-dialog .modal-content div.modal-body .asset-widget a.btn-dialog-open {
+    font-size: 120%;
+    padding-top: 0.6ex; }
+div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal i.toggle-info-btn {
+  font-size: 65%;
+  vertical-align: top;
+  cursor: pointer;
+  color: #333; }
+  div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal i.toggle-info-btn:hover {
+    color: #2a6496; }
+div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal span.info-details {
+  display: inline-block;
+  width: 95%;
+  margin-bottom: 2ex;
+  margin-left: 0.5ex;
+  opacity: 0.90; }
+  div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal span.info-details.hidden {
+    display: none; }
+div.multi-tab-dialog .modal-content div.modal-body .error-badge {
+  margin-top: 15px;
+  margin-bottom: 0; }

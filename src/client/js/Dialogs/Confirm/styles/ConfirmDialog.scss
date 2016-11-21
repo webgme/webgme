@@ -1,0 +1,53 @@
+/*
+ * @author pmeijer / https://github.com/pmeijer
+ */
+
+div.confirm-dialog {
+  .modal-content {
+    &.info {
+      .modal-header {
+        .header-icon {
+          color: #2e6da4;
+        }
+      }
+    }
+    &.warning {
+      .modal-header {
+        .header-icon {
+          color: #f0ad4e;
+        }
+      }
+    }
+    .question-text {
+      font-size: 14px;
+    }
+    .delete-item {
+      text-align: center;
+      font-size: 20px;
+      margin-top: 14px;
+      font-weight: bold;
+    }
+    .modal-header {
+      .header-icon {
+        font-size: 20px;
+        margin-right: 1ex;
+        display: inline-block;
+        color: #d9534f;
+      }
+      span {
+        font-size: 24px;
+      }
+    }
+  }
+
+  .modal-footer {
+    form {
+      .do-not-show {
+        display: none;
+      }
+      label {
+        font-weight: lighter;
+      }
+    }
+  }
+}

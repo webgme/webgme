@@ -1825,12 +1825,12 @@ define([
             });
         };
 
-        this.updateProjectFromFile = function (blobHash, callback) {
+        this.updateProjectFromFile = function (projectId, branchName, blobHash, callback) {
             var parameters = {
                 command: 'updateProjectFromFile',
                 blobHash: blobHash,
-                projectId: state.project.projectId,
-                branchName: state.branchName
+                projectId: projectId,
+                branchName: branchName
             };
 
             logger.debug('updating project from package', parameters);
@@ -1876,8 +1876,8 @@ define([
         /**
          *
          * @param {string[]} nodePaths - Paths to nodes of which to check.
-         * @param includeChildren
-         * @param callback
+         * @param {boolean} includeChildren - If true will recursively check the children of the nodes to check.
+         * @param {function(Error, Object)} callback
          */
         this.checkCustomConstraints = function (nodePaths, includeChildren, callback) {
             var parameters = {

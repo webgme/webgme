@@ -1,13 +1,19 @@
-<div class="confirm-delete-dialog modal fade" tabindex="-1" role="dialog">
+<div class="confirm-dialog modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">×</button>
-                <i class="glyphicon glyphicon-trash header-icon"></i><span>Confirm delete</span>
+                <i class="header-icon"></i><span class="title-text">Confirm delete</span>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete?
+                <div class="question-text">Are you sure you want to delete?</div>
                 <div class="delete-item"></div>
+                <form class="form-horizontal" role="form">
+                    <div class="input-group">
+                        <span class="input-group-addon">Input</span>
+                        <input type="text" class="form-control">
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <form>
@@ -15,7 +21,7 @@
                         <input type="checkbox"> Don't ask me again
                     </label>
                 </form>
-                <button class="btn btn-danger btn-ok">OK</button>
+                <button class="btn btn-ok">OK</button>
                 <button class="btn btn-default btn-cancel">Cancel</button>
             </div>
         </div>
