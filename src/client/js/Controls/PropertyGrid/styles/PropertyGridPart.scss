@@ -235,6 +235,9 @@ $input-color: lighten($background-color, 18.5%);
             margin-top: 4px;
             cursor: pointer;
             border-radius: 4px;
+            border-style: solid;
+            border-width: 1px;
+            border-color: darkgrey;
           }
 
           div.asset-widget {

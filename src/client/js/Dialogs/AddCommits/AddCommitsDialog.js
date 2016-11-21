@@ -11,8 +11,7 @@ define([
     'js/logger',
     'common/regexp',
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
-    'js/Dialogs/MultiTab/MultiTabDialog',
-    'css!./styles/AddCommitsDialog.css'
+    'js/Dialogs/MultiTab/MultiTabDialog'
 ], function (Logger, REGEXP, AssetWidget, MultiTabDialog) {
     'use strict';
 
@@ -64,7 +63,7 @@ define([
                 self._assetWidgetProject.propertyValue,
                 function (err, result) {
                     if (err) {
-                        callback('Failed to add commit from project' + err);
+                        callback('Failed to add commit from project: ' + err);
                     } else if (!self._checkCommitStatus(result.status)) {
                         callback('Project imported at commit ' + result.hash.substring(0, 7) +
                             ' but could not update branch.');

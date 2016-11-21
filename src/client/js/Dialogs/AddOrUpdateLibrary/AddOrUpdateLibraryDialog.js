@@ -81,7 +81,7 @@ define([
         function onOK(callback) {
             self._client.updateLibrary(self._libraryName, null, function (err, result) {
                 if (err) {
-                    callback('Failed to refresh library' + err);
+                    callback('Failed to refresh library: ' + err);
                 } else if (!self._checkCommitStatus(result.status)) {
                     callback('Project updated with library at commit ' + result.hash.substring(0, 7) +
                         ' but could not update branch.');
@@ -93,8 +93,12 @@ define([
 
         return {
             title: 'Refresh',
-            infoTitle: 'Refresh library from originating project',
-            infoDetails: 'Use project package as the source of the library',
+            infoTitle: 'Refresh from branch ' + this._storedLibraryInfo.branchName + ' in ' +
+            this._storedLibraryInfo.projectId,
+            infoDetails: 'The library info stored at the library root node indicates that this library originated ' +
+            'from a project within this deployment. It also has a branch stored and it is therefore possible ' +
+            'to attempt to update the attached library to the head of the branch linked. Use the link below to ' +
+            'view the current state of the branch.',
             formControl: $('<a class="refresh-link" href="' + linkUrl + '" target="_blank">View branch of library</a>'),
             onOK: onOK
         };
@@ -116,7 +120,7 @@ define([
 
             function resultCallback (err, result) {
                 if (err) {
-                    callback('Error getting library from blob' + err);
+                    callback('Error getting library from blob: ' + err);
                 } else if (!self._checkCommitStatus(result.status)) {
                     callback('Project updated with library at commit ' + result.hash.substring(0, 7) +
                         ' but could not update branch.');
@@ -135,7 +139,7 @@ define([
         return {
             title: 'File',
             infoTitle: 'From webgmex file',
-            infoDetails: 'Use project package as the source of the library',
+            infoDetails: 'Use an exported project package (webgmex-file) as the source of the library.',
             formControl: self._assetWidget.el,
             onOK: onOK
         };
@@ -174,7 +178,7 @@ define([
 
             function resultCallback (err, result) {
                 if (err) {
-                    callback('Error getting library via url' + err);
+                    callback('Error getting library via url: ' + err);
                 } else if (!self._checkCommitStatus(result.status)) {
                     callback('Project updated with library at commit ' + result.hash.substring(0, 7) +
                         ' but could not update branch.');
@@ -193,7 +197,9 @@ define([
         return {
             title: 'URL',
             infoTitle: 'From intra deployment URL',
-            infoDetails: 'Use the URL of the project as the source of the library',
+            infoDetails: 'Use the URL of the project as the source of the library. To obtain the url, open up the ' +
+            'project you would like to use as library and copy the full url from the address field. N.B. if you ' +
+            'later would like to be able to refresh the library, make sure that a branch i opened before copying.',
             formControl: formControl,
             onOK: onOK
         };

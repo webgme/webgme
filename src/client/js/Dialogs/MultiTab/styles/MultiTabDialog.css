@@ -17,11 +17,10 @@ div.multi-tab-dialog .modal-content .pre-body {
       text-align: center; }
 div.multi-tab-dialog .modal-content div.modal-body .asset-widget {
   width: 100%;
-  height: 100%;
-  padding-top: 0.3ex; }
+  height: 30px;
+  line-height: 30px; }
   div.multi-tab-dialog .modal-content div.modal-body .asset-widget a.btn-dialog-open {
-    font-size: 120%;
-    padding-top: 0.6ex; }
+    padding: 3px; }
 div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal i.toggle-info-btn {
   font-size: 65%;
   vertical-align: top;
