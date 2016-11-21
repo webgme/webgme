@@ -1226,7 +1226,10 @@ describe('Library core ', function () {
 
     it('should import if closure base matches only by originGuid', function (done) {
         var closure,
-            paths = [];
+            paths = [],
+            names,
+            i;
+
         Q.all([
             shareContext.core.loadByPath(shareContext.rootNode, '/E'),
             shareContext.core.loadByPath(shareContext.rootNode, '/Q'),
@@ -1262,6 +1265,13 @@ describe('Library core ', function () {
                 expect(shareContext.core.getChildrenRelids(newNodes[1])).to.have.members([
                     'P', 'T', 'X', 'W', 'g', 'C', 'M', 'm'
                 ]);
+
+                //checking the relations, they all should be valid
+                var names = shareContext.core.getPointerNames(newNodes[0])
+                for (i = 0; i < names.length; i += 1) {
+                    expect(shareContext.core.getPointerPath(newNodes[0], names[i])).not.to.eql(null);
+                    expect(shareContext.core.getPointerPath(newNodes[0], names[i])).not.to.eql(undefined);
+                }
             })
             .nodeify(done);
     });
@@ -1311,7 +1321,7 @@ describe('Library core ', function () {
                 shareContext.core.addMember(shareContext.rootNode, 'MetaAspectSet', exampleMachine);
                 return shareContext.core.setGuid(exampleMachine, '5f55234d-5975-19c3-063e-318b0fc93a17');
             })
-            .then(function(){
+            .then(function () {
                 shareContext.core.persist(shareContext.rootNode);
 
                 return shareContext.core.loadRoot(shareContext.core.getHash(shareContext.rootNode));
