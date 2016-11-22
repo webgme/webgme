@@ -7,13 +7,13 @@
   div.btn-group {
     width: 100%;
 
-    button.svgselect {
+    button.multiselect {
       font-size: 11px;
       padding: 6px 0;
       width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
-      text-align: left;
+      text-align: center;
     }
 
     &.open {

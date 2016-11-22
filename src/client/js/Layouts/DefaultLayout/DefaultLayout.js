@@ -25,7 +25,7 @@ define(['jquery-layout',
         SPACING_CLOSED_DESKTOP = 6,
         SPACING_OPEN = WebGMEGlobal.SUPPORTS_TOUCH ? SPACING_OPEN_TOUCH : SPACING_OPEN_DESKTOP,
         SPACING_CLOSED = WebGMEGlobal.SUPPORTS_TOUCH ? SPACING_CLOSED_TOUCH : SPACING_CLOSED_DESKTOP,
-        SIDE_PANEL_WIDTH = 202;
+        SIDE_PANEL_WIDTH = 210;
 
     DefaultLayout = function (params) {
         this._logger = (params && params.logger) || Logger.create('gme:Layouts:DefaultLayout',
