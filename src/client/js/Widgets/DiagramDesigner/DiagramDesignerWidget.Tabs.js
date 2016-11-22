@@ -166,17 +166,22 @@ define([
         }
     };
 
+    DiagramDesignerWidgetTabs.prototype._addTabDeleteBtn = function (li) {
+        var deleteBtn = TAB_DELETE_ICON_BASE.clone();
+        deleteBtn.attr('title', 'Delete tab');
+        li.find('a').append(deleteBtn);
+    };
+
     DiagramDesignerWidgetTabs.prototype.addTab = function (title, deletable, renamable) {
-        var self = this;
-        var li = TAB_LI_BASE.clone();
+        var self = this,
+            li = TAB_LI_BASE.clone();
 
         li.find('.tab-title').attr('title', title).text(title);
         li.data(TAB_ID, this._tabCounter + '');
         this._tabCounter += 1;
 
         if (this._deleteTabs === true && deletable === true) {
-            li.find('a').append(TAB_DELETE_ICON_BASE.clone());
-            li.find('a').attr('title', 'Delete tab');
+            this._addTabDeleteBtn(li);
         }
 
         //store renamable info in LI

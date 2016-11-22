@@ -41,15 +41,23 @@ define(['js/Utils/GMEConcepts',
         var result = [],
             memberListContainerID = this._memberListContainerID,
             setNames = GMEConcepts.getSets(memberListContainerID),
+            nodeObj = this._client.getNode(memberListContainerID),
+            validSetNames,
             len;
+
+        if (nodeObj) {
+            validSetNames = nodeObj.getValidSetNames();
+        } else {
+            validSetNames = [];
+        }
 
         len = setNames.length;
         while (len--) {
             result.push({
-                'memberListID': setNames[len],
-                'title': setNames[len],
-                'enableDeleteTab': false,
-                'enableRenameTab': false
+                memberListID: setNames[len],
+                title: setNames[len],
+                enableDeleteTab: validSetNames.indexOf(setNames[len]) === -1,
+                enableRenameTab: false
             });
         }
 
