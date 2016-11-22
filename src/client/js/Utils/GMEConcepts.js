@@ -338,6 +338,10 @@ define(['jquery',
             baseId,
             maxPerType;
 
+        if (!setMeta) {
+            return false;
+        }
+
         //check #1: global multiplicity
         if (setMeta.max !== undefined &&
             setMeta.max > -1 &&
@@ -382,7 +386,7 @@ define(['jquery',
                         }
                     }
 
-                    if (maxPerType[baseId] < 1) {
+                    if (maxPerType[baseId] < 0) {
                         result = false;
                         break;
                     }

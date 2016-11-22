@@ -20,7 +20,8 @@ define(['js/Utils/GMEConcepts',
 
     'use strict';
 
-    var SetEditorController;
+    var SetEditorController,
+        DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID = 'DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID';
 
     SetEditorController = function (options) {
         options = options || {};
@@ -68,15 +69,23 @@ define(['js/Utils/GMEConcepts',
     /**********************************************************/
     SetEditorController.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
         var gmeIDList = DragHelper.getDragItems(dragInfo),
-            accept = DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onBackgroundDroppableAccept.call(this,
-                event,
-                dragInfo);
+            accept = false,
+            params;
 
-        if (accept === true) {
-            //if based on the DiagramDesignerWidgetMultiTabMemberListControllerBase check it could be accepted,
-            //  i.e. items are not members of the set so far
-            //we need to see if we can accept them based on the META rules
-            accept = GMEConcepts.canAddToSet(this._memberListContainerID, this._selectedMemberListID, gmeIDList);
+        if (DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.
+            _onBackgroundDroppableAccept.call(this, event, dragInfo)) {
+            // If based on the DiagramDesignerWidgetMultiTabMemberListControllerBase check it could be accepted
+            // we need to check if it is a position move of a member and if not accept them based on the META rules
+            params = DragHelper.getDragParams(dragInfo);
+
+            if (params &&
+                params.hasOwnProperty(DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID) &&
+                params[DRAG_PARAMS_MULTI_TAB_MEMBER_LIST_CONTAINER_ID] === this._getDragParamsDataID()) {
+
+                accept = true;
+            } else {
+                accept = GMEConcepts.canAddToSet(this._memberListContainerID, this._selectedMemberListID, gmeIDList);
+            }
         }
 
         return accept;
