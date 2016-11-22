@@ -11,6 +11,7 @@ describe('constraint.core', function () {
         logger = testFixture.logger.fork('constraint.core:storage'),
         Q = testFixture.Q,
         storage,
+        expect = testFixture.expect,
         __should = testFixture.should,
         TASYNC = testFixture.requirejs('common/core/tasync'),
         project,
@@ -104,10 +105,16 @@ describe('constraint.core', function () {
             core.getOwnConstraintNames(base).should.be.eql(['global']);
             core.getConstraintNames(instance).should.include.members(['global', 'local']);
             core.getOwnConstraintNames(instance).should.be.eql(['local']);
+            expect(core.getConstraint(instance, 'local')).to.deep.equal({
+                priority: 1,
+                info: 'just another info text',
+                script: 'script text for local constraint'
+            });
 
             done();
         }, core.loadChildren(rootNode));
     });
+
     it('removing constraints', function (done) {
         TASYNC.call(function (children) {
             var base, instance, i;

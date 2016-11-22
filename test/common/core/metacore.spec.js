@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('meta core', function () {
+describe.only('meta core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -14,6 +14,7 @@ describe('meta core', function () {
         storage,
         projectName = 'coreMetaTesting',
         __should = testFixture.should,
+        expect = testFixture.expect,
         projectId = testFixture.projectName2Id(projectName),
         project,
         core,
@@ -80,7 +81,7 @@ describe('meta core', function () {
                 core.setPointerMetaLimits(setNode, 'set', 0, 2);
 
                 core.setPointerMetaTarget(setNode, 'ptr', base, 0, 1);
-                core.setPointerMetaLimits(setNode, 'ptr', 0, 1);
+                core.setPointerMetaLimits(setNode, 'ptr', 1, 1);
 
                 childNode = core.createNode({parent: root, base: base});
                 core.setAttribute(childNode, 'name', 'child');
@@ -280,5 +281,53 @@ describe('meta core', function () {
         core.getPath(core.getBaseType(setNode)).should.be.eql(core.getPath(base));
 
         (core.getBaseType(root) === null).should.be.true;
+    });
+
+    it('checks getChildrenMeta', function () {
+        var path,
+            childrenMeta = core.getChildrenMeta(childNode);
+
+        expect(childrenMeta.max).to.equal(10);
+        expect(childrenMeta.min).to.equal(undefined);
+
+        delete childrenMeta.min;
+        delete childrenMeta.max;
+
+        for (path in childrenMeta) {
+            expect(typeof childrenMeta[path].min).to.equal('number');
+            expect(typeof childrenMeta[path].max).to.equal('number');
+        }
+    });
+
+    it('checks getPointerMeta for pointer', function () {
+        var path,
+            pointerMeta = core.getPointerMeta(setNode, 'ptr');
+
+        expect(pointerMeta.max).to.equal(1);
+        expect(pointerMeta.min).to.equal(1);
+
+        delete pointerMeta.min;
+        delete pointerMeta.max;
+
+        for (path in pointerMeta) {
+            expect(typeof pointerMeta[path].min).to.equal('number');
+            expect(typeof pointerMeta[path].max).to.equal('number');
+        }
+    });
+
+    it('checks getPointerMeta for set', function () {
+        var path,
+            pointerMeta = core.getPointerMeta(setNode, 'set');
+
+        expect(pointerMeta.max).to.equal(2);
+        expect(pointerMeta.min).to.equal(-1);
+
+        delete pointerMeta.min;
+        delete pointerMeta.max;
+
+        for (path in pointerMeta) {
+            expect(typeof pointerMeta[path].min).to.equal('number');
+            expect(typeof pointerMeta[path].max).to.equal('number');
+        }
     });
 });
