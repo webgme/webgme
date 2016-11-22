@@ -1,7 +1,41 @@
 # Change Log
 
-## [v2.6.3](https://github.com/webgme/webgme/tree/v2.6.3) (2016-11-15)
+## [v2.7.0](https://github.com/webgme/webgme/tree/v2.7.0) (2016-11-21)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.6.3...v2.7.0)
+
+**Implemented enhancements:**
+
+- Provide path for updating projects coming from different deployments. [\#1240](https://github.com/webgme/webgme/issues/1240)
+- Add core methods for accessing set registries and attributes. [\#1227](https://github.com/webgme/webgme/issues/1227)
+- Increase test-coverage of simple worker methods and improve error-handling [\#1244](https://github.com/webgme/webgme/pull/1244) ([pmeijer](https://github.com/pmeijer))
+- Harmonize dialogs and provide base class [\#1242](https://github.com/webgme/webgme/pull/1242) ([pmeijer](https://github.com/pmeijer))
+- Add line preferences to PropertyEditor [\#1238](https://github.com/webgme/webgme/pull/1238) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- Importing Models fails due to reverse relations stored in reverse-overlay. [\#1241](https://github.com/webgme/webgme/issues/1241)
+- Files from branch status widget and network status widget are not automatically downloaded. [\#1235](https://github.com/webgme/webgme/issues/1235)
+- Server crash on "Too many files open" [\#1234](https://github.com/webgme/webgme/issues/1234)
+- Getting setMemberAttributes/Registries excludes properties that shouldn't be excluded. [\#1228](https://github.com/webgme/webgme/issues/1228)
+- Closes \#1235 Download file from browser issue and fixes style and minor bugs before release. [\#1246](https://github.com/webgme/webgme/pull/1246) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1234 Make sure to close writeStream if readStream closed before writeStream. [\#1245](https://github.com/webgme/webgme/pull/1245) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1241 Importing Models fails due to reverse relations stored in reverse-overlay. [\#1243](https://github.com/webgme/webgme/pull/1243) ([kecso](https://github.com/kecso))
+
+**Closed issues:**
+
+- Provide Document Nodes in META [\#903](https://github.com/webgme/webgme/issues/903)
+
+**Merged pull requests:**
+
+- Adds feature for squashing commits and importing a project as a new commit. [\#1230](https://github.com/webgme/webgme/pull/1230) ([kecso](https://github.com/kecso))
+- Add support for documentation in MetaEditor, fixes \#903 and also \#1227 and \#1228 [\#1229](https://github.com/webgme/webgme/pull/1229) ([pmeijer](https://github.com/pmeijer))
+
+## [v2.6.3](https://github.com/webgme/webgme/tree/v2.6.3) (2016-11-16)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.6.2...v2.6.3)
+
+**Implemented enhancements:**
+
+- Providing the color/text\_color/border\_color registry entries in the property editor [\#1233](https://github.com/webgme/webgme/pull/1233) ([kecso](https://github.com/kecso))
 
 **Fixed bugs:**
 
@@ -950,6 +984,7 @@
 
 **Implemented enhancements:**
 
+- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 - Squashing commits [\#466](https://github.com/webgme/webgme/issues/466)
 - Object browser auto scroll, when navigating with the keyboard [\#408](https://github.com/webgme/webgme/issues/408)
 - No Bezier Curves with the AutoRouter [\#314](https://github.com/webgme/webgme/issues/314)
@@ -1089,10 +1124,6 @@
 
 ## [v0.14.1](https://github.com/webgme/webgme/tree/v0.14.1) (2015-09-07)
 [Full Changelog](https://github.com/webgme/webgme/compare/v0.14.0...v0.14.1)
-
-**Implemented enhancements:**
-
-- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 
 **Fixed bugs:**
 
