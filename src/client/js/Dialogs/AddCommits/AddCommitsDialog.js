@@ -115,12 +115,12 @@ define([
             if (!isValidData) {
                 callback('The uploaded data is invalid');
                 return;
-            } else if (isValidName) {
+            } else if (!isValidName) {
                 callback('The provided branch is not valid, enter another one.');
                 return;
             }
 
-            self.gmeClient.applyCommitQueue(commitQueue, options, function (err) {
+            self._client.applyCommitQueue(commitQueue, options, function (err) {
                 if (err) {
                     self._logger(err);
                     callback('Failed to apply commit queue' + err);
