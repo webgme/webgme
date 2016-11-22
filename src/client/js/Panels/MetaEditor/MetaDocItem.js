@@ -6,8 +6,8 @@
 define(['./MetaEditorConstants', 'common/util/random'], function (META_EDITOR_CONSTANTS, RANDOM) {
     'use strict';
 
-    var DEFAULT_NAME = 'Doc',
-        DEFAULT_COLOR = '#ffffff', // White
+    var DEFAULT_NAME = 'Documentation',
+        DEFAULT_COLOR = '#ececec', // Gray like any decorator.
         DEFAULT_DOCUMENTATION = 'Edit documentation ...';
 
     function MetaDocItem(client, nodeId, setName, id) {

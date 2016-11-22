@@ -11,8 +11,7 @@ define([
     'js/logger',
     'common/regexp',
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
-    'js/Dialogs/MultiTab/MultiTabDialog',
-    'css!./styles/AddCommitsDialog.css'
+    'js/Dialogs/MultiTab/MultiTabDialog'
 ], function (Logger, REGEXP, AssetWidget, MultiTabDialog) {
     'use strict';
 
@@ -64,7 +63,7 @@ define([
                 self._assetWidgetProject.propertyValue,
                 function (err, result) {
                     if (err) {
-                        callback('Failed to add commit from project' + err);
+                        callback('Failed to add commit from project: ' + err);
                     } else if (!self._checkCommitStatus(result.status)) {
                         callback('Project imported at commit ' + result.hash.substring(0, 7) +
                             ' but could not update branch.');
@@ -116,12 +115,12 @@ define([
             if (!isValidData) {
                 callback('The uploaded data is invalid');
                 return;
-            } else if (isValidName) {
+            } else if (!isValidName) {
                 callback('The provided branch is not valid, enter another one.');
                 return;
             }
 
-            self.gmeClient.applyCommitQueue(commitQueue, options, function (err) {
+            self._client.applyCommitQueue(commitQueue, options, function (err) {
                 if (err) {
                     self._logger(err);
                     callback('Failed to apply commit queue' + err);

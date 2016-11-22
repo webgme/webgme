@@ -229,6 +229,10 @@ function validateConfig(configOrFileName) {
     assertEnum('config.storage.database.type', config.storage.database.type.toLowerCase(), 'mongo', 'redis', 'memory');
     assertObject('config.storage.database.options', config.storage.database.options);
     assertBoolean('config.storage.disableHashChecks', config.storage.disableHashChecks);
+    assertBoolean('config.storage.requireHashesToMatch', config.storage.requireHashesToMatch);
+    if (config.storage.disableHashChecks && config.storage.requireHashesToMatch) {
+        throw new Error('Cannot set config.storage.disableHashChecks and requireHashesToMatch to true at the same time!');
+    }
 
     //visualization
     expectedKeys.push('visualization');

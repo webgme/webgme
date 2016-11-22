@@ -28,7 +28,7 @@ define([
         var self = this,
             dialog = new MultiTabDialog(),
             parameters = {
-                title: 'Import Model',
+                title: 'Import Models',
                 extraClasses: 'import-model-dialog',
                 iconClass: 'glyphicon glyphicon-import',
                 activeTabIndex: 0,
@@ -77,10 +77,10 @@ define([
         return {
             title: 'File',
             infoTitle: 'From webgmexm file',
-            infoDetails: 'The export webgmexm file must come from a project that shares the same meta as the current' +
-            ' project. Specifically all the meta-types used in model must have matching meta-nodes (w.r.t GUIDs) in' +
-            ' this project. In cases where there is an uncertainty, there is no harm in trying to import the model -' +
-            ' an error will just be returned.',
+            infoDetails: 'The exported model(s) must come from a project that shares the same meta as the current' +
+            ' project. Specifically all the meta-types used in exported model(s) must have matching meta-nodes ' +
+            '(w.r.t GUIDs) in this project. If you are uncertain, there is no harm in trying to ' +
+            'import the model(s) - an error will just be returned.',
             formControl: self._assetWidget.el,
             onOK: onOK
         };

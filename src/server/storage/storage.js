@@ -195,7 +195,10 @@ Storage.prototype.makeCommit = function (data, callback) {
                                         '\npatch:\n', JSON.stringify(data.coreObjects[hash], null, 2),
                                         '\nresult:\n', JSON.stringify(patchResult.result, null, 2)
                                     );
-                                    throw new Error('Inconsistent hash after patching!');
+
+                                    if (self.gmeConfig.storage.requireHashesToMatch) {
+                                        throw new Error('Inconsistent hash after patching!');
+                                    }
                                 }
 
                                 patchResult.result[CONSTANTS.MONGO_ID] = hash;
@@ -325,9 +328,8 @@ Storage.prototype.squashCommits = function (data, callback) {
     //first we should check if the common ancestor is right
     var self = this,
         project,
-        deferred = Q.defer(),
         fromCommit = data.fromCommit,
-        branchName = undefined,
+        branchName,
         rootHash,
         toCommit,
         msg,
@@ -395,6 +397,7 @@ Storage.prototype.squashCommits = function (data, callback) {
 
             return self.getCommonAncestorCommit({
                 projectId: data.projectId,
+                username: data.username,
                 commitA: fromCommit,
                 commitB: toCommit
             });
@@ -732,6 +735,28 @@ Storage.prototype.getCommonAncestorCommit = function (data, callback) {
         return null;
     }
 
+    function loadAncestorsAndGetParents(project, commits, ancestorsSoFar) {
+        return Q.all(commits.map(function (commitHash) {
+            return project.loadObject(commitHash);
+        }))
+            .then(function (loadedCommits) {
+                var newCommits = [],
+                    i,
+                    j;
+                for (i = 0; i < loadedCommits.length; i += 1) {
+                    for (j = 0; j < loadedCommits[i].parents.length; j += 1) {
+                        if (loadedCommits[i].parents[j] !== '') {
+                            if (newCommits.indexOf(loadedCommits[i].parents[j]) === -1) {
+                                newCommits.push(loadedCommits[i].parents[j]);
+                            }
+                            ancestorsSoFar[loadedCommits[i].parents[j]] = true;
+                        }
+                    }
+                }
+                return newCommits;
+            });
+    }
+
     function loadParentsRec(project) {
         var candidate = checkForCommonAncestor();
 
@@ -755,28 +780,6 @@ Storage.prototype.getCommonAncestorCommit = function (data, callback) {
                     deferred.reject(err);
                 });
         }
-    }
-
-    function loadAncestorsAndGetParents(project, commits, ancestorsSoFar) {
-        return Q.all(commits.map(function (commitHash) {
-            return project.loadObject(commitHash);
-        }))
-            .then(function (loadedCommits) {
-                var newCommits = [],
-                    i,
-                    j;
-                for (i = 0; i < loadedCommits.length; i += 1) {
-                    for (j = 0; j < loadedCommits[i].parents.length; j += 1) {
-                        if (loadedCommits[i].parents[j] !== '') {
-                            if (newCommits.indexOf(loadedCommits[i].parents[j]) === -1) {
-                                newCommits.push(loadedCommits[i].parents[j]);
-                            }
-                            ancestorsSoFar[loadedCommits[i].parents[j]] = true;
-                        }
-                    }
-                }
-                return newCommits;
-            });
     }
 
     this.database.openProject(data.projectId)

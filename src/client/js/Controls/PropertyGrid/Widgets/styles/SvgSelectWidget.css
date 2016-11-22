@@ -5,13 +5,13 @@
   width: 50px; }
   .svgselect-widget div.btn-group {
     width: 100%; }
-    .svgselect-widget div.btn-group button.svgselect {
+    .svgselect-widget div.btn-group button.multiselect {
       font-size: 11px;
       padding: 6px 0;
       width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
-      text-align: left; }
+      text-align: center; }
     .svgselect-widget div.btn-group.open {
       position: absolute;
       width: inherit; }

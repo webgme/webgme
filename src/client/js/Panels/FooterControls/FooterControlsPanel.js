@@ -7,13 +7,11 @@
 define(['js/PanelBase/PanelBase',
     'js/Widgets/NetworkStatus/NetworkStatusWidget',
     'js/Widgets/BranchStatus/BranchStatusWidget',
-    'js/Widgets/BranchSelector/BranchSelectorWidget',
     'js/Widgets/KeyboardManager/KeyboardManagerWidget',
     'js/Widgets/Notification/NotificationWidget'
 ], function (PanelBase,
              NetworkStatusWidget,
              BranchStatusWidget,
-             BranchSelectorWidget,
              KeyboardManagerWidget,
              NotificationWidget) {
 

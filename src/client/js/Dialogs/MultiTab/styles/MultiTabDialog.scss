@@ -33,11 +33,10 @@ div.multi-tab-dialog {
     div.modal-body {
       .asset-widget {
         width: 100%;
-        height: 100%;
-        padding-top: 0.3ex;
+        height: 30px;
+        line-height: 30px;
         a.btn-dialog-open {
-          font-size: 120%;
-          padding-top: 0.6ex;
+          padding: 3px;
         }
       }
       form.form-horizontal {

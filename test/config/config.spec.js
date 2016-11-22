@@ -106,6 +106,24 @@ describe('configuration', function () {
         }).should.throw(Error);
     });
 
+    it('should throw if storage.disableHashChecks = true and storage.requireHashesToMatch', function () {
+        var config;
+        process.env.NODE_ENV = 'test';
+        config = require('../../config');
+        unloadConfigs();
+        validateConfig = require('../../config/validator');
+
+        try {
+            config.storage.disableHashChecks = true;
+            config.storage.requireHashesToMatch = true;
+            validateConfig(config);
+           throw new Error('Did not throw');
+        } catch (err) {
+            expect(err.message).to.equal('Cannot set config.storage.disableHashChecks and requireHashesToMatch ' +
+                'to true at the same time!');
+        }
+    });
+
     it('clientconfig should not expose mongo', function () {
         var config,
             clientConfig;

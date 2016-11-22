@@ -198,7 +198,8 @@ var path = require('path'),
                     //port: 6666
                 }
             },
-            disableHashChecks: false
+            disableHashChecks: false,
+            requireHashesToMatch: true
         },
 
         visualization: {

@@ -34,6 +34,19 @@ define(['blob/BlobClient'], function (BlobClient) {
         }
     }
 
+    function downloadTextAsFile(filename, text) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+    }
+
     function saveJsonToBlobStorage(fileName, data, logger, callback) {
         var bc = new BlobClient({logger: logger}),
             artifact = bc.createArtifact('uploaded');
@@ -57,6 +70,7 @@ define(['blob/BlobClient'], function (BlobClient) {
     return {
         saveToBlobStorage: saveJsonToBlobStorage,
         saveUrlToDisk: saveUrlToDisk,
-        saveJsonToDisk: saveJsonToDisk
+        saveJsonToDisk: saveJsonToDisk,
+        downloadTextAsFile: downloadTextAsFile
     };
 });
