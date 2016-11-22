@@ -97,9 +97,7 @@ define([
     }
 
     function downloadStateDump(client, state) {
-        var blob,
-            fileUrl,
-            errData = {
+        var errData = {
                 timestamp: (new Date()).toISOString(),
                 webgme: {
                     NpmVersion: 'n/a',
@@ -144,16 +142,11 @@ define([
             });
         }
 
-        blob = new Blob([JSON.stringify(errData, null, 2)], {type: 'application/json'});
-        fileUrl = window.URL.createObjectURL(blob);
-
-        saveToDisk.saveUrlToDisk(fileUrl, 'webgme-client-dump.json');
+        saveToDisk.downloadTextAsFile('webgme-client-dump.json', JSON.stringify(errData, null, 2));
     }
 
     function downloadCommitQueue(client, commitQueue) {
-        var blob,
-            fileUrl,
-            backupData = {
+        var backupData = {
                 webgmeVersion: client.getConnectedStorageVersion(),
                 projectId: client.getActiveProjectId(),
                 branchName: client.getActiveBranchName(),
@@ -161,10 +154,7 @@ define([
                 commitQueue: commitQueue
             };
 
-        blob = new Blob([JSON.stringify(backupData, null, 2)], {type: 'application/json'});
-        fileUrl = window.URL.createObjectURL(blob);
-
-        saveToDisk.saveUrlToDisk(fileUrl, 'commit-queue-dump.json');
+        saveToDisk.downloadTextAsFile('commit-queue-dump.json', JSON.stringify(backupData, null, 2));
     }
 
     return {

@@ -18,7 +18,6 @@ define([
     'js/Dialogs/Confirm/ConfirmDialog',
     'js/Dialogs/AddCommits/AddCommitsDialog',
     'common/storage/util',
-    'js/Utils/SaveToDisk',
     'js/Utils/Exporters',
     'q',
     'js/Utils/ComponentSettings'
@@ -34,7 +33,6 @@ define([
              ConfirmDialog,
              AddCommitsDialog,
              StorageUtil,
-             saveToDisk,
              exporters,
              Q,
              ComponentSettings) {

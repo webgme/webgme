@@ -4,7 +4,7 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-define(['js/Utils/SaveToDisk', 'js/Loader/ProgressNotification'], function (saveToDisk, ProgressNotification) {
+define(['js/Loader/ProgressNotification'], function (ProgressNotification) {
     'use strict';
 
     function exportProject(client, logger, projectParams, withAssets, callback) {
@@ -31,8 +31,6 @@ define(['js/Utils/SaveToDisk', 'js/Loader/ProgressNotification'], function (save
                         progress: 100,
                         type: 'success'
                     });
-
-                    saveToDisk.saveUrlToDisk(result.downloadUrl);
                 }
 
                 if (typeof callback === 'function') {
@@ -68,7 +66,6 @@ define(['js/Utils/SaveToDisk', 'js/Loader/ProgressNotification'], function (save
                         progress: 100,
                         type: 'success'
                     });
-                    saveToDisk.saveUrlToDisk(result.downloadUrl);
                 }
 
                 if (typeof callback === 'function') {
