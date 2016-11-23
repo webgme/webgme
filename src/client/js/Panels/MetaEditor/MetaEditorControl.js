@@ -1676,30 +1676,19 @@ define(['js/logger',
     /****************************************************************************/
     /*               END OF --- CONNECTION DESTINATION TEXT CHANGE              */
     /****************************************************************************/
-
-    // Documentation items
-
-
-    MetaEditorControl.prototype.activeSelectionChanged = function (activeSelection) {
+    MetaEditorControl.prototype._stateActiveSelectionChanged = function (model, activeSelection, opts) {
         var selectedIDs = [],
-            len = activeSelection.length;
+            len = activeSelection ? activeSelection.length : 0;
 
-        while (len--) {
-            if (this._GMEID2ComponentID.hasOwnProperty(activeSelection[len])) {
-                selectedIDs = selectedIDs.concat(this._GMEID2ComponentID[activeSelection[len]]);
+        if (opts.invoker !== this) {
+
+            while (len--) {
+                if (this._GMEID2ComponentID.hasOwnProperty(activeSelection[len])) {
+                    selectedIDs = selectedIDs.concat(this._GMEID2ComponentID[activeSelection[len]]);
+                }
             }
-        }
 
-        this.diagramDesigner.select(selectedIDs);
-    };
-
-    MetaEditorControl.prototype._stateActiveSelectionChanged = function (model, activeSelection) {
-        if (this._settingActiveSelection !== true) {
-            if (activeSelection) {
-                this.activeSelectionChanged(activeSelection);
-            } else {
-                this.activeSelectionChanged([]);
-            }
+            this.diagramDesigner.select(selectedIDs);
         }
     };
 
