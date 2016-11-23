@@ -408,7 +408,7 @@ define([
                 }
             } else {
                 //the existing selection (if any) has to be cleared out first
-                if (idList.length > 1) {
+                if (idList.length > 0) {
                     this._clearSelection();
 
                     changed = true;
@@ -421,29 +421,10 @@ define([
                         this._selectedElements.push(itemId);
 
                         if ($.isFunction(item.onSelect)) {
-                            item.onSelect(true, onceRendered);
+                            item.onSelect(idList.length > 1, onceRendered);
                         } else {
                             onceRendered(item);
                         }
-                    }
-                } else if (idList.length === 1){
-                    itemId = idList[0];
-
-                    //if not yet in selection
-                    if (this._selectedElements.indexOf(itemId) === -1) {
-                        this._clearSelection();
-
-                        this._selectedElements.push(itemId);
-
-                        item = items[itemId];
-
-                        if ($.isFunction(item.onSelect)) {
-                            item.onSelect(false, onceRendered);
-                        } else {
-                            onceRendered(item);
-                        }
-
-                        changed = true;
                     }
                 } else {
                     // Empty idList given..

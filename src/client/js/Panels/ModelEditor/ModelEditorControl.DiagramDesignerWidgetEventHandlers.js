@@ -811,9 +811,7 @@ define(['js/logger',
 
         this.$btnConnectionRemoveSegmentPoints.enabled(onlyConnectionSelected);
 
-        this._settingActiveSelection = true;
-        WebGMEGlobal.State.registerActiveSelection(gmeIDs);
-        this._settingActiveSelection = false;
+        WebGMEGlobal.State.registerActiveSelection(gmeIDs, {invoker: this});
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onClipboardCopy = function (selectedIds) {

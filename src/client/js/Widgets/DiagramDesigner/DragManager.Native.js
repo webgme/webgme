@@ -358,7 +358,6 @@ define([
 
         this._diagramDesigner.endUpdate();
 
-        this._diagramDesigner.selectionManager._clearSelection();
         this._diagramDesigner.selectionManager.setSelection(newSelectionIDs, false);
 
         //set cursor

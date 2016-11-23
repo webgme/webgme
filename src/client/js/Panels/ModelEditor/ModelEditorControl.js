@@ -1013,13 +1013,19 @@ define(['js/logger',
         }
     };
 
-    ModelEditorControl.prototype._stateActiveSelectionChanged = function (model, activeSelection) {
-        if (this._settingActiveSelection !== true) {
-            if (activeSelection) {
-                this.activeSelectionChanged(activeSelection);
-            } else {
-                this.activeSelectionChanged([]);
+    ModelEditorControl.prototype._stateActiveSelectionChanged = function (model, activeSelection, opts) {
+        var selectedIDs = [],
+            len = activeSelection ? activeSelection.length : 0;
+
+        if (opts.invoker !== this) {
+
+            while (len--) {
+                if (this._GMEID2ComponentID.hasOwnProperty(activeSelection[len])) {
+                    selectedIDs = selectedIDs.concat(this._GMEID2ComponentID[activeSelection[len]]);
+                }
             }
+
+            this.designerCanvas.select(selectedIDs);
         }
     };
 
@@ -1053,7 +1059,7 @@ define(['js/logger',
     ModelEditorControl.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
-        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_PROJECT_NAME, this._activeProjectChanged, this);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_PROJECT_NAME, this._activeProjectChanged);
     };
 
     ModelEditorControl.prototype.onActivate = function () {
@@ -1064,9 +1070,7 @@ define(['js/logger',
         }
 
         if (this.currentNodeInfo && typeof this.currentNodeInfo.id === 'string') {
-            WebGMEGlobal.State.registerSuppressVisualizerFromNode(true);
-            WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.id);
-            WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
+            WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.id, {suppressVisualizerFromNode: true});
         }
     };
 
@@ -1148,19 +1152,6 @@ define(['js/logger',
         } else {
             this.$btnModelHierarchyUp.enabled(false);
         }
-    };
-
-    ModelEditorControl.prototype.activeSelectionChanged = function (activeSelection) {
-        var selectedIDs = [],
-            len = activeSelection.length;
-
-        while (len--) {
-            if (this._GMEID2ComponentID.hasOwnProperty(activeSelection[len])) {
-                selectedIDs = selectedIDs.concat(this._GMEID2ComponentID[activeSelection[len]]);
-            }
-        }
-
-        this.designerCanvas.select(selectedIDs);
     };
 
     ModelEditorControl.prototype._updateAspects = function () {

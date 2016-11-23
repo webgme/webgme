@@ -230,7 +230,7 @@ define([
             filteredDroppableEnds;
 
         //clear out selection
-        this.selectionManager.clear();
+        this.selectionManager.setSelection([]);
 
         //hide all the source connectors on the 'src' item
         this.items[srcItemID].hideSourceConnectors();

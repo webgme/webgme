@@ -600,7 +600,7 @@ define([
 
         this.setTitle('');
 
-        this.selectionManager.clear();
+        this.selectionManager.setSelection([]);
 
         for (i in this.items) {
             if (this.items.hasOwnProperty(i)) {
@@ -1004,30 +1004,6 @@ define([
         }
 
         if (this.toolbarItems) {
-            if (this.toolbarItems.ddbtnConnectionArrowEnd) {
-                this.toolbarItems.ddbtnConnectionArrowEnd.enabled(connectionSelected);
-            }
-
-            if (this.toolbarItems.ddbtnConnectionArrowStart) {
-                this.toolbarItems.ddbtnConnectionArrowStart.enabled(connectionSelected);
-            }
-
-            if (this.toolbarItems.ddbtnConnectionPattern) {
-                this.toolbarItems.ddbtnConnectionPattern.enabled(connectionSelected);
-            }
-
-            if (this.toolbarItems.ddbtnConnectionLineType) {
-                this.toolbarItems.ddbtnConnectionLineType.enabled(connectionSelected);
-            }
-
-            if (this.toolbarItems.ddbtnConnectionLabelPlacement) {
-                this.toolbarItems.ddbtnConnectionLabelPlacement.enabled(connectionSelected);
-            }
-
-            if (this.toolbarItems.ddbtnConnectionLineWidth) {
-                this.toolbarItems.ddbtnConnectionLineWidth.enabled(connectionSelected);
-            }
-
             if (selectedIds.length > 0) {
                 if (this.toolbarItems.cpFillColor) {
                     this.toolbarItems.cpFillColor.enabled(true);
@@ -1291,7 +1267,6 @@ define([
     /*************** SELECTION API ******************************************/
 
     DiagramDesignerWidget.prototype.selectAll = function () {
-        // this.selectionManager.clear();
         this.selectionManager.setSelection(this.itemIds.concat(this.connectionIds), false);
     };
 
@@ -1303,22 +1278,18 @@ define([
         var invertList = _.difference(this.itemIds.concat(this.connectionIds),
             this.selectionManager.getSelectedElements());
 
-        // this.selectionManager.clear();
         this.selectionManager.setSelection(invertList, false);
     };
 
     DiagramDesignerWidget.prototype.selectItems = function () {
-        // this.selectionManager.clear();
         this.selectionManager.setSelection(this.itemIds, false);
     };
 
     DiagramDesignerWidget.prototype.selectConnections = function () {
-        // this.selectionManager.clear();
         this.selectionManager.setSelection(this.connectionIds, false);
     };
 
     DiagramDesignerWidget.prototype.select = function (selectionList) {
-        // this.selectionManager.clear();
         this.selectionManager.setSelection(selectionList, false);
     };
 

@@ -119,7 +119,7 @@ define([
                     client.emitStateNotification();
                 });
 
-                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad);
+                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad, {noHistoryUpdate: true});
 
                 document.title = config.pageTitle;
 
@@ -142,6 +142,7 @@ define([
                         WebGMEGlobal.State.registerActiveBranchName(null);
                     }
                 });
+
                 client.addEventListener(client.CONSTANTS.PROJECT_OPENED, function (_client, projectId) {
                     var projectName,
                         nodePath;
@@ -265,7 +266,6 @@ define([
             }
 
             function openProjectLoadDialog(connect) {
-                WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
                 initialProject = false;
                 //if initial project openings failed we show the project opening dialog
                 logger.info('init-phase false');
@@ -340,10 +340,6 @@ define([
                                     updatedState[CONSTANTS.STATE_ACTIVE_VISUALIZER] = vizualizer;
                                     updatedState[CONSTANTS.STATE_ACTIVE_TAB] = tab;
 
-                                    // Suppress the node determining the visualizer.
-                                    WebGMEGlobal.State.registerActiveVisualizer(vizualizer);
-                                    WebGMEGlobal.State.registerActiveTab(tab);
-
                                     // We also have to set the selected aspect according to the selectedTabIndex,
                                     //TODO this is not the best solution,
                                     // but as the node always orders the aspects based on their names, it is fine.
@@ -360,10 +356,8 @@ define([
                                     }
                                 }
 
-                                setTimeout(function () {
-                                    WebGMEGlobal.State.set(updatedState);
-                                    // After the state has been updated, make sure to allow node look-up again.
-                                    WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
+                                WebGMEGlobal.State.set(updatedState, {
+                                    suppressVisualizerFromNode: true
                                 });
                                 break;
                             }

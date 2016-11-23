@@ -103,8 +103,8 @@ define(['js/logger',
             event.preventDefault();
         });
 
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObjectId) {
-            self.selectedObjectChanged(activeObjectId);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObjectId, opts) {
+            self.selectedObjectChanged(activeObjectId, opts);
         });
 
         this._client.addEventListener(CONSTANTS.CLIENT.PROJECT_CLOSED, function (/* __project, nodeId */) {
@@ -400,10 +400,10 @@ define(['js/logger',
         }
     };
 
-    VisualizerPanel.prototype.selectedObjectChanged = function (currentNodeId) {
+    VisualizerPanel.prototype.selectedObjectChanged = function (currentNodeId, opts) {
         this._currentNodeID = currentNodeId;
         this._updateValidVisualizers(currentNodeId);
-        this._updateListedVisualizers(!WebGMEGlobal.State.getSuppressVisualizerFromNode());
+        this._updateListedVisualizers(!opts.suppressVisualizerFromNode);
     };
 
     VisualizerPanel.prototype._p2Editor = function (enabled) {

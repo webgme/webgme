@@ -232,9 +232,6 @@ define(['js/PanelBase/PanelBase', 'css!./styles/SplitPanel.css'], function (Pane
     };
 
     SplitPanel.prototype._setActivePanel = function (p) {
-        //if (this._panel1 && this._panel2) {
-        var prevValue = WebGMEGlobal.State.getSuppressVisualizerFromNode();
-        WebGMEGlobal.State.registerSuppressVisualizerFromNode(true);
         if (p === 0) {
             WebGMEGlobal.PanelManager.setActivePanel(this._panel1);
         }
@@ -242,8 +239,6 @@ define(['js/PanelBase/PanelBase', 'css!./styles/SplitPanel.css'], function (Pane
         if (p === 1) {
             WebGMEGlobal.PanelManager.setActivePanel(this._panel2);
         }
-        WebGMEGlobal.State.registerSuppressVisualizerFromNode(prevValue);
-        //}
     };
 
     SplitPanel.prototype._startPanelResize = function (event) {

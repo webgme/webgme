@@ -25,73 +25,81 @@ define([
              * defined or (even better) create a territory and check if the node could be loaded.
              * @param {string} objId
              */
-            registerActiveObject: function (objId) {
+            registerActiveObject: function (objId, opts) {
                 objId = objId === 'root' ? '' : objId;
                 logger.debug('registerActiveObject, objId: ', objId);
-                this.set(CONSTANTS.STATE_ACTIVE_OBJECT, objId);
+                opts = opts || {};
+                this.set(CONSTANTS.STATE_ACTIVE_OBJECT, objId, opts);
             },
 
             getActiveObject: function () {
                 return this.get(CONSTANTS.STATE_ACTIVE_OBJECT);
             },
 
-            registerActiveSelection: function (objIdList) {
+            registerActiveSelection: function (objIdList, opts) {
                 ASSERT(_.isArray(objIdList));
-                this.set(CONSTANTS.STATE_ACTIVE_SELECTION, objIdList);
+                opts = opts || {};
+                this.set(CONSTANTS.STATE_ACTIVE_SELECTION, objIdList, opts);
             },
 
             getActiveSelection: function () {
                 return this.get(CONSTANTS.STATE_ACTIVE_SELECTION);
             },
 
-            registerActiveAspect: function (aspect) {
-                this.set(CONSTANTS.STATE_ACTIVE_ASPECT, aspect, {silent: true});
+            registerActiveAspect: function (aspect, opts) {
+                opts = opts || {silent: true};
+                this.set(CONSTANTS.STATE_ACTIVE_ASPECT, aspect, opts);
             },
 
             getActiveAspect: function () {
                 return this.get(CONSTANTS.STATE_ACTIVE_ASPECT);
             },
 
-            registerActiveVisualizer: function (visualizer) {
-                this.set(CONSTANTS.STATE_ACTIVE_VISUALIZER, visualizer);
+            registerActiveVisualizer: function (visualizer, opts) {
+                opts = opts || {};
+                this.set(CONSTANTS.STATE_ACTIVE_VISUALIZER, visualizer, opts);
             },
 
             getActiveVisualizer: function () {
                 return this.get(CONSTANTS.STATE_ACTIVE_VISUALIZER);
             },
 
-            registerActiveProjectName: function (projectName) {
-                this.set(CONSTANTS.STATE_ACTIVE_PROJECT_NAME, projectName);
+            registerActiveProjectName: function (projectName, opts) {
+                opts = opts || {};
+                this.set(CONSTANTS.STATE_ACTIVE_PROJECT_NAME, projectName, opts);
             },
 
             getActiveProjectName: function () {
                 return this.get(CONSTANTS.STATE_ACTIVE_PROJECT_NAME);
             },
 
-            registerActiveBranchName: function (branchName) {
+            registerActiveBranchName: function (branchName, opts) {
                 var newState = {};
                 newState[CONSTANTS.STATE_ACTIVE_BRANCH_NAME] = branchName;
                 newState[CONSTANTS.STATE_ACTIVE_COMMIT] = null;
-                this.set(newState);
+                opts = opts || {};
+                this.set(newState, opts);
             },
 
             getActiveBranch: function () {
                 return this.get(CONSTANTS.STATE_ACTIVE_BRANCH_NAME);
             },
 
-            registerActiveCommit: function (commitHash) {
+            registerActiveCommit: function (commitHash, opts) {
                 var newState = {};
                 newState[CONSTANTS.STATE_ACTIVE_BRANCH_NAME] = null;
                 newState[CONSTANTS.STATE_ACTIVE_COMMIT] = commitHash;
-                this.set(newState);
+                opts = opts || {};
+                this.set(newState, opts);
             },
 
             getActiveCommit: function () {
                 return this.get(CONSTANTS.STATE_ACTIVE_COMMIT);
             },
 
-            registerActiveTab: function (tab) {
-                this.set(CONSTANTS.STATE_ACTIVE_TAB, parseInt(tab, 10));
+            registerActiveTab: function (tab, opts) {
+                opts = opts || {};
+                this.set(CONSTANTS.STATE_ACTIVE_TAB, parseInt(tab, 10), opts);
             },
 
             getActiveTab: function () {
@@ -99,18 +107,21 @@ define([
             },
 
             registerSuppressVisualizerFromNode: function (trueOrFalse) {
-                this.set(CONSTANTS.STATE_SUPPRESS_VISUALIZER_FROM_NODE, trueOrFalse);
+                logger.error('registerSuppressVisualizerFromNode is no longer valid pass extra argument to ' +
+                    'registerActiveObject(objectId, {suppressVisualizerFromNode: true} to suppress.');
             },
 
             getSuppressVisualizerFromNode: function () {
-                return this.get(CONSTANTS.STATE_SUPPRESS_VISUALIZER_FROM_NODE);
+                logger.error('getSuppressVisualizerFromNode is no longer valid pass extra argument to ' +
+                    'registerActiveObject(objectId, {suppressVisualizerFromNode: true} to suppress.');
             },
 
             /**
              * For this to take action the page needs to be refreshed.
              * @param {string} layout - Name of layout
              */
-            registerLayout: function (layout) {
+            registerLayout: function (layout, opts) {
+                opts = opts || {};
                 this.set(CONSTANTS.STATE_LAYOUT, layout);
             },
 
@@ -123,9 +134,6 @@ define([
             if (!_WebGMEState) {
                 logger = Logger.create('gme:Utils:StateManager', WebGMEGlobal.gmeConfig.client.log);
                 _WebGMEState = new WebGMEStateModel();
-                _WebGMEState.registerActiveAspect(CONSTANTS.ASPECT_ALL);
-                _WebGMEState.registerSuppressVisualizerFromNode(true);
-                //_WebGMEState.registerActiveTab('0');
                 _WebGMEState.on('change', function (model, options) {
                     logger.debug('', model, options);
                 });
