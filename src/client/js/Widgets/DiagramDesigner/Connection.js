@@ -834,13 +834,16 @@ define([
         }
     };
 
-    Connection.prototype.onDeselect = function () {
+    Connection.prototype.onDeselect = function (callback) {
         this.selected = false;
         this.selectedInMultiSelection = false;
         this.onRenderCallback = null;
 
         this._unHighlightPath();
         this._setEditMode(false);
+        if (typeof callback === 'function') {
+            callback(this);
+        }
     };
 
     Connection.prototype._highlightPath = function () {

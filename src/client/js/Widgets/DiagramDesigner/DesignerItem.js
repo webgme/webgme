@@ -312,13 +312,16 @@ define([
         callback(this);
     };
 
-    DesignerItem.prototype.onDeselect = function () {
+    DesignerItem.prototype.onDeselect = function (callback) {
         this.selected = false;
         this.selectedInMultiSelection = false;
         this.$el.removeClass('selected');
 
         //let the decorator know that this item became deselected
         this._callDecoratorMethod('onDeselect');
+        if (typeof callback === 'function') {
+            callback(this);
+        }
     };
 
     DesignerItem.prototype._callDecoratorMethod = function (fnName, args) {
