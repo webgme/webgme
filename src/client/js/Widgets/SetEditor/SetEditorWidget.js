@@ -1,4 +1,4 @@
-/*globals define, _*/
+/*globals define, _, $*/
 /*jshint browser: true*/
 
 /**
@@ -6,13 +6,15 @@
  */
 
 define(['js/DragDrop/DragHelper',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget'
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
+    'css!./styles/SetEditorWidget.css'
 ], function (DragHelper,
              DiagramDesignerWidget) {
     'use strict';
 
     var SetEditorWidget,
-        BACKGROUND_TEXT_COLOR = '#FFCCFF';
+        BACKGROUND_TEXT_COLOR = '#FFCCFF',
+        DELETE_TAB_BTN_BASE =  $('<i class="glyphicon glyphicon-exclamation-sign delete-set-tab"/>');
 
     SetEditorWidget = function (container, params) {
         params = params || {};
@@ -20,7 +22,7 @@ define(['js/DragDrop/DragHelper',
 
         params.tabsEnabled = true;
         params.addTabs = false;
-        params.deleteTabs = false;
+        params.deleteTabs = true;
         params.reorderTabs = false;
         params.lineStyleControls = false;
         params.enableConnectionDrawing = false;
@@ -40,6 +42,7 @@ define(['js/DragDrop/DragHelper',
 
         //TODO: disable connecting at all
 
+        this.$el.parent().addClass('set-editor-widget');
         //disable connection to a connection
         this._connectToConnection = false;
     };
@@ -69,6 +72,13 @@ define(['js/DragDrop/DragHelper',
         params = params || {};
         params.color = params.color || BACKGROUND_TEXT_COLOR;
         DiagramDesignerWidget.prototype.setBackgroundText.apply(this, [text, params]);
+    };
+
+    /* OVERWRITE DiagramDesignerWidget.prototype._addTabDeleteBtn */
+    SetEditorWidget.prototype._addTabDeleteBtn = function (li) {
+        var deleteBtn = DELETE_TAB_BTN_BASE.clone();
+        deleteBtn.attr('title', 'Remove meta-invalid set');
+        li.find('a').append(deleteBtn);
     };
 
     return SetEditorWidget;

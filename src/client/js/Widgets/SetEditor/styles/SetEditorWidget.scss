@@ -1,0 +1,15 @@
+.set-editor-widget {
+  .diagram-designer-tabs-container {
+    .tab-list-container {
+      .nav {
+        &.nav-tabs {
+          .delete-set-tab {
+            cursor: pointer;
+            font-size: 100%;
+            margin-left: 5px;
+          }
+        }
+      }
+    }
+  }
+}
