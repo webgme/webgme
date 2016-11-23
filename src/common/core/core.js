@@ -1272,6 +1272,12 @@ define([
          *
          * @return {module:Core~Constraint | null} Returns the defined constraint or null if it was not
          * defined for the node.
+         * @example
+         * {
+         *   script: "function (core, node, callback) {callback(null, {hasViolation: false, message: ''});}",
+         *   priority: 1,
+         *   info: "Should check unique name"
+         * }
          * @func
          */
         this.getConstraint = core.getConstraint;
@@ -1437,7 +1443,7 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the aspect.
          *
-         * @return {string[]} The function returns a list of absolute paths of nodes that are valid childrens of the node
+         * @return {string[]} The function returns a list of absolute paths of nodes that are valid children of the node
          * and fits to the META rules defined for the aspect. Any children, visible under the given aspect of the node
          * must be an instance of at least one node represented by the absolute paths.
          *
@@ -1450,7 +1456,53 @@ define([
          * @param {module:Core~Node} node - the node in question.
          *
          * @return {object} Returns an object that represents all the META rules of the node.
-         *
+         * @example
+         * {
+         *   children: {
+         *     items: [ "/1", "/c" ],
+         *     minItems: [ -1, -1 ],
+         *     maxItems: [ -1, -1 ]
+         *   },
+         *   attributes: {
+         *     name: { type: "string" },
+         *     level: { type: "integer"}
+         *   },
+         *   pointers: {
+         *     ptr: {
+         *       min: 1,
+         *       max: 1,
+         *       items: [ "/1" ],
+         *       minItems: [ -1 ],
+         *       maxItems: [ 1 ]
+         *     },
+         *     set: {
+         *       min: -1,
+         *       max: -1,
+         *       items: [ "/c" ],
+         *       minItems: [ -1 ],
+         *       maxItems: [ -1 ]
+         *     }
+         *   },
+         *   aspects: {
+         *     filter: [ "/8", "/c" ]
+         *   },
+         *   constraints: {
+         *     myConstraint: {
+         *       script: "function (core, node, callback) {callback(null, {hasViolation: false, message: ''});}",
+         *       priority: 1,
+         *       info: "Should check unique name"
+         *     }
+         *   }
+         * }
+         * @example
+         * {
+         *   children: {},
+         *   attributes: {
+         *      name: { type: "string" },
+         *   },
+         *   pointers: {},
+         *   aspects: {},
+         *   constraints: {}
          * @func
          */
         this.getJsonMeta = core.getJsonMeta;
@@ -1461,7 +1513,8 @@ define([
          *
          * @return {object} The function returns an object that represent the META rules that were defined
          * specifically for the node.
-         *
+         * @example
+         * see getJsonMeta
          * @func
          */
         this.getOwnJsonMeta = core.getOwnJsonMeta;
@@ -1513,7 +1566,50 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the attribute.
          *
-         * @return {object} The function returns the definition object
+         * @return {object} The function returns the definition object, where type is always defined.
+         * @example
+         * {
+         *    type: "string"
+         * }
+         * @example
+         * {
+         *    type: "string",
+         *    regexp: "^win"
+         * }
+         * @example
+         * {
+         *    type: "string",
+         *    enum: [ "value1", "value2" ]
+         * }
+         * @example
+         * {
+         *    type: "boolean"
+         * }
+         * @example
+         * {
+         *    type: "integer"
+         * }
+         * @example
+         * {
+         *    type: "integer",
+         *    min: 0,
+         *    max: 10
+         * }
+         * @example
+         * {
+         *    type: "integer",
+         *    enum: [ 3, 8 ]
+         * }
+         * @example
+         * {
+         *    type: "float",
+         *    min: 0,
+         *    max: 9.9
+         * }
+         * @example
+         * {
+         *    type: "asset"
+         * }
          * @func
          */
         this.getAttributeMeta = core.getAttributeMeta;
@@ -1533,9 +1629,15 @@ define([
          * Return a JSON representation of the META rules regarding the valid children of the given node.
          * @param {module:Core~Node} node - the node in question.
          *
-         * @return {module:Core~RelationRule} The funciton returns a detailed JSON structure that represents the META
+         * @return {module:Core~RelationRule} The function returns a detailed JSON structure that represents the META
          * rules regarding the possible children of the node.
-         *
+         * @example
+         * {
+         *   '/5': { max: 1, min: -1 },
+         *   '/c': { max: -1, min: 2 },
+         *   max: 10,
+         *   min: undefined
+         * }
          * @func
          */
         this.getChildrenMeta = core.getChildrenMeta;
@@ -1647,9 +1749,23 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the pointer/set.
          *
-         * @return {module:Core~RelationRule} The funciton returns a detailed JSON structure that represents the META
+         * @return {module:Core~RelationRule} The function returns a detailed JSON structure that represents the META
          * rules regarding the given pointer/set of the node.
-         *
+         * @example
+         * pointer
+         * {
+         *   '/a': { max: 1, min: -1 },
+         *   max: 1,
+         *   min: 1
+         * }
+         * @example
+         * set
+         * {
+         *   '/G': { max: -1, min: -1},
+         *   '/i': { max: -1, min: -1},
+         *   max: -1
+         *   min: -1
+         * }
          * @func
          */
         this.getPointerMeta = core.getPointerMeta;
