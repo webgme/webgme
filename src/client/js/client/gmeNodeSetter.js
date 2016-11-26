@@ -205,6 +205,7 @@ define([], function () {
                 storeNode(newNode);
 
                 saveRoot(msg || 'copyNode(' + path + ', ' + parentPath + ', ' + JSON.stringify(desc) + ')');
+                return state.core.getPath(newNode);
             }
         }
 
