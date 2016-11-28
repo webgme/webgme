@@ -1,7 +1,7 @@
 /*jshint node: true*/
 
 /**
- * @author pmeijer / https://github.com/pmeijer
+ * @author kecso / https://github.com/kecso
  */
 'use strict';
 
@@ -91,6 +91,41 @@ function getUnusedDataHashes(blobClient) {
     return deferred.promise;
 }
 
+function gatherSoftLinks(blobClient, metaHash) {
+    var deferred = Q.defer(),
+        softLinks = [],
+        complexEntry;
+
+    blobClient.getMetadata(metaHash)
+        .then(function (metaData) {
+            var promises = [];
+            if (metaData.contentType === CONTENT_TYPES.SOFT_LINK) {
+                softLinks.push(metaData.content);
+                promises.push(gatherSoftLinks(blobClient, metaData.content));
+            } else if (metaData.contentType === CONTENT_TYPES.COMPLEX) {
+                for (complexEntry in metaData.content) {
+                    if (metaData.content[complexEntry].contentType === CONTENT_TYPES.SOFT_LINK) {
+                        softLinks.push(metaData.content[complexEntry].content);
+                        promises.push(gatherSoftLinks(blobClient, metaData.content[complexEntry].content));
+                    }
+                }
+            }
+            return Q.all(promises);
+        })
+        .then(function (results) {
+            var i, j;
+            for (i = 0; i < results.length; i += 1) {
+                for (j = 0; j < results[i].length; j += 1) {
+                    softLinks.push(results[i][j]);
+                }
+            }
+            deferred.resolve(softLinks);
+        })
+        .catch(deferred.reject);
+
+    return deferred.promise;
+}
+
 function getUsedMetaHashes(metadatastorage, storage, blobClient) {
     var metaHashes = {},
         deferred = Q.defer(),
@@ -149,7 +184,6 @@ function getUsedMetaHashes(metadatastorage, storage, blobClient) {
 function getUnusedMetaHashes(blobClient, metadatastorage, storage) {
     var deferred = Q.defer(),
         allHashesArray,
-        usedHashesObject,
         i;
 
     blobClient.listObjects('wg-metadata')
@@ -158,10 +192,9 @@ function getUnusedMetaHashes(blobClient, metadatastorage, storage) {
             return getUsedMetaHashes(metadatastorage, storage, blobClient);
         })
         .then(function (used) {
-            usedHashesObject = used;
             i = allHashesArray.length;
             while (i--) {
-                if (usedHashesObject[allHashesArray[i]] === true) {
+                if (used[allHashesArray[i]] === true) {
                     allHashesArray.splice(i, 1);
                 }
             }
@@ -172,30 +205,7 @@ function getUnusedMetaHashes(blobClient, metadatastorage, storage) {
     return deferred.promise;
 }
 
-function gatherSoftLinks(blobClient, metaHash) {
-    var deferred = Q.defer(),
-        softLinks = [],
-        complexEntry;
-
-    blobClient.getMetadata(metaHash)
-        .then(function (metaData) {
-            if (metaData.contentType === CONTENT_TYPES.SOFT_LINK) {
-                softLinks.push(metaData.content);
-            } else if (metaData.contentType === CONTENT_TYPES.COMPLEX) {
-                for (complexEntry in metaData.content) {
-                    if (metaData.content[complexEntry].contentType === CONTENT_TYPES.SOFT_LINK) {
-                        softLinks.push(metaData.content[complexEntry].content);
-                    }
-                }
-            }
-            deferred.resolve(softLinks);
-        })
-        .catch(deferred.reject);
-
-    return deferred.promise;
-}
-
-function removeMetaHashes(blobClient, metaHashes) {
+function removeBasedOnMetaHashes(blobClient, metaHashes) {
     var deferred = Q.defer(),
         i,
         promises = [],
@@ -251,14 +261,12 @@ function getInputHashes(inputFilePath) {
     return deferred.promise;
 }
 /**
- * Lists and optionally deletes the projects matching the criteria.
+ * Lists and optionally deletes the unused data from file-system based Blob-storage.
  *
  * @param {object} [options]
  * @param {bool} [options.del=false] - If true will do the deletion.
- * @param {string} [options.daysAgo=10] - Time since last viewed (inclusive).
- * @param {string} [options.commits=1] - Maximum number of commits a deleted project can have..
- * @param {string} [options.branches=1] - Maximum number of branches a deleted project can have.
- * @param {string} [options.regex='.*'] - Project names must match the regex.
+ * @param {string} [options.env] - If given it will set the NODE_ENV environment variable.
+ * @param {string} [options.input] - Input JSON array file, that contains MetaDataHashes that needs to be removed.
  */
 
 function cleanUp(options) {
@@ -299,7 +307,7 @@ function cleanUp(options) {
                 console.log(unusedMetaHashes);
                 return null;
             } else {
-                return removeMetaHashes(blobClient, unusedMetaHashes);
+                return removeBasedOnMetaHashes(blobClient, unusedMetaHashes);
             }
         })
         .then(function (removals) {

@@ -32,7 +32,7 @@ BlobFSBackend.prototype.constructor = BlobFSBackend;
 
 BlobFSBackend.prototype.putObject = function (readStream, bucket, callback) {
     var self = this,
-    // TODO: create this in the system temp folder
+        // TODO: create this in the system temp folder
         tempName = path.join(self.blobDir, self.tempBucket, GUID() + '.tbf'),
         shasum = crypto.createHash(this.shaMethod),
         readStreamWasClosed = false,
@@ -232,7 +232,6 @@ BlobFSBackend.prototype.__deleteObject = function (bucket, hash, callback) {
     var self = this,
         fPath = path.join(self.blobDir, bucket, self._getObjectRelativeLocation(hash));
 
-    console.log(fPath);
     fs.unlink(fPath, callback);
 };
 
