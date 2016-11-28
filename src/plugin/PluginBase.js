@@ -591,6 +591,29 @@ define([
                 validPlugins + '"');
         }
     };
+
+    /**
+     * Loads all the nodes starting from node and returns a map from paths to nodes.
+     * @param {module:Core~Node} [node=self.rootNode] - Optional node to preload nodes from,
+     * by default all will be loaded.
+     * @param {function} [callback] - if defined no promise will be returned
+     * @return {external:Promise} - If successful will resolve with object where keys are paths and values nodes.
+     */
+    PluginBase.prototype.loadNodeMap = function (node, callback) {
+        var self = this;
+        return self.core.loadSubTree(node || self.rootNode)
+            .then(function (nodeArr) {
+                var nodes = {},
+                    i;
+
+                for (i = 0; i < nodeArr.length; i += 1) {
+                    nodes[self.core.getPath(nodeArr[i])] = nodeArr[i];
+                }
+
+                return nodes;
+            })
+            .nodeify(callback);
+    };
     //</editor-fold>
     //<editor-fold desc="Methods that are used by the Plugin Manager. Derived classes should not use these methods">
 
