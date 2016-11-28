@@ -112,6 +112,8 @@ define(['js/logger',
 
         this.metaAspectContainerNodeID = META_RULES_CONTAINER_NODE_ID;
 
+        this.currentNodeInfo.id = WebGMEGlobal.State.getActiveObject();
+
         this.logger.debug('_loadMetaAspectContainerNode: "' + this.metaAspectContainerNodeID + '"');
 
         this._initializeSelectedSheet();
@@ -1711,6 +1713,11 @@ define(['js/logger',
         if (this._selectedSheetID) {
             WebGMEGlobal.State.registerActiveTab(this._selectedSheetID);
         }
+
+        if (this.currentNodeInfo && typeof this.currentNodeInfo.id === 'string') {
+            WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.id, {suppressVisualizerFromNode: true});
+        }
+
         this._attachClientEventListeners();
         this._displayToolbarItems();
     };
