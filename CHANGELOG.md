@@ -1,6 +1,20 @@
 # Change Log
 
-## [v2.7.0](https://github.com/webgme/webgme/tree/v2.7.0) (2016-11-21)
+## [v2.7.1](https://github.com/webgme/webgme/tree/v2.7.1) (2016-11-28)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.7.0...v2.7.1)
+
+**Fixed bugs:**
+
+- client.copyNode should return new node id [\#1250](https://github.com/webgme/webgme/issues/1250)
+- Cardinality check w.r.t. set members is off by one. [\#1247](https://github.com/webgme/webgme/issues/1247)
+- Adjusted client.copyNode to return nodeId. Fixes \#1250 [\#1251](https://github.com/webgme/webgme/pull/1251) ([brollb](https://github.com/brollb))
+- Fixes SetEditor exception, cardinality check and way to remove invalid sets. [\#1248](https://github.com/webgme/webgme/pull/1248) ([pmeijer](https://github.com/pmeijer))
+
+**Merged pull requests:**
+
+- blob-fs-clean-up script [\#1249](https://github.com/webgme/webgme/pull/1249) ([kecso](https://github.com/kecso))
+
+## [v2.7.0](https://github.com/webgme/webgme/tree/v2.7.0) (2016-11-22)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.6.3...v2.7.0)
 
 **Implemented enhancements:**
@@ -10,6 +24,7 @@
 - Increase test-coverage of simple worker methods and improve error-handling [\#1244](https://github.com/webgme/webgme/pull/1244) ([pmeijer](https://github.com/pmeijer))
 - Harmonize dialogs and provide base class [\#1242](https://github.com/webgme/webgme/pull/1242) ([pmeijer](https://github.com/pmeijer))
 - Add line preferences to PropertyEditor [\#1238](https://github.com/webgme/webgme/pull/1238) ([kecso](https://github.com/kecso))
+- Providing the color/text\_color/border\_color registry entries in the property editor [\#1233](https://github.com/webgme/webgme/pull/1233) ([kecso](https://github.com/kecso))
 
 **Fixed bugs:**
 
@@ -32,10 +47,6 @@
 
 ## [v2.6.3](https://github.com/webgme/webgme/tree/v2.6.3) (2016-11-16)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.6.2...v2.6.3)
-
-**Implemented enhancements:**
-
-- Providing the color/text\_color/border\_color registry entries in the property editor [\#1233](https://github.com/webgme/webgme/pull/1233) ([kecso](https://github.com/kecso))
 
 **Fixed bugs:**
 
@@ -984,7 +995,6 @@
 
 **Implemented enhancements:**
 
-- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 - Squashing commits [\#466](https://github.com/webgme/webgme/issues/466)
 - Object browser auto scroll, when navigating with the keyboard [\#408](https://github.com/webgme/webgme/issues/408)
 - No Bezier Curves with the AutoRouter [\#314](https://github.com/webgme/webgme/issues/314)
@@ -1124,6 +1134,10 @@
 
 ## [v0.14.1](https://github.com/webgme/webgme/tree/v0.14.1) (2015-09-07)
 [Full Changelog](https://github.com/webgme/webgme/compare/v0.14.0...v0.14.1)
+
+**Implemented enhancements:**
+
+- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 
 **Fixed bugs:**
 
