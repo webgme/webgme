@@ -1424,4 +1424,29 @@ SafeStorage.prototype.loadPaths = function (data, callback) {
     return deferred.promise.nodeify(callback);
 };
 
+SafeStorage.prototype.traverse = function (data, callback) {
+    var deferred = Q.defer(),
+        self = this,
+        rejected = false;
+
+    rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+        check(typeof data.projectId === 'string', deferred, 'data.projectId is not a string.') ||
+        check(REGEXP.PROJECT.test(data.projectId), deferred, 'data.projectId failed regexp: ' + data.projectId) ||
+        check(typeof data.visitFn === 'function', deferred,
+            'data.visitFn is not a function');
+
+    if (data.hasOwnProperty('username')) {
+        rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
+    } else {
+        data.username = this.gmeConfig.authentication.guestAccount;
+    }
+
+    self.logger.debug('traverse', {metadata: data});
+    if (rejected === false) {
+        return Storage.prototype.traverse.call(self, data);
+    }
+
+    return deferred.promise.nodeify(callback);
+};
+
 module.exports = SafeStorage;
