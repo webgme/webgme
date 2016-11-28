@@ -119,7 +119,7 @@ define([
                     client.emitStateNotification();
                 });
 
-                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad, {noHistoryUpdate: true});
+                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad, {suppressHistoryUpdate: true});
 
                 document.title = config.pageTitle;
 
@@ -312,6 +312,7 @@ define([
                     var i,
                         activeNode,
                         updatedState = {},
+                        opts = {},
                         aspectNames;
                     logger.debug('events from selectObject', events);
 
@@ -335,30 +336,30 @@ define([
                                     updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] = selectionIds;
                                 }
 
-                                tab = parseInt(tab, 10);
-                                if (tab >= 0 && vizualizer) {
+                                if (vizualizer) {
                                     updatedState[CONSTANTS.STATE_ACTIVE_VISUALIZER] = vizualizer;
-                                    updatedState[CONSTANTS.STATE_ACTIVE_TAB] = tab;
+                                    opts.suppressVisualizerFromNode = true;
 
-                                    // We also have to set the selected aspect according to the selectedTabIndex,
-                                    //TODO this is not the best solution,
-                                    // but as the node always orders the aspects based on their names, it is fine.
-                                    if (vizualizer === 'ModelEditor') {
-                                        aspectNames = activeNode.getValidAspectNames();
-                                        aspectNames.sort(function (a, b) {
-                                            var an = a.toLowerCase(),
-                                                bn = b.toLowerCase();
+                                    tab = parseInt(tab, 10);
+                                    if (tab >= 0) {
+                                        updatedState[CONSTANTS.STATE_ACTIVE_TAB] = tab;
 
-                                            return (an < bn) ? -1 : 1;
-                                        });
-                                        aspectNames.unshift('All');
-                                        updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] = aspectNames[tab] || 'All';
+                                        // For the ModelEditor to work the tab-index and aspect name must be aligned.
+                                        if (vizualizer === 'ModelEditor') {
+                                            aspectNames = activeNode.getValidAspectNames();
+                                            aspectNames.sort(function (a, b) {
+                                                var an = a.toLowerCase(),
+                                                    bn = b.toLowerCase();
+
+                                                return (an < bn) ? -1 : 1;
+                                            });
+                                            aspectNames.unshift('All');
+                                            updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] = aspectNames[tab] || 'All';
+                                        }
                                     }
                                 }
 
-                                WebGMEGlobal.State.set(updatedState, {
-                                    suppressVisualizerFromNode: true
-                                });
+                                WebGMEGlobal.State.set(updatedState, opts);
                                 break;
                             }
                         }

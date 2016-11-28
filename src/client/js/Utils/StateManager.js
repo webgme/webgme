@@ -24,6 +24,11 @@ define([
              * N.B. Do NOT call this unless the node is guaranteed to be loaded. Either check that getNode(objId) is
              * defined or (even better) create a territory and check if the node could be loaded.
              * @param {string} objId
+             * @param {object} [opts] - Optional options when setting the state.
+             * @param {boolean} [opts.suppressVisualizerFromNode=false] - If true, stops the visualizer panel from 
+             * automatically setting the visualizer based on the order of the registered 'validVisualizers'.
+             * @param {object} [opts.invoker] - Optional reference to the instance that set the state.
+             * @param {object} [opts.suppressHistoryUpdate=false] - If true, state update will not be added to history.
              */
             registerActiveObject: function (objId, opts) {
                 objId = objId === 'root' ? '' : objId;
@@ -36,6 +41,13 @@ define([
                 return this.get(CONSTANTS.STATE_ACTIVE_OBJECT);
             },
 
+            /**
+             * Sets the active selection
+             * @param {string[]} objIdList - Array of ids/paths to nodes in selection
+             * @param {object} [opts] - Optional options when setting the state.
+             * @param {object} [opts.invoker] - Optional reference to the instance that set the state.
+             * @param {object} [opts.suppressHistoryUpdate=false] - If true, state update will not be added to history.
+             */
             registerActiveSelection: function (objIdList, opts) {
                 ASSERT(_.isArray(objIdList));
                 opts = opts || {};
@@ -46,6 +58,13 @@ define([
                 return this.get(CONSTANTS.STATE_ACTIVE_SELECTION);
             },
 
+            /**
+             * Sets the active aspect.
+             * @param {string} aspect - Name of aspect.
+             * @param {object} [opts] - Optional options when setting the state.
+             * @param {object} [opts.invoker] - Optional reference to the instance that set the state.
+             * @param {object} [opts.suppressHistoryUpdate=false] - If true, state update will not be added to history.
+             */
             registerActiveAspect: function (aspect, opts) {
                 opts = opts || {silent: true};
                 this.set(CONSTANTS.STATE_ACTIVE_ASPECT, aspect, opts);
@@ -55,6 +74,13 @@ define([
                 return this.get(CONSTANTS.STATE_ACTIVE_ASPECT);
             },
 
+            /**
+             * Sets the active visualiser.
+             * @param {string} visualizer - Name of visualizer.
+             * @param {object} [opts] - Optional options when setting the state.
+             * @param {object} [opts.invoker] - Optional reference to the instance that set the state.
+             * @param {object} [opts.suppressHistoryUpdate=false] - If true, state update will not be added to history.
+             */
             registerActiveVisualizer: function (visualizer, opts) {
                 opts = opts || {};
                 this.set(CONSTANTS.STATE_ACTIVE_VISUALIZER, visualizer, opts);
@@ -64,9 +90,9 @@ define([
                 return this.get(CONSTANTS.STATE_ACTIVE_VISUALIZER);
             },
 
-            registerActiveProjectName: function (projectName, opts) {
+            registerActiveProjectName: function (projectId, opts) {
                 opts = opts || {};
-                this.set(CONSTANTS.STATE_ACTIVE_PROJECT_NAME, projectName, opts);
+                this.set(CONSTANTS.STATE_ACTIVE_PROJECT_NAME, projectId, opts);
             },
 
             getActiveProjectName: function () {
@@ -97,6 +123,13 @@ define([
                 return this.get(CONSTANTS.STATE_ACTIVE_COMMIT);
             },
 
+            /**
+             * Sets the active tab.
+             * @param {number} tab - Current tab-index (0, .. ).
+             * @param {object} [opts] - Optional options when setting the state.
+             * @param {object} [opts.invoker] - Optional reference to the instance that set the state.
+             * @param {object} [opts.suppressHistoryUpdate=false] - If true, state update will not be added to history.
+             */
             registerActiveTab: function (tab, opts) {
                 opts = opts || {};
                 this.set(CONSTANTS.STATE_ACTIVE_TAB, parseInt(tab, 10), opts);
@@ -134,6 +167,7 @@ define([
             if (!_WebGMEState) {
                 logger = Logger.create('gme:Utils:StateManager', WebGMEGlobal.gmeConfig.client.log);
                 _WebGMEState = new WebGMEStateModel();
+                _WebGMEState.registerActiveAspect(CONSTANTS.ASPECT_ALL, {suppressHistoryUpdate: true});
                 _WebGMEState.on('change', function (model, options) {
                     logger.debug('', model, options);
                 });

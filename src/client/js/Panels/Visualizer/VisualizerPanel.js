@@ -122,8 +122,8 @@ define(['js/logger',
             self._validVisualizers = null;
         });
 
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
-            if (self._settingVisualizer !== true) {
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer, opts) {
+            if (opts.invoker !== self) {
                 self.setActiveVisualizer(activeVisualizer);
             }
         });
@@ -150,8 +150,6 @@ define(['js/logger',
     VisualizerPanel.prototype._setActiveVisualizer = function (visualizer, ul) {
         var PanelClass,
             panel = ul.attr('data-id');
-
-        this._settingVisualizer = true;
 
         if (this._activeVisualizer[panel] !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
             //we should change the selected tab to 0 in case of visualizer change to get the 'default' behaviour
@@ -186,10 +184,8 @@ define(['js/logger',
                 }
             }
 
-            WebGMEGlobal.State.registerActiveVisualizer(visualizer);
+            WebGMEGlobal.State.registerActiveVisualizer(visualizer, {invoker: this});
         }
-
-        this._settingVisualizer = false;
     };
 
     VisualizerPanel.prototype._updateValidVisualizers = function (currentNodeId) {

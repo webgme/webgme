@@ -40,7 +40,7 @@ define([
             if (WebGMEGlobal && WebGMEGlobal.State) {
                 WebGMEGlobal.State.on('change', function (model, opts) {
                     var searchQuery = WebGMEUrlManager.serializeStateToUrl();
-                    if (!opts.noHistoryUpdate && prevQuery !== searchQuery) {
+                    if (!opts.suppressHistoryUpdate && prevQuery !== searchQuery) {
                         // set the state that gets pushed into the history
                         $location.state(WebGMEGlobal.State.toJSON());
 
