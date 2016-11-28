@@ -23,7 +23,6 @@ function Mongo(mainLogger, gmeConfig) {
         disconnectDeferred,
         logger = mainLogger.fork('mongo');
 
-
     this.client = null;
     this.CONSTANTS = {
         TAGS: 'TAGS'
@@ -308,6 +307,50 @@ function Mongo(mainLogger, gmeConfig) {
                     deferred.resolve(result);
                 } else {
                     deferred.resolve({});
+                }
+            });
+
+            return deferred.promise.nodeify(callback);
+        };
+
+        this.traverse = function (visitFn, callback) {
+            var deferred = Q.defer(),
+                cursor = collection.find(),
+                self = this,
+                finished = false,
+                ongoingVisits = 0,
+                error = null,
+                next = function (err) {
+                    error = error || err;
+                    ongoingVisits -= 1;
+                    if (finished && ongoingVisits === 0) {
+                        if (error) {
+                            deferred.reject(error);
+                        } else {
+                            deferred.resolve();
+                        }
+                    }
+                };
+
+            cursor.batchSize(1000).each(function (err, object) {
+                error = error || err;
+                if (err === null) {
+                    if (object === null) {
+                        finished = true;
+                    } else {
+                        ongoingVisits += 1;
+                        visitFn(object, next);
+                    }
+                } else {
+                    finished = true;
+                }
+
+                if (finished && ongoingVisits === 0) {
+                    if (error) {
+                        deferred.reject(error);
+                    } else {
+                        deferred.resolve();
+                    }
                 }
             });
 
