@@ -521,13 +521,9 @@ define(['js/logger',
                         callback: function (/*key, options*/) {
                             var settings = {};
                             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
-                            WebGMEGlobal.State.set(settings);
-
-                            // Prevent the default to be selected.
-                            setTimeout(function () {
-                                var settings = {};
-                                settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = CROSSCUT_VISUALIZER;
-                                WebGMEGlobal.State.set(settings);
+                            settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = CROSSCUT_VISUALIZER;
+                            WebGMEGlobal.State.set(settings, {
+                                suppressVisualizerFromNode: true
                             });
                         },
                         icon: false
@@ -540,13 +536,9 @@ define(['js/logger',
                         callback: function (/*key, options*/) {
                             var settings = {};
                             settings[CONSTANTS.STATE_ACTIVE_OBJECT] = nodeId;
-                            WebGMEGlobal.State.set(settings);
-
-                            // Prevent the default to be selected.
-                            setTimeout(function () {
-                                var settings = {};
-                                settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = SET_VISUALIZER;
-                                WebGMEGlobal.State.set(settings);
+                            settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = SET_VISUALIZER;
+                            WebGMEGlobal.State.set(settings, {
+                                suppressVisualizerFromNode: true
                             });
                         },
                         icon: false
