@@ -33,7 +33,7 @@ define(['jquery',
 
         //set the attributes from the saved state
         logger.debug('loading state:' + JSON.stringify(stateObj));
-        WebGMEGlobal.State.set(stateObj);
+        WebGMEGlobal.State.set(stateObj, {suppressVisualizerFromNode: true, suppressHistoryUpdate: true});
 
         _stateLoading = false;
     }

@@ -112,6 +112,8 @@ define(['js/logger',
 
         this.metaAspectContainerNodeID = META_RULES_CONTAINER_NODE_ID;
 
+        this.currentNodeInfo.id = WebGMEGlobal.State.getActiveObject();
+
         this.logger.debug('_loadMetaAspectContainerNode: "' + this.metaAspectContainerNodeID + '"');
 
         this._initializeSelectedSheet();
@@ -1676,30 +1678,19 @@ define(['js/logger',
     /****************************************************************************/
     /*               END OF --- CONNECTION DESTINATION TEXT CHANGE              */
     /****************************************************************************/
-
-    // Documentation items
-
-
-    MetaEditorControl.prototype.activeSelectionChanged = function (activeSelection) {
+    MetaEditorControl.prototype._stateActiveSelectionChanged = function (model, activeSelection, opts) {
         var selectedIDs = [],
-            len = activeSelection.length;
+            len = activeSelection ? activeSelection.length : 0;
 
-        while (len--) {
-            if (this._GMEID2ComponentID.hasOwnProperty(activeSelection[len])) {
-                selectedIDs = selectedIDs.concat(this._GMEID2ComponentID[activeSelection[len]]);
+        if (opts.invoker !== this) {
+
+            while (len--) {
+                if (this._GMEID2ComponentID.hasOwnProperty(activeSelection[len])) {
+                    selectedIDs = selectedIDs.concat(this._GMEID2ComponentID[activeSelection[len]]);
+                }
             }
-        }
 
-        this.diagramDesigner.select(selectedIDs);
-    };
-
-    MetaEditorControl.prototype._stateActiveSelectionChanged = function (model, activeSelection) {
-        if (this._settingActiveSelection !== true) {
-            if (activeSelection) {
-                this.activeSelectionChanged(activeSelection);
-            } else {
-                this.activeSelectionChanged([]);
-            }
+            this.diagramDesigner.select(selectedIDs);
         }
     };
 
@@ -1722,6 +1713,11 @@ define(['js/logger',
         if (this._selectedSheetID) {
             WebGMEGlobal.State.registerActiveTab(this._selectedSheetID);
         }
+
+        if (this.currentNodeInfo && typeof this.currentNodeInfo.id === 'string') {
+            WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.id, {suppressVisualizerFromNode: true});
+        }
+
         this._attachClientEventListeners();
         this._displayToolbarItems();
     };

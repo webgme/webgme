@@ -119,7 +119,7 @@ define([
                     client.emitStateNotification();
                 });
 
-                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad);
+                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad, {suppressHistoryUpdate: true});
 
                 document.title = config.pageTitle;
 
@@ -142,6 +142,7 @@ define([
                         WebGMEGlobal.State.registerActiveBranchName(null);
                     }
                 });
+
                 client.addEventListener(client.CONSTANTS.PROJECT_OPENED, function (_client, projectId) {
                     var projectName,
                         nodePath;
@@ -265,7 +266,6 @@ define([
             }
 
             function openProjectLoadDialog(connect) {
-                WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
                 initialProject = false;
                 //if initial project openings failed we show the project opening dialog
                 logger.info('init-phase false');
@@ -312,6 +312,7 @@ define([
                     var i,
                         activeNode,
                         updatedState = {},
+                        opts = {},
                         aspectNames;
                     logger.debug('events from selectObject', events);
 
@@ -335,36 +336,30 @@ define([
                                     updatedState[CONSTANTS.STATE_ACTIVE_SELECTION] = selectionIds;
                                 }
 
-                                tab = parseInt(tab, 10);
-                                if (tab >= 0 && vizualizer) {
+                                if (vizualizer) {
                                     updatedState[CONSTANTS.STATE_ACTIVE_VISUALIZER] = vizualizer;
-                                    updatedState[CONSTANTS.STATE_ACTIVE_TAB] = tab;
+                                    opts.suppressVisualizerFromNode = true;
 
-                                    // Suppress the node determining the visualizer.
-                                    WebGMEGlobal.State.registerActiveVisualizer(vizualizer);
-                                    WebGMEGlobal.State.registerActiveTab(tab);
+                                    tab = parseInt(tab, 10);
+                                    if (tab >= 0) {
+                                        updatedState[CONSTANTS.STATE_ACTIVE_TAB] = tab;
 
-                                    // We also have to set the selected aspect according to the selectedTabIndex,
-                                    //TODO this is not the best solution,
-                                    // but as the node always orders the aspects based on their names, it is fine.
-                                    if (vizualizer === 'ModelEditor') {
-                                        aspectNames = activeNode.getValidAspectNames();
-                                        aspectNames.sort(function (a, b) {
-                                            var an = a.toLowerCase(),
-                                                bn = b.toLowerCase();
+                                        // For the ModelEditor to work the tab-index and aspect name must be aligned.
+                                        if (vizualizer === 'ModelEditor') {
+                                            aspectNames = activeNode.getValidAspectNames();
+                                            aspectNames.sort(function (a, b) {
+                                                var an = a.toLowerCase(),
+                                                    bn = b.toLowerCase();
 
-                                            return (an < bn) ? -1 : 1;
-                                        });
-                                        aspectNames.unshift('All');
-                                        updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] = aspectNames[tab] || 'All';
+                                                return (an < bn) ? -1 : 1;
+                                            });
+                                            aspectNames.unshift('All');
+                                            updatedState[CONSTANTS.STATE_ACTIVE_ASPECT] = aspectNames[tab] || 'All';
+                                        }
                                     }
                                 }
 
-                                setTimeout(function () {
-                                    WebGMEGlobal.State.set(updatedState);
-                                    // After the state has been updated, make sure to allow node look-up again.
-                                    WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
-                                });
+                                WebGMEGlobal.State.set(updatedState, opts);
                                 break;
                             }
                         }

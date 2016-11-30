@@ -215,15 +215,32 @@ define(['js/logger',
         }
     };
 
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveSelectionChanged = function (model, activeSelection, opts) {
+        var selectedIDs = [],
+            len = activeSelection ? activeSelection.length : 0;
+
+        if (opts.invoker !== this) {
+
+            while (len--) {
+                if (this._GMEID2ComponentID.hasOwnProperty(activeSelection[len])) {
+                    selectedIDs = selectedIDs.concat(this._GMEID2ComponentID[activeSelection[len]]);
+                }
+            }
+
+            this._widget.select(selectedIDs);
+        }
+    };
+
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged, this);
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged, this);
-
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged);
 
     };
@@ -234,9 +251,7 @@ define(['js/logger',
 
         //setting the active object to the container
         if (typeof this._memberListContainerID === 'string') {
-            WebGMEGlobal.State.registerSuppressVisualizerFromNode(true);
-            WebGMEGlobal.State.registerActiveObject(this._memberListContainerID);
-            WebGMEGlobal.State.registerSuppressVisualizerFromNode(false);
+            WebGMEGlobal.State.registerActiveObject(this._memberListContainerID, {suppressVisualizerFromNode: true});
         }
     };
 
@@ -1763,7 +1778,7 @@ define(['js/logger',
             }
         }
 
-        WebGMEGlobal.State.registerActiveSelection(gmeIDs);
+        WebGMEGlobal.State.registerActiveSelection(gmeIDs, {invoker: this});
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.displayNoTabMessage = function () {

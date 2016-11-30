@@ -38,9 +38,9 @@ define([
             // FIXME: this might not be the best place to put it...
             var prevQuery;
             if (WebGMEGlobal && WebGMEGlobal.State) {
-                WebGMEGlobal.State.on('change', function () {
+                WebGMEGlobal.State.on('change', function (model, opts) {
                     var searchQuery = WebGMEUrlManager.serializeStateToUrl();
-                    if (prevQuery !== searchQuery) {
+                    if (!opts.suppressHistoryUpdate && prevQuery !== searchQuery) {
                         // set the state that gets pushed into the history
                         $location.state(WebGMEGlobal.State.toJSON());
 

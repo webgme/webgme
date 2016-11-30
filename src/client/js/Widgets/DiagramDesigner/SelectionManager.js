@@ -45,7 +45,7 @@ define([
 
     SelectionManager.prototype.deactivate = function () {
         this._deactivateMouseListeners();
-        this._clearSelection();
+        this._setSelection([]);
     };
 
     SelectionManager.prototype._activateMouseListeners = function () {
@@ -97,7 +97,7 @@ define([
     };
 
     SelectionManager.prototype.clear = function () {
-        this._clearSelection();
+        this._setSelection([]);
     };
 
     SelectionManager.prototype.setSelection = function (idList, addToExistingSelection) {
@@ -142,7 +142,7 @@ define([
             };
 
             if (this._rubberbandSelection.addToExistingSelection !== true) {
-                this._clearSelection();
+                this._setSelection([]);
             }
 
             this.$rubberBand = this._createRubberBand();
@@ -300,8 +300,7 @@ define([
         var i = this._selectedElements.length,
             itemId,
             items = this._diagramDesigner.items,
-            item,
-            changed = false;
+            item;
 
         while (i--) {
             itemId = this._selectedElements[i];
@@ -312,17 +311,11 @@ define([
                     item.onDeselect();
                 }
             }
-
-            changed = true;
         }
 
         this._selectedElements = [];
 
         this.hideSelectionOutline();
-
-        if (changed) {
-            this.onSelectionChanged(this._selectedElements);
-        }
     };
     /*********************** END OF --- CLEAR SELECTION ****************************/
 
@@ -331,12 +324,12 @@ define([
     SelectionManager.prototype._setSelection = function (idList, addToExistingSelection, mouseMoved) {
         var self = this,
             i,
-            len = idList.length,
+            len,
             item,
             items = this._diagramDesigner.items,
             itemId,
             changed = false,
-            selectionCount = len,
+            selectionCount = idList.length,
             onceRendered = function(item) {
                 if (idList.indexOf(item.id) > -1) {
                     if (--selectionCount === 0) {
@@ -348,7 +341,7 @@ define([
 
         this.logger.debug('setSelection: ' + idList + ', addToExistingSelection: ' + addToExistingSelection);
 
-        if (len > 0 && !mouseMoved) {
+        if (!mouseMoved) {
             // Check if the new selection has to be added to the existing selection.
             if (addToExistingSelection === true) {
                 // If not in the selection yet, add IDs to the selection.
@@ -365,12 +358,15 @@ define([
 
                     if ($.isFunction(item.onSelect)) {
                         item.onSelect(true, onceRendered);
+                    } else {
+                        onceRendered(item);
                     }
                 }
 
                 i = idList.length;
                 len = idList.length + this._selectedElements.length;
 
+                selectionCount = idList.length;
                 while (i--) {
                     itemId = idList[i];
 
@@ -381,6 +377,8 @@ define([
 
                         if ($.isFunction(item.onSelect)) {
                             item.onSelect(len > 1, onceRendered);
+                        } else {
+                            onceRendered(item);
                         }
 
                         changed = true;
@@ -391,7 +389,9 @@ define([
                         item = items[itemId];
 
                         if ($.isFunction(item.onDeselect)) {
-                            item.onDeselect();
+                            item.onDeselect(onceRendered);
+                        } else {
+                            onceRendered(item);
                         }
 
                         changed = true;
@@ -402,11 +402,13 @@ define([
                     item = items[this._selectedElements[0]];
                     if ($.isFunction(item.onSelect)) {
                         item.onSelect(false, onceRendered);
+                    } else {
+                        onceRendered(item);
                     }
                 }
             } else {
                 //the existing selection (if any) has to be cleared out first
-                if (idList.length > 1) {
+                if (idList.length > 0) {
                     this._clearSelection();
 
                     changed = true;
@@ -419,24 +421,15 @@ define([
                         this._selectedElements.push(itemId);
 
                         if ($.isFunction(item.onSelect)) {
-                            item.onSelect(true, onceRendered);
+                            item.onSelect(idList.length > 1, onceRendered);
+                        } else {
+                            onceRendered(item);
                         }
                     }
                 } else {
-                    itemId = idList[0];
-
-                    //if not yet in selection
-                    if (this._selectedElements.indexOf(itemId) === -1) {
+                    // Empty idList given..
+                    if (this._selectedElements.length !== 0) {
                         this._clearSelection();
-
-                        this._selectedElements.push(itemId);
-
-                        item = items[itemId];
-
-                        if ($.isFunction(item.onSelect)) {
-                            item.onSelect(false, onceRendered);
-                        }
-
                         changed = true;
                     }
                 }

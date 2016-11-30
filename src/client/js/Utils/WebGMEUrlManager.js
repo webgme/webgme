@@ -34,7 +34,7 @@ define([
             searchQuery += '&visualizer=' + stateInfo.visualizer;
         }
 
-        if (stateInfo.tab) {
+        if (typeof stateInfo.tab === 'number') {
             searchQuery += '&tab=' + stateInfo.tab;
         }
 
@@ -71,7 +71,7 @@ define([
                 stateInfo.visualizer = WebGMEGlobal.State.getActiveVisualizer();
             }
 
-            if (WebGMEGlobal.State.getActiveTab() !== null && WebGMEGlobal.State.getActiveTab() !== undefined) {
+            if (typeof WebGMEGlobal.State.getActiveTab() === 'number') {
                 stateInfo.tab = WebGMEGlobal.State.getActiveTab();
             }
 

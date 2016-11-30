@@ -681,16 +681,7 @@ define(['js/logger',
             }
         }
 
-        // lineStyleControls are disabled in meta-editor.
-
-        //this.diagramDesigner.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionTypeSelected);
-        //this.diagramDesigner.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionTypeSelected);
-        //this.diagramDesigner.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionTypeSelected);
-        //this.diagramDesigner.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionTypeSelected);
-        //this.diagramDesigner.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionTypeSelected);
-        this._settingActiveSelection = true;
-        WebGMEGlobal.State.registerActiveSelection(gmeIDs);
-        this._settingActiveSelection = false;
+        WebGMEGlobal.State.registerActiveSelection(gmeIDs, {invoker: this});
     };
 
     //adding new meta aspect sheet
