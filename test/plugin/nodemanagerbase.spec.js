@@ -69,6 +69,8 @@ describe('climanager', function () {
             .then(function (result) {
                 libContext.commitHash = result.commitHash;
                 libContext.project = result.project;
+                libContext.core = result.core;
+                libContext.rootNode = result.rootNode;
             })
             .nodeify(done);
     });
@@ -614,6 +616,60 @@ describe('climanager', function () {
             })
             .catch(function (err) {
                 expect(err.message).to.include('Given namespace does not exist among the available:');
+            })
+            .nodeify(done);
+    });
+
+    it('should loadNodeMap with all nodes with no start node given', function (done) {
+        var manager = new PluginCliManager(libContext.project, logger, gmeConfig),
+            pluginConfig = {},
+            context = {
+                commitHash: libContext.commitHash,
+            },
+            plugin;
+
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+
+                return manager.configurePlugin(plugin, pluginConfig, context);
+            })
+            .then(function () {
+                return plugin.loadNodeMap();
+            })
+            .then(function (nodeMap) {
+                expect(typeof nodeMap).to.equal('object');
+                expect(nodeMap).to.not.equal(null);
+                expect(Object.keys(nodeMap).length).to.equal(12);
+            })
+            .nodeify(done);
+    });
+
+    it('should loadNodeMap with subtree if node given', function (done) {
+        var manager = new PluginCliManager(libContext.project, logger, gmeConfig),
+            pluginConfig = {},
+            context = {
+                commitHash: libContext.commitHash,
+            },
+            plugin;
+
+        manager.initializePlugin(pluginName)
+            .then(function (plugin_) {
+                plugin = plugin_;
+
+                return manager.configurePlugin(plugin, pluginConfig, context);
+            })
+            .then(function () {
+                plugin.core = libContext.core;
+                return libContext.core.loadByPath(libContext.rootNode, '/T');
+            })
+            .then(function (startNode) {
+                return plugin.loadNodeMap(startNode);
+            })
+            .then(function (nodeMap) {
+                expect(typeof nodeMap).to.equal('object');
+                expect(nodeMap).to.not.equal(null);
+                expect(Object.keys(nodeMap).length).to.equal(8);
             })
             .nodeify(done);
     });
