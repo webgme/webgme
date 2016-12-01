@@ -21,6 +21,8 @@ define([
     'debug',
     'urlparse',
     'underscore',
+    'chance',
+    'ravenjs',
     'backbone',
     'moment',
     'blockies',

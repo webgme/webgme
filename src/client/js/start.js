@@ -17,6 +17,7 @@ require(
         'js/logger',
         'superagent',
         'q',
+        'ravenjs',
 
         'angular',
         'angular-ui-bootstrap',
@@ -25,14 +26,30 @@ require(
         'isis-ui-components-templates'
     ],
     function (jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, bootstrap, bootstrapNotify, underscore,
-              backbone, webGME, util, gmeConfigJson, packageJson, Logger, superagent, Q) {
+              backbone, webGME, util, gmeConfigJson, packageJson, Logger, superagent, Q, Raven) {
 
         'use strict';
         var gmeConfig = JSON.parse(gmeConfigJson),
             npmJSON = JSON.parse(packageJson),
             log = Logger.create('gme:main', gmeConfig.client.log),
             domDeferred = Q.defer(),
+            defaultRavenOpts = { release: npmJSON.version }, // This is the webgme version
             npmJSONFromSplit;
+
+        // if (gmeConfig.client.errorReporting.enable === true) {
+        //     Raven.config(
+        //         gmeConfig.client.errorReporting.url,
+        //         gmeConfig.client.errorReporting.ravenOptions || defaultRavenOpts
+        //     ).install();
+
+        Raven.config('https://3118066a25db430086ad064fb35af2e8@sentry.io/118310').install();
+        //
+        // window.addEventListener('error', function (evt) {
+        //     if (evt.error) {
+        //         Raven.captureException(evt.error);
+        //     }
+        // });
+        // }
 
         WebGMEGlobal.gmeConfig = gmeConfig;
 

@@ -50,6 +50,7 @@
     "jquery.gritter": "1.7.4",
     "remarkable-bootstrap-notify": "3.1.3",
     "EpicEditor": "0.2.3",
-    "jQuery-contextMenu": "2.2.4"
+    "jQuery-contextMenu": "2.2.4",
+    "raven-js": "3.8.1"
   }
 }

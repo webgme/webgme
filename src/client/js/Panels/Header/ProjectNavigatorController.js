@@ -233,6 +233,8 @@ define([
                         }
                     }
                 }
+            } else if (networkStatus === CONSTANTS.CLIENT.UNCAUGHT_EXCEPTION) {
+                // This is handled elsewhere
             } else {
                 self.logger.error('Error network status, no actions done', networkStatus);
             }

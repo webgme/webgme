@@ -63,7 +63,13 @@ var path = require('path'),
             log: {
                 level: 'debug'
             },
-            defaultConnectionRouter: 'basic3' //'basic', 'basic2', 'basic3'
+            defaultConnectionRouter: 'basic3', //'basic', 'basic2', 'basic3'
+            errorReporting: {
+                enable: true,
+                url: 'https://3118066a25db430086ad064fb35af2e8@sentry.io/118310',
+                // see https://docs.sentry.io/clients/javascript/config/
+                ravenOptions: null // defaults to {release: <webgme-version>}
+            }
         },
 
         core: {

@@ -67,6 +67,7 @@ require.config({
         backbone: 'bower_components/backbone/backbone',
         d3: 'bower_components/d3/d3.min',
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
+        ravenjs: 'bower_components/raven-js/dist/raven',
 
         //RaphaelJS family
         eve: 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
@@ -116,6 +117,7 @@ require.config({
         'jquery-ui-iPad': ['jquery', 'jquery-ui'],
         'jquery-layout': ['jquery', 'jquery-ui'],
 
+        ravenjs: ['jquery'],
         bootstrap: ['jquery'],
         'bootstrap-multiselect': ['jquery', 'bootstrap'],
         'bootstrap-notify': ['jquery', 'bootstrap'],
