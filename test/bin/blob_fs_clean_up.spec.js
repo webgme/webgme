@@ -90,7 +90,7 @@ describe('BLOB cleanup script tests', function () {
             .done();
     });
 
-    it.only('should log if wrong hashes are given', function (done) {
+    it('should log if wrong hashes are given', function (done) {
         FS.writeFileSync('test-tmp/wrongHashes.json', JSON.stringify(['hashOne', 'hashTwo']), 'utf8');
         cleanup({input: 'test-tmp/wrongHashes.json'})
             .then(function () {
