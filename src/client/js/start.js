@@ -36,20 +36,12 @@ require(
             defaultRavenOpts = { release: npmJSON.version }, // This is the webgme version
             npmJSONFromSplit;
 
-        // if (gmeConfig.client.errorReporting.enable === true) {
-        //     Raven.config(
-        //         gmeConfig.client.errorReporting.url,
-        //         gmeConfig.client.errorReporting.ravenOptions || defaultRavenOpts
-        //     ).install();
-
-        Raven.config('https://3118066a25db430086ad064fb35af2e8@sentry.io/118310').install();
-        //
-        // window.addEventListener('error', function (evt) {
-        //     if (evt.error) {
-        //         Raven.captureException(evt.error);
-        //     }
-        // });
-        // }
+        if (gmeConfig.client.errorReporting.enable === true) {
+            Raven.config(
+                gmeConfig.client.errorReporting.DSN,
+                gmeConfig.client.errorReporting.ravenOptions || defaultRavenOpts
+            ).install();
+        }
 
         WebGMEGlobal.gmeConfig = gmeConfig;
 
