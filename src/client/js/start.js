@@ -17,6 +17,7 @@ require(
         'js/logger',
         'superagent',
         'q',
+        'ravenjs',
 
         'angular',
         'angular-ui-bootstrap',
@@ -25,14 +26,22 @@ require(
         'isis-ui-components-templates'
     ],
     function (jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, bootstrap, bootstrapNotify, underscore,
-              backbone, webGME, util, gmeConfigJson, packageJson, Logger, superagent, Q) {
+              backbone, webGME, util, gmeConfigJson, packageJson, Logger, superagent, Q, Raven) {
 
         'use strict';
         var gmeConfig = JSON.parse(gmeConfigJson),
             npmJSON = JSON.parse(packageJson),
             log = Logger.create('gme:main', gmeConfig.client.log),
             domDeferred = Q.defer(),
+            defaultRavenOpts = { release: npmJSON.version }, // This is the webgme version
             npmJSONFromSplit;
+
+        if (gmeConfig.client.errorReporting.enable === true) {
+            Raven.config(
+                gmeConfig.client.errorReporting.DSN,
+                gmeConfig.client.errorReporting.ravenOptions || defaultRavenOpts
+            ).install();
+        }
 
         WebGMEGlobal.gmeConfig = gmeConfig;
 

@@ -140,6 +140,10 @@ function validateConfig(configOrFileName) {
         'Use component settings for "GenericUIWebGMEStart"');
     assertEnum('config.client.defaultConnectionRouter', config.client.defaultConnectionRouter,
         'basic', 'basic2', 'basic3');
+    assertObject('config.client.errorReporting', config.client.errorReporting);
+    assertBoolean('config.client.errorReporting.enable', config.client.errorReporting.enable);
+    assertString('config.client.errorReporting.DSN', config.client.errorReporting.DSN);
+    assertObject('config.client.errorReporting.ravenOptions', config.client.errorReporting.ravenOptions, true);
 
     // core
     expectedKeys.push('core');
