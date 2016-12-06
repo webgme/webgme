@@ -40,5 +40,9 @@ define(['./ButtonBase', './ToolbarItemBase'], function (buttonBase, ToolbarItemB
         }
     };
 
+    ToolbarToggleButton.prototype.enabled = function (enabled) {
+        this._btn.enabled(enabled);
+    };
+
     return ToolbarToggleButton;
 });
