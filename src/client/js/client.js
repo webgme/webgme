@@ -44,7 +44,8 @@ define([
             logger = Logger.create('gme:client', gmeConfig.client.log),
             storage = Storage.getStorage(logger, gmeConfig, true),
             state = {
-                connection: null, // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED/INCOMPATIBLE_CONNECTION/CONNECTION_ERROR
+                // CONSTANTS.STORAGE. CONNECTED/DISCONNECTED/RECONNECTED/INCOMPATIBLE_CONNECTION/CONNECTION_ERROR
+                connection: null,
                 renewingToken: false,
                 exception: null,
                 project: null,
@@ -89,13 +90,547 @@ define([
             coreLibraryFunctions,
             ROOT_PATH = '',
             //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
-            loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
-        //loadPatternThrottled = loadPattern; //magic number could be fine-tuned
+            loadPatternThrottled;
 
         blobClient = new BlobClient({logger: logger.fork('BlobClient')});
         EventDispatcher.call(this);
 
         this.CONSTANTS = CONSTANTS;
+
+        // Internal functions
+        function COPY(object) {
+            if (object) {
+                return JSON.parse(JSON.stringify(object));
+            }
+            return null;
+        }
+
+        function addLoadUnloadPathToUpdates(paths) {
+            var i,
+                pathPieces;
+
+            for (i = 0; i < paths.length; i += 1) {
+                pathPieces = paths[i].split(CONSTANTS.CORE.PATH_SEP);
+                while (pathPieces.length > 1) {
+                    state.loading.changedNodes.update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
+                    pathPieces.pop();
+                }
+            }
+        }
+
+        function wasNodeUpdated(changedNodes, node) {
+            // Is changedNodes available at all?  If not (undo/redo) emit for all nodes...
+            if (!changedNodes) {
+                return true;
+            }
+
+            // Did the node have a collection update?
+            if (changedNodes.partialUpdate[state.core.getPath(node)] === true) {
+                return true;
+            }
+
+            // Did any of the base classes have a non-collection update?
+            while (node) {
+                if (changedNodes.update[state.core.getPath(node)] === true) {
+                    return true;
+                }
+
+                node = state.core.getBase(node);
+            }
+
+            return false;
+        }
+
+        function getModifiedNodes(newerNodes) {
+            var modifiedNodes = [],
+                updatedMetaPaths = [],
+                metaNodes,
+                metaPath,
+                updatePath,
+                nodePath,
+                i;
+
+            // For the client these rules apply for finding the affected nodes.
+            // 1. Updates should be triggered to any node that core.isTypeOf (i.e. mixins accounted for).
+            // 2. Root node should always be triggered.
+            // 3. loads/unloads should trigger updates for the parent chain.
+
+            if (state.loading.changedNodes) {
+                // 1. Account for mixins - i.e resolve isTypeOf.
+                // Gather all meta-nodes that had an update.
+                metaNodes = state.core.getAllMetaNodes(newerNodes[ROOT_PATH].node);
+                for (updatePath in state.loading.changedNodes.update) {
+                    if (metaNodes.hasOwnProperty(updatePath)) {
+                        updatedMetaPaths.push(updatePath);
+                    }
+                }
+
+                if (updatedMetaPaths.length > 0) {
+                    // There are meta-nodes with updates.
+                    for (metaPath in metaNodes) {
+                        // For all meta nodes..
+                        if (metaNodes.hasOwnProperty(metaPath)) {
+                            for (i = 0; i < updatedMetaPaths.length; i += 1) {
+                                // check if it is a typeOf (includes mixins) any of the updated meta-nodes
+                                if (state.core.isTypeOf(metaNodes[metaPath],
+                                        metaNodes[updatedMetaPaths[i]]) === true) {
+                                    // if so add its path to the update nodes.
+                                    state.loading.changedNodes.update[metaPath] = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                //console.log('Update after meta considered', Object.keys(state.loading.changedNodes.update));
+
+                // 2. Add Root node
+                state.loading.changedNodes.update[ROOT_PATH] = true;
+
+                // 3. Account for loads and unloads.
+                addLoadUnloadPathToUpdates(Object.keys(state.loading.changedNodes.load));
+                addLoadUnloadPathToUpdates(Object.keys(state.loading.changedNodes.unload));
+
+                //console.log('Update after loads and unloads considered',
+                //    Object.keys(state.loading.changedNodes.update));
+            }
+
+            for (nodePath in state.nodes) {
+                if (state.nodes.hasOwnProperty(nodePath) && newerNodes.hasOwnProperty(nodePath) &&
+                    wasNodeUpdated(state.loading.changedNodes, newerNodes[nodePath].node)) {
+
+                    modifiedNodes.push(nodePath);
+                }
+            }
+            //console.log('NewerNodes, modifiedNodes', Object.keys(newerNodes).length, modifiedNodes.length);
+            return modifiedNodes;
+        }
+
+        //this is just a first brute implementation it needs serious optimization!!!
+        function fitsInPatternTypes(path, pattern) {
+            var i;
+
+            if (pattern.items && pattern.items.length > 0) {
+                for (i = 0; i < pattern.items.length; i += 1) {
+                    if (self.isTypeOf(path, pattern.items[i])) {
+                        return true;
+                    }
+                }
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        function patternToPaths(patternId, pattern, pathsSoFar) {
+            var children,
+                subPattern,
+                i;
+
+            if (state.nodes[patternId]) {
+                pathsSoFar[patternId] = true;
+                if (pattern.children && pattern.children > 0) {
+                    children = state.core.getChildrenPaths(state.nodes[patternId].node);
+                    subPattern = COPY(pattern);
+                    subPattern.children -= 1;
+                    for (i = 0; i < children.length; i += 1) {
+                        if (fitsInPatternTypes(children[i], pattern)) {
+                            patternToPaths(children[i], subPattern, pathsSoFar);
+                        }
+                    }
+                }
+            } else {
+                state.loadError++;
+            }
+        }
+
+        function userEvents(userId, modifiedNodes) {
+            var newPaths = {},
+                startErrorLevel = state.loadError,
+                loadedOrUnloaded = {},
+                i,
+                events = [];
+
+            for (i in state.users[userId].PATTERNS) {
+                if (state.users[userId].PATTERNS.hasOwnProperty(i)) {
+                    if (state.nodes[i]) { //TODO we only check pattern if its root is there...
+                        patternToPaths(i, state.users[userId].PATTERNS[i], newPaths);
+                    }
+                }
+            }
+
+            if (startErrorLevel !== state.loadError) {
+                return; //we send events only when everything is there correctly
+            }
+
+            //deleted items
+            for (i in state.users[userId].PATHS) {
+                if (!newPaths[i]) {
+                    events.push({etype: 'unload', eid: i});
+                    loadedOrUnloaded[i] = true;
+                }
+            }
+
+            //added items
+            for (i in newPaths) {
+                if (!state.users[userId].PATHS[i]) {
+                    events.push({etype: 'load', eid: i});
+                    loadedOrUnloaded[i] = true;
+                }
+            }
+
+            //updated items
+            for (i = 0; i < modifiedNodes.length; i++) {
+                // Check that there wasn't a load or unload event for the node
+                if (newPaths[modifiedNodes[i]] && !loadedOrUnloaded[modifiedNodes[i]]) {
+                    events.push({etype: 'update', eid: modifiedNodes[i]});
+                }
+            }
+
+            state.users[userId].PATHS = newPaths;
+
+            //this is how the events should go
+            if (events.length > 0) {
+                if (state.loadError > startErrorLevel) {
+                    events.unshift({etype: 'incomplete', eid: null});
+                } else {
+                    events.unshift({etype: 'complete', eid: null});
+                }
+            } else {
+                events.unshift({etype: 'complete', eid: null});
+            }
+
+            state.users[userId].FN(events);
+        }
+
+        function loadChildrenPattern(core, nodesSoFar, node, level, callback) {
+            var path = core.getPath(node),
+                childrenPaths = core.getChildrenPaths(node),
+                childrenRelids = core.getChildrenRelids(node),
+                missing = childrenPaths.length,
+                error = null,
+                i,
+                childrenPatternLoaded = function (err) {
+                    error = error || err;
+                    missing -= 1;
+                    if (missing === 0) {
+                        callback(error);
+                    }
+                },
+                childLoaded = function (err, child) {
+                    if (err || child === null) {
+                        error = error || err;
+                        missing -= 1;
+                        if (missing === 0) {
+                            callback(error);
+                        }
+                    } else {
+                        loadChildrenPattern(core, nodesSoFar, child, level - 1, childrenPatternLoaded);
+                    }
+                };
+
+            if (!nodesSoFar[path]) {
+                nodesSoFar[path] = {
+                    node: node
+                };
+            }
+            if (level > 0) {
+                if (missing > 0) {
+                    for (i = 0; i < childrenPaths.length; i++) {
+                        if (nodesSoFar[childrenPaths[i]]) {
+                            loadChildrenPattern(core,
+                                nodesSoFar,
+                                nodesSoFar[childrenPaths[i]].node,
+                                level - 1, childrenPatternLoaded);
+                        } else {
+                            core.loadChild(node, childrenRelids[i], childLoaded);
+                        }
+                    }
+                } else {
+                    callback(error);
+                }
+            } else {
+                callback(error);
+            }
+        }
+
+        function loadPattern(core, id, pattern, nodesSoFar, callback) {
+            //console.log('LP',id,pattern);
+            //var _callback = callback;
+            //callback = function(error){
+            //    console.log('LPF',id,pattern);
+            //    _callback(error);
+            //};
+
+            var base = null,
+                baseLoaded = function () {
+                    if (pattern.children && pattern.children > 0) {
+                        var level = pattern.children;
+                        loadChildrenPattern(core, nodesSoFar, base, level, callback);
+                    } else {
+                        callback(null);
+                    }
+                };
+
+            if (nodesSoFar[id]) {
+                base = nodesSoFar[id].node;
+                baseLoaded();
+            } else {
+                if (!nodesSoFar[ROOT_PATH]) {
+                    logger.error('pattern cannot be loaded if there is no root!!!');
+                }
+                base = nodesSoFar[ROOT_PATH].node;
+
+                core.loadByPath(base, id, function (err, node) {
+                    var path;
+                    if (!err && node && !core.isEmpty(node)) {
+                        path = core.getPath(node);
+                        if (!nodesSoFar[path]) {
+                            nodesSoFar[path] = {
+                                node: node
+                            };
+                        }
+                        base = node;
+                        baseLoaded();
+                    } else {
+                        callback(err);
+                    }
+                });
+            }
+        }
+
+        loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
+
+        function checkMetaNameCollision(core, rootNode) {
+            var names = [],
+                nodes = core.getAllMetaNodes(rootNode),
+                i,
+                keys = Object.keys(nodes || {}),
+                name;
+            for (i = 0; i < keys.length; i += 1) {
+                //name = core.getAttribute(nodes[keys[i]], 'name');
+                name = core.getFullyQualifiedName(nodes[keys[i]]);
+                if (names.indexOf(name) === -1) {
+                    names.push(name);
+                } else {
+                    self.dispatchEvent(CONSTANTS.NOTIFICATION, {
+                        type: 'META',
+                        severity: 'error',
+                        message: 'Duplicate name on META level: \'' + name + '\'',
+                        hint: 'Rename one of the objects'
+                    });
+                }
+            }
+
+        }
+
+        function checkMixinErrors(core, rootNode) {
+            var metaNodes = core.getAllMetaNodes(rootNode),
+                i, key,
+                notifications = {},
+                notificationKeys = [],
+                errors;
+
+            for (key in metaNodes) {
+                errors = core.getMixinErrors(metaNodes[key]);
+
+                for (i = 0; i < errors.length; i += 1) {
+                    notifications[errors[i].message] = {
+                        type: 'META',
+                        severity: errors[i].severity,
+                        message: errors[i].message,
+                        hint: errors[i].hint
+                    };
+                    notificationKeys.push(errors[i].message);
+                }
+            }
+
+            //now sort simply by the messages
+            notificationKeys.sort();
+            for (i = 0; i < notificationKeys.length; i += 1) {
+                self.dispatchEvent(CONSTANTS.NOTIFICATION, notifications[notificationKeys[i]]);
+            }
+        }
+
+        function reLaunchUsers() {
+            var i;
+            for (i in state.users) {
+                if (state.users.hasOwnProperty(i)) {
+                    if (state.users[i].UI.reLaunch) {
+                        state.users[i].UI.reLaunch();
+                    }
+                }
+            }
+        }
+
+        function _updateTerritoryAllDone(guid, patterns, error) {
+
+            logger.debug('updateTerritory related loads finished', {
+                metadata: {
+                    userId: guid, patterns: patterns, error: error
+                }
+            });
+
+            if (state.users[guid]) {
+                state.users[guid].PATTERNS = COPY(patterns);
+                if (!error) {
+                    userEvents(guid, []);
+                }
+            }
+        }
+
+        function canSwitchStates() {
+            if (state.inLoading && state.ongoingTerritoryUpdateCounter === 0 &&
+                state.ongoingLoadPatternsCounter === 0) {
+                return true;
+            }
+            return false;
+        }
+
+        function switchStates() {
+            //it is safe now to move the loadNodes into nodes,
+            // refresh the metaNodes and generate events - all in a synchronous manner!!!
+            var modifiedPaths,
+                i;
+
+            //console.time('switchStates');
+
+            logger.debug('switching project state [C#' +
+                state.commitHash + ']->[C#' + state.loading.commitHash + '] : [R#' +
+                state.rootHash + ']->[R#' + state.loading.rootHash + ']');
+
+            //console.time('getModifiedNodes');
+            modifiedPaths = getModifiedNodes(state.loadNodes);
+            //console.timeEnd('getModifiedNodes');
+            state.nodes = state.loadNodes;
+            state.loadNodes = {};
+            self.getAllMetaNodes(); //This ensures that all language elements can be accessed with getNode
+
+            state.inLoading = false;
+            state.rootHash = state.loading.rootHash;
+            state.loading.rootHash = null;
+            state.commitHash = state.loading.commitHash;
+            state.loading.commitHash = null;
+
+            checkMetaNameCollision(state.core, state.nodes[ROOT_PATH].node);
+            checkMixinErrors(state.core, state.nodes[ROOT_PATH].node);
+
+            for (i in state.users) {
+                if (state.users.hasOwnProperty(i)) {
+                    userEvents(i, modifiedPaths);
+                }
+            }
+
+            if (state.loadingStatus) {
+                state.loading.next(state.loadingStatus);
+            } else {
+                state.loading.next(null);
+            }
+
+            //console.timeEnd('switchStates');
+        }
+
+        function loadingPatternFinished(err) {
+            state.loadingStatus = state.loadingStatus || err;
+            state.ongoingLoadPatternsCounter -= 1;
+
+            if (canSwitchStates()) {
+                switchStates();
+            }
+        }
+
+        function loading(newRootHash, newCommitHash, changedNodes, callback) {
+            var i, j,
+                userIds,
+                patternPaths,
+                patternsToLoad = [];
+
+            if (state.ongoingLoadPatternsCounter !== 0) {
+                callback(new Error('at the start of loading counter should bee zero!!! [' +
+                    state.ongoingLoadPatternsCounter + ']'));
+                return;
+            }
+
+            state.loadingStatus = null;
+            state.loadNodes = {};
+            state.loading.rootHash = newRootHash;
+            state.loading.commitHash = newCommitHash;
+            state.loading.next = callback;
+            state.loading.changedNodes = changedNodes;
+
+            state.core.loadRoot(state.loading.rootHash, function (err, root) {
+                if (err) {
+                    state.loading.next(err);
+                    return;
+                }
+
+                state.inLoading = true;
+                state.loadNodes[state.core.getPath(root)] = {
+                    node: root
+                };
+
+                //we first only set the counter of patterns but we also generate a completely separate pattern queue
+                //as we cannot be sure if all the users will remain at the point of giving the actual load command!
+                userIds = Object.keys(state.users);
+                for (i = 0; i < userIds.length; i += 1) {
+                    state.ongoingLoadPatternsCounter += Object.keys(state.users[userIds[i]].PATTERNS || {}).length;
+                    patternPaths = Object.keys(state.users[userIds[i]].PATTERNS || {});
+                    for (j = 0; j < patternPaths.length; j += 1) {
+                        patternsToLoad.push({
+                            id: patternPaths[j],
+                            pattern: COPY(state.users[userIds[i]].PATTERNS[patternPaths[j]])
+                        });
+                    }
+                }
+                userIds = Object.keys(state.pendingTerritoryUpdatePatterns);
+                for (i = 0; i < userIds.length; i += 1) {
+                    state.ongoingLoadPatternsCounter +=
+                        Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {}).length;
+                    patternPaths = Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {});
+                    for (j = 0; j < patternPaths.length; j += 1) {
+                        patternsToLoad.push({
+                            id: patternPaths[j],
+                            pattern: COPY(state.pendingTerritoryUpdatePatterns[userIds[i]][patternPaths[j]])
+                        });
+                    }
+                }
+
+                //empty load check
+                if (state.ongoingLoadPatternsCounter === 0) {
+                    if (canSwitchStates()) {
+                        switchStates();
+                        reLaunchUsers();
+                    }
+                    return;
+                }
+
+                for (i = 0; i < patternsToLoad.length; i += 1) {
+                    loadPatternThrottled(state.core,
+                        patternsToLoad[i].id, patternsToLoad[i].pattern, state.loadNodes, loadingPatternFinished);
+                }
+            });
+        }
+
+        function cleanUsersTerritories() {
+            //look out as the user can remove itself at any time!!!
+            var userIds = Object.keys(state.users),
+                i,
+                j,
+                events;
+
+            for (i = 0; i < userIds.length; i++) {
+                if (state.users[userIds[i]]) {
+                    events = [{eid: null, etype: 'complete'}];
+                    for (j in state.users[userIds[i]].PATHS
+                        ) {
+                        events.push({etype: 'unload', eid: j});
+                    }
+                    state.users[userIds[i]].PATTERNS = {};
+                    state.users[userIds[i]].PATHS = {};
+                    state.users[userIds[i]].SENDEVENTS = true;
+                    state.users[userIds[i]].FN(events);
+                }
+            }
+        }
 
         function logState(level, msg) {
             var indent = gmeConfig.debug ? 2 : 0;
@@ -110,7 +645,7 @@ define([
         }
 
         function renewTokenCookie(callback) {
-            callback = callback || function (err, res) {
+            callback = callback || function (err /*, res*/) {
                     state.renewingToken = false;
                     if (err) {
                         logger.error('Failed to renew token cookie', err);
@@ -227,57 +762,6 @@ define([
         this.filterPlugins = pluginManager.filterPlugins;
         this.dispatchPluginNotification = pluginManager.dispatchPluginNotification;
 
-        function checkMetaNameCollision(core, rootNode) {
-            var names = [],
-                nodes = core.getAllMetaNodes(rootNode),
-                i,
-                keys = Object.keys(nodes || {}),
-                name;
-            for (i = 0; i < keys.length; i += 1) {
-                //name = core.getAttribute(nodes[keys[i]], 'name');
-                name = core.getFullyQualifiedName(nodes[keys[i]]);
-                if (names.indexOf(name) === -1) {
-                    names.push(name);
-                } else {
-                    self.dispatchEvent(CONSTANTS.NOTIFICATION, {
-                        type: 'META',
-                        severity: 'error',
-                        message: 'Duplicate name on META level: \'' + name + '\'',
-                        hint: 'Rename one of the objects'
-                    });
-                }
-            }
-
-        }
-
-        function checkMixinErrors(core, rootNode) {
-            var metaNodes = core.getAllMetaNodes(rootNode),
-                i, key,
-                notifications = {},
-                notificationKeys = [],
-                errors;
-
-            for (key in metaNodes) {
-                errors = core.getMixinErrors(metaNodes[key]);
-
-                for (i = 0; i < errors.length; i += 1) {
-                    notifications[errors[i].message] = {
-                        type: 'META',
-                        severity: errors[i].severity,
-                        message: errors[i].message,
-                        hint: errors[i].hint
-                    };
-                    notificationKeys.push(errors[i].message);
-                }
-            }
-
-            //now sort simply by the messages
-            notificationKeys.sort();
-            for (i = 0; i < notificationKeys.length; i += 1) {
-                self.dispatchEvent(CONSTANTS.NOTIFICATION, notifications[notificationKeys[i]]);
-            }
-        }
-
         function printCoreError(error) {
             logger.error('Faulty core usage raised an error', error);
             self.dispatchEvent(CONSTANTS.NOTIFICATION, {
@@ -306,6 +790,36 @@ define([
         }
 
         // Main API functions (with helpers) for connecting, selecting project and branches etc.
+
+        function closeProject(projectId, callback) {
+
+            state.project = null;
+            //TODO what if for some reason we are in transaction?
+            storage.closeProject(projectId, function (err) {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                state.core = null;
+                state.branchName = null;
+                //self.dispatchEvent(null);
+                state.patterns = {};
+                //state.gHash = 0;
+                state.nodes = {};
+                state.loadNodes = {};
+                state.loadError = 0;
+                state.rootHash = null;
+                //state.rootObject = null;
+                state.inTransaction = false;
+                state.msg = '';
+
+                cleanUsersTerritories();
+                self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectId);
+
+                callback(null);
+            });
+        }
+
         this.connectToDatabase = function (callback) {
             if (self.isConnected()) {
                 logger.warn('connectToDatabase - already connected');
@@ -520,33 +1034,116 @@ define([
             }
         };
 
-        function closeProject(projectId, callback) {
+        function addModification(commitObject, clear) {
+            var newItem,
+                commitHash = commitObject[CONSTANTS.STORAGE.MONGO_ID],
+                currItem;
+            if (clear) {
+                logger.debug('foreign modification clearing undo-redo chain');
+                state.undoRedoChain = {
+                    commitHash: commitHash,
+                    rootHash: commitObject.root,
+                    previous: null,
+                    next: null
+                };
+                return;
+            }
 
-            state.project = null;
-            //TODO what if for some reason we are in transaction?
-            storage.closeProject(projectId, function (err) {
-                if (err) {
-                    callback(err);
+            // Check if the modification already exist, i.e. commit is from undoing or redoing.
+            currItem = state.undoRedoChain;
+            while (currItem) {
+                if (currItem.commitHash === commitHash) {
                     return;
                 }
-                state.core = null;
-                state.branchName = null;
-                //self.dispatchEvent(null);
-                state.patterns = {};
-                //state.gHash = 0;
-                state.nodes = {};
-                state.loadNodes = {};
-                state.loadError = 0;
-                state.rootHash = null;
-                //state.rootObject = null;
-                state.inTransaction = false;
-                state.msg = '';
+                currItem = currItem.previous;
+            }
 
-                cleanUsersTerritories();
-                self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectId);
+            currItem = state.undoRedoChain;
+            while (currItem) {
+                if (currItem.commitHash === commitHash) {
+                    return;
+                }
+                currItem = currItem.next;
+            }
 
-                callback(null);
-            });
+            newItem = {
+                commitHash: commitHash,
+                rootHash: commitObject.root,
+                previous: state.undoRedoChain,
+                next: null
+            };
+            state.undoRedoChain.next = newItem;
+            state.undoRedoChain = newItem;
+        }
+
+        function canUndo() {
+            var result = false;
+            if (state.undoRedoChain && state.undoRedoChain.previous && state.undoRedoChain.previous.commitHash) {
+                result = true;
+            }
+
+            return result;
+        }
+
+        function canRedo() {
+            var result = false;
+            if (state.undoRedoChain && state.undoRedoChain.next) {
+                result = true;
+            }
+
+            return result;
+        }
+
+        function getBranchStatusHandler() {
+            return function (branchStatus, commitQueue, updateQueue) {
+                logger.debug('branchStatus changed', branchStatus, commitQueue, updateQueue);
+                logState('debug', 'branchStatus');
+                state.branchStatus = branchStatus;
+                self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {
+                        status: branchStatus,
+                        commitQueue: commitQueue,
+                        updateQueue: updateQueue
+                    }
+                );
+            };
+        }
+
+        function getHashUpdateHandler() {
+            return function (data, commitQueue, updateQueue, callback) {
+                var commitData = data.commitData,
+                    clearUndoRedo = data.local !== true,
+                    commitHash = commitData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
+                logger.debug('hashUpdateHandler invoked. project, branch, commitHash',
+                    commitData.projectId, commitData.branchName, commitHash);
+
+                if (state.inTransaction) {
+                    logger.warn('Is in transaction, will not load in changes');
+                    callback(null, false); // proceed: false
+                    return;
+                }
+
+                //undo-redo
+                addModification(commitData.commitObject, clearUndoRedo);
+                self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
+                self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
+
+                logger.debug('loading commitHash, local?', commitHash, data.local);
+                loading(commitData.commitObject.root, commitHash, commitData.changedNodes, function (err, aborted) {
+                    if (err) {
+                        logger.error('hashUpdateHandler invoked loading and it returned error',
+                            commitData.commitObject.root, err);
+                        logState('error', 'hashUpdateHandler');
+                        callback(err, false); // proceed: false
+                    } else if (aborted === true) {
+                        logState('warn', 'hashUpdateHandler');
+                        callback(null, false); // proceed: false
+                    } else {
+                        logger.debug('loading complete for incoming rootHash', commitData.commitObject.root);
+                        logState('debug', 'hashUpdateHandler');
+                        callback(null, true); // proceed: true
+                    }
+                });
+            };
         }
 
         /**
@@ -666,58 +1263,6 @@ define([
             }
         };
 
-        function getBranchStatusHandler() {
-            return function (branchStatus, commitQueue, updateQueue) {
-                logger.debug('branchStatus changed', branchStatus, commitQueue, updateQueue);
-                logState('debug', 'branchStatus');
-                state.branchStatus = branchStatus;
-                self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {
-                        status: branchStatus,
-                        commitQueue: commitQueue,
-                        updateQueue: updateQueue
-                    }
-                );
-            };
-        }
-
-        function getHashUpdateHandler() {
-            return function (data, commitQueue, updateQueue, callback) {
-                var commitData = data.commitData,
-                    clearUndoRedo = data.local !== true,
-                    commitHash = commitData.commitObject[CONSTANTS.STORAGE.MONGO_ID];
-                logger.debug('hashUpdateHandler invoked. project, branch, commitHash',
-                    commitData.projectId, commitData.branchName, commitHash);
-
-                if (state.inTransaction) {
-                    logger.warn('Is in transaction, will not load in changes');
-                    callback(null, false); // proceed: false
-                    return;
-                }
-
-                //undo-redo
-                addModification(commitData.commitObject, clearUndoRedo);
-                self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-                self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
-
-                logger.debug('loading commitHash, local?', commitHash, data.local);
-                loading(commitData.commitObject.root, commitHash, commitData.changedNodes, function (err, aborted) {
-                    if (err) {
-                        logger.error('hashUpdateHandler invoked loading and it returned error',
-                            commitData.commitObject.root, err);
-                        logState('error', 'hashUpdateHandler');
-                        callback(err, false); // proceed: false
-                    } else if (aborted === true) {
-                        logState('warn', 'hashUpdateHandler');
-                        callback(null, false); // proceed: false
-                    } else {
-                        logger.debug('loading complete for incoming rootHash', commitData.commitObject.root);
-                        logState('debug', 'hashUpdateHandler');
-                        callback(null, true); // proceed: true
-                    }
-                });
-            };
-        }
-
         this.forkCurrentBranch = function (newName, commitHash, callback) {
             var self = this,
                 activeBranchName = self.getActiveBranchName(),
@@ -830,66 +1375,6 @@ define([
         };
 
         // Undo/Redo functionality
-        function addModification(commitObject, clear) {
-            var newItem,
-                commitHash = commitObject[CONSTANTS.STORAGE.MONGO_ID],
-                currItem;
-            if (clear) {
-                logger.debug('foreign modification clearing undo-redo chain');
-                state.undoRedoChain = {
-                    commitHash: commitHash,
-                    rootHash: commitObject.root,
-                    previous: null,
-                    next: null
-                };
-                return;
-            }
-
-            // Check if the modification already exist, i.e. commit is from undoing or redoing.
-            currItem = state.undoRedoChain;
-            while (currItem) {
-                if (currItem.commitHash === commitHash) {
-                    return;
-                }
-                currItem = currItem.previous;
-            }
-
-            currItem = state.undoRedoChain;
-            while (currItem) {
-                if (currItem.commitHash === commitHash) {
-                    return;
-                }
-                currItem = currItem.next;
-            }
-
-            newItem = {
-                commitHash: commitHash,
-                rootHash: commitObject.root,
-                previous: state.undoRedoChain,
-                next: null
-            };
-            state.undoRedoChain.next = newItem;
-            state.undoRedoChain = newItem;
-        }
-
-        function canUndo() {
-            var result = false;
-            if (state.undoRedoChain && state.undoRedoChain.previous && state.undoRedoChain.previous.commitHash) {
-                result = true;
-            }
-
-            return result;
-        }
-
-        function canRedo() {
-            var result = false;
-            if (state.undoRedoChain && state.undoRedoChain.next) {
-                result = true;
-            }
-
-            return result;
-        }
-
         this.undo = function (branchName, callback) {
             if (canUndo() === false) {
                 callback(new Error('unable to make undo'));
@@ -1192,15 +1677,6 @@ define([
             storage.unwatchProject(projectId, eventHandler, callback);
         };
 
-        // Internal functions
-
-        function COPY(object) {
-            if (object) {
-                return JSON.parse(JSON.stringify(object));
-            }
-            return null;
-        }
-
         // Node handling
         this.getNode = function (nodePath) {
             return getNode(nodePath, logger, state, storeNode);
@@ -1222,276 +1698,6 @@ define([
 
             return [];
         };
-
-        function addLoadUnloadPathToUpdates(paths) {
-            var i,
-                pathPieces;
-
-            for (i = 0; i < paths.length; i += 1) {
-                pathPieces = paths[i].split(CONSTANTS.CORE.PATH_SEP);
-                while (pathPieces.length > 1) {
-                    state.loading.changedNodes.update[pathPieces.join(CONSTANTS.CORE.PATH_SEP)] = true;
-                    pathPieces.pop();
-                }
-            }
-        }
-
-        function getModifiedNodes(newerNodes) {
-            var modifiedNodes = [],
-                updatedMetaPaths = [],
-                metaNodes,
-                metaPath,
-                updatePath,
-                nodePath,
-                i;
-
-            // For the client these rules apply for finding the affected nodes.
-            // 1. Updates should be triggered to any node that core.isTypeOf (i.e. mixins accounted for).
-            // 2. Root node should always be triggered.
-            // 3. loads/unloads should trigger updates for the parent chain.
-
-            if (state.loading.changedNodes) {
-                // 1. Account for mixins - i.e resolve isTypeOf.
-                // Gather all meta-nodes that had an update.
-                metaNodes = state.core.getAllMetaNodes(newerNodes[ROOT_PATH].node);
-                for (updatePath in state.loading.changedNodes.update) {
-                    if (metaNodes.hasOwnProperty(updatePath)) {
-                        updatedMetaPaths.push(updatePath);
-                    }
-                }
-
-                if (updatedMetaPaths.length > 0) {
-                    // There are meta-nodes with updates.
-                    for (metaPath in metaNodes) {
-                        // For all meta nodes..
-                        if (metaNodes.hasOwnProperty(metaPath)) {
-                            for (i = 0; i < updatedMetaPaths.length; i += 1) {
-                                // check if it is a typeOf (includes mixins) any of the updated meta-nodes
-                                if (state.core.isTypeOf(metaNodes[metaPath],
-                                        metaNodes[updatedMetaPaths[i]]) === true) {
-                                    // if so add its path to the update nodes.
-                                    state.loading.changedNodes.update[metaPath] = true;
-                                }
-                            }
-                        }
-                    }
-                }
-                //console.log('Update after meta considered', Object.keys(state.loading.changedNodes.update));
-
-                // 2. Add Root node
-                state.loading.changedNodes.update[ROOT_PATH] = true;
-
-                // 3. Account for loads and unloads.
-                addLoadUnloadPathToUpdates(Object.keys(state.loading.changedNodes.load));
-                addLoadUnloadPathToUpdates(Object.keys(state.loading.changedNodes.unload));
-
-                //console.log('Update after loads and unloads considered',
-                //    Object.keys(state.loading.changedNodes.update));
-            }
-
-            for (nodePath in state.nodes) {
-                if (state.nodes.hasOwnProperty(nodePath) && newerNodes.hasOwnProperty(nodePath) &&
-                    wasNodeUpdated(state.loading.changedNodes, newerNodes[nodePath].node)) {
-
-                    modifiedNodes.push(nodePath);
-                }
-            }
-            //console.log('NewerNodes, modifiedNodes', Object.keys(newerNodes).length, modifiedNodes.length);
-            return modifiedNodes;
-        }
-
-        //this is just a first brute implementation it needs serious optimization!!!
-        function fitsInPatternTypes(path, pattern) {
-            var i;
-
-            if (pattern.items && pattern.items.length > 0) {
-                for (i = 0; i < pattern.items.length; i += 1) {
-                    if (self.isTypeOf(path, pattern.items[i])) {
-                        return true;
-                    }
-                }
-                return false;
-            } else {
-                return true;
-            }
-        }
-
-        function patternToPaths(patternId, pattern, pathsSoFar) {
-            var children,
-                subPattern,
-                i;
-
-            if (state.nodes[patternId]) {
-                pathsSoFar[patternId] = true;
-                if (pattern.children && pattern.children > 0) {
-                    children = state.core.getChildrenPaths(state.nodes[patternId].node);
-                    subPattern = COPY(pattern);
-                    subPattern.children -= 1;
-                    for (i = 0; i < children.length; i += 1) {
-                        if (fitsInPatternTypes(children[i], pattern)) {
-                            patternToPaths(children[i], subPattern, pathsSoFar);
-                        }
-                    }
-                }
-            } else {
-                state.loadError++;
-            }
-        }
-
-        function userEvents(userId, modifiedNodes) {
-            var newPaths = {},
-                startErrorLevel = state.loadError,
-                loadedOrUnloaded = {},
-                i,
-                events = [];
-
-            for (i in state.users[userId].PATTERNS) {
-                if (state.users[userId].PATTERNS.hasOwnProperty(i)) {
-                    if (state.nodes[i]) { //TODO we only check pattern if its root is there...
-                        patternToPaths(i, state.users[userId].PATTERNS[i], newPaths);
-                    }
-                }
-            }
-
-            if (startErrorLevel !== state.loadError) {
-                return; //we send events only when everything is there correctly
-            }
-
-            //deleted items
-            for (i in state.users[userId].PATHS) {
-                if (!newPaths[i]) {
-                    events.push({etype: 'unload', eid: i});
-                    loadedOrUnloaded[i] = true;
-                }
-            }
-
-            //added items
-            for (i in newPaths) {
-                if (!state.users[userId].PATHS[i]) {
-                    events.push({etype: 'load', eid: i});
-                    loadedOrUnloaded[i] = true;
-                }
-            }
-
-            //updated items
-            for (i = 0; i < modifiedNodes.length; i++) {
-                // Check that there wasn't a load or unload event for the node
-                if (newPaths[modifiedNodes[i]] && !loadedOrUnloaded[modifiedNodes[i]]) {
-                    events.push({etype: 'update', eid: modifiedNodes[i]});
-                }
-            }
-
-            state.users[userId].PATHS = newPaths;
-
-            //this is how the events should go
-            if (events.length > 0) {
-                if (state.loadError > startErrorLevel) {
-                    events.unshift({etype: 'incomplete', eid: null});
-                } else {
-                    events.unshift({etype: 'complete', eid: null});
-                }
-            } else {
-                events.unshift({etype: 'complete', eid: null});
-            }
-
-            state.users[userId].FN(events);
-        }
-
-        function loadChildrenPattern(core, nodesSoFar, node, level, callback) {
-            var path = core.getPath(node),
-                childrenPaths = core.getChildrenPaths(node),
-                childrenRelids = core.getChildrenRelids(node),
-                missing = childrenPaths.length,
-                error = null,
-                i,
-                childLoaded = function (err, child) {
-                    if (err || child === null) {
-                        error = error || err;
-                        missing -= 1;
-                        if (missing === 0) {
-                            callback(error);
-                        }
-                    } else {
-                        loadChildrenPattern(core, nodesSoFar, child, level - 1, childrenPatternLoaded);
-                    }
-                },
-                childrenPatternLoaded = function (err) {
-                    error = error || err;
-                    missing -= 1;
-                    if (missing === 0) {
-                        callback(error);
-                    }
-                };
-
-            if (!nodesSoFar[path]) {
-                nodesSoFar[path] = {
-                    node: node
-                };
-            }
-            if (level > 0) {
-                if (missing > 0) {
-                    for (i = 0; i < childrenPaths.length; i++) {
-                        if (nodesSoFar[childrenPaths[i]]) {
-                            loadChildrenPattern(core,
-                                nodesSoFar,
-                                nodesSoFar[childrenPaths[i]].node,
-                                level - 1, childrenPatternLoaded);
-                        } else {
-                            core.loadChild(node, childrenRelids[i], childLoaded);
-                        }
-                    }
-                } else {
-                    callback(error);
-                }
-            } else {
-                callback(error);
-            }
-        }
-
-        function loadPattern(core, id, pattern, nodesSoFar, callback) {
-            //console.log('LP',id,pattern);
-            //var _callback = callback;
-            //callback = function(error){
-            //    console.log('LPF',id,pattern);
-            //    _callback(error);
-            //};
-
-            var base = null,
-                baseLoaded = function () {
-                    if (pattern.children && pattern.children > 0) {
-                        var level = pattern.children;
-                        loadChildrenPattern(core, nodesSoFar, base, level, callback);
-                    } else {
-                        callback(null);
-                    }
-                };
-
-            if (nodesSoFar[id]) {
-                base = nodesSoFar[id].node;
-                baseLoaded();
-            } else {
-                if (!nodesSoFar[ROOT_PATH]) {
-                    logger.error('pattern cannot be loaded if there is no root!!!');
-                }
-                base = nodesSoFar[ROOT_PATH].node;
-
-                core.loadByPath(base, id, function (err, node) {
-                    var path;
-                    if (!err && node && !core.isEmpty(node)) {
-                        path = core.getPath(node);
-                        if (!nodesSoFar[path]) {
-                            nodesSoFar[path] = {
-                                node: node
-                            };
-                        }
-                        base = node;
-                        baseLoaded();
-                    } else {
-                        callback(err);
-                    }
-                });
-            }
-        }
 
         this.startTransaction = function (msg) {
             if (state.inTransaction) {
@@ -1533,50 +1739,6 @@ define([
             logger.debug('_removeAllUIs called');
             state.users = {};
         };
-
-        function reLaunchUsers() {
-            var i;
-            for (i in state.users) {
-                if (state.users.hasOwnProperty(i)) {
-                    if (state.users[i].UI.reLaunch) {
-                        state.users[i].UI.reLaunch();
-                    }
-                }
-            }
-        }
-
-        function _updateTerritoryAllDone(guid, patterns, error) {
-
-            logger.debug('updateTerritory related loads finished', {
-                metadata: {
-                    userId: guid, patterns: patterns, error: error
-                }
-            });
-
-            if (state.users[guid]) {
-                state.users[guid].PATTERNS = COPY(patterns);
-                if (!error) {
-                    userEvents(guid, []);
-                }
-            }
-        }
-
-        function canSwitchStates() {
-            if (state.inLoading && state.ongoingTerritoryUpdateCounter === 0 &&
-                state.ongoingLoadPatternsCounter === 0) {
-                return true;
-            }
-            return false;
-        }
-
-        function loadingPatternFinished(err) {
-            state.loadingStatus = state.loadingStatus || err;
-            state.ongoingLoadPatternsCounter -= 1;
-
-            if (canSwitchStates()) {
-                switchStates();
-            }
-        }
 
         this.updateTerritory = function (guid, patterns) {
             var loadRequestCounter = 0,
@@ -1638,171 +1800,6 @@ define([
                 loadPatternThrottled(state.core, keys[i], patterns[keys[i]], state.nodes, patternLoaded);
             }
 
-        };
-
-        function switchStates() {
-            //it is safe now to move the loadNodes into nodes,
-            // refresh the metaNodes and generate events - all in a synchronous manner!!!
-            var modifiedPaths,
-                i;
-
-            //console.time('switchStates');
-
-            logger.debug('switching project state [C#' +
-                state.commitHash + ']->[C#' + state.loading.commitHash + '] : [R#' +
-                state.rootHash + ']->[R#' + state.loading.rootHash + ']');
-
-            //console.time('getModifiedNodes');
-            modifiedPaths = getModifiedNodes(state.loadNodes);
-            //console.timeEnd('getModifiedNodes');
-            state.nodes = state.loadNodes;
-            state.loadNodes = {};
-            self.getAllMetaNodes(); //This ensures that all language elements can be accessed with getNode
-
-            state.inLoading = false;
-            state.rootHash = state.loading.rootHash;
-            state.loading.rootHash = null;
-            state.commitHash = state.loading.commitHash;
-            state.loading.commitHash = null;
-
-            checkMetaNameCollision(state.core, state.nodes[ROOT_PATH].node);
-            checkMixinErrors(state.core, state.nodes[ROOT_PATH].node);
-
-            for (i in state.users) {
-                if (state.users.hasOwnProperty(i)) {
-                    userEvents(i, modifiedPaths);
-                }
-            }
-
-            if (state.loadingStatus) {
-                state.loading.next(state.loadingStatus);
-            } else {
-                state.loading.next(null);
-            }
-
-            //console.timeEnd('switchStates');
-        }
-
-        function loading(newRootHash, newCommitHash, changedNodes, callback) {
-            var i, j,
-                userIds,
-                patternPaths,
-                patternsToLoad = [];
-
-            if (state.ongoingLoadPatternsCounter !== 0) {
-                callback(new Error('at the start of loading counter should bee zero!!! [' +
-                    state.ongoingLoadPatternsCounter + ']'));
-                return;
-            }
-
-            state.loadingStatus = null;
-            state.loadNodes = {};
-            state.loading.rootHash = newRootHash;
-            state.loading.commitHash = newCommitHash;
-            state.loading.next = callback;
-            state.loading.changedNodes = changedNodes;
-
-            state.core.loadRoot(state.loading.rootHash, function (err, root) {
-                if (err) {
-                    state.loading.next(err);
-                    return;
-                }
-
-                state.inLoading = true;
-                state.loadNodes[state.core.getPath(root)] = {
-                    node: root
-                };
-
-                //we first only set the counter of patterns but we also generate a completely separate pattern queue
-                //as we cannot be sure if all the users will remain at the point of giving the actual load command!
-                userIds = Object.keys(state.users);
-                for (i = 0; i < userIds.length; i += 1) {
-                    state.ongoingLoadPatternsCounter += Object.keys(state.users[userIds[i]].PATTERNS || {}).length;
-                    patternPaths = Object.keys(state.users[userIds[i]].PATTERNS || {});
-                    for (j = 0; j < patternPaths.length; j += 1) {
-                        patternsToLoad.push({
-                            id: patternPaths[j],
-                            pattern: COPY(state.users[userIds[i]].PATTERNS[patternPaths[j]])
-                        });
-                    }
-                }
-                userIds = Object.keys(state.pendingTerritoryUpdatePatterns);
-                for (i = 0; i < userIds.length; i += 1) {
-                    state.ongoingLoadPatternsCounter +=
-                        Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {}).length;
-                    patternPaths = Object.keys(state.pendingTerritoryUpdatePatterns[userIds[i]] || {});
-                    for (j = 0; j < patternPaths.length; j += 1) {
-                        patternsToLoad.push({
-                            id: patternPaths[j],
-                            pattern: COPY(state.pendingTerritoryUpdatePatterns[userIds[i]][patternPaths[j]])
-                        });
-                    }
-                }
-
-                //empty load check
-                if (state.ongoingLoadPatternsCounter === 0) {
-                    if (canSwitchStates()) {
-                        switchStates();
-                        reLaunchUsers();
-                    }
-                    return;
-                }
-
-                for (i = 0; i < patternsToLoad.length; i += 1) {
-                    loadPatternThrottled(state.core,
-                        patternsToLoad[i].id, patternsToLoad[i].pattern, state.loadNodes, loadingPatternFinished);
-                }
-            });
-        }
-
-        function wasNodeUpdated(changedNodes, node) {
-            // Is changedNodes available at all?  If not (undo/redo) emit for all nodes...
-            if (!changedNodes) {
-                return true;
-            }
-
-            // Did the node have a collection update?
-            if (changedNodes.partialUpdate[state.core.getPath(node)] === true) {
-                return true;
-            }
-
-            // Did any of the base classes have a non-collection update?
-            while (node) {
-                if (changedNodes.update[state.core.getPath(node)] === true) {
-                    return true;
-                }
-
-                node = state.core.getBase(node);
-            }
-
-            return false;
-        }
-
-        function cleanUsersTerritories() {
-            //look out as the user can remove itself at any time!!!
-            var userIds = Object.keys(state.users),
-                i,
-                j,
-                events;
-
-            for (i = 0; i < userIds.length; i++) {
-                if (state.users[userIds[i]]) {
-                    events = [{eid: null, etype: 'complete'}];
-                    for (j in state.users[userIds[i]].PATHS
-                        ) {
-                        events.push({etype: 'unload', eid: j});
-                    }
-                    state.users[userIds[i]].PATTERNS = {};
-                    state.users[userIds[i]].PATHS = {};
-                    state.users[userIds[i]].SENDEVENTS = true;
-                    state.users[userIds[i]].FN(events);
-                }
-            }
-        }
-
-        this.getUserId = function () {
-            throw new Error('Deprecated! Username is not stored in a cookie anymore. If available, use ' +
-                'WebGMEGlobal.userInfo, if not the user info is available at GET /api/user');
         };
 
         this.importProjectFromFile = function (projectName, branchName, blobHash, ownerId, url, callback) {
@@ -2083,7 +2080,7 @@ define([
                 logger.debug('cannot set empty notification');
             }
         };
-        
+
         this.gmeConfig = gmeConfig;
 
         window.addEventListener('error', function (evt) {
