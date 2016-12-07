@@ -324,9 +324,6 @@ define(['q'], function (Q) {
             .nodeify(callback);
     }
 
-    function _pointerMeta(core) {
-
-    }
     /**
      * Checks that the meta-nodes and their definitions are consistent w.r.t.
      * - Meta name collisions.
@@ -341,18 +338,28 @@ define(['q'], function (Q) {
         var metaNodes = core.getAllMetaNodes(node),
             names = {},
             result = [],
+            isPointer,
             i,
             key,
             path,
             metaNode,
             metaName,
             setNames,
+            pointerNames,
             ownMetaJson;
 
         for (path in metaNodes) {
             metaNode = metaNodes[path];
             metaName = core.getFullyQualifiedName(metaNode);
             ownMetaJson = core.getOwnJsonMeta(metaNode);
+            setNames = core.getValidSetNames(metaNode);
+            pointerNames = core.getPointerNames(metaNode);
+
+            //Patch the ownMetaJson
+            ownMetaJson.attributes = ownMetaJson.attributes || {};
+            ownMetaJson.children = ownMetaJson.children || {};
+            ownMetaJson.pointers = ownMetaJson.pointers || {};
+            ownMetaJson.aspects = ownMetaJson.aspects || {};
 
             // Check for name duplication.
             if (names[metaName]) {
@@ -391,11 +398,13 @@ define(['q'], function (Q) {
             }
 
             for (key in ownMetaJson.pointers) {
+                isPointer = ownMetaJson.pointers[key].max === 1;
+
                 for (i = 0; i < ownMetaJson.pointers[key].items.length; i += 1) {
                     if (!metaNodes[ownMetaJson.pointers[key].items[i]]) {
                         result.push({
                             severity: 'error',
-                            message: metaName + ' defines a pointer/set [' + key + '] where target/member is not ' +
+                            message: metaName + ' defines a pointer/set [' + key + '] where the target/member is not ' +
                             'part of the meta.',
                             hint: 'Locate the node [' + ownMetaJson.pointers[key].items[i] + '] add it to the meta ' +
                             'and remove the pointer/set definition.',
@@ -403,16 +412,34 @@ define(['q'], function (Q) {
                         });
                     }
                 }
-            }
 
-            setNames = core.getValidSetNames(metaNode);
+                if (isPointer) {
+                    if (setNames.indexOf(key) > -1) {
+                        result.push({
+                            severity: 'error',
+                            message: metaName + ' defines a pointer [' + key + '] colliding with a set definition.',
+                            hint: 'Remove/rename one of them.',
+                            path: path
+                        });
+                    }
+                } else {
+                    if (pointerNames.indexOf(key) > -1) {
+                        result.push({
+                            severity: 'error',
+                            message: metaName + ' defines a set [' + key + '] colliding with a pointer definition.',
+                            hint: 'Remove/rename one of them.',
+                            path: path
+                        });
+                    }
+                }
+            }
 
             for (key in ownMetaJson.aspects) {
                 for (i = 0; i < ownMetaJson.aspects[key].length; i += 1) {
                     if (!metaNodes[ownMetaJson.aspects[key][i]]) {
                         result.push({
                             severity: 'error',
-                            message: metaName + ' defines an aspect [' + key + '] where member is not part of' +
+                            message: metaName + ' defines an aspect [' + key + '] where a member is not part of' +
                             ' the meta.',
                             hint: 'Remove the item from the aspect.',
                             path: path
@@ -421,7 +448,7 @@ define(['q'], function (Q) {
                         ownMetaJson.children.items.indexOf(ownMetaJson.aspects[key][i]))) {
                         result.push({
                             severity: 'error',
-                            message: metaName + ' defines an aspect [' + key + '] where the member does not have a ' +
+                            message: metaName + ' defines an aspect [' + key + '] where a member does not have a ' +
                             'containment definition.',
                             hint: 'Remove the item from the aspect.',
                             path: path
@@ -439,6 +466,8 @@ define(['q'], function (Q) {
                 }
             }
         }
+
+        return result;
     }
 
     return {
