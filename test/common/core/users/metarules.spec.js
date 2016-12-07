@@ -14,7 +14,7 @@ describe('Meta Rules', function () {
         storage,
         expect = testFixture.expect,
         Q = testFixture.Q,
-        checkMetaRules = requireJS('common/core/users/metarules'),
+        checkNode = requireJS('common/core/users/metarules').checkNode,
         projectName = 'MetaRules',
         branchName = 'master',
         languagePath = '/822429792/',
@@ -59,7 +59,7 @@ describe('Meta Rules', function () {
 
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(false, result.message);
@@ -73,7 +73,7 @@ describe('Meta Rules', function () {
 
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -85,7 +85,7 @@ describe('Meta Rules', function () {
             var nodePath = languagePath + '1578427941';
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -97,7 +97,7 @@ describe('Meta Rules', function () {
             var nodePath = languagePath + '942380411';
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -109,7 +109,7 @@ describe('Meta Rules', function () {
             var nodePath = languagePath + '1686535233';
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -121,7 +121,7 @@ describe('Meta Rules', function () {
             var nodePath = languagePath + '474747191';
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -133,7 +133,7 @@ describe('Meta Rules', function () {
             var nodePath = languagePath + '474747191';
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -148,7 +148,7 @@ describe('Meta Rules', function () {
             var nodePath = '/1936712753';
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -160,7 +160,7 @@ describe('Meta Rules', function () {
             var nodePath = '/767879236';
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -172,7 +172,7 @@ describe('Meta Rules', function () {
             var nodePath = '/31060956';
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -184,7 +184,7 @@ describe('Meta Rules', function () {
             var nodePath = '/551635397';
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -196,7 +196,7 @@ describe('Meta Rules', function () {
             var nodePath = '/361739760';
             testFixture.loadNode(ir.core, ir.rootNode, nodePath)
                 .then(function (node) {
-                    return checkMetaRules(ir.core, node);
+                    return checkNode(ir.core, node);
                 })
                 .then(function (result) {
                     expect(result.hasViolation).to.equal(false, result.message);
@@ -210,7 +210,7 @@ describe('Meta Rules', function () {
         var nodePath = '/994621516';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
@@ -223,7 +223,7 @@ describe('Meta Rules', function () {
         var nodePath = '/1694245053';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
@@ -236,7 +236,7 @@ describe('Meta Rules', function () {
         var nodePath = '/1868058421';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
@@ -249,7 +249,7 @@ describe('Meta Rules', function () {
         var nodePath = '/2048951527';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
@@ -262,7 +262,7 @@ describe('Meta Rules', function () {
         var nodePath = '/1672466581';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
@@ -275,7 +275,7 @@ describe('Meta Rules', function () {
         var nodePath = '/1232831412';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
@@ -288,7 +288,7 @@ describe('Meta Rules', function () {
         var nodePath = '/1702033017';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
@@ -301,7 +301,7 @@ describe('Meta Rules', function () {
         var nodePath = '/990231279';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
@@ -314,7 +314,7 @@ describe('Meta Rules', function () {
         var nodePath = '/3351391';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
@@ -327,7 +327,7 @@ describe('Meta Rules', function () {
         var nodePath = '/R';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(false, result.message);
@@ -339,7 +339,7 @@ describe('Meta Rules', function () {
         var nodePath = '/j';
         testFixture.loadNode(ir.core, ir.rootNode, nodePath)
             .then(function (node) {
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(false, result.message);
@@ -360,7 +360,7 @@ describe('Meta Rules', function () {
 
                 ir.core.setAttribute(node, 'withInvalidRegEx', 'hej');
 
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true, result.message);
@@ -369,7 +369,7 @@ describe('Meta Rules', function () {
                 ir.core.delAttribute(node, 'withInvalidRegEx', 'hej');
 
                 // Make sure that other tests could broke.
-                return checkMetaRules(ir.core, node);
+                return checkNode(ir.core, node);
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(false, result.message);

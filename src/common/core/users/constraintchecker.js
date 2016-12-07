@@ -81,7 +81,7 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
             };
 
         if (self.type === CONSTRAINT_TYPES.META) {
-            promises.push(metaRules(self.core, node));
+            promises.push(metaRules.checkNode(self.core, node));
             customNames = [];
         } else if (self.type === CONSTRAINT_TYPES.CUSTOM) {
             customNames = self.core.getConstraintNames(node);
@@ -89,7 +89,7 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
         } else if (self.type === CONSTRAINT_TYPES.BOTH) {
             customNames = self.core.getConstraintNames(node);
             promises = customNames.map(checkCustom);
-            promises.push(metaRules(self.core, node));
+            promises.push(metaRules.checkNode(self.core, node));
         } else {
             deferred.reject(new Error('Unknown CONSTRAINT_TYPE: ' + self.type));
         }

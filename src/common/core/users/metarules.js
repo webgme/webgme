@@ -291,7 +291,7 @@ define(['q'], function (Q) {
      * @param [callback]
      * @returns {Q.Promise}
      */
-    return function (core, node, callback) {
+    function checkNode(core, node, callback) {
         var result = {
                 hasViolation: false,
                 message: ''
@@ -306,11 +306,11 @@ define(['q'], function (Q) {
         meta = core.getJsonMeta(node);
 
         return Q.all([
-                checkPointerRules(meta, core, node),
-                checkSetRules(meta, core, node),
-                checkChildrenRules(meta, core, node),
-                checkAttributeRules(meta, core, node)
-            ])
+            checkPointerRules(meta, core, node),
+            checkSetRules(meta, core, node),
+            checkChildrenRules(meta, core, node),
+            checkAttributeRules(meta, core, node)
+        ])
             .then(function (results) {
                 var i;
                 for (i = 0; i < results.length; i += 1) {
@@ -322,5 +322,127 @@ define(['q'], function (Q) {
                 return result;
             })
             .nodeify(callback);
+    }
+
+    function _pointerMeta(core) {
+
+    }
+    /**
+     * Checks that the meta-nodes and their definitions are consistent w.r.t.
+     * - Meta name collisions.
+     * - Referencing nodes outside of the meta.
+     * - Duplicate definitions from mixins.
+     * -
+     * @param core
+     * @param node - any node in tree to be checked
+     * @param callback
+     */
+    function checkMetaConsistency(core, node) {
+        var metaNodes = core.getAllMetaNodes(node),
+            names = {},
+            result = [],
+            i,
+            key,
+            path,
+            metaNode,
+            metaName,
+            setNames,
+            ownMetaJson;
+
+        for (path in metaNodes) {
+            metaNode = metaNodes[path];
+            metaName = core.getFullyQualifiedName(metaNode);
+            ownMetaJson = core.getOwnJsonMeta(metaNode);
+
+            // Check for name duplication.
+            if (names[metaName]) {
+                result.push({
+                    severity: 'error',
+                    message: 'Duplicate name on META level: \'' + metaName + '\'',
+                    hint: 'Rename one of the objects',
+                    path: path
+                });
+            } else {
+                names[metaName] = true;
+            }
+
+            // Get the mixin errors.
+            result = result.concat(core.getMixinErrors(metaNode).map(function (mixinError) {
+                return {
+                    severity: mixinError.severity,
+                    message: mixinError.message,
+                    hint: mixinError.hint,
+                    path: path
+                };
+            }));
+
+            if (ownMetaJson.children.items) {
+                for (i = 0; i < ownMetaJson.children.items.length; i += 1) {
+                    if (!metaNodes[ownMetaJson.children.items[i]]) {
+                        result.push({
+                            severity: 'error',
+                            message: metaName + ' can contain a node that is not part of the meta.',
+                            hint: 'Locate the node [' + ownMetaJson.children.items[i] + '] add it to the meta and ' +
+                            'remove the containment definition.',
+                            path: path
+                        });
+                    }
+                }
+            }
+
+            for (key in ownMetaJson.pointers) {
+                for (i = 0; i < ownMetaJson.pointers[key].items.length; i += 1) {
+                    if (!metaNodes[ownMetaJson.pointers[key].items[i]]) {
+                        result.push({
+                            severity: 'error',
+                            message: metaName + ' defines a pointer/set [' + key + '] where target/member is not ' +
+                            'part of the meta.',
+                            hint: 'Locate the node [' + ownMetaJson.pointers[key].items[i] + '] add it to the meta ' +
+                            'and remove the pointer/set definition.',
+                            path: path
+                        });
+                    }
+                }
+            }
+
+            setNames = core.getValidSetNames(metaNode);
+
+            for (key in ownMetaJson.aspects) {
+                for (i = 0; i < ownMetaJson.aspects[key].length; i += 1) {
+                    if (!metaNodes[ownMetaJson.aspects[key][i]]) {
+                        result.push({
+                            severity: 'error',
+                            message: metaName + ' defines an aspect [' + key + '] where member is not part of' +
+                            ' the meta.',
+                            hint: 'Remove the item from the aspect.',
+                            path: path
+                        });
+                    } else if (!(ownMetaJson.children.items &&
+                        ownMetaJson.children.items.indexOf(ownMetaJson.aspects[key][i]))) {
+                        result.push({
+                            severity: 'error',
+                            message: metaName + ' defines an aspect [' + key + '] where the member does not have a ' +
+                            'containment definition.',
+                            hint: 'Remove the item from the aspect.',
+                            path: path
+                        });
+                    }
+                }
+
+                if (setNames.indexOf(key) > -1) {
+                    result.push({
+                        severity: 'error',
+                        message: metaName + ' defines an aspect [' + key + '] colliding with a set definition.',
+                        hint: 'Remove the aspect and create a new one.',
+                        path: path
+                    });
+                }
+            }
+        }
+    }
+
+    return {
+        checkNode: checkNode,
+        checkMetaConsistency: checkMetaConsistency
     };
 });
