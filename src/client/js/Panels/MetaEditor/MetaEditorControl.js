@@ -233,6 +233,8 @@ define(['js/logger',
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSetMembers = aspectNode.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
             territoryChanged = false,
+            metaInconsistencies,
+            i,
             len,
             diff,
             objDesc,
@@ -303,6 +305,12 @@ define(['js/logger',
         this._selectedMetaAspectSheetMembers = selectedSheetMembers.slice(0);
 
         this._processMetaDocItems();
+
+        metaInconsistencies = this._client.checkMetaConsistency();
+
+        for (i = 0; i < metaInconsistencies.length; i += 1) {
+            this._client.dispatchEvent(this._client.CONSTANTS.NOTIFICATION, metaInconsistencies[i]);
+        }
 
         //there was change in the territory
         if (territoryChanged === true) {

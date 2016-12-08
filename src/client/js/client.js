@@ -14,6 +14,7 @@ define([
     'common/core/tasync',
     'common/util/guid',
     'common/util/url',
+    'common/core/users/metarules',
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter',
     'js/client/libraries',
@@ -30,6 +31,7 @@ define([
              TASYNC,
              GUID,
              URL,
+             metaRules,
              getNode,
              getNodeSetters,
              getLibraryFunctions,
@@ -490,6 +492,8 @@ define([
             //it is safe now to move the loadNodes into nodes,
             // refresh the metaNodes and generate events - all in a synchronous manner!!!
             var modifiedPaths,
+                metaInconsistencies,
+                key,
                 i;
 
             //console.time('switchStates');
@@ -511,12 +515,13 @@ define([
             state.commitHash = state.loading.commitHash;
             state.loading.commitHash = null;
 
-            checkMetaNameCollision(state.core, state.nodes[ROOT_PATH].node);
-            checkMixinErrors(state.core, state.nodes[ROOT_PATH].node);
+            //checkMetaNameCollision(state.core, state.nodes[ROOT_PATH].node);
+            //checkMixinErrors(state.core, state.nodes[ROOT_PATH].node);
+            // These are checked by the meta-editor..
 
-            for (i in state.users) {
-                if (state.users.hasOwnProperty(i)) {
-                    userEvents(i, modifiedPaths);
+            for (key in state.users) {
+                if (state.users.hasOwnProperty(key)) {
+                    userEvents(key, modifiedPaths);
                 }
             }
 
@@ -1699,6 +1704,18 @@ define([
             return [];
         };
 
+        this.checkMetaConsistency = function () {
+            var result;
+
+            if (state && state.core && state.nodes && state.nodes[ROOT_PATH]) {
+                result = metaRules.checkMetaConsistency(state.core, state.nodes[ROOT_PATH].node);
+            } else {
+                result = [];
+            }
+
+            return result;
+        };
+
         this.startTransaction = function (msg) {
             if (state.inTransaction) {
                 logger.error('Already in transaction, will proceed though..');
@@ -1708,7 +1725,7 @@ define([
                 msg = msg || '[';
                 saveRoot(msg);
             } else {
-                logger.error('Can not start transaction with no core avaliable.');
+                logger.error('Can not start transaction with no core available.');
             }
         };
 

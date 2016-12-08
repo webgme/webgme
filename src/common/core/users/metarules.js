@@ -346,6 +346,7 @@ define(['q'], function (Q) {
             metaName,
             setNames,
             pointerNames,
+            childPaths,
             ownMetaJson;
 
         for (path in metaNodes) {
@@ -354,6 +355,7 @@ define(['q'], function (Q) {
             ownMetaJson = core.getOwnJsonMeta(metaNode);
             setNames = core.getValidSetNames(metaNode);
             pointerNames = core.getPointerNames(metaNode);
+            childPaths = core.getValidChildrenPaths(metaNode);
 
             //Patch the ownMetaJson
             ownMetaJson.attributes = ownMetaJson.attributes || {};
@@ -365,7 +367,7 @@ define(['q'], function (Q) {
             if (names[metaName]) {
                 result.push({
                     severity: 'error',
-                    message: 'Duplicate name on META level: \'' + metaName + '\'',
+                    message: 'Duplicate name on META level [' + metaName + ']',
                     hint: 'Rename one of the objects',
                     path: path
                 });
@@ -438,16 +440,15 @@ define(['q'], function (Q) {
                 for (i = 0; i < ownMetaJson.aspects[key].length; i += 1) {
                     if (!metaNodes[ownMetaJson.aspects[key][i]]) {
                         result.push({
-                            severity: 'error',
+                            severity: 'warning',
                             message: metaName + ' defines an aspect [' + key + '] where a member is not part of' +
                             ' the meta.',
                             hint: 'Remove the item from the aspect.',
                             path: path
                         });
-                    } else if (!(ownMetaJson.children.items &&
-                        ownMetaJson.children.items.indexOf(ownMetaJson.aspects[key][i]))) {
+                    } else if (childPaths.indexOf(ownMetaJson.aspects[key][i]) === -1) {
                         result.push({
-                            severity: 'error',
+                            severity: 'warning',
                             message: metaName + ' defines an aspect [' + key + '] where a member does not have a ' +
                             'containment definition.',
                             hint: 'Remove the item from the aspect.',
