@@ -5,7 +5,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTANTS) {
+define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CONSTANTS) {
     'use strict';
 
     function NullPointerCore(innerCore, options) {

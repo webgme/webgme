@@ -116,7 +116,10 @@ define([
     'common/core/metacachecore',
     'common/core/mixincore',
     'common/core/metaquerycore',
-    'common/core/librarycore'
+    'common/regexp',
+    'common/core/librarycore',
+    'common/core/CoreInputError',
+    'common/core/CoreIllegalOperationError'
 ], function (CoreRel,
              Set,
              Guid,
@@ -131,8 +134,44 @@ define([
              MetaCacheCore,
              MixinCore,
              MetaQueryCore,
-             LibraryCore) {
+             REGEXP,
+             LibraryCore,
+             CoreInputError,
+             CoreIllegalOperationError) {
     'use strict';
+
+    var isValidNode,
+        isValidPath;
+
+    function ensureString(input, nameOfInput) {
+        if (typeof input !== 'string') {
+            throw new CoreInputError('Parameter \'' + nameOfInput + '\' is not of type string.');
+        }
+    }
+
+    function ensurePath(input, nameOfInput) {
+        if (!isValidPath(input)) {
+            throw new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid path.');
+        }
+    }
+
+    function ensureNode(input, nameOfInput) {
+        if (!isValidNode(input)) {
+            throw new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid node.');
+        }
+    }
+
+    function ensureFunction(input, nameOfInput) {
+        if (typeof input !== 'function') {
+            throw new CoreInputError('Parameter \'' + nameOfInput + '\' is not of type function.');
+        }
+    }
+
+    function ensureHash(input, nameOfInput) {
+        if (!REGEXP.DB_HASH.test(input)) {
+            throw new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid hash.');
+        }
+    }
 
     /**
      * @param {object} storageObject
@@ -168,37 +207,44 @@ define([
             return new Class(inner, options);
         }, new CoreTree(storage, options));
 
+        isValidNode = core.isValidNode;
+        isValidPath = core.isValidPath;
+
         /**
          * Returns the parent of the node.
          * @param {module:Core~Node} node - the node in question
          *
-         * @return {module:Core~Node} Returns the parent of the node or NULL if it has no parent.
-         *
-         * @func
+         * @return {module:Core~Node|null} Returns the parent of the node or NULL if it has no parent.
          */
-        this.getParent = core.getParent;
+        this.getParent = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getParent(node);
+        };
 
         /**
          * Returns the parent-relative identifier of the node.
          * @param {module:Core~Node} node - the node in question.
          *
-         * @return {string} Returns the id string or return NULL and UNDEFINED if there is no such id for the node.
-         *
-         * @func
+         * @return {string|null|undefined} Returns the last segment of the node path.
          */
-        this.getRelid = core.getRelid;
+        this.getRelid = function (node) {
+            ensureNode(node, 'node');
 
-        //this.getLevel = core.getLevel;
+            return core.getRelid(node);
+        };
 
         /**
          * Returns the root node of the containment tree that node is part of.
          * @param {module:Core~Node} node - the node in question.
          *
          * @return {module:Core~Node} Returns the root of the containment hierarchy (it can be the node itself).
-         *
-         * @func
          */
-        this.getRoot = core.getRoot;
+        this.getRoot = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getRoot(node);
+        };
 
         /**
          * Returns the complete path of the node in the containment hierarchy.
@@ -291,10 +337,13 @@ define([
          * Loads the data object with the given hash and makes it a root of a containment hierarchy.
          * @param {module:Core~ObjectHash} hash - the hash of the data object we like to load as root.
          * @param {function(string, module:Core~Node)} callback
-         *
-         * @func
          */
-        this.loadRoot = core.loadRoot;
+        this.loadRoot = function (hash, callback) {
+            ensureHash(hash, 'hash');
+            ensureFunction(callback, 'callback');
+
+            core.loadRoot(hash, callback);
+        };
 
         /**
          * Loads the child of the given parent pointed by the relative id. Behind the scenes, it means
@@ -2008,18 +2057,6 @@ define([
         this.getMixinPaths = core.getMixinPaths;
 
         /**
-         * Gathers the paths of the mixin nodes associated with the node
-         * that were defined specifically for the given node.
-         *
-         * @param {module:Core~Node} node - the node in question.
-         *
-         * @return {string[]} The paths of the own mixins in an array.
-         *
-         * @func
-         */
-        this.getOwnMixinPaths = core.getOwnMixinPaths;
-
-        /**
          * Gathers the mixin nodes associated with the node.
          *
          * @param {module:Core~Node} node - the node in question.
@@ -2029,17 +2066,6 @@ define([
          * @func
          */
         this.getMixinNodes = core.getMixinNodes;
-
-        /**
-         * Gathers the mixin nodes associated with the node that were defined specifically for the given node.
-         *
-         * @param {module:Core~Node} node - the node in question.
-         *
-         * @return {Object<string, module:Core~Node>} The dictionary of the own mixin nodes keyed by their paths.
-         *
-         * @func
-         */
-        this.getOwnMixinNodes = core.getOwnMixinNodes;
 
         /**
          * Removes a mixin from the mixin set of the node.

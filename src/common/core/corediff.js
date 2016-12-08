@@ -9,7 +9,7 @@
 
 define(['common/util/canon',
     'common/core/tasync',
-    'common/util/assert',
+    'common/core/CoreAssert',
     'common/regexp',
     'common/util/random',
     'common/core/constants',

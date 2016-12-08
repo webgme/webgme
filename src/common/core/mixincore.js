@@ -5,7 +5,7 @@
  */
 
 define([
-    'common/util/assert',
+    'common/core/CoreAssert',
     'common/core/tasync',
     'common/util/canon',
     'common/core/constants'

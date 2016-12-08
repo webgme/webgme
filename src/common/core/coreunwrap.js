@@ -5,7 +5,7 @@
  * @author mmaroti / https://github.com/mmaroti
  */
 
-define(['common/util/assert', 'common/core/tasync'], function (ASSERT, TASYNC) {
+define(['common/core/CoreAssert', 'common/core/tasync'], function (ASSERT, TASYNC) {
     'use strict';
 
     // ----------------- CoreUnwrap -----------------
