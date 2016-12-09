@@ -5,7 +5,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['q'], function (Q) {
+define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
     'use strict';
 
     // Helper functions.
@@ -329,7 +329,10 @@ define(['q'], function (Q) {
      * - Meta name collisions.
      * - Referencing nodes outside of the meta.
      * - Duplicate definitions from mixins.
-     * -
+     * - Collisions between set names and pointers/aspects
+     * - Invalid regular expression for attributes
+     * - Invalid min/max for attributes
+     * - Invalid set/pointer/attribute/aspect/constraint names
      * @param core
      * @param node - any node in tree to be checked
      * @param callback
@@ -349,6 +352,18 @@ define(['q'], function (Q) {
             childPaths,
             ownMetaJson;
 
+        function getNameError(metaName, path, guid, key, type) {
+            return {
+                severity: 'warning',
+                message: metaName + ' defines ' + type + ' [' + key + '] starting with an underscore ("_").',
+                description: 'Such relations/properties in the models are considered private and not treated ' +
+                'as publicly defined concepts governed by the meta-model.',
+                hint: 'Remove/rename it.',
+                path: path,
+                relatedPaths: []
+            };
+        }
+
         for (path in metaNodes) {
             metaNode = metaNodes[path];
             metaName = core.getFullyQualifiedName(metaNode);
@@ -362,17 +377,20 @@ define(['q'], function (Q) {
             ownMetaJson.children = ownMetaJson.children || {};
             ownMetaJson.pointers = ownMetaJson.pointers || {};
             ownMetaJson.aspects = ownMetaJson.aspects || {};
+            ownMetaJson.constraints = ownMetaJson.constraints || {};
 
             // Check for name duplication.
-            if (names[metaName]) {
+            if (typeof names[metaName] === 'string') {
                 result.push({
                     severity: 'error',
                     message: 'Duplicate name on META level [' + metaName + ']',
+                    description: 'Non-unique meta names makes it hard to reason about the meta-model',
                     hint: 'Rename one of the objects',
-                    path: path
+                    path: path,
+                    relatedPaths: [names[metaName]]
                 });
             } else {
-                names[metaName] = true;
+                names[metaName] = path;
             }
 
             // Get the mixin errors.
@@ -380,8 +398,10 @@ define(['q'], function (Q) {
                 return {
                     severity: mixinError.severity,
                     message: mixinError.message,
+                    description: 'All defined meta-relations should be between meta-nodes.',
                     hint: mixinError.hint,
-                    path: path
+                    path: path,
+                    relatedPaths: mixinError.collisionPaths || []
                 };
             }));
 
@@ -390,10 +410,11 @@ define(['q'], function (Q) {
                     if (!metaNodes[ownMetaJson.children.items[i]]) {
                         result.push({
                             severity: 'error',
-                            message: metaName + ' can contain a node that is not part of the meta.',
-                            hint: 'Locate the node [' + ownMetaJson.children.items[i] + '] add it to the meta and ' +
-                            'remove the containment definition.',
-                            path: path
+                            message: metaName + ' defines containment of a node that is not part of the meta.',
+                            description: 'All defined meta-relations should be between meta-nodes.',
+                            hint: 'Locate the related node, add it to the meta and remove the containment definition.',
+                            path: path,
+                            relatedPaths: [ownMetaJson.children.items[i]]
                         });
                     }
                 }
@@ -406,11 +427,13 @@ define(['q'], function (Q) {
                     if (!metaNodes[ownMetaJson.pointers[key].items[i]]) {
                         result.push({
                             severity: 'error',
-                            message: metaName + ' defines a pointer/set [' + key + '] where the target/member is not ' +
-                            'part of the meta.',
-                            hint: 'Locate the node [' + ownMetaJson.pointers[key].items[i] + '] add it to the meta ' +
-                            'and remove the pointer/set definition.',
-                            path: path
+                            message: metaName + ' defines a ' + (isPointer ? 'pointer' : 'set') + '[' + key + '] ' +
+                            'where the ' + (isPointer ? 'pointer' : 'set') + ' is not part of the meta.',
+                            description: 'All defined meta-relations should be between meta-nodes.',
+                            hint: 'Locate the related node, add it to the meta and remove the ' +
+                            (isPointer ? 'pointer' : 'set') + ' definition.',
+                            path: path,
+                            relatedPaths: [ownMetaJson.pointers[key].items[i]]
                         });
                     }
                 }
@@ -420,8 +443,10 @@ define(['q'], function (Q) {
                         result.push({
                             severity: 'error',
                             message: metaName + ' defines a pointer [' + key + '] colliding with a set definition.',
+                            description: 'Pointer and set definitions share the same namespace.',
                             hint: 'Remove/rename one of them.',
-                            path: path
+                            path: path,
+                            relatedPaths: ownMetaJson.pointers[key].items
                         });
                     }
                 } else {
@@ -429,10 +454,16 @@ define(['q'], function (Q) {
                         result.push({
                             severity: 'error',
                             message: metaName + ' defines a set [' + key + '] colliding with a pointer definition.',
+                            description: 'Pointer and set definitions share the same namespace.',
                             hint: 'Remove/rename one of them.',
-                            path: path
+                            path: path,
+                            relatedPaths: ownMetaJson.pointers[key].items
                         });
                     }
+                }
+
+                if (key[0] === '_') {
+                    result.push(getNameError(metaName, path, key, isPointer ? 'a pointer' : 'a set'));
                 }
             }
 
@@ -443,16 +474,20 @@ define(['q'], function (Q) {
                             severity: 'warning',
                             message: metaName + ' defines an aspect [' + key + '] where a member is not part of' +
                             ' the meta.',
+                            description: 'All defined meta-relations should be between meta-nodes.',
                             hint: 'Remove the item from the aspect.',
-                            path: path
+                            path: path,
+                            relatedPaths: [ownMetaJson.aspects[key][i]]
                         });
                     } else if (childPaths.indexOf(ownMetaJson.aspects[key][i]) === -1) {
                         result.push({
                             severity: 'warning',
                             message: metaName + ' defines an aspect [' + key + '] where a member does not have a ' +
                             'containment definition.',
-                            hint: 'Remove the item from the aspect.',
-                            path: path
+                            description: 'All defined meta-relations should be between meta-nodes.',
+                            hint: 'Remove the item from the aspect or add a containment definition.',
+                            path: path,
+                            relatedPaths: [ownMetaJson.aspects[key][i]]
                         });
                     }
                 }
@@ -461,9 +496,73 @@ define(['q'], function (Q) {
                     result.push({
                         severity: 'error',
                         message: metaName + ' defines an aspect [' + key + '] colliding with a set definition.',
+                        description: 'Sets and aspects share the same name-space.',
                         hint: 'Remove the aspect and create a new one.',
-                        path: path
+                        path: path,
+                        relatedPaths: []
                     });
+                }
+
+                if (key[0] === '_') {
+                    result.push(getNameError(metaName, path, key, 'an aspect'));
+                }
+            }
+
+            for (key in ownMetaJson.attributes) {
+                if (ownMetaJson.attributes[key].hasOwnProperty('regexp')) {
+                    try {
+                        new RegExp(ownMetaJson.attributes[key].regexp);
+                    } catch (err) {
+                        result.push({
+                            severity: 'error',
+                            message: metaName + ' defines an invalid regular expression for the attribute [' + key +
+                            '], "' + ownMetaJson.attributes[key].regexp + '".',
+                            description: 'Invalid properties can lead to unexpected results in the models.',
+                            hint: 'Edit the regular expression for the attribute.',
+                            path: path,
+                            relatedPaths: []
+                        });
+                    }
+                }
+
+                if (ownMetaJson.attributes[key].type === CONSTANTS.ATTRIBUTE_TYPES.INTEGER ||
+                    ownMetaJson.attributes[key].type === CONSTANTS.ATTRIBUTE_TYPES.FLOAT) {
+
+                    if (ownMetaJson.attributes[key].hasOwnProperty('min') &&
+                        typeof ownMetaJson.attributes[key].min !== 'number') {
+                        result.push({
+                            severity: 'error',
+                            message: metaName + ' defines an invalid min value for the attribute [' + key +
+                            ']. The type is not a number but "' + typeof ownMetaJson.attributes[key].min + '".',
+                            description: 'Invalid properties can lead to unexpected results in the models.',
+                            hint: 'Edit the min value for the attribute.',
+                            path: path,
+                            relatedPaths: []
+                        });
+                    }
+
+                    if (ownMetaJson.attributes[key].hasOwnProperty('max') &&
+                        typeof ownMetaJson.attributes[key].max !== 'number') {
+                        result.push({
+                            severity: 'error',
+                            message: metaName + ' defines an invalid max value for the attribute [' + key +
+                            ']. The type is not a number but "' + typeof ownMetaJson.attributes[key].max + '".',
+                            description: 'Invalid properties can lead to unexpected results in the models.',
+                            hint: 'Edit the max value for the attribute.',
+                            path: path,
+                            relatedPaths: []
+                        });
+                    }
+                }
+
+                if (key[0] === '_') {
+                    result.push(getNameError(metaName, path, key, 'an attribute'));
+                }
+            }
+
+            for (key in ownMetaJson.constraints) {
+                if (key[0] === '_') {
+                    result.push(getNameError(metaName, path, key, 'a constraint'));
                 }
             }
         }

@@ -58,7 +58,7 @@ define(['js/util',
         this._dialog.modal('show');
     };
 
-    ConstraintCheckResultsDialog.prototype._initDialog = function (pluginResults) {
+    ConstraintCheckResultsDialog.prototype._initDialog = function (results) {
         var dialog = this._dialog,
             client = this._client,
             self = this,
@@ -80,8 +80,8 @@ define(['js/util',
             j,
             k;
 
-        for (i = 0; i < pluginResults.length; i += 1) {
-            result = pluginResults[i];
+        for (i = 0; i < results.length; i += 1) {
+            result = results[i];
 
             resultEntry = PLUGIN_RESULT_ENTRY_BASE.clone();
 
@@ -173,7 +173,7 @@ define(['js/util',
 
         dialog.find('.btn-clear').on('click', function () {
             body.empty();
-            pluginResults.splice(0, pluginResults.length);
+            results.splice(0, results.length);
         });
 
         dialog.on('click', '.btn-details', function (event) {
@@ -199,6 +199,8 @@ define(['js/util',
                         }
                     });
 
+                    client.removeUI(territoryId);
+
                     if (nodeLoaded) {
                         WebGMEGlobal.State.registerActiveObject(nodeId);
                         WebGMEGlobal.State.registerActiveSelection([]);
@@ -206,8 +208,6 @@ define(['js/util',
                     } else {
                         self.logger.error('Could not load the linked node at path', nodeId);
                     }
-
-                    client.removeUI(territoryId);
                 });
 
             patterns[nodeId] = {children: 0};
