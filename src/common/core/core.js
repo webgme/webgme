@@ -143,33 +143,51 @@ define([
     var isValidNode,
         isValidPath;
 
-    function ensureString(input, nameOfInput) {
-        if (typeof input !== 'string') {
-            throw new CoreInputError('Parameter \'' + nameOfInput + '\' is not of type string.');
+    function ensureType(input, nameOfInput, type, isAsync) {
+        var error;
+        if (typeof input !== type) {
+            error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not of type ' + type + '.');
+            if (isAsync) {
+                return error;
+            } else {
+                throw error;
+            }
         }
     }
 
-    function ensurePath(input, nameOfInput) {
+    function ensurePath(input, nameOfInput, isAsync) {
+        var error;
         if (!isValidPath(input)) {
-            throw new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid path.');
+            error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid path.');
+            if (isAsync) {
+                return error;
+            } else {
+                throw error;
+            }
         }
     }
 
-    function ensureNode(input, nameOfInput) {
+    function ensureNode(input, nameOfInput, isAsync) {
+        var error;
         if (!isValidNode(input)) {
-            throw new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid node.');
+            error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid node.');
+            if (isAsync) {
+                return error;
+            } else {
+                throw error;
+            }
         }
     }
 
-    function ensureFunction(input, nameOfInput) {
-        if (typeof input !== 'function') {
-            throw new CoreInputError('Parameter \'' + nameOfInput + '\' is not of type function.');
-        }
-    }
-
-    function ensureHash(input, nameOfInput) {
+    function ensureHash(input, nameOfInput, isAsync) {
+        var error;
         if (!REGEXP.DB_HASH.test(input)) {
-            throw new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid hash.');
+            error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid hash.');
+            if (isAsync) {
+                return error;
+            } else {
+                throw error;
+            }
         }
     }
 
@@ -199,9 +217,11 @@ define([
 
         coreLayers.push(LibraryCore);
 
-        if (options.usertype !== 'tasync') {
-            coreLayers.push(UnWrap);
-        }
+        // TODO check how we should handle the TASYNC error handling...
+        // if (options.usertype !== 'tasync') {
+        //     coreLayers.push(UnWrap);
+        // }
+        coreLayers.push(UnWrap);
 
         core = coreLayers.reduce(function (inner, Class) {
             return new Class(inner, options);
@@ -253,21 +273,12 @@ define([
          * @return {string} Returns a path string where each portion is a relative id and they are separated by '/'.
          * The path can be empty as well if the node in question is the  root itself, otherwise it should be a chain
          * of relative ids from the root of the containment hierarchy.
-         *
-         * @func
          */
-        this.getPath = core.getPath;
+        this.getPath = function (node) {
+            ensureNode(node, 'node');
 
-        //this.isValidPath = core.isValidPath;
-        //this.splitPath = core.splitPath;
-        //this.buildPath = core.buildPath;
-        //this.joinPaths = core.joinPaths;
-        //this.getCommonPathPrefixData = core.getCommonPathPrefixData;
-        //this.normalize = core.normalize;
-        //this.getAncestor = core.getAncestor;
-        //this.isAncestor = core.isAncestor;
-        //this.createRoot = core.createRoot;
-        //this.createChild = core.createChild;
+            return core.getPath(node);
+        };
 
         /**
          * Retrieves the child of the input node at the given relative id. It is not an asynchronous load
@@ -277,13 +288,13 @@ define([
          *
          * @return {module:Core~Node} Return an empty node if it was created as a result of the function or
          * return the already existing and loaded node if it found.
-         *
-         * @func
          */
-        this.getChild = core.getChild;
+        this.getChild = function (node, relativeId) {
+            ensureNode(node, 'node');
+            ensureType(relativeId, 'relativeId', 'string');
 
-        //this.isMutable = core.isMutable;
-        //this.isObject = core.isObject;
+            return core.getChild(node, relativeId);
+        };
 
         /**
          * Checks if the node in question has some actual data.
@@ -291,23 +302,12 @@ define([
          *
          * @return {bool} Returns true if the node is 'empty' meaning that it is not reserved by real data.
          * Returns false if the node is exists and have some meaningful value.
-         *
-         * @func
          */
-        this.isEmpty = core.isEmpty;
+        this.isEmpty = function (node) {
+            ensureNode(node, 'node');
 
-        //this.mutate = core.mutate;
-        //this.getData = core.getData;
-        //this.setData = core.setData;
-        //this.deleteData = core.deleteData;
-        //this.copyData = core.copyData;
-        //this.getProperty = core.getProperty;
-        //this.setProperty = core.setProperty;
-        //this.deleteProperty = core.deleteProperty;
-        //this.getKeys = core.getKeys;
-        //this.getRawKeys = core.getRawKeys;
-        //this.isHashed = core.isHashed;
-        //this.setHashed = core.setHashed;
+            return core.isEmpty(node);
+        };
 
         /**
          * Returns the calculated database id of the data of the node.
@@ -316,10 +316,12 @@ define([
          * @return {module:Core~ObjectHash} Returns the so called Hash value of the data of the given node. If the string is empty,
          * then it means that the node was mutated but not yet saved to the database, so it do not have a hash
          * temporarily.
-         *
-         * @func
          */
-        this.getHash = core.getHash;
+        this.getHash = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getHash(node);
+        };
 
         /**
          * Persists the changes made in memory and computed the data blobs that needs to be saved into the database
@@ -328,21 +330,31 @@ define([
          *
          * @return {module:Core~GmePersisted} The function returns an object which collects all the changes
          * on data level and necessary to update the database on server side
-         *
-         * @func
          */
-        this.persist = core.persist;
+        this.persist = function (node) {
+            ensureNode(node, 'node');
+
+            return core.persist(node);
+        };
 
         /**
          * Loads the data object with the given hash and makes it a root of a containment hierarchy.
          * @param {module:Core~ObjectHash} hash - the hash of the data object we like to load as root.
-         * @param {function(string, module:Core~Node)} callback
+         * @param {function} callback
+         * @param {Error|null} callback.error - the result of the execution
+         * @param {module:Core~Node} callback.node - the resulting root node
          */
         this.loadRoot = function (hash, callback) {
-            ensureHash(hash, 'hash');
-            ensureFunction(callback, 'callback');
+            var error = null;
 
-            core.loadRoot(hash, callback);
+            ensureType(callback, 'callback', 'function');
+            error = ensureHash(hash, 'hash', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                core.loadRoot(hash, callback);
+            }
         };
 
         /**
@@ -352,99 +364,213 @@ define([
          * hierarchy. If there is no such relative id reserved, the call will return with null.
          * @param {module:Core~Node} parent - the container node in question.
          * @param {string} relativeId - the relative id of the child in question.
-         * @param {function(string, module:Core~Node)} callback
-         *
-         * @func
+         * @param {function} callback
+         * @param {Error|null} callback.error - the result of the execution
+         * @param {module:Core~Node} callback.node - the resulting child
          */
-        this.loadChild = core.loadChild;
+        this.loadChild = function (node, relativeId, callback) {
+            var error = null;
+
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(node, 'node', true);
+            error = error || ensureType(relativeId, 'relativeId', 'string', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                core.loadChild(node, relativeId, callback);
+            }
+        };
 
         /**
          * From the given starting node, it loads the path given as a series of relative ids (separated by '/')
          * and returns the node it finds at the ends of the path. If there is no node, the function will return null.
-         * @param {module:Core~Node} startNode - the starting node of our search.
+         * @param {module:Core~Node} node - the starting node of our search.
          * @param {string} relativePath - the relative path - built by relative ids - of the node in question.
-         * @param {function(string, module:Core~Node)} callback
-         *
-         * @func
+         * @param {function} callback
+         * @param {Error|null} callback.error - the result of the execution
+         * @param {module:Core~Node} callback.node - the resulting node
          */
-        this.loadByPath = core.loadByPath;
+        this.loadByPath = function (node, relativePath, callback) {
+            var error = null;
+
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(node, 'node', true);
+            error = error || ensurePath(relativePath, 'relativePath', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                core.loadByPath(node, relativePath, callback);
+            }
+        };
 
         /**
          * Loads all the children of the given parent. As it first checks the already reserved relative ids of
          * the parent, it only loads the already existing children (so no on-demand empty node creation).
-         * @param {module:Core~Node} parent - the container node in question.
-         * @param {function(string, module:Core~Node[])} callback
-         *
-         * @func
+         * @param {module:Core~Node} node - the container node in question.
+         * @param {function} callback
+         * @param {Error|null} callback.error - the result of the execution
+         * @param {module:Core~Node[]} callback.children - the resulting children
          */
-        this.loadChildren = core.loadChildren;
+        this.loadChildren = function (node, callback) {
+            var error = null;
+
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(node, 'node', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                core.loadChildren(node, callback);
+            }
+        };
 
         /**
          * Loads all the children of the given parent that has some data and not just inherited. As it first checks
          * the already reserved relative ids of the parent, it only loads the already existing children
          * (so no on-demand empty node creation).
-         * @param {module:Core~Node} parent - the container node in question.
-         * @param {function(string, module:Core~Node[])} callback
-         *
-         * @func
+         * @param {module:Core~Node} node - the container node in question.
+         * @param {function} callback
+         * @param {Error|null} callback.error - the result of the execution
+         * @param {module:Core~Node[]} callback.node - the resulting children
          */
-        this.loadOwnChildren = core.loadOwnChildren;
+        this.loadOwnChildren = function (node, callback) {
+            var error = null;
+
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(node, 'node', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                core.loadOwnChildren(node, callback);
+            }
+        };
 
         /**
          * Loads the target of the given pointer of the given node. In the callback the node can have three values:
          * if the node is valid, then it is the defined target of a valid pointer,
          * if the returned value is null, then it means that the pointer is defined, but has no real target,
          * finally if the returned value is undefined than there is no such pointer defined for the given node.
-         * @param {module:Core~Node} source - the container node in question.
-         * @param {string} pointerName - the relative id of the child in question.
-         * @param {function(string, module:Core~Node)} callback
-         *
-         * @func
+         * @param {module:Core~Node} node - the source node in question.
+         * @param {string} pointerName - the name of the pointer.
+         * @param {function} callback
+         * @param {Error|null} callback.error - the result of the execution
+         * @param {module:Core~Node} callback.node - the resulting target
          */
-        this.loadPointer = core.loadPointer;
+        this.loadPointer = function (node, pointerName, callback) {
+            var error = null,
+                targetPath;
+
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(node, 'node', true);
+            error = error || ensureType(pointerName, 'pointerName', 'string', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                targetPath = core.getPointerPath(node, pointerName);
+
+                if (targetPath === undefined) {
+                    callback(new CoreIllegalOperationError('Cannot load target of undefined pointer.'));
+                } else {
+                    core.loadPointer(node, pointerName, callback);
+                }
+            }
+
+        };
 
         /**
          * Loads all the source nodes that has such a pointer and its target is the given node.
-         * @param {module:Core~Node} target - the container node in question.
-         * @param {string} pointerName - the relative id of the child in question.
-         * @param {function(string, module:Core~Node[])} callback
-         *
-         * @func
+         * @param {module:Core~Node} node - the target node in question.
+         * @param {string} pointerName - the name of the pointer of the sources.
+         * @param {function} callback
+         * @param {Error|null} callback.error - the result of the execution
+         * @param {module:Core~Node[]} callback.node - the resulting sources
          */
-        this.loadCollection = core.loadCollection;
+        this.loadCollection = function (node, pointerName, callback) {
+            var error = null,
+                collectionNames;
+
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(node, 'node', true);
+            error = error || ensureType(pointerName, 'pointerName', 'string', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                collectionNames = core.getCollectionNames(node);
+
+                if (collectionNames.indexOf(pointerName) === -1) {
+                    callback(new CoreIllegalOperationError('Cannot load sources of undefined pointer.'));
+                } else {
+                    core.loadCollection(node, pointerName, callback);
+                }
+            }
+        };
 
         /**
          * Loads a complete sub-tree of the containment hierarchy starting from the given node.
-         * @param {module:Core~Node} node - the container node in question.
-         * @param {function(string, module:Core~Node[])} callback
-         *
-         * @func
+         * @param {module:Core~Node} node - the node that is the root of the sub-tree in question.
+         * @param {function} callback
+         * @param {Error|null} callback.error - the result of the execution
+         * @param {module:Core~Node[]} callback.node - the resulting sources
          */
-        this.loadSubTree = core.loadSubTree;
+        this.loadSubTree = function (node, callback) {
+            var error = null;
+
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(node, 'node', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                core.loadSubTree(node, callback);
+            }
+        };
 
         /**
          * Loads a complete sub-tree of the containment hierarchy starting from the given node, but load only those
          * children that has some additional data and not purely inherited.
          * @param {module:Core~Node} node - the container node in question.
-         * @param {function(string, module:Core~Node[])} callback
-         *
-         * @func
+         * @param {function} callback
+         * @param {Error|null} callback.error - the result of the execution
+         * @param {module:Core~Node[]} callback.node - the resulting sources
          */
-        this.loadOwnSubTree = core.loadOwnSubTree;
+        this.loadOwnSubTree = function (node, callback) {
+            var error = null;
+
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(node, 'node', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                core.loadOwnSubTree(node, callback);
+            }
+        };
 
         /**
          * Loads a complete containment hierarchy using the data object - pointed by the given hash -
          * as the root.
-         * @param {module:Core~ObjectHash} rootHash - hash of the root node.
+         * @param {module:Core~ObjectHash} hash - hash of the root node.
          * @param {function(string, module:Core~Node[])} callback
          *
          * @func
          */
-        this.loadTree = core.loadTree;
+        this.loadTree = function (hash, callback) {
+            var error = null;
 
-        //this.isValidNode = core.isValidNode;
-        //this.getChildHash = core.getChildHash;
-        //this.isValidRelid = core.isValidRelid;
+            ensureType(callback, 'callback', 'function');
+            error = ensureHash(hash, 'hash', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                core.loadTree(hash, callback);
+            }
+        };
 
         /**
          * Collects the relative ids of all the children of the given node.

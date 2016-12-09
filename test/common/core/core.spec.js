@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('core', function () {
+describe.only('core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         projectName = 'core',
@@ -158,7 +158,7 @@ describe('core', function () {
         var myError;
 
         try {
-            core.getParent('string');
+            core.getRoot('string');
         } catch (e) {
             myError = e;
         } finally {
@@ -166,26 +166,286 @@ describe('core', function () {
         }
     });
 
-    it('should throw @loadRoot if not valid parameters are given', function () {
+    it('should throw @getPath if not valid node is given', function () {
         var myError;
 
         try {
-            core.loadRoot('badhash', function () {
-            });
+            core.getPath('string');
         } catch (e) {
             myError = e;
         } finally {
             expect(myError.name).to.eql('CoreInputError');
-            expect(myError.message).to.contains('valid hash');
+        }
+    });
+
+    it('should throw @getChild if not parameters are given', function () {
+        var myError;
+
+        try {
+            core.getChild('string', 'anything');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.message).to.contains('node');
         }
 
         try {
-            core.loadRoot(originalRootHash, 'string');
+            core.getChild(rootNode, {});
         } catch (e) {
             myError = e;
         } finally {
             expect(myError.name).to.eql('CoreInputError');
-            expect(myError.message).to.contains('function');
+            expect(myError.message).to.contains('relativeId');
         }
     });
+
+    it('should throw @isEmpty if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.isEmpty('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getHash if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getHash('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @persist if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getHash('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @loadRoot if not valid parameters are given', function (done) {
+        var myError;
+
+        core.loadRoot('badhash', function (e) {
+            expect(e.name).to.eql('CoreInputError');
+            expect(e.message).to.contains('valid hash');
+
+            try {
+                core.loadRoot(originalRootHash, 'string');
+            } catch (e) {
+                myError = e;
+            } finally {
+                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.message).to.contains('function');
+                done();
+            }
+        });
+
+    });
+
+    it('should throw @loadChild if not parameters are given', function (done) {
+        var myError;
+
+        core.loadChild('badnode', 'relid', function (e) {
+            expect(e.name).to.eql('CoreInputError');
+            expect(e.message).to.contains('valid node');
+            core.loadChild(rootNode, {}, function (e) {
+                expect(e.name).to.eql('CoreInputError');
+                expect(e.message).to.contains('string');
+
+                try {
+                    core.loadChild(rootNode, {});
+                } catch (e) {
+                    myError = e;
+                } finally {
+                    expect(myError.name).to.eql('CoreInputError');
+                    expect(myError.message).to.contains('function');
+                    done();
+                }
+            });
+        });
+    });
+
+    it('should throw @loadByPath if not parameters are given', function (done) {
+        var myError;
+
+        core.loadByPath('badnode', 'relid', function (e) {
+            expect(e.name).to.eql('CoreInputError');
+            expect(e.message).to.contains('valid node');
+            core.loadByPath(rootNode, {}, function (e) {
+                expect(e.name).to.eql('CoreInputError');
+                expect(e.message).to.contains('valid path');
+
+                try {
+                    core.loadByPath(rootNode, {});
+                } catch (e) {
+                    myError = e;
+                } finally {
+                    expect(myError.name).to.eql('CoreInputError');
+                    expect(myError.message).to.contains('function');
+                    done();
+                }
+            });
+        });
+    });
+
+    it('should throw @loadChildren if not valid parameters are given', function (done) {
+        var myError;
+
+        core.loadChildren('badhash', function (e) {
+            expect(e.name).to.eql('CoreInputError');
+            expect(e.message).to.contains('valid node');
+
+            try {
+                core.loadChildren(originalRootHash, 'string');
+            } catch (e) {
+                myError = e;
+            } finally {
+                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.message).to.contains('function');
+                done();
+            }
+        });
+
+    });
+
+    it('should throw @loadOwnChildren if not valid parameters are given', function (done) {
+        var myError;
+
+        core.loadOwnChildren('badhash', function (e) {
+            expect(e.name).to.eql('CoreInputError');
+            expect(e.message).to.contains('valid node');
+
+            try {
+                core.loadOwnChildren(originalRootHash, 'string');
+            } catch (e) {
+                myError = e;
+            } finally {
+                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.message).to.contains('function');
+                done();
+            }
+        });
+
+    });
+
+    it('should throw @loadPointer if not parameters are given', function (done) {
+        var myError;
+
+        core.loadPointer('badnode', 'relid', function (e) {
+            expect(e.name).to.eql('CoreInputError');
+            expect(e.message).to.contains('valid node');
+            core.loadPointer(rootNode, {}, function (e) {
+                expect(e.name).to.eql('CoreInputError');
+                expect(e.message).to.contains('string');
+
+                try {
+                    core.loadPointer(rootNode, {});
+                } catch (e) {
+                    myError = e;
+                } finally {
+                    expect(myError.name).to.eql('CoreInputError');
+                    expect(myError.message).to.contains('function');
+                    done();
+                }
+            });
+        });
+    });
+
+    it('should throw @loadCollection if not parameters are given', function (done) {
+        var myError;
+
+        core.loadCollection('badnode', 'relid', function (e) {
+            expect(e.name).to.eql('CoreInputError');
+            expect(e.message).to.contains('valid node');
+            core.loadCollection(rootNode, {}, function (e) {
+                expect(e.name).to.eql('CoreInputError');
+                expect(e.message).to.contains('string');
+
+                try {
+                    core.loadCollection(rootNode, {});
+                } catch (e) {
+                    myError = e;
+                } finally {
+                    expect(myError.name).to.eql('CoreInputError');
+                    expect(myError.message).to.contains('function');
+                    done();
+                }
+            });
+        });
+    });
+
+    it('should throw @loadSubTree if not valid parameters are given', function (done) {
+        var myError;
+
+        core.loadSubTree('badhash', function (e) {
+            expect(e.name).to.eql('CoreInputError');
+            expect(e.message).to.contains('valid node');
+
+            try {
+                core.loadSubTree(originalRootHash, 'string');
+            } catch (e) {
+                myError = e;
+            } finally {
+                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.message).to.contains('function');
+                done();
+            }
+        });
+
+    });
+
+    it('should throw @loadOwnSubTree if not valid parameters are given', function (done) {
+        var myError;
+
+        core.loadOwnSubTree('badhash', function (e) {
+            expect(e.name).to.eql('CoreInputError');
+            expect(e.message).to.contains('valid node');
+
+            try {
+                core.loadOwnSubTree(originalRootHash, 'string');
+            } catch (e) {
+                myError = e;
+            } finally {
+                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.message).to.contains('function');
+                done();
+            }
+        });
+
+    });
+
+    it('should throw @loadTree if not valid parameters are given', function (done) {
+        var myError;
+
+        core.loadTree('badhash', function (e) {
+            expect(e.name).to.eql('CoreInputError');
+            expect(e.message).to.contains('valid hash');
+
+            try {
+                core.loadTree(originalRootHash, 'string');
+            } catch (e) {
+                myError = e;
+            } finally {
+                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.message).to.contains('function');
+                done();
+            }
+        });
+
+    });
+
 });

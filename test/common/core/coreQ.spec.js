@@ -50,9 +50,9 @@ describe('CoreQ Async with Promises', function () {
 
     after(function (done) {
         Q.allDone([
-                storage.closeDatabase(),
-                gmeAuth.unload()
-            ])
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
             .nodeify(done);
     });
 
@@ -70,7 +70,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('ASSERT failed');
+                expect(err.name).to.eql('CoreInputError');
             })
             .nodeify(done);
     });
@@ -92,7 +92,8 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('ASSERT failed');
+                // expect(err.message).to.include('ASSERT failed');
+                expect(err.name).to.eql('CoreInputError');
             })
             .nodeify(done);
     });
@@ -114,7 +115,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('ASSERT failed');
+                expect(err.name).to.eql('CoreInputError');
             })
             .nodeify(done);
     });
@@ -136,7 +137,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('ASSERT failed');
+                expect(err.name).to.eql('CoreInputError');
             })
             .nodeify(done);
     });
@@ -158,7 +159,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('ASSERT failed');
+                expect(err.name).to.eql('CoreInputError');
             })
             .nodeify(done);
     });
@@ -183,7 +184,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('ASSERT failed');
+                expect(err.name).to.eql('CoreInputError');
             })
             .nodeify(done);
     });
@@ -207,7 +208,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('ASSERT failed');
+                expect(err.name).to.eql('CoreInputError');
             })
             .nodeify(done);
     });
