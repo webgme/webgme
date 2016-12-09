@@ -531,8 +531,8 @@ define([
                     pointer = {};
 
                     pointer.items = self.getOwnMemberPaths(tempNode, CONSTANTS.SET_ITEMS);
-                    pointer.min = self.getAttribute(tempNode, CONSTANTS.SET_ITEMS_MIN);
-                    pointer.max = self.getAttribute(tempNode, CONSTANTS.SET_ITEMS_MAX);
+                    pointer.min = self.getOwnAttribute(tempNode, CONSTANTS.SET_ITEMS_MIN);
+                    pointer.max = self.getOwnAttribute(tempNode, CONSTANTS.SET_ITEMS_MAX);
                     pointer.minItems = [];
                     pointer.maxItems = [];
 

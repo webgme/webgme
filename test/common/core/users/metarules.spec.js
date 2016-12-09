@@ -15,10 +15,12 @@ describe('Meta Rules', function () {
         expect = testFixture.expect,
         Q = testFixture.Q,
         checkNode = requireJS('common/core/users/metarules').checkNode,
+        checkMetaConsistency = requireJS('common/core/users/metarules').checkMetaConsistency,
         projectName = 'MetaRules',
         branchName = 'master',
         languagePath = '/822429792/',
         ir,
+        metaMetaIr,
 
         gmeAuth;
 
@@ -42,6 +44,19 @@ describe('Meta Rules', function () {
             })
             .then(function (importResult) {
                 ir = importResult;
+
+                var importParam = {
+                    projectSeed: './seeds/EmptyProject.webgmex',
+                    projectName: 'MetaConsistencyCheck',
+                    branchName: 'master',
+                    logger: logger,
+                    gmeConfig: gmeConfig
+                };
+
+                return testFixture.importProject(storage, importParam);
+            })
+            .then(function (importResult) {
+                metaMetaIr = importResult;
             })
             .nodeify(done);
     });
@@ -375,5 +390,184 @@ describe('Meta Rules', function () {
                 expect(result.hasViolation).to.equal(false, result.message);
             })
             .nodeify(done);
+    });
+
+    describe.only('metaConsistencyCheck', function () {
+        function getContext() {
+            var result = {
+                root: null,
+                fco: null,
+                core: metaMetaIr.core
+            };
+
+            return metaMetaIr.core.loadRoot(metaMetaIr.rootHash)
+                .then(function (root) {
+                    result.root = root;
+                    return metaMetaIr.core.loadByPath(root, '/1');
+                })
+                .then(function (fco) {
+                    result.fco = fco;
+                    return result;
+                });
+        }
+
+        it('should return empty array on empty project', function (done) {
+            getContext()
+                .then(function (c) {
+                    expect(checkMetaConsistency(c.core, c.root)).to.deep.equal([]);
+                })
+                .nodeify(done);
+        });
+
+        it('should return error with two meta nodes sharing name', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    c.core.addMember(c.root, 'MetaAspectSet', n);
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('Duplicate name');
+                    expect(result[0].severity).to.include('error');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error with containment def of non-meta node', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    //c.core.addMember(c.root, 'MetaAspectSet', n);
+                    c.core.setChildMeta(c.fco, n, -1, -1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('containment of a node that is not part of the meta');
+                    expect(result[0].severity).to.include('error');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error with pointer target to non-meta node', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    //c.core.addMember(c.root, 'MetaAspectSet', n);
+                    c.core.setPointerMetaTarget(c.fco, 'toNonMeta', n, 1, 1);
+                    c.core.setPointerMetaLimits(c.fco, 'toNonMeta', 1, 1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('defines a pointer [toNonMeta] where the ' +
+                        'target is not part of the meta');
+                    expect(result[0].severity).to.include('error');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error with set member to non-meta node', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    //c.core.addMember(c.root, 'MetaAspectSet', n);
+                    c.core.setPointerMetaTarget(c.fco, 'toNonMeta', n, -1, -1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('defines a set [toNonMeta] where the ' +
+                        'member is not part of the meta');
+                    expect(result[0].severity).to.include('error');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when pointer name overrides set name', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    c.core.setAttribute(n, 'name', 'Node');
+                    c.core.addMember(c.root, 'MetaAspectSet', n);
+                    c.core.setPointerMetaTarget(c.fco, 'setAndPtr', n, -1, -1);
+
+                    c.core.setPointerMetaTarget(n, 'setAndPtr', c.fco, 1, 1);
+                    c.core.setPointerMetaLimits(n, 'setAndPtr', 1, 1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('defines a pointer [setAndPtr] colliding' +
+                        ' with a set definition');
+                    expect(result[0].severity).to.include('error');
+                })
+                .nodeify(done);
+        });
+
+        it.skip('should return error when set name overrides pointer name', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    c.core.setAttribute(n, 'name', 'Node');
+                    c.core.addMember(c.root, 'MetaAspectSet', n);
+
+                    c.core.setPointerMetaTarget(c.fco, 'ptrAndSet', c.fco, 1, 1);
+                    c.core.setPointerMetaLimits(c.fco, 'ptrAndSet', 1, 1);
+
+                    c.core.setPointerMetaTarget(n, 'ptrAndSet', c.fco, -1, -1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('defines a set [ptrAndSet] colliding' +
+                        ' with a pointer definition');
+                    expect(result[0].severity).to.include('error');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when regexp is invalid', function (done) {
+            getContext()
+                .then(function (c) {
+                    var result;
+                    c.core.setAttributeMeta(c.fco, 'InvalidRegexp', {
+                        type: 'string',
+                        regexp: "/((?<=\\()[A-Za-z][A-Za-z0-9\\+\\.\\-]*:([A-Za-z0-9\\.\\-_~:/\\?#\\[\\]@!\\$&'\\(\\)\\*\\+,;=]|%[A-Fa-f0-9]{2})+(?=\\)))|([A-Za-z][A-Za-z0-9\\+\\.\\-]*:([A-Za-z0-9\\.\\-_~:/\\?#\\[\\]@!\\$&'\\(\\)\\*\\+,;=]|%[A-Fa-f0-9]{2})+)/"
+                    });
+
+                    result = checkMetaConsistency(c.core, c.root);
+
+                    expect(result.length).to.equal(1);
+                    expect(result[0].severity).to.equal('error');
+                    expect(result[0].message).to.include('defines an invalid regular expression');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when min and max of integer/float not a number', function (done) {
+            getContext()
+                .then(function (c) {
+                    var result;
+                    c.core.setAttributeMeta(c.fco, 'MinMaxStringsInt', {type: 'integer', min: '0', max: '2'});
+                    c.core.setAttributeMeta(c.fco, 'MinMaxStringsFloat', {type: 'float', min: '0', max: '2'});
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(4);
+                    result.forEach(function (res) {
+                        expect(res.severity).to.equal('error');
+                        expect(res.message).to.include('defines an invalid');
+                        expect(res.message).to.include('The type is not a number');
+                    });
+                })
+                .nodeify(done);
+        });
     });
 });

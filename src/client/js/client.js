@@ -2100,6 +2100,11 @@ define([
 
         this.gmeConfig = gmeConfig;
 
+        this.getUserId = function () {
+            throw new Error('Deprecated! Username is not stored in a cookie anymore. If available, use ' +
+                'WebGMEGlobal.userInfo, if not the user info is available at GET /api/user');
+        };
+
         window.addEventListener('error', function (evt) {
             state.exception = {};
             if (evt.error) {

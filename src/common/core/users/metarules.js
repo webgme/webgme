@@ -383,7 +383,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             if (typeof names[metaName] === 'string') {
                 result.push({
                     severity: 'error',
-                    message: 'Duplicate name on META level [' + metaName + ']',
+                    message: 'Duplicate name among meta-nodes [' + metaName + ']',
                     description: 'Non-unique meta names makes it hard to reason about the meta-model',
                     hint: 'Rename one of the objects',
                     path: path,
@@ -427,8 +427,8 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     if (!metaNodes[ownMetaJson.pointers[key].items[i]]) {
                         result.push({
                             severity: 'error',
-                            message: metaName + ' defines a ' + (isPointer ? 'pointer' : 'set') + '[' + key + '] ' +
-                            'where the ' + (isPointer ? 'pointer' : 'set') + ' is not part of the meta.',
+                            message: metaName + ' defines a ' + (isPointer ? 'pointer' : 'set') + ' [' + key + '] ' +
+                            'where the ' + (isPointer ? 'target' : 'member') + ' is not part of the meta.',
                             description: 'All defined meta-relations should be between meta-nodes.',
                             hint: 'Locate the related node, add it to the meta and remove the ' +
                             (isPointer ? 'pointer' : 'set') + ' definition.',
