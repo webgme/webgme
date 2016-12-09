@@ -200,7 +200,7 @@ define([
             typeEl.append('[' + aDesc.items[i] + '] - cannot be contained! Uncheck to clean up..');
 
             chb = typeEl.find('input[type=checkbox]');
-            chb.data(DATA_TYPE_ID, typeInfo.id);
+            chb.data(DATA_TYPE_ID, aDesc.items[i]);
             typeEl.addClass('invalid-aspect-member-label');
             chb.addClass('invalid-aspect-member-cb');
             chb.prop('checked', true);

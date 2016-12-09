@@ -489,6 +489,7 @@ describe('Meta Rules', function () {
                 .nodeify(done);
         });
 
+        // Name collisions sets/pointers/aspects.
         it('should return error when pointer name overrides set name', function (done) {
             getContext()
                 .then(function (c) {
@@ -511,7 +512,7 @@ describe('Meta Rules', function () {
                 .nodeify(done);
         });
 
-        it.skip('should return error when set name overrides pointer name', function (done) {
+        it('should return error when set name overrides pointer name', function (done) {
             getContext()
                 .then(function (c) {
                     var n = c.core.createNode({parent: c.root, base: c.fco}),
@@ -523,7 +524,7 @@ describe('Meta Rules', function () {
                     c.core.setPointerMetaTarget(c.fco, 'ptrAndSet', c.fco, 1, 1);
                     c.core.setPointerMetaLimits(c.fco, 'ptrAndSet', 1, 1);
 
-                    c.core.setPointerMetaTarget(n, 'ptrAndSet', c.fco, -1, -1);
+                    c.core.setPointerMetaTarget(n, 'ptrAndSet', n, -1, -1);
 
                     result = checkMetaConsistency(c.core, c.root);
                     expect(result.length).to.equal(1);
@@ -534,6 +535,91 @@ describe('Meta Rules', function () {
                 .nodeify(done);
         });
 
+        it('should return error when aspect name overrides set name', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    c.core.setAttribute(n, 'name', 'Node');
+                    c.core.addMember(c.root, 'MetaAspectSet', n);
+                    c.core.setPointerMetaTarget(c.fco, 'setAndAspect', c.fco, -1, -1);
+
+                    c.core.setChildMeta(n, c.fco, -1, -1);
+                    c.core.setAspectMetaTarget(n, 'setAndAspect', c.fco);
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('defines an aspect [setAndAspect] colliding' +
+                        ' with a set definition');
+                    expect(result[0].severity).to.include('error');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when set name overrides aspect name', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    c.core.setAttribute(n, 'name', 'Node');
+                    c.core.addMember(c.root, 'MetaAspectSet', n);
+                    c.core.setChildMeta(c.fco, c.fco, -1, -1);
+                    c.core.setAspectMetaTarget(c.fco, 'aspectAndSet', c.fco);
+
+                    c.core.setPointerMetaTarget(n, 'aspectAndSet', c.fco, -1, -1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('defines a set [aspectAndSet] colliding' +
+                        ' with an aspect definition');
+                    expect(result[0].severity).to.include('error');
+                })
+                .nodeify(done);
+        });
+
+        // Aspects
+        it('should return error when an aspect member is not a meta-node', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    c.core.setAttribute(n, 'name', 'Node');
+                    //c.core.addMember(c.root, 'MetaAspectSet', n);
+                    //c.core.setChildMeta(c.fco, c.fco, -1, -1);
+                    c.core.setAspectMetaTarget(c.fco, 'nonMeta', n);
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('defines an aspect [nonMeta] where ' +
+                        'a member is not part of the meta');
+                    expect(result[0].severity).to.include('error');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when an aspect has a member that does not have a containment def', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    c.core.setAttribute(n, 'name', 'Node');
+                    c.core.addMember(c.root, 'MetaAspectSet', n);
+                    c.core.setAspectMetaTarget(c.fco, 'notChild', n);
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('defines an aspect [notChild] where ' +
+                        'a member does not have a containment definition');
+                    expect(result[0].severity).to.include('error');
+                })
+                .nodeify(done);
+        });
+
+        // Attributes
         it('should return error when regexp is invalid', function (done) {
             getContext()
                 .then(function (c) {

@@ -349,8 +349,23 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             metaName,
             setNames,
             pointerNames,
+            aspectNames,
             childPaths,
             ownMetaJson;
+
+        function isTypeOfAny(node, paths) {
+            var i,
+                metaNode;
+
+            for (i = 0; i < paths.length; i += 1) {
+                metaNode = metaNodes[paths[i]];
+                if (metaNode && core.isTypeOf(node, metaNode)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         function getNameError(metaName, path, guid, key, type) {
             return {
@@ -369,7 +384,8 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             metaName = core.getFullyQualifiedName(metaNode);
             ownMetaJson = core.getOwnJsonMeta(metaNode);
             setNames = core.getValidSetNames(metaNode);
-            pointerNames = core.getPointerNames(metaNode);
+            pointerNames = core.getValidPointerNames(metaNode);
+            aspectNames = core.getValidAspectNames(metaNode);
             childPaths = core.getValidChildrenPaths(metaNode);
 
             //Patch the ownMetaJson
@@ -398,7 +414,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 return {
                     severity: mixinError.severity,
                     message: mixinError.message,
-                    description: 'All defined meta-relations should be between meta-nodes.',
+                    description: 'Mixin violations makes it hard to see which definition is used.',
                     hint: mixinError.hint,
                     path: path,
                     relatedPaths: mixinError.collisionPaths || []
@@ -460,6 +476,17 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                             relatedPaths: ownMetaJson.pointers[key].items
                         });
                     }
+
+                    if (aspectNames.indexOf(key) > -1) {
+                        result.push({
+                            severity: 'error',
+                            message: metaName + ' defines a set [' + key + '] colliding with an aspect definition.',
+                            description: 'Sets and aspects share the same name-space.',
+                            hint: 'Remove/rename one of them.',
+                            path: path,
+                            relatedPaths: ownMetaJson.pointers[key].items
+                        });
+                    }
                 }
 
                 if (key[0] === '_') {
@@ -471,7 +498,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 for (i = 0; i < ownMetaJson.aspects[key].length; i += 1) {
                     if (!metaNodes[ownMetaJson.aspects[key][i]]) {
                         result.push({
-                            severity: 'warning',
+                            severity: 'error',
                             message: metaName + ' defines an aspect [' + key + '] where a member is not part of' +
                             ' the meta.',
                             description: 'All defined meta-relations should be between meta-nodes.',
@@ -479,9 +506,9 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                             path: path,
                             relatedPaths: [ownMetaJson.aspects[key][i]]
                         });
-                    } else if (childPaths.indexOf(ownMetaJson.aspects[key][i]) === -1) {
+                    } else if (isTypeOfAny(metaNodes[ownMetaJson.aspects[key][i]], childPaths) === false) {
                         result.push({
-                            severity: 'warning',
+                            severity: 'error',
                             message: metaName + ' defines an aspect [' + key + '] where a member does not have a ' +
                             'containment definition.',
                             description: 'All defined meta-relations should be between meta-nodes.',
