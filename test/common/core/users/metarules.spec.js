@@ -392,7 +392,7 @@ describe('Meta Rules', function () {
             .nodeify(done);
     });
 
-    describe.only('metaConsistencyCheck', function () {
+    describe('metaConsistencyCheck', function () {
         function getContext() {
             var result = {
                 root: null,
@@ -652,6 +652,177 @@ describe('Meta Rules', function () {
                         expect(res.message).to.include('defines an invalid');
                         expect(res.message).to.include('The type is not a number');
                     });
+                })
+                .nodeify(done);
+        });
+
+        // Invalid/reserved names
+        it.skip('should return error when attribute name starts with _', function (done) {
+            getContext()
+                .then(function (c) {
+                    var result;
+                    // TODO: This should throw!
+                    c.core.setAttributeMeta(c.fco, '_underscore', {
+                        type: 'string'
+                    });
+
+                    result = checkMetaConsistency(c.core, c.root);
+
+                    expect(result.length).to.equal(1);
+                    expect(result[0].severity).to.equal('error');
+                    expect(result[0].message).to.include('defines an invalid regular expression');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when set starts with _', function (done) {
+            getContext()
+                .then(function (c) {
+                    var result;
+                    // TODO: This should throw!
+                    c.core.setPointerMetaTarget(c.fco, '_underscore', c.fco, -1, -1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+
+                    expect(result.length).to.equal(1);
+                    expect(result[0].severity).to.equal('error');
+                    expect(result[0].message).to.include('defines a set [_underscore] starting with an underscore');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when set is named ovr', function (done) {
+            getContext()
+                .then(function (c) {
+                    var result;
+                    // TODO: This should throw!
+                    c.core.setPointerMetaTarget(c.fco, 'ovr', c.fco, -1, -1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+
+                    expect(result.length).to.equal(1);
+                    expect(result[0].severity).to.equal('error');
+                    expect(result[0].message).to.include('defines a set [ovr] which is a reserved name');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when aspect starts with _', function (done) {
+            getContext()
+                .then(function (c) {
+                    var result;
+                    c.core.setChildMeta(c.fco, c.fco, -1, -1);
+                    // TODO: This should throw!
+                    c.core.setAspectMetaTarget(c.fco, '_underscore', c.fco);
+
+                    result = checkMetaConsistency(c.core, c.root);
+
+                    expect(result.length).to.equal(1);
+                    expect(result[0].severity).to.equal('error');
+                    expect(result[0].message).to.include('defines an aspect [_underscore] starting with an underscore');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when aspect is named ovr', function (done) {
+            getContext()
+                .then(function (c) {
+                    var result;
+                    c.core.setChildMeta(c.fco, c.fco, -1, -1);
+                    // TODO: This should throw!
+                    c.core.setAspectMetaTarget(c.fco, 'ovr', c.fco);
+
+                    result = checkMetaConsistency(c.core, c.root);
+
+                    expect(result.length).to.equal(1);
+                    expect(result[0].severity).to.equal('error');
+                    expect(result[0].message).to.include('defines an aspect [ovr] which is a reserved name');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when pointer starts with _', function (done) {
+            getContext()
+                .then(function (c) {
+                    var result;
+                    // TODO: This should throw!
+                    c.core.setPointerMetaTarget(c.fco, '_underscore', c.fco, 1, 1);
+                    c.core.setPointerMetaLimits(c.fco, '_underscore', 1, 1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+
+                    expect(result.length).to.equal(1);
+                    expect(result[0].severity).to.equal('error');
+                    expect(result[0].message).to.include('defines a pointer [_underscore] starting with an underscore');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when pointer is named base', function (done) {
+            getContext()
+                .then(function (c) {
+                    var result;
+                    // TODO: This should throw!
+                    c.core.setPointerMetaTarget(c.fco, 'base', c.fco, 1, 1);
+                    c.core.setPointerMetaLimits(c.fco, 'base', 1, 1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+
+                    expect(result.length).to.equal(1);
+                    expect(result[0].severity).to.equal('error');
+                    expect(result[0].message).to.include('defines a pointer [base] which is a reserved name');
+                })
+                .nodeify(done);
+        });
+
+        it('should return error when pointer is named base', function (done) {
+            getContext()
+                .then(function (c) {
+                    var result;
+                    // TODO: This should throw!
+                    c.core.setPointerMetaTarget(c.fco, 'base', c.fco, 1, 1);
+                    c.core.setPointerMetaLimits(c.fco, 'base', 1, 1);
+
+                    result = checkMetaConsistency(c.core, c.root);
+
+                    expect(result.length).to.equal(1);
+                    expect(result[0].severity).to.equal('error');
+                    expect(result[0].message).to.include('defines a pointer [base] which is a reserved name');
+                })
+                .nodeify(done);
+        });
+
+        // Mixin - this only checks the single call to core.getMixinErrors which has its own tests.
+        it('should return warning when there is a mixin warning', function (done) {
+            getContext()
+                .then(function (c) {
+                    var n = c.core.createNode({parent: c.root, base: c.fco}),
+                        mixin = c.core.createNode({parent: c.root, base: c.fco}),
+                        mixin2 = c.core.createNode({parent: c.root, base: c.fco}),
+                        result;
+
+                    c.core.setAttribute(n, 'name', 'Node');
+                    c.core.setAttribute(mixin, 'name', 'mixin');
+                    c.core.setAttribute(mixin2, 'name', 'mixin2');
+                    c.core.addMember(c.root, 'MetaAspectSet', n);
+                    c.core.addMember(c.root, 'MetaAspectSet', mixin);
+                    c.core.addMember(c.root, 'MetaAspectSet', mixin2);
+
+                    c.core.setAttributeMeta(mixin, 'same', {
+                        type: 'string'
+                    });
+
+                    c.core.setAttributeMeta(mixin2, 'same', {
+                        type: 'string'
+                    });
+
+                    c.core.addMixin(n, c.core.getPath(mixin));
+                    c.core.addMixin(n, c.core.getPath(mixin2));
+
+                    result = checkMetaConsistency(c.core, c.root);
+                    expect(result.length).to.equal(1);
+                    expect(result[0].message).to.include('inherits attribute definition \'same\' from');
+                    expect(result[0].severity).to.include('warning');
                 })
                 .nodeify(done);
         });

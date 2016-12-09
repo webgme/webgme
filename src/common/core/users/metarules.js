@@ -367,12 +367,24 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             return false;
         }
 
-        function getNameError(metaName, path, guid, key, type) {
+        function getUnderScoreError(metaName, path, key, type) {
             return {
-                severity: 'warning',
+                severity: 'error',
                 message: metaName + ' defines ' + type + ' [' + key + '] starting with an underscore ("_").',
-                description: 'Such relations/properties in the models are considered private and not treated ' +
-                'as publicly defined concepts governed by the meta-model.',
+                description: 'Such relations/properties in the models are considered private and can ' +
+                'collied with reserved properties.',
+                hint: 'Remove/rename it.',
+                path: path,
+                relatedPaths: []
+            };
+        }
+
+        function getReservedNameError(metaName, path, key, type) {
+            return {
+                severity: 'error',
+                message: metaName + ' defines ' + type + ' [' + key + '] which is a reserved name.',
+                description: 'Such relations/properties in the models can lead to collisions resulting in unexpected' +
+                ' behavior.',
                 hint: 'Remove/rename it.',
                 path: path,
                 relatedPaths: []
@@ -465,6 +477,10 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                             relatedPaths: ownMetaJson.pointers[key].items
                         });
                     }
+
+                    if (key === 'base') {
+                        result.push(getReservedNameError(metaName, path, key, 'a pointer'));
+                    }
                 } else {
                     if (pointerNames.indexOf(key) > -1) {
                         result.push({
@@ -487,10 +503,14 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                             relatedPaths: ownMetaJson.pointers[key].items
                         });
                     }
+
+                    if (key === 'ovr') {
+                        result.push(getReservedNameError(metaName, path, key, 'a set'));
+                    }
                 }
 
                 if (key[0] === '_') {
-                    result.push(getNameError(metaName, path, key, isPointer ? 'a pointer' : 'a set'));
+                    result.push(getUnderScoreError(metaName, path, key, isPointer ? 'a pointer' : 'a set'));
                 }
             }
 
@@ -530,8 +550,12 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     });
                 }
 
+                if (key === 'ovr') {
+                    result.push(getReservedNameError(metaName, path, key, 'an aspect'));
+                }
+
                 if (key[0] === '_') {
-                    result.push(getNameError(metaName, path, key, 'an aspect'));
+                    result.push(getUnderScoreError(metaName, path, key, 'an aspect'));
                 }
             }
 
@@ -582,16 +606,15 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     }
                 }
 
+                // This cannot happen since _s are filtered out.
                 if (key[0] === '_') {
-                    result.push(getNameError(metaName, path, key, 'an attribute'));
+                    result.push(getUnderScoreError(metaName, path, key, 'an attribute'));
                 }
             }
 
-            for (key in ownMetaJson.constraints) {
-                if (key[0] === '_') {
-                    result.push(getNameError(metaName, path, key, 'a constraint'));
-                }
-            }
+            // for (key in ownMetaJson.constraints) {
+            //     // Any checking on constraints?
+            // }
         }
 
         return result;
