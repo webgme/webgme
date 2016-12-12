@@ -181,10 +181,24 @@ define(['q', './BlobMetadata'], function (Q, BlobMetadata) {
             assets = [];
         }
 
+        function getMetadataSafely(assetHash) {
+            return blobClient.getMetadata(assetHash)
+                .catch(function(err) {
+                    logger.warn('When building project package could not retrieve metadata for attribute with value',
+                    assetHash, '. Will continue assuming it is not an asset attribute...');
+                    logger.debug('Returned error when getMetadata', err);
+                    return null;
+                });
+        }
+
         Q.allSettled(assets.map(function (assetHash) {
-            return Q.ninvoke(blobClient, 'getMetadata', assetHash)
+            return getMetadataSafely(assetHash)
                 .then(function (metadata) {
-                    return _gatherFilesFromMetadataHashRec(logger, blobClient, metadata, assetHash, artie);
+                    if (metadata) {
+                        return _gatherFilesFromMetadataHashRec(logger, blobClient, metadata, assetHash, artie);
+                    } else {
+                        return Q();
+                    }
                 });
         }))
             .then(function (result) {

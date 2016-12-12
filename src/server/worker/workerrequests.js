@@ -583,7 +583,12 @@ function WorkerRequests(mainLogger, gmeConfig) {
     /**
      *
      * @param {string} webgmeToken
-     * @param {object} parameters TODO: parameters...
+     * @param {object} parameters - One of rootHash, commitHash and branchName must be given.
+     * @param {string} parameters.projectId
+     * @param {string} [parameters.rootHash] - The hash of the tree root.
+     * @param {string} [parameters.commitHash] - The tree associated with the commitHash.
+     * @param {string} [parameters.branchName] - The tree at the given branch.
+     * @param {string} [parameters.withAssets=false] - Bundle the encountered assets linked from attributes.
      * @param {function} callback
      */
     function exportProjectToFile(webgmeToken, parameters, callback) {
