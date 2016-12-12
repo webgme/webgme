@@ -94,7 +94,8 @@ define([
     };
 
     MetaEditorWidget.prototype.showMetaConsistencyResults = function (results) {
-        var hadInconsistencies = false,
+        var self = this,
+            hadInconsistencies = false,
             resEl,
             dl,
             i,j;
@@ -108,6 +109,9 @@ define([
 
             return 0;
         });
+
+        this.$metaConsistencyResults.find('dd.path-link').off('click');
+        this.$metaConsistencyResults.find('i.close-result').off('click');
 
         this.$metaConsistencyResults.empty();
 
@@ -131,12 +135,15 @@ define([
             dl.append($('<dd>', {text: results[i].hint}));
 
             dl.append($('<dt>', {text: 'Node path'}));
-            dl.append($('<dd>', {text: results[i].path}));
+            dl.append($('<dd>', {text: results[i].path, class: 'path-link'}).data('gme-id', results[i].path));
 
             if (results[i].relatedPaths.length > 0) {
                 dl.append($('<dt>', {text: 'Related paths'}));
                 for (j = 0; j < results[i].relatedPaths.length; j += 1) {
-                    dl.append($('<dd>', {text: results[i].relatedPaths[j]}));
+                    dl.append($('<dd>', {
+                        text: results[i].relatedPaths[j],
+                        class: 'path-link'
+                    }).data('gme-id', results[i].relatedPaths[j]));
                 }
             }
 
@@ -145,15 +152,29 @@ define([
         }
 
         if (hadInconsistencies === true) {
+            this.$metaConsistencyResults.find('dd.path-link').on('click', function () {
+                var path = $(this).data('gme-id');
+                self.onInconsistencyLinkClicked(path);
+            });
+
             this.$metaConsistencyResults.prepend($('<h3>', {
-                text: 'Meta-model has inconsistencies',
+                text: 'Meta-model Inconsistencies',
                 class: 'meta-inconsistency-header'
-            }));
+            }).append($('<i/>', {
+                class: 'fa fa-check-circle-o close-result pull-left',
+                title: 'Close result view'
+            }).on('click', function () {
+                self.showMetaConsistencyResults([]);
+            })));
             this.$metaConsistencyResults.append($('<div>', {class: 'meta-inconsistency-divider'}));
             this.$el.parent().addClass('show-meta-consistency-results');
         } else {
             this.$el.parent().removeClass('show-meta-consistency-results');
         }
+    };
+
+    MetaEditorWidget.prototype.onInconsistencyLinkClicked = function (gmeId) {
+        this.logger.warn('MetaEditorWidget.onInconsistencyLinkClicked not overwritten in controller, gmeId:', gmeId);
     };
 
     MetaEditorWidget.prototype.addFilterItem = function (text, value, iconEl) {

@@ -1829,6 +1829,12 @@ define(['js/logger',
             clickFn: function () {
                 var results = self._client.checkMetaConsistency();
                 self.diagramDesigner.showMetaConsistencyResults(results);
+                if (results.length === 0) {
+                    self._client.dispatchEvent(self._client.CONSTANTS.NOTIFICATION, {
+                        severity: 'success',
+                        message: 'No inconsistencies found in meta-model.'
+                    });
+                }
             }
         }));
 
