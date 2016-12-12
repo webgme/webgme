@@ -3,6 +3,35 @@
  */
 .meta-editor-widget.w-tabs .diagram-designer-zoom-container {
   top: 45px; }
+.meta-editor-widget.show-meta-consistency-results {
+  display: inline-flex; }
+  .meta-editor-widget.show-meta-consistency-results .panel-body {
+    width: 50%; }
+  .meta-editor-widget.show-meta-consistency-results .meta-consistency-results {
+    width: 50%;
+    overflow-y: scroll;
+    margin-top: 30px;
+    border-left: 1px gray solid; }
+    .meta-editor-widget.show-meta-consistency-results .meta-consistency-results .meta-inconsistency-header {
+      margin-left: 8px; }
+      .meta-editor-widget.show-meta-consistency-results .meta-consistency-results .meta-inconsistency-header i {
+        margin-left: 10px;
+        cursor: pointer; }
+    .meta-editor-widget.show-meta-consistency-results .meta-consistency-results .meta-inconsistency-divider {
+      border-top: 3px lightgray solid;
+      margin: 20px 20px 20px 20px; }
+    .meta-editor-widget.show-meta-consistency-results .meta-consistency-results .meta-inconsistency {
+      margin-left: 10px;
+      margin-right: 10px; }
+      .meta-editor-widget.show-meta-consistency-results .meta-consistency-results .meta-inconsistency dt {
+        width: 100px; }
+      .meta-editor-widget.show-meta-consistency-results .meta-consistency-results .meta-inconsistency dd {
+        margin-left: 120px; }
+        .meta-editor-widget.show-meta-consistency-results .meta-consistency-results .meta-inconsistency dd.path-link {
+          cursor: pointer;
+          color: blue; }
+          .meta-editor-widget.show-meta-consistency-results .meta-consistency-results .meta-inconsistency dd.path-link:hover {
+            color: orange; }
 
 div.filterPanel {
   position: absolute;

@@ -23,11 +23,7 @@ define([
 
     'use strict';
 
-    var MetaEditorWidget,
-        __parent__ = DiagramDesignerWidget,
-        __parent_proto__ = DiagramDesignerWidget.prototype;
-
-    MetaEditorWidget = function (container, params) {
+    function MetaEditorWidget(container, params) {
         params = params || {};
         params.loggerName = 'gme:Widgets:MetaEditor:MetaEditorWidget';
 
@@ -39,27 +35,28 @@ define([
         params.deleteTabs = true;
         params.reorderTabs = true;
 
-        __parent__.call(this, container, params);
+        DiagramDesignerWidget.call(this, container, params);
 
+        this.$el.parent().addClass('meta-editor-widget');
         this.logger.debug('MetaEditorWidget ctor');
-    };
+    }
 
     _.extend(MetaEditorWidget.prototype, DiagramDesignerWidget.prototype);
 
     MetaEditorWidget.prototype._initializeUI = function (/*containerElement*/) {
-        __parent_proto__._initializeUI.apply(this, arguments);
+        DiagramDesignerWidget.prototype._initializeUI.apply(this, arguments);
         this.logger.debug('MetaEditorWidget._initializeUI');
 
         //disable connection to a connection
         this._connectToConnection = false;
 
         this._initializeFilterPanel();
+        this._initializeMetaConsistencyResult();
     };
 
     MetaEditorWidget.prototype._afterManagersInitialized = function () {
         //turn off item rotation
         this.enableRotate(false);
-
     };
 
     MetaEditorWidget.prototype._initializeFilterPanel = function () {
@@ -74,9 +71,16 @@ define([
         this.$filterUl = this.$filterPanel.find('ul.body');
 
         this.$el.parent().append(this.$filterPanel);
-        this.$el.parent().addClass('meta-editor-widget');
-
         this._filterCheckboxes = {};
+    };
+
+    MetaEditorWidget.prototype._initializeMetaConsistencyResult = function () {
+        /**** create FILTER PANEL ****/
+        this.$metaConsistencyResults = $('<div/>', {
+            class: 'meta-consistency-results'
+        });
+
+        this.$el.parent().append(this.$metaConsistencyResults);
     };
 
     MetaEditorWidget.prototype._checkChanged = function (value, isChecked) {
@@ -87,6 +91,90 @@ define([
 
     MetaEditorWidget.prototype.onCheckChanged = function (/*value, isChecked*/) {
         this.logger.warn('MetaEditorWidget.onCheckChanged(value, isChecked) is not overridden!');
+    };
+
+    MetaEditorWidget.prototype.showMetaConsistencyResults = function (results) {
+        var self = this,
+            hadInconsistencies = false,
+            resEl,
+            dl,
+            i,j;
+
+        results.sort(function (r1, r2) {
+            if (r1.message > r2.message) {
+                return 1;
+            } else if (r1.message < r2.message) {
+                return -1;
+            }
+
+            return 0;
+        });
+
+        this.$metaConsistencyResults.find('dd.path-link').off('click');
+        this.$metaConsistencyResults.find('i.close-result').off('click');
+
+        this.$metaConsistencyResults.empty();
+
+        for (i = 0; i < results.length; i += 1) {
+            hadInconsistencies = true;
+            this.$metaConsistencyResults.append($('<div>', {class: 'meta-inconsistency-divider'}));
+
+            resEl = $('<div>', {
+                class: 'meta-inconsistency',
+            });
+
+            dl = $('<dl>', {class: 'dl-horizontal'});
+
+            dl.append($('<dt>', {text: 'Inconsistency'}));
+            dl.append($('<dd>', {text: results[i].message}));
+
+            dl.append($('<dt>', {text: 'Description'}));
+            dl.append($('<dd>', {text: results[i].description}));
+
+            dl.append($('<dt>', {text: 'Hint'}));
+            dl.append($('<dd>', {text: results[i].hint}));
+
+            dl.append($('<dt>', {text: 'Node path'}));
+            dl.append($('<dd>', {text: results[i].path, class: 'path-link'}).data('gme-id', results[i].path));
+
+            if (results[i].relatedPaths.length > 0) {
+                dl.append($('<dt>', {text: 'Related paths'}));
+                for (j = 0; j < results[i].relatedPaths.length; j += 1) {
+                    dl.append($('<dd>', {
+                        text: results[i].relatedPaths[j],
+                        class: 'path-link'
+                    }).data('gme-id', results[i].relatedPaths[j]));
+                }
+            }
+
+            resEl.append(dl);
+            this.$metaConsistencyResults.append(resEl);
+        }
+
+        if (hadInconsistencies === true) {
+            this.$metaConsistencyResults.find('dd.path-link').on('click', function () {
+                var path = $(this).data('gme-id');
+                self.onInconsistencyLinkClicked(path);
+            });
+
+            this.$metaConsistencyResults.prepend($('<h3>', {
+                text: 'Meta-model Inconsistencies',
+                class: 'meta-inconsistency-header'
+            }).append($('<i/>', {
+                class: 'fa fa-check-circle-o close-result pull-left',
+                title: 'Close result view'
+            }).on('click', function () {
+                self.showMetaConsistencyResults([]);
+            })));
+            this.$metaConsistencyResults.append($('<div>', {class: 'meta-inconsistency-divider'}));
+            this.$el.parent().addClass('show-meta-consistency-results');
+        } else {
+            this.$el.parent().removeClass('show-meta-consistency-results');
+        }
+    };
+
+    MetaEditorWidget.prototype.onInconsistencyLinkClicked = function (gmeId) {
+        this.logger.warn('MetaEditorWidget.onInconsistencyLinkClicked not overwritten in controller, gmeId:', gmeId);
     };
 
     MetaEditorWidget.prototype.addFilterItem = function (text, value, iconEl) {

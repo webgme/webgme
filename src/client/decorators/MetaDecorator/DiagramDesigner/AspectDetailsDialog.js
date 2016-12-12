@@ -42,21 +42,17 @@ define([
 
     AspectDetailsDialog.prototype._initDialog = function (aspectDesc, aspectNames, saveCallBack, deleteCallBack) {
         var self = this,
-            closeSave,
-            closeDelete,
-            isValidAspectName,
             aDesc = {},
             i,
             typeEl,
             typeInfo,
             displayName,
-            chb,
-            checkSelected;
+            chb;
 
         _.extend(aDesc, ASPECT_DESC_BASE);
         _.extend(aDesc, aspectDesc);
 
-        closeSave = function () {
+        function closeSave() {
             var saveDesc = {},
                 checked = typesContainer.find('input[type=checkbox]:checked');
 
@@ -75,23 +71,23 @@ define([
             if (saveCallBack) {
                 saveCallBack.call(self, saveDesc);
             }
-        };
+        }
 
-        closeDelete = function () {
+        function closeDelete() {
             self._dialog.modal('hide');
 
             if (deleteCallBack) {
                 deleteCallBack.call(self);
             }
-        };
+        }
 
-        isValidAspectName = function (name) {
+        function isValidAspectName(name) {
             return !(name === '' || aspectNames.indexOf(name) !== -1 ||
             name.toLowerCase() === CONSTANTS.ASPECT_ALL.toLowerCase() ||
             REGEXP.DOCUMENT_KEY.test(name) === false);
-        };
+        }
 
-        checkSelected = function () {
+        function checkSelected() {
             var checked = typesContainer.find('input[type=checkbox]:checked');
 
             if (checked.length > 0 && isValidAspectName(self._inputName.val())) {
@@ -99,7 +95,7 @@ define([
             } else {
                 self._btnSave.disable(true);
             }
-        };
+        }
 
         this._dialog = $(aspectDetailsDialogTemplate);
 
@@ -192,12 +188,32 @@ define([
 
             if (aDesc.items.indexOf(typeInfo.id) !== -1) {
                 chb.prop('checked', true);
+                aDesc.items.splice(aDesc.items.indexOf(typeInfo.id), 1);
             }
 
             typesContainer.append(typeEl);
         }
 
+        //Checked ones without containment definition
+        for (i = 0; i < aDesc.items.length; i += 1) {
+            typeEl = TYPE_EL_BASE.clone();
+            typeEl.append('[' + aDesc.items[i] + '] - cannot be contained! Uncheck to clean up..');
+
+            chb = typeEl.find('input[type=checkbox]');
+            chb.data(DATA_TYPE_ID, aDesc.items[i]);
+            typeEl.addClass('invalid-aspect-member-label');
+            chb.addClass('invalid-aspect-member-cb');
+            chb.prop('checked', true);
+
+            typesContainer.append(typeEl);
+        }
+
         this._pTypes.on('change', 'input[type=checkbox]', function () {
+            var cb = $(this);
+            if (cb.hasClass('invalid-aspect-member-cb')) {
+                cb.prop('disabled', true);
+            }
+
             checkSelected();
         });
 

@@ -28,6 +28,12 @@
         background-color: #ffff99;
       }
     }
+    &.notification-drop-down-menu-item-warning {
+      background-color: #ffffcc;
+      &:hover {
+        background-color: #ffff99;
+      }
+    }
     &.notification-drop-down-menu-item-error {
       background-color: #ffcccc;
       &:hover {

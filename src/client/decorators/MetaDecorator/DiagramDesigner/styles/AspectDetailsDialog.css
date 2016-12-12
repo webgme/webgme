@@ -3,3 +3,7 @@
  */
 .aspect-details-dialog .modal-body {
   max-height: 500px; }
+  .aspect-details-dialog .modal-body label.checkbox.invalid-aspect-member-label {
+    color: red; }
+  .aspect-details-dialog .modal-body label.checkbox input {
+    margin-top: 2px; }

@@ -5,5 +5,13 @@
 .aspect-details-dialog {
   .modal-body {
     max-height: 500px;
+    label.checkbox {
+      &.invalid-aspect-member-label {
+        color: red;
+      }
+      input {
+        margin-top: 2px;
+      }
+    }
   }
 }

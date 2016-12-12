@@ -228,6 +228,10 @@ define(['js/logger',
             self._onAlignSelection(selectedIds, type);
         };
 
+        this.diagramDesigner.onInconsistencyLinkClicked = function (gmeId) {
+            return self._onInconsistencyLinkClicked(gmeId);
+        };
+
         this.logger.debug('attachDesignerCanvasEventHandlers finished');
     };
 
@@ -1028,6 +1032,17 @@ define(['js/logger',
         if (params.coordinates) {
             this._alignMenu.alignSetSelection(params, selectedIds, type);
         }
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onInconsistencyLinkClicked = function (gmeId) {
+        var componentId = this._GMEID2ComponentID[gmeId],
+            result = false;
+        if (componentId) {
+            this.diagramDesigner.select([componentId]);
+            result = true;
+        }
+
+        return result;
     };
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;

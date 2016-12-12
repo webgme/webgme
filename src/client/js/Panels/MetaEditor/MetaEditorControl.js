@@ -8,6 +8,7 @@ define(['js/logger',
     'js/util',
     'js/Constants',
     'js/Utils/GMEConcepts',
+    'js/Utils/ComponentSettings',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
@@ -21,6 +22,7 @@ define(['js/logger',
              util,
              CONSTANTS,
              GMEConcepts,
+             ComponentSettings,
              nodePropertyNames,
              REGISTRY_KEYS,
              DiagramDesignerWidgetConstants,
@@ -46,6 +48,8 @@ define(['js/logger',
                 WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
+        this._config = MetaEditorControl.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this._config, MetaEditorControl.getComponentId());
 
         //initialize core collections and variables
         this.diagramDesigner = options.widget;
@@ -233,6 +237,8 @@ define(['js/logger',
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSetMembers = aspectNode.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
             territoryChanged = false,
+            metaInconsistencies,
+            i,
             len,
             diff,
             objDesc,
@@ -303,6 +309,12 @@ define(['js/logger',
         this._selectedMetaAspectSheetMembers = selectedSheetMembers.slice(0);
 
         this._processMetaDocItems();
+
+        metaInconsistencies = this._config.autoCheckMetaConsistency ? this._client.checkMetaConsistency() : [];
+
+        for (i = 0; i < metaInconsistencies.length; i += 1) {
+            this._client.dispatchEvent(this._client.CONSTANTS.NOTIFICATION, metaInconsistencies[i]);
+        }
 
         //there was change in the territory
         if (territoryChanged === true) {
@@ -1811,6 +1823,21 @@ define(['js/logger',
             }
         }));
 
+        this._toolbarItems.push(toolBar.addButton({
+            icon: 'fa fa-check-circle-o',
+            title: 'Check consistency of Meta',
+            clickFn: function () {
+                var results = self._client.checkMetaConsistency();
+                self.diagramDesigner.showMetaConsistencyResults(results);
+                if (results.length === 0) {
+                    self._client.dispatchEvent(self._client.CONSTANTS.NOTIFICATION, {
+                        severity: 'success',
+                        message: 'No inconsistencies found in meta-model.'
+                    });
+                }
+            }
+        }));
+
         /************** END OF - CREATE META RELATION CONNECTION TYPES *****************/
 
         /************** PRINT NODE DATA *****************/
@@ -2082,6 +2109,16 @@ define(['js/logger',
 
     MetaEditorControl.prototype.setReadOnly = function (isReadOnly) {
         this._radioButtonGroupMetaRelationType.enabled(!isReadOnly);
+    };
+
+    MetaEditorControl.getDefaultConfig = function () {
+        return {
+            autoCheckMetaConsistency: true
+        };
+    };
+
+    MetaEditorControl.getComponentId = function () {
+        return 'GenericUIMetaEditorControl';
     };
 
     //attach MetaEditorControl - DiagramDesigner event handler functions

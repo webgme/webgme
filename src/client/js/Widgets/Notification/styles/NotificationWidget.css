@@ -16,6 +16,10 @@
   background-color: #ffffcc; }
   .notification-widget a.notification-drop-down-menu-item.notification-drop-down-menu-item-warn:hover {
     background-color: #ffff99; }
+.notification-widget a.notification-drop-down-menu-item.notification-drop-down-menu-item-warning {
+  background-color: #ffffcc; }
+  .notification-widget a.notification-drop-down-menu-item.notification-drop-down-menu-item-warning:hover {
+    background-color: #ffff99; }
 .notification-widget a.notification-drop-down-menu-item.notification-drop-down-menu-item-error {
   background-color: #ffcccc; }
   .notification-widget a.notification-drop-down-menu-item.notification-drop-down-menu-item-error:hover {
