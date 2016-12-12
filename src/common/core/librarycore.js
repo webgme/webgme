@@ -9,8 +9,9 @@ define([
         'common/core/CoreAssert',
         'common/core/tasync',
         'common/core/constants',
-        'common/util/random'
-    ], function (ASSERT, TASYNC, CONSTANTS, RANDOM) {
+        'common/util/random',
+        'common/core/CoreIllegalOperationError'
+    ], function (ASSERT, TASYNC, CONSTANTS, RANDOM, CoreIllegalOperationError) {
         'use strict';
 
         var LibraryCore = function (innerCore, options) {
@@ -483,11 +484,11 @@ define([
 
                 if (parameters && parameters.parent &&
                     (self.isLibraryRoot(parameters.parent) || self.isLibraryElement(parameters.parent))) {
-                    return new Error('Not allowed to create new node inside library.');
+                    throw new CoreIllegalOperationError('Not allowed to create new node inside library.');
                 }
 
                 if (parameters && parameters.base && self.isLibraryRoot(parameters.base)) {
-                    return new Error('Not allowed to instantiate library root.');
+                    throw new CoreIllegalOperationError('Not allowed to instantiate library root.');
                 }
 
                 node = innerCore.createNode(parameters);
@@ -500,7 +501,8 @@ define([
 
             this.deleteNode = function (node, technical) {
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('Not allowed to remove library node by simply deleting them.');
+                    throw new CoreIllegalOperationError('Not allowed to remove library node by simply deleting them.');
+
                 }
 
                 return innerCore.deleteNode(node, technical);
@@ -508,11 +510,11 @@ define([
 
             this.copyNode = function (node, parent) {
                 if (self.isLibraryRoot(parent) || self.isLibraryElement(parent)) {
-                    return new Error('Not allowed to add nodes inside a library.');
+                    throw new CoreIllegalOperationError('Not allowed to add nodes inside a library.');
                 }
 
                 if (self.isLibraryRoot(node)) {
-                    return new Error('Not allowed to copy library root.');
+                    throw new CoreIllegalOperationError('Not allowed to copy library root.');
                 }
 
                 return innerCore.copyNode(node, parent);
@@ -521,12 +523,12 @@ define([
             this.copyNodes = function (nodes, parent) {
                 var i;
                 if (self.isLibraryRoot(parent) || self.isLibraryElement(parent)) {
-                    return new Error('Not allowed to add nodes inside a library.');
+                    throw new CoreIllegalOperationError('Not allowed to add nodes inside a library.');
                 }
 
                 for (i = 0; i < nodes.length; i += 1) {
                     if (self.isLibraryRoot(nodes[i])) {
-                        return new Error('Not allowed to copy library root.');
+                        throw new CoreIllegalOperationError('Not allowed to copy library root.');
                     }
                 }
 
@@ -535,11 +537,11 @@ define([
 
             this.moveNode = function (node, parent) {
                 if (self.isLibraryRoot(parent) || self.isLibraryElement(parent)) {
-                    return new Error('Not allowed to add nodes inside a library.');
+                    throw new CoreIllegalOperationError('Not allowed to add nodes inside a library.');
                 }
 
                 if (self.isLibraryRoot(node) || self.isLibraryElement(node)) {
-                    return new Error('Not allowed to move library elements.');
+                    throw new CoreIllegalOperationError('Not allowed to move library elements.');
                 }
 
                 return innerCore.moveNode(node, parent);

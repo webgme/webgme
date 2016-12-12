@@ -211,11 +211,16 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.createNode({parent: metaNodes['/L/I'], base: null});
+        try {
+            core.createNode({parent: metaNodes['/L/I'], base: null});
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
 
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
     });
 
     it('should prevent library modification via createNode if parent is library root', function () {
@@ -226,11 +231,16 @@ describe('Library core ', function () {
         expect(metaNodes['/L/I']).not.to.equal(null);
 
         libraryRoot = core.getLibraryRoot(metaNodes['/L/I'], 'basicLibrary');
-        error = core.createNode({parent: libraryRoot, base: null});
+        try {
+            core.createNode({parent: libraryRoot, base: null});
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
 
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
     });
 
     it('should prevent library root usage as base of new node', function () {
@@ -241,47 +251,85 @@ describe('Library core ', function () {
         expect(metaNodes['/L/I']).not.to.equal(null);
 
         libraryRoot = core.getLibraryRoot(metaNodes['/L/I'], 'basicLibrary');
-        error = core.createNode({parent: root, base: libraryRoot});
+        try {
+            core.createNode({parent: root, base: libraryRoot});
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
 
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
     });
 
     it('should prevent to remove library element or root', function () {
         var error;
 
-        error = core.deleteNode(core.getLibraryRoot(root, 'basicLibrary'));
-        expect(error instanceof Error).to.equal(true);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.deleteNode(core.getLibraryRoot(root, 'basicLibrary'));
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error instanceof Error).to.equal(true);
+            expect(error.message).to.contain('Not allowed to');
+            error = null;
+        }
 
-        error = core.deleteNode(core.getAllMetaNodes(root)['/L/I']);
-        expect(error instanceof Error).to.equal(true);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.deleteNode(core.getAllMetaNodes(root)['/L/I']);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error instanceof Error).to.equal(true);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent the copy of library root', function () {
         var error;
 
-        error = core.copyNode(core.getLibraryRoot(root, 'basicLibrary'), root);
-        expect(error instanceof Error).to.equal(true);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.copyNode(core.getLibraryRoot(root, 'basicLibrary'), root);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error instanceof Error).to.equal(true);
+            expect(error.message).to.contain('Not allowed to');
+            error = null;
+        }
 
-        error = core.copyNodes([core.getLibraryRoot(root, 'basicLibrary')], root);
-        expect(error instanceof Error).to.equal(true);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.copyNodes([core.getLibraryRoot(root, 'basicLibrary')], root);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error instanceof Error).to.equal(true);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent the move of any library element', function () {
         var error;
 
-        error = core.moveNode(core.getLibraryRoot(root, 'basicLibrary'), root);
-        expect(error instanceof Error).to.equal(true);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.moveNode(core.getLibraryRoot(root, 'basicLibrary'), root);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error instanceof Error).to.equal(true);
+            expect(error.message).to.contain('Not allowed to');
+            error = null;
+        }
 
-        error = core.moveNode(core.getAllMetaNodes(root)['/L/I'], root);
-        expect(error instanceof Error).to.equal(true);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.moveNode(core.getAllMetaNodes(root)['/L/I'], root);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error instanceof Error).to.equal(true);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delAttribute', function () {

@@ -230,7 +230,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('ASSERT failed');
+                expect(err.message).to.include('valid node');
             })
             .nodeify(done);
     });
@@ -249,7 +249,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.message).to.include('ASSERT failed');
+                expect(err.message).to.include('valid hash');
             })
             .nodeify(done);
     });

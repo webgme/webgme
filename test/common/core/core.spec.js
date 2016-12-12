@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.only('core', function () {
+describe('core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         projectName = 'core',
@@ -445,6 +445,206 @@ describe.only('core', function () {
                 done();
             }
         });
+    });
+
+    it('should throw @getChildrenRelids if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getChildrenRelids('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getOwnChildrenRelids if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getOwnChildrenRelids('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getChildrenPaths if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getChildrenPaths('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getOwnChildrenPaths if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getOwnChildrenPaths('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @createNode if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.createNode({});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.createNode({parent: 'notNode'});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.createNode({parent: rootNode, base: 'notNode'});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.createNode({parent: rootNode, base: rootNode, guid: 'invalidGuid'});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @deleteNode if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.deleteNode('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @copyNode if not valid node or parent is given', function () {
+        var myError;
+
+        try {
+            core.copyNode('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.copyNode(rootNode, 'invalid');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+    });
+
+    it('should throw @copyNodes if not valid nodes or parent is given', function () {
+        var myError;
+
+        try {
+            core.copyNode('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.copyNode(['string']);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.copyNode([rootNode], 'invalid');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+    });
+
+    it('should throw @isValidNewParent if not valid node or parent is given', function () {
+        var myError;
+
+        try {
+            core.isValidNewParent('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.isValidNewParent(rootNode, 'invalid');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+    });
+
+    it('should throw @moveNode if not valid node or parent is given', function () {
+        var myError;
+
+        try {
+            core.moveNode('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.moveNode(rootNode, 'invalid');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
 
     });
 

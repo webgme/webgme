@@ -155,6 +155,18 @@ define([
         }
     }
 
+    function ensureInstanceOf(input, nameOfInput, type, isAsync) {
+        var error;
+        if (!input instanceof type) {
+            error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not of type ' + type + '.');
+            if (isAsync) {
+                return error;
+            } else {
+                throw error;
+            }
+        }
+    }
+
     function ensurePath(input, nameOfInput, isAsync) {
         var error;
         if (!isValidPath(input)) {
@@ -183,6 +195,18 @@ define([
         var error;
         if (!REGEXP.DB_HASH.test(input)) {
             error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid hash.');
+            if (isAsync) {
+                return error;
+            } else {
+                throw error;
+            }
+        }
+    }
+
+    function ensureGuid(input, nameOfInput, isAsync) {
+        var error;
+        if (!REGEXP.GUID.test(input)) {
+            error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid GUID.');
             if (isAsync) {
                 return error;
             } else {
@@ -235,6 +259,9 @@ define([
          * @param {module:Core~Node} node - the node in question
          *
          * @return {module:Core~Node|null} Returns the parent of the node or NULL if it has no parent.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.getParent = function (node) {
             ensureNode(node, 'node');
@@ -247,6 +274,9 @@ define([
          * @param {module:Core~Node} node - the node in question.
          *
          * @return {string|null|undefined} Returns the last segment of the node path.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.getRelid = function (node) {
             ensureNode(node, 'node');
@@ -259,6 +289,9 @@ define([
          * @param {module:Core~Node} node - the node in question.
          *
          * @return {module:Core~Node} Returns the root of the containment hierarchy (it can be the node itself).
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.getRoot = function (node) {
             ensureNode(node, 'node');
@@ -273,6 +306,9 @@ define([
          * @return {string} Returns a path string where each portion is a relative id and they are separated by '/'.
          * The path can be empty as well if the node in question is the  root itself, otherwise it should be a chain
          * of relative ids from the root of the containment hierarchy.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.getPath = function (node) {
             ensureNode(node, 'node');
@@ -288,6 +324,9 @@ define([
          *
          * @return {module:Core~Node} Return an empty node if it was created as a result of the function or
          * return the already existing and loaded node if it found.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.getChild = function (node, relativeId) {
             ensureNode(node, 'node');
@@ -302,6 +341,9 @@ define([
          *
          * @return {bool} Returns true if the node is 'empty' meaning that it is not reserved by real data.
          * Returns false if the node is exists and have some meaningful value.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.isEmpty = function (node) {
             ensureNode(node, 'node');
@@ -316,6 +358,9 @@ define([
          * @return {module:Core~ObjectHash} Returns the so called Hash value of the data of the given node. If the string is empty,
          * then it means that the node was mutated but not yet saved to the database, so it do not have a hash
          * temporarily.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.getHash = function (node) {
             ensureNode(node, 'node');
@@ -330,6 +375,9 @@ define([
          *
          * @return {module:Core~GmePersisted} The function returns an object which collects all the changes
          * on data level and necessary to update the database on server side
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.persist = function (node) {
             ensureNode(node, 'node');
@@ -341,8 +389,13 @@ define([
          * Loads the data object with the given hash and makes it a root of a containment hierarchy.
          * @param {module:Core~ObjectHash} hash - the hash of the data object we like to load as root.
          * @param {function} callback
-         * @param {Error|null} callback.error - the result of the execution
+         * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node} callback.node - the resulting root node
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in
+         * a promiselike manner.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
         this.loadRoot = function (hash, callback) {
             var error = null;
@@ -365,8 +418,12 @@ define([
          * @param {module:Core~Node} parent - the container node in question.
          * @param {string} relativeId - the relative id of the child in question.
          * @param {function} callback
-         * @param {Error|null} callback.error - the result of the execution
+         * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node} callback.node - the resulting child
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
         this.loadChild = function (node, relativeId, callback) {
             var error = null;
@@ -388,8 +445,12 @@ define([
          * @param {module:Core~Node} node - the starting node of our search.
          * @param {string} relativePath - the relative path - built by relative ids - of the node in question.
          * @param {function} callback
-         * @param {Error|null} callback.error - the result of the execution
+         * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node} callback.node - the resulting node
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
         this.loadByPath = function (node, relativePath, callback) {
             var error = null;
@@ -410,8 +471,12 @@ define([
          * the parent, it only loads the already existing children (so no on-demand empty node creation).
          * @param {module:Core~Node} node - the container node in question.
          * @param {function} callback
-         * @param {Error|null} callback.error - the result of the execution
+         * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node[]} callback.children - the resulting children
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
         this.loadChildren = function (node, callback) {
             var error = null;
@@ -432,8 +497,12 @@ define([
          * (so no on-demand empty node creation).
          * @param {module:Core~Node} node - the container node in question.
          * @param {function} callback
-         * @param {Error|null} callback.error - the result of the execution
+         * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node[]} callback.node - the resulting children
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
         this.loadOwnChildren = function (node, callback) {
             var error = null;
@@ -456,8 +525,12 @@ define([
          * @param {module:Core~Node} node - the source node in question.
          * @param {string} pointerName - the name of the pointer.
          * @param {function} callback
-         * @param {Error|null} callback.error - the result of the execution
+         * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node} callback.node - the resulting target
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
         this.loadPointer = function (node, pointerName, callback) {
             var error = null,
@@ -486,8 +559,12 @@ define([
          * @param {module:Core~Node} node - the target node in question.
          * @param {string} pointerName - the name of the pointer of the sources.
          * @param {function} callback
-         * @param {Error|null} callback.error - the result of the execution
+         * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node[]} callback.node - the resulting sources
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
         this.loadCollection = function (node, pointerName, callback) {
             var error = null,
@@ -514,8 +591,12 @@ define([
          * Loads a complete sub-tree of the containment hierarchy starting from the given node.
          * @param {module:Core~Node} node - the node that is the root of the sub-tree in question.
          * @param {function} callback
-         * @param {Error|null} callback.error - the result of the execution
+         * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node[]} callback.node - the resulting sources
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
         this.loadSubTree = function (node, callback) {
             var error = null;
@@ -535,8 +616,12 @@ define([
          * children that has some additional data and not purely inherited.
          * @param {module:Core~Node} node - the container node in question.
          * @param {function} callback
-         * @param {Error|null} callback.error - the result of the execution
+         * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node[]} callback.node - the resulting sources
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
         this.loadOwnSubTree = function (node, callback) {
             var error = null;
@@ -555,9 +640,13 @@ define([
          * Loads a complete containment hierarchy using the data object - pointed by the given hash -
          * as the root.
          * @param {module:Core~ObjectHash} hash - hash of the root node.
-         * @param {function(string, module:Core~Node[])} callback
+         * @param {function} callback
+         * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution.
+         * @param {module:Core~Node[]} callback.nodes - the resulting nodes.
          *
-         * @func
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise.
+         *
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
         this.loadTree = function (hash, callback) {
             var error = null;
@@ -574,34 +663,46 @@ define([
 
         /**
          * Collects the relative ids of all the children of the given node.
-         * @param {module:Core~Node} parent - the container node in question.
+         * @param {module:Core~Node} node - the container node in question.
          *
          * @return {string[]} The function returns an array of the relative ids.
-         *
-         * @func
          */
-        this.getChildrenRelids = core.getChildrenRelids;
+        this.getChildrenRelids = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getChildrenRelids(node);
+        };
 
         /**
          * Collects the relative ids of all the children of the given node that has some data and not just inherited.
          * N.B. Do not mutate the returned array!
-         * @param {module:Core~Node} parent - the container node in question.
+         * @param {module:Core~Node} node - the container node in question.
          *
          * @return {string[]} The function returns an array of the relative ids.
          *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getOwnChildrenRelids = core.getOwnChildrenRelids;
+        this.getOwnChildrenRelids = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getOwnChildrenRelids(node);
+        };
 
         /**
          * Collects the paths of all the children of the given node.
-         * @param {module:Core~Node} parent - the container node in question.
+         * @param {module:Core~Node} node - the container node in question.
          *
          *@return {string[]} The function returns an array of the absolute paths of the children.
          *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getChildrenPaths = core.getChildrenPaths;
+        this.getChildrenPaths = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getChildrenPaths(node);
+        };
 
         /**
          * Collects the paths of all the children of the given node that has some data as well and not just inherited.
@@ -609,9 +710,14 @@ define([
          *
          *@return {string[]} The function returns an array of the absolute paths of the children.
          *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getOwnChildrenPaths = core.getOwnChildrenPaths;
+        this.getOwnChildrenPaths = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getOwnChildrenPaths(node);
+        };
 
         /**
          * Creates a node according to the given parameters.
@@ -623,45 +729,80 @@ define([
          * @param {module:Core~GUID} [parameters.guid] - the GUID of the node to be created
          *
          *
-         * @return {module:Core~Node | Error} The function returns the created node or null if no node was created
+         * @return {module:Core~Node} The function returns the created node or null if no node was created
          * or an error if the creation with the given parameters are not allowed.
          *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.createNode = core.createNode;
+        this.createNode = function (parameters) {
+            if (parameters) {
+                ensureType(parameters, 'parameters', 'object');
+                ensureNode(parameters.parent, 'parameters.parent');
+                if (parameters.base) {
+                    ensureNode(parameters.base, 'parameters.base');
+                }
+                if (parameters.guid) {
+                    ensureGuid(parameters.guid, 'parameters.guid');
+                }
+            }
+            return core.createNode(parameters);
+        };
 
         /**
          * Removes a node from the containment hierarchy.
          * @param {module:Core~Node} node - the node to be removed.
          *
-         * @return {undefined|Error} If the operation is not allowed it returns an error.
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.deleteNode = core.deleteNode;
+        this.deleteNode = function (node) {
+            ensureNode(node, 'node');
+
+            return core.deleteNode(node);
+        };
 
         /**
          * Copies the given node into parent.
          * @param {module:Core~Node} node - the node to be copied.
          * @param {module:Core~Node} parent - the parent node of the copy.
          *
-         * @return {module:Core~Node | Error} The function returns the copied node or an error if the copy
-         * is not allowed.
+         * @return {module:Core~Node} The function returns the copied node.
          *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.copyNode = core.copyNode;
+        this.copyNode = function (node, parent) {
+            ensureNode(node, 'node');
+            ensureNode(parent, 'parent');
+
+            return core.copyNode(node, parent);
+        };
 
         /**
          * Copies the given nodes into parent.
          * @param {module:Core~Node[]} nodes - the nodes to be copied.
          * @param {module:Core~Node} parent - the parent node of the copy.
          *
-         * @return {module:Core~Node[] | Error} The function returns an array of the copied nodes or an error
-         * if any of the nodes are not allowed to be copied to the given parent.
+         * @return {module:Core~Node[]} The function returns an array of the copied nodes.
          *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.copyNodes = core.copyNodes;
+        this.copyNodes = function (nodes, parent) {
+            var i;
+            ensureInstanceOf(nodes, 'nodes', Array);
+            for (i = 0; i < nodes.length; i += 1) {
+                ensureNode(nodes[i], 'nodes[' + i + ']');
+            }
+            ensureNode(parent, 'parent');
+
+            return core.copyNodes(nodes, parent);
+        };
 
         /**
          * Checks if parent can be the new parent of node.
@@ -670,21 +811,33 @@ define([
          *
          * @return {boolean} True if the supplied parent is a valid parent for the node.
          *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isValidNewParent = core.isValidNewParent;
+        this.isValidNewParent = function (node, parent) {
+            ensureNode(node, 'node');
+            ensureNode(parent, 'parent');
+
+            return core.isValidNewParent(node, parent);
+        };
 
         /**
          * Moves the given node under the given parent.
          * @param {module:Core~Node} node - the node to be moved.
          * @param {module:Core~Node} parent - the parent node of the copy.
          *
-         * @return {module:Core~Node | Error} The function returns the node after the move or an error
-         * if the move is not allowed.
+         * @return {module:Core~Node} The function returns the node after the move.
          *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.moveNode = core.moveNode;
+        this.moveNode = function (node, parent) {
+            ensureNode(node, 'node');
+            ensureNode(parent, 'parent');
+
+            return core.moveNode(node, parent);
+        };
 
         /**
          * Returns the names of the defined attributes of the node.
