@@ -116,6 +116,7 @@ describe('core', function () {
             ];
 
         expect(functions).to.have.members(Matches);
+        console.error(Matches.length);
 
         for (i = 0; i < functions.length; i += 1) {
             expect(typeof core[functions[i]]).to.eql('function');
@@ -648,4 +649,15 @@ describe('core', function () {
 
     });
 
+    it('should throw @getAttributeNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getAttributeNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
 });

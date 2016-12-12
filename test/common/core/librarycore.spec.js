@@ -155,13 +155,25 @@ describe('Library core ', function () {
     });
 
     it('should give error if not a library member is asked for library GUID', function () {
-        var error = core.getLibraryGuid(root);
-        expect(error.message).to.contain('Node is not a library member');
+        var error;
+        try {
+            core.getLibraryGuid(root);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error.message).to.contain('Node is not a library member');
+        }
     });
 
     it('should give error if unknown library was given to look for library GUID', function () {
-        var error = core.getLibraryGuid(core.getAllMetaNodes(root)['/L/I'], 'unknown');
-        expect(error.message).to.contain('Unknown library was given');
+        var error;
+        try {
+            core.getLibraryGuid(core.getAllMetaNodes(root)['/L/I'], 'unknown');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error.message).to.contain('Unknown library was given');
+        }
     });
 
     it('should list all library names', function () {
@@ -185,11 +197,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setAttribute(metaNodes['/L/I'], 'anyAttribute', 'anyValue');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('modify library');
+        try {
+            core.setAttribute(metaNodes['/L/I'], 'anyAttribute', 'anyValue');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('modify library');
+        }
     });
 
     it('should prevent library modification via setRegistry', function () {
@@ -198,11 +214,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setRegistry(metaNodes['/L/I'], 'anyAttribute', 'anyValue');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('modify library');
+        try {
+            core.setRegistry(metaNodes['/L/I'], 'anyAttribute', 'anyValue');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('modify library');
+        }
     });
 
     it('should prevent library modification via createNode if parent is library item', function () {
@@ -338,11 +358,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delAttribute(metaNodes['/L/I'], 'name');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delAttribute(metaNodes['/L/I'], 'name');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setRegistry', function () {
@@ -351,11 +375,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setRegistry(metaNodes['/L/I'], 'anyRegistry', 'anyValue');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setRegistry(metaNodes['/L/I'], 'anyRegistry', 'anyValue');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delRegistry', function () {
@@ -364,11 +392,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delRegistry(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delRegistry(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setPointer', function () {
@@ -377,11 +409,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setPointer(metaNodes['/L/I'], 'any', root);
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setPointer(metaNodes['/L/I'], 'any', root);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via deletePointer', function () {
@@ -390,11 +426,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.deletePointer(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.deletePointer(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setBase', function () {
@@ -403,23 +443,37 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setBase(metaNodes['/L/I'], root);
+        try {
+            core.setBase(metaNodes['/L/I'], root);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+            error = null;
+        }
 
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setBase(core.getLibraryRoot(root, 'basicLibrary'), root);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+            error = null;
+        }
 
-        error = core.setBase(core.getLibraryRoot(root, 'basicLibrary'), root);
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
-
-        error = core.setBase(metaNodes['/1'], core.getLibraryRoot(root, 'basicLibrary'));
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setBase(metaNodes['/1'], core.getLibraryRoot(root, 'basicLibrary'));
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via addMember', function () {
@@ -428,11 +482,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.addMember(metaNodes['/L/I'], 'any', root);
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.addMember(metaNodes['/L/I'], 'any', root);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delMember', function () {
@@ -441,11 +499,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delMember(metaNodes['/L/I'], '');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delMember(metaNodes['/L/I'], '');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setMemberAttribute', function () {
@@ -454,11 +516,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setMemberAttribute(metaNodes['/L/I'], 'any', '', 'any', 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setMemberAttribute(metaNodes['/L/I'], 'any', '', 'any', 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delMemberAttribute', function () {
@@ -467,11 +533,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delMemberAttribute(metaNodes['/L/I'], 'any', '', 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delMemberAttribute(metaNodes['/L/I'], 'any', '', 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setMemberRegistry', function () {
@@ -480,11 +550,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setMemberRegistry(metaNodes['/L/I'], 'any', '', 'any', 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setMemberRegistry(metaNodes['/L/I'], 'any', '', 'any', 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delMemberRegistry', function () {
@@ -493,11 +567,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delMemberRegistry(metaNodes['/L/I'], 'any', '', 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delMemberRegistry(metaNodes['/L/I'], 'any', '', 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via createSet', function () {
@@ -506,11 +584,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.createSet(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.createSet(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via deleteSet', function () {
@@ -519,11 +601,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.deleteSet(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.deleteSet(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setGuid', function (done) {
@@ -547,11 +633,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setConstraint(metaNodes['/L/I'], 'any', {'any': 'any'});
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setConstraint(metaNodes['/L/I'], 'any', {'any': 'any'});
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delConstraint', function () {
@@ -560,11 +650,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delConstraint(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delConstraint(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via clearMetaRules', function () {
@@ -573,11 +667,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delConstraint(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delConstraint(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setAttributeMeta', function () {
@@ -586,11 +684,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setAttributeMeta(metaNodes['/L/I'], 'any', {});
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setAttributeMeta(metaNodes['/L/I'], 'any', {});
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delAttributeMeta', function () {
@@ -599,11 +701,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delAttributeMeta(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delAttributeMeta(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setChildMeta', function () {
@@ -612,17 +718,26 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setChildMeta(metaNodes['/L/I'], root, 1, 1);
+        try {
+            core.setChildMeta(metaNodes['/L/I'], root, 1, 1);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+            error = null;
+        }
 
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
-
-        error = core.setChildMeta(root, core.getLibraryRoot(root, 'basicLibrary'), 1, 1);
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setChildMeta(root, core.getLibraryRoot(root, 'basicLibrary'), 1, 1);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delChildMeta', function () {
@@ -631,11 +746,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delChildMeta(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delChildMeta(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setChildrenMetaLimits', function () {
@@ -644,11 +763,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setChildrenMetaLimits(metaNodes['/L/I'], 10, 10);
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setChildrenMetaLimits(metaNodes['/L/I'], 10, 10);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setPointerMetaTarget', function () {
@@ -657,11 +780,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setPointerMetaTarget(metaNodes['/L/I'], 'any', root, 1, 1);
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setPointerMetaTarget(metaNodes['/L/I'], 'any', root, 1, 1);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delPointerMetaTarget', function () {
@@ -670,11 +797,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delPointerMetaTarget(metaNodes['/L/I'], 'any', 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delPointerMetaTarget(metaNodes['/L/I'], 'any', 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setPointerMetaLimits', function () {
@@ -683,11 +814,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setPointerMetaLimits(metaNodes['/L/I'], 'any', 10, 10);
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setPointerMetaLimits(metaNodes['/L/I'], 'any', 10, 10);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delPointerMeta', function () {
@@ -696,11 +831,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delPointerMeta(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delPointerMeta(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via setAspectMetaTarget', function () {
@@ -709,11 +848,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.setAspectMetaTarget(metaNodes['/L/I'], 'any', root);
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.setAspectMetaTarget(metaNodes['/L/I'], 'any', root);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delAspectMetaTarget', function () {
@@ -722,11 +865,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delAspectMetaTarget(metaNodes['/L/I'], 'any', 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delAspectMetaTarget(metaNodes['/L/I'], 'any', 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delAspectMeta', function () {
@@ -735,11 +882,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delAspectMeta(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delAspectMeta(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via delMixin', function () {
@@ -748,11 +899,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.delMixin(metaNodes['/L/I'], 'any');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.delMixin(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via addMixin', function () {
@@ -761,17 +916,26 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.addMixin(metaNodes['/L/I'], 'any');
+        try {
+            core.addMixin(metaNodes['/L/I'], 'any');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+            error = null;
+        }
 
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
-
-        error = core.addMixin(root, '/L');
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.addMixin(root, '/L');
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should prevent library modification via clearMixins', function () {
@@ -780,11 +944,15 @@ describe('Library core ', function () {
 
         expect(metaNodes['/L/I']).not.to.equal(null);
 
-        error = core.clearMixins(metaNodes['/L/I']);
-
-        expect(error).not.to.equal(null);
-        expect(error).not.to.equal(undefined);
-        expect(error.message).to.contain('Not allowed to');
+        try {
+            core.clearMixins(metaNodes['/L/I']);
+        } catch (e) {
+            error = e;
+        } finally {
+            expect(error).not.to.equal(null);
+            expect(error).not.to.equal(undefined);
+            expect(error.message).to.contain('Not allowed to');
+        }
     });
 
     it('should rename a library', function (done) {
@@ -1158,12 +1326,15 @@ describe('Library core ', function () {
             shareContext.core.loadByPath(shareContext.rootNode, '/Q/P')
         ])
             .then(function (nodes) {
-                var closure = shareContext.core.getClosureInformation(nodes);
+                shareContext.core.getClosureInformation(nodes);
 
-                expect(closure).not.to.eql(null);
-                expect(closure instanceof Error).to.equal(true);
-                expect(closure.message).to.contains('cannot be created');
-                expect(closure.message).to.contains('base');
+                throw new Error('missing error handling in library core');
+            })
+            .catch(function (error) {
+                expect(error).not.to.eql(null);
+                expect(error instanceof Error).to.equal(true);
+                expect(error.message).to.contains('cannot be created');
+                expect(error.message).to.contains('base');
             })
             .nodeify(done);
     });
@@ -1175,11 +1346,14 @@ describe('Library core ', function () {
             shareContext.core.loadByPath(shareContext.rootNode, '')
         ])
             .then(function (nodes) {
-                var closure = shareContext.core.getClosureInformation(nodes);
+                shareContext.core.getClosureInformation(nodes);
 
-                expect(closure).not.to.eql(null);
-                expect(closure instanceof Error).to.equal(true);
-                expect(closure.message).to.contains('Cannot select the project root!');
+                throw new Error('missing error handling in library core');
+            })
+            .catch(function (error) {
+                expect(error).not.to.eql(null);
+                expect(error instanceof Error).to.equal(true);
+                expect(error.message).to.contains('Cannot select the project root!');
             })
             .nodeify(done);
     });
@@ -1191,12 +1365,15 @@ describe('Library core ', function () {
             shareContext.core.loadByPath(shareContext.rootNode, '/V/G')
         ])
             .then(function (nodes) {
-                var closure = shareContext.core.getClosureInformation(nodes);
+                shareContext.core.getClosureInformation(nodes);
 
-                expect(closure).not.to.eql(null);
-                expect(closure instanceof Error).to.equal(true);
-                expect(closure.message).to.contains('Cannot select node');
-                expect(closure.message).to.contains('library content');
+                throw new Error('missing error handling in library core');
+            })
+            .catch(function (error) {
+                expect(error).not.to.eql(null);
+                expect(error instanceof Error).to.equal(true);
+                expect(error.message).to.contains('Cannot select node');
+                expect(error.message).to.contains('library content');
             })
             .nodeify(done);
     });
@@ -1315,7 +1492,7 @@ describe('Library core ', function () {
                 ]);
 
                 //checking the relations, they all should be valid
-                var names = shareContext.core.getPointerNames(newNodes[0])
+                var names = shareContext.core.getPointerNames(newNodes[0]);
                 for (i = 0; i < names.length; i += 1) {
                     expect(shareContext.core.getPointerPath(newNodes[0], names[i])).not.to.eql(null);
                     expect(shareContext.core.getPointerPath(newNodes[0], names[i])).not.to.eql(undefined);
@@ -1342,10 +1519,14 @@ describe('Library core ', function () {
                 delete closure.bases['6686433f-c77c-61a5-cd70-e12860311fe1'];
                 closure.bases['6686433f-c77c-61a5-cd70-000000000000'].originGuid =
                     '6686433f-c77c-61a5-cd70-000000000000';
-                closure = shareContext.core.importClosure(shareContext.rootNode, closure);
-                expect(closure).not.to.eql(null);
-                expect(closure instanceof Error).to.equal(true);
-                expect(closure.message).to.include('Cannot find necessary base');
+
+                shareContext.core.importClosure(shareContext.rootNode, closure);
+                throw new Error('missing error handling in library core');
+            })
+            .catch(function (error) {
+                expect(error).not.to.eql(null);
+                expect(error instanceof Error).to.equal(true);
+                expect(error.message).to.include('Cannot find necessary base');
             })
             .nodeify(done);
     });
@@ -1379,10 +1560,14 @@ describe('Library core ', function () {
                 closure.bases['6686433f-c77c-61a5-cd70-000000000000'] =
                     closure.bases['6686433f-c77c-61a5-cd70-e12860311fe1'];
                 delete closure.bases['6686433f-c77c-61a5-cd70-e12860311fe1'];
-                closure = shareContext.core.importClosure(newRoot, closure);
-                expect(closure).not.to.eql(null);
-                expect(closure instanceof Error).to.equal(true);
-                expect(closure.message).to.include('Ambiguous occurrences of base');
+
+                shareContext.core.importClosure(newRoot, closure);
+                throw new Error('missing error handling in library core');
+            })
+            .catch(function(error){
+                expect(error).not.to.eql(null);
+                expect(error instanceof Error).to.equal(true);
+                expect(error.message).to.include('Ambiguous occurrences of base');
             })
             .nodeify(done);
     });

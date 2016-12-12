@@ -155,6 +155,18 @@ define([
         }
     }
 
+    function ensureValue(input, nameOfInput, isAsync) {
+        var error;
+        if (input === undefined) {
+            error = new CoreInputError('Parameter \'' + nameOfInput + '\' cannot be undefined.');
+            if (isAsync) {
+                return error;
+            } else {
+                throw error;
+            }
+        }
+    }
+
     function ensureInstanceOf(input, nameOfInput, type, isAsync) {
         var error;
         if (!input instanceof type) {
@@ -845,9 +857,14 @@ define([
          *
          * @return {string[]} The function returns an array of the names of the attributes of the node.
          *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getAttributeNames = core.getAttributeNames;
+        this.getAttributeNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getAttributeNames(node);
+        };
 
         /**
          * Retrieves the value of the given attribute of the given node.
@@ -858,9 +875,15 @@ define([
          * The value can be an object or any primitive type. If the value is undefined that means the node do not have
          * such attribute defined. [The retrieved attribute should not be modified as is - it should be copied first!!]
          *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getAttribute = core.getAttribute;
+        this.getAttribute = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            return core.getAttribute(node, name);
+        };
 
         /**
          * Sets the value of the given attribute of the given node. It defines the attribute on demand, means that it
@@ -870,22 +893,26 @@ define([
          * @param {object | primitive | null} value - the new of the attribute. Can be any primitive type or object.
          * Undefined is not allowed.
          *
-         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
-         * an error.
-         *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setAttribute = core.setAttribute;
+        this.setAttribute = function (node, name, value) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensureValue(value, 'value');
+
+            return core.setAttribute(node, name, value);
+        };
 
         /**
          * Removes the given attributes from the given node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the attribute.
          *
-         * @return {undefined | Error} If the node is not allowed to be modified, the function returns
-         * an error.
-         *
-         * @func
+         * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.delAttribute = core.delAttribute;
 
