@@ -914,7 +914,16 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delAttribute = core.delAttribute;
+        this.delAttribute = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            var names = core.getAttributeNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove non-existing attribute');
+            }
+
+            return core.delAttribute(node, name);
+        };
 
         /**
          * Returns the names of the defined registry entries of the node.

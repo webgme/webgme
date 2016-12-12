@@ -6,7 +6,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('core', function () {
+describe.only('core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         projectName = 'core',
@@ -658,6 +658,90 @@ describe('core', function () {
             myError = e;
         } finally {
             expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getAttribute if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @setAttribute if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.setAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setAttribute(rootNode, 'name', undefined);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @delAttribute if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.delAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delAttribute(rootNode, 'nonexistent');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
         }
     });
 });
