@@ -229,7 +229,7 @@ describe.only('core', function () {
         var myError;
 
         try {
-            core.getHash('string');
+            core.persist('string');
         } catch (e) {
             myError = e;
         } finally {
@@ -349,19 +349,25 @@ describe.only('core', function () {
         core.loadPointer('badnode', 'relid', function (e) {
             expect(e.name).to.eql('CoreInputError');
             expect(e.message).to.contains('valid node');
+
             core.loadPointer(rootNode, {}, function (e) {
                 expect(e.name).to.eql('CoreInputError');
                 expect(e.message).to.contains('string');
 
-                try {
-                    core.loadPointer(rootNode, {});
-                } catch (e) {
-                    myError = e;
-                } finally {
-                    expect(myError.name).to.eql('CoreInputError');
-                    expect(myError.message).to.contains('function');
-                    done();
-                }
+                core.loadPointer(rootNode, 'unknown', function (e) {
+                    expect(e.name).to.eql('CoreIllegalOperationError');
+                    expect(e.message).to.contains('undefined');
+
+                    try {
+                        core.loadPointer(rootNode, {});
+                    } catch (e) {
+                        myError = e;
+                    } finally {
+                        expect(myError.name).to.eql('CoreInputError');
+                        expect(myError.message).to.contains('function');
+                        done();
+                    }
+                });
             });
         });
     });
@@ -376,15 +382,20 @@ describe.only('core', function () {
                 expect(e.name).to.eql('CoreInputError');
                 expect(e.message).to.contains('string');
 
-                try {
-                    core.loadCollection(rootNode, {});
-                } catch (e) {
-                    myError = e;
-                } finally {
-                    expect(myError.name).to.eql('CoreInputError');
-                    expect(myError.message).to.contains('function');
-                    done();
-                }
+                core.loadCollection(rootNode, 'unknown', function (e) {
+                    expect(e.name).to.eql('CoreIllegalOperationError');
+                    expect(e.message).to.contains('undefined');
+
+                    try {
+                        core.loadCollection(rootNode, {});
+                    } catch (e) {
+                        myError = e;
+                    } finally {
+                        expect(myError.name).to.eql('CoreInputError');
+                        expect(myError.message).to.contains('function');
+                        done();
+                    }
+                });
             });
         });
     });
@@ -575,7 +586,7 @@ describe.only('core', function () {
         var myError;
 
         try {
-            core.copyNode('string');
+            core.copyNodes('string');
         } catch (e) {
             myError = e;
         } finally {
@@ -584,7 +595,7 @@ describe.only('core', function () {
         }
 
         try {
-            core.copyNode(['string']);
+            core.copyNodes(['string']);
         } catch (e) {
             myError = e;
         } finally {
@@ -593,7 +604,7 @@ describe.only('core', function () {
         }
 
         try {
-            core.copyNode([rootNode], 'invalid');
+            core.copyNodes([rootNode], 'invalid');
         } catch (e) {
             myError = e;
         } finally {
@@ -742,6 +753,735 @@ describe.only('core', function () {
         } finally {
             expect(myError.name).to.eql('CoreIllegalOperationError');
             myError = null;
+        }
+    });
+
+    it('should throw @getRegistryNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getRegistryNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getRegistry if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @setRegistry if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.setRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setRegistry(rootNode, 'name', undefined);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @delRegistry if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.delRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delRegistry(rootNode, 'nonexistent');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+    });
+
+    it('should throw @getPointerNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getPointerNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getPointerPath if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getPointerPath('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getPointerPath(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @setPointer if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.setPointer('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setPointer(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setPointer(rootNode, 'name', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @delPointer if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.delPointer('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delPointer(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delPointer(rootNode, 'nonexistent');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+    });
+
+    it('should throw @getCollectionNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getCollectionNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getCollectionPaths if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getCollectionPaths('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getCollectionPaths(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @getChildrenHashes if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getChildrenHashes('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getBase if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getBase('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getBaseRoot if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getBaseRoot('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getOwnAttributeNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getOwnAttributeNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getOwnRegistryNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getOwnRegistryNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getOwnAttribute if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getOwnAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @getOwnRegistry if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getOwnRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @getOwnPointerNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getOwnPointerNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getOwnPointerPath if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getOwnPointerPath('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnPointerPath(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @isValidNewBase if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.isValidNewBase('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.isValidNewBase(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @setBase if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.setBase('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setBase(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+    });
+
+    it('should throw @getTypeRoot if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getTypeRoot('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getSetNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getSetNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getOwnSetNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getOwnSetNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @createSet if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.createSet('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.createSet(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @delSet if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.delSet('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delSet(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delSet(rootNode, 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getSetAttributeNames if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getSetAttributeNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getSetAttributeNames(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getSetAttributeNames(rootNode, 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getOwnSetAttributeNames if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getOwnSetAttributeNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnSetAttributeNames(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnSetAttributeNames(rootNode, 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getSetAttribute if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getSetAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getSetAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getSetAttribute(rootNode, 'unknown', 'good');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getSetAttribute(rootNode, 'MetaAspectSet', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getOwnSetAttribute if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getOwnSetAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnSetAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnSetAttribute(rootNode, 'unknown', 'good');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnSetAttribute(rootNode, 'MetaAspectSet', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @setSetAttribute if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.setSetAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setSetAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setSetAttribute(rootNode, 'unknown', 'good', 'good');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.setSetAttribute(rootNode, 'MetaAspectSet', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setSetAttribute(rootNode, 'MetaAspectSet', 'any', undefined);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @delSetAttribute if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.delSetAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delSetAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delSetAttribute(rootNode, 'unknown', 'good');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.delSetAttribute(rootNode, 'MetaAspectSet', 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.delSetAttribute(rootNode, 'MetaAspectSet', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
         }
     });
 });
