@@ -478,7 +478,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                         });
                     }
 
-                    if (key === 'base') {
+                    if (key === CONSTANTS.BASE_POINTER || key === CONSTANTS.MEMBER_RELATION) {
                         result.push(getReservedNameError(metaName, path, key, 'a pointer'));
                     }
                 } else {
@@ -504,7 +504,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                         });
                     }
 
-                    if (key === 'ovr') {
+                    if (key === CONSTANTS.OVERLAYS_PROPERTY) {
                         result.push(getReservedNameError(metaName, path, key, 'a set'));
                     }
                 }
@@ -550,7 +550,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     });
                 }
 
-                if (key === 'ovr') {
+                if (key === CONSTANTS.OVERLAYS_PROPERTY) {
                     result.push(getReservedNameError(metaName, path, key, 'an aspect'));
                 }
 

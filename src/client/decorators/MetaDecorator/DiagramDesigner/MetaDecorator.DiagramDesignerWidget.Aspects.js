@@ -75,7 +75,10 @@ define([
         var client = this._control._client,
             objId = this._metaInfo[CONSTANTS.GME_ID],
             node = client.getNode(objId),
-            existingNames = [CONSTANTS.ASPECT_ALL].concat(node.getSetNames());
+            existingNames = [
+                CONSTANTS.ASPECT_ALL,
+                client.CONSTANTS.CORE.OVERLAYS_PROPERTY
+            ].concat(node.getValidSetNames()).concat(node.getOwnValidAspectNames());
 
         this._onNewClick(existingNames, this._skinParts.$aspectsContainer, this._skinParts.$addAspectContainer,
             this._skinParts.$aspectsTitle, this._onNewAspectCreate);

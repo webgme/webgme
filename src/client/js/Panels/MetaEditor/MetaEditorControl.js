@@ -1243,40 +1243,18 @@ define(['js/logger',
         var client = this._client,
             sourceNode = client.getNode(sourceID),
             targetNode = client.getNode(targetID),
-            metaNodes = client.getAllMetaNodes(true),
             pointerMetaDescriptor,
             existingNames,
             existingPointerNames,
             notAllowedPointerNames;
 
         function getExistingNames() {
-            var nodeObj = sourceNode,
-                lastMetaNode,
-                i,
-                instancePaths;
-
-            // Get the meta-node "last" in the inheritance chain
-            do {
-                instancePaths = nodeObj.getInstancePaths();
-
-                lastMetaNode = null;
-                for (i = 0; i < instancePaths.length; i += 1) {
-                    if (metaNodes[instancePaths[i]]) {
-                        lastMetaNode = metaNodes[instancePaths[i]];
-                        break;
-                    }
-                }
-
-                if (lastMetaNode) {
-                    nodeObj = lastMetaNode;
-                }
-            } while (lastMetaNode);
-
-            // TODO: Currently these contain mixins too
+            // This does not include collision in the derived types,
+            // however that is being checked by the meta-rules checker.
             return {
-                pointers: nodeObj.getValidPointerNames() || [],
-                sets: nodeObj.getValidSetNames() || [],
-                aspects: nodeObj.getValidAspectNames() || []
+                pointers: sourceNode.getValidPointerNames() || [],
+                sets: sourceNode.getValidSetNames() || [],
+                aspects: sourceNode.getValidAspectNames() || []
             };
         }
 
@@ -1290,7 +1268,7 @@ define(['js/logger',
             } else {
                 //this is a single pointer
                 existingPointerNames = existingNames.pointers;
-                notAllowedPointerNames = _.union(existingNames.sets, existingNames.aspects);
+                notAllowedPointerNames = existingNames.sets;
             }
 
             // Reserved names are handled in the dialog.

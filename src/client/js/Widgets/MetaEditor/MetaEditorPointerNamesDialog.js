@@ -83,7 +83,7 @@ define([
             } else if (REGEXP.DOCUMENT_KEY.test(name) === false) {
                 result.hasViolation = true;
                 result.message = 'Name "' + name + '" contains illegal characters, it may not contain "." ' +
-                    'or start with "$".';
+                    'or start with "$" or "_".';
             } else if (!isSet) {
                 if (_endsWith(name, CONSTANTS.CORE.COLLECTION_NAME_SUFFIX)) {
                     result.hasViolation = true;
@@ -102,6 +102,9 @@ define([
                 if (name === 'src' || name === 'dst') {
                     result.hasViolation = true;
                     result.message = 'Name "' + name + '" can only be used for pointer names and not for sets.';
+                } else if (name === CONSTANTS.CORE.OVERLAYS_PROPERTY) {
+                    result.hasViolation = true;
+                    result.message = 'Name "' + name + '" is a reserved key word for sets.';
                 }
             }
 
