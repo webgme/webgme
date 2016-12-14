@@ -169,7 +169,7 @@ define([
 
     function ensureInstanceOf(input, nameOfInput, type, isAsync) {
         var error;
-        if (!input instanceof type) {
+        if (input instanceof type === false) {
             error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not of type ' + type + '.');
             if (isAsync) {
                 return error;
@@ -181,7 +181,7 @@ define([
 
     function ensurePath(input, nameOfInput, isAsync) {
         var error;
-        if (!isValidPath(input)) {
+        if (isValidPath(input) === false) {
             error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid path.');
             if (isAsync) {
                 return error;
@@ -193,7 +193,7 @@ define([
 
     function ensureNode(input, nameOfInput, isAsync) {
         var error;
-        if (!isValidNode(input)) {
+        if (isValidNode(input) === false) {
             error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid node.');
             if (isAsync) {
                 return error;
@@ -205,7 +205,7 @@ define([
 
     function ensureHash(input, nameOfInput, isAsync) {
         var error;
-        if (!REGEXP.DB_HASH.test(input)) {
+        if (REGEXP.DB_HASH.test(input) === false) {
             error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid hash.');
             if (isAsync) {
                 return error;
@@ -217,13 +217,33 @@ define([
 
     function ensureGuid(input, nameOfInput, isAsync) {
         var error;
-        if (!REGEXP.GUID.test(input)) {
+        if (REGEXP.GUID.test(input) === false) {
             error = new CoreInputError('Parameter \'' + nameOfInput + '\' is not a valid GUID.');
             if (isAsync) {
                 return error;
             } else {
                 throw error;
             }
+        }
+    }
+
+    function ensureMinMax(input, nameOfInput, isAsync) {
+        var error;
+
+        if (input === null || input === undefined) {
+            return;
+        }
+
+        if (typeof input === 'number' && Number.isSafeInteger(input) && input >= -1) {
+            return;
+        }
+
+        error = new CoreInputError('Parameter ' + nameOfInput + ' is not a safe integer from [-1,∞).');
+
+        if (isAsync) {
+            return error;
+        } else {
+            throw error;
         }
     }
 
@@ -1216,7 +1236,7 @@ define([
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.getOwnRegistry = function (node, name) {
-            ensureNode(node, 'node')
+            ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
 
             return core.getOwnRegistry(node, name);
@@ -2234,14 +2254,14 @@ define([
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.delConstraint = function (node, name) {
-            ensureNode(node,'node');
-            ensureType(name,'name','string');
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
             var names = core.getConstraintNames(node);
-            if(names.indexOf(name) === -1){
+            if (names.indexOf(name) === -1) {
                 throw new CoreIllegalOperationError('Cannot remove unknown constraint.');
             }
 
-            return core.delConstraint(node,name);
+            return core.delConstraint(node, name);
         };
 
         /**
@@ -2285,7 +2305,7 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isTypeOf = function (node,type) {
+        this.isTypeOf = function (node, type) {
             ensureNode(node, 'node');
             ensureNode(type, 'type');
 
@@ -2304,7 +2324,7 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isValidChildOf = function (node,parent) {
+        this.isValidChildOf = function (node, parent) {
             ensureNode(node, 'node');
             ensureNode(parent, 'parent');
 
@@ -2320,7 +2340,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getValidPointerNames = core.getValidPointerNames;
+        this.getValidPointerNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getValidPointerNames(node);
+        };
 
         /**
          * Returns the list of the META defined set names of the node.
@@ -2331,7 +2355,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getValidSetNames = core.getValidSetNames;
+        this.getValidSetNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getValidSetNames(node);
+        };
 
         /**
          * Returns the list of the META defined pointers of the node.
@@ -2343,9 +2371,20 @@ define([
          * target of the given pointer of the source.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isValidTargetOf = core.isValidTargetOf;
+        this.isValidTargetOf = function (node, source, name) {
+            ensureNode(node, 'node');
+            ensureNode(source, 'source');
+            ensureType(name, 'name', 'string');
+            var names = core.getValidPointerNames(source);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot get information about unknown pointer definition.');
+            }
+
+            return core.isValidTargetOf(node);
+        };
 
         /**
          * Returns the list of the META defined attribute names of the node.
@@ -2357,7 +2396,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getValidAttributeNames = core.getValidAttributeNames;
+        this.getValidAttributeNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getValidAttributeNames(node);
+        };
 
         /**
          * Returns the list of the META defined attribute names of the node that were specifically defined for the node.
@@ -2368,7 +2411,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getOwnValidAttributeNames = core.getOwnValidAttributeNames;
+        this.getOwnValidAttributeNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getOwnValidAttributeNames(node);
+        };
 
         /**
          * Checks if the given value is of the necessary type, according to the META rules.
@@ -2379,9 +2426,20 @@ define([
          * @return {bool} Returns true if the value matches the META definitions.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isValidAttributeValueOf = core.isValidAttributeValueOf;
+        this.isValidAttributeValueOf = function (node, name, value) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensureValue(value, 'value');
+            var names = core.getValidAttributeNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot get information about unknown attribute definition.');
+            }
+
+            return core.getValidAttributeNames(node);
+        };
 
         /**
          * Returns the list of the META defined aspect names of the node.
@@ -2393,7 +2451,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getValidAspectNames = core.getValidAspectNames;
+        this.getValidAspectNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getValidAspectNames(node);
+        };
 
         /**
          * Returns the list of the META defined aspect names of the node that were specifically defined for the node.
@@ -2404,7 +2466,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getOwnValidAspectNames = core.getOwnValidAspectNames;
+        this.getOwnValidAspectNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getOwnValidAspectNames(node);
+        };
 
         /**
          * Returns the list of valid children types of the given aspect.
@@ -2416,10 +2482,14 @@ define([
          * must be an instance of at least one node represented by the absolute paths.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
-         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getAspectMeta = core.getAspectMeta;
+        this.getAspectMeta = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            return core.getAspectMeta(node);
+        };
 
         /**
          * Gives a JSON representation of the META rules of the node.
@@ -2478,7 +2548,11 @@ define([
          *   aspects: {},
          *   constraints: {}
          */
-        this.getJsonMeta = core.getJsonMeta;
+        this.getJsonMeta = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getJsonMeta(node);
+        };
 
         /**
          * Returns the META rules specifically defined for the given node.
@@ -2490,7 +2564,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getOwnJsonMeta = core.getOwnJsonMeta;
+        this.getOwnJsonMeta = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getOwnJsonMeta(node);
+        };
 
         /**
          * Removes all META rules that were specifically defined for the node (so the function do not touches
@@ -2501,7 +2579,11 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.clearMetaRules = core.clearMetaRules;
+        this.clearMetaRules = function (node) {
+            ensureNode(node, 'node');
+
+            return core.clearMetaRules(node);
+        };
 
         /**
          * Sets the META rules of the attribute of the node.
@@ -2518,7 +2600,14 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setAttributeMeta = core.setAttributeMeta;
+        this.setAttributeMeta = function (node, name, rule) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensureType(rule, 'rule', 'object');
+            ensureType(rule.type, 'rule.type', 'string');
+
+            return core.setAttributeMeta(node, name, rule);
+        };
 
         /**
          * Removes an attribute definition from the META rules of the node.
@@ -2529,7 +2618,16 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delAttributeMeta = core.delAttributeMeta;
+        this.delAttributeMeta = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            var names = core.getValidAttributeNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove unknown attribute definition');
+            }
+
+            return core.delAttributeMeta(node, name);
+        };
 
         /**
          * Returns the definition object of an attribute from the META rules of the node.
@@ -2586,7 +2684,12 @@ define([
          *    type: "asset"
          * }
          */
-        this.getAttributeMeta = core.getAttributeMeta;
+        this.getAttributeMeta = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            return core.getAttributeMeta(node, name);
+        };
 
         /**
          * Returns the list of absolute path of the valid children types of the node.
@@ -2598,7 +2701,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getValidChildrenPaths = core.getValidChildrenPaths;
+        this.getValidChildrenPaths = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getValidChildrenPaths(node);
+        };
 
         /**
          * Return a JSON representation of the META rules regarding the valid children of the given node.
@@ -2619,7 +2726,11 @@ define([
          * }
          * @func
          */
-        this.getChildrenMeta = core.getChildrenMeta;
+        this.getChildrenMeta = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getChildrenMeta(node);
+        };
 
         /**
          * Sets the given child as a valid children type for the node.
@@ -2634,18 +2745,34 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setChildMeta = core.setChildMeta;
+        this.setChildMeta = function (node, child, min, max) {
+            ensureNode(node, 'node');
+            ensureNode(child, 'child');
+            ensureMinMax(min, 'min');
+            ensureMinMax(max, 'max');
+
+            return core.setChildMeta(node, child, min, max);
+        };
 
         /**
          * Removes the given child rule from the node.
          * @param {module:Core~Node} node - the node in question.
-         * @param {string} childPath - the absolute path of the child which rule is to be removed from the node.
+         * @param {string} path - the absolute path of the child which rule is to be removed from the node.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delChildMeta = core.delChildMeta;
+        this.delChildMeta = function (node, path) {
+            ensureNode(node, 'node');
+            ensurePath(path, 'path');
+            var paths = core.getValidChildrenPaths(node);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove child definition of an unknown child.');
+            }
+
+            return core.delChildMeta(node, path);
+        };
 
         /**
          * Sets the global containment limits for the node.
@@ -2659,7 +2786,13 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setChildrenMetaLimits = core.setChildrenMetaLimits;
+        this.setChildrenMetaLimits = function (node, min, max) {
+            ensureNode(node, 'node');
+            ensureMinMax(min, 'min');
+            ensureMinMax(max, 'max');
+
+            return core.setChildrenMetaLimits(node, min, max);
+        };
 
         /**
          * Sets the given target as a valid target type for the pointer/set of the node.
@@ -2675,19 +2808,40 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setPointerMetaTarget = core.setPointerMetaTarget;
+        this.setPointerMetaTarget = function (node, target, min, max) {
+            ensureNode(node, 'node');
+            ensureNode(target, 'target');
+            ensureMinMax(min, 'min');
+            ensureMinMax(max, 'max');
+
+            return core.setPointerMetaTarget(node, target, min, max);
+        };
 
         /**
          * Removes a possible target type from the pointer/set of the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the pointer/set
-         * @param {string} targetPath - the absolute path of the possible target type.
+         * @param {string} path - the absolute path of the possible target type.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delPointerMetaTarget = core.delPointerMetaTarget;
+        this.delPointerMetaTarget = function (node, name, path) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensurePath(path, 'path');
+            var names = core.getValidPointerNames(node).concat(core.getValidSetNames(node));
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access definition of unknown pointer.');
+            }
+            var paths = core.getValidTargetPaths(node, name);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove definition regarding unknown target.');
+            }
+
+            return core.delPointerMetaTarget(node, name, path);
+        };
 
         /**
          * Sets the global target limits for pointer/set of the node. On META level the only distinction between
@@ -2703,7 +2857,13 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setPointerMetaLimits = core.setPointerMetaLimits;
+        this.setPointerMetaLimits = function (node, min, max) {
+            ensureNode(node, 'node');
+            ensureMinMax(min, 'min');
+            ensureMinMax(max, 'max');
+
+            return core.setPointerMetaLimits(node, min, max);
+        };
 
         /**
          * Removes the complete META rule regarding the given pointer/set of the node.
@@ -2714,15 +2874,24 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delPointerMeta = core.delPointerMeta;
+        this.delPointerMeta = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            var names = core.getValidPointerNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove unknown pointer definition.');
+            }
+
+            return delPointerMeta(node, name);
+        };
 
         /**
          * Return a JSON representation of the META rules regarding the given pointer/set of the given node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the pointer/set.
          *
-         * @return {module:Core~RelationRule} The function returns a detailed JSON structure that represents the META
-         * rules regarding the given pointer/set of the node.
+         * @return {module:Core~RelationRule|undefined} The function returns a detailed JSON structure that
+         * represents the META rules regarding the given pointer/set of the node.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
@@ -2744,7 +2913,12 @@ define([
          *   min: -1
          * }
          */
-        this.getPointerMeta = core.getPointerMeta;
+        this.getPointerMeta = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            return getPointerMeta(node, name);
+        }
 
         /**
          * Sets a valid type for the given aspect of the node.
@@ -2756,19 +2930,39 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setAspectMetaTarget = core.setAspectMetaTarget;
+        this.setAspectMetaTarget = function (node, name, target) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensureNode(target, 'target');
+
+            return core.setAspectMetaTarget(node, name, target);
+        };
 
         /**
          * Removes a valid type from the given aspect of the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the aspect.
-         * @param {string} targetPath - the absolute path of the valid type of the aspect.
+         * @param {string} path - the absolute path of the valid type of the aspect.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delAspectMetaTarget = core.delAspectMetaTarget;
+        this.delAspectMetaTarget = function (node, name, path) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensurePath(path, 'path');
+            var names = core.getValidAspectNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot change definition of unknown aspect.');
+            }
+            var paths = core.getAspectMeta(node, name);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot delete unknown target of aspect.');
+            }
+
+            return core.delAspectMetaTarget(node, name, path);
+        };
 
         /**
          * Removes the given aspect rule of the node.
@@ -2779,7 +2973,16 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delAspectMeta = core.delAspectMeta;
+        this.delAspectMeta = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            var names = core.getValidAspectNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove definition of unknown aspect.');
+            }
+
+            return core.delAspectMeta(node, name, path);
+        };
 
         /**
          * Searches for the closest META node of the node in question.
@@ -2792,7 +2995,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getBaseType = this.getMetaType = core.getBaseType;
+        this.getBaseType = this.getMetaType = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getMetaType(node);
+        };
 
         /**
          * Checks if there is a node with the given name in the nodes inheritance chain (excluding itself).
@@ -2804,7 +3011,12 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isInstanceOf = core.isInstanceOf;
+        this.isInstanceOf = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            return core.isInstanceOf(node, name);
+        };
 
         /**
          * Generates a differential tree among the two states of the project that contains the necessary changes
@@ -2821,18 +3033,40 @@ define([
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
-        this.generateTreeDiff = core.generateTreeDiff;
+        this.generateTreeDiff = function (sourceRoot, targetRoot, callback) {
+            var error;
+
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(sourceRoot, 'sourceRoot', true);
+            error = error || ensureNode(targetRoot, 'targetRoot', true);
+            if (error) {
+                callback(error);
+            } else {
+                core.generateTreeDiff(sourceRoot, targetRoot, callback);
+            }
+        };
 
         /**
          * Apply changes to the current project.
-         * @param {module:Core~Node} root - the root of the containment hierarchy where we wish to apply the changes
+         * @param {module:Core~Node} node - the root of the containment hierarchy where we wish to apply the changes
          * @param {object} patch - the tree structured collection of changes represented with a special JSON object
          * @param {function} callback[]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
-        this.applyTreeDiff = core.applyTreeDiff;
+        this.applyTreeDiff = function (node, patch, callback) {
+            var error;
+
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(node, 'node', true);
+            error = error || ensureType(patch, 'patch', 'object', true);
+            if (error) {
+                callback(error);
+            } else {
+                core.applyTreeDiff(node, patch, callback);
+            }
+        };
 
         /**
          * Tries to merge two patch object. The patches ideally represents changes made by two parties. They represents
@@ -2847,7 +3081,12 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.tryToConcatChanges = core.tryToConcatChanges;
+        this.tryToConcatChanges = function (mine, theirs) {
+            ensureType(mine, 'mine', 'object');
+            ensureType(theirs, 'theirs', 'object');
+
+            return core.tryToConcatChanges(mine, theirs);
+        };
 
         /**
          * When our attempt to merge two patches ended in some conflict, then we can modify that result highlighting
@@ -2863,7 +3102,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.applyResolution = core.applyResolution;
+        this.applyResolution = function (conflict) {
+            ensureType(conflict, 'conflict', 'object');
+
+            return core.applyResolution(conflict);
+        };
 
         /**
          * Checks if the node is abstract.
@@ -2875,7 +3118,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isAbstract = core.isAbstract;
+        this.isAbstract = function (node) {
+            ensureNode(node, 'node');
+
+            return core.isAbstract(node);
+        };
 
         /**
          * Check is the node is a connection-like node.
@@ -2886,7 +3133,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isConnection = core.isConnection;
+        this.isConnection = function (node) {
+            ensureNode(node, 'node');
+
+            return core.isConnection(node);
+        };
 
         /**
          * Retrieves the valid META nodes that can be base of a child of the node.
@@ -2906,7 +3157,27 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getValidChildrenMetaNodes = core.getValidChildrenMetaNodes;
+        this.getValidChildrenMetaNodes = function (parameters) {
+            ensureType(parameters, 'parameters', 'object');
+            ensureNode(parameters.node, 'parameters.node');
+            if (parameters.hasOwnProperty('children')) {
+                ensureInstanceOf(parameters.children, 'parameters.children', Array);
+                for (var i = 0; i < parameters.children.length; i += 1) {
+                    ensureNode(parameters.children[i], 'parameters.children[i]');
+                }
+            }
+            if (parameters.hasOwnProperty('sensitive')) {
+                ensureType(parameters.sensitive, 'parameters.sensitive', 'boolean');
+            }
+            if (parameters.hasOwnProperty('multiplicity')) {
+                ensureType(parameters.multiplicity, 'parameters.multiplicity', 'boolean');
+            }
+            if (parameters.hasOwnProperty('aspect')) {
+                ensureType(parameters.aspect, 'parameters.aspect', 'string');
+            }
+
+            return core.getValidChildrenMetaNodes(parameters);
+        };
 
         /**
          * Retrieves the valid META nodes that can be base of a member of the set of the node.
@@ -2926,7 +3197,24 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getValidSetElementsMetaNodes = core.getValidSetElementsMetaNodes;
+        this.getValidSetElementsMetaNodes = function (parameters) {
+            ensureType(parameters, 'parameters', 'object');
+            ensureNode(parameters.node, 'parameters.node');
+            if (parameters.hasOwnProperty('members')) {
+                ensureInstanceOf(parameters.members, 'parameters.members', Array);
+                for (var i = 0; i < parameters.members.length; i += 1) {
+                    ensureNode(parameters.members[i], 'parameters.members[i]');
+                }
+            }
+            if (parameters.hasOwnProperty('sensitive')) {
+                ensureType(parameters.sensitive, 'parameters.sensitive', 'boolean');
+            }
+            if (parameters.hasOwnProperty('multiplicity')) {
+                ensureType(parameters.multiplicity, 'parameters.multiplicity', 'boolean');
+            }
+
+            return core.getValidSetElementsMetaNodes(parameters);
+        };
 
         /**
          * Returns all META nodes.
@@ -2938,7 +3226,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getAllMetaNodes = core.getAllMetaNodes;
+        this.getAllMetaNodes = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getAllMetaNodes(node);
+        };
 
         /**
          * Checks if the node is a META node.
@@ -2950,13 +3242,17 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isMetaNode = core.isMetaNode;
+        this.isMetaNode = function (node) {
+            ensureNode(node, 'node');
+
+            return core.isMetaNode(node);
+        };
 
         /**
          * Checks if the member is completely overridden in the set of the node.
          * @param {module:Core~Node} node - the node to test.
-         * @param {string} setName - the name of the set of the node.
-         * @param {string} memberPath - the path of the member in question.
+         * @param {string} name - the name of the set of the node.
+         * @param {string} path - the path of the member in question.
          *
          * @return {bool} Returns true if the member exists in the base of the set, but was
          * added to the given set as well, which means a complete override. If the set does not exist
@@ -2967,7 +3263,17 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isFullyOverriddenMember = core.isFullyOverriddenMember;
+        this.isFullyOverriddenMember = function (node, name, path) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensurePath(path, 'path');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+
+            return core.isFullyOverriddenMember(node, name, path);
+        }
 
         /**
          * Checks if the mixins allocated with the node can be used.
@@ -2982,7 +3288,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMixinErrors = core.getMixinErrors;
+        this.getMixinErrors = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getMixinErrors(node);
+        };
 
         /**
          * Gathers the paths of the mixin nodes associated with the node.
@@ -2994,7 +3304,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMixinPaths = core.getMixinPaths;
+        this.getMixinPaths = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getMixinPaths(node);
+        };
 
         /**
          * Gathers the mixin nodes associated with the node.
@@ -3006,31 +3320,49 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMixinNodes = core.getMixinNodes;
+        this.getMixinNodes = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getMixinNodes(node);
+        };
 
         /**
          * Removes a mixin from the mixin set of the node.
          *
          * @param {module:Core~Node} node - the node in question.
-         * @param {string} mixinPath - the path of the mixin node.
+         * @param {string} path - the path of the mixin node.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delMixin = core.delMixin;
+        this.delMixin = function (node, path) {
+            ensureNode(node, 'node');
+            ensurePath(path, 'path');
+            var paths = core.getMixinPaths(node);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove unknown mixin.');
+            }
+
+            return core.delMixin(node, path);
+        };
 
         /**
          * Adds a mixin to the mixin set of the node.
          *
          * @param {module:Core~Node} node - the node in question.
-         * @param {string} mixinPath - the path of the mixin node.
+         * @param {string} path - the path of the mixin node.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.addMixin = core.addMixin;
+        this.addMixin = function (node, path) {
+            ensureNode(node, 'node');
+            ensurePath(path, 'path');
+
+            return core.addMixin(node, path);
+        };
 
         /**
          * Removes all mixins for a given node.
@@ -3040,7 +3372,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.clearMixins = core.clearMixins;
+        this.clearMixins = function (node) {
+            ensureNode(node, 'node');
+
+            return core.clearMixins(node);
+        };
 
         /**
          * Searches for the closest META node of the node in question and the direct mixins of that node.
@@ -3052,18 +3388,27 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getBaseTypes = core.getBaseTypes;
+        this.getBaseTypes = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getBaseTypes(node);
+        };
 
         /**
          * Checks if the given path can be added as a mixin to the given node.
          *
          * @param {module:Core~Node} node - the node in question.
-         * @param {string} mixinPath - the path of the mixin node.
+         * @param {string} path - the path of the mixin node.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.canSetAsMixin = core.canSetAsMixin;
+        this.canSetAsMixin = function (node, path) {
+            ensureNode(node, 'node');
+            ensurePath(path, 'path');
+
+            return core.addMixin(node, path);
+        };
 
         //library function TODO checking everything and adding all new functions
 
@@ -3077,10 +3422,10 @@ define([
          * @param {string} name - the name of the library you wish to use as a namespace in your project.
          * @param {string} libraryRootHash - the hash of your library's root
          * (must exist in the project's collection at the time of call).
-         * @param {Object} libraryInfo - information about your project.
-         * @param {string} libraryInfo.projectId - the projectId of your library.
-         * @param {string} libraryInfo.branchName - the branch that your library follows in the origin project.
-         * @param {string} libraryInfo.commitHash - the version of your library.
+         * @param {Object} libraryInfo[] - information about your project.
+         * @param {string} libraryInfo.projectId[] - the projectId of your library.
+         * @param {string} libraryInfo.branchName[] - the branch that your library follows in the origin project.
+         * @param {string} libraryInfo.commitHash[] - the version of your library.
          * @param {function} callback[]
          * @param {Error|CoreInputError|CoreIllegalOperationError|CoreAssertError|null} callback.error - the
          * result of the execution.
@@ -3089,7 +3434,28 @@ define([
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
-        this.addLibrary = core.addLibrary;
+        this.addLibrary = function (node, libraryRootHash, libraryInfo, callback) {
+            ensureType(callback, 'callback', 'function');
+            var error = ensureNode(node, 'node', true);
+            error = error || ensureHash(libraryRootHash, 'libraryRootHash', true);
+            if (libraryInfo) {
+                error = error || ensureType(libraryInfo, 'libraryInfo', 'object', true);
+                if (libraryInfo.hasOwnProperty('projectId')) {
+                    error = error || ensureType(libraryInfo.projectId, 'libraryInfo.projectId', 'string', true);
+                }
+                if (libraryInfo.hasOwnProperty('branchName')) {
+                    error = error || ensureType(libraryInfo.branchName, 'libraryInfo.branchName', 'string', true);
+                }
+                if (libraryInfo.hasOwnProperty('commitHash')) {
+                    error = error || ensureHash(libraryInfo.commitHash, 'libraryInfo.commitHash', true);
+                }
+            }
+            if (error) {
+                callback(error);
+            } else {
+                core.addLibrary(node, libraryRootHash, libraryInfo, callback);
+            }
+        };
 
         /**
          * It updates a library in your project based on the input information. It will 'reaplace' the old
@@ -3098,10 +3464,10 @@ define([
          * @param {string} name - the name of the library you want to update.
          * @param {string} libraryRootHash - the hash of your library's new root
          * (must exist in the project's collection at the time of call).
-         * @param {object} libraryInfo - information about your project.
-         * @param {string} libraryInfo.projectId - the projectId of your library.
-         * @param {string} libraryInfo.branchName - the branch that your library follows in the origin project.
-         * @param {string} libraryInfo.commitHash - the version of your library.
+         * @param {object} libraryInfo[] - information about your project.
+         * @param {string} libraryInfo.projectId[] - the projectId of your library.
+         * @param {string} libraryInfo.branchName[] - the branch that your library follows in the origin project.
+         * @param {string} libraryInfo.commitHash[] - the version of your library.
          * @param {function} callback[]
          * @param {Error|CoreInputError|CoreIllegalOperationError|CoreAssertError|null} callback.error - the
          * status of the execution.
@@ -3110,7 +3476,29 @@ define([
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
-        this.updateLibrary = core.updateLibrary;
+        this.updateLibrary = function (node, libraryRootHash, libraryInfo, callback) {
+            ensureType(callback, 'callback', 'function');
+            var error = ensureNode(node, 'node', true);
+            error = error || ensureHash(libraryRootHash, 'libraryRootHash', true);
+            if (libraryInfo) {
+                error = error || ensureType(libraryInfo, 'libraryInfo', 'object', true);
+                if (libraryInfo.hasOwnProperty('projectId')) {
+                    error = error || ensureType(libraryInfo.projectId, 'libraryInfo.projectId', 'string', true);
+                }
+                if (libraryInfo.hasOwnProperty('branchName')) {
+                    error = error || ensureType(libraryInfo.branchName, 'libraryInfo.branchName', 'string', true);
+                }
+                if (libraryInfo.hasOwnProperty('commitHash')) {
+                    error = error || ensureHash(libraryInfo.commitHash, 'libraryInfo.commitHash', true);
+                }
+            }
+            if (error) {
+                callback(error);
+            } else {
+                core.addLibrary(node, libraryRootHash, libraryInfo, callback);
+            }
+
+        };
 
         /**
          * Gives back the list of libraries in your project.
@@ -3123,7 +3511,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getLibraryNames = core.getLibraryNames;
+        this.getLibraryNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getLibraryNames(node);
+        };
 
         /**
          * Return the root of the inheritance chain of your Meta nodes.
@@ -3135,7 +3527,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getFCO = core.getFCO;
+        this.getFCO = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getFCO(node);
+        };
 
         /**
          * Returns true if the node in question is a library root..
@@ -3148,7 +3544,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isLibraryRoot = core.isLibraryRoot;
+        this.isLibraryRoot = function (node) {
+            ensureNode(node, 'node');
+
+            return core.isLibraryRoot(node);
+        };
 
         /**
          * Returns true if the node in question is a library element..
@@ -3160,7 +3560,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isLibraryElement = core.isLibraryElement;
+        this.isLibraryElement = function (node) {
+            ensureNode(node, 'node');
+
+            return core.isLibraryElement(node);
+        };
 
         /**
          * Returns the resolved namespace for the node. If node is not in a library it returns the
@@ -3176,7 +3580,11 @@ define([
          *
          * @example NS1.NS2
          */
-        this.getNamespace = core.getNamespace;
+        this.getNamespace = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getNamespace(node);
+        };
 
         /**
          * Returns the fully qualified name of the node, which is the list of its namespaces separated
@@ -3193,7 +3601,11 @@ define([
          *
          * @example NS1.NS2.name
          */
-        this.getFullyQualifiedName = core.getFullyQualifiedName;
+        this.getFullyQualifiedName = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getFullyQualifiedName(node);
+        };
 
         /**
          * Removes a library from your project. It will also remove any remaining instances of the specific library.
@@ -3205,7 +3617,16 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.removeLibrary = core.removeLibrary;
+        this.removeLibrary = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            var names = core.getLibraryNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove unknown library');
+            }
+
+            return core.removeLibrary(node, name);
+        };
 
         /**
          * Returns the origin GUID of any library node.
@@ -3221,7 +3642,12 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getLibraryGuid = core.getLibraryGuid;
+        this.getLibraryGuid = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            return core.getLibraryGuid(node, name);
+        };
 
         /**
          * Rename a library in your project.
@@ -3234,7 +3660,13 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.renameLibrary = core.renameLibrary;
+        this.renameLibrary = function (node, oldName, newName) {
+            ensureNode(node, 'node');
+            ensureType(oldName, 'oldName', 'string');
+            ensureType(newName, 'newName', 'string');
+
+            return core.renameLibrary(node, oldName, newName);
+        };
 
         /**
          * Returns the info associated with the library.
@@ -3249,7 +3681,12 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getLibraryInfo = core.getLibraryInfo;
+        this.getLibraryInfo = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            return core.getLibraryInfo(node, name);
+        };
 
         /**
          * Returns the root node of the given library.
@@ -3263,7 +3700,12 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getLibraryRoot = core.getLibraryRoot;
+        this.getLibraryRoot = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            return core.getLibraryRoot(node, name);
+        };
 
         /**
          * Returns all the Meta nodes within the given library.
@@ -3280,7 +3722,15 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getLibraryMetaNodes = core.getLibraryMetaNodes;
+        this.getLibraryMetaNodes = function (node, name, onlyOwn) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            if (onlyOwn !== null && onlyOwn !== undefined) {
+                ensureType(onlyOwn, 'onlyOwn', 'boolean');
+            }
+
+            return core.getLibraryMetaNodes(node, name, onlyOwn);
+        };
 
         /**
          * The function traverses the sub-tree of the project starting with the given root and calls the
@@ -3307,14 +3757,40 @@ define([
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
-        this.traverse = core.traverse;
+        this.traverse = function (root, options, visitFn, callback) {
+            ensureType(callback, 'callback', 'function');
+            var error = ensureNode(root, 'root', true);
+            if (options) {
+                error = error || ensureType(options, 'options', 'object');
+                if (options.hasOwnProperty('excludeRoot')) {
+                    error = error || ensureType(options.excludeRoot, 'options.excludeRoot', 'boolean', true);
+                }
+                if (options.hasOwnProperty('order')) {
+                    error = error || ensureType(options.order, 'options.order', 'string', true);
+                    if (options.order !== 'BFS' && options.order !== 'DFS') {
+                        error = error ||
+                            new CoreInputError('Parameter options.order must be either \'BFS\' or \'DFS\'.');
+                    }
+                }
+                if (options.hasOwnProperty('stopOnError')) {
+                    error = error || ensureType(options.stopOnError, 'options.stopOnError', 'boolean', true);
+                }
+            }
+            error = error || ensureType(visitFn, 'visitFn', 'function');
+
+            if (error) {
+                callback(error);
+            } else {
+                core.traverse(root, options, visitFn, callback);
+            }
+        };
 
         /**
          * Collects the necessary information to export the set of input nodes and use it in other
          * - compatible - projects.
          * @private
          *
-         * @param {module:Core~Node[]} nodesToExport - the set of nodes that we want to export
+         * @param {module:Core~Node[]} nodes - the set of nodes that we want to export
          *
          * @return {object} If the closure is available for export, the returned special JSON object
          * will contain information about the necessary data that needs to be exported as well as relations
@@ -3324,7 +3800,14 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getClosureInformation = core.getClosureInformation;
+        this.getClosureInformation = function (nodes) {
+            ensureInstanceOf(nodes, 'nodes', Array);
+            for (var i = 0; i < nodes.length; i += 1) {
+                ensureNode(nodes[i], 'nodes[i]');
+            }
+
+            return core.getClosureInformation(nodes);
+        };
 
         /**
          * Imports the set of nodes in the closureInformation - that has the format created by
@@ -3342,7 +3825,12 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.importClosure = core.importClosure;
+        this.importClosure = function (node, closureInformation) {
+            ensureNode(node, 'node');
+            ensureType(closureInformation, 'closureInformation', 'object');
+
+            return core.importClosure(node, closureInformation);
+        };
 
         /**
          * Collects the paths of all the instances of the given node.
@@ -3353,7 +3841,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getInstancePaths = core.getInstancePaths;
+        this.getInstancePaths = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getInstancePaths(node);
+        };
 
         /**
          * Loads all the instances of the given node.
@@ -3367,8 +3859,16 @@ define([
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
-        this.loadInstances = core.loadInstances;
-    }
+        this.loadInstances = function (node, callback) {
+            ensureType(callback, 'callback', 'function');
+            var error = ensureNode(node, 'node', true);
+            if (error) {
+                callback(error);
+            } else {
+                core.loadInstances(node, callback);
+            }
+        };
+    };
 
     return Core;
 });
