@@ -2148,7 +2148,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getGuid = core.getGuid;
+        this.getGuid = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getGuid(node);
+        };
 
         //TODO this is only used in import - export use-cases, probably could be removed...
         /**
@@ -2157,13 +2161,24 @@ define([
          * @param {module:Core~Node} node - the node in question.
          * @param {module:Core~GUID} guid - the new globally unique identifier.
          * @param {function} callback[]
-         * @param {Error|null} callback.error - the result of the executiob.
+         * @param {Error|CoreInputError|CoreIllegalOperationError|CoreAssertError|null} callback.error - the
+         * result of the execution.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
-         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
-         * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setGuid = core.setGuid;
+        this.setGuid = function (node, guid, callback) {
+            var error = null;
+            ensureType(callback, 'callback', 'function');
+            error = ensureNode(node, 'node', true);
+            error = error || ensureGuid(guid, 'guid', true);
+
+            if (error) {
+                callback(error);
+            } else {
+                core.setGuid(node, guid, callback);
+            }
+
+        };
 
         /**
          * Gets a constraint object of the node.
@@ -2184,7 +2199,12 @@ define([
          *   info: "Should check unique name"
          * }
          */
-        this.getConstraint = core.getConstraint;
+        this.getConstraint = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            return core.getConstraint(node, name);
+        };
 
         /**
          * Sets a constraint object of the node.
@@ -2196,7 +2216,13 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setConstraint = core.setConstraint;
+        this.setConstraint = function (node, name, constraint) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensureType(constraint, 'constraint', 'object');
+
+            return core.setConstraint(node, name, constraint);
+        };
 
         /**
          * Removes a constraint from the node.
@@ -2207,7 +2233,16 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delConstraint = core.delConstraint;
+        this.delConstraint = function (node, name) {
+            ensureNode(node,'node');
+            ensureType(name,'name','string');
+            var names = core.getConstraintNames(node);
+            if(names.indexOf(name) === -1){
+                throw new CoreIllegalOperationError('Cannot remove unknown constraint.');
+            }
+
+            return core.delConstraint(node,name);
+        };
 
         /**
          * Retrieves the list of constraint names defined for the node.
@@ -2218,7 +2253,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getConstraintNames = core.getConstraintNames;
+        this.getConstraintNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getConstraintNames(node);
+        };
 
         /**
          * Retrieves the list of constraint names defined specifically for the node.
@@ -2229,7 +2268,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getOwnConstraintNames = core.getOwnConstraintNames;
+        this.getOwnConstraintNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getOwnConstraintNames(node);
+        };
 
         /**
          * Checks if the given typeNode is really a base of the node.
@@ -2242,7 +2285,12 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isTypeOf = core.isTypeOf;
+        this.isTypeOf = function (node,type) {
+            ensureNode(node, 'node');
+            ensureNode(type, 'type');
+
+            return core.isTypeOf(node);
+        };
 
         /**
          * Checks if according to the META rules the given node can be a child of the parent.
@@ -2256,7 +2304,12 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isValidChildOf = core.isValidChildOf;
+        this.isValidChildOf = function (node,parent) {
+            ensureNode(node, 'node');
+            ensureNode(parent, 'parent');
+
+            return core.isTypeOf(node);
+        };
 
         /**
          * Returns the list of the META defined pointer names of the node.

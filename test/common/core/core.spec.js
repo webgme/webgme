@@ -2570,4 +2570,210 @@ describe.only('core', function () {
             expect(myError.name).to.eql('CoreInputError');
         }
     });
+
+    it('should throw @getGuid if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getGuid('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+
+        try {
+            core.getGuid({});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @setGuid if not valid parameters are given', function (done) {
+        var myError;
+
+        try {
+            core.getGuid('string', 'otherstring', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+
+        core.setGuid('string', 'other', function (err) {
+            expect(err).not.to.eql(null);
+            expect(err.name).to.eql('CoreInputError');
+
+            core.setGuid(rootNode, 'notguid', function (err) {
+                expect(err).not.to.eql(null);
+                expect(err.name).to.eql('CoreInputError');
+                done();
+            });
+        });
+    });
+
+    it('should throw @getConstraint if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getConstraint('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getConstraint(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @setConstraint if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.setConstraint('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setConstraint(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setConstraint(rootNode, 'newConstraint', 'notObject');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @delConstraint if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.delConstraint('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delConstraint(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delConstraint(rootNode, 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getConstraintNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getConstraintNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+
+        try {
+            core.getConstraintNames({});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getOwnConstraintNames if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.getOwnConstraintNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+
+        try {
+            core.getOwnConstraintNames({});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @isTypeOf if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.isTypeOf('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.isTypeOf(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @isValidChildOf if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.isValidChildOf('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.isValidChildOf(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
 });
