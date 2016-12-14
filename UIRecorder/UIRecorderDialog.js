@@ -1,4 +1,4 @@
-/*globals define, $, WebGMEGlobal*/
+/*globals define, $*/
 /*jshint browser: true*/
 
 /**
@@ -8,21 +8,19 @@
  */
 
 define([
-    'text!./templates/UIReplayDialog.html',
-    'css!./styles/UIReplayDialog.css'
+    'text!./templates/UIRecorderDialog.html'
 ], function (dialogTemplate) {
     'use strict';
 
-    var REC = WebGMEGlobal.recorder,
-        STATE_CHANGE_OPTIONS = {
+    var STATE_CHANGE_OPTIONS = {
 
         },
         COMMIT_CHANGE_OPTIONS = {
 
         };
 
-    function UIReplayDialog(mainLogger) {
-        this._logger = mainLogger.fork('UIReplayDialog');
+    function UIRecorderDialog(mainLogger) {
+        this._logger = mainLogger.fork('UIRecorderDialog');
 
         this._dialog = null;
         this._infoBtn = null;
@@ -41,10 +39,12 @@ define([
         this._playing = false;
     }
 
-    UIReplayDialog.prototype.show = function (data, fnCallback) {
+    UIRecorderDialog.prototype.show = function (data, fnCallback) {
         var self = this;
 
         this._dialog = $(dialogTemplate);
+
+        this.recorder = data.recorder;
 
         this._dialog.draggable({
             handle: '.modal-body'
@@ -55,7 +55,7 @@ define([
         this._stopBtn = this._dialog.find('.btn-stop');
         this._stepForwardBtn = this._dialog.find('.btn-step-forward');
 
-        if (REC.recording.length === 0) {
+        if (self.recorder.recording.length === 0) {
             this._playBtn.prop('disabled', true);
         }
 
@@ -64,7 +64,7 @@ define([
         this._saveBtn = this._dialog.find('.btn-save');
 
         this._recBadge = this._dialog.find('.rec-badge');
-        this._recBadge.text(REC.recording.length);
+        this._recBadge.text(self.recorder.recording.length);
 
         this._infoBtn = this._dialog.find('.toggle-info-btn');
         this._infoFooter = this._dialog.find('.modal-footer');
@@ -87,8 +87,8 @@ define([
         });
 
         this._recBadge.on('click', function () {
-            REC.clear();
-            $(this).text(REC.recording.length);
+            self.recorder.clear();
+            $(this).text(self.recorder.recording.length);
         });
 
         this._infoBtn.on('click', function () {
@@ -110,11 +110,11 @@ define([
         this._dialog.modal('show');
     };
 
-    UIReplayDialog.prototype.atPlay = function () {
+    UIRecorderDialog.prototype.atPlay = function () {
         if (this._playing) {
             // Stop playback mode
-            REC.stateIndex = -1;
-            REC.commitIndex = -1;
+            this.recorder.stateIndex = -1;
+            this.recorder.commitIndex = -1;
             this._playBtn.show();
             this._stopBtn.hide();
             this._stepBackBtn.prop('disabled', true);
@@ -132,7 +132,7 @@ define([
         this._playing = !this._playing;
     };
 
-    UIReplayDialog.prototype.atStep = function (forward) {
+    UIRecorderDialog.prototype.atStep = function (forward) {
         var self = this,
             promise;
 
@@ -141,27 +141,27 @@ define([
         this._stepBackBtn.prop('disabled', true);
 
         if (forward) {
-            if (REC.stateIndex === REC.commitIndex) {
-                promise = REC.stepForwardState(STATE_CHANGE_OPTIONS);
+            if (self.recorder.stateIndex === self.recorder.commitIndex) {
+                promise = self.recorder.stepForwardState(STATE_CHANGE_OPTIONS);
             } else {
-                promise = REC.stepForwardCommit(COMMIT_CHANGE_OPTIONS);
+                promise = self.recorder.stepForwardCommit(COMMIT_CHANGE_OPTIONS);
             }
         } else {
-            if (REC.stateIndex === REC.commitIndex) {
-                promise = REC.stepBackCommit(COMMIT_CHANGE_OPTIONS);
+            if (self.recorder.stateIndex === self.recorder.commitIndex) {
+                promise = self.recorder.stepBackCommit(COMMIT_CHANGE_OPTIONS);
             } else {
-                promise = REC.stepBackState(STATE_CHANGE_OPTIONS);
+                promise = self.recorder.stepBackState(STATE_CHANGE_OPTIONS);
             }
         }
 
         promise
             .then(function() {
                 self._stopBtn.prop('disabled', false);
-                if (REC.commitIndex < REC.recording.length - 1) {
+                if (self.recorder.commitIndex < self.recorder.recording.length - 1) {
                     self._stepForwardBtn.prop('disabled', false);
                 }
 
-                if (REC.stateIndex > 0) {
+                if (self.recorder.stateIndex > 0) {
                     self._stepBackBtn.prop('disabled', false);
                 }
             })
@@ -170,18 +170,18 @@ define([
             });
     };
 
-    UIReplayDialog.prototype.atSave = function () {
+    UIRecorderDialog.prototype.atSave = function () {
 
     };
 
-    UIReplayDialog.prototype.atLoad = function () {
+    UIRecorderDialog.prototype.atLoad = function () {
 
     };
 
-    UIReplayDialog.prototype.setDisableLoaderSaver = function (disable) {
+    UIRecorderDialog.prototype.setDisableLoaderSaver = function (disable) {
         this._loadBtn.disable(disable);
         this._saveBtn.disable(disable);
     };
 
-    return UIReplayDialog;
+    return UIRecorderDialog;
 });

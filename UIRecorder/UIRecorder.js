@@ -8,7 +8,7 @@
 define(['q'], function (Q) {
     'use strict';
 
-    var Recorder = function (client) {
+    var UIRecorder = function (client) {
         var self = this,
             storeCommitState = function (_client, data) {
                 self.recording.push(data);
@@ -50,9 +50,8 @@ define(['q'], function (Q) {
             delete uiState.activeBranchName;
             delete uiState.activeCommit;
 
-            uiState.suppressVisualizerFromNode = true;
             console.log('Switch ui-state', JSON.stringify(uiState, null, 2));
-            WebGMEGlobal.State.set(uiState);
+            WebGMEGlobal.State.set(uiState, {suppressVisualizerFromNode: true});
 
             setTimeout(function () {
                 deferred.resolve();
@@ -168,5 +167,5 @@ define(['q'], function (Q) {
         };
     };
 
-    return Recorder;
+    return UIRecorder;
 });

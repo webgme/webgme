@@ -402,57 +402,6 @@ define([
 
         loadPatternThrottled = TASYNC.throttle(loadPattern, 1); //magic number could be fine-tuned
 
-        function checkMetaNameCollision(core, rootNode) {
-            var names = [],
-                nodes = core.getAllMetaNodes(rootNode),
-                i,
-                keys = Object.keys(nodes || {}),
-                name;
-            for (i = 0; i < keys.length; i += 1) {
-                //name = core.getAttribute(nodes[keys[i]], 'name');
-                name = core.getFullyQualifiedName(nodes[keys[i]]);
-                if (names.indexOf(name) === -1) {
-                    names.push(name);
-                } else {
-                    self.dispatchEvent(CONSTANTS.NOTIFICATION, {
-                        type: 'META',
-                        severity: 'error',
-                        message: 'Duplicate name on META level: \'' + name + '\'',
-                        hint: 'Rename one of the objects'
-                    });
-                }
-            }
-
-        }
-
-        function checkMixinErrors(core, rootNode) {
-            var metaNodes = core.getAllMetaNodes(rootNode),
-                i, key,
-                notifications = {},
-                notificationKeys = [],
-                errors;
-
-            for (key in metaNodes) {
-                errors = core.getMixinErrors(metaNodes[key]);
-
-                for (i = 0; i < errors.length; i += 1) {
-                    notifications[errors[i].message] = {
-                        type: 'META',
-                        severity: errors[i].severity,
-                        message: errors[i].message,
-                        hint: errors[i].hint
-                    };
-                    notificationKeys.push(errors[i].message);
-                }
-            }
-
-            //now sort simply by the messages
-            notificationKeys.sort();
-            for (i = 0; i < notificationKeys.length; i += 1) {
-                self.dispatchEvent(CONSTANTS.NOTIFICATION, notifications[notificationKeys[i]]);
-            }
-        }
-
         function reLaunchUsers() {
             var i;
             for (i in state.users) {
@@ -492,9 +441,7 @@ define([
             //it is safe now to move the loadNodes into nodes,
             // refresh the metaNodes and generate events - all in a synchronous manner!!!
             var modifiedPaths,
-                metaInconsistencies,
-                key,
-                i;
+                key;
 
             //console.time('switchStates');
 
@@ -1131,6 +1078,10 @@ define([
                 addModification(commitData.commitObject, clearUndoRedo);
                 self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
+                self.dispatchEvent(CONSTANTS.NEW_COMMIT_STATE, {
+                    commitObject: commitData.commitObject,
+                    uiState: self.uiStateGetter()
+                });
 
                 logger.debug('loading commitHash, local?', commitHash, data.local);
                 loading(commitData.commitObject.root, commitHash, commitData.changedNodes, function (err, aborted) {

@@ -1,0 +1,63 @@
+.record-replay-widget {
+  &.recording {
+    button {
+      background-color: lightgrey;
+      animation:myfirst 1s;
+      -moz-animation:myfirst 1s infinite; /* Firefox */
+      -webkit-animation:myfirst 1s infinite; /* Safari and Chrome */
+    }
+  }
+
+  @-moz-keyframes myfirst /* Firefox */
+  {
+    0%   {background-color: lightgrey;}
+    50%  {background-color: red;}
+    100% {background-color: lightgrey;}
+  }
+
+  @-webkit-keyframes myfirst /* Safari and Chrome */
+  {
+    0%   {background-color: lightgrey;}
+    50%  {background-color: red;}
+    100% {background-color: lightgrey;}
+  }
+}
+
+div.ui-replay-dialog {
+  width: 400px;
+  .modal-dialog {
+    width: 400px;
+    margin: 0;
+  }
+
+  .modal-content {
+    .toggle-info-btn {
+      font-size: 65%;
+      vertical-align: top;
+      cursor: pointer;
+      color: #333;
+      &:hover {
+        color: #2a6496;
+      }
+    }
+    .btn-record {
+      &.recording {
+        color: red;
+      }
+    }
+
+    .modal-footer {
+      .info-message {
+        display: inline-block;
+        width: 95%;
+        margin-bottom: 2ex;
+        margin-left: 0.5ex;
+        opacity: 0.90;
+      }
+      &.hidden {
+        display: none;
+      }
+    }
+  }
+}
+

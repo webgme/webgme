@@ -2,33 +2,34 @@
 /*jshint browser: true*/
 
 /**
- * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define([
     'js/logger',
     'js/Controls/DropDownMenu',
-    'js/Dialogs/UIReplay/UIReplayDialog',
-    'css!./styles/RecordReplayWidget.css'
-], function (Logger, DropDownMenu, UIReplayDialog) {
+    './UIRecorder',
+    './UIRecorderDialog',
+    'css!./styles/UIRecorder.css'
+], function (Logger, DropDownMenu, UIRecorder, UIReplayDialog) {
 
     'use strict';
 
-    var RecordReplayWidget,
-        REC = WebGMEGlobal.recorder;
+    var UIRecorderWidget;
 
-    RecordReplayWidget = function (containerEl, client) {
-        this._logger = Logger.create('gme:Widgets:RecordReplayWidget', WebGMEGlobal.gmeConfig.client.log);
+    UIRecorderWidget = function (containerEl, client) {
+        this._logger = Logger.create('gme:Widgets:UIRecorderWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
         this._el = containerEl;
+        this.recorder = new UIRecorder(client);
 
         this._initialize();
 
         this._logger.debug('Created');
     };
 
-    RecordReplayWidget.prototype._initialize = function () {
+    UIRecorderWidget.prototype._initialize = function () {
         var self = this;
         this._el.addClass('record-replay-widget');
         this._recording = false;
@@ -72,7 +73,7 @@ define([
         });
     };
 
-    RecordReplayWidget.prototype._atRecord = function () {
+    UIRecorderWidget.prototype._atRecord = function () {
         var self = this;
         self._recording = !self._recording;
 
@@ -80,24 +81,24 @@ define([
             self._recBtn.find('a').text('Stop recording');
             self._menuBtn.hide();
             self._el.addClass('recording');
-            REC.start();
+            self.recorder.start();
         } else {
             self._recBtn.find('a').text('Start recording');
             self._menuBtn.show();
             self._el.removeClass('recording');
-            REC.stop();
+            self.recorder.stop();
         }
     };
 
-    RecordReplayWidget.prototype._atMenuOpen = function () {
+    UIRecorderWidget.prototype._atMenuOpen = function () {
         var self = this,
             dialog = new UIReplayDialog(self._logger);
 
         self._dropDown.setEnabled(false);
-        dialog.show({}, function () {
+        dialog.show({recorder: self.recorder}, function () {
             self._dropDown.setEnabled(true);
         });
     };
 
-    return RecordReplayWidget;
+    return UIRecorderWidget;
 });

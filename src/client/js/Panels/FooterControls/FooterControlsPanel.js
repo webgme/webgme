@@ -7,15 +7,15 @@
 define(['js/PanelBase/PanelBase',
     'js/Widgets/NetworkStatus/NetworkStatusWidget',
     'js/Widgets/BranchStatus/BranchStatusWidget',
-    'js/Widgets/RecordReplay/RecordReplayWidget',
     'js/Widgets/KeyboardManager/KeyboardManagerWidget',
-    'js/Widgets/Notification/NotificationWidget'
+    'js/Widgets/Notification/NotificationWidget',
+    'UIRecorder/UIRecorderWidget'
 ], function (PanelBase,
              NetworkStatusWidget,
              BranchStatusWidget,
-             RecordReplayWidget,
              KeyboardManagerWidget,
-             NotificationWidget) {
+             NotificationWidget,
+             UIRecorderWidget) {
 
     'use strict';
 
@@ -102,7 +102,7 @@ define(['js/PanelBase/PanelBase',
         }
 
         recordEl = widgetPlaceHolder.clone();
-        new RecordReplayWidget(recordEl, this._client);
+        new UIRecorderWidget(recordEl, this._client);
         navBarInner.append(recordEl).append(separator.clone());
 
         networkStatusEl = widgetPlaceHolder.clone();
