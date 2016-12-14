@@ -1687,21 +1687,25 @@ define([
             return getNode(nodePath, logger, state, storeNode);
         };
 
-        this.getAllMetaNodes = function () {
+        this.getAllMetaNodes = function (asObject) {
+            var result = asObject ? {} : [];
             if (state && state.core && state.nodes && state.nodes[ROOT_PATH]) {
                 var metaNodes = state.core.getAllMetaNodes(state.nodes[ROOT_PATH].node),
-                    gmeNodes = [],
+                    gmeNode,
                     keys = Object.keys(metaNodes || {}),
                     i;
 
                 for (i = 0; i < keys.length; i += 1) {
-                    gmeNodes.push(self.getNode(storeNode(metaNodes[keys[i]]), logger, state, storeNode));
+                    gmeNode = self.getNode(storeNode(metaNodes[keys[i]]), logger, state, storeNode);
+                    if (asObject) {
+                        result[keys[i]] = gmeNode;
+                    } else {
+                        result.push(gmeNode);
+                    }
                 }
-
-                return gmeNodes;
             }
 
-            return [];
+            return result;
         };
 
         this.checkMetaConsistency = function () {

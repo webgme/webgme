@@ -1240,46 +1240,49 @@ define(['js/logger',
     };
 
     MetaEditorControl.prototype._createPointerRelationship = function (sourceID, targetID, isSet) {
-        var sourceNode = this._client.getNode(sourceID),
-            targetNode = this._client.getNode(targetID),
+        var client = this._client,
+            sourceNode = client.getNode(sourceID),
+            targetNode = client.getNode(targetID),
             pointerMetaDescriptor,
+            existingNames,
             existingPointerNames,
-            notAllowedPointerNames,
-            self = this;
+            notAllowedPointerNames;
+
+        function getExistingNames() {
+            // This does not include collision in the derived types,
+            // however that is being checked by the meta-rules checker.
+            return {
+                pointers: sourceNode.getValidPointerNames() || [],
+                sets: sourceNode.getValidSetNames() || [],
+                aspects: sourceNode.getValidAspectNames() || []
+            };
+        }
 
         if (sourceNode && targetNode) {
-            notAllowedPointerNames = _.union(sourceNode.getSetNames(), sourceNode.getPointerNames());
+            existingNames = getExistingNames();
+
             if (isSet === true) {
-                //this is a pointer list
-                existingPointerNames = _.difference(sourceNode.getSetNames() || [],
-                    sourceNode.getValidAspectNames());
+                //this is a set
+                existingPointerNames = existingNames.sets;
+                notAllowedPointerNames = _.union(existingNames.pointers, existingNames.aspects);
             } else {
                 //this is a single pointer
-                //get the list of existing pointers and show them in a dialog so the user can choose
-                existingPointerNames = sourceNode.getPointerNames() || [];
-            }
-            notAllowedPointerNames = _.difference(notAllowedPointerNames, existingPointerNames);
-
-            //handle RESERVED pointer names
-            existingPointerNames = _.difference(existingPointerNames, MetaEditorConstants.RESERVED_POINTER_NAMES);
-            notAllowedPointerNames = notAllowedPointerNames.concat(MetaEditorConstants.RESERVED_POINTER_NAMES);
-
-            if (isSet !== true) {
-                // Only pointers cannot have the name member.
-                notAllowedPointerNames.push(CONSTANTS.CORE.MEMBER_RELATION);
+                existingPointerNames = existingNames.pointers;
+                notAllowedPointerNames = existingNames.sets;
             }
 
+            // Reserved names are handled in the dialog.
             //query pointer name from user
             this.diagramDesigner.selectNewPointerName(existingPointerNames,
                 notAllowedPointerNames,
                 isSet,
                 function (userSelectedPointerName) {
-                    self._client.startTransaction();
-                    pointerMetaDescriptor = self._client.getOwnValidTargetItems(sourceID, userSelectedPointerName);
+                    client.startTransaction();
+                    pointerMetaDescriptor = client.getOwnValidTargetItems(sourceID, userSelectedPointerName);
                     if (!pointerMetaDescriptor) {
                         if (isSet !== true) {
                             //single pointer
-                            self._client.setPointerMeta(sourceID, userSelectedPointerName, {
+                            client.setPointerMeta(sourceID, userSelectedPointerName, {
                                 min: 1,
                                 max: 1,
                                 items: [
@@ -1289,29 +1292,29 @@ define(['js/logger',
                                     }
                                 ]
                             });
-                            self._client.setPointer(sourceID, userSelectedPointerName, null);
+                            client.setPointer(sourceID, userSelectedPointerName, null);
                         } else {
                             //pointer list
-                            self._client.setPointerMeta(sourceID, userSelectedPointerName, {
+                            client.setPointerMeta(sourceID, userSelectedPointerName, {
                                 items: [
                                     {
                                         id: targetID
                                     }
                                 ]
                             });
-                            self._client.createSet(sourceID, userSelectedPointerName);
+                            client.createSet(sourceID, userSelectedPointerName);
                         }
                     } else {
                         if (isSet !== true) {
                             //single pointer
-                            self._client.setPointerMetaTarget(sourceID,
+                            client.setPointerMetaTarget(sourceID,
                                 userSelectedPointerName,
                                 targetID,
                                 -1,
                                 1);
                         } else {
                             //pointer list
-                            self._client.setPointerMetaTarget(sourceID,
+                            client.setPointerMetaTarget(sourceID,
                                 userSelectedPointerName,
                                 targetID,
                                 -1,
@@ -1319,7 +1322,7 @@ define(['js/logger',
                         }
                     }
 
-                    self._client.completeTransaction();
+                    client.completeTransaction();
                 });
         }
     };
