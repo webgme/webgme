@@ -1531,9 +1531,19 @@ define([
          * @return {string[]} Returns the array of names of registry entries in the set.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getSetRegistryNames = core.getSetRegistryNames;
+        this.getSetRegistryNames = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of unknown set.');
+            }
+
+            return core.getSetRegistryNames(node, name);
+        };
 
         /**
          * Return the names of the registry entries specifically set for the set at the node.
@@ -1543,9 +1553,19 @@ define([
          * @return {string[]} Returns the array of names of registry entries defined in the set at the node.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getOwnSetRegistryNames = core.getOwnSetRegistryNames;
+        this.getOwnSetRegistryNames = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of unknown set.');
+            }
+
+            return core.getOwnSetRegistryNames(node, name);
+        };
 
         /**
          * Get the value of the registry entry in the set.
@@ -1557,9 +1577,20 @@ define([
          * is no such registry at the set.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getSetRegistry = core.getSetRegistry;
+        this.getSetRegistry = function (node, setName, regName) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensureType(regName, 'regName', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of unknown set.');
+            }
+
+            return core.getSetRegistry(node, setName, regName);
+        };
 
         /**
          * Get the value of the registry entry specifically set for the set at the node.
@@ -1573,7 +1604,17 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getOwnSetRegistry = core.getOwnSetRegistry;
+        this.getOwnSetRegistry = function (node, setName, regName) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensureType(regName, 'regName', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of unknown set.');
+            }
+
+            return core.getOwnSetRegistry(node, setName, regName);
+        };
 
         /**
          * Sets the registry entry value for the set at the node.
@@ -1586,7 +1627,18 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setSetRegistry = core.setSetRegistry;
+        this.setSetRegistry = function (node, setName, regName, value) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensureType(regName, 'regName', 'string');
+            ensureValue(value, 'value');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of unknown set.');
+            }
+
+            return core.setSetRegistry(node, setName, regName, value);
+        };
 
         /**
          * Removes the registry entry for the set at the node.
@@ -1598,7 +1650,21 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delSetRegistry = core.delSetRegistry;
+        this.delSetRegistry = function (node, setName, regName) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensureType(regName, 'regName', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of unknown set.');
+            }
+            names = core.getSetRegistryNames(node, setName);
+            if (names.indexOf(regName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of unknown set.');
+            }
+
+            return core.delSetRegistry(node, setName, regName);
+        };
 
         /**
          * Returns the list of absolute paths of the members of the given set of the given node.
@@ -1608,9 +1674,19 @@ define([
          * @return {string[]} Returns an array of absolute path strings of the member nodes of the set.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMemberPaths = core.getMemberPaths;
+        this.getMemberPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+
+            return core.getMemberPaths(node, name);
+        };
 
         /**
          * Returns the list of absolute paths of the members of the given set of the given node that not simply
@@ -1622,9 +1698,19 @@ define([
          * information on the node's inheritance level.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getOwnMemberPaths = core.getOwnMemberPaths;
+        this.getOwnMemberPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+
+            return core.getOwnMemberPaths(node, name);
+        };
 
         /**
          * Removes a member from the set. The functions doesn't remove the node itself.
@@ -1636,7 +1722,21 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delMember = core.delMember;
+        this.delMember = function (node, name, path) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensurePath(path, 'path');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, name);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove unknown member.');
+            }
+
+            return core.delMember(node, name, path);
+        };
 
         /**
          * Adds a member to the given set.
@@ -1648,13 +1748,23 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.addMember = core.addMember;
+        this.addMember = function (node, name, member) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensureNode(member, 'member');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+
+            return core.addMember(node, name, member);
+        };
 
         /**
          * Return the names of the attributes defined for the set membership to the member node.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} name - the name of the set.
-         * @param {string} memberPath - the absolute path of the member.
+         * @param {string} path - the absolute path of the member.
          *
          * @return {string[]} Returns the array of names of attributes that represents some property of the membership.
          *
@@ -1662,13 +1772,27 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMemberAttributeNames = core.getMemberAttributeNames;
+        this.getMemberAttributeNames = function (node, name, path) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensurePath(path, 'path');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, name);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of an unknown member.');
+            }
+
+            return core.getMemberAttributeNames(node, name, path);
+        };
 
         /**
          * Return the names of the attributes defined for the set membership specifically defined to the member node.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} name - the name of the set.
-         * @param {string} memberPath - the absolute path of the member.
+         * @param {string} path - the absolute path of the member.
          *
          * @return {string[]} Returns the array of names of attributes that represents some property of the membership.
          *
@@ -1676,13 +1800,27 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMemberOwnAttributeNames = core.getMemberOwnAttributeNames;
+        this.getMemberOwnAttributeNames = function (node, name, path) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensurePath(path, 'path');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, name);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of an unknown member.');
+            }
+
+            return core.getMemberOwnAttributeNames(node, name, path);
+        };
 
         /**
          * Get the value of the attribute in relation with the set membership.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} setName - the name of the set.
-         * @param {string} memberPath - the absolute path of the member node.
+         * @param {string} path - the absolute path of the member node.
          * @param {string} attrName - the name of the attribute.
          *
          * @return {object|primitive|null|undefined} Return the value of the attribute. If it is undefined, than there
@@ -1692,13 +1830,28 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMemberAttribute = core.getMemberAttribute;
+        this.getMemberAttribute = function (node, setName, path, attrName) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensurePath(path, 'path');
+            ensureType(attrName, 'attrName', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, setName);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of an unknown member.');
+            }
+
+            return core.getMemberAttribute(node, setName, path, attrName);
+        };
 
         /**
          * Get the value of the attribute for the set membership specifically defined to the member node.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} setName - the name of the set.
-         * @param {string} memberPath - the absolute path of the member node.
+         * @param {string} path - the absolute path of the member node.
          * @param {string} attrName - the name of the attribute.
          *
          * @return {object|primitive|null|undefined} Return the value of the attribute. If it is undefined, than there
@@ -1708,13 +1861,28 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMemberOwnAttribute = core.getMemberOwnAttribute;
+        this.getMemberOwnAttribute = function (node, setName, path, attrName) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensurePath(path, 'path');
+            ensureType(attrName, 'attrName', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, setName);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of an unknown member.');
+            }
+
+            return core.getMemberOwnAttribute(node, setName, path, attrName);
+        };
 
         /**
          * Sets the attribute value which represents a property of the membership.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} setName - the name of the set.
-         * @param {string} memberPath - the absolute path of the member node.
+         * @param {string} path - the absolute path of the member node.
          * @param {string} attrName - the name of the attribute.
          * @param {object|primitive|null} value - the new value of the attribute.
          *
@@ -1722,7 +1890,23 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setMemberAttribute = core.setMemberAttribute;
+        this.setMemberAttribute = function (node, setName, path, attrName, value) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensurePath(path, 'path');
+            ensureType(attrName, 'attrName', 'string');
+            ensureValue(value, 'value');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, setName);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of an unknown member.');
+            }
+
+            return core.setMemberAttribute(node, setName, path, attrName);
+        };
 
         /**
          * Removes an attribute which represented a property of the given set membership.
@@ -1735,13 +1919,32 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delMemberAttribute = core.delMemberAttribute;
+        this.delMemberAttribute = function (node, setName, path, attrName) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensurePath(path, 'path');
+            ensureType(attrName, 'attrName', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, setName);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access attributes of an unknown member.');
+            }
+            names = core.getMemberAttributeNames(node, setName, path);
+            if (names.indexOf(attrName) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove unknown attribute.');
+            }
+
+            return core.delMemberAttribute(node, setName, path, attrName);
+        };
 
         /**
          * Return the names of the registry entries defined for the set membership to the member node.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} name - the name of the set.
-         * @param {string} memberPath - the absolute path of the member.
+         * @param {string} path - the absolute path of the member.
          *
          * @return {string[]} Returns the array of names of registry entries that represents some property of the
          * membership.
@@ -1750,14 +1953,28 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMemberRegistryNames = core.getMemberRegistryNames;
+        this.getMemberRegistryNames = function (node, name, path) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensurePath(path, 'path');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, name);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access registry of an unknown member.');
+            }
+
+            return core.getMemberRegistryNames(node, name, path);
+        };
 
         /**
          * Return the names of the registry entries defined for the set membership specifically defined to
          * the member node.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} name - the name of the set.
-         * @param {string} memberPath - the absolute path of the member.
+         * @param {string} path - the absolute path of the member.
          *
          * @return {string[]} Returns the array of names of registry entries that represents some property of the
          * membership.
@@ -1766,13 +1983,27 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMemberOwnRegistryNames = core.getMemberOwnRegistryNames;
+        this.getMemberOwnRegistryNames = function (node, name, path) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensurePath(path, 'path');
+            var names = core.getSetNames(node);
+            if (names.indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, name);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access registry of an unknown member.');
+            }
+
+            return core.getMemberOwnRegistryNames(node, name, path);
+        };
 
         /**
          * Get the value of the registry entry in relation with the set membership.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} setName - the name of the set.
-         * @param {string} memberPath - the absolute path of the member node.
+         * @param {string} path - the absolute path of the member node.
          * @param {string} regName - the name of the registry entry.
          *
          * @return {object|primitive|null|undefined} Return the value of the registry. If it is undefined, than there
@@ -1782,13 +2013,28 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMemberRegistry = core.getMemberRegistry;
+        this.getMemberRegistry = function (node, setName, path, regName) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensurePath(path, 'path');
+            ensureType(regName, 'regName', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, setName);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access registry of an unknown member.');
+            }
+
+            return core.getMemberRegistry(node, setName, path, regName);
+        };
 
         /**
          * Get the value of the registry entry for the set membership specifically defined to the member node.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} setName - the name of the set.
-         * @param {string} memberPath - the absolute path of the member node.
+         * @param {string} path - the absolute path of the member node.
          * @param {string} regName - the name of the registry entry.
          *
          * @return {object|primitive|null|undefined} Return the value of the registry. If it is undefined, than there
@@ -1798,13 +2044,28 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getMemberOwnRegistry = core.getMemberOwnRegistry;
+        this.getMemberOwnRegistry = function (node, setName, path, regName) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensurePath(path, 'path');
+            ensureType(regName, 'regName', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, setName);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access registry of an unknown member.');
+            }
+
+            return core.getMemberOwnRegistry(node, setName, path, regName);
+        };
 
         /**
          * Sets the registry entry value which represents a property of the membership.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} setName - the name of the set.
-         * @param {string} memberPath - the absolute path of the member node.
+         * @param {string} path - the absolute path of the member node.
          * @param {string} regName - the name of the registry entry.
          * @param {object|primitive|null} value - the new value of the registry.
          *
@@ -1812,20 +2073,55 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setMemberRegistry = core.setMemberRegistry;
+        this.setMemberRegistry = function (node, setName, path, regName, value) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensurePath(path, 'path');
+            ensureType(regName, 'regName', 'string');
+            ensureValue(value, 'value');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, setName);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access registry of an unknown member.');
+            }
+
+            return core.setMemberRegistry(node, setName, path, regName);
+        };
 
         /**
          * Removes a registry entry which represented a property of the given set membership.
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} setName - the name of the set.
-         * @param {string} memberPath - the absolute path of the member node.
+         * @param {string} path - the absolute path of the member node.
          * @param {string} regName - the name of the registry entry.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delMemberRegistry = core.delMemberRegistry;
+        this.delMemberRegistry = function (node, setName, path, regName) {
+            ensureNode(node, 'node');
+            ensureType(setName, 'setName', 'string');
+            ensurePath(path, 'path');
+            ensureType(regName, 'regName', 'string');
+            var names = core.getSetNames(node);
+            if (names.indexOf(setName) === -1) {
+                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
+            }
+            var paths = core.getMemberPaths(node, setName);
+            if (paths.indexOf(path) === -1) {
+                throw new CoreIllegalOperationError('Cannot access registry of an unknown member.');
+            }
+            names = core.getMemberRegistryNames(node, setName, path);
+            if (names.indexOf(regName) === -1) {
+                throw new CoreIllegalOperationError('Cannot remove unknown registry entry.');
+            }
+
+            return core.delMemberRegistry(node, setName, path, regName);
+        };
 
         /**
          * Returns all membership information of the given node.
@@ -1837,7 +2133,11 @@ define([
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isMemberOf = core.isMemberOf;
+        this.isMemberOf = function (node) {
+            ensureNode(node, 'node');
+
+            return core.isMemberOf(node);
+        };
 
         /**
          * Get the GUID of a node.

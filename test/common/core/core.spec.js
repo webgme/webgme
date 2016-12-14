@@ -1484,4 +1484,1090 @@ describe.only('core', function () {
             expect(myError.name).to.eql('CoreInputError');
         }
     });
+
+    it('should throw @getSetRegistryNames if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getSetRegistryNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getSetRegistryNames(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getSetRegistryNames(rootNode, 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getOwnSetRegistryNames if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getOwnSetRegistryNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnSetRegistryNames(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnSetRegistryNames(rootNode, 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getSetRegistry if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getSetRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getSetRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getSetRegistry(rootNode, 'unknown', 'good');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getSetRegistry(rootNode, 'MetaAspectSet', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getOwnSetRegistry if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getOwnSetRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnSetRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnSetRegistry(rootNode, 'unknown', 'good');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnSetRegistry(rootNode, 'MetaAspectSet', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @setSetRegistry if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.setSetRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setSetRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setSetRegistry(rootNode, 'unknown', 'good', 'good');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.setSetRegistry(rootNode, 'MetaAspectSet', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setSetRegistry(rootNode, 'MetaAspectSet', 'any', undefined);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @delSetRegistry if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.delSetRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delSetRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delSetRegistry(rootNode, 'unknown', 'good');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.delSetRegistry(rootNode, 'MetaAspectSet', 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.delSetRegistry(rootNode, 'MetaAspectSet', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
+
+    it('should throw @getMemberPaths if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getMemberPaths('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberPaths(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberPaths(rootNode, 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getOwnMemberPaths if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getOwnMemberPaths('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnMemberPaths(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getOwnMemberPaths(rootNode, 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @delMember if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.delMember('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMember(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMember(rootNode, 'unknown', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMember(rootNode, 'unknown', '/1/2');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+
+        try {
+            core.delMember(rootNode, 'MetaAspectSet', '/unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @addMember if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.addMember('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.addMember(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.addMember(rootNode, 'unknown', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.addMember(rootNode, 'unknown', rootNode);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getMemberAttributeNames if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getMemberAttributeNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberAttributeNames(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberAttributeNames(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberAttributeNames(rootNode, 'unknown', '/1/2');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberAttributeNames(rootNode, 'MetaAspectSet', '/unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getMemberOwnAttributeNames if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getMemberOwnAttributeNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnAttributeNames(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnAttributeNames(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnAttributeNames(rootNode, 'unknown', '/1/2');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnAttributeNames(rootNode, 'MetaAspectSet', '/unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getMemberAttribute if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getMemberAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberAttribute(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberAttribute(rootNode, 'setname', '/path', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberAttribute(rootNode, 'unknown', '/1/2', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberAttribute(rootNode, 'MetaAspectSet', '/unknown', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getMemberOwnAttribute if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getMemberOwnAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnAttribute(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnAttribute(rootNode, 'setname', '/path', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnAttribute(rootNode, 'unknown', '/1/2', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnAttribute(rootNode, 'MetaAspectSet', '/unknown', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @setMemberAttribute if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.setMemberAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberAttribute(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberAttribute(rootNode, 'setname', '/path', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberAttribute(rootNode, 'setname', '/path', 'attr', undefined);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberAttribute(rootNode, 'unknown', '/1/2', 'attr', 'value');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberAttribute(rootNode, 'MetaAspectSet', '/unknown', 'attr', 'value');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @delMemberAttribute if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.delMemberAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberAttribute(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberAttribute(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberAttribute(rootNode, 'setname', '/path', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberAttribute(rootNode, 'unknown', '/1/2', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberAttribute(rootNode, 'MetaAspectSet', '/unknown', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberAttribute(rootNode, 'MetaAspectSet', '/1', 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+    });
+
+    it('should throw @getMemberRegistryNames if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getMemberRegistryNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberRegistryNames(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberRegistryNames(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberRegistryNames(rootNode, 'unknown', '/1/2');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberRegistryNames(rootNode, 'MetaAspectSet', '/unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getMemberOwnRegistryNames if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getMemberOwnRegistryNames('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnRegistryNames(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnRegistryNames(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnRegistryNames(rootNode, 'unknown', '/1/2');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnRegistryNames(rootNode, 'MetaAspectSet', '/unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getMemberRegistry if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getMemberRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberRegistry(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberRegistry(rootNode, 'setname', '/path', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberRegistry(rootNode, 'unknown', '/1/2', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberRegistry(rootNode, 'MetaAspectSet', '/unknown', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getMemberOwnRegistry if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.getMemberOwnRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnRegistry(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnRegistry(rootNode, 'setname', '/path', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnRegistry(rootNode, 'unknown', '/1/2', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.getMemberOwnRegistry(rootNode, 'MetaAspectSet', '/unknown', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @setMemberRegistry if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.setMemberRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberRegistry(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberRegistry(rootNode, 'setname', '/path', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberRegistry(rootNode, 'setname', '/path', 'attr', undefined);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberRegistry(rootNode, 'unknown', '/1/2', 'attr', 'value');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.setMemberRegistry(rootNode, 'MetaAspectSet', '/unknown', 'attr', 'value');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @delMemberRegistry if not valid parameters are given', function () {
+        var myError;
+
+        try {
+            core.delMemberRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberRegistry(rootNode, {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberRegistry(rootNode, 'setname', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberRegistry(rootNode, 'setname', '/path', {});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberRegistry(rootNode, 'unknown', '/1/2', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberRegistry(rootNode, 'MetaAspectSet', '/unknown', 'attr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+
+        try {
+            core.delMemberRegistry(rootNode, 'MetaAspectSet', '/1', 'unknown');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
+        }
+    });
+
+    it('should throw @isMemberOf if not valid node is given', function () {
+        var myError;
+
+        try {
+            core.isMemberOf('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+
+        try {
+            core.isMemberOf({});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+        }
+    });
 });
