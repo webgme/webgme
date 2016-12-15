@@ -111,9 +111,7 @@ var path = require('path'),
             serverResultTimeout: 60000
         },
 
-        requirejsPaths: {
-            'UIRecorder': './UIRecorder'
-        },
+        requirejsPaths: {},
 
         rest: {
             components: {

@@ -103,5 +103,9 @@
         "DEBUG_ONLY": false
       }
     ]
+  },
+  "GenericUIProjectRepositoryWidget": {
+    "webhookBadges": {
+    }
   }
 }

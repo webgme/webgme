@@ -131,6 +131,16 @@ $table-row-height: 25px;
           }
         }
 
+        .webhook-container {
+          text-align: left;
+          *:first-child {
+            padding-left: 0;
+          }
+          * {
+            padding-left: 5px;
+          }
+        }
+
         &.commit-hash {
           font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
           &:hover {

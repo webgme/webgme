@@ -77,6 +77,15 @@
         .project-repository-widget table tr td.user-column .avatar-container .avatar-image {
           width: 18px;
           margin-left: 8px; }
+      .project-repository-widget table tr th .webhook-container,
+      .project-repository-widget table tr td .webhook-container {
+        text-align: left; }
+        .project-repository-widget table tr th .webhook-container *:first-child,
+        .project-repository-widget table tr td .webhook-container *:first-child {
+          padding-left: 0; }
+        .project-repository-widget table tr th .webhook-container *,
+        .project-repository-widget table tr td .webhook-container * {
+          padding-left: 5px; }
       .project-repository-widget table tr th.commit-hash,
       .project-repository-widget table tr td.commit-hash {
         font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace; }

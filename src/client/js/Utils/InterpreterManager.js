@@ -42,7 +42,7 @@ define([
         pluginResult.setError(pluginMessage.message);
 
         return pluginResult;
-    }
+    };
 
     /**
      *
