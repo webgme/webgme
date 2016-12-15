@@ -420,7 +420,7 @@ define([
         /**
          * Loads the data object with the given hash and makes it a root of a containment hierarchy.
          * @param {module:Core~ObjectHash} hash - the hash of the data object we like to load as root.
-         * @param {function} callback
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node} callback.node - the resulting root node
          *
@@ -449,7 +449,7 @@ define([
          * hierarchy. If there is no such relative id reserved, the call will return with null.
          * @param {module:Core~Node} parent - the container node in question.
          * @param {string} relativeId - the relative id of the child in question.
-         * @param {function} callback
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node} callback.node - the resulting child
          *
@@ -476,7 +476,7 @@ define([
          * and returns the node it finds at the ends of the path. If there is no node, the function will return null.
          * @param {module:Core~Node} node - the starting node of our search.
          * @param {string} relativePath - the relative path - built by relative ids - of the node in question.
-         * @param {function} callback
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node} callback.node - the resulting node
          *
@@ -502,7 +502,7 @@ define([
          * Loads all the children of the given parent. As it first checks the already reserved relative ids of
          * the parent, it only loads the already existing children (so no on-demand empty node creation).
          * @param {module:Core~Node} node - the container node in question.
-         * @param {function} callback
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node[]} callback.children - the resulting children
          *
@@ -528,7 +528,7 @@ define([
          * the already reserved relative ids of the parent, it only loads the already existing children
          * (so no on-demand empty node creation).
          * @param {module:Core~Node} node - the container node in question.
-         * @param {function} callback
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node[]} callback.node - the resulting children
          *
@@ -556,7 +556,7 @@ define([
          * finally if the returned value is undefined than there is no such pointer defined for the given node.
          * @param {module:Core~Node} node - the source node in question.
          * @param {string} pointerName - the name of the pointer.
-         * @param {function} callback
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node} callback.node - the resulting target
          *
@@ -590,7 +590,7 @@ define([
          * Loads all the source nodes that has such a pointer and its target is the given node.
          * @param {module:Core~Node} node - the target node in question.
          * @param {string} pointerName - the name of the pointer of the sources.
-         * @param {function} callback
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node[]} callback.node - the resulting sources
          *
@@ -622,7 +622,7 @@ define([
         /**
          * Loads a complete sub-tree of the containment hierarchy starting from the given node.
          * @param {module:Core~Node} node - the node that is the root of the sub-tree in question.
-         * @param {function} callback
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node[]} callback.node - the resulting sources
          *
@@ -647,7 +647,7 @@ define([
          * Loads a complete sub-tree of the containment hierarchy starting from the given node, but load only those
          * children that has some additional data and not purely inherited.
          * @param {module:Core~Node} node - the container node in question.
-         * @param {function} callback
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution
          * @param {module:Core~Node[]} callback.node - the resulting sources
          *
@@ -672,7 +672,7 @@ define([
          * Loads a complete containment hierarchy using the data object - pointed by the given hash -
          * as the root.
          * @param {module:Core~ObjectHash} hash - hash of the root node.
-         * @param {function} callback
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution.
          * @param {module:Core~Node[]} callback.nodes - the resulting nodes.
          *
@@ -2184,7 +2184,7 @@ define([
          * this function is only advised during the creation of the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {module:Core~GUID} guid - the new globally unique identifier.
-         * @param {function} callback[]
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreIllegalOperationError|CoreAssertError|null} callback.error - the
          * result of the execution.
          *
@@ -2924,7 +2924,7 @@ define([
             ensureType(name, 'name', 'string');
 
             return core.getPointerMeta(node, name);
-        }
+        };
 
         /**
          * Sets a valid type for the given aspect of the node.
@@ -3029,7 +3029,7 @@ define([
          * that can modify the source to be identical to the target. The result is in form of a json object.
          * @param {module:Core~Node} sourceRoot - the root node of the source state.
          * @param {module:Core~Node} targetRoot - the root node of the target state.
-         * @param {function} callback[]
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the status of the exectuion.
          * @param {object} callback.treeDiff - the difference between the two containment hierarchies in
          * a special JSON object
@@ -3056,7 +3056,7 @@ define([
          * Apply changes to the current project.
          * @param {module:Core~Node} node - the root of the containment hierarchy where we wish to apply the changes
          * @param {object} patch - the tree structured collection of changes represented with a special JSON object
-         * @param {function} callback[]
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the result of the execution.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
@@ -3279,7 +3279,7 @@ define([
             }
 
             return core.isFullyOverriddenMember(node, name, path);
-        }
+        };
 
         /**
          * Checks if the mixins allocated with the node can be used.
@@ -3428,11 +3428,11 @@ define([
          * @param {string} name - the name of the library you wish to use as a namespace in your project.
          * @param {string} libraryRootHash - the hash of your library's root
          * (must exist in the project's collection at the time of call).
-         * @param {Object} libraryInfo[] - information about your project.
-         * @param {string} libraryInfo.projectId[] - the projectId of your library.
-         * @param {string} libraryInfo.branchName[] - the branch that your library follows in the origin project.
-         * @param {string} libraryInfo.commitHash[] - the version of your library.
-         * @param {function} callback[]
+         * @param {object} [libraryInfo] - information about your project.
+         * @param {string} [libraryInfo.projectId] - the projectId of your library.
+         * @param {string} [libraryInfo.branchName] - the branch that your library follows in the origin project.
+         * @param {string} [libraryInfo.commitHash] - the version of your library.
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreIllegalOperationError|CoreAssertError|null} callback.error - the
          * result of the execution.
          *
@@ -3471,12 +3471,12 @@ define([
          * @param {string} name - the name of the library you want to update.
          * @param {string} libraryRootHash - the hash of your library's new root
          * (must exist in the project's collection at the time of call).
-         * @param {object} libraryInfo[] - information about your project.
-         * @param {string} libraryInfo.projectId[] - the projectId of your library.
-         * @param {string} libraryInfo.branchName[] - the branch that your library follows in the origin project.
-         * @param {string} libraryInfo.commitHash[] - the version of your library.
-         * @param {*} updateInstructions - not yet used parameter.
-         * @param {function} callback[]
+         * @param {object} [libraryInfo] - information about your project.
+         * @param {string} [libraryInfo.projectId] - the projectId of your library.
+         * @param {string} [libraryInfo.branchName] - the branch that your library follows in the origin project.
+         * @param {string} [libraryInfo.commitHash] - the version of your library.
+         * @param updateInstructions - not yet used parameter.
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreIllegalOperationError|CoreAssertError|null} callback.error - the
          * status of the execution.
          *
@@ -3641,7 +3641,7 @@ define([
          * Returns the origin GUID of any library node.
          *
          * @param {module:Core~Node} node - the node in question.
-         * @param {undefined | string} name[] - name of the library where we want to deduct the GUID from. If not given,
+         * @param {undefined | string} [name] - name of the library where we want to deduct the GUID from. If not given,
          * than the GUID is computed from the direct library root of the node
          *
          * @return {module:Core~GUID | Error} - Returns the origin GUID of the node or
@@ -3760,7 +3760,7 @@ define([
          * @param {module:Core~Node} visitFn.node - the node that is being visited.
          * @param {function} visitFn.next - the callback function of the visit function that marks the end
          * of visitation.
-         * @param {function} callback[]
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the status of the execution.
          *
          * @return {External~Promise} If no callback is given, the end of traverse is marked in a promise like
@@ -3861,7 +3861,7 @@ define([
         /**
          * Loads all the instances of the given node.
          * @param {module:Core~Node} node - the node in question.
-         * @param {function(string, module:Core~Node[])} callback[]
+         * @param {function} [callback]
          * @param {Error|CoreInputError|CoreAssertError|null} callback.error - the status of the execution.
          * @param {module:Core~Node[]} callback.nodes - the found instances of the node.
          *
@@ -3879,7 +3879,7 @@ define([
                 core.loadInstances(node, callback);
             }
         };
-    };
+    }
 
     return Core;
 });
