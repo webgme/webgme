@@ -494,7 +494,6 @@ describe('mixin core', function () {
             expect(core.isValidTargetOf(M2, A, 'Ms')).to.equal(true);
             expect(core.isValidTargetOf(M3, A, 'FCO')).to.equal(true);
             expect(core.isValidTargetOf(M4, A, 'FCO')).to.equal(true);
-            expect(core.isValidTargetOf(FCO, A, 'unknown')).to.equal(false);
         });
 
         it('should check if a given node is a valid child based on the composed rule-set', function () {

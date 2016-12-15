@@ -122,8 +122,6 @@ describe('meta core', function () {
 
     it('checking attribute values', function () {
 
-        core.isValidAttributeValueOf(attrNode, 'unknown', 'anything').should.be.false;
-
         core.isValidAttributeValueOf(attrNode, 'boolean', 'true').should.be.false;
         core.isValidAttributeValueOf(attrNode, 'boolean', 1).should.be.false;
         core.isValidAttributeValueOf(attrNode, 'boolean', 1.1).should.be.false;
@@ -208,9 +206,6 @@ describe('meta core', function () {
 
         core.isValidTargetOf(attrNode, setNode, 'set').should.be.true;
         core.isValidTargetOf(setNode, setNode, 'set').should.be.true;
-        core.isValidTargetOf(base, setNode, 'set').should.be.false;
-
-        core.isValidTargetOf(attrNode, setNode, 'unknown').should.be.false;
 
         core.isValidTargetOf(attrNode, setNode, 'ptr').should.be.true;
         core.isValidTargetOf(aspectNode, setNode, 'ptr').should.be.true;

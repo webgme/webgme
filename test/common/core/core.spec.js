@@ -517,15 +517,6 @@ describe('core', function () {
         var myError;
 
         try {
-            core.createNode({});
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreInputError');
-            myError = null;
-        }
-
-        try {
             core.createNode({parent: 'notNode'});
         } catch (e) {
             myError = e;
@@ -1860,14 +1851,6 @@ describe('core', function () {
         } finally {
             expect(myError.name).to.eql('CoreInputError');
             myError = null;
-        }
-
-        try {
-            core.addMember(rootNode, 'unknown', rootNode);
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
         }
     });
 
@@ -3445,7 +3428,7 @@ describe('core', function () {
         }
 
         try {
-            core.setPointerMetaLimits(rootNode, 'notAValidPath');
+            core.setPointerMetaLimits(rootNode, {});
         } catch (e) {
             myError = e;
         } finally {
@@ -3454,7 +3437,7 @@ describe('core', function () {
         }
 
         try {
-            core.setPointerMetaLimits(rootNode, 'notNumber');
+            core.setPointerMetaLimits(rootNode, 'any', 'notAValidPath');
         } catch (e) {
             myError = e;
         } finally {
@@ -3463,7 +3446,7 @@ describe('core', function () {
         }
 
         try {
-            core.setPointerMetaLimits(rootNode, 0.5);
+            core.setPointerMetaLimits(rootNode, 'any', 'notNumber');
         } catch (e) {
             myError = e;
         } finally {
@@ -3472,7 +3455,7 @@ describe('core', function () {
         }
 
         try {
-            core.setPointerMetaLimits(rootNode, -2);
+            core.setPointerMetaLimits(rootNode, 'any', 0.5);
         } catch (e) {
             myError = e;
         } finally {
@@ -3481,7 +3464,16 @@ describe('core', function () {
         }
 
         try {
-            core.setPointerMetaLimits(rootNode, 0, 'notnumber');
+            core.setPointerMetaLimits(rootNode, 'any', -2);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreInputError');
+            myError = null;
+        }
+
+        try {
+            core.setPointerMetaLimits(rootNode, 'any', 0, 'notnumber');
         } catch (e) {
             myError = e;
         } finally {
@@ -4234,7 +4226,7 @@ describe('core', function () {
         var myError;
 
         try {
-            core.addLibrary(rootNode, '#0123456789012345678901234567890123456789', null, 'nocallback');
+            core.addLibrary(rootNode, 'name', '#0123456789012345678901234567890123456789', null, 'nocallback');
         } catch (e) {
             myError = e;
         } finally {
@@ -4242,21 +4234,23 @@ describe('core', function () {
             myError = null;
         }
         Q.allSettled([
-            Q.nfcall(core.addLibrary, 'string', 'string', null),
-            Q.nfcall(core.addLibrary, rootNode, 'string', null),
-            Q.nfcall(core.addLibrary, rootNode, '#0123456789012345678901234567890123456789', 'nope'),
-            Q.nfcall(core.addLibrary, rootNode, '#0123456789012345678901234567890123456789', {
+            Q.nfcall(core.addLibrary, 'string', 'string', 'string', null),
+            Q.nfcall(core.addLibrary, rootNode, {}, 'string', null),
+            Q.nfcall(core.addLibrary, rootNode, 'libname', 'string', null),
+            Q.nfcall(core.addLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', 'nope'),
+            Q.nfcall(core.addLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', {
                 projectId: 0
             }),
-            Q.nfcall(core.addLibrary, rootNode, '#0123456789012345678901234567890123456789', {
+            Q.nfcall(core.addLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', {
                 branchName: 0
             }),
-            Q.nfcall(core.addLibrary, rootNode, '#0123456789012345678901234567890123456789', {
+            Q.nfcall(core.addLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', {
                 commitHash: 'notahash'
             }),
         ])
             .then(function (results) {
-                expect(results).to.have.length(6);
+                expect(results).to.have.length(7);
+                console.error(results);
                 for (var i = 0; i < results.length; i += 1) {
                     expect(results[i].state).to.eql('rejected');
                     expect(results[i].reason instanceof Error).to.eql(true);
@@ -4270,7 +4264,7 @@ describe('core', function () {
         var myError;
 
         try {
-            core.updateLibrary(rootNode, '#0123456789012345678901234567890123456789', null, 'nocallback');
+            core.updateLibrary(rootNode, 'libname', '#0123456789012345678901234567890123456789', null, 'nocallback');
         } catch (e) {
             myError = e;
         } finally {
@@ -4278,21 +4272,22 @@ describe('core', function () {
             myError = null;
         }
         Q.allSettled([
-            Q.nfcall(core.updateLibrary, 'string', 'string', null),
-            Q.nfcall(core.updateLibrary, rootNode, 'string', null),
-            Q.nfcall(core.updateLibrary, rootNode, '#0123456789012345678901234567890123456789', 'nope'),
-            Q.nfcall(core.updateLibrary, rootNode, '#0123456789012345678901234567890123456789', {
+            Q.nfcall(core.updateLibrary, 'string', 'string', 'string', null),
+            Q.nfcall(core.updateLibrary, rootNode, {}, 'string', null),
+            Q.nfcall(core.updateLibrary, rootNode, 'libname', 'string', null),
+            Q.nfcall(core.updateLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', 'nope'),
+            Q.nfcall(core.updateLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', {
                 projectId: 0
             }),
-            Q.nfcall(core.updateLibrary, rootNode, '#0123456789012345678901234567890123456789', {
+            Q.nfcall(core.updateLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', {
                 branchName: 0
             }),
-            Q.nfcall(core.updateLibrary, rootNode, '#0123456789012345678901234567890123456789', {
+            Q.nfcall(core.updateLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', {
                 commitHash: 'notahash'
             }),
         ])
             .then(function (results) {
-                expect(results).to.have.length(6);
+                expect(results).to.have.length(7);
                 for (var i = 0; i < results.length; i += 1) {
                     expect(results[i].state).to.eql('rejected');
                     expect(results[i].reason instanceof Error).to.eql(true);

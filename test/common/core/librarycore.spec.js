@@ -57,6 +57,13 @@ describe('Library core ', function () {
         return deferred.promise;
     }
 
+    function checkError(error, errorType) {
+        expect(error).not.to.equal(null);
+        expect(error).not.to.equal(undefined);
+        expect(error instanceof Error).to.eql(true);
+        expect(error.name).to.eql(errorType || 'CoreIllegalOperationError');
+    }
+
     before(function (done) {
         gmeConfig = testFixture.getGmeConfig();
         logger = testFixture.logger.fork('LibraryCore');
@@ -202,9 +209,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('modify library');
+            checkError(error);
         }
     });
 
@@ -219,9 +224,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('modify library');
+            checkError(error);
         }
     });
 
@@ -236,9 +239,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
 
     });
@@ -256,9 +257,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
 
     });
@@ -276,9 +275,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
 
     });
@@ -291,8 +288,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error instanceof Error).to.equal(true);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
             error = null;
         }
 
@@ -301,8 +297,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error instanceof Error).to.equal(true);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -314,8 +309,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error instanceof Error).to.equal(true);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
             error = null;
         }
 
@@ -324,8 +318,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error instanceof Error).to.equal(true);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -337,8 +330,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error instanceof Error).to.equal(true);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
             error = null;
         }
 
@@ -347,8 +339,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error instanceof Error).to.equal(true);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -363,9 +354,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -380,9 +369,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -397,9 +384,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -414,9 +399,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -431,9 +414,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -448,9 +429,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
             error = null;
         }
 
@@ -459,9 +438,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
             error = null;
         }
 
@@ -470,9 +447,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -487,9 +462,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -504,9 +477,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error, 'CoreInputError');
         }
     });
 
@@ -521,9 +492,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -538,9 +507,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -555,9 +522,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -572,9 +537,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -606,9 +569,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -655,9 +616,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -672,9 +631,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -689,9 +646,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error,'CoreInputError');
         }
     });
 
@@ -706,9 +661,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -751,9 +704,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error,'CoreInputError');
         }
     });
 
@@ -785,9 +736,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -802,9 +751,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error,'CoreInputError');
         }
     });
 
@@ -819,9 +766,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -836,9 +781,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -870,9 +813,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error,'CoreInputError');
         }
     });
 
@@ -887,9 +828,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -900,13 +839,11 @@ describe('Library core ', function () {
         expect(metaNodes['/L/I']).not.to.equal(null);
 
         try {
-            core.delMixin(metaNodes['/L/I'], 'any');
+            core.delMixin(metaNodes['/L/I'], '/1');
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -917,13 +854,11 @@ describe('Library core ', function () {
         expect(metaNodes['/L/I']).not.to.equal(null);
 
         try {
-            core.addMixin(metaNodes['/L/I'], 'any');
+            core.addMixin(metaNodes['/L/I'], '/1');
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
             error = null;
         }
 
@@ -932,9 +867,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            expect(error).not.to.equal(null);
-            expect(error).not.to.equal(undefined);
-            expect(error.message).to.contain('Not allowed to');
+            checkError(error);
         }
     });
 
@@ -1564,7 +1497,7 @@ describe('Library core ', function () {
                 shareContext.core.importClosure(newRoot, closure);
                 throw new Error('missing error handling in library core');
             })
-            .catch(function(error){
+            .catch(function (error) {
                 expect(error).not.to.eql(null);
                 expect(error instanceof Error).to.equal(true);
                 expect(error.message).to.include('Ambiguous occurrences of base');

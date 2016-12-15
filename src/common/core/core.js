@@ -771,11 +771,15 @@ define([
         this.createNode = function (parameters) {
             if (parameters) {
                 ensureType(parameters, 'parameters', 'object');
-                ensureNode(parameters.parent, 'parameters.parent');
-                if (parameters.base) {
+                if (parameters.hasOwnProperty('parent') &&
+                    parameters.parent !== null && parameters.parent !== undefined) {
+                    ensureNode(parameters.parent, 'parameters.parent');
+                }
+                if (parameters.hasOwnProperty('base') &&
+                    parameters.base !== null && parameters.base !== undefined) {
                     ensureNode(parameters.base, 'parameters.base');
                 }
-                if (parameters.guid) {
+                if (parameters.hasOwnProperty('guid') && parameters.guid !== undefined) {
                     ensureGuid(parameters.guid, 'parameters.guid');
                 }
             }
@@ -790,10 +794,13 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.deleteNode = function (node) {
+        this.deleteNode = function (node, technical) {
             ensureNode(node, 'node');
+            if (technical !== null && technical !== undefined) {
+                ensureType(technical, 'technical', 'boolean');
+            }
 
-            return core.deleteNode(node);
+            return core.deleteNode(node, technical);
         };
 
         /**
@@ -1079,7 +1086,7 @@ define([
          * Sets the target of the pointer of the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the pointer in question.
-         * @param {module:Core~Node} target - the new target of the pointer.
+         * @param {module:Core~Node|null} target - the new target of the pointer.
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
@@ -1088,7 +1095,9 @@ define([
         this.setPointer = function (node, name, target) {
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
-            ensureNode(target, 'target');
+            if (target !== null) {
+                ensureNode(target, 'target');
+            }
 
             return core.setPointer(node, name, target);
         };
@@ -1700,7 +1709,7 @@ define([
         this.getMemberPaths = function (node, name) {
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
-            var names = core.getSetNames(node);
+            var names = core.getSetNames(node).concat(core.getValidSetNames(node));
             if (names.indexOf(name) === -1) {
                 throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
             }
@@ -1772,11 +1781,6 @@ define([
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
             ensureNode(member, 'member');
-            var names = core.getSetNames(node);
-            if (names.indexOf(name) === -1) {
-                throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
-            }
-
             return core.addMember(node, name, member);
         };
 
@@ -1925,7 +1929,7 @@ define([
                 throw new CoreIllegalOperationError('Cannot access attributes of an unknown member.');
             }
 
-            return core.setMemberAttribute(node, setName, path, attrName);
+            return core.setMemberAttribute(node, setName, path, attrName, value);
         };
 
         /**
@@ -2108,7 +2112,7 @@ define([
                 throw new CoreIllegalOperationError('Cannot access registry of an unknown member.');
             }
 
-            return core.setMemberRegistry(node, setName, path, regName);
+            return core.setMemberRegistry(node, setName, path, regName, value);
         };
 
         /**
@@ -2309,7 +2313,7 @@ define([
             ensureNode(node, 'node');
             ensureNode(type, 'type');
 
-            return core.isTypeOf(node);
+            return core.isTypeOf(node, type);
         };
 
         /**
@@ -2328,7 +2332,7 @@ define([
             ensureNode(node, 'node');
             ensureNode(parent, 'parent');
 
-            return core.isTypeOf(node);
+            return core.isValidChildOf(node, parent);
         };
 
         /**
@@ -2378,12 +2382,12 @@ define([
             ensureNode(node, 'node');
             ensureNode(source, 'source');
             ensureType(name, 'name', 'string');
-            var names = core.getValidPointerNames(source);
+            var names = core.getValidPointerNames(source).concat(core.getValidSetNames(source));
             if (names.indexOf(name) === -1) {
                 throw new CoreIllegalOperationError('Cannot get information about unknown pointer definition.');
             }
 
-            return core.isValidTargetOf(node);
+            return core.isValidTargetOf(node, source, name);
         };
 
         /**
@@ -2438,7 +2442,7 @@ define([
                 throw new CoreIllegalOperationError('Cannot get information about unknown attribute definition.');
             }
 
-            return core.getValidAttributeNames(node);
+            return core.isValidAttributeValueOf(node, name, value);
         };
 
         /**
@@ -2488,7 +2492,7 @@ define([
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
 
-            return core.getAspectMeta(node);
+            return core.getAspectMeta(node, name);
         };
 
         /**
@@ -2808,13 +2812,14 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setPointerMetaTarget = function (node, target, min, max) {
+        this.setPointerMetaTarget = function (node, name, target, min, max) {
             ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
             ensureNode(target, 'target');
             ensureMinMax(min, 'min');
             ensureMinMax(max, 'max');
 
-            return core.setPointerMetaTarget(node, target, min, max);
+            return core.setPointerMetaTarget(node, name, target, min, max);
         };
 
         /**
@@ -2857,12 +2862,13 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.setPointerMetaLimits = function (node, min, max) {
+        this.setPointerMetaLimits = function (node, name, min, max) {
             ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
             ensureMinMax(min, 'min');
             ensureMinMax(max, 'max');
 
-            return core.setPointerMetaLimits(node, min, max);
+            return core.setPointerMetaLimits(node, name, min, max);
         };
 
         /**
@@ -2877,12 +2883,12 @@ define([
         this.delPointerMeta = function (node, name) {
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
-            var names = core.getValidPointerNames(node);
+            var names = core.getValidPointerNames(node).concat(core.getValidSetNames(node));
             if (names.indexOf(name) === -1) {
                 throw new CoreIllegalOperationError('Cannot remove unknown pointer definition.');
             }
 
-            return delPointerMeta(node, name);
+            return core.delPointerMeta(node, name);
         };
 
         /**
@@ -2917,7 +2923,7 @@ define([
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
 
-            return getPointerMeta(node, name);
+            return core.getPointerMeta(node, name);
         }
 
         /**
@@ -2981,7 +2987,7 @@ define([
                 throw new CoreIllegalOperationError('Cannot remove definition of unknown aspect.');
             }
 
-            return core.delAspectMeta(node, name, path);
+            return core.delAspectMeta(node, name);
         };
 
         /**
@@ -2998,7 +3004,7 @@ define([
         this.getBaseType = this.getMetaType = function (node) {
             ensureNode(node, 'node');
 
-            return core.getMetaType(node);
+            return core.getBaseType(node);
         };
 
         /**
@@ -3160,19 +3166,19 @@ define([
         this.getValidChildrenMetaNodes = function (parameters) {
             ensureType(parameters, 'parameters', 'object');
             ensureNode(parameters.node, 'parameters.node');
-            if (parameters.hasOwnProperty('children')) {
+            if (parameters.hasOwnProperty('children') && parameters.children !== undefined) {
                 ensureInstanceOf(parameters.children, 'parameters.children', Array);
                 for (var i = 0; i < parameters.children.length; i += 1) {
                     ensureNode(parameters.children[i], 'parameters.children[i]');
                 }
             }
-            if (parameters.hasOwnProperty('sensitive')) {
+            if (parameters.hasOwnProperty('sensitive') && parameters.sensitive !== undefined) {
                 ensureType(parameters.sensitive, 'parameters.sensitive', 'boolean');
             }
             if (parameters.hasOwnProperty('multiplicity')) {
                 ensureType(parameters.multiplicity, 'parameters.multiplicity', 'boolean');
             }
-            if (parameters.hasOwnProperty('aspect')) {
+            if (parameters.hasOwnProperty('aspect') && parameters.aspect !== undefined) {
                 ensureType(parameters.aspect, 'parameters.aspect', 'string');
             }
 
@@ -3407,7 +3413,7 @@ define([
             ensureNode(node, 'node');
             ensurePath(path, 'path');
 
-            return core.addMixin(node, path);
+            return core.canSetAsMixin(node, path);
         };
 
         //library function TODO checking everything and adding all new functions
@@ -3434,26 +3440,27 @@ define([
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
-        this.addLibrary = function (node, libraryRootHash, libraryInfo, callback) {
+        this.addLibrary = function (node, name, libraryRootHash, libraryInfo, callback) {
             ensureType(callback, 'callback', 'function');
             var error = ensureNode(node, 'node', true);
+            error = error || ensureType(name, 'name', 'string');
             error = error || ensureHash(libraryRootHash, 'libraryRootHash', true);
             if (libraryInfo) {
                 error = error || ensureType(libraryInfo, 'libraryInfo', 'object', true);
-                if (libraryInfo.hasOwnProperty('projectId')) {
+                if (libraryInfo.hasOwnProperty('projectId') && libraryInfo.projectId !== undefined) {
                     error = error || ensureType(libraryInfo.projectId, 'libraryInfo.projectId', 'string', true);
                 }
-                if (libraryInfo.hasOwnProperty('branchName')) {
+                if (libraryInfo.hasOwnProperty('branchName') && libraryInfo.branchName !== undefined) {
                     error = error || ensureType(libraryInfo.branchName, 'libraryInfo.branchName', 'string', true);
                 }
-                if (libraryInfo.hasOwnProperty('commitHash')) {
+                if (libraryInfo.hasOwnProperty('commitHash') && libraryInfo.commitHash !== undefined) {
                     error = error || ensureHash(libraryInfo.commitHash, 'libraryInfo.commitHash', true);
                 }
             }
             if (error) {
                 callback(error);
             } else {
-                core.addLibrary(node, libraryRootHash, libraryInfo, callback);
+                core.addLibrary(node, name, libraryRootHash, libraryInfo, callback);
             }
         };
 
@@ -3468,6 +3475,7 @@ define([
          * @param {string} libraryInfo.projectId[] - the projectId of your library.
          * @param {string} libraryInfo.branchName[] - the branch that your library follows in the origin project.
          * @param {string} libraryInfo.commitHash[] - the version of your library.
+         * @param {*} updateInstructions - not yet used parameter.
          * @param {function} callback[]
          * @param {Error|CoreInputError|CoreIllegalOperationError|CoreAssertError|null} callback.error - the
          * status of the execution.
@@ -3476,26 +3484,27 @@ define([
          *
          * @throws {CoreInputError} If some of the parameters doesn't match the input criteria.
          */
-        this.updateLibrary = function (node, libraryRootHash, libraryInfo, callback) {
+        this.updateLibrary = function (node, name, libraryRootHash, libraryInfo, updateInstructions, callback) {
             ensureType(callback, 'callback', 'function');
             var error = ensureNode(node, 'node', true);
+            error = error || ensureType(name, 'name', 'string');
             error = error || ensureHash(libraryRootHash, 'libraryRootHash', true);
             if (libraryInfo) {
                 error = error || ensureType(libraryInfo, 'libraryInfo', 'object', true);
-                if (libraryInfo.hasOwnProperty('projectId')) {
+                if (libraryInfo.hasOwnProperty('projectId') && libraryInfo.projectId !== undefined) {
                     error = error || ensureType(libraryInfo.projectId, 'libraryInfo.projectId', 'string', true);
                 }
-                if (libraryInfo.hasOwnProperty('branchName')) {
+                if (libraryInfo.hasOwnProperty('branchName') && libraryInfo.branchName !== undefined) {
                     error = error || ensureType(libraryInfo.branchName, 'libraryInfo.branchName', 'string', true);
                 }
-                if (libraryInfo.hasOwnProperty('commitHash')) {
+                if (libraryInfo.hasOwnProperty('commitHash') && libraryInfo.commitHash !== undefined) {
                     error = error || ensureHash(libraryInfo.commitHash, 'libraryInfo.commitHash', true);
                 }
             }
             if (error) {
                 callback(error);
             } else {
-                core.addLibrary(node, libraryRootHash, libraryInfo, callback);
+                core.updateLibrary(node, name, libraryRootHash, libraryInfo, callback);
             }
 
         };
@@ -3632,7 +3641,7 @@ define([
          * Returns the origin GUID of any library node.
          *
          * @param {module:Core~Node} node - the node in question.
-         * @param {undefined | string} name - name of the library where we want to deduct the GUID from. If not given,
+         * @param {undefined | string} name[] - name of the library where we want to deduct the GUID from. If not given,
          * than the GUID is computed from the direct library root of the node
          *
          * @return {module:Core~GUID | Error} - Returns the origin GUID of the node or
@@ -3644,7 +3653,9 @@ define([
          */
         this.getLibraryGuid = function (node, name) {
             ensureNode(node, 'node');
-            ensureType(name, 'name', 'string');
+            if (name !== undefined && name !== null) {
+                ensureType(name, 'name', 'string');
+            }
 
             return core.getLibraryGuid(node, name);
         };
