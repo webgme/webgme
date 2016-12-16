@@ -107,5 +107,9 @@
   "GenericUIProjectRepositoryWidget": {
     "commitBadges": {
     }
+  },
+  "GenericUIFooterControlsPanel": {
+    "extraWidgets": {
+    }
   }
 }

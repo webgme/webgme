@@ -158,9 +158,9 @@ define(['js/PanelBase/PanelBase',
     FooterControlsPanel.getDefaultConfig = function () {
         return {
             extraWidgets: {
-                UIRecorder: {
-                    path: 'UIRecorder/UIRecorderWidget'
-                }
+                // UIRecorder: {
+                //     path: 'UIRecorder/UIRecorderWidget'
+                // }
             }
         };
     };

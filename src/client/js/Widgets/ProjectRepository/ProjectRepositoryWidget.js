@@ -1155,9 +1155,9 @@ define(['js/logger',
     ProjectRepositoryWidget.getDefaultConfig = function () {
         return {
             commitBadges: {
-                'UIRecorderCommitBadge': {
-                    path: 'UIRecorder/UIRecorderCommitBadge'
-                }
+                //'UIRecorderCommitBadge': {
+                //    path: 'UIRecorder/UIRecorderCommitBadge'
+                //}
             }
         };
     };

@@ -63,7 +63,7 @@ var path = require('path'),
             log: {
                 level: 'debug'
             },
-            defaultConnectionRouter: 'basic2', //'basic', 'basic2', 'basic3'
+            defaultConnectionRouter: 'basic3', //'basic', 'basic2', 'basic3'
             errorReporting: {
                 enable: false,
                 DSN: '',
@@ -111,13 +111,11 @@ var path = require('path'),
             serverResultTimeout: 60000
         },
 
-        requirejsPaths: {
-            'UIRecorder': './UIRecorder'
-        },
+        requirejsPaths: {},
 
         rest: {
             components: {
-                'routers/UIRecorder': __dirname + '/../UIRecorder/routers/UIRecorder/UIRecorder.js'
+                //'path/subPath': './middleware/ExampleRestRouter'
             }
         },
 
