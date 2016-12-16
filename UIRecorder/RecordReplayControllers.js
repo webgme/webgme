@@ -40,16 +40,13 @@ define(['q', 'superagent'], function (Q, superagent) {
             });
     }
 
-    function getRecordings(projectId, commits, callback) {
+    function getRecordings(projectId, startCommit, endCommit, maxNumber, callback) {
         var project = projectId.split('+');
 
-        superagent.get('/routers/UIRecorder/recordings')
-            .send({
-                projectId: projectId,
-                commitHashes: commits
-            })
-            .end(function (err, status) {
-                callback(err, status);
+        superagent.get('/routers/UIRecorder/' + project[0] + '/' + project[1] +
+            '/recordings/' + startCommit.slice(1) + '...' + endCommit.slice(1))
+            .end(function (err, result) {
+                callback(err, result ? result.body : null);
             });
     }
 
@@ -69,9 +66,9 @@ define(['q', 'superagent'], function (Q, superagent) {
             self.recording = [];
         };
 
-        this.load = function (projectId, commits, callback) {
+        this.loadRecordings = function (projectId, startCommit, endCommit, maxNumber, callback) {
             var deferred = Q.defer();
-            getRecordings(projectId, commits, function (err, recordings) {
+            getRecordings(projectId, startCommit, endCommit, maxNumber, function (err, recordings) {
                 if (err) {
                     deferred.reject(err);
                 } else {
@@ -80,7 +77,7 @@ define(['q', 'superagent'], function (Q, superagent) {
                 }
             });
 
-            return deferred.promise;
+            return deferred.promise.nodeify(callback);
         };
 
         function loadState(options, uiState) {

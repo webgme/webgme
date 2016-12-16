@@ -1,4 +1,4 @@
-/*globals define, $*/
+/*globals define, $, WebGMEGlobal*/
 /*jshint browser: true*/
 
 /**
@@ -8,8 +8,10 @@
  */
 
 define([
-    'text!./templates/UIRecorderDialog.html'
-], function (dialogTemplate) {
+    'js/logger',
+    './RecordReplayControllers',
+    'text!./templates/UIReplayDialog.html'
+], function (Logger, RecordReplayControllers, dialogTemplate) {
     'use strict';
 
     var STATE_CHANGE_OPTIONS = {
@@ -19,8 +21,10 @@ define([
 
         };
 
-    function UIRecorderDialog(mainLogger) {
-        this._logger = mainLogger.fork('UIRecorderDialog');
+    function UIReplayDialog(mainLogger) {
+        this._logger = mainLogger ? mainLogger.fork('UIReplayDialog') : Logger.create(
+            'gme:UIReplayDialog:UIReplayDialog',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._dialog = null;
         this._infoBtn = null;
@@ -30,21 +34,21 @@ define([
         this._stepForwardBtn = null;
         this._playBtn = null;
         this._stopBtn = null;
-
-        this._loadBtn = null;
-        this._saveBtn = null;
-
         this._recBadge = null;
 
         this._playing = false;
     }
 
-    UIRecorderDialog.prototype.show = function (data, fnCallback) {
+    UIReplayDialog.prototype.show = function (options, fnCallback) {
         var self = this;
 
         this._dialog = $(dialogTemplate);
 
-        this.recorder = data.recorder;
+        this._client = options.client;
+
+        this._player = new RecordReplayControllers.Player(this._client);
+
+        this._currentProjectId = this._client.getActiveProjectId();
 
         this._dialog.draggable({
             handle: '.modal-body'
@@ -55,16 +59,12 @@ define([
         this._stopBtn = this._dialog.find('.btn-stop');
         this._stepForwardBtn = this._dialog.find('.btn-step-forward');
 
-        if (self.recorder.recording.length === 0) {
-            this._playBtn.prop('disabled', true);
-        }
+        this._playBtn.prop('disabled', true);
 
         this._stopBtn.hide();
-        this._loadBtn = this._dialog.find('.btn-load');
-        this._saveBtn = this._dialog.find('.btn-save');
 
         this._recBadge = this._dialog.find('.rec-badge');
-        this._recBadge.text(self.recorder.recording.length);
+        this._recBadge.text(self._player.recording.length);
 
         this._infoBtn = this._dialog.find('.toggle-info-btn');
         this._infoFooter = this._dialog.find('.modal-footer');
@@ -87,8 +87,7 @@ define([
         });
 
         this._recBadge.on('click', function () {
-            self.recorder.clear();
-            $(this).text(self.recorder.recording.length);
+
         });
 
         this._infoBtn.on('click', function () {
@@ -104,35 +103,48 @@ define([
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
-            fnCallback();
+            if (typeof fnCallback === 'function') {
+                fnCallback();
+            }
         });
 
         this._dialog.modal('show');
+
+        this._player.loadRecordings(this._currentProjectId, options.startCommit, options.endCommit, 100,
+            function (err, commits) {
+                if (err) {
+                    self._logger.error(err);
+                } else {
+                    self._recBadge.text(commits.length);
+                    if (commits.length > 0) {
+                        self._playBtn.prop('disabled', false);
+                    }
+                }
+            }
+        );
     };
 
-    UIRecorderDialog.prototype.atPlay = function () {
+    UIReplayDialog.prototype.atPlay = function () {
         if (this._playing) {
             // Stop playback mode
-            this.recorder.stateIndex = -1;
-            this.recorder.commitIndex = -1;
+            this._player.stateIndex = -1;
+            this._player.commitIndex = -1;
             this._playBtn.show();
             this._stopBtn.hide();
             this._stepBackBtn.prop('disabled', true);
             this._stepForwardBtn.prop('disabled', true);
-            this.setDisableLoaderSaver(false);
         } else {
             // Start playback mode
             this._playBtn.hide();
             this._stopBtn.show();
             this._stepForwardBtn.prop('disabled', false);
             this._stepBackBtn.prop('disabled', true);
-            this.setDisableLoaderSaver(true);
         }
 
         this._playing = !this._playing;
     };
 
-    UIRecorderDialog.prototype.atStep = function (forward) {
+    UIReplayDialog.prototype.atStep = function (forward) {
         var self = this,
             promise;
 
@@ -141,27 +153,27 @@ define([
         this._stepBackBtn.prop('disabled', true);
 
         if (forward) {
-            if (self.recorder.stateIndex === self.recorder.commitIndex) {
-                promise = self.recorder.stepForwardState(STATE_CHANGE_OPTIONS);
+            if (self._player.stateIndex === self._player.commitIndex) {
+                promise = self._player.stepForwardState(STATE_CHANGE_OPTIONS);
             } else {
-                promise = self.recorder.stepForwardCommit(COMMIT_CHANGE_OPTIONS);
+                promise = self._player.stepForwardCommit(COMMIT_CHANGE_OPTIONS);
             }
         } else {
-            if (self.recorder.stateIndex === self.recorder.commitIndex) {
-                promise = self.recorder.stepBackCommit(COMMIT_CHANGE_OPTIONS);
+            if (self._player.stateIndex === self._player.commitIndex) {
+                promise = self._player.stepBackCommit(COMMIT_CHANGE_OPTIONS);
             } else {
-                promise = self.recorder.stepBackState(STATE_CHANGE_OPTIONS);
+                promise = self._player.stepBackState(STATE_CHANGE_OPTIONS);
             }
         }
 
         promise
             .then(function() {
                 self._stopBtn.prop('disabled', false);
-                if (self.recorder.commitIndex < self.recorder.recording.length - 1) {
+                if (self._player.commitIndex < self._player.recording.length - 1) {
                     self._stepForwardBtn.prop('disabled', false);
                 }
 
-                if (self.recorder.stateIndex > 0) {
+                if (self._player.stateIndex > 0) {
                     self._stepBackBtn.prop('disabled', false);
                 }
             })
@@ -170,18 +182,5 @@ define([
             });
     };
 
-    UIRecorderDialog.prototype.atSave = function () {
-
-    };
-
-    UIRecorderDialog.prototype.atLoad = function () {
-
-    };
-
-    UIRecorderDialog.prototype.setDisableLoaderSaver = function (disable) {
-        this._loadBtn.disable(disable);
-        this._saveBtn.disable(disable);
-    };
-
-    return UIRecorderDialog;
+    return UIReplayDialog;
 });

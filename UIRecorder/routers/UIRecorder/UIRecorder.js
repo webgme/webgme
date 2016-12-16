@@ -100,27 +100,53 @@ function initialize(middlewareOpts) {
             });
     });
 
-    router.get('/recordings', function (req, res, next) {
-        var userId = getUserId(req),
-            collection;
+    router.get('/:ownerId/:projectName/recordings/:startCommit...:endCommit', function (req, res, next) {
+        var data = {
+                projectId: req.params.ownerId + '+' + req.params.projectName,
+                username: getUserId(req)
+            },
+            commitHashes = [];
 
-        Q.ninvoke(dbConn, 'collection', req.body.projectId)
-            .then(function (result) {
-                collection = result;
-                return Q.all(req.body.commitHashes.map(function (commitHash) {
-                    Q.ninvoke(collection, 'findOne', {_id: commitHash});
+        middlewareOpts.safeStorage.openProject(data)
+            .then(function (project) {
+
+                return project.getHistory('#' + req.params.startCommit, 100);
+            })
+            .then(function (history) {
+                var found = false,
+                    i;
+
+                for (i = 0; i < history.length; i += 1) {
+                    commitHashes.push(history[i]._id);
+                    if (history[i]._id === '#' + req.params.endCommit) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    commitHashes = [];
+                }
+
+                return Q.ninvoke(dbConn, 'collection', data.projectId);
+            })
+            .then(function (collection) {
+                return Q.all(commitHashes.map(function (commitHash) {
+                    return Q.ninvoke(collection, 'findOne', {_id: commitHash});
                 }));
             })
             .then(function (result) {
-                var records = [];
+                var records = [],
+                    len = result.length;
 
-                result.forEach(function (record) {
-                    if (record) {
-                        records.push(record);
+                // This reverses the order suiting for the player.
+                while (len--) {
+                    if (result[len]) {
+                        records.push(result[len]);
                     } else {
                         logger.error('missing record');
                     }
-                });
+                }
 
                 res.json(records);
             })
