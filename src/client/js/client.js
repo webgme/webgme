@@ -1080,7 +1080,7 @@ define([
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
                 self.dispatchEvent(CONSTANTS.NEW_COMMIT_STATE, {
                     data: data,
-                    uiState: self.uiStateGetter()
+                    uiState: typeof self.uiStateGetter === 'function' ? self.uiStateGetter() : null
                 });
 
                 logger.debug('loading commitHash, local?', commitHash, data.local);
