@@ -425,7 +425,7 @@ describe('set core', function () {
             core.setMemberRegistry(setType, 'set', 'doesNotExist', 'myReg', 'myValue');
         } catch (e) {
             expect(e instanceof Error).to.eql(true);
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
         } finally {
             expect(core.getMemberPaths(setType, 'set')).to.deep.equal([]);
         }
@@ -639,7 +639,7 @@ describe('set core', function () {
             core.isFullyOverriddenMember(setType, 'set', 'dummyMemberPath');
         } catch (e) {
             expect(e instanceof Error).to.eql(true);
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -652,7 +652,7 @@ describe('set core', function () {
             core.isFullyOverriddenMember(setType, 'set', 'dummyMemberPath');
         } catch (e) {
             expect(e instanceof Error).to.eql(true);
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
         }
     });
 

@@ -35,7 +35,7 @@ describe('core', function () {
         logger.info = function () {
         };
         logger.fork = function () {
-            return logger
+            return logger;
         };
 
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
@@ -137,7 +137,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -145,7 +145,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -157,7 +157,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -169,7 +169,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -181,7 +181,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -193,7 +193,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             expect(myError.message).to.contains('node');
         }
 
@@ -202,7 +202,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             expect(myError.message).to.contains('relativeId');
         }
     });
@@ -215,7 +215,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -227,7 +227,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -239,7 +239,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -247,7 +247,7 @@ describe('core', function () {
         var myError;
 
         core.loadRoot('badhash', function (e) {
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
             expect(e.message).to.contains('valid hash');
 
             try {
@@ -255,7 +255,7 @@ describe('core', function () {
             } catch (e) {
                 myError = e;
             } finally {
-                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.name).to.eql('CoreIllegalArgumentError');
                 expect(myError.message).to.contains('function');
                 done();
             }
@@ -267,10 +267,10 @@ describe('core', function () {
         var myError;
 
         core.loadChild('badnode', 'relid', function (e) {
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
             expect(e.message).to.contains('valid node');
             core.loadChild(rootNode, {}, function (e) {
-                expect(e.name).to.eql('CoreInputError');
+                expect(e.name).to.eql('CoreIllegalArgumentError');
                 expect(e.message).to.contains('string');
 
                 try {
@@ -278,7 +278,7 @@ describe('core', function () {
                 } catch (e) {
                     myError = e;
                 } finally {
-                    expect(myError.name).to.eql('CoreInputError');
+                    expect(myError.name).to.eql('CoreIllegalArgumentError');
                     expect(myError.message).to.contains('function');
                     done();
                 }
@@ -290,10 +290,10 @@ describe('core', function () {
         var myError;
 
         core.loadByPath('badnode', 'relid', function (e) {
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
             expect(e.message).to.contains('valid node');
             core.loadByPath(rootNode, {}, function (e) {
-                expect(e.name).to.eql('CoreInputError');
+                expect(e.name).to.eql('CoreIllegalArgumentError');
                 expect(e.message).to.contains('valid path');
 
                 try {
@@ -301,7 +301,7 @@ describe('core', function () {
                 } catch (e) {
                     myError = e;
                 } finally {
-                    expect(myError.name).to.eql('CoreInputError');
+                    expect(myError.name).to.eql('CoreIllegalArgumentError');
                     expect(myError.message).to.contains('function');
                     done();
                 }
@@ -313,7 +313,7 @@ describe('core', function () {
         var myError;
 
         core.loadChildren('badhash', function (e) {
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
             expect(e.message).to.contains('valid node');
 
             try {
@@ -321,7 +321,7 @@ describe('core', function () {
             } catch (e) {
                 myError = e;
             } finally {
-                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.name).to.eql('CoreIllegalArgumentError');
                 expect(myError.message).to.contains('function');
                 done();
             }
@@ -333,7 +333,7 @@ describe('core', function () {
         var myError;
 
         core.loadOwnChildren('badhash', function (e) {
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
             expect(e.message).to.contains('valid node');
 
             try {
@@ -341,7 +341,7 @@ describe('core', function () {
             } catch (e) {
                 myError = e;
             } finally {
-                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.name).to.eql('CoreIllegalArgumentError');
                 expect(myError.message).to.contains('function');
                 done();
             }
@@ -353,27 +353,22 @@ describe('core', function () {
         var myError;
 
         core.loadPointer('badnode', 'relid', function (e) {
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
             expect(e.message).to.contains('valid node');
 
             core.loadPointer(rootNode, {}, function (e) {
-                expect(e.name).to.eql('CoreInputError');
+                expect(e.name).to.eql('CoreIllegalArgumentError');
                 expect(e.message).to.contains('string');
 
-                core.loadPointer(rootNode, 'unknown', function (e) {
-                    expect(e.name).to.eql('CoreIllegalOperationError');
-                    expect(e.message).to.contains('undefined');
-
-                    try {
-                        core.loadPointer(rootNode, {});
-                    } catch (e) {
-                        myError = e;
-                    } finally {
-                        expect(myError.name).to.eql('CoreInputError');
-                        expect(myError.message).to.contains('function');
-                        done();
-                    }
-                });
+                try {
+                    core.loadPointer(rootNode, {});
+                } catch (e) {
+                    myError = e;
+                } finally {
+                    expect(myError.name).to.eql('CoreIllegalArgumentError');
+                    expect(myError.message).to.contains('function');
+                    done();
+                }
             });
         });
     });
@@ -382,26 +377,21 @@ describe('core', function () {
         var myError;
 
         core.loadCollection('badnode', 'relid', function (e) {
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
             expect(e.message).to.contains('valid node');
             core.loadCollection(rootNode, {}, function (e) {
-                expect(e.name).to.eql('CoreInputError');
+                expect(e.name).to.eql('CoreIllegalArgumentError');
                 expect(e.message).to.contains('string');
 
-                core.loadCollection(rootNode, 'unknown', function (e) {
-                    expect(e.name).to.eql('CoreIllegalOperationError');
-                    expect(e.message).to.contains('undefined');
-
-                    try {
-                        core.loadCollection(rootNode, {});
-                    } catch (e) {
-                        myError = e;
-                    } finally {
-                        expect(myError.name).to.eql('CoreInputError');
-                        expect(myError.message).to.contains('function');
-                        done();
-                    }
-                });
+                try {
+                    core.loadCollection(rootNode, {});
+                } catch (e) {
+                    myError = e;
+                } finally {
+                    expect(myError.name).to.eql('CoreIllegalArgumentError');
+                    expect(myError.message).to.contains('function');
+                    done();
+                }
             });
         });
     });
@@ -410,7 +400,7 @@ describe('core', function () {
         var myError;
 
         core.loadSubTree('badhash', function (e) {
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
             expect(e.message).to.contains('valid node');
 
             try {
@@ -418,7 +408,7 @@ describe('core', function () {
             } catch (e) {
                 myError = e;
             } finally {
-                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.name).to.eql('CoreIllegalArgumentError');
                 expect(myError.message).to.contains('function');
                 done();
             }
@@ -430,7 +420,7 @@ describe('core', function () {
         var myError;
 
         core.loadOwnSubTree('badhash', function (e) {
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
             expect(e.message).to.contains('valid node');
 
             try {
@@ -438,7 +428,7 @@ describe('core', function () {
             } catch (e) {
                 myError = e;
             } finally {
-                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.name).to.eql('CoreIllegalArgumentError');
                 expect(myError.message).to.contains('function');
                 done();
             }
@@ -450,7 +440,7 @@ describe('core', function () {
         var myError;
 
         core.loadTree('badhash', function (e) {
-            expect(e.name).to.eql('CoreInputError');
+            expect(e.name).to.eql('CoreIllegalArgumentError');
             expect(e.message).to.contains('valid hash');
 
             try {
@@ -458,7 +448,7 @@ describe('core', function () {
             } catch (e) {
                 myError = e;
             } finally {
-                expect(myError.name).to.eql('CoreInputError');
+                expect(myError.name).to.eql('CoreIllegalArgumentError');
                 expect(myError.message).to.contains('function');
                 done();
             }
@@ -473,7 +463,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -485,7 +475,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -497,7 +487,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -509,7 +499,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -521,7 +511,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -530,7 +520,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -539,7 +529,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -552,7 +542,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -564,7 +554,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -573,7 +563,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -587,7 +577,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -596,7 +586,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -605,7 +595,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -619,7 +609,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -628,7 +618,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -642,7 +632,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -651,7 +641,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -665,7 +655,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -677,7 +667,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -686,7 +676,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -699,7 +689,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -708,7 +698,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -717,7 +707,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -730,7 +720,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -739,16 +729,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
-            myError = null;
-        }
-
-        try {
-            core.delAttribute(rootNode, 'nonexistent');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -761,7 +742,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -773,7 +754,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -782,7 +763,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -795,7 +776,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -804,7 +785,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -813,7 +794,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -826,7 +807,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -835,16 +816,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
-            myError = null;
-        }
-
-        try {
-            core.delRegistry(rootNode, 'nonexistent');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -857,7 +829,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -869,7 +841,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -878,7 +850,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -891,7 +863,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -900,7 +872,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -909,7 +881,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -922,7 +894,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -931,16 +903,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
-            myError = null;
-        }
-
-        try {
-            core.delPointer(rootNode, 'nonexistent');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -953,7 +916,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -965,7 +928,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -974,7 +937,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -987,7 +950,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -999,7 +962,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1011,7 +974,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1023,7 +986,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1035,7 +998,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1047,7 +1010,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1056,7 +1019,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -1069,7 +1032,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1078,7 +1041,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -1091,7 +1054,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1103,7 +1066,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1112,7 +1075,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -1125,7 +1088,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1134,7 +1097,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -1147,7 +1110,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1156,7 +1119,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -1169,7 +1132,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1181,7 +1144,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1193,7 +1156,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1205,7 +1168,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1214,7 +1177,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1226,7 +1189,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1235,16 +1198,8 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
-        }
-
-        try {
-            core.delSet(rootNode, 'unknown');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
         }
     });
 
@@ -1256,7 +1211,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1265,7 +1220,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1286,7 +1241,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1295,7 +1250,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1316,7 +1271,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1325,7 +1280,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1343,7 +1298,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1355,7 +1310,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1364,7 +1319,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1382,7 +1337,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1394,7 +1349,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1403,7 +1358,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1421,7 +1376,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1430,7 +1385,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1442,7 +1397,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1451,7 +1406,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1465,20 +1420,11 @@ describe('core', function () {
         }
 
         try {
-            core.delSetAttribute(rootNode, 'MetaAspectSet', 'unknown');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
-            myError = null;
-        }
-
-        try {
             core.delSetAttribute(rootNode, 'MetaAspectSet', {});
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1490,7 +1436,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1499,7 +1445,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1520,7 +1466,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1529,7 +1475,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1550,7 +1496,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1559,7 +1505,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1577,7 +1523,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1589,7 +1535,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1598,7 +1544,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1616,7 +1562,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1628,7 +1574,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1637,7 +1583,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1655,7 +1601,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1664,7 +1610,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1676,7 +1622,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1685,7 +1631,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1699,20 +1645,11 @@ describe('core', function () {
         }
 
         try {
-            core.delSetRegistry(rootNode, 'MetaAspectSet', 'unknown');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
-            myError = null;
-        }
-
-        try {
             core.delSetRegistry(rootNode, 'MetaAspectSet', {});
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -1724,7 +1661,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1733,7 +1670,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1754,7 +1691,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1763,7 +1700,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1784,7 +1721,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1793,7 +1730,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1802,7 +1739,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1831,7 +1768,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1840,7 +1777,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1849,7 +1786,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -1862,7 +1799,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1871,7 +1808,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1880,7 +1817,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1910,7 +1847,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1919,7 +1856,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1928,7 +1865,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1958,7 +1895,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1967,7 +1904,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1976,7 +1913,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -1985,7 +1922,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2015,7 +1952,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2024,7 +1961,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2033,7 +1970,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2042,7 +1979,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2072,7 +2009,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2081,7 +2018,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2090,7 +2027,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2099,7 +2036,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2108,7 +2045,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2138,7 +2075,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2147,7 +2084,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2156,7 +2093,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2165,7 +2102,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2186,15 +2123,6 @@ describe('core', function () {
             expect(myError.name).to.eql('CoreIllegalOperationError');
             myError = null;
         }
-
-        try {
-            core.delMemberAttribute(rootNode, 'MetaAspectSet', '/1', 'unknown');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
-            myError = null;
-        }
     });
 
     it('should throw @getMemberRegistryNames if not valid parameters are given', function () {
@@ -2205,7 +2133,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2214,7 +2142,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2223,7 +2151,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2242,6 +2170,7 @@ describe('core', function () {
             myError = e;
         } finally {
             expect(myError.name).to.eql('CoreIllegalOperationError');
+            myError = null;
         }
     });
 
@@ -2253,7 +2182,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2262,7 +2191,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2271,7 +2200,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2301,7 +2230,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2310,7 +2239,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2319,7 +2248,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2328,7 +2257,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2358,7 +2287,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2367,7 +2296,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2376,7 +2305,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2385,7 +2314,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2415,7 +2344,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2424,7 +2353,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2433,7 +2362,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2442,7 +2371,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2451,7 +2380,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2481,7 +2410,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2490,7 +2419,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2499,7 +2428,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2508,7 +2437,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2529,15 +2458,6 @@ describe('core', function () {
             expect(myError.name).to.eql('CoreIllegalOperationError');
             myError = null;
         }
-
-        try {
-            core.delMemberRegistry(rootNode, 'MetaAspectSet', '/1', 'unknown');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
-            myError = null;
-        }
     });
 
     it('should throw @isMemberOf if not valid node is given', function () {
@@ -2548,7 +2468,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -2556,7 +2476,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2568,7 +2488,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -2576,7 +2496,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2588,16 +2508,16 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         core.setGuid('string', 'other', function (err) {
             expect(err).not.to.eql(null);
-            expect(err.name).to.eql('CoreInputError');
+            expect(err.name).to.eql('CoreIllegalArgumentError');
 
             core.setGuid(rootNode, 'notguid', function (err) {
                 expect(err).not.to.eql(null);
-                expect(err.name).to.eql('CoreInputError');
+                expect(err.name).to.eql('CoreIllegalArgumentError');
                 done();
             });
         });
@@ -2611,7 +2531,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2620,7 +2540,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2632,7 +2552,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2641,7 +2561,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2650,7 +2570,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2662,7 +2582,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2671,16 +2591,8 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
-        }
-
-        try {
-            core.delConstraint(rootNode, 'unknown');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
         }
     });
 
@@ -2692,7 +2604,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -2700,7 +2612,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2712,7 +2624,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -2720,7 +2632,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2732,7 +2644,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2741,7 +2653,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2753,7 +2665,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2762,7 +2674,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2774,7 +2686,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -2782,7 +2694,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2794,7 +2706,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -2802,7 +2714,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2814,7 +2726,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2823,7 +2735,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2832,16 +2744,8 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
-        }
-
-        try {
-            core.isValidTargetOf(rootNode, rootNode, 'unknown');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
         }
     });
 
@@ -2853,7 +2757,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -2861,7 +2765,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2873,7 +2777,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -2881,7 +2785,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2893,7 +2797,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2902,7 +2806,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2911,16 +2815,8 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
-        }
-
-        try {
-            core.isValidAttributeValueOf(rootNode, 'unknown', 0);
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
         }
     });
 
@@ -2932,7 +2828,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -2940,7 +2836,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2952,7 +2848,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -2960,7 +2856,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2972,7 +2868,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -2981,7 +2877,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -2993,7 +2889,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -3001,7 +2897,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3013,7 +2909,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -3021,7 +2917,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3033,7 +2929,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -3041,7 +2937,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3053,7 +2949,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3062,7 +2958,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3071,7 +2967,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3080,7 +2976,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3092,7 +2988,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3101,16 +2997,8 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
-        }
-
-        try {
-            core.delAttributeMeta(rootNode, 'unknown');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
         }
     });
 
@@ -3122,7 +3010,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3131,7 +3019,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3143,7 +3031,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -3151,7 +3039,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3163,7 +3051,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -3171,7 +3059,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3183,7 +3071,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3192,7 +3080,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3201,7 +3089,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3210,7 +3098,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3219,7 +3107,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3228,7 +3116,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3240,7 +3128,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3249,16 +3137,8 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
-        }
-
-        try {
-            core.delChildMeta(rootNode, '/unknown');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
         }
     });
 
@@ -3270,7 +3150,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3279,7 +3159,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3288,7 +3168,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3297,7 +3177,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3306,7 +3186,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3318,52 +3198,61 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
         try {
-            core.setPointerMetaTarget(rootNode, 'notAValidPath');
+            core.setPointerMetaTarget(rootNode, {});
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
         try {
-            core.setPointerMetaTarget(rootNode, rootNode, 'notNumber');
+            core.setPointerMetaTarget(rootNode, 'myname', 'notnode');
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
         try {
-            core.setPointerMetaTarget(rootNode, rootNode, 0.5);
+            core.setPointerMetaTarget(rootNode, 'myname', rootNode, '0.5');
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
         try {
-            core.setPointerMetaTarget(rootNode, rootNode, -2);
+            core.setPointerMetaTarget(rootNode, 'myname', rootNode, 0.5);
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
         try {
-            core.setPointerMetaTarget(rootNode, rootNode, 0, 'notnumber');
+            core.setPointerMetaTarget(rootNode, 'myname', rootNode, -2);
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+            myError = null;
+        }
+
+        try {
+            core.setPointerMetaTarget(rootNode, 'myname', rootNode, 0, 'notnumber');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3375,7 +3264,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3384,7 +3273,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3393,7 +3282,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3405,14 +3294,6 @@ describe('core', function () {
             expect(myError.name).to.eql('CoreIllegalOperationError');
             myError = null;
         }
-
-        try {
-            core.delPointerMetaTarget(setNode, 'setPtr', '/nomember');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
-        }
     });
 
     it('should throw @setPointerMetaLimits if not valid parameters are given', function () {
@@ -3423,7 +3304,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3432,7 +3313,43 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+            myError = null;
+        }
+
+        try {
+            core.setPointerMetaLimits(rootNode, '_nounderscore');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+            myError = null;
+        }
+
+        try {
+            core.setPointerMetaLimits(rootNode, 'base');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+            myError = null;
+        }
+
+        try {
+            core.setPointerMetaLimits(rootNode, 'ovr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+            myError = null;
+        }
+
+        try {
+            core.setPointerMetaLimits(rootNode, 'member');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3441,7 +3358,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3450,7 +3367,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3459,7 +3376,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3468,7 +3385,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3477,7 +3394,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3489,7 +3406,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3498,16 +3415,8 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
-        }
-
-        try {
-            core.delPointerMeta(rootNode, 'unknown');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
         }
     });
 
@@ -3519,7 +3428,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3528,7 +3437,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -3541,7 +3450,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3550,7 +3459,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3559,7 +3468,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -3567,14 +3476,12 @@ describe('core', function () {
     it('should throw @delAspectMetaTarget if not valid parameters are given', function () {
         var myError;
 
-        core.setAspectMetaTarget(rootNode, 'setAspect', setNode);
-
         try {
             core.delAspectMetaTarget('string');
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3583,7 +3490,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3592,21 +3499,12 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
         try {
             core.delAspectMetaTarget(rootNode, 'aspecto', '/path');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
-            myError = null;
-        }
-
-        try {
-            core.delAspectMetaTarget(rootNode, 'setAspect', '/1');
         } catch (e) {
             myError = e;
         } finally {
@@ -3623,7 +3521,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3632,16 +3530,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
-            myError = null;
-        }
-
-        try {
-            core.delAspectMeta(rootNode, 'aspecto');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -3654,7 +3543,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -3662,7 +3551,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3674,7 +3563,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3683,7 +3572,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -3696,17 +3585,17 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
         core.generateTreeDiff('string', 'string', function (err) {
             expect(err).not.to.eql(null);
-            expect(err.name).to.eql('CoreInputError');
+            expect(err.name).to.eql('CoreIllegalArgumentError');
 
             core.generateTreeDiff(rootNode, 'string', function (err) {
                 expect(err).not.to.eql(null);
-                expect(err.name).to.eql('CoreInputError');
+                expect(err.name).to.eql('CoreIllegalArgumentError');
                 done();
             });
         });
@@ -3720,13 +3609,13 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
         core.applyTreeDiff(rootNode, 'string', function (err) {
             expect(err).not.to.eql(null);
-            expect(err.name).to.eql('CoreInputError');
+            expect(err.name).to.eql('CoreIllegalArgumentError');
             done();
         });
     });
@@ -3739,7 +3628,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3748,7 +3637,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -3761,7 +3650,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -3774,7 +3663,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -3782,7 +3671,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3794,7 +3683,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -3802,7 +3691,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3814,7 +3703,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3823,7 +3712,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3832,7 +3721,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3841,7 +3730,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3850,7 +3739,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3859,7 +3748,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3868,7 +3757,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3877,7 +3766,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -3890,7 +3779,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3899,7 +3788,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3908,7 +3797,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3917,7 +3806,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3926,7 +3815,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3935,7 +3824,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -3944,7 +3833,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -3957,7 +3846,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -3965,7 +3854,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3977,7 +3866,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -3985,7 +3874,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -3997,7 +3886,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4006,7 +3895,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4015,7 +3904,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4037,7 +3926,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4045,7 +3934,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4057,7 +3946,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4065,7 +3954,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4077,7 +3966,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4085,7 +3974,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4097,7 +3986,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4106,16 +3995,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
-            myError = null;
-        }
-
-        try {
-            core.delMixin(setNode, '/unknownpath');
-        } catch (e) {
-            myError = e;
-        } finally {
-            expect(myError.name).to.eql('CoreIllegalOperationError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -4128,7 +4008,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4137,7 +4017,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4146,7 +4026,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -4159,7 +4039,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4167,7 +4047,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4179,7 +4059,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4187,7 +4067,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4199,7 +4079,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4208,7 +4088,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4217,7 +4097,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -4230,7 +4110,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
         Q.allSettled([
@@ -4254,7 +4134,7 @@ describe('core', function () {
                 for (var i = 0; i < results.length; i += 1) {
                     expect(results[i].state).to.eql('rejected');
                     expect(results[i].reason instanceof Error).to.eql(true);
-                    expect(results[i].reason.name).to.eql('CoreInputError');
+                    expect(results[i].reason.name).to.eql('CoreIllegalArgumentError');
                 }
             })
             .nodeify(done);
@@ -4268,30 +4148,30 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
         Q.allSettled([
-            Q.nfcall(core.updateLibrary, 'string', 'string', 'string', null),
-            Q.nfcall(core.updateLibrary, rootNode, {}, 'string', null),
-            Q.nfcall(core.updateLibrary, rootNode, 'libname', 'string', null),
-            Q.nfcall(core.updateLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', 'nope'),
+            Q.nfcall(core.updateLibrary, 'string', 'string', 'string', null, null),
+            Q.nfcall(core.updateLibrary, rootNode, {}, 'string', null, null),
+            Q.nfcall(core.updateLibrary, rootNode, 'libname', 'string', null, null),
+            Q.nfcall(core.updateLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', 'nope', null),
             Q.nfcall(core.updateLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', {
                 projectId: 0
-            }),
+            }, null),
             Q.nfcall(core.updateLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', {
                 branchName: 0
-            }),
+            }, null),
             Q.nfcall(core.updateLibrary, rootNode, 'libname', '#0123456789012345678901234567890123456789', {
                 commitHash: 'notahash'
-            }),
+            }, null),
         ])
             .then(function (results) {
                 expect(results).to.have.length(7);
                 for (var i = 0; i < results.length; i += 1) {
                     expect(results[i].state).to.eql('rejected');
                     expect(results[i].reason instanceof Error).to.eql(true);
-                    expect(results[i].reason.name).to.eql('CoreInputError');
+                    expect(results[i].reason.name).to.eql('CoreIllegalArgumentError');
                 }
             })
             .nodeify(done);
@@ -4305,7 +4185,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4313,7 +4193,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4325,7 +4205,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4333,7 +4213,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4345,7 +4225,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4353,7 +4233,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4365,7 +4245,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4373,7 +4253,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4385,7 +4265,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4393,7 +4273,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4405,7 +4285,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4413,7 +4293,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4425,7 +4305,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4434,7 +4314,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4456,7 +4336,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4465,7 +4345,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -4478,7 +4358,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4487,7 +4367,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4496,7 +4376,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -4509,7 +4389,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4518,7 +4398,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -4531,7 +4411,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4540,7 +4420,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -4553,7 +4433,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4562,7 +4442,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4571,7 +4451,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -4587,7 +4467,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4605,7 +4485,7 @@ describe('core', function () {
                 for (var i = 0; i < results.length; i += 1) {
                     expect(results[i].state).to.eql('rejected');
                     expect(results[i].reason instanceof Error).to.eql(true);
-                    expect(results[i].reason.name).to.eql('CoreInputError');
+                    expect(results[i].reason.name).to.eql('CoreIllegalArgumentError');
                 }
             })
             .nodeify(done);
@@ -4619,7 +4499,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4628,7 +4508,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -4641,7 +4521,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
 
@@ -4650,7 +4530,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
             myError = null;
         }
     });
@@ -4663,7 +4543,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         try {
@@ -4671,7 +4551,7 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
     });
 
@@ -4683,12 +4563,12 @@ describe('core', function () {
         } catch (e) {
             myError = e;
         } finally {
-            expect(myError.name).to.eql('CoreInputError');
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
         }
 
         core.loadInstances('string', function (err) {
             expect(err).not.to.eql(null);
-            expect(err.name).to.eql('CoreInputError');
+            expect(err.name).to.eql('CoreIllegalArgumentError');
             done();
         });
     });

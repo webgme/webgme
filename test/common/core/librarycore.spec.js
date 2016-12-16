@@ -477,7 +477,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            checkError(error, 'CoreInputError');
+            checkError(error, 'CoreIllegalArgumentError');
         }
     });
 
@@ -646,7 +646,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            checkError(error,'CoreInputError');
+            checkError(error,'CoreIllegalArgumentError');
         }
     });
 
@@ -704,7 +704,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            checkError(error,'CoreInputError');
+            checkError(error,'CoreIllegalArgumentError');
         }
     });
 
@@ -751,7 +751,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            checkError(error,'CoreInputError');
+            checkError(error,'CoreIllegalArgumentError');
         }
     });
 
@@ -813,7 +813,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            checkError(error,'CoreInputError');
+            checkError(error,'CoreIllegalArgumentError');
         }
     });
 

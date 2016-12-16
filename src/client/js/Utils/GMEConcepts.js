@@ -201,7 +201,6 @@ define(['jquery',
 
             }
 
-
             //FILTER OUT ABSTRACTS
             if (result === true) {
                 //TODO: why just filter out, why not return false in the first place
@@ -450,7 +449,6 @@ define(['jquery',
         return validPointerTypes;
     }
 
-
     function canCreateChildrenInAspect(parentId, baseIdList, aspectName) {
         var canCreateInAspect = true,
             parentNode = client.getNode(parentId),
@@ -659,7 +657,6 @@ define(['jquery',
         return result;
     }
 
-
     function getValidPointerTypesFromSourceToTarget(sourceId, targetId) {
         var result = [],
             EXCLUDED_POINTERS = [CONSTANTS.POINTER_BASE],
@@ -678,7 +675,6 @@ define(['jquery',
 
         return result;
     }
-
 
     function getValidSetTypesFromContainerToMember(containerId, objId) {
         var result = [],
@@ -711,7 +707,7 @@ define(['jquery',
 
     function getSets(objID) {
         var obj = client.getNode(objID),
-            setNames = obj.getSetNames() || [],
+            setNames = _.union(obj.getSetNames() || [], obj.getValidSetNames() || []),
             aspects = obj.getValidAspectNames() || [],
             crossCuts = getCrosscuts(objID),
             crossCutNames = [];
@@ -777,13 +773,13 @@ define(['jquery',
 
         return result;
     }
-    
+
     function isReplaceable(nodeOrId) {
         var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId;
 
         return canBeReplaceable(node) && !!node.getRegistry(REGISTRY_KEYS.REPLACEABLE);
     }
-    
+
     function getConstrainedById(nodeOrId) {
         var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
             constrainedById = node.getPointerId(CONSTANTS.POINTER_CONSTRAINED_BY);
@@ -798,7 +794,7 @@ define(['jquery',
     function isInstanceOf(nodeOrId, baseNodeOrId) {
         var node = typeof nodeOrId === 'string' ? client.getNode(nodeOrId) : nodeOrId,
             nodeId = node.getId(),
-            prospectBaseNodeId = typeof baseNodeOrId === 'string' ? baseNodeOrId: baseNodeOrId.getId();
+            prospectBaseNodeId = typeof baseNodeOrId === 'string' ? baseNodeOrId : baseNodeOrId.getId();
 
         while (node) {
             if (nodeId === prospectBaseNodeId) {

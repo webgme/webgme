@@ -7,17 +7,17 @@
 
 define([], function () {
     'use strict';
-    function CoreInputError() {
+    function CoreInternalError() {
         var error = Error.apply(this, arguments);
-        error.name = this.name = 'CoreInputError';
+        error.name = this.name = 'CoreInternalError';
         this.message = error.message;
         this.stack = error.stack;
 
         return error;
     }
 
-    CoreInputError.prototype = Object.create(Error.prototype);
-    CoreInputError.prototype.constructor = CoreInputError;
+    CoreInternalError.prototype = Object.create(Error.prototype);
+    CoreInternalError.prototype.constructor = CoreInternalError;
 
-    return CoreInputError;
+    return CoreInternalError;
 });

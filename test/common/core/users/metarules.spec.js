@@ -678,15 +678,13 @@ describe('Meta Rules', function () {
         it('should return error when set starts with _', function (done) {
             getContext()
                 .then(function (c) {
-                    var result;
-                    // TODO: This should throw!
                     c.core.setPointerMetaTarget(c.fco, '_underscore', c.fco, -1, -1);
 
-                    result = checkMetaConsistency(c.core, c.root);
-
-                    expect(result.length).to.equal(1);
-                    expect(result[0].severity).to.equal('error');
-                    expect(result[0].message).to.include('defines a set [_underscore] starting with an underscore');
+                    throw new Error('should have thrown earlier!!!');
+                })
+                .catch(function (e) {
+                    expect(e instanceof Error).to.eql(true);
+                    expect(e.name).to.eql('CoreIllegalArgumentError');
                 })
                 .nodeify(done);
         });
@@ -694,15 +692,13 @@ describe('Meta Rules', function () {
         it('should return error when set is named ovr', function (done) {
             getContext()
                 .then(function (c) {
-                    var result;
-                    // TODO: This should throw!
                     c.core.setPointerMetaTarget(c.fco, 'ovr', c.fco, -1, -1);
 
-                    result = checkMetaConsistency(c.core, c.root);
-
-                    expect(result.length).to.equal(1);
-                    expect(result[0].severity).to.equal('error');
-                    expect(result[0].message).to.include('defines a set [ovr] which is a reserved name');
+                    throw new Error('should have thrown earlier!!!');
+                })
+                .catch(function (e) {
+                    expect(e instanceof Error).to.eql(true);
+                    expect(e.name).to.eql('CoreIllegalArgumentError');
                 })
                 .nodeify(done);
         });
@@ -710,16 +706,13 @@ describe('Meta Rules', function () {
         it('should return error when aspect starts with _', function (done) {
             getContext()
                 .then(function (c) {
-                    var result;
-                    c.core.setChildMeta(c.fco, c.fco, -1, -1);
-                    // TODO: This should throw!
                     c.core.setAspectMetaTarget(c.fco, '_underscore', c.fco);
 
-                    result = checkMetaConsistency(c.core, c.root);
-
-                    expect(result.length).to.equal(1);
-                    expect(result[0].severity).to.equal('error');
-                    expect(result[0].message).to.include('defines an aspect [_underscore] starting with an underscore');
+                    throw new Error('should have thrown earlier!!!');
+                })
+                .catch(function (e) {
+                    expect(e instanceof Error).to.eql(true);
+                    expect(e.name).to.eql('CoreIllegalArgumentError');
                 })
                 .nodeify(done);
         });
@@ -727,16 +720,13 @@ describe('Meta Rules', function () {
         it('should return error when aspect is named ovr', function (done) {
             getContext()
                 .then(function (c) {
-                    var result;
-                    c.core.setChildMeta(c.fco, c.fco, -1, -1);
-                    // TODO: This should throw!
                     c.core.setAspectMetaTarget(c.fco, 'ovr', c.fco);
 
-                    result = checkMetaConsistency(c.core, c.root);
-
-                    expect(result.length).to.equal(1);
-                    expect(result[0].severity).to.equal('error');
-                    expect(result[0].message).to.include('defines an aspect [ovr] which is a reserved name');
+                    throw new Error('should have thrown earlier!!!');
+                })
+                .catch(function (e) {
+                    expect(e instanceof Error).to.eql(true);
+                    expect(e.name).to.eql('CoreIllegalArgumentError');
                 })
                 .nodeify(done);
         });
@@ -744,16 +734,13 @@ describe('Meta Rules', function () {
         it('should return error when pointer starts with _', function (done) {
             getContext()
                 .then(function (c) {
-                    var result;
-                    // TODO: This should throw!
-                    c.core.setPointerMetaTarget(c.fco, '_underscore', c.fco, 1, 1);
                     c.core.setPointerMetaLimits(c.fco, '_underscore', 1, 1);
 
-                    result = checkMetaConsistency(c.core, c.root);
-
-                    expect(result.length).to.equal(1);
-                    expect(result[0].severity).to.equal('error');
-                    expect(result[0].message).to.include('defines a pointer [_underscore] starting with an underscore');
+                    throw new Error('should have thrown earlier!!!');
+                })
+                .catch(function (e) {
+                    expect(e instanceof Error).to.eql(true);
+                    expect(e.name).to.eql('CoreIllegalArgumentError');
                 })
                 .nodeify(done);
         });
@@ -761,16 +748,13 @@ describe('Meta Rules', function () {
         it('should return error when pointer is named base', function (done) {
             getContext()
                 .then(function (c) {
-                    var result;
-                    // TODO: This should throw!
-                    c.core.setPointerMetaTarget(c.fco, 'base', c.fco, 1, 1);
                     c.core.setPointerMetaLimits(c.fco, 'base', 1, 1);
 
-                    result = checkMetaConsistency(c.core, c.root);
-
-                    expect(result.length).to.equal(1);
-                    expect(result[0].severity).to.equal('error');
-                    expect(result[0].message).to.include('defines a pointer [base] which is a reserved name');
+                    throw new Error('should have thrown earlier!!!');
+                })
+                .catch(function (e) {
+                    expect(e instanceof Error).to.eql(true);
+                    expect(e.name).to.eql('CoreIllegalArgumentError');
                 })
                 .nodeify(done);
         });
@@ -778,16 +762,13 @@ describe('Meta Rules', function () {
         it('should return error when pointer is named base', function (done) {
             getContext()
                 .then(function (c) {
-                    var result;
-                    // TODO: This should throw!
                     c.core.setPointerMetaTarget(c.fco, 'base', c.fco, 1, 1);
-                    c.core.setPointerMetaLimits(c.fco, 'base', 1, 1);
 
-                    result = checkMetaConsistency(c.core, c.root);
-
-                    expect(result.length).to.equal(1);
-                    expect(result[0].severity).to.equal('error');
-                    expect(result[0].message).to.include('defines a pointer [base] which is a reserved name');
+                    throw new Error('should have thrown earlier!!!');
+                })
+                .catch(function (e) {
+                    expect(e instanceof Error).to.eql(true);
+                    expect(e.name).to.eql('CoreIllegalArgumentError');
                 })
                 .nodeify(done);
         });

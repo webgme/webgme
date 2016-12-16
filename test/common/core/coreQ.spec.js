@@ -70,7 +70,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.name).to.eql('CoreInputError');
+                expect(err.name).to.eql('CoreIllegalArgumentError');
             })
             .nodeify(done);
     });
@@ -93,7 +93,7 @@ describe('CoreQ Async with Promises', function () {
             })
             .catch(function (err) {
                 // expect(err.message).to.include('ASSERT failed');
-                expect(err.name).to.eql('CoreInputError');
+                expect(err.name).to.eql('CoreIllegalArgumentError');
             })
             .nodeify(done);
     });
@@ -115,7 +115,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.name).to.eql('CoreInputError');
+                expect(err.name).to.eql('CoreIllegalArgumentError');
             })
             .nodeify(done);
     });
@@ -137,7 +137,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.name).to.eql('CoreInputError');
+                expect(err.name).to.eql('CoreIllegalArgumentError');
             })
             .nodeify(done);
     });
@@ -159,7 +159,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.name).to.eql('CoreInputError');
+                expect(err.name).to.eql('CoreIllegalArgumentError');
             })
             .nodeify(done);
     });
@@ -184,7 +184,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.name).to.eql('CoreInputError');
+                expect(err.name).to.eql('CoreIllegalArgumentError');
             })
             .nodeify(done);
     });
@@ -208,7 +208,7 @@ describe('CoreQ Async with Promises', function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
-                expect(err.name).to.eql('CoreInputError');
+                expect(err.name).to.eql('CoreIllegalArgumentError');
             })
             .nodeify(done);
     });
