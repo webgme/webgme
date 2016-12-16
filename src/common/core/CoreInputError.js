@@ -12,6 +12,8 @@ define([], function () {
         error.name = this.name = 'CoreInputError';
         this.message = error.message;
         this.stack = error.stack;
+
+        return error;
     }
 
     CoreInputError.prototype = Object.create(Error.prototype);

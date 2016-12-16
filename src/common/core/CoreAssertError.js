@@ -12,6 +12,8 @@ define([], function () {
         error.name = this.name = 'CoreAssertError';
         this.message = error.message;
         this.stack = error.stack;
+
+        return error;
     }
 
     CoreAssertError.prototype = Object.create(Error.prototype);

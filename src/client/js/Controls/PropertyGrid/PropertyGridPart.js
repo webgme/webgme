@@ -23,11 +23,10 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         INVALID_BUTTON_BASE = $('<i class="glyphicon glyphicon-exclamation-sign reset-badge btn-reset" ' +
             'title="Remove META-invalid property"/>');
 
-        PropertyGridPart = function (params) {
+    PropertyGridPart = function (params) {
         if (params.el) {
             this._containerElement = params.el;
         }
-
 
         this._el = $('<div/>', {
             class: CSS_NAMESPACE
@@ -79,7 +78,6 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         titleRow.addClass('title');
         titleRow.on('click', onClickTitle);
     };
-
 
     /*************** PRIVATE API *************************/
 
@@ -136,7 +134,6 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     };
 
     /*************** END OF - PRIVATE API *************************/
-
 
     /*************** PUBLIC API **************************/
 
@@ -221,10 +218,13 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
                 spnName.addClass('p-reset');
 
                 actionBtn.on('click', function (event) {
-                    self._reset(propertyDesc.id);
+                    if (self.__widgets[propertyDesc.name]._isReadOnly === false) {
+                        self._reset(propertyDesc.id);
+                    }
                     event.stopPropagation();
                     event.preventDefault();
                 });
+
             }
         }
 
@@ -334,7 +334,6 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
         this._widgetManager.registerWidgetForType(type, widget);
     };
     /*************** END OF - PUBLIC API **************************/
-
 
     return PropertyGridPart;
 });

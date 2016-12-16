@@ -12,6 +12,8 @@ define([], function () {
         error.name = this.name = 'CoreIllegalOperationError';
         this.message = error.message;
         this.stack = error.stack;
+
+        return error;
     }
 
     CoreIllegalOperationError.prototype = Object.create(Error.prototype);

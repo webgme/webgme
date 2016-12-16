@@ -11,7 +11,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     function _logDeprecated(oldFn, newFn, comment) {
         var commentStr = comment ? comment : '';
         console.warn('"gmeNode.' + oldFn + '" is deprecated and will eventually be removed, use "gmeNode.' + newFn +
-        '" instead.' + commentStr);
+            '" instead.' + commentStr);
     }
 
     function _getNode(nodes, path) {
@@ -149,14 +149,6 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.getPointer = function (name) {
-        //return _core.getPointerPath(_nodes[this._id].node,name);
-        if (name === 'base') {
-            //base is a special case as it complicates with inherited children
-            return {
-                to: this._state.core.getPath(this._state.core.getBase(this._state.nodes[this._id].node)),
-                from: []
-            };
-        }
         return {to: this._state.core.getPointerPath(this._state.nodes[this._id].node, name), from: []};
     };
 

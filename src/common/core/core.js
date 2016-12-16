@@ -3155,7 +3155,7 @@ define([
          * @param {bool} - [parameters.multiplicity] - if true, the query tries to filter out even more nodes according
          * to the multiplicity rules (the default value is false, the check is only meaningful if all the children were
          * passed)
-         * @param {string} - [parameters.aspect] - if given, the query filters to contain only types that are visible
+         * @param {string|null} - [parameters.aspect] - if given, the query filters to contain only types that are visible
          * in the given aspect.
          * @return {module:Core~Node[]} The function returns a list of valid nodes that can be instantiated as a
          * child of the node.
@@ -3178,7 +3178,7 @@ define([
             if (parameters.hasOwnProperty('multiplicity')) {
                 ensureType(parameters.multiplicity, 'parameters.multiplicity', 'boolean');
             }
-            if (parameters.hasOwnProperty('aspect') && parameters.aspect !== undefined) {
+            if (parameters.hasOwnProperty('aspect') && parameters.aspect !== undefined && parameters.aspect !== null) {
                 ensureType(parameters.aspect, 'parameters.aspect', 'string');
             }
 
