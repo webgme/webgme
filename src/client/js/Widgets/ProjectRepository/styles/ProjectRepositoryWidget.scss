@@ -131,8 +131,10 @@ $table-row-height: 25px;
           }
         }
 
-        .webhook-container {
-          text-align: left;
+        .commit-badge-container {
+          .place-holder {
+          }
+          text-align: center;
           *:first-child {
             padding-left: 0;
           }

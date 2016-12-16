@@ -1079,7 +1079,7 @@ define([
                 self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
                 self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
                 self.dispatchEvent(CONSTANTS.NEW_COMMIT_STATE, {
-                    commitObject: commitData.commitObject,
+                    data: data,
                     uiState: self.uiStateGetter()
                 });
 

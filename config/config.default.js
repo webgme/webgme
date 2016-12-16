@@ -111,11 +111,13 @@ var path = require('path'),
             serverResultTimeout: 60000
         },
 
-        requirejsPaths: {},
+        requirejsPaths: {
+            'UIRecorder': './UIRecorder'
+        },
 
         rest: {
             components: {
-                //'path/subPath': './middleware/ExampleRestRouter'
+                'routers/UIRecorder': __dirname + '/../UIRecorder/routers/UIRecorder/UIRecorder.js'
             }
         },
 

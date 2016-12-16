@@ -63,7 +63,7 @@ define(['js/logger',
         this._config = ProjectRepositoryWidget.getDefaultConfig();
         ComponentSettings.resolveWithWebGMEGlobal(this._config, ProjectRepositoryWidget.getComponentId());
 
-        this._webhookBadges = Object.keys(this._config.webhookBadges);
+        this._commitBadges = Object.keys(this._config.commitBadges);
         this.clear();
         this._initializeUI();
 
@@ -90,9 +90,9 @@ define(['js/logger',
             cCommit = this._commits[i];
             if (cCommit.ui) {
                 cCommit.ui.graphEl.remove();
-                cCommit.ui.webhookBadges.forEach(function (webhookBadge) {
-                    if (typeof webhookBadge.destroy === 'function') {
-                        webhookBadge.destroy();
+                cCommit.ui.commitBadges.forEach(function (commitBadge) {
+                    if (typeof commitBadge.destroy === 'function') {
+                        commitBadge.destroy();
                     }
                 });
 
@@ -264,11 +264,11 @@ define(['js/logger',
         this._table = $('<table/>', {class: 'table table-hover user-select-on commit-list'});
         this._tHead = $('<thead/>');
         this._tHead.append($('<tr><th>Graph</th><th>Actions</th><th>Commit</th>' +
-            '<th>Message</th><th>User</th><th>Time</th><th class="webhook-header">Webhooks</th></tr>'));
+            '<th>Message</th><th>User</th><th>Time</th><th class="commit-badge-header">Badges</th></tr>'));
         this._tBody = $('<tbody/>');
 
-        if (this._webhookBadges.length === 0) {
-            this._tHead.find('.webhook-header').hide();
+        if (this._commitBadges.length === 0) {
+            this._tHead.find('.commit-badge-header').hide();
         }
 
         this._table.append(this._tHead).append(this._tBody);
@@ -278,7 +278,7 @@ define(['js/logger',
         this._tableCellMessageIndex = 3;
         this._tableCellUserIndex = 4;
         this._tableCellTimeStampIndex = 5;
-        this._tableCellWebhooksIndex = 6;
+        this._tableCellCommitBadgesIndex = 6;
 
         this._el.append(this._table);
 
@@ -464,9 +464,9 @@ define(['js/logger',
             cCommit = this._commits[i];
             if (cCommit.ui) {
                 cCommit.ui.graphEl.remove();
-                cCommit.ui.webhookBadges.forEach(function (webhookBadge) {
-                    if (typeof webhookBadge.destroy === 'function') {
-                        webhookBadge.destroy();
+                cCommit.ui.commitBadges.forEach(function (commitBadge) {
+                    if (typeof commitBadge.destroy === 'function') {
+                        commitBadge.destroy();
                     }
                 });
 
@@ -695,7 +695,7 @@ define(['js/logger',
     ProjectRepositoryWidget.prototype._trDOMBase = $(
         '<tr><td></td><td class="actions"></td><td class="commit-hash"></td><td class="message-column">' +
         '<div class="' + MESSAGE_DIV_CLASS + '"></div></td><td class="user-column"></td>' +
-        '<td></td><td class="webhook-column"></td></tr>'
+        '<td></td><td class="commit-badge-column"></td></tr>'
     );
     ProjectRepositoryWidget.prototype._createBranchBtnDOMBase = $(
         '<button class="btn btn-default btn-xs btnCreateBranchFromCommit" ' +
@@ -724,12 +724,12 @@ define(['js/logger',
             result = {
                 graphEl: null,
                 tableEl: null,
-                webhookBadges: []
+                commitBadges: []
             },
             itemObj,
             tr,
             btn,
-            webhookContainer,
+            commitBadgeContainer,
             i,
             when;
 
@@ -793,13 +793,13 @@ define(['js/logger',
             'title', moment(when).local().format('dddd, MMMM Do YYYY, h:mm:ss a')
         );
 
-        if (this._webhookBadges.length === 0) {
-            $(tr[0].cells[this._tableCellWebhooksIndex]).hide();
+        if (this._commitBadges.length === 0) {
+            $(tr[0].cells[this._tableCellCommitBadgesIndex]).hide();
         } else {
-            webhookContainer = $('<div>', {class: 'webhook-container'});
-            $(tr[0].cells[this._tableCellWebhooksIndex]).append(webhookContainer);
-            for (i = 0; i < this._webhookBadges.length; i += 1) {
-                this._loadWebhookBadge(this._webhookBadges[i], webhookContainer, params, result);
+            commitBadgeContainer = $('<div>', {class: 'commit-badge-container'});
+            $(tr[0].cells[this._tableCellCommitBadgesIndex]).append(commitBadgeContainer);
+            for (i = 0; i < this._commitBadges.length; i += 1) {
+                this._loadCommitBadge(this._commitBadges[i], commitBadgeContainer, params, result);
             }
         }
 
@@ -1129,21 +1129,21 @@ define(['js/logger',
         });
     };
 
-    ProjectRepositoryWidget.prototype._loadWebhookBadge = function (badgeId, container, params, result) {
+    ProjectRepositoryWidget.prototype._loadCommitBadge = function (badgeId, container, params, result) {
         var self = this,
-            placeHolder = $('<div>', {class: 'place-holder', text: 'loading'});
+            placeHolder = $('<i>', {class: 'fa fa-spinner fa-spin place-holder'});
 
         container.append(placeHolder);
 
-        requirejs([this._config.webhookBadges[badgeId].path],
-            function (WebhookBadge) {
+        requirejs([this._config.commitBadges[badgeId].path],
+            function (CommitBadge) {
                 // Ensure that the container is still part of the DOM
                 // https://api.jquery.com/jQuery.contains/
                 if ($.contains(self._el[0], container[0])) {
                     placeHolder.remove();
-                    result.webhookBadges.push(new WebhookBadge(container, self._client, params));
+                    result.commitBadges.push(new CommitBadge(container, self._client, params));
                 } else {
-                    self._logger.error('ProjectRepositoryWidget or table row removed before webhookBadge loaded');
+                    self._logger.error('ProjectRepositoryWidget or table row removed before CommitBadge loaded');
                 }
             },
             function (err) {
@@ -1154,8 +1154,10 @@ define(['js/logger',
 
     ProjectRepositoryWidget.getDefaultConfig = function () {
         return {
-            webhookBadges: {
-                // path: 'some/requirejs/path'
+            commitBadges: {
+                'UIRecorderCommitBadge': {
+                    path: 'UIRecorder/UIRecorderCommitBadge'
+                }
             }
         };
     };

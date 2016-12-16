@@ -1,4 +1,4 @@
-/*globals define, _, WebGMEGlobal, $ */
+/*globals define, _, WebGMEGlobal, $, requirejs*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -9,13 +9,13 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/BranchStatus/BranchStatusWidget',
     'js/Widgets/KeyboardManager/KeyboardManagerWidget',
     'js/Widgets/Notification/NotificationWidget',
-    'UIRecorder/UIRecorderWidget'
+    'js/Utils/ComponentSettings'
 ], function (PanelBase,
              NetworkStatusWidget,
              BranchStatusWidget,
              KeyboardManagerWidget,
              NotificationWidget,
-             UIRecorderWidget) {
+             ComponentSettings) {
 
     'use strict';
 
@@ -31,7 +31,10 @@ define(['js/PanelBase/PanelBase',
         __parent__.apply(this, [options]);
 
         this._client = params.client;
+        this._config = FooterControlsPanel.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this._config, FooterControlsPanel.getComponentId());
 
+        this._widgets = [];
         //initialize UI
         this._initialize();
 
@@ -88,8 +91,10 @@ define(['js/PanelBase/PanelBase',
     FooterControlsPanel.prototype.createWidgets = function (navBarInner) {
         var widgetPlaceHolder = $('<div class="pull-right"></div>'),
             separator = $('<div class="spacer pull-right"></div>'),
+            extraWidgets = Object.keys(this._config.extraWidgets),
+            i,
             branchStatusEl,
-            recordEl,
+            extraEl,
             notificationEl,
             networkStatusEl,
             keyBoardManagerEl;
@@ -97,25 +102,71 @@ define(['js/PanelBase/PanelBase',
         //keyboard enable/disbale widget (NOTE: only on non touch device)
         if (WebGMEGlobal.SUPPORTS_TOUCH !== true) {
             keyBoardManagerEl = widgetPlaceHolder.clone();
-            new KeyboardManagerWidget(keyBoardManagerEl);
+            this._widgets.push(new KeyboardManagerWidget(keyBoardManagerEl));
             navBarInner.append(keyBoardManagerEl).append(separator.clone());
         }
 
-        recordEl = widgetPlaceHolder.clone();
-        new UIRecorderWidget(recordEl, this._client);
-        navBarInner.append(recordEl).append(separator.clone());
+        for (i = 0; i < extraWidgets.length; i += 1) {
+            extraEl = widgetPlaceHolder.clone();
+            navBarInner.append(extraEl).append(separator.clone());
+
+            this._loadExtraWidget(extraWidgets[i], extraEl, navBarInner);
+        }
 
         networkStatusEl = widgetPlaceHolder.clone();
-        new NetworkStatusWidget(networkStatusEl, this._client);
+        this._widgets.push(new NetworkStatusWidget(networkStatusEl, this._client));
         navBarInner.append(networkStatusEl).append(separator.clone());
 
         notificationEl = widgetPlaceHolder.clone();
-        new NotificationWidget(notificationEl, this._client);
+        this._widgets.push(new NotificationWidget(notificationEl, this._client));
         navBarInner.append(notificationEl).append(separator.clone());
 
         branchStatusEl = widgetPlaceHolder.clone();
-        new BranchStatusWidget(branchStatusEl, this._client);
+        this._widgets.push(new BranchStatusWidget(branchStatusEl, this._client));
         navBarInner.append(branchStatusEl).append(separator.clone());
+    };
+
+    FooterControlsPanel.prototype.clear = function () {
+        this._widgets.forEach(function (widget) {
+            if (typeof widget.destroy === 'function') {
+                widget.destroy();
+            }
+        });
+
+        this._widgets = [];
+    };
+
+    FooterControlsPanel.prototype._loadExtraWidget = function (widgetId, container, navBarInner) {
+        var self = this;
+
+        requirejs([this._config.extraWidgets[widgetId].path],
+            function (Widget) {
+                // Ensure that the container is still part of the DOM
+                // https://api.jquery.com/jQuery.contains/
+                if ($.contains(navBarInner[0], container[0])) {
+                    self._widgets.push(new Widget(container, self._client));
+                } else {
+                    self._logger.error('FooterPanel destroyed before widget loaded.');
+                }
+            },
+            function (err) {
+                self._logger.error(err);
+            }
+        );
+    };
+
+    FooterControlsPanel.getDefaultConfig = function () {
+        return {
+            extraWidgets: {
+                UIRecorder: {
+                    path: 'UIRecorder/UIRecorderWidget'
+                }
+            }
+        };
+    };
+
+    FooterControlsPanel.getComponentId = function () {
+        return 'GenericUIFooterControlsPanel';
     };
 
     return FooterControlsPanel;
