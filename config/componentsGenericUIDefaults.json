@@ -103,5 +103,13 @@
         "DEBUG_ONLY": false
       }
     ]
+  },
+  "GenericUIProjectRepositoryWidget": {
+    "commitBadges": {
+    }
+  },
+  "GenericUIFooterControlsPanel": {
+    "extraWidgets": {
+    }
   }
 }

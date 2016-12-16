@@ -592,7 +592,7 @@ SafeStorage.prototype.getCommits = function (data, callback) {
  * @param {object} data - input parameters
  * @param {string} data.projectId - identifier for project.
  * @param {number} data.number - maximum number of commits to load.
- * @param {string|string[]} data.start - BranchName or commitHash or array of such.
+ * @param {string|string[]} data.start - BranchName or commitHash, or an array of such.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {function} [callback]
  * @returns {promise} //TODO: jsdocify this

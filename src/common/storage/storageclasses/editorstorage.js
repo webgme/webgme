@@ -462,6 +462,8 @@ define([
             } else {
                 webSocket.makeCommit(commitData, commitCallback);
             }
+
+            return commitData.commitObject;
         };
 
         this.setBranchHash = function (projectId, branchName, newHash, oldHash, callback) {

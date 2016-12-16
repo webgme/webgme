@@ -1,4 +1,4 @@
-/*globals define, Raphael, WebGMEGlobal, $*/
+/*globals define, Raphael, WebGMEGlobal, $, requirejs*/
 /*jshint browser: true*/
 
 /**
@@ -9,6 +9,7 @@
 define(['js/logger',
     'js/util',
     'js/Loader/LoaderCircles',
+    'js/Utils/ComponentSettings',
     './ProjectRepositoryWidgetControl',
     'common/regexp',
     'moment',
@@ -18,6 +19,7 @@ define(['js/logger',
 ], function (Logger,
              util,
              LoaderCircles,
+             ComponentSettings,
              ProjectRepositoryWidgetControl,
              REGEXP,
              moment,
@@ -57,6 +59,11 @@ define(['js/logger',
         this._start = null;
         this._dialog = params.dialog;
         this._projectAccess = client.getProjectAccess();
+        this._client = client;
+        this._config = ProjectRepositoryWidget.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this._config, ProjectRepositoryWidget.getComponentId());
+
+        this._commitBadges = Object.keys(this._config.commitBadges);
         this.clear();
         this._initializeUI();
 
@@ -74,6 +81,26 @@ define(['js/logger',
     };
 
     ProjectRepositoryWidget.prototype.clear = function () {
+        var cCommit,
+            i;
+
+        this._commits = this._commits || [];
+
+        for (i = 0; i < this._commits.length; i += 1) {
+            cCommit = this._commits[i];
+            if (cCommit.ui) {
+                cCommit.ui.graphEl.remove();
+                cCommit.ui.commitBadges.forEach(function (commitBadge) {
+                    if (typeof commitBadge.destroy === 'function') {
+                        commitBadge.destroy();
+                    }
+                });
+
+                cCommit.ui.tableEl.find('*').off();
+                cCommit.ui.tableEl.remove();
+            }
+        }
+
         this._commits = [];
         this._orderedCommitIds = [];
         this._actualCommitId = undefined;
@@ -237,8 +264,12 @@ define(['js/logger',
         this._table = $('<table/>', {class: 'table table-hover user-select-on commit-list'});
         this._tHead = $('<thead/>');
         this._tHead.append($('<tr><th>Graph</th><th>Actions</th><th>Commit</th>' +
-            '<th>Message</th><th>User</th><th>Time</th></tr>'));
+            '<th>Message</th><th>User</th><th>Time</th><th class="commit-badge-header">Badges</th></tr>'));
         this._tBody = $('<tbody/>');
+
+        if (this._commitBadges.length === 0) {
+            this._tHead.find('.commit-badge-header').hide();
+        }
 
         this._table.append(this._tHead).append(this._tBody);
 
@@ -247,6 +278,7 @@ define(['js/logger',
         this._tableCellMessageIndex = 3;
         this._tableCellUserIndex = 4;
         this._tableCellTimeStampIndex = 5;
+        this._tableCellCommitBadgesIndex = 6;
 
         this._el.append(this._table);
 
@@ -431,7 +463,15 @@ define(['js/logger',
         for (i = idx; i < len; i += 1) {
             cCommit = this._commits[i];
             if (cCommit.ui) {
-                cCommit.ui.remove();
+                cCommit.ui.graphEl.remove();
+                cCommit.ui.commitBadges.forEach(function (commitBadge) {
+                    if (typeof commitBadge.destroy === 'function') {
+                        commitBadge.destroy();
+                    }
+                });
+
+                cCommit.ui.tableEl.find('*').off();
+                cCommit.ui.tableEl.remove();
             }
             cCommit.ui = this._createItem({
                 x: cCommit.x,
@@ -654,7 +694,8 @@ define(['js/logger',
 
     ProjectRepositoryWidget.prototype._trDOMBase = $(
         '<tr><td></td><td class="actions"></td><td class="commit-hash"></td><td class="message-column">' +
-        '<div class="' + MESSAGE_DIV_CLASS + '"></div></td><td></td><td></td></tr>'
+        '<div class="' + MESSAGE_DIV_CLASS + '"></div></td><td class="user-column"></td>' +
+        '<td></td><td class="commit-badge-column"></td></tr>'
     );
     ProjectRepositoryWidget.prototype._createBranchBtnDOMBase = $(
         '<button class="btn btn-default btn-xs btnCreateBranchFromCommit" ' +
@@ -678,11 +719,18 @@ define(['js/logger',
     //);
 
     ProjectRepositoryWidget.prototype._createItem = function (params) {
-        var itemObj,
+        var firstRow = this._tBody.children().length === 0,
+            userId = params.user || '',
+            result = {
+                graphEl: null,
+                tableEl: null,
+                commitBadges: []
+            },
+            itemObj,
             tr,
             btn,
-            firstRow = this._tBody.children().length === 0,
-            userId = params.user || '',
+            commitBadgeContainer,
+            i,
             when;
 
         itemObj = $('<div/>', {
@@ -730,7 +778,7 @@ define(['js/logger',
             }).toDataURL();
         }
 
-        $(tr[0].cells[this._tableCellUserIndex]).addClass('user-column');
+        $(tr[0].cells[this._tableCellUserIndex]).addClass();
 
         $(tr[0].cells[this._tableCellUserIndex]).append(
             $('<span class="avatar-container">' + userId +
@@ -744,6 +792,16 @@ define(['js/logger',
         $(tr[0].cells[this._tableCellTimeStampIndex]).attr(
             'title', moment(when).local().format('dddd, MMMM Do YYYY, h:mm:ss a')
         );
+
+        if (this._commitBadges.length === 0) {
+            $(tr[0].cells[this._tableCellCommitBadgesIndex]).hide();
+        } else {
+            commitBadgeContainer = $('<div>', {class: 'commit-badge-container'});
+            $(tr[0].cells[this._tableCellCommitBadgesIndex]).append(commitBadgeContainer);
+            for (i = 0; i < this._commitBadges.length; i += 1) {
+                this._loadCommitBadge(this._commitBadges[i], commitBadgeContainer, params, result);
+            }
+        }
 
         //generate 'Create branch from here' button
         btn = this._createBranchBtnDOMBase.clone();
@@ -779,8 +837,10 @@ define(['js/logger',
         }
 
         this._tBody.append(tr);
+        result.graphEl = itemObj;
+        result.tableEl = tr;
 
-        return itemObj;
+        return result;
     };
 
     //ProjectRepositoryWidget.prototype._generateLoadCommitBtnForCommit = function (commitId) {
@@ -805,7 +865,7 @@ define(['js/logger',
 
         //remove old actual marker
         if (idx !== -1) {
-            this._commits[idx].ui.removeClass(ACTUAL_COMMIT_CLASS);
+            this._commits[idx].ui.graphEl.removeClass(ACTUAL_COMMIT_CLASS);
 
             //btn = this._generateLoadCommitBtnForCommit(oldId);
 
@@ -817,7 +877,7 @@ define(['js/logger',
         idx = this._orderedCommitIds.indexOf(newId);
         if (idx !== -1) {
             //add 'actual' class to commit DOM
-            this._commits[idx].ui.addClass(ACTUAL_COMMIT_CLASS);
+            this._commits[idx].ui.graphEl.addClass(ACTUAL_COMMIT_CLASS);
 
             //remove 'LoadCommit' button from that row
             $(this._tBody.children()[idx]
@@ -1067,6 +1127,43 @@ define(['js/logger',
             }
             event.stopPropagation();
         });
+    };
+
+    ProjectRepositoryWidget.prototype._loadCommitBadge = function (badgeId, container, params, result) {
+        var self = this,
+            placeHolder = $('<i>', {class: 'fa fa-spinner fa-spin place-holder'});
+
+        container.append(placeHolder);
+
+        requirejs([this._config.commitBadges[badgeId].path],
+            function (CommitBadge) {
+                // Ensure that the container is still part of the DOM
+                // https://api.jquery.com/jQuery.contains/
+                if ($.contains(self._el[0], container[0])) {
+                    placeHolder.remove();
+                    result.commitBadges.push(new CommitBadge(container, self._client, params));
+                } else {
+                    self._logger.error('ProjectRepositoryWidget or table row removed before CommitBadge loaded');
+                }
+            },
+            function (err) {
+                self._logger.error(err);
+            }
+        );
+    };
+
+    ProjectRepositoryWidget.getDefaultConfig = function () {
+        return {
+            commitBadges: {
+                //'UIRecorderCommitBadge': {
+                //    path: 'UIRecorder/UIRecorderCommitBadge'
+                //}
+            }
+        };
+    };
+
+    ProjectRepositoryWidget.getComponentId = function () {
+        return 'GenericUIProjectRepositoryWidget';
     };
 
     return ProjectRepositoryWidget;

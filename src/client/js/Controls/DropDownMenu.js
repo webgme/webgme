@@ -32,7 +32,7 @@ define(['jquery'], function () {
     };
 
     DropDownMenu.prototype.addItem = function (item) {
-        this._addItem(item);
+        return this._addItem(item);
     };
 
     DropDownMenu.prototype.clear = function (noDetach) {
@@ -100,18 +100,18 @@ define(['jquery'], function () {
     };
 
     DropDownMenu.prototype._addItem = function (item) {
-        var li;
+        var itemEl;
 
         if (item.html) {
-            li = $(item.html);
+            itemEl = $(item.html);
         } else {
-            li = $('<li><a href="#">' + item.text + '</a></li>');
+            itemEl = $('<li><a href="#">' + item.text + '</a></li>');
         }
 
-        li.data('val', item.value);
+        itemEl.data('val', item.value);
 
         if (this._sorted === false) {
-            this._ul.append(li);
+            this._ul.append(itemEl);
         } else {
             //find it's place based on text order
             var insertBefore;
@@ -125,9 +125,9 @@ define(['jquery'], function () {
                 }
             }
             if (insertBefore) {
-                li.insertAfter(insertBefore);
+                itemEl.insertAfter(insertBefore);
             } else {
-                this._ul.prepend(li);
+                this._ul.prepend(itemEl);
             }
         }
 
@@ -135,6 +135,8 @@ define(['jquery'], function () {
             this._el.append(this._btnDropDownToggle);
             this._el.append(this._ul);
         }
+
+        return itemEl;
     };
 
     DropDownMenu.prototype._clear = function (noDetach) {
