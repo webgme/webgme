@@ -4,8 +4,8 @@
  */
 
 var testFixture = require('../../../_globals.js');
-
-describe('Executor Plugin', function () {
+//TODO: Add these back when 
+describe.skip('Executor Plugin', function () {
     'use strict';
 
     var Q = testFixture.Q,
