@@ -119,7 +119,8 @@ define([
     'common/regexp',
     'common/core/librarycore',
     'common/core/CoreIllegalArgumentError',
-    'common/core/CoreIllegalOperationError'
+    'common/core/CoreIllegalOperationError',
+    'common/core/constants'
 ], function (CoreRel,
              Set,
              Guid,
@@ -137,7 +138,8 @@ define([
              REGEXP,
              LibraryCore,
              CoreIllegalArgumentError,
-             CoreIllegalOperationError) {
+             CoreIllegalOperationError,
+             CONSTANTS) {
     'use strict';
 
     var isValidNode,
@@ -250,17 +252,20 @@ define([
     }
 
     function ensureRelationName(input, nameOfInput, isAsync) {
-        var error;
+        var error,
+            reserved = [
+                CONSTANTS.BASE_POINTER,
+                CONSTANTS.OVERLAYS_PROPERTY,
+                CONSTANTS.MEMBER_RELATION
+            ];
 
         if (typeof input !== 'string') {
             error = new CoreIllegalArgumentError('Parameter ' + nameOfInput + ' is not of type string.');
         } else {
             if (input.indexOf('_') === 0 ||
-                input === 'base' ||
-                input === 'ovr' ||
-                input === 'member') {
+                reserved.indexOf(input) !== -1) {
                 error = new CoreIllegalArgumentError('Parameter ' + nameOfInput + ' cannot start with \'_\'' +
-                    ', or be equal to \'base\', or be equal to \'ovr\', or be equal to \'member\'');
+                    ', or be equal with any of the reserved ' + reserved + ' words.');
             }
         }
 
@@ -1394,7 +1399,7 @@ define([
          */
         this.deleteSet = this.delSet = function (node, name) {
             ensureNode(node, 'node');
-            ensureType(name, 'name', 'string');
+            ensureRelationName(name, 'name');
 
             return core.deleteSet(node, name);
         };
