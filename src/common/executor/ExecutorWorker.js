@@ -129,6 +129,11 @@ define([
     };
     util.inherits(ExecutorWorker, events.EventEmitter);
 
+    ExecutorWorker.prototype.wasProcessCanceled = function (code, signal) {
+        var isPosix = process.platform !== 'win32';
+        return signal === 'SIGINT' || (isPosix && code === 130);
+    };
+
     ExecutorWorker.prototype.startJob = function (jobInfo, errorCallback, successCallback) {
         var self = this;
 
@@ -231,7 +236,7 @@ define([
 
                                     jobInfo.finishTime = new Date().toISOString();
 
-                                    if (signal === 'SIGINT') {
+                                    if (this.wasProcessCanceled(err, signal)) {
                                         jobInfo.status = 'CANCELED';
                                     } else if (err) {
                                         self.logger.error(jobInfo.hash + ' exec error: ' + util.inspect(err));
