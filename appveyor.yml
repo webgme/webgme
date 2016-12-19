@@ -70,3 +70,4 @@ test_script:
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/storage
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/util
   - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/server/worker
+  - node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test/client
