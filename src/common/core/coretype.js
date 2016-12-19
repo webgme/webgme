@@ -732,9 +732,9 @@ define([
                 base = node.base,
                 moved;
 
-            if (typeof minRelidLength === 'number' && currRelid.length < minRelidLength){
+            if (typeof minRelidLength === 'number' && currRelid.length < minRelidLength) {
                 takenRelids[currRelid] = true;
-            } else if (typeof relidLength === 'number' && currRelid.length < relidLength){
+            } else if (typeof relidLength === 'number' && currRelid.length < relidLength) {
                 takenRelids[currRelid] = true;
             }
 
@@ -1209,11 +1209,11 @@ define([
         };
 
         this.getOwnPointerPath = function (node, name) {
-            innerCore.getPointerPath(node, name);
+            return innerCore.getPointerPath(node, name);
         };
 
         this.getOwnPointerPathFrom = function (node, source, name) {
-            innerCore.getPointerPathFrom(node, source, name);
+            return innerCore.getPointerPathFrom(node, source, name);
         };
 
         this.getOwnChildrenPaths = function (node) {
