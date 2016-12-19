@@ -58,12 +58,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.getBaseId = function () {
-        var base = this._state.core.getBase(this._state.nodes[this._id].node);
-        if (base) {
-            return this._storeNode(base);
-        } else {
-            return null;
-        }
+        return this._storeNode(this._state.core.getBase(this._state.nodes[this._id].node));
     };
 
     GMENode.prototype.isValidNewBase = function (basePath) {
@@ -97,7 +92,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.getInheritorIds = function () {
-        return [];
+        return this._state.core.getInstancePaths(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getAttribute = function (name) {
@@ -176,16 +171,8 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getAttributeNames(this._state.nodes[this._id].node);
     };
 
-    GMENode.prototype.getValidAttributeNames = function () {
-        return this._state.core.getValidAttributeNames(this._state.nodes[this._id].node);
-    };
-
     GMENode.prototype.getOwnAttributeNames = function () {
         return this._state.core.getOwnAttributeNames(this._state.nodes[this._id].node);
-    };
-
-    GMENode.prototype.getOwnValidAttributeNames = function () {
-        return this._state.core.getOwnValidAttributeNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.getAttributeMeta = function (name) {
@@ -265,6 +252,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
 
     GMENode.prototype.getValidAttributeNames = function () {
         return this._state.core.getValidAttributeNames(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getOwnValidAttributeNames = function () {
+        return this._state.core.getOwnValidAttributeNames(this._state.nodes[this._id].node);
     };
 
     GMENode.prototype.isValidAttributeValueOf = function (name, value) {
@@ -379,7 +370,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     GMENode.prototype.getValidSetMemberTypesDetailed = function (setName) {
         var parameters = {
                 node: this._state.nodes[this._id].node,
-                children: [],
+                members: [],
                 sensitive: true,
                 multiplicity: false,
                 name: setName
@@ -387,12 +378,12 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
             fullList,
             filteredList,
             validTypes = {},
-            keys = this.getChildrenIds(),
+            keys = this.getMemberIds(setName),
             i;
 
         for (i = 0; i < keys.length; i++) {
             if (this._state.nodes[keys[i]]) {
-                parameters.children.push(this._state.nodes[keys[i]].node);
+                parameters.members.push(this._state.nodes[keys[i]].node);
             }
         }
 
@@ -437,7 +428,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     };
 
     GMENode.prototype.isValidChildOf = function (parentPath) {
-        var parentNode = this._state.nodes[parentPath].node;
+        var parentNode = _getNode(this._state.nodes, parentPath);
 
         if (parentNode) {
             return this._state.core.isValidChildOf(this._state.nodes[this._id].node, parentNode);

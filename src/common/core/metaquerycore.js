@@ -139,7 +139,7 @@ define([
             }
 
             if (parameters.aspect) {
-                keys = innerCore.getAspectMeta(node, parameters.aspect);
+                keys = innerCore.getAspectMeta(node, parameters.aspect) || [];
                 i = validNodes.length;
 
                 while (i--) {

@@ -1344,10 +1344,8 @@ describe('GME client', function () {
             expect(clientNode.getBaseId()).to.equal('/701504349');
         });
 
-        //TODO not implemented, do we need it???
         it('should return the paths of the instances of the node', function () {
-            //expect(clientNode.getInheritorIds()).to.deep.equal(['/5185791']);
-            expect(clientNode.getInheritorIds()).to.be.empty;
+            expect(clientNode.getInheritorIds()).to.deep.equal(['/5185791']);
         });
 
         it('should return the list of available attribute names of the node', function () {

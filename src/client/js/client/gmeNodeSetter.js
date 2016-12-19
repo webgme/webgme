@@ -12,7 +12,7 @@ define([], function () {
                 commentStr = comment ? comment : '';
 
             console.warn('"gmeClient.' + oldFn + '" is deprecated and will eventually be removed, use "' +
-            typeToUse + newFn + '" instead.' + commentStr);
+                typeToUse + newFn + '" instead.' + commentStr);
         }
 
         function _getNode(path) {
@@ -191,7 +191,7 @@ define([], function () {
         function copyNode(path, parentPath, desc, msg) {
             var node = _getNode(path),
                 parentNode = _getNode(parentPath),
-                newNode;
+                newNode, newPath;
 
             if (node && parentNode) {
                 newNode = state.core.copyNode(node, parentNode);
@@ -202,10 +202,10 @@ define([], function () {
                 }
 
                 _setAttrAndRegistry(newNode, desc);
-                storeNode(newNode);
+                newPath = storeNode(newNode);
 
                 saveRoot(msg || 'copyNode(' + path + ', ' + parentPath + ', ' + JSON.stringify(desc) + ')');
-                return state.core.getPath(newNode);
+                return newPath;
             }
         }
 
@@ -495,6 +495,7 @@ define([], function () {
                 saveRoot(msg || 'delMemberRegistry(' + path + ',' + memberPath + ',' + setId + ',' + name + ')');
             }
         }
+
         // Mixed argument methods - END
 
         function setSetAttribute(path, setName, attrName, attrValue, msg) {
@@ -578,17 +579,14 @@ define([], function () {
         function moveNode(path, parentPath, msg) {
             var node = _getNode(path),
                 parentNode = _getNode(parentPath),
-                error;
+                movedPath;
 
             if (node && parentNode) {
-                error = state.core.moveNode(node, parentNode);
-                if (error instanceof Error) {
-                    printCoreError(error);
-                    return;
-                }
-
+                movedPath = storeNode(state.core.moveNode(node, parentNode));
                 saveRoot(msg || 'moveNode(' + path + ',' + parentPath + ')');
             }
+
+            return movedPath;
         }
 
         function delBase(path, msg) {
@@ -780,7 +778,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg ||'setChildMeta(' + path + ', ' + childPath + ',' + min || -1 + ',' + max || -1 +')');
+                saveRoot(msg || 'setChildMeta(' + path + ', ' + childPath + ',' + min || -1 + ',' + max || -1 + ')');
             }
         }
 
@@ -1347,14 +1345,14 @@ define([], function () {
 
         return {
             setAttribute: setAttribute,
-            setAttributes: function() {
+            setAttributes: function () {
                 _logDeprecated('setAttributes', 'setAttribute');
                 setAttribute.apply(null, arguments);
             },
 
             delAttribute: delAttribute,
-            delAttributes: function() {
-            _logDeprecated('delAttributes', 'delAttribute');
+            delAttributes: function () {
+                _logDeprecated('delAttributes', 'delAttribute');
                 delAttribute.apply(null, arguments);
             },
             setRegistry: setRegistry,
@@ -1366,7 +1364,7 @@ define([], function () {
             moveMoreNodes: moveMoreNodes,
             deleteNode: deleteNode,
             deleteNodes: deleteNodes,
-            delMoreNodes: function() {
+            delMoreNodes: function () {
                 _logDeprecated('delMoreNodes', 'deleteNodes');
                 deleteNodes.apply(null, arguments);
             },
@@ -1381,7 +1379,7 @@ define([], function () {
             createChildren: createChildren,
 
             setPointer: setPointer,
-            makePointer: function() {
+            makePointer: function () {
                 _logDeprecated('makePointer', 'setPointer');
                 setPointer.apply(null, arguments);
             },
@@ -1427,12 +1425,12 @@ define([], function () {
 
             // attribute
             setAttributeMeta: setAttributeMeta,
-            setAttributeSchema: function() {
+            setAttributeSchema: function () {
                 _logDeprecated('setAttributeSchema', 'setAttributeMeta');
                 setAttributeMeta.apply(null, arguments);
             },
             delAttributeMeta: delAttributeMeta,
-            removeAttributeSchema: function() {
+            removeAttributeSchema: function () {
                 _logDeprecated('removeAttributeSchema', 'delAttributeMeta');
                 delAttributeMeta.apply(null, arguments);
             },
@@ -1441,19 +1439,19 @@ define([], function () {
             setPointerMeta: setPointerMeta,
             setPointerMetaTarget: setPointerMetaTarget,
             updateValidTargetItem: function (path, name, targetObj, msg) {
-            _logDeprecated('updateValidTargetItem(path, name, targetObj, msg)',
+                _logDeprecated('updateValidTargetItem(path, name, targetObj, msg)',
                     'setPointerMetaTarget(path, name, targetPath, childPath, min, max, msg)');
                 targetObj = targetObj || {};
                 setPointerMetaTarget(path, name, targetObj.id, targetObj.min, targetObj.max, msg);
             },
 
             delPointerMetaTarget: delPointerMetaTarget,
-            removeValidTargetItem:  function() {
+            removeValidTargetItem: function () {
                 _logDeprecated('removeValidTargetItem', 'delPointerMetaTarget');
                 delPointerMetaTarget.apply(null, arguments);
             },
             delPointerMeta: delPointerMeta,
-            deleteMetaPointer: function() {
+            deleteMetaPointer: function () {
                 _logDeprecated('deleteMetaPointer', 'delPointerMeta');
                 delPointerMeta.apply(null, arguments);
             },
@@ -1461,13 +1459,13 @@ define([], function () {
             // aspect
             setAspectMetaTarget: setAspectMetaTarget,
             setAspectMetaTargets: setAspectMetaTargets,
-            setMetaAspect: function() {
+            setMetaAspect: function () {
                 _logDeprecated('setMetaAspect', 'setAspectMetaTargets');
                 setAspectMetaTargets.apply(null, arguments);
             },
             delAspectMetaTarget: delAspectMetaTarget,
             delAspectMeta: delAspectMeta,
-            deleteMetaAspect: function() {
+            deleteMetaAspect: function () {
                 _logDeprecated('deleteMetaAspect', 'delAspectMeta');
                 delAspectMeta.apply(null, arguments);
             },
@@ -1478,96 +1476,96 @@ define([], function () {
 
             // Deprecated meta-getters
             // TODO: These should be moved to Util/GMEConcepts or removed.
-            getMeta: function() {
+            getMeta: function () {
                 _logDeprecated('getMeta(path)', 'getJsonMeta()', true);
                 return getMeta.apply(null, arguments);
             },
-            isTypeOf: function() {
+            isTypeOf: function () {
                 //_logDeprecated('isTypeOf(path, typePath)', 'isTypeOf(typePath)', true);
                 return isTypeOf.apply(null, arguments);
             },
-            isValidTarget: function() {
+            isValidTarget: function () {
                 _logDeprecated('isValidTarget(path, name, targetPath)', 'isValidTargetOf(sourcePath, name)', true);
                 return isValidTarget.apply(null, arguments);
             },
-            filterValidTarget: function() {
+            filterValidTarget: function () {
                 // TODO: Should we add a method in GMEConcepts or remove this guy?
                 return filterValidTarget.apply(null, arguments);
             },
-            getValidTargetTypes: function() {
+            getValidTargetTypes: function () {
                 // TODO: Should we add a method in GMEConcepts or remove this guy?
                 return getValidTargetTypes.apply(null, arguments);
             },
-            getOwnValidTargetTypes: function() {
+            getOwnValidTargetTypes: function () {
                 // TODO: Should we add a method in GMEConcepts or remove this guy?
                 return getOwnValidTargetTypes.apply(null, arguments);
             },
-            getValidTargetItems: function() {
+            getValidTargetItems: function () {
                 // TODO: Should we add a method in GMEConcepts or remove this guy?
                 return getValidTargetItems.apply(null, arguments);
             },
-            getOwnValidTargetItems: function() {
+            getOwnValidTargetItems: function () {
                 // TODO: Should we add a method in GMEConcepts or remove this guy?
                 return getOwnValidTargetItems.apply(null, arguments);
             },
-            getPointerMeta: function() {
+            getPointerMeta: function () {
                 // TODO: Should we add a method in GMEConcepts or remove this guy?
                 return getPointerMeta.apply(null, arguments);
             },
-            isValidChild: function() {
+            isValidChild: function () {
                 _logDeprecated('isValidChild(path, childPath)', 'isValidChildOf(parentPath)', true);
                 return isValidChild.apply(null, arguments);
             },
-            getValidChildrenTypes: function() {
+            getValidChildrenTypes: function () {
                 _logDeprecated('getValidChildrenTypes(path)', 'getValidChildrenIds()', true);
                 return getValidChildrenTypes.apply(null, arguments);
             },
-            getValidAttributeNames: function() {
+            getValidAttributeNames: function () {
                 _logDeprecated('getValidAttributeNames(path)', 'getValidAttributeNames()', true);
                 return getValidAttributeNames.apply(null, arguments);
             },
-            getOwnValidAttributeNames: function() {
+            getOwnValidAttributeNames: function () {
                 _logDeprecated('getOwnValidAttributeNames(path)', 'getOwnValidAttributeNames()', true);
                 return getOwnValidAttributeNames.apply(null, arguments);
             },
-            getAttributeSchema: function() {
+            getAttributeSchema: function () {
                 _logDeprecated('getAttributeSchema(path, name)', 'getAttributeMeta(name)', true);
                 return getAttributeSchema.apply(null, arguments);
             },
-            getMetaAspectNames: function() {
+            getMetaAspectNames: function () {
                 _logDeprecated('getMetaAspectNames(path)', 'getValidAspectNames()', true);
                 return getMetaAspectNames.apply(null, arguments);
             },
-            getOwnMetaAspectNames: function() {
+            getOwnMetaAspectNames: function () {
                 _logDeprecated('getOwnMetaAspectNames(path)', 'getOwnValidAspectNames()', true);
                 return getOwnMetaAspectNames.apply(null, arguments);
             },
-            getMetaAspect: function() {
+            getMetaAspect: function () {
                 _logDeprecated('getMetaAspect(path, name)', 'getAspectMeta(name)', true,
                     ' Returned value is of different structure! {items: meta} vs meta');
                 return getMetaAspect.apply(null, arguments);
             },
-            hasOwnMetaRules: function() {
+            hasOwnMetaRules: function () {
                 // TODO: Should we add a method on the core??
                 return hasOwnMetaRules.apply(null, arguments);
             },
-            getChildrenMeta: function() {
+            getChildrenMeta: function () {
                 // TODO: Should we add a method in GMEConcepts or remove this guy?
                 return getChildrenMeta.apply(null, arguments);
             },
-            getChildrenMetaAttribute: function() {
+            getChildrenMetaAttribute: function () {
                 // TODO: Should we add a method in GMEConcepts or remove this guy?
                 return getChildrenMetaAttribute.apply(null, arguments);
             },
-            getValidChildrenItems: function() {
+            getValidChildrenItems: function () {
                 // TODO: Should we add a method in GMEConcepts or remove this guy?
                 return getValidChildrenItems.apply(null, arguments);
             },
-            getOwnValidChildrenTypes: function() {
+            getOwnValidChildrenTypes: function () {
                 // TODO: Should we add a method on the core similar to getValidChildrenTypes?
                 return getOwnValidChildrenTypes.apply(null, arguments);
             },
-            getAspectTerritoryPattern: function() {
+            getAspectTerritoryPattern: function () {
                 // TODO: Should we add a method in GMEConcepts or remove this guy?
                 return getAspectTerritoryPattern.apply(null, arguments);
             }

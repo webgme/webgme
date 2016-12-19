@@ -1,15 +1,62 @@
 {
   "source": {
-    "include": [ "src/addon", "src/bin", "src/client/js/client.js", "src/client/js/client", "src/common", "src/server",
-    "jsdocdefs.js", "src/plugin"],
-    "exclude": [ "src/server/middleware/executor/worker/node_worker.classes.build.js" ,
-      "src/server/middleware/executor/worker/node_modules"],
-    "includePattern": ".+\\.js(doc)?$",
-    "excludePattern": "(^|\\/|\\\\)_"
+    "include": [
+      "src/docs",
+      "src/common/blob/BlobClient.js",
+      "src/common/blob/Artifact.js",
+      "src/common/blob/BlobConfig.js",
+      "src/common/blob/BlobMetadata.js",
+      "src/server/middleware/blob",
+      "src/addon/AddOnBase.js",
+      "src/addon/addonmanager.js",
+      "src/addon/AddOnUpdateResult.js",
+      "src/plugin/PluginBase.js",
+      "src/plugin/PluginConfig.js",
+      "src/plugin/PluginContext.js",
+      "src/plugin/PluginManagerConfiguration.js",
+      "src/plugin/PluginMessage.js",
+      "src/plugin/PluginNodeDescription.js",
+      "src/plugin/PluginResult.js",
+      "src/common/executor",
+      "src/common/core/core.js",
+      "src/server/middleware/auth/gmeauth.js",
+      "src/common/storage/project/project.js",
+      "src/common/storage/project/interface.js",
+      "src/server/storage/safestorage.js",
+      "src/server/storage/userproject.js"
+    ]
   },
   "opts": {
     "encoding": "utf8",
+    "template": "./node_modules/ink-docstrap/template",
     "destination": "./docs/source",
-    "recurse": true
+    "recurse": true,
+    "readme": "src/docs/main.md"
+  },
+  "plugins": [
+    "plugins/markdown"
+  ],
+  "markdown": {
+    "tags": [
+      "author",
+      "description"
+    ]
+  },
+  "templates": {
+    "systemName": "WebGME",
+    "footer": "",
+    "copyright": "Copyright (c) 2012-2017 Vanderbilt University, ISIS (MIT)",
+    "includeDate": true,
+    "navType": "inline",
+    "theme": "slate",
+    "linenums": false,
+    "collapseSymbols": false,
+    "inverseNav": true,
+    "outputSourceFiles": false,
+    "outputSourcePath": false,
+    "dateFormat": "dd DD/MM/YYYY",
+    "syntaxTheme": "dark",
+    "sort": true,
+    "search": true
   }
 }
