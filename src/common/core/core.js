@@ -1383,7 +1383,7 @@ define([
          */
         this.createSet = function (node, name) {
             ensureNode(node, 'node');
-            ensureType(name, 'name', 'string');
+            ensureRelationName(name, 'name');
 
             return core.createSet(node, name);
         };

@@ -1816,20 +1816,27 @@ define(['js/logger',
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._getConnectionVisualProperties = function (objID) {
         var connVisualProperties = GMEVisualConcepts.getConnectionVisualProperties(objID),
             memberListContainer = this._client.getNode(this._memberListContainerID),
+            members,
             val;
 
-        //get custom color from the set's registry object
-        val = memberListContainer.getMemberRegistry(this._selectedMemberListID, objID, REGISTRY_KEYS.COLOR);
-        if (val) {
-            connVisualProperties[CONSTANTS.LINE_STYLE.COLOR] = val;
-        }
+        if (memberListContainer !== null &&
+            memberListContainer.getSetNames().indexOf(this._selectedMemberListID) !== -1) {
+            members = memberListContainer.getMemberIds(this._selectedMemberListID);
+            if (members.indexOf(objID) !== -1) {
+                //get custom color from the set's registry object
+                val = memberListContainer.getMemberRegistry(this._selectedMemberListID, objID, REGISTRY_KEYS.COLOR);
+                if (val) {
+                    connVisualProperties[CONSTANTS.LINE_STYLE.COLOR] = val;
+                }
 
-        //get custom points from the set's registry object
-        val = memberListContainer.getMemberRegistry(this._selectedMemberListID,
-            objID,
-            REGISTRY_KEYS.LINE_CUSTOM_POINTS);
-        if (val && _.isArray(val)) {
-            connVisualProperties[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = $.extend(true, [], val);
+                //get custom points from the set's registry object
+                val = memberListContainer.getMemberRegistry(this._selectedMemberListID,
+                    objID,
+                    REGISTRY_KEYS.LINE_CUSTOM_POINTS);
+                if (val && _.isArray(val)) {
+                    connVisualProperties[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = $.extend(true, [], val);
+                }
+            }
         }
 
         return connVisualProperties;
