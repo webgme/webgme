@@ -100,15 +100,15 @@ describe('Executor Plugin', function () {
                 var deferred = Q.defer(),
                     stderr = '',
                     stdout = '',
-                    args = ['node_worker.js', '../../../../../test-tmp/worker_config.json',
-                        '../../../../../test-tmp/executor-tmp'],
+                    args = ['node_worker.js', '../../test-tmp/worker_config.json',
+                        '../../test-tmp/executor-tmp'],
                     timeoutId = setTimeout(function () {
                         deferred.reject(new Error('Worker did not respond in time, stderr: ' +
                             stderr + ' stdout: ' + stdout));
                     }, 5000);
 
                 nodeWorkerProcess = childProcess.spawn('node', args,
-                    {cwd: 'src/server/middleware/executor/worker'});
+                    {cwd: 'node_modules/webgme-executor-worker'});
                 nodeWorkerProcess.stderr.on('data', function (data) {
                     stderr += data.toString();
                 });

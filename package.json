@@ -88,7 +88,8 @@
     "pkginfo": "0.4.0",
     "plato": "1.7.0",
     "rimraf": "2.5.4",
-    "ssl-root-cas": "1.1.10"
+    "ssl-root-cas": "1.1.10",
+    "webgme-executor-worker": "^1.0.0"
   },
   "main": "webgme",
   "scripts": {
