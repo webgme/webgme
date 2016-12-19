@@ -18,7 +18,12 @@
       "src/plugin/PluginNodeDescription.js",
       "src/plugin/PluginResult.js",
       "src/common/executor",
-      "src/common/core/core.js"
+      "src/common/core/core.js",
+      "src/server/middleware/auth/gmeauth.js",
+      "src/common/storage/project/project.js",
+      "src/common/storage/project/interface.js",
+      "src/server/storage/safestorage.js",
+      "src/server/storage/userproject.js"
     ]
   },
   "opts": {
