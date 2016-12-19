@@ -198,7 +198,7 @@ describe('meta cache core', function () {
         var root = core.createNode({}),
             itemBase = core.createNode({parent: root}),
             item = core.createNode({parent: root, base: itemBase}),
-            itemBasePath = core.getPath(itemBase),
+            itemPath = core.getPath(item),
             hash = core.getHash(root);
 
         core.addMember(root, 'MetaAspectSet', itemBase);
@@ -210,18 +210,18 @@ describe('meta cache core', function () {
 
         core.loadRoot(hash)
             .then(function (root) {
-                var itemBase;
+                var item;
                 expect(Object.keys(core.getAllMetaNodes(root))).to.have.length(2);
 
-                itemBase = core.getAllMetaNodes(root)[itemBasePath];
-                core.deleteNode(itemBase, true);
+                item = core.getAllMetaNodes(root)[itemPath];
+                core.deleteNode(item);
                 core.persist(root);
                 hash = core.getHash(root);
 
                 return core.loadRoot(hash);
             })
             .then(function (root) {
-                expect(Object.keys(core.getAllMetaNodes(root))).to.have.length(0);
+                expect(Object.keys(core.getAllMetaNodes(root))).to.have.length(1);
             })
             .nodeify(done);
     });

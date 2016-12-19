@@ -12,8 +12,6 @@ describe('constraint.core', function () {
         Q = testFixture.Q,
         storage,
         expect = testFixture.expect,
-        __should = testFixture.should,
-        TASYNC = testFixture.requirejs('common/core/tasync'),
         project,
         projectName = 'coreConstraintTesting',
         projectId = testFixture.projectName2Id(projectName),
@@ -51,7 +49,6 @@ describe('constraint.core', function () {
 
                 project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
                 core = new testFixture.WebGME.core(project, {
-                    usertype: 'tasync',
                     globConf: gmeConfig,
                     logger: logger
                 });
@@ -86,54 +83,56 @@ describe('constraint.core', function () {
     });
 
     it('gives back proper names for own and all constraints', function (done) {
-        TASYNC.call(function (children) {
-            var base, instance, i;
+        Q.nfcall(core.loadChildren,rootNode)
+            .then(function (children) {
+                var base, instance, i;
 
-            children.should.have.length(2);
+                children.should.have.length(2);
 
-            for (i = 0; i < children.length; i++) {
-                if (core.getAttribute(children[i], 'name') === 'base') {
-                    base = children[i];
-                } else {
-                    instance = children[i];
+                for (i = 0; i < children.length; i++) {
+                    if (core.getAttribute(children[i], 'name') === 'base') {
+                        base = children[i];
+                    } else {
+                        instance = children[i];
+                    }
                 }
-            }
 
-            core.getConstraintNames(rootNode).should.be.empty;
-            core.getOwnConstraintNames(rootNode).should.be.empty;
-            core.getConstraintNames(base).should.be.eql(['global']);
-            core.getOwnConstraintNames(base).should.be.eql(['global']);
-            core.getConstraintNames(instance).should.include.members(['global', 'local']);
-            core.getOwnConstraintNames(instance).should.be.eql(['local']);
-            expect(core.getConstraint(instance, 'local')).to.deep.equal({
-                priority: 1,
-                info: 'just another info text',
-                script: 'script text for local constraint'
-            });
+                core.getConstraintNames(rootNode).should.be.empty;
+                core.getOwnConstraintNames(rootNode).should.be.empty;
+                core.getConstraintNames(base).should.be.eql(['global']);
+                core.getOwnConstraintNames(base).should.be.eql(['global']);
+                core.getConstraintNames(instance).should.include.members(['global', 'local']);
+                core.getOwnConstraintNames(instance).should.be.eql(['local']);
+                expect(core.getConstraint(instance, 'local')).to.deep.equal({
+                    priority: 1,
+                    info: 'just another info text',
+                    script: 'script text for local constraint'
+                });
 
-            done();
-        }, core.loadChildren(rootNode));
+            })
+            .nodeify(done);
     });
 
     it('removing constraints', function (done) {
-        TASYNC.call(function (children) {
-            var base, instance, i;
+        Q.nfcall(core.loadChildren,rootNode)
+            .then(function(children){
+                var base, instance, i;
 
-            children.should.have.length(2);
+                children.should.have.length(2);
 
-            for (i = 0; i < children.length; i++) {
-                if (core.getAttribute(children[i], 'name') === 'base') {
-                    base = children[i];
-                } else {
-                    instance = children[i];
+                for (i = 0; i < children.length; i++) {
+                    if (core.getAttribute(children[i], 'name') === 'base') {
+                        base = children[i];
+                    } else {
+                        instance = children[i];
+                    }
                 }
-            }
-            core.delConstraint(base, 'global');
+                core.delConstraint(base, 'global');
 
-            core.getConstraintNames(instance).should.be.eql(['local']);
-            core.getOwnConstraintNames(instance).should.be.eql(['local']);
+                core.getConstraintNames(instance).should.be.eql(['local']);
+                core.getOwnConstraintNames(instance).should.be.eql(['local']);
 
-            done();
-        }, core.loadChildren(rootNode));
+            })
+            .nodeify(done);
     });
 });

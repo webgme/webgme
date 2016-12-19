@@ -6,7 +6,7 @@
  */
 
 define([
-    'common/util/assert'
+    'common/core/CoreAssert'
 ], function (ASSERT) {
     'use strict';
 

@@ -25,15 +25,23 @@ define([
             len = this._registryList.length,
             result,
             registryDesc,
-            container;
+            container,
+            setNames,
+            memberIds;
 
         for (i = 0; i < len; i += 1) {
             registryDesc = this._registryList[i];
             container = _client.getNode(registryDesc.containerID);
             if (container) {
-                result = container.getMemberRegistry(registryDesc.setID, objID, regKey);
-                if (result !== undefined && result !== null) {
-                    break;
+                setNames = container.getSetNames();
+                if (registryDesc.setID && setNames.indexOf(registryDesc.setID) !== -1) {
+                    memberIds = container.getMemberIds(registryDesc.setID);
+                    if (memberIds.indexOf(objID) !== -1) {
+                        result = container.getMemberRegistry(registryDesc.setID, objID, regKey);
+                        if (result !== undefined && result !== null) {
+                            break;
+                        }
+                    }
                 }
             }
         }

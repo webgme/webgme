@@ -149,7 +149,6 @@ describe('set core', function () {
                 child = core.createNode({parent: proto, relid: 'c'}),
                 member = core.createNode({parent: root});
 
-
             core.createSet(child, 'set');
             core.addMember(child, 'set', member);
 
@@ -172,7 +171,6 @@ describe('set core', function () {
                 derived = core.createNode({parent: root, base: proto, relid: 'd'}),
                 child = core.createNode({parent: proto, relid: 'c'}),
                 member = core.createNode({parent: root});
-
 
             core.createSet(child, 'set');
             core.addMember(child, 'set', member);
@@ -402,7 +400,7 @@ describe('set core', function () {
         ]);
 
         //now override the property
-        core.setMemberAttribute(setInstance,'set',core.getPath(propertyOverriddenMember),'myAttr','myValue');
+        core.setMemberAttribute(setInstance, 'set', core.getPath(propertyOverriddenMember), 'myAttr', 'myValue');
 
         expect(core.getOwnMemberPaths(setInstance, 'set')).to.have.members([
             core.getPath(propertyOverriddenMember),
@@ -419,14 +417,18 @@ describe('set core', function () {
         ]);
     });
 
-
     it('setMemberRegistry should not modify the set if path not a member', function () {
         var setType = core.createNode({parent: root});
 
         core.createSet(setType, 'set');
-        core.setMemberRegistry(setType, 'set', 'doesNotExist', 'myReg', 'myValue');
-
-        expect(core.getMemberPaths(setType, 'set')).to.deep.equal([]);
+        try {
+            core.setMemberRegistry(setType, 'set', 'doesNotExist', 'myReg', 'myValue');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalArgumentError');
+        } finally {
+            expect(core.getMemberPaths(setType, 'set')).to.deep.equal([]);
+        }
     });
 
     it('getMemberRegistry/Names and getMemberOwnRegistry/Names should return appropriate', function () {
@@ -477,25 +479,6 @@ describe('set core', function () {
         expect(core.getMemberOwnAttribute(setInstance, 'set', mPath, 'instanceAttr')).to.equal('myValue2');
     });
 
-    it('all member getters should return undefined or empty array when no set defined', function () {
-        var node = core.createNode({parent: root}),
-            dummyPath = 'doesNotExist',
-            dummyPropName = 'dummyProp';
-
-        expect(core.getMemberPaths (node, 'set')).to.deep.equal([]);
-        expect(core.getOwnMemberPaths (node, 'set')).to.deep.equal([]);
-
-        expect(core.getMemberAttributeNames(node, 'set', dummyPath)).to.deep.equal([]);
-        expect(core.getMemberOwnAttributeNames(node, 'set', dummyPath)).to.deep.equal([]);
-        expect(core.getMemberAttribute(node, 'set', dummyPath, dummyPropName)).to.equal(undefined);
-        expect(core.getMemberOwnAttribute(node, 'set', dummyPath, dummyPropName)).to.equal(undefined);
-
-        expect(core.getMemberRegistryNames(node, 'set', dummyPath)).to.deep.equal([]);
-        expect(core.getMemberOwnRegistryNames(node, 'set', dummyPath)).to.deep.equal([]);
-        expect(core.getMemberRegistry(node, 'set', dummyPath, dummyPropName)).to.equal(undefined);
-        expect(core.getMemberOwnRegistry(node, 'set', dummyPath, dummyPropName)).to.equal(undefined);
-    });
-
     it('add a memberAttribute/Registry and then delete it twice', function () {
         var setType = core.createNode({parent: root}),
             member = core.createNode({parent: root}),
@@ -520,8 +503,18 @@ describe('set core', function () {
         expect(core.getMemberAttribute(setType, 'set', memberPath, 'myAttr')).to.equal(undefined);
         expect(core.getMemberRegistry(setType, 'set', memberPath, 'myReg')).to.equal(undefined);
 
-        core.delMemberAttribute(setType, 'set', core.getPath(member), 'myAttr');
-        core.delMemberRegistry(setType, 'set', core.getPath(member), 'myReg');
+        try {
+            core.delMemberAttribute(setType, 'set', core.getPath(member), 'myAttr');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
+        try {
+            core.delMemberRegistry(setType, 'set', core.getPath(member), 'myReg');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
     });
 
     it('should set/get/del Set Registries and own should act as expected', function () {
@@ -529,10 +522,30 @@ describe('set core', function () {
             setInstance = core.createNode({parent: root, base: setType});
 
         // Getting before set created
-        expect(core.getSetRegistryNames(setType, 'set')).to.deep.equal([]);
-        expect(core.getOwnSetRegistryNames(setType, 'set')).to.deep.equal([]);
-        expect(core.getSetRegistry(setType, 'set', 'base')).to.equal(undefined);
-        expect(core.getOwnSetRegistry(setType, 'set', 'base')).to.equal(undefined);
+        try {
+            core.getSetRegistryNames(setType, 'set');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
+        try {
+            core.getOwnSetRegistryNames(setType, 'set');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
+        try {
+            core.getSetRegistry(setType, 'set', 'base');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
+        try {
+            core.getOwnSetRegistry(setType, 'set', 'base');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
 
         core.createSet(setType, 'set');
         core.setSetRegistry(setType, 'set', 'base', 'baseValue');
@@ -558,10 +571,30 @@ describe('set core', function () {
             setInstance = core.createNode({parent: root, base: setType});
 
         // Getting before set created
-        expect(core.getSetAttributeNames(setType, 'set')).to.deep.equal([]);
-        expect(core.getOwnSetAttributeNames(setType, 'set')).to.deep.equal([]);
-        expect(core.getSetAttribute(setType, 'set', 'base')).to.equal(undefined);
-        expect(core.getOwnSetAttribute(setType, 'set', 'base')).to.equal(undefined);
+        try {
+            core.getSetAttributeNames(setType, 'set');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
+        try {
+            core.getOwnSetAttributeNames(setType, 'set');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
+        try {
+            core.getSetAttribute(setType, 'set', 'base');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
+        try {
+            core.getOwnSetAttribute(setType, 'set', 'base');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
 
         core.createSet(setType, 'set');
         core.setSetAttribute(setType, 'set', 'base', 'baseValue');
@@ -599,24 +632,28 @@ describe('set core', function () {
         expect(core.getOwnSetNames(setInstance, 'set')).to.have.members(['setInstance']);
     });
 
-    it('isFullyOverriddenMember should return false if no set', function () {
+    it('isFullyOverriddenMember should throw if no set', function () {
         var setType = core.createNode({parent: root});
 
-        expect(core.isFullyOverriddenMember(setType, 'set', 'dummyMemberPath')).to.equal(false);
+        try {
+            core.isFullyOverriddenMember(setType, 'set', 'dummyMemberPath');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalArgumentError');
+        }
     });
 
-    it('isFullyOverriddenMember should return false if no set', function () {
-        var setType = core.createNode({parent: root});
-
-        expect(core.isFullyOverriddenMember(setType, 'set', 'dummyMemberPath')).to.equal(false);
-    });
-
-    it('isFullyOverriddenMember should return false if no base', function () {
+    it('isFullyOverriddenMember should throw if no base', function () {
         var setType = core.createNode({parent: root});
 
         core.createSet(setType, 'set');
 
-        expect(core.isFullyOverriddenMember(setType, 'set', 'dummyMemberPath')).to.equal(false);
+        try {
+            core.isFullyOverriddenMember(setType, 'set', 'dummyMemberPath');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalArgumentError');
+        }
     });
 
     it('isFullyOverriddenMember should return false if base does not have set', function () {
@@ -639,7 +676,7 @@ describe('set core', function () {
 
         core.createSet(setType, 'set');
         core.addMember(setType, 'set', member);
-        core.setMemberRegistry(setInstance, 'set', member, 'reg', 'regValue');
+        core.setMemberRegistry(setInstance, 'set', memberPath, 'reg', 'regValue');
 
         expect(core.isFullyOverriddenMember(setInstance, 'set', memberPath)).to.equal(false);
     });
@@ -676,11 +713,12 @@ describe('set core', function () {
         var setType = core.createNode({parent: root}),
             setInstance = core.createNode({parent: root, base: setType}),
             member = core.createNode({parent: root}),
+            memberPath = core.getPath(member),
             compareObj = {};
 
         core.createSet(setType, 'set');
         core.addMember(setType, 'set', member);
-        core.setMemberRegistry(setInstance, 'set', member, 'reg', 'regValue');
+        core.setMemberRegistry(setInstance, 'set', memberPath, 'reg', 'regValue');
 
         compareObj[core.getPath(setType)] = ['set'];
         expect(core.isMemberOf(member)).to.deep.equal(compareObj);
@@ -688,11 +726,12 @@ describe('set core', function () {
 
     it('getCollectionNames should exclude member(ships)', function () {
         var setType = core.createNode({parent: root}),
-            member = core.createNode({parent: root});
+            member = core.createNode({parent: root}),
+            memberPath = core.getPath(member);
 
         core.createSet(setType, 'set');
         core.addMember(setType, 'set', member);
-        core.setMemberRegistry(setType, 'set', member, 'reg', 'regValue');
+        core.setMemberRegistry(setType, 'set', memberPath, 'reg', 'regValue');
         core.setPointer(setType, 'ptr', member);
 
         expect(core.getCollectionNames(member)).to.deep.equal(['ptr']);
@@ -815,8 +854,18 @@ describe('set core', function () {
             persisted;
 
         core.persist(root);
-        core.setSetAttribute(setType, 'set', 'someName', 'someVal');
-        core.setSetRegistry(setType, 'set', 'someName', 'someVal');
+        try {
+            core.setSetAttribute(setType, 'set', 'someName', 'someVal');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
+        try {
+            core.setSetRegistry(setType, 'set', 'someName', 'someVal');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
         persisted = core.persist(root).objects;
         expect(persisted).to.deep.equal({});
     });
@@ -839,8 +888,18 @@ describe('set core', function () {
             persisted;
 
         core.persist(root);
-        core.delSetAttribute(setType, 'set', 'someName');
-        core.delSetRegistry(setType, 'set', 'someName');
+        try {
+            core.delSetAttribute(setType, 'set', 'someName');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
+        try {
+            core.delSetRegistry(setType, 'set', 'someName');
+        } catch (e) {
+            expect(e instanceof Error).to.eql(true);
+            expect(e.name).to.eql('CoreIllegalOperationError');
+        }
         persisted = core.persist(root).objects;
         expect(persisted).to.deep.equal({});
     });

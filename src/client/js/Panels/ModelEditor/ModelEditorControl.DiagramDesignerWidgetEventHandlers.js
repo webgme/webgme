@@ -791,9 +791,9 @@ define(['js/logger',
         var gmeIDs = [],
             len = selectedIds.length,
             id,
-            onlyConnectionSelected = selectedIds.length > 0;
+            onlyConnectionSelected = selectedIds.length > 0 && this.designerCanvas.getIsReadOnlyMode() === false;
 
-        while (len--) {
+        while (len-- && onlyConnectionSelected) {
             id = this._ComponentID2GMEID[selectedIds[len]];
             if (id) {
                 gmeIDs.push(id);

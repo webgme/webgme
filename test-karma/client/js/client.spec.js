@@ -1493,7 +1493,12 @@ describe('GME client', function () {
         });
 
         it('should return an empty array for an unknown set', function () {
-            expect(clientNode.getMemberIds('unknown_set')).to.empty;
+            try {
+                clientNode.getMemberIds('unknown_set');
+            } catch (e) {
+                expect(e instanceof Error).to.eql(true);
+                expect(e.name).to.eql('CoreIllegalOperationError');
+            }
         });
 
         it('should return a list of available attributes of the set containment', function () {
@@ -1656,7 +1661,7 @@ describe('GME client', function () {
             expect(copy).to.equal(relidPool.length);
         });
 
-        it('should allow access to META nodes even if they are not part of the territory',function(){
+        it('should allow access to META nodes even if they are not part of the territory', function () {
             var metaNode = client.getNode('/1');
             expect(metaNode).not.to.eql(null);
         });
@@ -3487,7 +3492,7 @@ describe('GME client', function () {
 
                         node = client.getNode('/323573539');
                         expect(node).not.to.equal(null);
-                        expect(node.getMemberIds('newSet')).to.empty;
+                        expect(node.getSetNames()).not.to.include.members(['newSet']);
 
                         client.addMember('/323573539', '/1697300825', 'newSet', 'basic add member test');
                         return;

@@ -5,7 +5,7 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTANTS) {
+define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CONSTANTS) {
     'use strict';
 
     function SetCore(innerCore, options) {
@@ -250,13 +250,13 @@ define(['common/util/assert', 'common/core/constants'], function (ASSERT, CONSTA
             return names;
         }
 
-        function getOwnPropertyValue(node,  propertyCollectionName, propertyName, setName, memberPath) {
+        function getOwnPropertyValue(node, propertyCollectionName, propertyName, setName, memberPath) {
             var propertyCollectionInfo = getPropertyCollectionInfo(node, propertyCollectionName, setName, memberPath);
 
             return propertyCollectionInfo ? propertyCollectionInfo[propertyName] : undefined;
         }
 
-        function getPropertyValue(node,  propertyCollectionName, propertyName, setName, memberPath) {
+        function getPropertyValue(node, propertyCollectionName, propertyName, setName, memberPath) {
             var value;
 
             do {

@@ -374,7 +374,7 @@ define([
 
     /****************** PUBLIC FUNCTIONS ***********************************/
 
-        //Called when the widget's container size changed
+    //Called when the widget's container size changed
     DiagramDesignerWidget.prototype.onWidgetContainerResize = function (width, height) {
         this._containerSize.w = width;
         this._containerSize.h = height;
@@ -1003,7 +1003,7 @@ define([
             }
         }
 
-        if (this.toolbarItems) {
+        if (this.toolbarItems && this.getIsReadOnlyMode() === false) {
             if (selectedIds.length > 0) {
                 if (this.toolbarItems.cpFillColor) {
                     this.toolbarItems.cpFillColor.enabled(true);
