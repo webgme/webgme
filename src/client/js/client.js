@@ -2061,12 +2061,24 @@ define([
         };
 
         window.addEventListener('error', function (evt) {
+            var errorType;
             state.exception = {};
             if (evt.error) {
                 state.exception.message = evt.error.message;
                 state.exception.stack = evt.error.stack;
+                errorType = evt.error.name;
             } else {
                 state.exception = 'No error on event - check browser';
+            }
+
+            if (errorType === 'CoreIllegalOperationError') {
+                // Do not propagate these errors (for now)
+                self.dispatchEvent(self.CONSTANTS.NOTIFICATION, {
+                    severity: 'error',
+                    message: evt.error.message
+                });
+
+                return true;
             }
 
             self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.UNCAUGHT_EXCEPTION);
