@@ -1502,16 +1502,25 @@ define(['js/logger',
 
     CrosscutController.prototype._updateCrosscutRegistry = function () {
         var containerNode = this._client.getNode(this._memberListContainerID),
-            regItem = containerNode.getEditableRegistry(REGISTRY_KEYS.CROSSCUTS),
-            i, crosscutId = Number(this._activeCrosscutId);
+            regItem = containerNode.getOwnEditableRegistry(REGISTRY_KEYS.CROSSCUTS),
+            i, crosscutId = Number(this._activeCrosscutId),
+            base;
 
-        for (i = 0; i < regItem.length; i += 1) {
-            if (regItem[i].order === crosscutId) {
-                regItem[i].filter = this._filteredOutConnTypes;
-            }
+        base = this._client.getNode(containerNode.getBaseId());
+        if (regItem === undefined &&
+            (base === null || base.getRegistry(REGISTRY_KEYS.CROSSCUTS) === undefined)) {
+            regItem = [];
         }
 
-        this._client.setRegistry(this._memberListContainerID, REGISTRY_KEYS.CROSSCUTS, regItem);
+        if (regItem) {
+            for (i = 0; i < regItem.length; i += 1) {
+                if (regItem[i].order === crosscutId) {
+                    regItem[i].filter = this._filteredOutConnTypes;
+                }
+            }
+
+            this._client.setRegistry(this._memberListContainerID, REGISTRY_KEYS.CROSSCUTS, regItem);
+        }
     };
 
     CrosscutController.prototype._selectedTabChanged = function (tabId) {
