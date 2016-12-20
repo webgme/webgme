@@ -568,7 +568,7 @@ define(['js/logger',
     /*******************************************************************************/
     CrosscutController.prototype._processNodePointers = function (gmeID, isSet) {
         var node = this._client.getNode(gmeID),
-            pointerNames = node === null ? [] : isSet === true ? node.getSetNames() : node.getPointerNames(),
+            pointerNames = node === null ? [] : isSet === true ? GMEConcepts.getSets(gmeID) : node.getPointerNames(),
             pointerTo,
             len,
             oldPointers,
