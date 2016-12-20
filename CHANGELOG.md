@@ -1,6 +1,55 @@
 # Change Log
 
-## [v2.7.0](https://github.com/webgme/webgme/tree/v2.7.0) (2016-11-21)
+## [v2.8.0](https://github.com/webgme/webgme/tree/v2.8.0) (2016-12-19)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.7.1...v2.8.0)
+
+**Implemented enhancements:**
+
+- Provide Additional Promise versions for methods [\#1259](https://github.com/webgme/webgme/issues/1259)
+- Fail gracefully when can't find asset [\#1255](https://github.com/webgme/webgme/issues/1255)
+- Multiple locations added to browser history per one user action [\#1226](https://github.com/webgme/webgme/issues/1226)
+- Naming a pointer 'base' is not allowed [\#892](https://github.com/webgme/webgme/issues/892)
+- Use a different template for the generated source code documentation [\#1264](https://github.com/webgme/webgme/pull/1264) ([kecso](https://github.com/kecso))
+- Add support for custom commit-badges and footer-widgets. [\#1261](https://github.com/webgme/webgme/pull/1261) ([pmeijer](https://github.com/pmeijer))
+- Better error handling in core [\#1260](https://github.com/webgme/webgme/pull/1260) ([kecso](https://github.com/kecso))
+- Closes \#1255 gracefully handle hash-like attributes during export [\#1257](https://github.com/webgme/webgme/pull/1257) ([pmeijer](https://github.com/pmeijer))
+- Option to enable automatic error reports on uncaught execptions using sentry.io/raven-js [\#1256](https://github.com/webgme/webgme/pull/1256) ([pmeijer](https://github.com/pmeijer))
+- Add helper method on PluginBase for preloading nodes. [\#1254](https://github.com/webgme/webgme/pull/1254) ([pmeijer](https://github.com/pmeijer))
+- Better state-handling and fix selection manager from trigger multiple events. [\#1253](https://github.com/webgme/webgme/pull/1253) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#892 add better feedback and better handling of invalidly named pointers/sets [\#1231](https://github.com/webgme/webgme/pull/1231) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Fixes for v2.8.0 release [\#1267](https://github.com/webgme/webgme/pull/1267) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Add optional parameters when updating the webgme ui state in the StateManager. [\#1252](https://github.com/webgme/webgme/issues/1252)
+
+**Merged pull requests:**
+
+- Migrate executor-worker to own repository [\#1265](https://github.com/webgme/webgme/pull/1265) ([pmeijer](https://github.com/pmeijer))
+- Provide entrypoint for checking consistency of meta-model. [\#1258](https://github.com/webgme/webgme/pull/1258) ([pmeijer](https://github.com/pmeijer))
+
+## [v2.7.1](https://github.com/webgme/webgme/tree/v2.7.1) (2016-11-28)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.7.0...v2.7.1)
+
+**Fixed bugs:**
+
+- client.copyNode should return new node id [\#1250](https://github.com/webgme/webgme/issues/1250)
+- Cardinality check w.r.t. set members is off by one. [\#1247](https://github.com/webgme/webgme/issues/1247)
+- Adjusted client.copyNode to return nodeId. Fixes \#1250 [\#1251](https://github.com/webgme/webgme/pull/1251) ([brollb](https://github.com/brollb))
+- Fixes SetEditor exception, cardinality check and way to remove invalid sets. [\#1248](https://github.com/webgme/webgme/pull/1248) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Provide bin script for safely cleaning up blob storage. [\#1237](https://github.com/webgme/webgme/issues/1237)
+
+**Merged pull requests:**
+
+- blob-fs-clean-up script [\#1249](https://github.com/webgme/webgme/pull/1249) ([kecso](https://github.com/kecso))
+
+## [v2.7.0](https://github.com/webgme/webgme/tree/v2.7.0) (2016-11-22)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.6.3...v2.7.0)
 
 **Implemented enhancements:**
@@ -10,6 +59,7 @@
 - Increase test-coverage of simple worker methods and improve error-handling [\#1244](https://github.com/webgme/webgme/pull/1244) ([pmeijer](https://github.com/pmeijer))
 - Harmonize dialogs and provide base class [\#1242](https://github.com/webgme/webgme/pull/1242) ([pmeijer](https://github.com/pmeijer))
 - Add line preferences to PropertyEditor [\#1238](https://github.com/webgme/webgme/pull/1238) ([kecso](https://github.com/kecso))
+- Providing the color/text\_color/border\_color registry entries in the property editor [\#1233](https://github.com/webgme/webgme/pull/1233) ([kecso](https://github.com/kecso))
 
 **Fixed bugs:**
 
