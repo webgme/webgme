@@ -234,9 +234,17 @@ define(['js/logger',
                         pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
                     } else {
                         memberListContainerObj = this._client.getNode(this.currentNodeInfo.id);
-                        pos = memberListContainerObj.getMemberRegistry(this._selectedAspect,
+                        try {
+                            pos = memberListContainerObj.getMemberRegistry(this._selectedAspect,
                                 nodeId,
-                                REGISTRY_KEYS.POSITION) || nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+                                REGISTRY_KEYS.POSITION);
+                        } catch (err) {
+                            if (err.name !== 'CoreIllegalOperationError') {
+                                throw err;
+                            }
+                        }
+
+                        pos = pos || nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
                     }
 
                     if (pos) {

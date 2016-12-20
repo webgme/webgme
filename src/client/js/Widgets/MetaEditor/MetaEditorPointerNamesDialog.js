@@ -84,27 +84,27 @@ define([
                 result.hasViolation = true;
                 result.message = 'Name "' + name + '" contains illegal characters, it may not contain "." ' +
                     'or start with "$" or "_".';
-            } else if (!isSet) {
+            } else {
                 if (_endsWith(name, CONSTANTS.CORE.COLLECTION_NAME_SUFFIX)) {
                     result.hasViolation = true;
                     result.message = 'Name "' + name + '" ends with "' + CONSTANTS.CORE.COLLECTION_NAME_SUFFIX + '", ' +
                         'which could lead to collisions with data stored for inverse pointers.';
                 } else if (name === CONSTANTS.CORE.BASE_POINTER) {
                     result.hasViolation = true;
-                    result.message = 'Pointer "' + CONSTANTS.CORE.BASE_POINTER  + '" is reserved for base/instance ' +
+                    result.message = 'Name "' + CONSTANTS.CORE.BASE_POINTER  + '" is reserved for base/instance ' +
                         'relationship.';
                 } else if (name === CONSTANTS.CORE.MEMBER_RELATION) {
                     result.hasViolation = true;
-                    result.message = 'Pointer "' + CONSTANTS.CORE.MEMBER_RELATION  + '" is reserved for ' +
+                    result.message = 'Name "' + CONSTANTS.CORE.MEMBER_RELATION  + '" is reserved for ' +
                         'set membership.';
-                }
-            } else if (isSet) {
-                if (name === 'src' || name === 'dst') {
-                    result.hasViolation = true;
-                    result.message = 'Name "' + name + '" can only be used for pointer names and not for sets.';
                 } else if (name === CONSTANTS.CORE.OVERLAYS_PROPERTY) {
                     result.hasViolation = true;
-                    result.message = 'Name "' + name + '" is a reserved key word for sets.';
+                    result.message = 'Name "' + name + '" is a reserved key word.';
+                }
+
+                if (isSet && name === 'src' || name === 'dst') {
+                    result.hasViolation = true;
+                    result.message = 'Name "' + name + '" can only be used for pointer names and not for sets.';
                 }
             }
 

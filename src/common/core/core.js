@@ -1383,7 +1383,7 @@ define([
          */
         this.createSet = function (node, name) {
             ensureNode(node, 'node');
-            ensureType(name, 'name', 'string');
+            ensureRelationName(name, 'name');
 
             return core.createSet(node, name);
         };
@@ -1723,7 +1723,7 @@ define([
         this.getOwnMemberPaths = function (node, name) {
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
-            var names = core.getSetNames(node);
+            var names = core.getSetNames(node).concat(core.getValidSetNames(node));;
             if (names.indexOf(name) === -1) {
                 throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
             }
@@ -2349,7 +2349,6 @@ define([
          * target of the given pointer of the source.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
-         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.isValidTargetOf = function (node, source, name) {
@@ -2400,7 +2399,6 @@ define([
          * @return {bool} Returns true if the value matches the META definitions.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
-         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.isValidAttributeValueOf = function (node, name, value) {
@@ -2850,7 +2848,6 @@ define([
          * represents the META rules regarding the given pointer/set of the node.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
-         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          *
          * @example
@@ -3543,7 +3540,6 @@ define([
          * i.e. its namespaces and name join together by dots.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
-         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          *
          * @example NS1.NS2.name
@@ -3646,7 +3642,6 @@ define([
          * @return {module:Core~Node | null} - Returns the library root node or null, if the library is unknown.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
-         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.getLibraryRoot = function (node, name) {
@@ -3668,7 +3663,6 @@ define([
          * the given library.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
-         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.getLibraryMetaNodes = function (node, name, onlyOwn) {
@@ -3771,7 +3765,6 @@ define([
          * otherwise a specific object will be returned that holds information about the closure.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
-         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
         this.importClosure = function (node, closureInformation) {
