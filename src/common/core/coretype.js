@@ -753,13 +753,14 @@ define([
 
         this.copyNode = function (node, parent, relidLength) {
             ASSERT(!node.base || self.getPath(node.base) !== self.getPath(parent));
-            var base = node.base,
-                newnode;
+            var newnode;
 
             relidLength = relidLength || innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
             newnode = innerCore.copyNode(node, parent, self.getChildrenRelids(parent, true), relidLength);
-            newnode.base = base;
-            innerCore.setPointer(newnode, CONSTANTS.BASE_POINTER, base);
+            newnode.base = node.base;
+            if (typeof self.getPointerPath(node, CONSTANTS.BASE_POINTER) === 'string') {
+                innerCore.setPointer(newnode, CONSTANTS.BASE_POINTER, node.base);
+            }
 
             // The copy does not have any instances at this point -> reset the property.
             innerCore.deleteProperty(newnode, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);

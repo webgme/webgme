@@ -646,7 +646,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            checkError(error,'CoreIllegalArgumentError');
+            checkError(error, 'CoreIllegalArgumentError');
         }
     });
 
@@ -704,7 +704,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            checkError(error,'CoreIllegalArgumentError');
+            checkError(error, 'CoreIllegalArgumentError');
         }
     });
 
@@ -751,7 +751,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            checkError(error,'CoreIllegalArgumentError');
+            checkError(error, 'CoreIllegalArgumentError');
         }
     });
 
@@ -813,7 +813,7 @@ describe('Library core ', function () {
         } catch (e) {
             error = e;
         } finally {
-            checkError(error,'CoreIllegalArgumentError');
+            checkError(error, 'CoreIllegalArgumentError');
         }
     });
 
@@ -1346,6 +1346,31 @@ describe('Library core ', function () {
                 ]);
             })
             .nodeify(done);
+    });
+
+    it('should generate a proper closure if sets are involved (#1269)', function () {
+        var core = shareContext.core,
+            root = core.createNode(),
+            fco = core.createNode({parent: root, base: null}),
+            item = core.createNode({parent: root, base: fco}),
+            closureInfo;
+
+        //setting language boundaries
+        core.createSet(root, 'MetaAspectSet');
+        core.addMember(root, 'MetaAspectSet', fco);
+
+        //playing with set entry
+        core.addMember(item, 'anyset', item);
+        core.setMemberRegistry(item, 'anyset', core.getPath(item), 'position', {x: 100, y: 100});
+        core.addMember(item, 'anyset', item);
+
+        expect(core.getMemberRegistry(item, 'anyset', core.getPath(item), 'position')).to.eql({x: 100, y: 100});
+
+        closureInfo = core.getClosureInformation([item]);
+        expect(closureInfo).not.to.eql(null);
+        expect(closureInfo).not.to.eql(undefined);
+        expect(Object.keys(closureInfo.selection)).to.have.length(1);
+        expect(Object.keys(closureInfo.relations.preserved)).to.have.length(1);
     });
 
     it('should import closure without the losses', function (done) {
