@@ -910,7 +910,7 @@ define([
 
             do {
                 overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
-                if (overlays && overlays[source] && overlays[source][name]) {
+                if (overlays && overlays[source] && typeof overlays[source][name] == 'string') {
                     self.overlayRemove(node, source, name, overlays[source][name]);
                 }
 
