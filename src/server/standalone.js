@@ -8,7 +8,7 @@
 
 'use strict';
 
-var Path = require('path'),
+var path = require('path'),
     OS = require('os'),
     Q = require('q'),
     fs = require('fs'),
@@ -50,6 +50,10 @@ process.on('SIGINT', function () {
         error = false,
         numStops = 0;
 
+    function exit(code) {
+        process.exit(code);
+    }
+
     function serverOnStop(server) {
         server.stop(function (err) {
             numStops -= 1;
@@ -80,14 +84,9 @@ process.on('SIGINT', function () {
         }
     }
 
-    function exit(code) {
-        process.exit(code);
-    }
-
     if (numStops === 0) {
         exit(0);
     }
-
 });
 
 function StandAloneServer(gmeConfig) {
@@ -106,6 +105,12 @@ function StandAloneServer(gmeConfig) {
     }
 
     mainLogger.info('Node version', process.version);
+
+    gmeConfig.server.log.transports.forEach(function (transport) {
+        if (transport.transportType === 'File') {
+            mainLogger.info('Logfile [', transport.options.level, '] :', path.resolve(transport.options.filename));
+        }
+    });
 
     this.serverUrl = '';
     this.isRunning = false;
@@ -510,7 +515,7 @@ function StandAloneServer(gmeConfig) {
         __workerManager,
         __httpServer = null,
         __baseDir = requireJS.s.contexts._.config.baseUrl,// TODO: this is ugly
-        __clientBaseDir = Path.resolve(gmeConfig.client.appDir),
+        __clientBaseDir = path.resolve(gmeConfig.client.appDir),
         __requestCounter = 0,
         __reportedRequestCounter = 0,
         __requestCheckInterval = 2500,
@@ -608,7 +613,7 @@ function StandAloneServer(gmeConfig) {
     setupExternalRestModules();
 
     __app.get(['', '/', '/index.html'], ensureAuthenticated, function (req, res) {
-        var indexHtmlPath = Path.join(__clientBaseDir, 'index.html'),
+        var indexHtmlPath = path.join(__clientBaseDir, 'index.html'),
             protocol = gmeConfig.server.behindSecureProxy ? 'https' : 'http',
             host = protocol + '://' + req.get('host'),
             url = host + req.originalUrl,
@@ -689,8 +694,8 @@ function StandAloneServer(gmeConfig) {
         var tryNext = function (index) {
             var resolvedPath;
             if (index < gmeConfig.visualization.decoratorPaths.length) {
-                resolvedPath = Path.resolve(gmeConfig.visualization.decoratorPaths[index]);
-                resolvedPath = Path.join(resolvedPath, req.url.substring('/decorators/'.length));
+                resolvedPath = path.resolve(gmeConfig.visualization.decoratorPaths[index]);
+                resolvedPath = path.join(resolvedPath, req.url.substring('/decorators/'.length));
                 res.sendFile(resolvedPath, function (err) {
                     logger.debug('sending decorator', resolvedPath);
                     if (err && err.code !== 'ECONNRESET') {
@@ -746,7 +751,7 @@ function StandAloneServer(gmeConfig) {
         urlArray.shift();
 
         var relPath = urlArray.join('/');
-        var absPath = Path.resolve(Path.join(process.cwd(), relPath));
+        var absPath = path.resolve(path.join(process.cwd(), relPath));
         // must pass the full path
         if (relPath.lastIndexOf('/') === relPath.length - 1) {
             // if URL ends with /, append / to support sending index.html
@@ -760,17 +765,17 @@ function StandAloneServer(gmeConfig) {
     //static contents
     //javascripts - core and transportation related files //TODO: remove config, middleware and bin
     __app.get(/^\/(common|config|bin|middleware)\/.*\.js$/, Express.static(__baseDir, {index: false}));
-    __app.get(/^\/(dist)\/.*\.(js|css|map)$/, Express.static(Path.join(__baseDir, '..'), {index: false}));
+    __app.get(/^\/(dist)\/.*\.(js|css|map)$/, Express.static(path.join(__baseDir, '..'), {index: false}));
 
     //TODO remove this part as this is only temporary!!!
-    __app.get('/docs/*', Express.static(Path.join(__baseDir, '..'), {index: false}));
+    __app.get('/docs/*', Express.static(path.join(__baseDir, '..'), {index: false}));
 
     __app.use('/rest/blob', BlobServer.createExpressBlob(middlewareOpts));
 
     //client contents - js/html/css
     __app.get(/^\/.*\.(css|ico|ttf|woff|woff2|js|cur)$/, Express.static(__clientBaseDir));
 
-    __app.get('/package.json', ensureAuthenticated, Express.static(Path.join(__baseDir, '..')));
+    __app.get('/package.json', ensureAuthenticated, Express.static(path.join(__baseDir, '..')));
     __app.get(/^\/.*\.(_js|html|gif|png|bmp|svg|json|map)$/, ensureAuthenticated, Express.static(__clientBaseDir));
 
     logger.debug('creating API related routing rules');
