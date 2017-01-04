@@ -5,6 +5,10 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
+/*
+ * For additional documentation of the notify feature see: http://bootstrap-notify.remabledesigns.com/
+ */
+
 define(['jquery'], function () {
 
     'use strict';

@@ -20,9 +20,10 @@ define(['blob/BlobClient'], function (BlobClient) {
                 save.download = fileName;
             }
 
-            event.initEvent('click', true, true);
-            save.dispatchEvent(event);
-            (window.URL || window.webkitURL).revokeObjectURL(save.href);
+            // event.initEvent('click', true, true);
+            // save.dispatchEvent(event);
+            // (window.URL || window.webkitURL).revokeObjectURL(save.href);
+            save.click();
         }
 
         // for IE

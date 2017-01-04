@@ -49,6 +49,7 @@ require.config({
         d3: 'bower_components/d3/d3',
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
         ravenjs: 'bower_components/raven-js/dist/raven',
+        clipboard: 'bower_components/clipboard/dist/clipboard.min',
 
         //RaphaelJS family
         eve: 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'

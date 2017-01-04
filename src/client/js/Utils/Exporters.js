@@ -4,7 +4,7 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-define(['js/Loader/ProgressNotification'], function (ProgressNotification) {
+define(['js/Loader/ProgressNotification', 'clipboard'], function (ProgressNotification, Clipboard) {
     'use strict';
 
     function exportProject(client, logger, projectParams, withAssets, callback) {
@@ -60,12 +60,19 @@ define(['js/Loader/ProgressNotification'], function (ProgressNotification) {
                         progress: 100
                     });
                 } else {
+
                     progress.note.update({
                         message: '<strong>Exported </strong> models <a href="' +
                         result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
                         progress: 100,
-                        type: 'success'
+                        type: 'success',
+                        icon: 'glyphicon glyphicon-copy'
                     });
+
+                    $(progress.note.$ele).find('.glyphicon-copy').attr('title', 'copy to clipboard');
+                    console.log(result);
+                    $(progress.note.$ele).find('.glyphicon-copy').attr('data-clipboard-text', result.hash);
+                    new Clipboard($(progress.note.$ele).find('.glyphicon-copy')[0]);
                 }
 
                 if (typeof callback === 'function') {
