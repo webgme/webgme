@@ -15,6 +15,7 @@ Options to deploy and run WebGME:
  * Reuse components from other users.
  * Publish and share your work with others.
  * Updating to newer webgme releases only requires a `npm install webgme` and won't cause any conflicts.
+ * **Note that** if cloning an existing repository constructed with webgme-cli, it is only neccessary to install webgme-cli if you intend to create/import new components.
 
 2. For webgme developers, clone this repo.
  * install packages with npm `npm install`
