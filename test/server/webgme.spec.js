@@ -113,7 +113,7 @@ describe('webgme', function () {
                 done(new Error('should have failed to connect to mongo'));
             })
             .catch(function (err) {
-                expect(err.message).to.include('failed to connect to [127.0.0.1:27000]');
+                expect(err.message).to.include('failed to connect to server [127.0.0.1:27000]');
                 done();
             })
             .done();

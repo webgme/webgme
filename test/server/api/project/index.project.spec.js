@@ -1506,12 +1506,11 @@ describe('PROJECT REST API', function () {
             }
         );
 
-        // TODO: This might be the wrong behaviour
-        it('204 should deauthorize /projects/user/projectOwnedByUser/authorize/notExists', function (done) {
+        it('404 should deauthorize /projects/user/projectOwnedByUser/authorize/notExists', function (done) {
             agent.del(server.getUrl() + '/api/v1/projects/user/projectOwnedByUser/authorize/notExists')
                 .set('Authorization', 'Basic ' + new Buffer('user:p').toString('base64'))
                 .end(function (err, res) {
-                    expect(res.status).equal(204, err);
+                    expect(res.status).equal(404, err);
                     done();
                 });
         });

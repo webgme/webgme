@@ -113,6 +113,7 @@ describe('ExecutorClient', function () {
                 executorClient.updateJob(jobInfo, function (err) {
                     if (err) {
                         done(err);
+                        return;
                     }
                     done();
                 });
@@ -171,6 +172,7 @@ describe('ExecutorClient', function () {
             executorClient.updateJob(jobInfo, function (err) {
                 if (err) {
                     done(err);
+                    return;
                 }
                 executorClient.getInfo(jobInfo.hash, function (err, res) {
                     if (err) {
