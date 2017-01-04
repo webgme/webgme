@@ -4,6 +4,8 @@
 /**
  * @module Server:GMEAuth
  * @author ksmyth / https://github.com/ksmyth
+ *
+ * http://mongodb.github.io/node-mongodb-native/2.2/api/Collection.html
  */
 
 var Mongodb = require('mongodb'),
@@ -81,29 +83,48 @@ function GMEAuth(session, gmeConfig) {
             });
         };
         collection_.update = function (/*query, update, options*/) {
+            throw new Error('update is deprecated, use updateOne or updateMany');
+        };
+        collection_.updateOne = function (/*query, update, options*/) {
             var args = arguments;
             return collection_.then(function (c) {
-                return Q.npost(c, 'update', args);
+                return Q.npost(c, 'updateOne', args);
+            });
+        };
+        collection_.updateMany = function (/*query, update, options*/) {
+            var args = arguments;
+            return collection_.then(function (c) {
+                return Q.npost(c, 'updateMany', args);
             });
         };
         collection_.insert = function (/*data, options*/) {
+            throw new Error('insert is deprecated, use insertOne or insertMany');
+        };
+        collection_.insertOne = function (/*data, options*/) {
             var args = arguments;
             return collection_.then(function (c) {
-                return Q.npost(c, 'insert', args);
+                return Q.npost(c, 'insertOne', args);
+            });
+        };
+        collection_.insertMany = function (/*data, options*/) {
+            var args = arguments;
+            return collection_.then(function (c) {
+                return Q.npost(c, 'insertMany', args);
             });
         };
         collection_.remove = function (/*query, options*/) {
+            throw new Error('remove is deprecated, use deleteOne or deleteMany');
+        };
+        collection_.deleteOne = function (/*query, options*/) {
             var args = arguments;
             return collection_.then(function (c) {
-                return Q.npost(c, 'remove', args)
-                    .then(function (num) {
-                        // depending on mongodb hasWriteCommands,
-                        // remove calls back with (num) or (num, backWardsCompatibiltyResults)
-                        if (Array.isArray(num)) {
-                            return num[0];
-                        }
-                        return num;
-                    });
+                return Q.npost(c, 'deleteOne', args);
+            });
+        };
+        collection_.deleteMany = function (/*query, options*/) {
+            var args = arguments;
+            return collection_.then(function (c) {
+                return Q.npost(c, 'deleteMany', args);
             });
         };
     }
@@ -322,21 +343,21 @@ function GMEAuth(session, gmeConfig) {
      */
     function deleteUser(userId, force, callback) {
         if (force) {
-            return collection.remove({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
+            return collection.deleteOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}})
                 .then(function () {
-                    return collection.update({admins: userId}, {$pull: {admins: userId}}, {multi: true});
+                    return collection.updateMany({admins: userId}, {$pull: {admins: userId}});
                 })
                 .nodeify(callback);
         } else {
-            return collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}}, {
+            return collection.updateOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {
                 $set: {disabled: true}
             })
-                .then(function (count) {
-                    if (count instanceof Array ? count[0] === 0 : count === 0) {
+                .then(function (result) {
+                    if (result.modifiedCount === 0) {
                         return Q.reject(new Error('no such user [' + userId + ']'));
                     }
 
-                    return collection.update({admins: userId}, {$pull: {admins: userId}}, {multi: true});
+                    return collection.updateMany({admins: userId}, {$pull: {admins: userId}});
                 })
                 .nodeify(callback);
         }
@@ -386,10 +407,10 @@ function GMEAuth(session, gmeConfig) {
                     return Q.ninvoke(bcrypt, 'hash', userData.password, gmeConfig.authentication.salts)
                         .then(function (hash) {
                             oldUserData.passwordHash = hash;
-                            return collection.update({_id: userId}, oldUserData, {upsert: true});
+                            return collection.updateOne({_id: userId}, oldUserData, {upsert: true});
                         });
                 } else {
-                    return collection.update({_id: userId}, oldUserData, {upsert: true});
+                    return collection.updateOne({_id: userId}, oldUserData, {upsert: true});
                 }
             })
             .then(function () {
@@ -424,7 +445,7 @@ function GMEAuth(session, gmeConfig) {
                 }
 
                 update.$set[jointKey] = currentValue;
-                return collection.update({_id: userId}, update, {upsert: true});
+                return collection.updateOne({_id: userId}, update, {upsert: true});
             })
             .then(function () {
                 return getUser(userId);
@@ -554,9 +575,9 @@ function GMEAuth(session, gmeConfig) {
                 .then(function (hash) {
                     data.passwordHash = hash;
                     if (!options.overwrite) {
-                        return collection.insert(data);
+                        return collection.insertOne(data);
                     } else {
-                        return collection.update({_id: userId}, data, {upsert: true});
+                        return collection.updateOne({_id: userId}, data, {upsert: true});
                     }
                 })
                 .then(deferred.resolve)
@@ -579,7 +600,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function addOrganization(orgId, info, callback) {
-        return collection.insert({
+        return collection.insertOne({
                 _id: orgId,
                 projects: {},
                 type: CONSTANTS.ORGANIZATION,
@@ -664,19 +685,20 @@ function GMEAuth(session, gmeConfig) {
      */
     function removeOrganizationByOrgId(orgId, force, callback) {
         if (force) {
-            return collection.remove({_id: orgId, type: CONSTANTS.ORGANIZATION})
+            return collection.deleteOne({_id: orgId, type: CONSTANTS.ORGANIZATION})
                 .then(function () {
-                    return collection.update({orgs: orgId}, {$pull: {orgs: orgId}}, {multi: true});
+                    return collection.updateMany({orgs: orgId}, {$pull: {orgs: orgId}});
                 })
                 .nodeify(callback);
         } else {
-            return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
+            return collection.updateOne({_id: orgId, type: CONSTANTS.ORGANIZATION},
                 {$set: {disabled: true}})
-                .then(function (count) {
-                    if (count instanceof Array ? count[0] === 0 : count === 0) {
+                .then(function (result) {
+                    if (result.modifiedCount === 0) {
                         return Q.reject(new Error('no such organization [' + orgId + ']'));
                     }
-                    return collection.update({orgs: orgId}, {$pull: {orgs: orgId}}, {multi: true});
+
+                    return collection.updateMany({orgs: orgId}, {$pull: {orgs: orgId}});
                 })
                 .nodeify(callback);
         }
@@ -697,10 +719,10 @@ function GMEAuth(session, gmeConfig) {
                 }
             })
             .then(function () {
-                return collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}},
+                return collection.updateOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}},
                     {$addToSet: {orgs: orgId}})
-                    .spread(function (count) {
-                        if (count === 0) {
+                    .then(function (result) {
+                        if (result.matchedCount === 0) {
                             return Q.reject(new Error('no such user [' + userId + ']'));
                         }
                     });
@@ -723,7 +745,7 @@ function GMEAuth(session, gmeConfig) {
                 }
             })
             .then(function () {
-                return collection.update({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}},
+                return collection.updateOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}},
                     {$pull: {orgs: orgId}});
             })
             .nodeify(callback);
@@ -749,11 +771,11 @@ function GMEAuth(session, gmeConfig) {
                     if (!user) {
                         return Q.reject(new Error('no such user [' + userId + ']'));
                     }
-                    return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
+                    return collection.updateOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
                         {$addToSet: {admins: userId}});
                 } else {
                     if (admins.indexOf(userId) > -1) {
-                        return collection.update({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
+                        return collection.updateOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
                             {$pull: {admins: userId}});
                     }
                 }

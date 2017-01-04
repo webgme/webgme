@@ -76,7 +76,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
                 info: info || {}
             };
 
-        return self.projectCollection.insert(data)
+        return self.projectCollection.insertOne(data)
             .then(function () {
                 return id;
             })
@@ -97,7 +97,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
      * @returns {*}
      */
     function deleteProject(projectId, callback) {
-        return self.projectCollection.remove({_id: projectId}).nodeify(callback);
+        return self.projectCollection.deleteOne({_id: projectId}).nodeify(callback);
     }
 
     function transferProject(projectId, newOwnerId, callback) {
@@ -145,7 +145,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
                 projectData.info.createdAt = info.createdAt || projectData.info.createdAt;
                 projectData.info.creator = info.creator || projectData.info.creator;
 
-                return self.projectCollection.update({_id: projectId}, projectData, {upsert: true});
+                return self.projectCollection.updateOne({_id: projectId}, projectData, {upsert: true});
             })
             .then(function () {
                 return getProject(projectId);
@@ -163,7 +163,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
                 // always update webhook information as a whole to allow remove and create and update as well
                 projectData.hooks = hooks;
 
-                return self.projectCollection.update({_id: projectId}, projectData, {upsert: true});
+                return self.projectCollection.updateOne({_id: projectId}, projectData, {upsert: true});
             })
             .then(function () {
                 return getProject(projectId);

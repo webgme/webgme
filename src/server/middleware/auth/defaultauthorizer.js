@@ -64,7 +64,7 @@ function DefaultAuthorizer(mainLogger, gmeConfig) {
     function removeProjectRightsForAll(projectId, callback) {
         var update = {$unset: {}};
         update.$unset['projects.' + projectId] = '';
-        return self.collection.update({}, update, {multi: true})
+        return self.collection.updateMany({}, update)
             .nodeify(callback);
     }
 
@@ -117,29 +117,25 @@ function DefaultAuthorizer(mainLogger, gmeConfig) {
      */
     function authorizeByUserOrOrgId(userOrOrgId, projectId, type, rights, callback) {
         var update;
+
         if (type === 'set') {
             update = {$set: {}};
             update.$set['projects.' + projectId] = rights;
-            return self.collection.update({_id: userOrOrgId, disabled: {$ne: true}}, update)
-                .spread(function (numUpdated) {
-                    if (numUpdated !== 1) {
-                        return Q.reject(new Error('no such user or org [' + userOrOrgId + ']'));
-                    }
-                })
-                .nodeify(callback);
         } else if (type === 'delete') {
             update = {$unset: {}};
             update.$unset['projects.' + projectId] = '';
-            return self.collection.update({_id: userOrOrgId, disabled: {$ne: true}}, update)
-                .spread(function (numUpdated) {
-                    // FIXME this is always true. Try findAndUpdate instead
-                    return numUpdated === 1;
-                })
-                .nodeify(callback);
         } else {
             return Q.reject(new Error('unknown type ' + type))
                 .nodeify(callback);
         }
+
+        return self.collection.updateOne({_id: userOrOrgId, disabled: {$ne: true}}, update)
+            .then(function (result) {
+                if (result.matchedCount !== 1) {
+                    return Q.reject(new Error('no such user or org [' + userOrOrgId + ']'));
+                }
+            })
+            .nodeify(callback);
     }
 
     this.getAccessRights = function (userId, entityId, params, callback) {
