@@ -304,7 +304,8 @@ function clearDatabase(gmeConfigParameter, callback) {
     Q.ninvoke(exports.mongodb.MongoClient, 'connect', gmeConfigParameter.mongo.uri, gmeConfigParameter.mongo.options)
         .then(function (db_) {
             db = db_;
-            return Q.ninvoke(db, 'collectionNames');
+            var colls = db.listCollections();
+            return Q.ninvoke(colls, 'toArray');
         })
         .then(function (collectionNames) {
             var collectionPromises = [];

@@ -115,8 +115,8 @@ function ExecutorServer(options) {
                 // reset unfinished jobs assigned to worker to CREATED, so they'll be executed by someone else
                 self.logger.debug('worker "' + docs[i].clientId + '" is gone');
 
-                self.workerList.remove({_id: docs[i]._id}, callback);
-                self.jobList.update({worker: docs[i].clientId, status: {$nin: JobInfo.finishedStatuses}}, {
+                self.workerList.deleteOne({_id: docs[i]._id}, callback);
+                self.jobList.updateMany({worker: docs[i].clientId, status: {$nin: JobInfo.finishedStatuses}}, {
                     $set: {
                         worker: null,
                         status: 'CREATED',
@@ -163,7 +163,7 @@ function ExecutorServer(options) {
 
         if (self.running === true) {
 
-            self.jobList.update({hash: jobInfo.hash}, query, function (err) {
+            self.jobList.updateOne({hash: jobInfo.hash}, query, function (err) {
                 if (err) {
                     self.logger.error('Error clearing outputNumber in job', err);
                     deferred.reject(err);
@@ -183,19 +183,19 @@ function ExecutorServer(options) {
                     }
                 };
 
-                self.outputList.remove(query, function (err, num) {
+                self.outputList.deleteMany(query, function (err, res) {
                     if (err) {
                         deferred.reject(err);
                         self.logger.error('Failed to remove output for job', err);
                         return;
                     }
 
-                    if (num !== jobInfo.outputNumber + 1) {
-                        self.logger.warn('Did not remove all output for job', num,
+                    if (res.deletedCount !== jobInfo.outputNumber + 1) {
+                        self.logger.warn('Did not remove all output for job', res.deletedCount,
                             {metadata: jobInfo});
                     }
 
-                    self.logger.debug('Cleared output for job', num, jobInfo.hash);
+                    self.logger.debug('Cleared output for job', res.deletedCount, jobInfo.hash);
                     deferred.resolve();
                 });
             });
@@ -255,7 +255,7 @@ function ExecutorServer(options) {
         function insertNewInfo() {
             var deferred = Q.defer();
 
-            self.jobList.update({hash: oldJobInfo.hash}, newInfo, {upsert: true}, function (err) {
+            self.jobList.updateOne({hash: oldJobInfo.hash}, newInfo, {upsert: true}, function (err) {
                 if (err) {
                     deferred.reject(err);
                 } else {
@@ -346,7 +346,7 @@ function ExecutorServer(options) {
                 self.logger.error(err);
                 res.sendStatus(500);
             } else if (!doc) {
-                self.jobList.insert(jobInfo, function (err) {
+                self.jobList.insertOne(jobInfo, function (err) {
                     if (err) {
                         // TODO: Deal with error when it already existed.
                         self.logger.error(err);
@@ -395,11 +395,11 @@ function ExecutorServer(options) {
                 }
 
                 jobInfo.secret = doc.secret;
-                self.jobList.update({hash: req.params.hash}, jobInfo, function (err, numReplaced) {
+                self.jobList.updateOne({hash: req.params.hash}, jobInfo, function (err, result) {
                     if (err) {
                         self.logger.error(err);
                         res.sendStatus(500);
-                    } else if (numReplaced !== 1) {
+                    } else if (result.matchedCount === 0) {
                         res.sendStatus(404);
                     } else {
                         if (JobInfo.isFinishedStatus(jobInfo.status)) {
@@ -428,7 +428,7 @@ function ExecutorServer(options) {
                     res.sendStatus(403);
                 } else if (JobInfo.isFinishedStatus(doc.status) === false) {
                     // Only bother to update the cancelRequested if job hasn't finished.
-                    self.jobList.update({hash: req.params.hash}, {
+                    self.jobList.updateOne({hash: req.params.hash}, {
                         $set: {
                             cancelRequested: true
                         }
@@ -504,22 +504,22 @@ function ExecutorServer(options) {
 
         self.logger.debug('output posted', outputInfo._id);
 
-        self.outputList.update({_id: outputInfo._id}, outputInfo, {upsert: true}, function (err) {
+        self.outputList.updateOne({_id: outputInfo._id}, outputInfo, {upsert: true}, function (err) {
             if (err) {
                 self.logger.error('post output', err);
                 res.sendStatus(500);
                 return;
             }
 
-            self.jobList.update({hash: req.params.hash}, {
+            self.jobList.updateOne({hash: req.params.hash}, {
                 $set: {
                     outputNumber: outputInfo.outputNumber
                 }
-            }, function (err, num) {
+            }, function (err, result) {
                 if (err) {
                     self.logger.error('post output', err);
                     res.sendStatus(500);
-                } else if (num === 0) {
+                } else if (result.matchedCount === 0) {
                     self.logger.warn('posted output to job that did not exist');
                     res.sendStatus(404);
                 } else {
@@ -577,7 +577,7 @@ function ExecutorServer(options) {
                 });
         }
 
-        self.workerList.update({clientId: clientRequest.clientId}, {
+        self.workerList.updateOne({clientId: clientRequest.clientId}, {
             $set: {
                 lastSeen: (new Date()).getTime() / 1000,
                 labels: clientRequest.labels
@@ -608,7 +608,7 @@ function ExecutorServer(options) {
                             checkForCanceledJobs();
                             return;
                         }
-                        self.jobList.update({_id: docs[i]._id, status: 'CREATED'}, {
+                        self.jobList.updateOne({_id: docs[i]._id, status: 'CREATED'}, {
                             $set: {
                                 status: 'RUNNING',
                                 worker: clientRequest.clientId
@@ -663,7 +663,7 @@ function ExecutorServer(options) {
                 watchLabelJobs();
                 workerTimeoutIntervalId = setInterval(workerTimeout, 10 * 1000);
                 self.running = true;
-                return Q.ninvoke(self.jobList, 'ensureIndex', {hash: 1}, {unique: true});
+                return Q.ninvoke(self.jobList, 'createIndex', {hash: 1}, {unique: true});
             })
             .nodeify(callback);
     };

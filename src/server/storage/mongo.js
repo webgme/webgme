@@ -83,7 +83,7 @@ function Mongo(mainLogger, gmeConfig) {
                 rejected = true;
             }
             if (rejected === false) {
-                collection.insert(object, function (err) {
+                collection.insertOne(object, function (err) {
                     // manually check duplicate keys
                     if (err && err.code === 11000) {
                         collection.findOne({
@@ -167,11 +167,11 @@ function Mongo(mainLogger, gmeConfig) {
                     }
                 });
             } else if (newhash === '') {
-                collection.remove({
+                collection.deleteOne({
                     _id: branch,
                     hash: oldhash
-                }, function (err, num) {
-                    if (!err && num !== 1) {
+                }, function (err, result) {
+                    if (!err && result.deletedCount !== 1) {
                         collection.findOne({_id: branch}, function (err, obj) {
                             if (!err && obj) {
                                 err = new Error('branch hash mismatch');
@@ -189,7 +189,7 @@ function Mongo(mainLogger, gmeConfig) {
                     }
                 });
             } else if (oldhash === '') {
-                collection.insert({
+                collection.insertOne({
                     _id: branch,
                     hash: newhash
                 }, function (err) {
@@ -205,15 +205,15 @@ function Mongo(mainLogger, gmeConfig) {
                     }
                 });
             } else {
-                collection.update({
+                collection.updateOne({
                     _id: branch,
                     hash: oldhash
                 }, {
                     $set: {
                         hash: newhash
                     }
-                }, function (err, num) {
-                    if (!err && num !== 1) {
+                }, function (err, result) {
+                    if (!err && result.modifiedCount !== 1) {
                         err = new Error('branch hash mismatch');
                     }
                     if (err) {
@@ -259,7 +259,7 @@ function Mongo(mainLogger, gmeConfig) {
 
             update.$set[name] = commitHash;
 
-            collection.update(query, update, {upsert: true}, function (err/*, num*/) {
+            collection.updateOne(query, update, {upsert: true}, function (err/*, num*/) {
                 if (err) {
                     if (err.code === 11000) {
                         deferred.reject(new Error('Tag already exists [' + name + ']'));
@@ -285,7 +285,7 @@ function Mongo(mainLogger, gmeConfig) {
 
             update.$unset[name] = '';
 
-            collection.update(query, update, function (err/*, num*/) {
+            collection.updateOne(query, update, function (err/*, num*/) {
                 if (err) {
                     deferred.reject(err);
                 } else {
@@ -364,7 +364,8 @@ function Mongo(mainLogger, gmeConfig) {
 
         if (connectionCnt === 1) {
             if (self.client === null) {
-                logger.info('connecting', gmeConfig.mongo.uri, JSON.stringify(gmeConfig.mongo.options));
+                logger.info('connecting to:', gmeConfig.mongo.uri);
+                logger.debug('mongdb options', gmeConfig.mongo.uri, JSON.stringify(gmeConfig.mongo.options));
                 connectDeferred = Q.defer();
                 // connect to mongo
                 mongodb.MongoClient.connect(gmeConfig.mongo.uri, gmeConfig.mongo.options, function (err, db) {
@@ -489,7 +490,7 @@ function Mongo(mainLogger, gmeConfig) {
                     if (something) {
                         deferred.reject(new Error('Project already exists ' + projectId));
                     } else {
-                        return Q.ninvoke(collection, 'insert', {_id: CONSTANTS.EMPTY_PROJECT_DATA});
+                        return Q.ninvoke(collection, 'insertOne', {_id: CONSTANTS.EMPTY_PROJECT_DATA});
                     }
                 })
                 .then(function () {

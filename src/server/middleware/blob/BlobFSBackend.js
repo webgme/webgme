@@ -21,7 +21,7 @@ var BlobFSBackend = function (gmeConfig, logger) {
     BlobBackendBase.call(this, logger);
     this.blobDir = gmeConfig.blob.fsDir;
     this.tempBucket = this.tempBucket + '-' + gmeConfig.server.port;
-    this.logger.info('local-storage:', this.blobDir);
+    this.logger.info('local-storage:', path.resolve(this.blobDir));
 };
 
 // Inherits from BlobManagerBase
