@@ -59,6 +59,34 @@ define(['js/logger',
             throw ('DiagramDesignerWidgetMultiTabMemberListControllerBase can not be created');
         }
 
+        // Initialize maps
+        this._tabIDMemberListID = {};
+        this._memberListMembers = {};
+        this._memberListMemberCoordinates = {};
+
+        this._GMEID2ComponentID = {};
+        this._ComponentID2GMEID = {};
+
+        this._GMEID2Subcomponent = {};
+        this._Subcomponent2GMEID = {};
+
+        this._connectionWaitingListByDstGMEID = {};
+        this._connectionWaitingListBySrcGMEID = {};
+
+        this._connectionListBySrcGMEID = {};
+        this._connectionListByDstGMEID = {};
+        this._connectionListByID = {};
+
+        this._componentIDPartIDMap = {};
+
+        this._selectedMemberListMembers = [];
+        this._delayedConnections = [];
+        this._delayedConnectionsAsItems = {};
+
+        this._selectedMemberListMembersTerritoryPatterns = {};
+
+        this._notifyPackage = {};
+
         this._attachDiagramDesignerWidgetEventHandlers();
 
         this.logger.debug('DiagramDesignerWidgetMultiTabMemberListControllerBase ctor finished');
@@ -452,6 +480,7 @@ define(['js/logger',
                     }
                 }
             }
+
             this._widget.endUpdate();
 
             //save current list of members

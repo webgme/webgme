@@ -5,13 +5,13 @@
 
 #Getting started
 
-WebGME requires [NodeJS](https://nodejs.org/) (0.12 <= version, CI tests are performed on versions 4.x, 6.x) and [MongoDB](https://www.mongodb.com/) (version >= 2.6) installed on the host system (the server).
+WebGME requires [NodeJS](https://nodejs.org/) (0.12 <= version, CI tests are performed on versions 4.x, 6.x and LTS is recommended) and [MongoDB](https://www.mongodb.com/) (version >= 2.6) installed on the host system (the server).
 In addition the npm installation requires [Git](https://git-scm.com) to be installed and available in PATH.
 
 Options to deploy and run WebGME:
 
 1. [webgme-cli](https://github.com/webgme/webgme-cli). This is the preferred way of using webgme as it allows you to:
- * Automatically generate boilerplate code for [extension components](#Extension Components) (w/o manually configuring paths etc.).
+ * Automatically generate boilerplate code for [extension components](#extension-components) (w/o manually configuring paths etc.).
  * Reuse components from other users.
  * Publish and share your work with others.
  * Updating to newer webgme releases only requires a `npm install webgme` and won't cause any conflicts.

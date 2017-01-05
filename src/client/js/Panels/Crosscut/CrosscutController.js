@@ -29,8 +29,8 @@ define(['js/logger',
 
     var CrosscutController,
         DEFAULT_DECORATOR = 'ModelDecorator',
-        WIDGET_NAME = 'DiagramDesigner',
-        CONNECTION_DECORATOR = 'CircleDecorator';
+        WIDGET_NAME = 'DiagramDesigner';
+        //CONNECTION_DECORATOR = 'CircleDecorator';
 
     CrosscutController = function (options) {
         options = options || {};
@@ -106,6 +106,7 @@ define(['js/logger',
             territoryChanged = false,
             territoryId = this._selectedMemberListMembersTerritoryId,
             territoryPatterns = this._selectedMemberListMembersTerritoryPatterns,
+            client = this._client,
             putConnectionsToBeHandledLast = function (list) {
                 var boxes = [],
                     connections = [],
@@ -119,8 +120,7 @@ define(['js/logger',
                     }
                 }
                 return connections.concat(boxes);
-            },
-            client = this._client;
+            };
 
         //let's see who has been deleted
         diff = putConnectionsToBeHandledLast(_.difference(currentlyDisplayedMembers, actualMembers));
