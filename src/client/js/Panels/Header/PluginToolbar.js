@@ -51,7 +51,12 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog', 'common/util/guid'], fun
                     title: 'Show results...',
                     text: 'Show results...',
                     clickFn: function () {
-                        showResults();
+                        var resultId;
+                        if (unreadResults === 1 && self._results.length > 0) {
+                            resultId = self._results[0].__id;
+                        }
+
+                        showResults(resultId);
                     }
                 });
                 if (pluginIds.length > 0) {
@@ -137,7 +142,7 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog', 'common/util/guid'], fun
 
                 note.$ele.on('click', function () {
                     if (self._results.length > 0) {
-                        showResults();
+                        showResults(result.__id);
                     }
 
                     note.close();
