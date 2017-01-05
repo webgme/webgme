@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResultsDialog) {
+define(['js/Dialogs/PluginResults/PluginResultsDialog', 'common/util/guid'], function (PluginResultsDialog, GUID) {
     'use strict';
 
     var PluginToolbar,
@@ -105,6 +105,8 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
                     note;
 
                 result.__unread = true;
+                result.__id = GUID();
+
                 self._results.splice(0, 0, result);
                 self.$btnExecutePlugin.el.find('.btn').disable(false);
                 unreadResults += 1;
@@ -147,9 +149,9 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog'], function (PluginResults
             });
         };
 
-        showResults = function () {
+        showResults = function (resultId) {
             var dialog = new PluginResultsDialog();
-            dialog.show(client, self._results);
+            dialog.show(client, self._results, resultId);
             unreadResults = 0;
             setBadgeText('');
         };
