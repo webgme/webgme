@@ -45,12 +45,12 @@ define(['js/util',
         this.logger = Logger.create('gme:Dialogs:PluginResults:PluginResultsDialog', WebGMEGlobal.gmeConfig.client.log);
     };
 
-    PluginResultsDialog.prototype.show = function (client, pluginResults) {
+    PluginResultsDialog.prototype.show = function (client, pluginResults, expandedId) {
         var self = this;
 
         this._dialog = $(pluginResultsDialogTemplate);
         this._client = client;
-        this._initDialog(pluginResults);
+        this._initDialog(pluginResults, expandedId || null);
 
         this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
@@ -62,7 +62,7 @@ define(['js/util',
     };
 
 
-    PluginResultsDialog.prototype._initDialog = function (pluginResults) {
+    PluginResultsDialog.prototype._initDialog = function (pluginResults, expandedId) {
         var self = this,
             dialog = this._dialog,
             client = this._client,
@@ -149,6 +149,14 @@ define(['js/util',
             return historyContainer;
         }
 
+        function toggleCollapsed(resultDiv) {
+            var messagesPanel = resultDiv.find('.messages'),
+                artifactsPanel = resultDiv.find('.artifacts');
+
+            messagesPanel.toggleClass('in');
+            artifactsPanel.toggleClass('in');
+        }
+
         for (i = 0; i < pluginResults.length; i += 1) {
             result = pluginResults[i];
 
@@ -233,6 +241,10 @@ define(['js/util',
 
             resultEntry.append(messageContainer);
 
+            if (result.__id === expandedId) {
+                toggleCollapsed(resultEntry);
+            }
+
             body.append(resultEntry);
         }
 
@@ -242,12 +254,7 @@ define(['js/util',
         });
 
         dialog.on('click', '.btn-details', function (event) {
-            var detailsBtn = $(this),
-                messagesPanel = detailsBtn.parent().parent().find('.messages'),
-                artifactsPanel = detailsBtn.parent().parent().find('.artifacts');
-
-            messagesPanel.toggleClass('in');
-            artifactsPanel.toggleClass('in');
+            toggleCollapsed($(this).parent().parent());
 
             event.stopPropagation();
             event.preventDefault();

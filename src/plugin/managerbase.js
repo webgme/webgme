@@ -79,7 +79,7 @@ define([
                     self.runPluginMain(plugin, callback);
                 })
                 .catch(function (err) {
-                    var pluginResult = self.getPluginErrorResult(pluginId, 'Exception was raised, err: ' + err.stack,
+                    var pluginResult = self.getPluginErrorResult(pluginId, pluginId, 'Exception was raised, err: ' + err.stack,
                         plugin && plugin.projectId);
                     self.logger.error(err.stack);
                     callback(err.message, pluginResult);
@@ -194,7 +194,7 @@ define([
             self.logger.debug('plugin configured, invoking main');
 
             if (plugin.isConfigured === false) {
-                callback('Plugin is not configured.', self.getPluginErrorResult(plugin.getName(),
+                callback('Plugin is not configured.', self.getPluginErrorResult(plugin.getId(), plugin.getName(),
                     'Plugin is not configured.', project && project.projectId));
                 return;
             }
@@ -212,6 +212,7 @@ define([
                 result.setStartTime(startTime);
 
                 result.setPluginName(plugin.getName());
+                result.setPluginId(plugin.getId());
 
                 if (mainCallbackCalls > 1) {
                     stackTrace = new Error().stack;
@@ -264,13 +265,14 @@ define([
             return deferred.promise.nodeify(callback);
         }
 
-        this.getPluginErrorResult = function (pluginName, message, projectId) {
+        this.getPluginErrorResult = function (pluginId, pluginName, message, projectId) {
             var pluginResult = new PluginResult(),
                 pluginMessage = new PluginMessage();
             pluginMessage.severity = 'error';
             pluginMessage.message = message;
             pluginResult.setSuccess(false);
             pluginResult.setPluginName(pluginName);
+            pluginResult.setPluginId(pluginId);
             pluginResult.setProjectId(projectId || 'N/A');
             pluginResult.addMessage(pluginMessage);
             pluginResult.setStartTime((new Date()).toISOString());
