@@ -24,6 +24,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         if (config) {
             this.success = config.success;
             this.pluginName = config.pluginName;
+            this.pluginId = config.pluginId;
             this.startTime = config.startTime;
             this.finishTime = config.finishTime;
             this.messages = [];
@@ -49,6 +50,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             this.finishTime = null;
             this.error = null;
             this.projectId = null;
+            this.pluginId = null;
             this.commits = [];
         }
     };
@@ -135,6 +137,15 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
     };
 
     /**
+     * Sets the name of the plugin to which the result object belongs to.
+     *
+     * @param {string} pluginName - name of the plugin
+     */
+    PluginResult.prototype.setPluginId = function (pluginId) {
+        this.pluginId = pluginId;
+    };
+
+    /**
      * Sets the name of the projectId the result was generated from.
      *
      * @param {string} projectId - id of the project
@@ -214,6 +225,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
             commits: this.commits,
             artifacts: this.artifacts,
             pluginName: this.pluginName,
+            pluginId: this.pluginId,
             startTime: this.startTime,
             finishTime: this.finishTime,
             error: this.error

@@ -130,7 +130,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     err = err instanceof Error ? err : new Error(err);
                     logger.error('plugin [' + pluginName + '] failed with error', err);
                     if (!result) {
-                        result = pluginManager.getPluginErrorResult(pluginName, err.message,
+                        result = pluginManager.getPluginErrorResult(pluginName, pluginName, err.message,
                             context && context.managerConfig && context.managerConfig.project);
                     } else if (!result.error) {
                         result.error = err.message;
@@ -144,13 +144,14 @@ function WorkerRequests(mainLogger, gmeConfig) {
             };
 
         if (gmeConfig.plugin.allowServerExecution === false) {
-            errResult = pluginManager.getPluginErrorResult(pluginName, 'plugin execution on server side is disabled');
+            errResult = pluginManager.getPluginErrorResult(pluginName, pluginName,
+                'plugin execution on server side is disabled');
             callback(null, errResult);
             return;
         }
 
         if (typeof pluginName !== 'string' || typeof context !== 'object') {
-            errResult = pluginManager.getPluginErrorResult(pluginName, 'invalid parameters');
+            errResult = pluginManager.getPluginErrorResult(pluginName, pluginName, 'invalid parameters');
             callback(new Error('invalid parameters'), errResult);
             return;
         }

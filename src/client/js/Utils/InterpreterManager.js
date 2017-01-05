@@ -28,12 +28,13 @@ define([
 
     InterpreterManager.prototype.GLOBAL_OPTIONS = 'Global Options';
 
-    InterpreterManager.prototype.getPluginErrorResult = function (pluginName, message, startTime, projectId) {
+    InterpreterManager.prototype.getPluginErrorResult = function (pluginId, pluginName, message, startTime, projectId) {
         var pluginResult = new PluginResult(),
             pluginMessage = new PluginMessage();
         pluginMessage.severity = 'error';
         pluginMessage.message = message;
         pluginResult.setSuccess(false);
+        pluginResult.setPluginId(pluginId);
         pluginResult.setPluginName(pluginName);
         pluginResult.setProjectId(projectId || this._client.getActiveProjectId() || 'N/A');
         pluginResult.addMessage(pluginMessage);
@@ -70,7 +71,7 @@ define([
                         if (result) {
                             callback(new PluginResult(result));
                         } else {
-                            callback(self.getPluginErrorResult(metadata.id, err.message, startTime,
+                            callback(self.getPluginErrorResult(metadata.id, metadata.name, err.message, startTime,
                                 context.managerConfig.project.projectId));
                         }
                     } else {
@@ -102,7 +103,7 @@ define([
                         self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC;
 
                 if (!readOnlyClient && isOutOfSync) {
-                    callback(self.getPluginErrorResult(metadata.id, 'Not allowed ' +
+                    callback(self.getPluginErrorResult(metadata.id, metadata.name, 'Not allowed ' +
                         'to invoke server plugin while local branch is AHEAD or ' +
                         'PULLING changes from server.', startTime));
                     return;
@@ -179,7 +180,8 @@ define([
         }
 
         if (errorMessage) {
-            return this.getPluginErrorResult(pluginMetadata.id, errorMessage, (new Date()).toISOString());
+            return this.getPluginErrorResult(pluginMetadata.id, pluginMetadata.name, errorMessage,
+                (new Date()).toISOString());
         } else {
             result.push(runOption);
             namespace.valueItems = this._client.getLibraryNames();

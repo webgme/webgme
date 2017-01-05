@@ -141,11 +141,24 @@ define([
      *
      * @returns {string}
      */
+    PluginBase.prototype.getId = function () {
+        if (this.pluginMetadata) {
+            return this.pluginMetadata.id;
+        } else {
+            throw new Error('pluginMetadata is not defined - implement this function in the derived class');
+        }
+    };
+
+    /**
+     * Readable name of this plugin that can contain spaces.
+     *
+     * @returns {string}
+     */
     PluginBase.prototype.getName = function () {
         if (this.pluginMetadata) {
             return this.pluginMetadata.name;
         } else {
-            throw new Error('If pluginMetadata is not defined - implement this function in the derived class');
+            throw new Error('pluginMetadata is not defined - implement this function in the derived class');
         }
     };
 
@@ -379,6 +392,7 @@ define([
                 projectId: self.projectId,
                 branchName: self.branchName,
                 pluginName: self.getName(),
+                pluginId: self.getId(),
                 pluginVersion: self.getVersion()
             };
 
