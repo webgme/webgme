@@ -316,7 +316,6 @@ function Mongo(mainLogger, gmeConfig) {
         this.traverse = function (visitFn, callback) {
             var deferred = Q.defer(),
                 cursor = collection.find(),
-                self = this,
                 finished = false,
                 ongoingVisits = 0,
                 error = null,
