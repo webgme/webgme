@@ -16,14 +16,14 @@ process.env.NODE_ENV = (process.env.NODE_ENV && process.env.NODE_ENV.indexOf('te
 
 //adding a local storage class to the global Namespace
 var WebGME = require('../webgme'),
-    gmeConfig = require('../config'),
+    _gmeConfig,
     getGmeConfig = function () {
         // makes sure that for each request it returns with a unique object and tests will not interfere
-        if (!gmeConfig) {
+        if (!_gmeConfig) {
             // if some tests are deleting or unloading the config
-            gmeConfig = require('../config');
+            _gmeConfig = require('../config');
         }
-        return JSON.parse(JSON.stringify(gmeConfig));
+        return JSON.parse(JSON.stringify(_gmeConfig));
     },
     _Core,
     _NodeStorage,
@@ -572,11 +572,16 @@ function loadRootNodeFromCommit(project, core, commitHash, callback) {
 /**
  * This uses the guest account by default
  * @param {string} projectName
- * @param {string} [userId=gmeConfig.authentication.guestAccount]
+ * @param {string} userId
  * @returns {string} projectId
  */
 function projectName2Id(projectName, userId) {
-    userId = userId || gmeConfig.authentication.guestAccount;
+    if (_gmeConfig) {
+        userId = userId || _gmeConfig.authentication.guestAccount;
+    } else {
+        throw new Error('userId required when webgme is a dependency!');
+    }
+
     return exports.storageUtil.getProjectIdFromOwnerIdAndProjectName(userId, projectName);
 }
 
@@ -731,7 +736,10 @@ function getChangedNodesFromPersisted(persisted, printPatches) {
     return storageUtil.getChangedNodes(coreObjects, persisted.rootHash);
 }
 
-WebGME.addToRequireJsPaths(gmeConfig);
+// Only load the config if globals is used for webgme and not for a domain repo.
+if (process.cwd() === exports.path.join(__dirname, '..')) {
+    WebGME.addToRequireJsPaths(getGmeConfig());
+}
 
 // This is for the client side test-cases (only add paths here!)
 requireJS.config({
