@@ -1,7 +1,7 @@
 {
   "name": "webgme",
   "version": "2.9.0-beta1",
-  "description": "Web based graphical domain specific modeling environments",
+  "description": "Web-based Generic Modeling Environment",
   "engines": {
     "node": ">=0.12.0 <5.0.0"
   },
