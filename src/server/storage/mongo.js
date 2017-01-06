@@ -446,25 +446,24 @@ function Mongo(mainLogger, gmeConfig) {
     }
 
     function openProject(projectId, callback) {
-        var collection,
-            deferred = Q.defer();
+        var deferred = Q.defer();
 
         logger.debug('openProject', projectId);
 
         if (self.client) {
-            Q.ninvoke(self.client, 'collection', projectId)
-                .then(function (result) {
-                    collection = result;
-                    return Q.ninvoke(result, 'findOne', {}, {_id: 1});
+            Q.ninvoke(self.client, 'collection', projectId, {strict: true})
+                .then(function (collection) {
+                    deferred.resolve(new MongoProject(projectId, collection));
                 })
-                .then(function (something) {
-                    if (!something) {
+                .catch(function (err) {
+                    console.log(err);
+                    if (err.message.indexOf('does not exist') > -1) {
                         deferred.reject(new Error('Project does not exist ' + projectId));
                     } else {
-                        deferred.resolve(new MongoProject(projectId, collection));
+                        deferred.reject(err);
                     }
                 })
-                .catch(deferred.reject);
+                .done();
 
         } else {
             deferred.reject(new Error('Database is not open.'));
@@ -483,19 +482,19 @@ function Mongo(mainLogger, gmeConfig) {
             Q.ninvoke(self.client, 'collection', projectId)
                 .then(function (result) {
                     collection = result;
-                    return Q.ninvoke(result, 'findOne', {}, {_id: 1});
-                })
-                .then(function (something) {
-                    if (something) {
-                        deferred.reject(new Error('Project already exists ' + projectId));
-                    } else {
-                        return Q.ninvoke(collection, 'insertOne', {_id: CONSTANTS.EMPTY_PROJECT_DATA});
-                    }
+                    return Q.ninvoke(collection, 'insertOne', {_id: CONSTANTS.EMPTY_PROJECT_DATA});
                 })
                 .then(function () {
                     deferred.resolve(new MongoProject(projectId, collection));
                 })
-                .catch(deferred.reject);
+                .catch(function (err) {
+                    if (err.code === 11000) {
+                        deferred.reject(new Error('Project already exists ' + projectId));
+                    } else {
+                        deferred.reject(err);
+                    }
+                })
+                .done();
 
         } else {
             deferred.reject(new Error('Database is not open.'));
