@@ -4,7 +4,11 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-define(['js/Loader/ProgressNotification', 'clipboard'], function (ProgressNotification, Clipboard) {
+define([
+    'js/Loader/ProgressNotification',
+    'clipboard',
+    'js/Utils/SaveToDisk'
+], function (ProgressNotification, Clipboard, saveToDisk) {
     'use strict';
 
     function exportProject(client, logger, projectParams, withAssets, callback) {
@@ -25,6 +29,7 @@ define(['js/Loader/ProgressNotification', 'clipboard'], function (ProgressNotifi
                         progress: 100
                     });
                 } else {
+                    saveToDisk.saveUrlToDisk(result.downloadUrl);
                     progress.note.update({
                         message: '<strong>Exported </strong> project <a href="' +
                         result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
@@ -51,6 +56,7 @@ define(['js/Loader/ProgressNotification', 'clipboard'], function (ProgressNotifi
             selectedIds,
             withAssets,
             function (err, result) {
+                var copied = false;
                 clearInterval(progress.intervalId);
                 if (err) {
                     logger.error('unable to export models', err);
@@ -69,8 +75,7 @@ define(['js/Loader/ProgressNotification', 'clipboard'], function (ProgressNotifi
                         icon: 'glyphicon glyphicon-copy'
                     });
 
-                    $(progress.note.$ele).find('.glyphicon-copy').attr('title', 'copy to clipboard');
-                    console.log(result);
+                    $(progress.note.$ele).find('.glyphicon-copy').attr('title', 'copy blobhash of export to clipboard');
                     $(progress.note.$ele).find('.glyphicon-copy').attr('data-clipboard-text', result.hash);
                     new Clipboard($(progress.note.$ele).find('.glyphicon-copy')[0]);
                 }

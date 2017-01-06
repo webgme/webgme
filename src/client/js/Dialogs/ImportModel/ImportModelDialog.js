@@ -7,8 +7,10 @@
 
 define([
     'js/Controls/PropertyGrid/Widgets/AssetWidget',
+    'js/Controls/PropertyGrid/Widgets/BlobHashWidget',
     'js/Dialogs/MultiTab/MultiTabDialog'
 ], function (AssetWidget,
+             BlobHashWidget,
              MultiTabDialog) {
 
     'use strict';
@@ -32,13 +34,14 @@ define([
                 extraClasses: 'import-model-dialog',
                 iconClass: 'glyphicon glyphicon-import',
                 activeTabIndex: 0,
-                tabs: [self._getFileTab()]
+                tabs: [self._getFileTab(), self._getBlobHashTab()]
             };
 
         this._parentId = parentId;
 
         dialog.show(parameters, function () {
             self._assetWidget.destroy();
+            self._blobHashWidget.destroy();
         });
     };
 
@@ -82,6 +85,50 @@ define([
             '(w.r.t GUIDs) in this project. If you are uncertain, there is no harm in trying to ' +
             'import the model(s) - an error will just be returned.',
             formControl: self._assetWidget.el,
+            onOK: onOK
+        };
+    };
+
+    ImportModelDialog.prototype._getBlobHashTab = function () {
+        var self = this;
+
+        this._blobHashWidget = new BlobHashWidget({
+            propertyName: 'ImportModelDialog',
+            propertyValue: ''
+        });
+
+        function onOK(callback) {
+            if (!self._blobHashWidget.propertyValue) {
+                callback('No file hash was given.');
+                return;
+            }
+
+            self._client.importSelectionFromFile(
+                self._client.getActiveProjectId(),
+                self._client.getActiveBranchName(),
+                self._parentId,
+                self._blobHashWidget.propertyValue,
+                function (err, result) {
+                    if (err) {
+                        callback('Failed to import model' + err);
+                    } else if (!self._checkCommitStatus(result.status)) {
+                        callback('Project updated model at commit ' + result.hash.substring(0, 7) +
+                            ' but could not update branch.');
+                    } else {
+                        callback();
+                    }
+                }
+            );
+        }
+
+        return {
+            title: 'Hash',
+            infoTitle: 'From BlobHash that represents an export',
+            infoDetails: 'The exported model(s) represented by the hash must come from a project that shares ' +
+            'the same meta as the current project. Specifically all the meta-types used in exported model(s) must ' +
+            'have matching meta-nodes (w.r.t GUIDs) in this project. If you are uncertain, there is no harm in ' +
+            'trying to import the model(s) - an error will just be returned.',
+            formControl: self._blobHashWidget.el,
             onOK: onOK
         };
     };
