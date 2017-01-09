@@ -7,7 +7,6 @@ define([
 
     'jquery',
     'jquery-ui',
-    'jquery-gritter',
     'jquery-contextMenu',
     'jquery-spectrum',
 
@@ -29,6 +28,7 @@ define([
     'd3',
     'codemirror',
     'epiceditor',
+    'clipboard',
 
     'angular',
     'angular-ui-bootstrap',

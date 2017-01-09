@@ -29,7 +29,6 @@ require.config({
         'jquery-dataTables': 'lib/jquery/jquery.dataTables',
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
         'jquery-spectrum': 'bower_components/spectrum/spectrum',
-        'jquery-gritter': 'bower_components/jquery.gritter/js/jquery.gritter',
         'jquery-fancytree': 'bower_components/jquery.fancytree/dist/jquery.fancytree-all',
         'jquery-layout': 'lib/jquery/jquery.layout',
 

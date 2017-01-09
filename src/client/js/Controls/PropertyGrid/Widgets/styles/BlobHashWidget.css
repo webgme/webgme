@@ -21,13 +21,8 @@ div.blobhash-widget {
     padding-left: 1ex;
     overflow: hidden;
     text-overflow: ellipsis;
-    border: 1px dashed #aaaaaa;
+    border: none;
     border-radius: 4px; }
-  div.blobhash-widget .btn-ready {
-    position: absolute;
-    right: 22px;
-    top: 0;
-    padding: 0 3px; }
   div.blobhash-widget .btn-clear {
     position: absolute;
     right: 0;

@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, $*/
 /*jshint node: true, browser: true, bitwise: false*/
 
 /**
@@ -56,7 +56,6 @@ define([
             selectedIds,
             withAssets,
             function (err, result) {
-                var copied = false;
                 clearInterval(progress.intervalId);
                 if (err) {
                     logger.error('unable to export models', err);
@@ -75,8 +74,11 @@ define([
                         icon: 'glyphicon glyphicon-copy'
                     });
 
+                    //TODO it is not the nicest way, we might want to add it as an option to the notification itself
                     $(progress.note.$ele).find('.glyphicon-copy').attr('title', 'copy blobhash of export to clipboard');
                     $(progress.note.$ele).find('.glyphicon-copy').attr('data-clipboard-text', result.hash);
+                    $(progress.note.$ele).find('.glyphicon-copy').css('cursor', 'copy');
+                    $(progress.note.$ele).find('.glyphicon-copy').addClass('btn btn-xs');
                     new Clipboard($(progress.note.$ele).find('.glyphicon-copy')[0]);
                 }
 

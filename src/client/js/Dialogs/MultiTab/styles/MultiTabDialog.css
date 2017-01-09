@@ -26,15 +26,11 @@ div.multi-tab-dialog .modal-content div.modal-body .blobhash-widget {
   height: 30px;
   line-height: 30px; }
   div.multi-tab-dialog .modal-content div.modal-body .blobhash-widget input {
-    height: 20px;
-    line-height: 20px;
+    height: 28px;
+    line-height: 28px;
     width: 50%;
-    left: 10%;
-    top: 5px;
     padding: 5px; }
   div.multi-tab-dialog .modal-content div.modal-body .blobhash-widget a.btn-clear {
-    padding: 3px; }
-  div.multi-tab-dialog .modal-content div.modal-body .blobhash-widget a.btn-ready {
     padding: 3px; }
 div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal i.toggle-info-btn {
   font-size: 65%;
