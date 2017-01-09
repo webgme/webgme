@@ -791,25 +791,27 @@ define(['js/logger',
         var gmeIDs = [],
             len = selectedIds.length,
             id,
-            onlyConnectionSelected = selectedIds.length > 0 && this.designerCanvas.getIsReadOnlyMode() === false;
+            enableEditConnections = selectedIds.length > 0;
 
-        while (len-- && onlyConnectionSelected) {
+        while (len--) {
             id = this._ComponentID2GMEID[selectedIds[len]];
             if (id) {
                 gmeIDs.push(id);
 
-                onlyConnectionSelected = onlyConnectionSelected && GMEConcepts.isConnectionType(id);
+                enableEditConnections = enableEditConnections && GMEConcepts.isConnectionType(id);
             }
         }
 
-        this.designerCanvas.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionSelected);
-        this.designerCanvas.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionSelected);
-        this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionSelected);
-        this.designerCanvas.toolbarItems.ddbtnConnectionLineType.enabled(onlyConnectionSelected);
-        this.designerCanvas.toolbarItems.ddbtnConnectionLineWidth.enabled(onlyConnectionSelected);
-        this.designerCanvas.toolbarItems.ddbtnConnectionLabelPlacement.enabled(onlyConnectionSelected);
+        enableEditConnections = enableEditConnections && this.designerCanvas.getIsReadOnlyMode() === false;
 
-        this.$btnConnectionRemoveSegmentPoints.enabled(onlyConnectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionArrowStart.enabled(enableEditConnections);
+        this.designerCanvas.toolbarItems.ddbtnConnectionPattern.enabled(enableEditConnections);
+        this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(enableEditConnections);
+        this.designerCanvas.toolbarItems.ddbtnConnectionLineType.enabled(enableEditConnections);
+        this.designerCanvas.toolbarItems.ddbtnConnectionLineWidth.enabled(enableEditConnections);
+        this.designerCanvas.toolbarItems.ddbtnConnectionLabelPlacement.enabled(enableEditConnections);
+
+        this.$btnConnectionRemoveSegmentPoints.enabled(enableEditConnections);
 
         WebGMEGlobal.State.registerActiveSelection(gmeIDs, {invoker: this});
     };
