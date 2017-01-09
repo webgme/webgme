@@ -46,7 +46,10 @@ define([
     }
 
     function exportModels(client, logger, selectedIds, withAssets, callback) {
-        var progress = ProgressNotification.start('<strong>Exporting </strong> models ...');
+        var progress = ProgressNotification.start({
+            message: '<strong>Exporting </strong> models ...',
+            useClipboard: true
+        });
 
         withAssets = withAssets === false ? false : true;
 
@@ -71,15 +74,8 @@ define([
                         result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
                         progress: 100,
                         type: 'success',
-                        icon: 'glyphicon glyphicon-copy'
+                        clipboardValue: result.hash
                     });
-
-                    //TODO it is not the nicest way, we might want to add it as an option to the notification itself
-                    $(progress.note.$ele).find('.glyphicon-copy').attr('title', 'copy blobhash of export to clipboard');
-                    $(progress.note.$ele).find('.glyphicon-copy').attr('data-clipboard-text', result.hash);
-                    $(progress.note.$ele).find('.glyphicon-copy').css('cursor', 'copy');
-                    $(progress.note.$ele).find('.glyphicon-copy').addClass('btn btn-xs');
-                    new Clipboard($(progress.note.$ele).find('.glyphicon-copy')[0]);
                 }
 
                 if (typeof callback === 'function') {
