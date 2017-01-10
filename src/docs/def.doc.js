@@ -62,6 +62,18 @@
  */
 
 /**
+ * @description Javascript Number class. For more information, look up the
+ * [reference]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number}.
+ * @typedef {number} number
+ */
+
+/**
+ * @description Represents an integer from the Number class of Javascript. For more information, look up the
+ * [reference]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number}.
+ * @typedef {integer} integer
+ */
+
+/**
  * @description The main configuration object of the WebGME. For detailed information about the individual
  * options, look up the [wiki]{@link https://github.com/webgme/webgme/tree/master/config/README.md} pages.
  * @typedef {object} GmeConfig

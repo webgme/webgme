@@ -20,7 +20,7 @@
  * @typedef {object} GmePersisted - the result object of a persist which contains information about the newly
  * created data objects.
  * @prop {module:Core~ObjectHash} rootHash - Hash of the root node.
- * @prop {Object.<module:Core~ObjectHash, module:Core~DataObject>} objects - Hash of the root node.
+ * @prop {object.<module:Core~ObjectHash, module:Core~DataObject>} objects - Hash of the root node.
  */
 
 /**
@@ -86,7 +86,7 @@
  * 'severity': 'error',
  * 'type': 'missing',
  * 'targetInfo': '/E/b',
- * 'message': '[MyObject]: mixin node \'E/b\' is missing from the Meta',
+ * 'message': '[MyObject]: mixin node "E/b" is missing from the Meta',
  * 'hint': 'Remove mixin or add to the Meta'
  * }'
  * @example
@@ -96,7 +96,7 @@
  * 'ruleName': 'value',
  * 'collisionPaths': ['/E/a','/E/Z'],
  * 'collisionNodes': [Object,Object],
- * 'message':'[MyObject]: inherits attribute definition \'value'\ from [TypeA] and [TypeB]',
+ * 'message':'[MyObject]: inherits attribute definition "value" from [TypeA] and [TypeB]',
  * 'hint': 'Remove one of the mixin relations'
  * }'
  */

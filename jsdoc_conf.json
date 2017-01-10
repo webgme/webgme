@@ -23,7 +23,9 @@
       "src/common/storage/project/project.js",
       "src/common/storage/project/interface.js",
       "src/server/storage/safestorage.js",
-      "src/server/storage/userproject.js"
+      "src/server/storage/userproject.js",
+      "src/common/storage/constants.js",
+      "src/common/storage/storageclasses"
     ]
   },
   "opts": {
