@@ -314,13 +314,13 @@ describe('gmeNodeGetter', function () {
     it('should return the value of the given registry', function () {
         var node = getNode('/175547009/871430202', logger, basicState, basicStoreNode);
 
-        expect(node.getRegistry('position')).to.eql({x: 91, y: 219});
+        expect(node.getRegistry('position')).to.eql({x: 104, y: 218});
     });
 
     it('should return the own value of the given registry', function () {
         var node = getNode('/175547009/871430202', logger, basicState, basicStoreNode);
 
-        expect(node.getOwnRegistry('position')).to.eql({x: 91, y: 219});
+        expect(node.getOwnRegistry('position')).to.eql({x: 104, y: 218});
     });
 
     it('should return a mutable value of the given registry', function () {

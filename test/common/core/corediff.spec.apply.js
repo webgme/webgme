@@ -642,7 +642,7 @@ describe('corediff apply', function () {
                     },
                     guid: 'ba70829e-5e52-826f-93b3-ab9c8daa8a42',
                     removed: false,
-                    hash: '#e54a4dcce022c601a808424bb76608b962dc435c',
+                    hash: '#b4af4be317dfbbe961eee699a7a4f8b50d7a2164',
                     pointer: {
                         base: '/175547009/1817665259'
                     },
@@ -831,7 +831,7 @@ describe('corediff apply', function () {
                         }
                     },
                     b: {
-                        hash: '#e54a4dcce022c601a808424bb76608b962dc435c',
+                        hash: '#b4af4be317dfbbe961eee699a7a4f8b50d7a2164',
                         removed: false,
                         oGuids: {
                             '5f73946c-68aa-9de1-7979-736d884171af': true
