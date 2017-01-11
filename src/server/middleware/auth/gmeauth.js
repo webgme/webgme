@@ -4,6 +4,7 @@
 /**
  * @module Server:GMEAuth
  * @author ksmyth / https://github.com/ksmyth
+ * @author pmeijer / https://github.com/pmeijer
  *
  * http://mongodb.github.io/node-mongodb-native/2.2/api/Collection.html
  */
@@ -16,7 +17,7 @@ var Mongodb = require('mongodb'),
     jwt = require('jsonwebtoken'),
     MetadataStorage = require('../../storage/metadatastorage'),
     UTIL = requireJS('common/util/util'),
-
+    EventDispatcher = requireJS('common/EventDispatcher'),
     Logger = require('../../logger'),
 
     CONSTANTS = require('./constants');
@@ -30,8 +31,8 @@ var Mongodb = require('mongodb'),
  */
 function GMEAuth(session, gmeConfig) {
     'use strict';
-    // TODO: make sure that gmeConfig passes all config
-    var logger = Logger.create('gme:server:auth:gmeauth', gmeConfig.server.log),
+    var self = this,
+        logger = Logger.create('gme:server:auth:gmeauth', gmeConfig.server.log),
         _collectionName = '_users',
         _projectCollectionName = '_projects',
         db,
@@ -47,6 +48,8 @@ function GMEAuth(session, gmeConfig) {
             algorithm: 'RS256',
             expiresIn: gmeConfig.authentication.jwt.expiresIn
         };
+
+    EventDispatcher.call(this);
 
     if (gmeConfig.authentication.enable === true) {
         PRIVATE_KEY = fs.readFileSync(gmeConfig.authentication.jwt.privateKey, 'utf8');
@@ -348,6 +351,10 @@ function GMEAuth(session, gmeConfig) {
                 .then(function () {
                     return collection.updateMany({admins: userId}, {$pull: {admins: userId}});
                 })
+                .then(function (res) {
+                    self.dispatchEvent(CONSTANTS.USER_DELETED, {userId: userId});
+                    return res;
+                })
                 .nodeify(callback);
         } else {
             return collection.updateOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {
@@ -359,6 +366,10 @@ function GMEAuth(session, gmeConfig) {
                     }
 
                     return collection.updateMany({admins: userId}, {$pull: {admins: userId}});
+                })
+                .then(function (res) {
+                    self.dispatchEvent(CONSTANTS.USER_DELETED, {userId: userId});
+                    return res;
                 })
                 .nodeify(callback);
         }
@@ -581,7 +592,10 @@ function GMEAuth(session, gmeConfig) {
                         return collection.updateOne({_id: userId}, data, {upsert: true});
                     }
                 })
-                .then(deferred.resolve)
+                .then(function (res) {
+                    self.dispatchEvent(CONSTANTS.USER_CREATED, {userId: userId});
+                    deferred.resolve(res);
+                })
                 .catch(function (err) {
                     if (err.code === 11000) {
                         deferred.reject(new Error('user already exists [' + userId + ']'));
@@ -609,6 +623,10 @@ function GMEAuth(session, gmeConfig) {
                 info: info || {}
             }
         )
+            .then(function (res) {
+                self.dispatchEvent(CONSTANTS.ORGANIZATION_CREATED, {orgId: orgId});
+                return res;
+            })
             .catch(function (err) {
                 if (err.code === 11000) {
                     throw new Error('user or org already exists [' + orgId + ']');
@@ -690,6 +708,10 @@ function GMEAuth(session, gmeConfig) {
                 .then(function () {
                     return collection.updateMany({orgs: orgId}, {$pull: {orgs: orgId}});
                 })
+                .then(function (res) {
+                    self.dispatchEvent(CONSTANTS.ORGANIZATION_DELETED, {orgId: orgId});
+                    return res;
+                })
                 .nodeify(callback);
         } else {
             return collection.updateOne({_id: orgId, type: CONSTANTS.ORGANIZATION},
@@ -700,6 +722,10 @@ function GMEAuth(session, gmeConfig) {
                     }
 
                     return collection.updateMany({orgs: orgId}, {$pull: {orgs: orgId}});
+                })
+                .then(function (res) {
+                    self.dispatchEvent(CONSTANTS.ORGANIZATION_DELETED, {orgId: orgId});
+                    return res;
                 })
                 .nodeify(callback);
         }
@@ -845,5 +871,9 @@ function GMEAuth(session, gmeConfig) {
         CONSTANTS: CONSTANTS
     };
 }
+
+// Inherit from EventDispatcher
+GMEAuth.prototype = Object.create(EventDispatcher.prototype);
+GMEAuth.prototype.constructor = GMEAuth;
 
 module.exports = GMEAuth;
