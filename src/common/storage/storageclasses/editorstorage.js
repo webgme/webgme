@@ -642,6 +642,7 @@ define([
                 error = new Error('Branch, ' + branchName + ', not in project ' + projectId + '.');
                 if (callback) {
                     callback(error);
+                    return;
                 } else {
                     throw error;
                 }

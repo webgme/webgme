@@ -62,7 +62,7 @@ define([
 
         if (this.diagramDesigner === undefined || this.diagramDesigner === null) {
             this.logger.error('Trying to initialize a ConnectionRouteManager3 without a canvas...');
-            throw ('ConnectionRouteManager3 can not be created');
+            throw new Error('ConnectionRouteManager3 can not be created');
         }
 
         this.logger.debug('ConnectionRouteManager3 ctor finished');
@@ -536,6 +536,13 @@ define([
         // Update each AutoRouter port
         for (j = connInfo.length; j--;) {
             this._invokeAutoRouterMethod('updatePort', [objId, connInfo[j]]);
+        }
+
+        if (!boxObject) {
+            //FIXME: It may or may not be safe to assume empty array..)
+            // Sentry will log the message if there is an uncaught exception after this..
+            this.logger.error('ConnectionRouteManager3: no boxObject, related to #1289');
+            return;
         }
 
         for (j = boxObject.ports.length; j--;) {

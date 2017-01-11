@@ -984,7 +984,6 @@ define(['js/logger',
         //generate container for 'show more' button and progress bar
         this._showMoreContainer.empty();
         this._showMoreContainer.remove();
-        this._showMoreContainer = undefined;
     };
 
     ProjectRepositoryWidget.prototype._generateSVGGradientDefinition = function () {
