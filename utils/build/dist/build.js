@@ -46,7 +46,7 @@ var requirejs = require('requirejs'),
             d3: 'empty:',
             clipboard: 'empty:',
 
-            AutoRouterActionApplier: 'empty:',
+            AutoRouterActionApplier: 'client/lib/autorouter/action-applier',
 
             jquery: 'empty:',
             'jquery-ui': 'empty:',
@@ -128,7 +128,7 @@ var requirejs = require('requirejs'),
             epiceditor: 'client/bower_components/EpicEditor/epiceditor/js/epiceditor',
             clipboard: 'client/bower_components/clipboard/dist/clipboard',
 
-            AutoRouterActionApplier: 'client/lib/autorouter/action-applier',
+            AutoRouterActionApplier: 'empty:',
 
             jquery: 'client/bower_components/jquery/dist/jquery',
             'jquery-ui': 'client/bower_components/jquery-ui/jquery-ui',

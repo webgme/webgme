@@ -62,7 +62,7 @@ define([
 
         if (this.diagramDesigner === undefined || this.diagramDesigner === null) {
             this.logger.error('Trying to initialize a ConnectionRouteManager3 without a canvas...');
-            throw ('ConnectionRouteManager3 can not be created');
+            throw new Error('ConnectionRouteManager3 can not be created');
         }
 
         this.logger.debug('ConnectionRouteManager3 ctor finished');

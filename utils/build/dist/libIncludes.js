@@ -34,8 +34,7 @@ define([
     'angular-ui-bootstrap',
 
     'isis-ui-components',
-    'isis-ui-components-templates',
-    'AutoRouterActionApplier'
+    'isis-ui-components-templates'
 ], function () {
 
 });
