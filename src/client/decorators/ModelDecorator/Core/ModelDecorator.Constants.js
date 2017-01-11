@@ -18,6 +18,7 @@ define([], function () {
         POINTER_CLASS: 'ptr',
         POINTER_CLASS_NON_SET: 'ptr-nonset',
         PROGRESS_BAR_CLASS: 'progress-bar',
-        REPLACEABLE_CLASS: 'replaceable'
+        REPLACEABLE_CLASS: 'replaceable',
+        SET_CLASS: 'set'
     };
 });

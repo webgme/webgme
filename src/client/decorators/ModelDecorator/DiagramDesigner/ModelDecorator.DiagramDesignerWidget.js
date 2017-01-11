@@ -52,7 +52,6 @@ define([
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     ModelDecoratorDiagramDesignerWidget.prototype.DECORATORID = DECORATOR_ID;
 
-
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     ModelDecoratorDiagramDesignerWidget.prototype.$DOMBase = $(modelDecoratorTemplate);
 
@@ -91,6 +90,13 @@ define([
             event.preventDefault();
         });
 
+        // set icon on double-click
+        this.$el.on('dblclick.setDblClick', '.' + ModelDecoratorConstants.SET_CLASS, function (event) {
+            self.__onSetDblClick({x: event.clientX, y: event.clientY});
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
         this._updateDropArea();
     };
     //jshint camelcase: true
@@ -101,7 +107,6 @@ define([
         this._updateDropArea();
     };
 
-
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     ModelDecoratorDiagramDesignerWidget.prototype.onRenderGetLayoutInfo = function () {
         this._paddingTop = parseInt(this.$el.css('padding-top'), 10);
@@ -109,7 +114,6 @@ define([
 
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.call(this);
     };
-
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     ModelDecoratorDiagramDesignerWidget.prototype.destroy = function () {
@@ -121,7 +125,6 @@ define([
         //call base destroy
         ModelDecoratorCore.prototype.destroy.call(this);
     };
-
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     ModelDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (id/*, isEnd, connectionMetaInfo*/) {
@@ -221,13 +224,11 @@ define([
         return result;
     };
 
-
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     //called when the designer item's subcomponent should be updated
     ModelDecoratorDiagramDesignerWidget.prototype.updateSubcomponent = function (portId) {
         this._updatePort(portId);
     };
-
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     //Shows the 'connectors' - appends them to the DOM
@@ -275,20 +276,17 @@ define([
         }
     };
 
-
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     //should highlight the connectors for the given elements
     ModelDecoratorDiagramDesignerWidget.prototype.showEndConnectors = function (params) {
         this.showSourceConnectors(params);
     };
 
-
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     //Hides the 'connectors' - detaches them from the DOM
     ModelDecoratorDiagramDesignerWidget.prototype.hideEndConnectors = function () {
         this.hideSourceConnectors();
     };
-
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     ModelDecoratorDiagramDesignerWidget.prototype.notifyComponentEvent = function (componentList) {
@@ -298,7 +296,7 @@ define([
         }
         this._checkTerritoryReady();
     };
-    
+
     ModelDecoratorDiagramDesignerWidget.prototype._portPositionChanged = function (portId) {
         this.onRenderGetLayoutInfo();
         this.hostDesignerItem.canvas.dispatchEvent(
@@ -315,7 +313,7 @@ define([
 
         return ModelDecoratorCore.prototype.renderPort.call(this, portId);
     };
-    
+
     ModelDecoratorDiagramDesignerWidget.prototype.removePort = function (portId) {
         var idx = this.portIDs.indexOf(portId);
 
@@ -393,6 +391,16 @@ define([
                 menu.show(mousePos);
             }
         }
+    };
+
+    ModelDecoratorDiagramDesignerWidget.prototype.__onSetDblClick = function (mousePos) {
+        var settings = {};
+
+        settings[CONSTANTS.STATE_ACTIVE_OBJECT] = this._metaInfo[CONSTANTS.GME_ID];
+        settings[CONSTANTS.STATE_ACTIVE_VISUALIZER] = 'SetEditor';
+        WebGMEGlobal.State.set(settings, {
+            suppressVisualizerFromNode: true
+        });
     };
 
     ModelDecoratorDiagramDesignerWidget.prototype._navigateToPointerTarget = function (targetID) {

@@ -40,7 +40,8 @@ define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS)
                 return [self._treeBrowser.DRAG_EFFECTS.DRAG_COPY,
                     self._treeBrowser.DRAG_EFFECTS.DRAG_CREATE_POINTER,
                     self._treeBrowser.DRAG_EFFECTS.DRAG_CREATE_INSTANCE,
-                    self._treeBrowser.DRAG_EFFECTS.DRAG_SET_REPLACEABLE
+                    self._treeBrowser.DRAG_EFFECTS.DRAG_SET_REPLACEABLE,
+                    self._treeBrowser.DRAG_EFFECTS.DRAG_ADD_MEMBER
                 ];
             }
             return [self._treeBrowser.DRAG_EFFECTS.DRAG_COPY,
@@ -48,6 +49,7 @@ define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS)
                 self._treeBrowser.DRAG_EFFECTS.DRAG_CREATE_POINTER,
                 self._treeBrowser.DRAG_EFFECTS.DRAG_CREATE_INSTANCE,
                 self._treeBrowser.DRAG_EFFECTS.DRAG_SET_REPLACEABLE,
+                self._treeBrowser.DRAG_EFFECTS.DRAG_ADD_MEMBER
             ];
         };
 
@@ -113,7 +115,7 @@ define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS)
             }
         }
 
-        return iconName ?  '/assets/DecoratorSVG/' + iconName : null;
+        return iconName ? '/assets/DecoratorSVG/' + iconName : null;
     };
 
     ObjectBrowserControlBase.prototype.getMetaInfo = function (nodeObj) {
