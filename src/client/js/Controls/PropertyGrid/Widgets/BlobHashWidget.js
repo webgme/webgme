@@ -19,7 +19,7 @@ define([
 
     var BlobHashWidget,
         BTN_CLEAR = $('<a class="btn btn-mini btn-clear"><i class="glyphicon glyphicon-remove" /></a>'),
-        INPUT_FIELD = $('<input type="text"/>'),
+        INPUT_FIELD = $('<input type="text" placeholder="Paste an exported blob-hash here"/>'),
         WIDGET_BASE = $('<div class="blobhash-widget" />'),
         ASSET_LINK = $('<a class="blob-download-link" href="" target="_self"/>');
 

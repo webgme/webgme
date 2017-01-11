@@ -28,7 +28,6 @@ div.multi-tab-dialog .modal-content div.modal-body .blobhash-widget {
   div.multi-tab-dialog .modal-content div.modal-body .blobhash-widget input {
     height: 28px;
     line-height: 28px;
-    width: 50%;
     padding: 5px; }
   div.multi-tab-dialog .modal-content div.modal-body .blobhash-widget a.btn-clear {
     padding: 3px; }
