@@ -85,9 +85,6 @@ function GMEAuth(session, gmeConfig) {
                 return Q.npost(c, 'find', args);
             });
         };
-        collection_.update = function (/*query, update, options*/) {
-            throw new Error('update is deprecated, use updateOne or updateMany');
-        };
         collection_.updateOne = function (/*query, update, options*/) {
             var args = arguments;
             return collection_.then(function (c) {
@@ -100,9 +97,6 @@ function GMEAuth(session, gmeConfig) {
                 return Q.npost(c, 'updateMany', args);
             });
         };
-        collection_.insert = function (/*data, options*/) {
-            throw new Error('insert is deprecated, use insertOne or insertMany');
-        };
         collection_.insertOne = function (/*data, options*/) {
             var args = arguments;
             return collection_.then(function (c) {
@@ -114,9 +108,6 @@ function GMEAuth(session, gmeConfig) {
             return collection_.then(function (c) {
                 return Q.npost(c, 'insertMany', args);
             });
-        };
-        collection_.remove = function (/*query, options*/) {
-            throw new Error('remove is deprecated, use deleteOne or deleteMany');
         };
         collection_.deleteOne = function (/*query, options*/) {
             var args = arguments;
@@ -196,11 +187,6 @@ function GMEAuth(session, gmeConfig) {
                 return Q.ninvoke(db, 'collection', _projectCollectionName);
             })
             .then(function (projectCollection_) {
-                projectCollectionDeferred.resolve(projectCollection_);
-                return _prepareGuestAccount();
-            })
-            .then(function (projectCollection_) {
-
                 projectCollectionDeferred.resolve(projectCollection_);
                 return _prepareGuestAccount();
             })
@@ -821,7 +807,6 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-
     function authorizeByUserId(userId, projectId, type, rights, callback) {
         var projectAuthParams = {
             entityType: authorizer.ENTITY_TYPES.PROJECT
@@ -832,44 +817,42 @@ function GMEAuth(session, gmeConfig) {
         return authorizer.setAccessRights(userId, projectId, rights, projectAuthParams).nodeify(callback);
     }
 
-    return {
-        unload: unload,
-        connect: connect,
+    this.unload = unload;
+    this.connect = connect;
 
-        // user managerment functions
-        addUser: addUser,
-        updateUser: updateUser,
-        updateUserDataField: updateUserDataField,
-        updateUserSettings: updateUserSettings,
-        updateUserComponentSettings: updateUserComponentSettings,
-        deleteUser: deleteUser,
-        getUser: getUser,
-        listUsers: listUsers,
+    this.listUsers = listUsers;
+    this.getUser = getUser;
+    this.addUser = addUser;
+    this.updateUser = updateUser;
+    this.updateUserDataField = updateUserDataField;
+    this.updateUserSettings = updateUserSettings;
+    this.updateUserComponentSettings = updateUserComponentSettings;
+    this.deleteUser = deleteUser;
 
-        addOrganization: addOrganization,
-        getOrganization: getOrganization,
-        listOrganizations: listOrganizations,
+    this.listOrganizations = listOrganizations;
+    this.getOrganization = getOrganization;
+    this.addOrganization = addOrganization;
+    this.deleteOrganization = this.removeOrganizationByOrgId = removeOrganizationByOrgId;
 
-        removeOrganizationByOrgId: removeOrganizationByOrgId,
-        addUserToOrganization: addUserToOrganization,
-        removeUserFromOrganization: removeUserFromOrganization,
-        setAdminForUserInOrganization: setAdminForUserInOrganization,
-        getAdminsInOrganization: getAdminsInOrganization,
+    this.getAdminsInOrganization = getAdminsInOrganization;
+    this.addUserToOrganization = addUserToOrganization;
+    this.removeUserFromOrganization = removeUserFromOrganization;
+    this.setAdminForUserInOrganization = setAdminForUserInOrganization;
 
-        authenticateUser: authenticateUser,
-        generateJWToken: generateJWToken,
-        generateJWTokenForAuthenticatedUser: generateJWTokenForAuthenticatedUser,
-        regenerateJWToken: regenerateJWToken,
-        verifyJWToken: verifyJWToken,
+    this.authenticateUser = authenticateUser;
+    this.generateJWToken = generateJWToken;
+    this.generateJWTokenForAuthenticatedUser = generateJWTokenForAuthenticatedUser;
+    this.regenerateJWToken = regenerateJWToken;
+    this.verifyJWToken = verifyJWToken;
 
-        metadataStorage: metadataStorage,
-        authorizer: authorizer,
+    this.metadataStorage = metadataStorage;
+    this.authorizer = authorizer;
 
-        // This is left in order to not break all tests.
-        authorizeByUserId: authorizeByUserId,
-        authorizeByUserOrOrgId: authorizeByUserId,
-        CONSTANTS: CONSTANTS
-    };
+    this.CONSTANTS = CONSTANTS;
+
+    // These are left in order to not break all tests.
+    this.authorizeByUserId = authorizeByUserId;
+    this.authorizeByUserOrOrgId = authorizeByUserId;
 }
 
 // Inherit from EventDispatcher

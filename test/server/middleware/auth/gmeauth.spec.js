@@ -76,8 +76,26 @@ describe('GME authentication', function () {
             .nodeify(done);
     });
 
-    it('adds user without overwrite', function (done) {
-        auth.addUser('no_overwrite_user', 'no_overwrite_user@example.com', 'plaintext', true, {overwrite: false}, done);
+    it('adds user without overwrite should dispatch USER_CREATED', function (done) {
+        var cnt = 2;
+        function callDone() {
+            cnt -= 1;
+            if (cnt === 0) {
+                done();
+            }
+        }
+
+        function handler(_auth, data) {
+            expect(data.userId === 'no_overwrite_user');
+            auth.removeEventListener(auth.CONSTANTS.USER_CREATED, handler);
+            callDone();
+        }
+
+        auth.addEventListener(auth.CONSTANTS.USER_CREATED, handler);
+
+        auth.addUser('no_overwrite_user', 'no_overwrite_user@example.com', 'plaintext', true, {overwrite: false})
+            .then(callDone)
+            .catch(done);
     });
 
     it('adds a user without email address', function (done) {
@@ -175,8 +193,63 @@ describe('GME authentication', function () {
             .nodeify(done);
     });
 
+    it('should add and remove user and trigger USER_DELETED event', function (done) {
+        var cnt = 2,
+            userId = 'addRemoveEvent';
+
+        function callDone() {
+            cnt -= 1;
+            if (cnt === 0) {
+                done();
+            }
+        }
+
+        function handler(_auth, data) {
+            expect(data.userId === userId);
+            auth.removeEventListener(auth.CONSTANTS.USER_DELETED, handler);
+            callDone();
+        }
+
+        auth.addEventListener(auth.CONSTANTS.USER_DELETED, handler);
+
+        auth.addUser(userId, 'userId@example.com', 'plaintext', true, {overwrite: false})
+            .then(function () {
+                return auth.deleteUser(userId);
+            })
+            .then(callDone)
+            .catch(done);
+    });
+
+    it('should add and remove user with force and trigger USER_DELETED event', function (done) {
+        var cnt = 2,
+            userId = 'addRemoveForceEvent';
+
+        function callDone() {
+            cnt -= 1;
+            if (cnt === 0) {
+                done();
+            }
+        }
+
+        function handler(_auth, data) {
+            expect(data.userId === userId);
+            auth.removeEventListener(auth.CONSTANTS.USER_DELETED, handler);
+            callDone();
+        }
+
+        auth.addEventListener(auth.CONSTANTS.USER_DELETED, handler);
+
+        auth.addUser(userId, 'userId@example.com', 'plaintext', true, {overwrite: false})
+            .then(function () {
+                return auth.deleteUser(userId, true);
+            })
+            .then(callDone)
+            .catch(done);
+    });
+
     it('removes user by id and fail to add it again', function (done) {
         var userId = 'user_to_remove_and_fail_to_add';
+
         auth.addUser(userId, 'user_to_remove@example.com', 'plaintext', true, {overwrite: true})
             .then(function () {
                 return auth.listUsers();
@@ -948,6 +1021,84 @@ describe('GME authentication', function () {
         });
     });
 
+    it('should add organization and trigger ORGANIZATION_CREATED event', function (done) {
+        var cnt = 2,
+            orgId = 'addedOrgEvent';
+
+        function callDone() {
+            cnt -= 1;
+            if (cnt === 0) {
+                done();
+            }
+        }
+
+        function handler(_auth, data) {
+            expect(data.orgId === orgId);
+            auth.removeEventListener(auth.CONSTANTS.ORGANIZATION_CREATED, handler);
+            callDone();
+        }
+
+        auth.addEventListener(auth.CONSTANTS.ORGANIZATION_CREATED, handler);
+
+        auth.addOrganization(orgId)
+            .then(callDone)
+            .catch(done);
+    });
+
+    it('should add and delete organization and trigger ORGANIZATION_DELETED event', function (done) {
+        var cnt = 2,
+            orgId = 'addRemoveOrgEvent';
+
+        function callDone() {
+            cnt -= 1;
+            if (cnt === 0) {
+                done();
+            }
+        }
+
+        function handler(_auth, data) {
+            expect(data.orgId === orgId);
+            auth.removeEventListener(auth.CONSTANTS.ORGANIZATION_DELETED, handler);
+            callDone();
+        }
+
+        auth.addEventListener(auth.CONSTANTS.ORGANIZATION_DELETED, handler);
+
+        auth.addOrganization(orgId)
+            .then(function () {
+                return auth.deleteOrganization(orgId);
+            })
+            .then(callDone)
+            .catch(done);
+    });
+
+    it('should add and delete organization force and trigger ORGANIZATION_DELETED event', function (done) {
+        var cnt = 2,
+            orgId = 'addRemoveOrgForceEvent';
+
+        function callDone() {
+            cnt -= 1;
+            if (cnt === 0) {
+                done();
+            }
+        }
+
+        function handler(_auth, data) {
+            expect(data.orgId === orgId);
+            auth.removeEventListener(auth.CONSTANTS.ORGANIZATION_DELETED, handler);
+            callDone();
+        }
+
+        auth.addEventListener(auth.CONSTANTS.ORGANIZATION_DELETED, handler);
+
+        auth.addOrganization(orgId)
+            .then(function () {
+                return auth.deleteOrganization(orgId, true);
+            })
+            .then(callDone)
+            .catch(done);
+    });
+
     it('should fail to authorize non existent organization', function (done) {
         authorizer.setAccessRights('dummyOrgId', 'unauthorized_project', {}, projectAuthParams)
             .then(function () {
@@ -1021,7 +1172,6 @@ describe('GME authentication', function () {
             auth.addOrganization(otherOrgName)
         ])
             .then(function () {
-                'adminUser2'
                 return Q.allDone([
                     auth.addUserToOrganization('user', orgName)
                 ]);
