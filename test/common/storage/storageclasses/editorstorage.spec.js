@@ -481,127 +481,54 @@ describe('storage storageclasses editorstorage', function () {
     it('should persist commits with no open project', function (done) {
         // jshint ignore:start
         // jscs:disable
-        var commitQueueDump = {
-            "webgmeVersion": "2.7.0-beta1",
-            "projectId": "guest+StorageProject",
+        var projectId = projectName2Id(projectName),
+            commitQueueDump = {
+            "webgmeVersion": "2.9.0-beta1",
+            "projectId": projectId,
             "branchName": "master",
             "branchStatus": "AHEAD_SYNC",
             "commitQueue": [
                 {
-                    "rootHash": "#28eb77c985afe9baa9c7968013286bea84cbc49d",
-                    "projectId": "guest+StorageProject",
+                    "rootHash": "#ac05af30bcfbc3e46f3b8aab2fbd859fe78ae8a4",
+                    "projectId": projectId,
                     "commitObject": {
-                        "root": "#28eb77c985afe9baa9c7968013286bea84cbc49d",
+                        "root": "#ac05af30bcfbc3e46f3b8aab2fbd859fe78ae8a4",
                         "parents": [
-                            "#94e13e7feaa0b722b28f385b6ce9ce842c7d9448"
+                            "#0c4cca16ee4189d668c8ceb3c756e90cd93cce9a"
                         ],
                         "updater": [
                             "guest"
                         ],
-                        "time": 1479140927645,
+                        "time": 1484171011838,
                         "message": "[\nsetAttribute(/1,name,\"FCO1\")\n]",
                         "type": "commit",
                         "__v": "1.1.0",
-                        "_id": "#bca2a7ca0ce7ddb16aa7ff3a9c561e9945a70f93"
+                        "_id": "#406151d6d531b2a0f7704aeb9e2b6419ac610ab9"
                     },
                     "coreObjects": {
-                        "#84268a8fd43f17641d2ffa3ed0d4caa9c69878c0": {
+                        "#5593e5e47f22f778cb0c3d0355245856ac332215": {
                             "type": "patch",
-                            "base": "#7f9626a859234e2a6948b3dd925fcd48ebc0a46e",
+                            "base": "#b25794864ce94422ed1087986d3da1ef4f76fb0e",
                             "patch": [
-                                {
-                                    "op": "add",
-                                    "path": "/__v",
-                                    "value": "1.1.0"
-                                },
                                 {
                                     "op": "replace",
                                     "path": "/atr/name",
                                     "value": "FCO1"
-                                },
-                                {
-                                    "op": "remove",
-                                    "path": "/ovr/%2f_nullptr",
-                                    "partialUpdates": [],
-                                    "updates": []
                                 }
                             ],
-                            "_id": "#84268a8fd43f17641d2ffa3ed0d4caa9c69878c0"
+                            "_id": "#5593e5e47f22f778cb0c3d0355245856ac332215"
                         },
-                        "#28eb77c985afe9baa9c7968013286bea84cbc49d": {
+                        "#ac05af30bcfbc3e46f3b8aab2fbd859fe78ae8a4": {
                             "type": "patch",
-                            "base": "#ed2a98991739bbfb4fc93dee191e388ea7caf20b",
+                            "base": "#ebb87c1adf5f759c0cbe8090f9c78077e7304332",
                             "patch": [
-                                {
-                                    "op": "add",
-                                    "path": "/__v",
-                                    "value": "1.1.0"
-                                },
                                 {
                                     "op": "replace",
                                     "path": "/1",
-                                    "value": "#84268a8fd43f17641d2ffa3ed0d4caa9c69878c0"
-                                },
-                                {
-                                    "op": "replace",
-                                    "path": "/_meta",
-                                    "value": {
-                                        "atr": {
-                                            "name": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "children": {
-                                            "_sets": {
-                                                "items": {
-                                                    "302362349": {
-                                                        "reg": {
-                                                            "_": "_"
-                                                        },
-                                                        "atr": {
-                                                            "min": -1,
-                                                            "max": -1
-                                                        }
-                                                    },
-                                                    "reg": {
-                                                        "_": "_"
-                                                    }
-                                                },
-                                                "_nullptr": {
-                                                    "atr": {
-                                                        "name": "_null_pointer"
-                                                    }
-                                                },
-                                                "ovr": {
-                                                    "": {
-                                                        "items": "/_nullptr"
-                                                    }
-                                                }
-                                            },
-                                            "reg": {
-                                                "_sets_": 4
-                                            }
-                                        }
-                                    }
-                                },
-                                {
-                                    "op": "remove",
-                                    "path": "/_sets/ovr/%2f_nullptr"
-                                },
-                                {
-                                    "op": "remove",
-                                    "path": "/ovr/%2f_nullptr",
-                                    "partialUpdates": [],
-                                    "updates": []
-                                },
-                                {
-                                    "op": "remove",
-                                    "path": "/ovr/%2f1",
-                                    "partialUpdates": [],
-                                    "updates": []
+                                    "value": "#5593e5e47f22f778cb0c3d0355245856ac332215"
                                 }
                             ],
-                            "_id": "#28eb77c985afe9baa9c7968013286bea84cbc49d"
+                            "_id": "#ac05af30bcfbc3e46f3b8aab2fbd859fe78ae8a4"
                         }
                     },
                     "changedNodes": {
@@ -616,71 +543,59 @@ describe('storage storageclasses editorstorage', function () {
                     "branchName": "master"
                 },
                 {
-                    "rootHash": "#093f0af14cd4055ccbddef339004471cfc347226",
-                    "projectId": "guest+StorageProject",
+                    "rootHash": "#37abec46171fa75095036221cb0c3c3be735663c",
+                    "projectId": projectId,
                     "commitObject": {
-                        "root": "#093f0af14cd4055ccbddef339004471cfc347226",
+                        "root": "#37abec46171fa75095036221cb0c3c3be735663c",
                         "parents": [
-                            "#bca2a7ca0ce7ddb16aa7ff3a9c561e9945a70f93"
+                            "#406151d6d531b2a0f7704aeb9e2b6419ac610ab9"
                         ],
                         "updater": [
                             "guest"
                         ],
-                        "time": 1479140931928,
-                        "message": "createChildren({\"/1\":\"/J\"})",
+                        "time": 1484171013931,
+                        "message": "[\nsetRegistry(/1,position,{\"x\":187,\"y\":159})\n]",
                         "type": "commit",
                         "__v": "1.1.0",
-                        "_id": "#2e43e5700e6412c7ded6740e8b58f5ca3137ba3f"
+                        "_id": "#4838adb2441aa6231aa7a149ac9d7417ffa39690"
                     },
                     "coreObjects": {
-                        "#bbd60515aa7af9e305f5aacbd31a4a803ab2c551": {
-                            "_id": "#bbd60515aa7af9e305f5aacbd31a4a803ab2c551",
-                            "atr": {
-                                "_relguid": "b307518fa1b9fd841628f2c5172c91ca"
-                            },
-                            "reg": {
-                                "position": {
-                                    "x": 105,
-                                    "y": 240
-                                }
-                            }
-                        },
-                        "#093f0af14cd4055ccbddef339004471cfc347226": {
+                        "#d03d708da8f26fb76280c907e94a9773df1b21c0": {
                             "type": "patch",
-                            "base": "#28eb77c985afe9baa9c7968013286bea84cbc49d",
+                            "base": "#5593e5e47f22f778cb0c3d0355245856ac332215",
                             "patch": [
                                 {
-                                    "op": "add",
-                                    "path": "/J",
-                                    "value": "#bbd60515aa7af9e305f5aacbd31a4a803ab2c551"
-                                },
-                                {
-                                    "op": "add",
-                                    "path": "/ovr/%2fJ",
+                                    "op": "replace",
+                                    "path": "/reg/position",
                                     "value": {
-                                        "base": "/1"
-                                    },
-                                    "partialUpdates": [
-                                        "/1"
-                                    ],
-                                    "updates": []
+                                        "x": 187,
+                                        "y": 159
+                                    }
                                 }
                             ],
-                            "_id": "#093f0af14cd4055ccbddef339004471cfc347226"
+                            "_id": "#d03d708da8f26fb76280c907e94a9773df1b21c0"
+                        },
+                        "#37abec46171fa75095036221cb0c3c3be735663c": {
+                            "type": "patch",
+                            "base": "#ac05af30bcfbc3e46f3b8aab2fbd859fe78ae8a4",
+                            "patch": [
+                                {
+                                    "op": "replace",
+                                    "path": "/1",
+                                    "value": "#d03d708da8f26fb76280c907e94a9773df1b21c0"
+                                }
+                            ],
+                            "_id": "#37abec46171fa75095036221cb0c3c3be735663c"
                         }
                     },
                     "changedNodes": {
-                        "load": {
-                            "/J": true
-                        },
+                        "load": {},
                         "unload": {},
                         "update": {
-                            "": true,
-                            "/J": true
+                            "/1": true,
+                            "": true
                         },
-                        "partialUpdate": {
-                            "/1": true
-                        }
+                        "partialUpdate": {}
                     },
                     "branchName": "master"
                 }
