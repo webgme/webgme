@@ -44,6 +44,7 @@ var requirejs = require('requirejs'),
             moment: 'empty:',
             blockies: 'empty:',
             d3: 'empty:',
+            clipboard: 'empty:',
 
             AutoRouterActionApplier: 'empty:',
 
@@ -55,7 +56,6 @@ var requirejs = require('requirejs'),
             'jquery-fancytree': 'empty:',
             'jquery-layout': 'empty:',
             'jquery-contextMenu': 'empty:',
-            'jquery-gritter': 'empty:',
 
             bootstrap: 'empty:',
             'bootstrap-multiselect': 'empty:',
@@ -126,6 +126,7 @@ var requirejs = require('requirejs'),
             blockies: 'client/lib/blockies/blockies',
             d3: 'client/bower_components/d3/d3',
             epiceditor: 'client/bower_components/EpicEditor/epiceditor/js/epiceditor',
+            clipboard: 'client/bower_components/clipboard/dist/clipboard',
 
             AutoRouterActionApplier: 'client/lib/autorouter/action-applier',
 
@@ -137,7 +138,6 @@ var requirejs = require('requirejs'),
             'jquery-fancytree': 'empty:',
             'jquery-layout': 'empty:',
             'jquery-contextMenu': 'client/bower_components/jQuery-contextMenu/dist/jquery.contextMenu',
-            'jquery-gritter': 'client/bower_components/jquery.gritter/js/jquery.gritter',
 
             bootstrap: 'client/bower_components/bootstrap/dist/js/bootstrap',
             'bootstrap-multiselect': 'client/bower_components/bootstrap-multiselect/dist/js/bootstrap-multiselect',

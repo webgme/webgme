@@ -1,10 +1,14 @@
-/*globals define*/
+/*globals define, $*/
 /*jshint node: true, browser: true, bitwise: false*/
 
 /**
  * @author kecso / https://github.com/kecso
  */
-define(['js/Loader/ProgressNotification'], function (ProgressNotification) {
+define([
+    'js/Loader/ProgressNotification',
+    'clipboard',
+    'js/Utils/SaveToDisk'
+], function (ProgressNotification, Clipboard, saveToDisk) {
     'use strict';
 
     function exportProject(client, logger, projectParams, withAssets, callback) {
@@ -25,6 +29,7 @@ define(['js/Loader/ProgressNotification'], function (ProgressNotification) {
                         progress: 100
                     });
                 } else {
+                    saveToDisk.saveUrlToDisk(result.downloadUrl);
                     progress.note.update({
                         message: '<strong>Exported </strong> project <a href="' +
                         result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
@@ -41,7 +46,10 @@ define(['js/Loader/ProgressNotification'], function (ProgressNotification) {
     }
 
     function exportModels(client, logger, selectedIds, withAssets, callback) {
-        var progress = ProgressNotification.start('<strong>Exporting </strong> models ...');
+        var progress = ProgressNotification.start({
+            message: '<strong>Exporting </strong> models ...',
+            useClipboard: true
+        });
 
         withAssets = withAssets === false ? false : true;
 
@@ -60,12 +68,16 @@ define(['js/Loader/ProgressNotification'], function (ProgressNotification) {
                         progress: 100
                     });
                 } else {
+
                     progress.note.update({
                         message: '<strong>Exported </strong> models <a href="' +
                         result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
                         progress: 100,
-                        type: 'success'
+                        type: 'success',
+                        clipboardValue: result.hash
                     });
+
+                    progress.btnEl.show();
                 }
 
                 if (typeof callback === 'function') {

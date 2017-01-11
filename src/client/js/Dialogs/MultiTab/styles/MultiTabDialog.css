@@ -21,6 +21,16 @@ div.multi-tab-dialog .modal-content div.modal-body .asset-widget {
   line-height: 30px; }
   div.multi-tab-dialog .modal-content div.modal-body .asset-widget a.btn-dialog-open {
     padding: 3px; }
+div.multi-tab-dialog .modal-content div.modal-body .blobhash-widget {
+  width: 100%;
+  height: 30px;
+  line-height: 30px; }
+  div.multi-tab-dialog .modal-content div.modal-body .blobhash-widget input {
+    height: 28px;
+    line-height: 28px;
+    padding: 5px; }
+  div.multi-tab-dialog .modal-content div.modal-body .blobhash-widget a.btn-clear {
+    padding: 3px; }
 div.multi-tab-dialog .modal-content div.modal-body form.form-horizontal i.toggle-info-btn {
   font-size: 65%;
   vertical-align: top;

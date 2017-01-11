@@ -39,6 +39,19 @@ div.multi-tab-dialog {
           padding: 3px;
         }
       }
+      .blobhash-widget {
+        width: 100%;
+        height: 30px;
+        line-height: 30px;
+        input {
+          height: 28px;
+          line-height: 28px;
+          padding: 5px;
+        }
+        a.btn-clear {
+          padding: 3px;
+        }
+      }
       form.form-horizontal {
         i.toggle-info-btn {
           font-size: 65%;

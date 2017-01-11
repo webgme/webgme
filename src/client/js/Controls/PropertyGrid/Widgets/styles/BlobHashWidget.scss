@@ -1,0 +1,46 @@
+div.blobhash-widget {
+  height: 25px;
+  line-height: 25px;
+  vertical-align: middle;
+  width: 50%;
+  border-radius: 4px;
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.025);
+  border: 1px solid #aaaaaa;
+
+  input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    white-space: nowrap;
+    display: inline-block;
+    height: 25px;
+    line-height: 25px;
+    vertical-align: middle;
+    width: 100%;
+    padding-right: 20px;
+    padding-left: 1ex;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: none;
+    border-radius: 4px;
+  }
+
+  .btn-clear {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 0 3px;
+  }
+
+  a {
+    white-space: nowrap;
+    display: inline-block;
+    max-width: 100%;
+    padding-right: 20px;
+    padding-left: 1ex;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 100;
+  }
+}

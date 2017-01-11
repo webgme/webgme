@@ -48,7 +48,6 @@ require.config({
         'jquery-dataTables': 'lib/jquery/jquery.dataTables.min',
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
         'jquery-spectrum': 'bower_components/spectrum/spectrum',
-        'jquery-gritter': 'bower_components/jquery.gritter/js/jquery.gritter',
         'jquery-fancytree': 'bower_components/jquery.fancytree/dist/jquery.fancytree-all',
         'jquery-layout': 'lib/jquery/jquery.layout.min',
 
@@ -65,9 +64,10 @@ require.config({
         underscore: 'bower_components/underscore/underscore',
         chance: 'bower_components/chance/chance',
         backbone: 'bower_components/backbone/backbone',
-        d3: 'bower_components/d3/d3.min',
+        d3: 'bower_components/d3/d3',
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
         ravenjs: 'bower_components/raven-js/dist/raven',
+        clipboard: 'bower_components/clipboard/dist/clipboard',
 
         //RaphaelJS family
         eve: 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
