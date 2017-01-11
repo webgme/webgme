@@ -356,10 +356,12 @@ define([
     };
 
     ModelDecoratorCore.prototype._ptrUIDOMBase =
-        $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '"><i class="glyphicon glyphicon-share"></i></div>');
+        $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '" title="Follow the pointer(s) of the node">' +
+            '<i class="glyphicon glyphicon-share"></i></div>');
 
     ModelDecoratorCore.prototype._setUIDOMBase =
-        $('<div class="' + ModelDecoratorConstants.SET_CLASS + '"><i class="glyphicon glyphicon-list-alt"></i></div>');
+        $('<div class="' + ModelDecoratorConstants.SET_CLASS + '" title="See the sets of the node...">' +
+            '<i class="glyphicon glyphicon-list-alt"></i></div>');
 
     ModelDecoratorCore.prototype._replaceableUIDOMBase =
         $('<div class="' + ModelDecoratorConstants.REPLACEABLE_CLASS + '">' +

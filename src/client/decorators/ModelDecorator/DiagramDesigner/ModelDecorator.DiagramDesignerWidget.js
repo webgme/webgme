@@ -97,6 +97,13 @@ define([
             event.preventDefault();
         });
 
+        //pop-up base replacement dialog
+        this.$el.on('dblclick.replDblClick', '.' + ModelDecoratorConstants.REPLACEABLE_CLASS, function (event) {
+            self._control._replaceBaseDialog(self._metaInfo[CONSTANTS.GME_ID]);
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
         this._updateDropArea();
     };
     //jshint camelcase: true
