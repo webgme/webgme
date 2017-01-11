@@ -15,7 +15,6 @@ define([
 
     var DecoratorWithPortsAndPointerHelpersBase,
         EXCLUDED_POINTERS = [
-            CONSTANTS.POINTER_BASE,
             CONSTANTS.POINTER_SOURCE,
             CONSTANTS.POINTER_TARGET,
             CONSTANTS.POINTER_CONSTRAINED_BY];
@@ -32,7 +31,7 @@ define([
             ptrNames = [];
 
         if (nodeObj) {
-            ptrNames = _.difference(nodeObj.getPointerNames().slice(0), EXCLUDED_POINTERS);
+            ptrNames = _.difference(nodeObj.getValidPointerNames(), EXCLUDED_POINTERS);
         }
 
         return ptrNames;
@@ -70,6 +69,41 @@ define([
         }
 
         return validPtrNames;
+    };
+
+    DecoratorWithPortsAndPointerHelpersBase.prototype._getValidSetsForTargets = function (targetIds) {
+        var client = this._control._client,
+            gmeID = this._metaInfo[CONSTANTS.GME_ID],
+            node = client.getNode(gmeID),
+            targetNode,
+            setNames = node.getValidSetNames(),
+            len,
+            potential,
+            detailedSetInfo,
+            validSetNames = [],
+            i;
+
+        for (i = 0; i < setNames.length; i += 1) {
+            detailedSetInfo = node.getValidSetMemberTypesDetailed(setNames[i]);
+            len = targetIds.length;
+            potential = true;
+            while (potential && len--) {
+                targetNode = client.getNode(targetIds[len]);
+                if (targetNode) {
+                    if (targetNode.isValidTargetOf(gmeID, setNames[i]) === false) {
+                        potential = false;
+                    }
+                } else {
+                    potential = false;
+                }
+            }
+            if (potential) {
+                validSetNames.push(setNames[i]);
+            }
+
+        }
+        return validSetNames;
+
     };
 
     DecoratorWithPortsAndPointerHelpersBase.prototype._getPointerTargets = function () {
@@ -111,16 +145,19 @@ define([
 
     DecoratorWithPortsAndPointerHelpersBase.prototype._setPointerTarget = function (targetID, mousePos) {
         var ptrNames = this._getValidPointersForTarget(targetID),
+            setNames = this._getValidSetsForTargets([targetID]),
             validReplaceable = this._isValidReplaceableTarget(targetID);
 
-        if (ptrNames.length > 0 || validReplaceable) {
+        if (ptrNames.length > 0 || validReplaceable || setNames.length > 0) {
             //check to see if there is more than one potential pointer to set
-            if (ptrNames.length === 1 && !validReplaceable) {
+            if (ptrNames.length === 1 && !validReplaceable && setNames.length === 0) {
                 this._setPointer(ptrNames[0], targetID);
+            } else if (ptrNames.length === 0 && !validReplaceable && setNames.length === 1) {
+                this._addMembersToSet(setNames[0], [targetID]);
             } else {
                 //there is multiple pointer names that are valid for this target
                 //let the user pick one
-                this._selectPointerForTarget(ptrNames, targetID, mousePos, validReplaceable);
+                this._selectPointerForTarget(ptrNames, setNames, targetID, mousePos, validReplaceable);
             }
         }
     };
@@ -136,7 +173,8 @@ define([
         }
     };
 
-    DecoratorWithPortsAndPointerHelpersBase.prototype._selectPointerForTarget = function (ptrNames, targetID, mousePos,
+    DecoratorWithPortsAndPointerHelpersBase.prototype._selectPointerForTarget = function (ptrNames, setNames,
+                                                                                          targetID, mousePos,
                                                                                           validReplaceable) {
         var logger = this.logger,
             menu,
@@ -151,6 +189,13 @@ define([
             };
         }
 
+        for (i = 0; i < setNames.length; i += 1) {
+            menuItems[setNames[i]] = {
+                icon: 'glyphicon glyphicon-list-alt',
+                name: 'Add to set "' + setNames[i] + '"'
+            };
+        }
+
         if (validReplaceable) {
             menuItems[''] = {
                 icon: 'glyphicon glyphicon-transfer',
@@ -162,8 +207,13 @@ define([
             items: menuItems,
             callback: function (key) {
                 if (key) {
-                    logger.debug('_selectPointerForTarget: ' + key);
-                    self._setPointer(key, targetID);
+                    if (ptrNames.indexOf(key) !== -1) {
+                        logger.debug('_selectPointerForTarget: ' + key);
+                        self._setPointer(key, targetID);
+                    } else if (setNames.indexOf(key) !== -1) {
+                        logger.debug('_selectPointerForTarget: ' + key + ' [set]');
+                        self._addMembersToSet(key, [targetID]);
+                    }
                 } else {
                     self._replaceWithTarget(targetID);
                 }
@@ -212,6 +262,60 @@ define([
 
     DecoratorWithPortsAndPointerHelpersBase.prototype._replaceWithTarget = function (targetId) {
         this._control._client.setBase(this._metaInfo[CONSTANTS.GME_ID], targetId);
+    };
+
+    // Set helpers
+    DecoratorWithPortsAndPointerHelpersBase.prototype._addMember = function (targetIds, mousePos) {
+        var setNames = this._getValidSetsForTargets(targetIds);
+
+        if (setNames.length > 0) {
+            //check to see if there is more than one potential pointer to set
+            if (setNames.length === 1) {
+                this._addMembersToSet(setNames[0], targetIds);
+            } else {
+                this._selectSetForTarget(setNames, targetIds, mousePos);
+            }
+        }
+    };
+
+    DecoratorWithPortsAndPointerHelpersBase.prototype._addMembersToSet = function (setName, targetIds) {
+        var client = this._control._client,
+            gmeID = this._metaInfo[CONSTANTS.GME_ID],
+            i;
+
+        client.startTransaction();
+        for (i = 0; i < targetIds.length; i += 1) {
+            client.addMember(gmeID, targetIds[i], setName);
+        }
+        client.completeTransaction();
+    };
+
+    DecoratorWithPortsAndPointerHelpersBase.prototype._selectSetForTargets = function (setNames, targetIds,
+                                                                                       mousePos) {
+        var logger = this.logger,
+            menu,
+            self = this,
+            menuItems = {},
+            i;
+
+        for (i = 0; i < setNames.length; i += 1) {
+            menuItems[setNames[i]] = {
+                icon: 'glyphicon glyphicon-list-alt',
+                name: 'Add to set "' + setNames[i] + '"'
+            };
+        }
+
+        menu = new ContextMenu({
+            items: menuItems,
+            callback: function (key) {
+                if (setNames.indexOf(key) !== -1) {
+                    logger.debug('_selectSetForTargets: ' + key);
+                    self._addMembersToSet(key, targetIds);
+                }
+            }
+        });
+
+        menu.show({x: mousePos.left, y: mousePos.top});
     };
 
     return DecoratorWithPortsAndPointerHelpersBase;

@@ -126,6 +126,33 @@ $abstract-class-name-color: #AAAAAA;
       }
     }
 
+    .set {
+      position: absolute;
+      bottom: 0;
+      right: 2px;
+      height: 15px;
+      width: 15px;
+      margin-bottom: 2px;
+      border-radius: 5px;
+
+      &.inverse-on-hover:hover {
+        background-color: $ptr-hover-background-color;
+        -webkit-box-shadow: $ptr-hover-shadow;
+        -moz-box-shadow: $ptr-hover-shadow;
+        box-shadow: $ptr-hover-shadow;
+
+        [class^="icon-"]:not(.icon-white),
+        [class*=" icon-"]:not(.icon-white) {
+          background-image: url("../../../img/glyphicons-halflings-white.png");
+        }
+      }
+
+      [class^="icon-"],
+      [class*=" icon-"] {
+        margin-top: -2px;
+      }
+    }
+
     &.abstract {
       .name {
         font-style: italic;

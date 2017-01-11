@@ -356,14 +356,21 @@ define([
     };
 
     ModelDecoratorCore.prototype._ptrUIDOMBase =
-        $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '"><i class="glyphicon glyphicon-share"></i></div>');
+        $('<div class="' + ModelDecoratorConstants.POINTER_CLASS + '" title="Follow the pointer(s) of the node">' +
+            '<i class="glyphicon glyphicon-share"></i></div>');
+
+    ModelDecoratorCore.prototype._setUIDOMBase =
+        $('<div class="' + ModelDecoratorConstants.SET_CLASS + '" title="See the sets of the node...">' +
+            '<i class="glyphicon glyphicon-list-alt"></i></div>');
 
     ModelDecoratorCore.prototype._replaceableUIDOMBase =
-        $('<div class="' + ModelDecoratorConstants.REPLACEABLE_CLASS +'">' +
+        $('<div class="' + ModelDecoratorConstants.REPLACEABLE_CLASS + '">' +
             '<i class="glyphicon glyphicon-transfer" title="This node is replaceable"></i></div>');
 
     ModelDecoratorCore.prototype._updatePointers = function () {
-        var ptrTo;
+        var ptrTo,
+            client = this._control._client,
+            node = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
 
         if (this._getPointerNames().length > 0) {
             this.skinParts.$ptr = this.$el.find('.' + ModelDecoratorConstants.POINTER_CLASS);
@@ -383,6 +390,20 @@ define([
             if (this.skinParts.$ptr) {
                 this.skinParts.$ptr.remove();
                 this.skinParts.$ptr = undefined;
+            }
+        }
+
+        if (node && node.getValidSetNames().length > 0) {
+            this.skinParts.$set = this.$el.find('.' + ModelDecoratorConstants.SET_CLASS);
+            if (this.skinParts.$set.length === 0) {
+                this.skinParts.$set = this._setUIDOMBase.clone();
+                this.$el.append(this.skinParts.$set);
+
+            }
+        } else {
+            if (this.skinParts.$set) {
+                this.skinParts.$set.remove();
+                this.skinParts.$set = undefined;
             }
         }
     };

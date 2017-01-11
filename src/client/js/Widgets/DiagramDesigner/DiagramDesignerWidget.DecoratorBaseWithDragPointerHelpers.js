@@ -62,9 +62,23 @@ define([
 
     DiagramDesignerWidgetDecoratorBaseWithDragPointerHelpers.prototype.__isPotentialDropItem =
         function (dragItems, dragEffects) {
-            return dragItems.length === 1 && dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
-                (dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) !== -1 ||
-                dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_SET_REPLACEABLE) !== -1);
+            var potential = true,
+                len = dragItems.length;
+
+            if (len === 1) {
+                potential = dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
+                    (dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_POINTER) !== -1 ||
+                    dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_SET_REPLACEABLE) !== -1 ||
+                    dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_ADD_MEMBER !== -1));
+            } else if (len > 1 && dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_ADD_MEMBER !== -1)) {
+                while (len-- && potential) {
+                    potential = dragItems[len] !== this._metaInfo[CONSTANTS.GME_ID];
+                }
+            } else {
+                potential = false;
+            }
+
+            return potential;
         };
 
     DiagramDesignerWidgetDecoratorBaseWithDragPointerHelpers.prototype.__onBackgroundDroppableOver =
@@ -85,7 +99,11 @@ define([
 
         if (this.__acceptDroppable === true) {
             if (this.__isPotentialDropItem(dragItems, dragEffects)) {
-                this._setPointerTarget(dragItems[0], helper.offset());
+                if (dragItems.length === 1) {
+                    this._setPointerTarget(dragItems[0], helper.offset());
+                } else {
+                    this._addMember(dragItems, helper.offset());
+                }
             }
         }
 
@@ -103,7 +121,8 @@ define([
             //and that element can be a valid target of at least one pointer of this guy or replaceable.
             if (this.__isPotentialDropItem(dragItems, dragEffects)) {
                 doAccept = this._getValidPointersForTarget(dragItems[0]).length > 0 ||
-                    this._isValidReplaceableTarget(dragItems[0]);
+                    this._isValidReplaceableTarget(dragItems[0]) ||
+                    this._getValidSetsForTargets(dragItems).length > 0;
             }
 
             return doAccept;
