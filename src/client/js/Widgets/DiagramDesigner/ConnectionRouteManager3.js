@@ -538,6 +538,13 @@ define([
             this._invokeAutoRouterMethod('updatePort', [objId, connInfo[j]]);
         }
 
+        if (!boxObject) {
+            //FIXME: It may or may not be safe to assume empty array..)
+            // Sentry will log the message if there is an uncaught exception after this..
+            this.logger.error('ConnectionRouteManager3: no boxObject, related to #1289');
+            return;
+        }
+
         for (j = boxObject.ports.length; j--;) {
             id = boxObject.ports[j].id;
             if (!newIds[id]) {
