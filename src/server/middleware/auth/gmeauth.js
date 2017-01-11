@@ -4,6 +4,7 @@
 /**
  * @module Server:GMEAuth
  * @author ksmyth / https://github.com/ksmyth
+ * @author pmeijer / https://github.com/pmeijer
  *
  * http://mongodb.github.io/node-mongodb-native/2.2/api/Collection.html
  */
@@ -16,7 +17,7 @@ var Mongodb = require('mongodb'),
     jwt = require('jsonwebtoken'),
     MetadataStorage = require('../../storage/metadatastorage'),
     UTIL = requireJS('common/util/util'),
-
+    EventDispatcher = requireJS('common/EventDispatcher'),
     Logger = require('../../logger'),
 
     CONSTANTS = require('./constants');
@@ -30,8 +31,8 @@ var Mongodb = require('mongodb'),
  */
 function GMEAuth(session, gmeConfig) {
     'use strict';
-    // TODO: make sure that gmeConfig passes all config
-    var logger = Logger.create('gme:server:auth:gmeauth', gmeConfig.server.log),
+    var self = this,
+        logger = Logger.create('gme:server:auth:gmeauth', gmeConfig.server.log),
         _collectionName = '_users',
         _projectCollectionName = '_projects',
         db,
@@ -47,6 +48,8 @@ function GMEAuth(session, gmeConfig) {
             algorithm: 'RS256',
             expiresIn: gmeConfig.authentication.jwt.expiresIn
         };
+
+    EventDispatcher.call(this);
 
     if (gmeConfig.authentication.enable === true) {
         PRIVATE_KEY = fs.readFileSync(gmeConfig.authentication.jwt.privateKey, 'utf8');
@@ -82,9 +85,6 @@ function GMEAuth(session, gmeConfig) {
                 return Q.npost(c, 'find', args);
             });
         };
-        collection_.update = function (/*query, update, options*/) {
-            throw new Error('update is deprecated, use updateOne or updateMany');
-        };
         collection_.updateOne = function (/*query, update, options*/) {
             var args = arguments;
             return collection_.then(function (c) {
@@ -97,9 +97,6 @@ function GMEAuth(session, gmeConfig) {
                 return Q.npost(c, 'updateMany', args);
             });
         };
-        collection_.insert = function (/*data, options*/) {
-            throw new Error('insert is deprecated, use insertOne or insertMany');
-        };
         collection_.insertOne = function (/*data, options*/) {
             var args = arguments;
             return collection_.then(function (c) {
@@ -111,9 +108,6 @@ function GMEAuth(session, gmeConfig) {
             return collection_.then(function (c) {
                 return Q.npost(c, 'insertMany', args);
             });
-        };
-        collection_.remove = function (/*query, options*/) {
-            throw new Error('remove is deprecated, use deleteOne or deleteMany');
         };
         collection_.deleteOne = function (/*query, options*/) {
             var args = arguments;
@@ -193,11 +187,6 @@ function GMEAuth(session, gmeConfig) {
                 return Q.ninvoke(db, 'collection', _projectCollectionName);
             })
             .then(function (projectCollection_) {
-                projectCollectionDeferred.resolve(projectCollection_);
-                return _prepareGuestAccount();
-            })
-            .then(function (projectCollection_) {
-
                 projectCollectionDeferred.resolve(projectCollection_);
                 return _prepareGuestAccount();
             })
@@ -348,6 +337,10 @@ function GMEAuth(session, gmeConfig) {
                 .then(function () {
                     return collection.updateMany({admins: userId}, {$pull: {admins: userId}});
                 })
+                .then(function (res) {
+                    self.dispatchEvent(CONSTANTS.USER_DELETED, {userId: userId});
+                    return res;
+                })
                 .nodeify(callback);
         } else {
             return collection.updateOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {
@@ -359,6 +352,10 @@ function GMEAuth(session, gmeConfig) {
                     }
 
                     return collection.updateMany({admins: userId}, {$pull: {admins: userId}});
+                })
+                .then(function (res) {
+                    self.dispatchEvent(CONSTANTS.USER_DELETED, {userId: userId});
+                    return res;
                 })
                 .nodeify(callback);
         }
@@ -581,7 +578,10 @@ function GMEAuth(session, gmeConfig) {
                         return collection.updateOne({_id: userId}, data, {upsert: true});
                     }
                 })
-                .then(deferred.resolve)
+                .then(function (res) {
+                    self.dispatchEvent(CONSTANTS.USER_CREATED, {userId: userId});
+                    deferred.resolve(res);
+                })
                 .catch(function (err) {
                     if (err.code === 11000) {
                         deferred.reject(new Error('user already exists [' + userId + ']'));
@@ -609,6 +609,10 @@ function GMEAuth(session, gmeConfig) {
                 info: info || {}
             }
         )
+            .then(function (res) {
+                self.dispatchEvent(CONSTANTS.ORGANIZATION_CREATED, {orgId: orgId});
+                return res;
+            })
             .catch(function (err) {
                 if (err.code === 11000) {
                     throw new Error('user or org already exists [' + orgId + ']');
@@ -690,6 +694,10 @@ function GMEAuth(session, gmeConfig) {
                 .then(function () {
                     return collection.updateMany({orgs: orgId}, {$pull: {orgs: orgId}});
                 })
+                .then(function (res) {
+                    self.dispatchEvent(CONSTANTS.ORGANIZATION_DELETED, {orgId: orgId});
+                    return res;
+                })
                 .nodeify(callback);
         } else {
             return collection.updateOne({_id: orgId, type: CONSTANTS.ORGANIZATION},
@@ -700,6 +708,10 @@ function GMEAuth(session, gmeConfig) {
                     }
 
                     return collection.updateMany({orgs: orgId}, {$pull: {orgs: orgId}});
+                })
+                .then(function (res) {
+                    self.dispatchEvent(CONSTANTS.ORGANIZATION_DELETED, {orgId: orgId});
+                    return res;
                 })
                 .nodeify(callback);
         }
@@ -795,7 +807,6 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
-
     function authorizeByUserId(userId, projectId, type, rights, callback) {
         var projectAuthParams = {
             entityType: authorizer.ENTITY_TYPES.PROJECT
@@ -806,44 +817,46 @@ function GMEAuth(session, gmeConfig) {
         return authorizer.setAccessRights(userId, projectId, rights, projectAuthParams).nodeify(callback);
     }
 
-    return {
-        unload: unload,
-        connect: connect,
+    this.unload = unload;
+    this.connect = connect;
 
-        // user managerment functions
-        addUser: addUser,
-        updateUser: updateUser,
-        updateUserDataField: updateUserDataField,
-        updateUserSettings: updateUserSettings,
-        updateUserComponentSettings: updateUserComponentSettings,
-        deleteUser: deleteUser,
-        getUser: getUser,
-        listUsers: listUsers,
+    this.listUsers = listUsers;
+    this.getUser = getUser;
+    this.addUser = addUser;
+    this.updateUser = updateUser;
+    this.updateUserDataField = updateUserDataField;
+    this.updateUserSettings = updateUserSettings;
+    this.updateUserComponentSettings = updateUserComponentSettings;
+    this.deleteUser = deleteUser;
 
-        addOrganization: addOrganization,
-        getOrganization: getOrganization,
-        listOrganizations: listOrganizations,
+    this.listOrganizations = listOrganizations;
+    this.getOrganization = getOrganization;
+    this.addOrganization = addOrganization;
+    this.deleteOrganization = this.removeOrganizationByOrgId = removeOrganizationByOrgId;
 
-        removeOrganizationByOrgId: removeOrganizationByOrgId,
-        addUserToOrganization: addUserToOrganization,
-        removeUserFromOrganization: removeUserFromOrganization,
-        setAdminForUserInOrganization: setAdminForUserInOrganization,
-        getAdminsInOrganization: getAdminsInOrganization,
+    this.getAdminsInOrganization = getAdminsInOrganization;
+    this.addUserToOrganization = addUserToOrganization;
+    this.removeUserFromOrganization = removeUserFromOrganization;
+    this.setAdminForUserInOrganization = setAdminForUserInOrganization;
 
-        authenticateUser: authenticateUser,
-        generateJWToken: generateJWToken,
-        generateJWTokenForAuthenticatedUser: generateJWTokenForAuthenticatedUser,
-        regenerateJWToken: regenerateJWToken,
-        verifyJWToken: verifyJWToken,
+    this.authenticateUser = authenticateUser;
+    this.generateJWToken = generateJWToken;
+    this.generateJWTokenForAuthenticatedUser = generateJWTokenForAuthenticatedUser;
+    this.regenerateJWToken = regenerateJWToken;
+    this.verifyJWToken = verifyJWToken;
 
-        metadataStorage: metadataStorage,
-        authorizer: authorizer,
+    this.metadataStorage = metadataStorage;
+    this.authorizer = authorizer;
 
-        // This is left in order to not break all tests.
-        authorizeByUserId: authorizeByUserId,
-        authorizeByUserOrOrgId: authorizeByUserId,
-        CONSTANTS: CONSTANTS
-    };
+    this.CONSTANTS = CONSTANTS;
+
+    // These are left in order to not break all tests.
+    this.authorizeByUserId = authorizeByUserId;
+    this.authorizeByUserOrOrgId = authorizeByUserId;
 }
+
+// Inherit from EventDispatcher
+GMEAuth.prototype = Object.create(EventDispatcher.prototype);
+GMEAuth.prototype.constructor = GMEAuth;
 
 module.exports = GMEAuth;
