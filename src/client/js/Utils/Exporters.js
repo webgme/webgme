@@ -76,6 +76,8 @@ define([
                         type: 'success',
                         clipboardValue: result.hash
                     });
+
+                    progress.btnEl.show();
                 }
 
                 if (typeof callback === 'function') {

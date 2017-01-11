@@ -25,6 +25,7 @@ define(['clipboard', 'jquery'], function (Clipboard) {
                 }
             },
             progress = 15,
+            btnEl,
             intervalId,
             useClipboard = false,
             clipboardHint = '';
@@ -33,19 +34,24 @@ define(['clipboard', 'jquery'], function (Clipboard) {
             note = $.notify(options, settings);
         } else if (options !== null && options !== undefined) {
             useClipboard = options.useClipboard || false;
-            clipboardHint = options.clipboardHint || 'click to copy hash to clipboard';
+            clipboardHint = options.clipboardHint || 'Copy hash to clipboard';
             delete options.useClipboard;
             delete options.clipboardHint;
+
             if (useClipboard) {
-                options.icon = options.icon || 'glyphicon glyphicon-copy';
+                options.icon = options.icon || 'glyphicon glyphicon-copy btn btn-s';
             }
             note = $.notify(options, settings);
 
             if (useClipboard) {
-                new Clipboard($(note.$ele).find('.glyphicon-copy')
+                btnEl = $(note.$ele).find('.glyphicon-copy')
                     .attr('title', clipboardHint)
                     .css('cursor', 'copy')
-                    .addClass('btn btn-xs')[0]);
+                    .css('padding-top', '0')
+                    .css('padding-left', '0')
+                    .hide();
+
+                new Clipboard(btnEl[0]);
 
                 note.__oldUpdate = note.update;
                 note.update = function (name, value) {
@@ -86,7 +92,8 @@ define(['clipboard', 'jquery'], function (Clipboard) {
 
         return {
             note: note,
-            intervalId: intervalId
+            intervalId: intervalId,
+            btnEl: btnEl
         };
     }
 
