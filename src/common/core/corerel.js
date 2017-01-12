@@ -312,10 +312,11 @@ define([
             }
 
             //Now we check if some mutation happened
-            if (inverseOverlays && !node.inverseOverlays) {
+            if (inverseOverlays && node.mutable === false) {
                 inverseOverlays = JSON.parse(JSON.stringify(inverseOverlays));
                 node.inverseOverlays = inverseOverlays;
             }
+
             if (inverseOverlays && inverseOverlays[target] && inverseOverlays[target][name]) {
                 index = inverseOverlays[target][name].indexOf(source);
                 if (index !== -1) {
@@ -344,10 +345,10 @@ define([
                     for (name in overlays[path]) {
                         if (self.isPointerName(name)) {
                             list.push({
-                                s: path,
-                                n: name,
-                                t: overlays[path][name],
-                                p: true
+                                s: path,                // source
+                                n: name,                // name
+                                t: overlays[path][name],// target
+                                p: true                 // is forward relation
                             });
                         }
                     }
