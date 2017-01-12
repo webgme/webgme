@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
+define(['clipboard', 'js/Controls/PropertyGrid/Widgets/WidgetBase'], function (Clipboard, WidgetBase) {
 
     'use strict';
 
@@ -15,6 +15,13 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         WidgetBase.call(this, propertyDesc);
 
         this.__label = LABEL_BASE.clone();
+        this.__clipboard = propertyDesc.clipboard;
+
+        if (this.__clipboard === true) {
+            new Clipboard(this.__label[0]);
+            this.__label.attr('title', 'Copy to clipboard');
+            this.__label.css('cursor', 'copy');
+        }
 
         this.updateDisplay();
 
@@ -26,7 +33,13 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
     LabelWidget.prototype.updateDisplay = function () {
         this.__label.text(this.propertyValue);
-        this.__label.attr('title', this.propertyValue);
+
+        if (this.__clipboard) {
+            this.__label.attr('data-clipboard-text', this.propertyValue);
+        } else {
+            this.__label.attr('title', this.propertyValue);
+        }
+
         return WidgetBase.prototype.updateDisplay.call(this);
     };
 

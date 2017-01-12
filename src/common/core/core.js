@@ -813,6 +813,9 @@ define([
          */
         this.deleteNode = function (node) {
             ensureNode(node, 'node');
+            if (core.getParent(node) === null) {
+                throw new CoreIllegalOperationError('Not allowed to delete node without a parent.');
+            }
 
             return core.deleteNode(node, false);
         };

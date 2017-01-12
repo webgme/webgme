@@ -329,7 +329,7 @@ define([
                 }
             }
 
-        }
+        };
 
         this.overlayQuery = function (node, prefix) {
             ASSERT(self.isValidNode(node) && innerCore.isValidPath(prefix));

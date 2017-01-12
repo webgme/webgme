@@ -224,7 +224,8 @@ define(['js/logger',
                 value: selectedObjIDs[0],
                 valueType: 'string',
                 isCommon: true,
-                readOnly: true
+                readOnly: true,
+                clipboard: true
             };
 
             cNode = self._client.getNode(selectedObjIDs[0]);
@@ -234,7 +235,8 @@ define(['js/logger',
                     value: cNode.getGuid(),
                     valueType: 'string',
                     isCommon: true,
-                    readOnly: true
+                    readOnly: true,
+                    clipboard: true
                 };
 
                 if (cNode.isLibraryElement()) {
@@ -243,7 +245,8 @@ define(['js/logger',
                         value: cNode.getLibraryGuid(),
                         valueType: 'string',
                         isCommon: true,
-                        readOnly: true
+                        readOnly: true,
+                        clipboard: true
                     };
                 }
 
@@ -571,7 +574,12 @@ define(['js/logger',
             ptrTo;
 
         while (len--) {
-            ptrTo = node.getPointer(availablePointers[len]).to;
+            if (availablePointers[len] === CONSTANTS.POINTER_BASE) {
+                ptrTo = node.getBaseId();
+            } else {
+                ptrTo = node.getPointerId(availablePointers[len]);
+            }
+
             ptrTo = ptrTo === null ? CONSTANTS.CORE.NULLPTR_RELID : ptrTo;
             result[availablePointers[len]] = ptrTo || '';
         }
