@@ -244,4 +244,63 @@ describe('corerel', function () {
         }, myCore.loadRoot(myCore.getHash(root)));
 
     });
+
+    it('should mutate the reverse overlay cache properly', function (done) {
+        var myCore = new Core(project, {globConf: gmeConfig, logger: testFixture.logger.fork('corerel:core')}),
+            root = myCore.createNode({}),
+            rootHash,
+            fco = myCore.createNode({parent: root, relid: 'f'}),
+            destination = myCore.createNode({parent: root, base: fco, relid: 'd'}),
+            firstSource = myCore.createNode({parent: root, base: fco, relid: 's1'}),
+            secondSource = myCore.createNode({parent: root, base: fco, relid: 's2'}),
+            refreshVariables = function (nodeArray) {
+                nodeArray.forEach(function (n_) {
+                    switch (myCore.getRelid(n_)) {
+                        case 'f':
+                            fco = n_;
+                            break;
+                        case 'd':
+                            destination = n_;
+                            break;
+                        case 's1':
+                            firstSource = n_;
+                            break;
+                        case 's2':
+                            secondSource = n_;
+                            break;
+                    }
+                });
+            };
+
+        myCore.setPointer(firstSource, 'ref', destination);
+        myCore.setPointer(secondSource, 'ref', destination);
+        myCore.persist(root);
+
+        TASYNC.call(function (r_) {
+            root = r_;
+            rootHash = myCore.getHash(root);
+            TASYNC.call(function (children) {
+                refreshVariables(children);
+                expect(myCore.getPointerPath(firstSource, 'ref')).to.eql('/d');
+                expect(myCore.getPointerPath(secondSource, 'ref')).to.eql('/d');
+                expect(myCore.getCollectionPaths(destination, 'ref')).to.have.members(['/s1', '/s2']);
+
+                myCore.deletePointer(firstSource, 'ref');
+
+                //Now we reload the current state without persisting
+                TASYNC.call(function (r_) {
+                    root = r_;
+                    TASYNC.call(function (children) {
+                        refreshVariables(children);
+                        expect(myCore.getPointerPath(firstSource, 'ref')).to.eql('/d');
+                        expect(myCore.getPointerPath(secondSource, 'ref')).to.eql('/d');
+                        expect(myCore.getCollectionPaths(destination, 'ref')).to.have.members(['/s1', '/s2']);
+
+                        done();
+                    }, myCore.loadChildren(root));
+                }, myCore.loadRoot(rootHash));
+
+            }, myCore.loadChildren(root));
+        }, myCore.loadRoot(myCore.getHash(root)));
+    });
 });

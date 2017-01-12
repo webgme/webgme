@@ -1264,5 +1264,4 @@ define([
     };
 
     return CoreType;
-})
-;
+});
