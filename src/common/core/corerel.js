@@ -118,6 +118,7 @@ define([
 
             if (hash && node.inverseOverlays) {
                 self._inverseCache.setItem(hash, node.inverseOverlays);
+                delete node.inverseOverlaysMutable;
                 for (relid in node.children) {
                     storeNewInverseOverlays(node.children[relid]);
                 }
@@ -167,6 +168,7 @@ define([
                 inverseOverlays = self._inverseCache.getItem(hash);
                 if (inverseOverlays) {
                     node.inverseOverlays = inverseOverlays;
+                    delete node.inverseOverlaysMutable;
                     return node.inverseOverlays;
                 }
             }
@@ -187,6 +189,9 @@ define([
             // If it is an unmodified node, we can store the inverse, otherwise it still can change
             if (hash) {
                 self._inverseCache.setItem(hash, inverseOverlays);
+                delete node.inverseOverlaysMutable;
+            } else {
+                node.inverseOverlaysMutable = true;
             }
 
             node.inverseOverlays = inverseOverlays;
@@ -299,7 +304,6 @@ define([
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
             var overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
-                inverseOverlays = node.inverseOverlays, // we only handle it if it is already computed
                 overlayNode,
                 index;
 
@@ -311,20 +315,20 @@ define([
                 innerCore.deleteProperty(overlays, source);
             }
 
-            //Now we check if some mutation happened
-            if (inverseOverlays && node.mutable === false) {
-                inverseOverlays = JSON.parse(JSON.stringify(inverseOverlays));
-                node.inverseOverlays = inverseOverlays;
-            }
+            //Now we check if we need to mutate the inverse overlays
+            if (node.inverseOverlays) {
+                if (node.inverseOverlaysMutable !== true) {
+                    node.inverseOverlays = JSON.parse(JSON.stringify(node.inverseOverlays));
+                    node.inverseOverlaysMutable = true;
+                }
 
-            if (inverseOverlays && inverseOverlays[target] && inverseOverlays[target][name]) {
-                index = inverseOverlays[target][name].indexOf(source);
+                index = node.inverseOverlays[target][name].indexOf(source);
                 if (index !== -1) {
-                    inverseOverlays[target][name].splice(index, 1);
-                    if (inverseOverlays[target][name].length === 0) {
-                        delete inverseOverlays[target][name];
-                        if (Object.keys(inverseOverlays[target]).length === 0) {
-                            delete inverseOverlays[target];
+                    node.inverseOverlays[target][name].splice(index, 1);
+                    if (node.inverseOverlays[target][name].length === 0) {
+                        delete node.inverseOverlays[target][name];
+                        if (Object.keys(node.inverseOverlays[target]).length === 0) {
+                            delete node.inverseOverlays[target];
                         }
                     }
                 }
@@ -379,23 +383,22 @@ define([
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
             var overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
-                inverseOverlays = node.inverseOverlays, // We update it only if it exists
                 overlay = self.getChild(overlays, source);
 
             // Make sure it is an insert
             ASSERT(self.getProperty(overlay, name) === undefined);
             self.setProperty(overlay, name, target);
 
-            // First check if mutation took place.
-            if (inverseOverlays && !node.inverseOverlays) {
-                inverseOverlays = JSON.parse(JSON.stringify(inverseOverlays));
-                node.inverseOverlays = inverseOverlays;
-            }
+            //First check if we to inverse computed already and if we need to mutate it
+            if (node.inverseOverlays) {
+                if (node.inverseOverlaysMutable !== true) {
+                    node.inverseOverlays = JSON.parse(JSON.stringify(node.inverseOverlays));
+                    node.inverseOverlaysMutable = true;
+                }
 
-            if (inverseOverlays) {
-                inverseOverlays[target] = inverseOverlays[target] || {};
-                inverseOverlays[target][name] = inverseOverlays[target][name] || [];
-                inverseOverlays[target][name].push(source);
+                node.inverseOverlays[target] = node.inverseOverlays[target] || {};
+                node.inverseOverlays[target][name] = node.inverseOverlays[target][name] || [];
+                node.inverseOverlays[target][name].push(source);
             }
         };
 
@@ -427,6 +430,7 @@ define([
 
             // As we just created the node, we can allocate an empty inverse object, that is appropriate this time
             node.inverseOverlays = {};
+            node.inverseOverlayMutable = true;
             return node;
         };
 
@@ -488,11 +492,9 @@ define([
                 entry,
                 relativePath,
                 source,
-                target,
-                inverseOverlays;
+                target;
 
             node = innerCore.normalize(node);
-            inverseOverlays = node.inverseOverlays;
 
             if (parent) {
                 ancestor = innerCore.getAncestor(node, parent);
@@ -566,9 +568,13 @@ define([
                 innerCore.setData(newNode, innerCore.copyData(node));
             }
 
-            if (inverseOverlays) {
-                newNode.inverseOverlays = JSON.parse(JSON.stringify(inverseOverlays));
+            if (node.inverseOverlaysMutable) {
+                newNode.inverseOverlays = JSON.parse(JSON.stringify(node.inverseOverlays));
+            } else {
+                newNode.inverseOverlays = node.inverseOverlays;
             }
+            newNode.inverseOverlaysMutable = node.inverseOverlaysMutable;
+
             return newNode;
         };
 
@@ -911,7 +917,7 @@ define([
 
             do {
                 overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
-                if (overlays && overlays[source] && typeof overlays[source][name] == 'string') {
+                if (overlays && overlays[source] && typeof overlays[source][name] === 'string') {
                     self.overlayRemove(node, source, name, overlays[source][name]);
                 }
 
