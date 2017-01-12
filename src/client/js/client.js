@@ -642,7 +642,7 @@ define([
                 };
             }
 
-            if (!state.viewer && !state.readOnlyProject) {
+            if (!state.viewer && !state.readOnlyProject && state.nodes[ROOT_PATH]) {
                 if (state.msg) {
                     state.msg += '\n' + msg;
                 } else {
