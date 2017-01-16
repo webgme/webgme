@@ -334,7 +334,7 @@ define([
     ModelDecoratorDiagramDesignerWidget.prototype._updateDropArea = function () {
         var inverseClass = 'inverse-on-hover';
 
-        if (this.skinParts.$ptr || this.skinParts.$replaceable) {
+        if (this.skinParts.$ptr || this.skinParts.$replaceable || this.skinParts.$set) {
 
             if (this.skinParts.$ptr) {
                 if (this.skinParts.$ptr.hasClass(ModelDecoratorConstants.POINTER_CLASS_NON_SET)) {

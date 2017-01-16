@@ -49,7 +49,6 @@ define([
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     SVGDecoratorDiagramDesignerWidget.prototype.DECORATORID = DECORATOR_ID;
 
-
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     SVGDecoratorDiagramDesignerWidget.prototype.$DOMBase = $(SVGDecoratorTemplate);
 
@@ -109,7 +108,6 @@ define([
 
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.call(this);
     };
-
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     SVGDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (id/*, isEnd, connectionMetaInfo*/) {
@@ -206,9 +204,8 @@ define([
         return result;
     };
 
-
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //Shows the 'connectors' - appends them to the DOM
+    //Shows the 'connectors' - appends them to the DOM
     SVGDecoratorDiagramDesignerWidget.prototype.showSourceConnectors = function (params) {
         var connectors,
             i;
@@ -239,7 +236,7 @@ define([
     };
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //Hides the 'connectors' - detaches them from the DOM
+    //Hides the 'connectors' - detaches them from the DOM
     SVGDecoratorDiagramDesignerWidget.prototype.hideSourceConnectors = function () {
         var i;
 
@@ -253,20 +250,17 @@ define([
         }
     };
 
-
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //should highlight the connectors for the given elements
+    //should highlight the connectors for the given elements
     SVGDecoratorDiagramDesignerWidget.prototype.showEndConnectors = function (params) {
         this.showSourceConnectors(params);
     };
 
-
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //Hides the 'connectors' - detaches them from the DOM
+    //Hides the 'connectors' - detaches them from the DOM
     SVGDecoratorDiagramDesignerWidget.prototype.hideEndConnectors = function () {
         this.hideSourceConnectors();
     };
-
 
     SVGDecoratorDiagramDesignerWidget.prototype.__onNodeTitleChanged = function (oldValue, newValue) {
         var client = this._control._client;
@@ -275,11 +269,10 @@ define([
     };
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-        //called when the designer item's subcomponent should be updated
+    //called when the designer item's subcomponent should be updated
     SVGDecoratorDiagramDesignerWidget.prototype.updateSubcomponent = function (portId) {
         this._updatePort(portId);
     };
-
 
     /**** Override from ModelDecoratorCore ****/
     SVGDecoratorDiagramDesignerWidget.prototype.renderPort = function (portId) {
@@ -287,7 +280,6 @@ define([
 
         return SVGDecoratorCore.prototype.renderPort.call(this, portId);
     };
-
 
     /**** Override from ModelDecoratorCore ****/
     SVGDecoratorDiagramDesignerWidget.prototype.removePort = function (portId) {
@@ -322,7 +314,11 @@ define([
 
     SVGDecoratorDiagramDesignerWidget.prototype._updateDropArea = function () {
         // enable/disable drag events based on pointers and if it's replaceable.
-        if (this._getPointerNames().length > 0 || this._isReplaceable()) {
+        var client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            setNames = nodeObj.getValidSetNames();
+
+        if (this._getPointerNames().length > 0 || this._isReplaceable() || setNames.length > 0) {
             this._enableDragEvents();
         } else {
             this._disableDragEvents();
