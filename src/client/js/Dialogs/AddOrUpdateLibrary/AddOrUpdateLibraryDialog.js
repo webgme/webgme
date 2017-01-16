@@ -19,7 +19,7 @@ define([
     'use strict';
 
     /**
-     * 
+     *
      * @param client
      * @param addLibrary
      * @constructor
@@ -27,9 +27,10 @@ define([
     function AddOrUpdateLibraryDialog(client, addLibrary) {
         this._client = client;
         this._addLibrary = addLibrary;
+        this._refreshedCommitHash = null;
     }
 
-    AddOrUpdateLibraryDialog.prototype.show = function (libraryIdOrName) {
+    AddOrUpdateLibraryDialog.prototype.show = function (libraryIdOrName, finished) {
         var self = this,
             dialog = new MultiTabDialog(),
             parameters = {
@@ -68,6 +69,9 @@ define([
             self._urlInputControl.off('keyup');
             self._urlInputControl.off('keydown');
             self._assetWidget.destroy();
+            if (typeof finished === 'function') {
+                finished(self._refreshedCommitHash);
+            }
         });
     };
 
@@ -86,6 +90,7 @@ define([
                     callback('Project updated with library at commit ' + result.hash.substring(0, 7) +
                         ' but could not update branch.');
                 } else {
+                    self._refreshedCommitHash = result.hash;
                     callback();
                 }
             });
@@ -118,7 +123,7 @@ define([
                 return;
             }
 
-            function resultCallback (err, result) {
+            function resultCallback(err, result) {
                 if (err) {
                     callback('Error getting library from blob: ' + err);
                 } else if (!self._checkCommitStatus(result.status)) {
@@ -176,7 +181,7 @@ define([
                 return;
             }
 
-            function resultCallback (err, result) {
+            function resultCallback(err, result) {
                 if (err) {
                     callback('Error getting library via url: ' + err);
                 } else if (!self._checkCommitStatus(result.status)) {
@@ -207,7 +212,7 @@ define([
 
     AddOrUpdateLibraryDialog.prototype._checkCommitStatus = function (commitStatus) {
         return commitStatus === this._client.CONSTANTS.STORAGE.SYNCED ||
-                commitStatus === this._client.CONSTANTS.STORAGE.MERGED;
+            commitStatus === this._client.CONSTANTS.STORAGE.MERGED;
     };
 
     return AddOrUpdateLibraryDialog;

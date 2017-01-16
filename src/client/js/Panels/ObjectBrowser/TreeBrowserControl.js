@@ -46,10 +46,11 @@ define(['js/logger',
             stateLoaded = 1,
             selfId,
             selfPatterns = {},
-        //local container for accounting the currently opened node list,
-        // its a hashmap with a key of nodeId and a value of { FancyTreeNode, childrenIds[], state }
+            //local container for accounting the currently opened node list,
+            // its a hashmap with a key of nodeId and a value of { FancyTreeNode, childrenIds[], state }
             nodes = {},
             refresh,
+            checkLibraries,
             initialize,
             initialized = false,
             self = this,
@@ -159,7 +160,7 @@ define(['js/logger',
                 c = isMetaNode ? GME_META_MODEL_CLASS : GME_MODEL_CLASS;
             } else {
                 //by default everyone is represented with the atom class
-                c = isMetaNode ? GME_META_ATOM_CLASS :GME_ATOM_CLASS;
+                c = isMetaNode ? GME_META_ATOM_CLASS : GME_ATOM_CLASS;
             }
 
             return c;
@@ -480,7 +481,12 @@ define(['js/logger',
                     menuItems.library.items.refreshLibrary = {
                         name: 'Update library ...',
                         callback: function (/*key, options*/) {
-                            self._libraryManager.update(nodeId);
+                            var libraryName = nodeObj.getFullyQualifiedName();
+                            self._libraryManager.update(nodeId, function (changed) {
+                                if (changed) {
+                                    delete self._libraryChecks[libraryName];
+                                }
+                            });
                         },
                         icon: false
                     };
@@ -592,6 +598,11 @@ define(['js/logger',
                     updatedObject = client.getNode(objectId);
 
                     if (updatedObject) {
+
+                        if (objectId === CONSTANTS.PROJECT_ROOT_ID) {
+                            checkLibraries();
+                        }
+
                         currentChildren = updatedObject.getChildrenIds();
                         //check what state the object is in according to the local hashmap
                         if (nodes[objectId].state === stateLoading) {
@@ -781,6 +792,29 @@ define(['js/logger',
                 }
             }
             //ENDOF : HANDLE UPDATE
+        };
+
+        checkLibraries = function () {
+            var libraryNames = client.getLibraryNames(),
+                i,
+                checkLibrary = function (name) {
+                    self._libraryChecks[name] = true;
+                    self._libraryManager.check(name,
+                        function (err, notified) {
+                            if (!err && !notified) {
+                                delete self._libraryChecks[name];
+                            }
+                        });
+                };
+
+            self._libraryChecks = self._libraryChecks || {};
+
+            for (i = 0; i < libraryNames.length; i += 1) {
+                if (libraryNames[i].indexOf('.') === -1 &&
+                    self._libraryChecks[libraryNames[i]] !== true) {
+                    checkLibrary(libraryNames[i]);
+                }
+            }
         };
 
         this._eventCallback = function (events) {

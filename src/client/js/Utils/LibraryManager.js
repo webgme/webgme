@@ -8,7 +8,7 @@
 define([
     'js/Dialogs/Confirm/ConfirmDialog',
     'js/Dialogs/AddOrUpdateLibrary/AddOrUpdateLibraryDialog',
-    'common/regexp',
+    'common/regexp'
 ], function (ConfirmDialog, AddOrUpdateLibraryDialog, REGEXP) {
     'use strict';
 
@@ -47,8 +47,20 @@ define([
         });
     };
 
-    LibraryManager.prototype.update = function (nodeId) {
-        this._update.show(nodeId);
+    LibraryManager.prototype.update = function (nodeId, callback) {
+        var client = this._client,
+            node = client.getNode(nodeId),
+            libraryName = node.getFullyQualifiedName(),
+            libraryInfo = client.getLibraryInfo(libraryName);
+
+        this._update.show(nodeId, function (newCommitHash) {
+            if (libraryInfo && libraryInfo.commitHash && newCommitHash &&
+                libraryInfo.commitHash !== newCommitHash) {
+                callback(true);
+            } else {
+                callback(false);
+            }
+        });
     };
 
     LibraryManager.prototype.remove = function (nodeId) {
@@ -106,6 +118,30 @@ define([
             });
         }
 
+    };
+
+    LibraryManager.prototype.check = function (name, callback) {
+        var client = this._client,
+            availableNames = client.getLibraryNames(),
+            libraryInfo,
+            notification;
+
+        if (availableNames.indexOf(name) !== -1) {
+            libraryInfo = client.getLibraryInfo(name);
+            if (libraryInfo && libraryInfo.projectId && libraryInfo.branchName) {
+                client.getBranches(libraryInfo.projectId, function (err, branches) {
+                    if (err) {
+                        callback(err);
+                    } else if (branches[libraryInfo.branchName] &&
+                        branches[libraryInfo.branchName] !== libraryInfo.commitHash) {
+                        client.notifyUser({message: 'New version available from [' + name + '] library'});
+                        callback(null, true);
+                    } else {
+                        callback(null, false);
+                    }
+                });
+            }
+        }
     };
 
     return LibraryManager;
