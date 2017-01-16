@@ -152,8 +152,6 @@ define([
             //check to see if there is more than one potential pointer to set
             if (ptrNames.length === 1 && !validReplaceable && setNames.length === 0) {
                 this._setPointer(ptrNames[0], targetID);
-            } else if (ptrNames.length === 0 && !validReplaceable && setNames.length === 1) {
-                this._addMembersToSet(setNames[0], [targetID]);
             } else {
                 //there is multiple pointer names that are valid for this target
                 //let the user pick one
