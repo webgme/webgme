@@ -1,6 +1,51 @@
 # Change Log
 
-## [v2.8.0](https://github.com/webgme/webgme/tree/v2.8.0) (2016-12-19)
+## [v2.9.0](https://github.com/webgme/webgme/tree/v2.9.0) (2017-01-16)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.8.0...v2.9.0)
+
+**Implemented enhancements:**
+
+- Add option to copy exported models to clipboard and tab in import accepting link [\#1276](https://github.com/webgme/webgme/issues/1276)
+- Webgme doesn't work with node v7  [\#1273](https://github.com/webgme/webgme/issues/1273)
+- auto slider showing results when plugin finished [\#1271](https://github.com/webgme/webgme/issues/1271)
+- Provide mechanism for plugin to load/query the model before displaying config to user [\#945](https://github.com/webgme/webgme/issues/945)
+- Add option to point to a custom plugin configurator [\#1298](https://github.com/webgme/webgme/pull/1298) ([pmeijer](https://github.com/pmeijer))
+- Upgrading seeds so they use the latest data format. [\#1292](https://github.com/webgme/webgme/pull/1292) ([kecso](https://github.com/kecso))
+- gmeAuth dispatches events when creating/deleting users or organizations. [\#1287](https://github.com/webgme/webgme/pull/1287) ([pmeijer](https://github.com/pmeijer))
+- Drag-n-Drop onto designer items adds drag-items to set. [\#1286](https://github.com/webgme/webgme/pull/1286) ([kecso](https://github.com/kecso))
+- Support copy to clipboard at model export [\#1283](https://github.com/webgme/webgme/pull/1283) ([kecso](https://github.com/kecso))
+- Make project creation and opening race free [\#1282](https://github.com/webgme/webgme/pull/1282) ([pmeijer](https://github.com/pmeijer))
+- Bump year to 2017 [\#1280](https://github.com/webgme/webgme/pull/1280) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1271 Show clickable notification when plugin finishes [\#1279](https://github.com/webgme/webgme/pull/1279) ([pmeijer](https://github.com/pmeijer))
+- Upgrade mongodb to 2.2.19 Fixes \#1273 [\#1274](https://github.com/webgme/webgme/pull/1274) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Inverse overlay in cache can get mutated at changes [\#1295](https://github.com/webgme/webgme/issues/1295)
+- client saveRoot throws exception if core available but root node is not [\#1294](https://github.com/webgme/webgme/issues/1294)
+- Branch event received after closed branch in storage throws exception [\#1290](https://github.com/webgme/webgme/issues/1290)
+- Uncaught exception in ConnectionRouteManager3 [\#1289](https://github.com/webgme/webgme/issues/1289)
+- Uncaught exception at noMoreCommitsToDisplay in ProjectRepositoryWidget [\#1288](https://github.com/webgme/webgme/issues/1288)
+- Some links in generated documentation is broken [\#1277](https://github.com/webgme/webgme/issues/1277)
+- Set- and CrosscutEditor crashes at new selection if no set available. [\#1275](https://github.com/webgme/webgme/issues/1275)
+- SaveToDisk failing w/ blob url [\#1272](https://github.com/webgme/webgme/issues/1272)
+- Exporting model fails with error about aspect sets missing a base [\#1269](https://github.com/webgme/webgme/issues/1269)
+- Active selection state not updated in read-only or multi-select mode from ModelEditor [\#1268](https://github.com/webgme/webgme/issues/1268)
+- Fixes bug that not allowed drop if the node had only sets defined. [\#1300](https://github.com/webgme/webgme/pull/1300) ([kecso](https://github.com/kecso))
+- Fixes \#1295 Inverse overlay in cache can get mutated at changes [\#1297](https://github.com/webgme/webgme/pull/1297) ([kecso](https://github.com/kecso))
+- Fixes \#1294 saveRoot exception when rootnode not loaded. [\#1296](https://github.com/webgme/webgme/pull/1296) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1288 \#1289 \#1290 Minor uncaught exceptions in the UI [\#1293](https://github.com/webgme/webgme/pull/1293) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1277 Some links in generated documentation is broken [\#1285](https://github.com/webgme/webgme/pull/1285) ([kecso](https://github.com/kecso))
+- Fixes \#1268 Multi-select and read-only updates state correctly [\#1284](https://github.com/webgme/webgme/pull/1284) ([pmeijer](https://github.com/pmeijer))
+- Do not publish the test files on npm \(reduces size by 20Mb\). [\#1281](https://github.com/webgme/webgme/pull/1281) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1275 Exception when no tabs in Set- and CrossCutEditor [\#1278](https://github.com/webgme/webgme/pull/1278) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1269 - Exporting model fails with error about aspect sets missing a base [\#1270](https://github.com/webgme/webgme/pull/1270) ([kecso](https://github.com/kecso))
+
+**Closed issues:**
+
+- node not deleting using the `client` [\#1122](https://github.com/webgme/webgme/issues/1122)
+
+## [v2.8.0](https://github.com/webgme/webgme/tree/v2.8.0) (2016-12-20)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.7.1...v2.8.0)
 
 **Implemented enhancements:**
@@ -83,10 +128,6 @@
 ## [v2.6.3](https://github.com/webgme/webgme/tree/v2.6.3) (2016-11-16)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.6.2...v2.6.3)
 
-**Implemented enhancements:**
-
-- Providing the color/text\_color/border\_color registry entries in the property editor [\#1233](https://github.com/webgme/webgme/pull/1233) ([kecso](https://github.com/kecso))
-
 **Fixed bugs:**
 
 - Get rid of undefined before calculating hashes. [\#1239](https://github.com/webgme/webgme/pull/1239) ([pmeijer](https://github.com/pmeijer))
@@ -122,11 +163,11 @@
 
 **Implemented enhancements:**
 
-- New connections in meta-editor are dashed which make it hard to distinguish between inheritance and mixins. [\#964](https://github.com/webgme/webgme/issues/964)
 - Harmonize relid generation in core layers [\#1207](https://github.com/webgme/webgme/issues/1207)
 - Enable webGME to run under systemd control [\#1205](https://github.com/webgme/webgme/issues/1205)
 - API documentation should be created on prepublish [\#1197](https://github.com/webgme/webgme/issues/1197)
 - Large file \(asset\) upload for plugins fails [\#1145](https://github.com/webgme/webgme/issues/1145)
+- New connections in meta-editor are dashed which make it hard to distinguish between inheritance and mixins. [\#964](https://github.com/webgme/webgme/issues/964)
 - Symmetric "Plug-in Architectural Programmer's Guide" and "Annotated Examples" [\#883](https://github.com/webgme/webgme/issues/883)
 - Tutorials [\#117](https://github.com/webgme/webgme/issues/117)
 - Client gme node getters api [\#1215](https://github.com/webgme/webgme/pull/1215) ([pmeijer](https://github.com/pmeijer))
@@ -476,6 +517,7 @@
 
 - Seeding from existing project loses library info [\#970](https://github.com/webgme/webgme/issues/970)
 - Better feedback when trying to edit/add a constraint to a library node. [\#955](https://github.com/webgme/webgme/issues/955)
+- Provide a legitimate save/load mechanism [\#895](https://github.com/webgme/webgme/issues/895)
 - Remove old serialization [\#991](https://github.com/webgme/webgme/pull/991) ([pmeijer](https://github.com/pmeijer))
 - Provide look-up of selected namespace in plugin-config. [\#989](https://github.com/webgme/webgme/pull/989) ([pmeijer](https://github.com/pmeijer))
 - Continuous integration tests now use node version 4.x and 6.x [\#988](https://github.com/webgme/webgme/pull/988) ([pmeijer](https://github.com/pmeijer))
@@ -534,7 +576,6 @@
 
 **Implemented enhancements:**
 
-- Provide a legitimate save/load mechanism [\#895](https://github.com/webgme/webgme/issues/895)
 - Trying to use an exported webgmeX \(or its json\) as a seed fails [\#943](https://github.com/webgme/webgme/issues/943)
 - Print warnings in functions/API that will be removed in v2.0.0 [\#952](https://github.com/webgme/webgme/pull/952) ([pmeijer](https://github.com/pmeijer))
 - Fixes \#943 Trying to use an exported webgmeX \(or its json\) as a seed fails [\#950](https://github.com/webgme/webgme/pull/950) ([kecso](https://github.com/kecso))
@@ -682,7 +723,6 @@
 
 **Implemented enhancements:**
 
-- Server side plugins with dependencies [\#779](https://github.com/webgme/webgme/issues/779)
 - Make a Widget for validPlugins, useAddOns, validDecorators etc. [\#828](https://github.com/webgme/webgme/issues/828)
 - Add default support for storing plugin config in users. [\#824](https://github.com/webgme/webgme/issues/824)
 - pre-release 1.5.0 [\#836](https://github.com/webgme/webgme/pull/836) ([pmeijer](https://github.com/pmeijer))
@@ -705,7 +745,6 @@
 
 **Fixed bugs:**
 
-- Missing name attributes in export [\#812](https://github.com/webgme/webgme/issues/812)
 - Visualizer URL not respected and meta editor tabs neither. [\#823](https://github.com/webgme/webgme/issues/823)
 - Importing an instance model duplicates the meta-sheets. [\#820](https://github.com/webgme/webgme/issues/820)
 - Exception in CrosscutController. [\#806](https://github.com/webgme/webgme/issues/806)
@@ -723,6 +762,11 @@
 - Fixes \#806 Exception in CrosscutController. [\#807](https://github.com/webgme/webgme/pull/807) ([kecso](https://github.com/kecso))
 - Fix test cases with non-deterministic results. [\#805](https://github.com/webgme/webgme/pull/805) ([kecso](https://github.com/kecso))
 - Fixes \#802 Multiple Meta views in Split View changes the tabs unexpectedly. [\#804](https://github.com/webgme/webgme/pull/804) ([kecso](https://github.com/kecso))
+
+**Closed issues:**
+
+- Missing name attributes in export [\#812](https://github.com/webgme/webgme/issues/812)
+- Server side plugins with dependencies [\#779](https://github.com/webgme/webgme/issues/779)
 
 **Merged pull requests:**
 
@@ -832,7 +876,6 @@
 
 **Fixed bugs:**
 
-- Uncaught exception when switching between projects. [\#664](https://github.com/webgme/webgme/issues/664)
 - Blob clients in workers raises DEPTH\_ZERO\_SELF\_SIGNED\_CERT when https enabled. [\#521](https://github.com/webgme/webgme/issues/521)
 - saveJsonToDisk failing [\#761](https://github.com/webgme/webgme/issues/761)
 - PartBrowser throws exception when aspect does not exist. [\#757](https://github.com/webgme/webgme/issues/757)
@@ -869,6 +912,7 @@
 
 **Closed issues:**
 
+- Uncaught exception when switching between projects. [\#664](https://github.com/webgme/webgme/issues/664)
 - Abstract models cannot be moved. [\#629](https://github.com/webgme/webgme/issues/629)
 - Plugin should be enabled by node type [\#720](https://github.com/webgme/webgme/issues/720)
 - Introduce tags [\#712](https://github.com/webgme/webgme/issues/712)
@@ -1034,7 +1078,6 @@
 
 **Implemented enhancements:**
 
-- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 - Squashing commits [\#466](https://github.com/webgme/webgme/issues/466)
 - Object browser auto scroll, when navigating with the keyboard [\#408](https://github.com/webgme/webgme/issues/408)
 - No Bezier Curves with the AutoRouter [\#314](https://github.com/webgme/webgme/issues/314)
@@ -1174,6 +1217,10 @@
 
 ## [v0.14.1](https://github.com/webgme/webgme/tree/v0.14.1) (2015-09-07)
 [Full Changelog](https://github.com/webgme/webgme/compare/v0.14.0...v0.14.1)
+
+**Implemented enhancements:**
+
+- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 
 **Fixed bugs:**
 
