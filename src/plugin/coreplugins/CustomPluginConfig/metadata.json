@@ -1,0 +1,24 @@
+{
+  "id": "CustomPluginConfig",
+  "name": "Custom Plugin Config",
+  "version": "0.1.0",
+  "description": "Illustrates how a custom dialog can be set for a plugin",
+  "icon": {
+    "class": "glyphicon glyphicon-cog",
+    "src": ""
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "writeAccessRequired": false,
+  "configWidget": "plugin/CustomPluginConfig/CustomPluginConfig/widget/ConfigWidget",
+  "configStructure": [
+    {
+      "name": "activeNodeName",
+      "displayName": "Name of ActiveNode",
+      "description": "Name of ActiveNode.",
+      "value": "",
+      "valueType": "string",
+      "readOnly": false
+    }
+  ]
+}
