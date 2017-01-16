@@ -1,4 +1,4 @@
-/*globals define, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, requirejs*/
 /*jshint browser: true*/
 
 /**
@@ -45,6 +45,21 @@ define([
         return pluginResult;
     };
 
+    InterpreterManager.prototype.loadConfigDialog = function (metadata, callback) {
+        if (!metadata.configWidget) {
+            callback(null, PluginConfigDialog);
+        } else {
+            requirejs([metadata.configWidget],
+                function (CustomConfigDialog) {
+                    callback(null, CustomConfigDialog);
+                },
+                function (err) {
+                    callback(err);
+                }
+            );
+        }
+    };
+
     /**
      *
      * @param {object} metadata - metadata of plugin to be executed.
@@ -52,70 +67,83 @@ define([
      */
     InterpreterManager.prototype.configureAndRun = function (metadata, callback) {
         var self = this,
-            configDialog = new PluginConfigDialog({client: this._client}),
             context = self._client.getCurrentPluginContext(metadata.id),
-            globalOptions = this.getGlobalOptions(metadata, {namespace: context.managerConfig.namespace});
+            globalOptions = this.getGlobalOptions(metadata, {namespace: context.managerConfig.namespace}),
+            configDialog;
 
         if (globalOptions instanceof PluginResult) {
             callback(globalOptions);
             return;
         }
 
-        configDialog.show(globalOptions, metadata, this.getStoredConfiguration(metadata),
-            function (globalConfig, pluginConfig, storeInUser) {
-                var startTime = (new Date()).toISOString();
+        self.loadConfigDialog(metadata, function (err, ConfigDialog) {
+            if (err || !ConfigDialog) {
+                callback(self.getPluginErrorResult(metadata.id,
+                    metadata.name,
+                    err ? err.message : 'Could not load configuration dialog.',
+                    (new Date()).toISOString(),
+                    context.managerConfig.project.projectId));
+                return;
+            }
 
-                function execCallback(err, result) {
-                    if (err) {
-                        self.logger.error(err);
-                        if (result) {
-                            callback(new PluginResult(result));
+            configDialog = new ConfigDialog({client: self._client, logger: self.logger});
+
+            configDialog.show(globalOptions, metadata, self.getStoredConfiguration(metadata),
+                function (globalConfig, pluginConfig, storeInUser) {
+                    var startTime = (new Date()).toISOString();
+
+                    function execCallback(err, result) {
+                        if (err) {
+                            self.logger.error(err);
+                            if (result) {
+                                callback(new PluginResult(result));
+                            } else {
+                                callback(self.getPluginErrorResult(metadata.id, metadata.name, err.message, startTime,
+                                    context.managerConfig.project.projectId));
+                            }
                         } else {
-                            callback(self.getPluginErrorResult(metadata.id, metadata.name, err.message, startTime,
-                                context.managerConfig.project.projectId));
+                            callback(new PluginResult(result));
                         }
+                    }
+
+                    if (globalConfig === false) {
+                        // Canceled from dialog..
+                        callback(false);
+                        return;
+                    }
+
+                    // Store the config in memory for this session.
+                    self._savedConfigs[metadata.id] = pluginConfig;
+
+                    if (storeInUser === true) {
+                        self.saveSettingsInUser(metadata, pluginConfig);
+                    }
+
+                    context.pluginConfig = pluginConfig;
+                    context.managerConfig.namespace = globalConfig.namespace;
+
+                    // Before executing the plugin - make sure the client is in SYNC.
+                    // This can be skipped if the plugin is read-only and executed on
+                    // the client.
+                    var readOnlyClient = !globalConfig.runOnServer && !metadata.writeAccessRequired,
+                        isOutOfSync = self._client.getBranchStatus() &&
+                            self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC;
+
+                    if (!readOnlyClient && isOutOfSync) {
+                        callback(self.getPluginErrorResult(metadata.id, metadata.name, 'Not allowed ' +
+                            'to invoke server plugin while local branch is AHEAD or ' +
+                            'PULLING changes from server.', startTime));
+                        return;
+                    }
+
+                    if (globalConfig.runOnServer === true) {
+                        self._client.runServerPlugin(metadata.id, context, execCallback);
                     } else {
-                        callback(new PluginResult(result));
+                        self._client.runBrowserPlugin(metadata.id, context, execCallback);
                     }
                 }
-
-                if (globalConfig === false) {
-                    // Canceled from dialog..
-                    callback(false);
-                    return;
-                }
-
-                // Store the config in memory for this session.
-                self._savedConfigs[metadata.id] = pluginConfig;
-
-                if (storeInUser === true) {
-                    self.saveSettingsInUser(metadata, pluginConfig);
-                }
-
-                context.pluginConfig = pluginConfig;
-                context.managerConfig.namespace = globalConfig.namespace;
-
-                // Before executing the plugin - make sure the client is in SYNC.
-                // This can be skipped if the plugin is read-only and executed on
-                // the client.
-                var readOnlyClient = !globalConfig.runOnServer && !metadata.writeAccessRequired,
-                    isOutOfSync = self._client.getBranchStatus() &&
-                        self._client.getBranchStatus() !== self._client.CONSTANTS.BRANCH_STATUS.SYNC;
-
-                if (!readOnlyClient && isOutOfSync) {
-                    callback(self.getPluginErrorResult(metadata.id, metadata.name, 'Not allowed ' +
-                        'to invoke server plugin while local branch is AHEAD or ' +
-                        'PULLING changes from server.', startTime));
-                    return;
-                }
-
-                if (globalConfig.runOnServer === true) {
-                    self._client.runServerPlugin(metadata.id, context, execCallback);
-                } else {
-                    self._client.runBrowserPlugin(metadata.id, context, execCallback);
-                }
-            }
-        );
+            );
+        });
     };
 
     InterpreterManager.prototype.getGlobalOptions = function (pluginMetadata, defaults) {
