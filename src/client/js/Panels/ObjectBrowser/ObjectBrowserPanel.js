@@ -149,13 +149,16 @@ define(['js/PanelBase/PanelBaseWithHeader',
                 data: {},
                 clickFn: function (/*data*/) {
                     var nodeId = WebGMEGlobal.State.getActiveObject(),
-                        selectedIds = WebGMEGlobal.State.getActiveSelection();
+                        selectedIds = WebGMEGlobal.State.getActiveSelection(),
+                        isActiveNode = true;
+
                     if (selectedIds && selectedIds.length > 0) {
                         nodeId = selectedIds[0];
+                        isActiveNode = false;
                     }
 
                     if (typeof nodeId === 'string') {
-                        self._client.dispatchEvent(UI_EVENTS.LOCATE_NODE, {nodeId: nodeId});
+                        self._client.dispatchEvent(UI_EVENTS.LOCATE_NODE, {nodeId: nodeId, isActiveNode: isActiveNode});
                     }
                 }
             });
@@ -165,7 +168,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this._client.addEventListener(UI_EVENTS.LOCATE_NODE, function (client, eventData) {
             compositionEl.click();
             if (typeof eventData.nodeId === 'string') {
-                compositionTreeBrowserControl.locateNode(eventData.nodeId);
+                compositionTreeBrowserControl.locateNode(eventData.nodeId, eventData.isActiveNode);
             }
         });
     };

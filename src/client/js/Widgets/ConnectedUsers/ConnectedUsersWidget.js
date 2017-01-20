@@ -158,7 +158,10 @@ define([
 
         userInfo.$el.on('click', function () {
             if (typeof userInfo.state.activeObject === 'string') {
-                self.client.dispatchEvent(UI_EVENTS.LOCATE_NODE, {nodeId: userInfo.state.activeObject});
+                self.client.dispatchEvent(UI_EVENTS.LOCATE_NODE, {
+                    nodeId: userInfo.state.activeObject,
+                    isActiveNode: true
+                });
             }
         });
 
