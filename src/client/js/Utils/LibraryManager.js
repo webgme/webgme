@@ -8,8 +8,9 @@
 define([
     'js/Dialogs/Confirm/ConfirmDialog',
     'js/Dialogs/AddOrUpdateLibrary/AddOrUpdateLibraryDialog',
-    'common/regexp'
-], function (ConfirmDialog, AddOrUpdateLibraryDialog, REGEXP) {
+    'common/regexp',
+    'common/storage/constants'
+], function (ConfirmDialog, AddOrUpdateLibraryDialog, REGEXP, CONSTANTS) {
     'use strict';
 
     var LibraryManager = function (client) {
@@ -140,6 +141,37 @@ define([
                         callback(null, false);
                     }
                 });
+            }
+        }
+    };
+
+    LibraryManager.prototype._libraryEvent = function (event) {
+        if (event && event.type && event.type === CONSTANTS.BRANCH_HASH_UPDATED &&
+            event.projectId && this._currentProjectId === event.projectId &&
+            this._libraryInfos[this._currentProjectId] &&
+            this._libraryInfos[this._currentProjectId].branchName === event.branchName &&
+            this._libraryInfos[this._currentProjectId].commitHash !== event.newHash) {
+            // The event is relevant so let us notify the user.
+            this._client.notifyUser({message: 'New version available from [' + name + '] library'});
+        }
+    };
+
+    LibraryManager.prototype.follow = function (projectId) {
+        var currentLibraries = this._client.getLibraryNames(),
+            i;
+
+        this._libraryInfos = this._libraryInfos || {};
+        if (this._currentProjectId !== projectId) {
+            for (i in this._libraryInfos) {
+                this._client.unwatchProject(this._currentProjectId, this._libraryEvent);
+            }
+            this._currentProjectId = projectId;
+            this._libraryInfos = {};
+        }
+        for (i = 0; i < currentLibraries.length; i += 1) {
+            if (currentLibraries[i].indexOf('.') === -1) {
+                this._libraryInfos[currentLibraries[i]] = this._libraryInfos[currentLibraries[i]] || {};
+
             }
         }
     };
