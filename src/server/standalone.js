@@ -94,7 +94,9 @@ function StandAloneServer(gmeConfig) {
         clientConfig = getClientConfig(gmeConfig),
         excludeRegExs = [],
         routeComponents = [],
-        sockets = [];
+        sockets = [],
+        nmpPackageJson = webgmeUtils.getPackageJsonSync(),
+        cacheManifest;
 
     self.id = Math.random().toString(36).slice(2, 11);
 
@@ -774,6 +776,15 @@ function StandAloneServer(gmeConfig) {
 
     //client contents - js/html/css
     __app.get(/^\/.*\.(css|ico|ttf|woff|woff2|js|cur)$/, Express.static(__clientBaseDir));
+
+    cacheManifest = 'CACHE MANIFEST\n\n#' + nmpPackageJson.version +
+        '/dist/webgme.dist.main.css\n/dist/webgme.lib.build.js\n/dist/webgme.dist.build.js\n' +
+        'NETWORK:\n*';
+
+    __app.get('/webgme.dist.appcache', function (req, res) {
+        res.set('Content-Type', 'text/cache-manifest');
+        res.send(cacheManifest);
+    });
 
     __app.get('/package.json', ensureAuthenticated, Express.static(path.join(__baseDir, '..')));
     __app.get(/^\/.*\.(_js|html|gif|png|bmp|svg|json|map)$/, ensureAuthenticated, Express.static(__clientBaseDir));
