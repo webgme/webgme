@@ -631,6 +631,7 @@ function StandAloneServer(gmeConfig) {
             } else {
                 res.contentType('text/html');
                 res.send(ejs.render(indexTemp, {
+                    webgmeVersion: nmpPackageJson.version,
                     url: url,
                     imageUrl: imageUrl,
                     projectId: projectId ? projectId.replace('+', '/') : 'WebGME'
@@ -777,8 +778,10 @@ function StandAloneServer(gmeConfig) {
     //client contents - js/html/css
     __app.get(/^\/.*\.(css|ico|ttf|woff|woff2|js|cur)$/, Express.static(__clientBaseDir));
 
-    cacheManifest = 'CACHE MANIFEST\n\n#' + nmpPackageJson.version +
-        '/dist/webgme.dist.main.css\n/dist/webgme.lib.build.js\n/dist/webgme.dist.build.js\n' +
+    cacheManifest = 'CACHE MANIFEST\n\n#' + nmpPackageJson.version + '\n' +
+        '/dist/webgme.' + nmpPackageJson.version + '.dist.main.css\n' +
+        '/dist/webgme.' + nmpPackageJson.version + '.lib.build.js\n'+
+        '/dist/webgme.' + nmpPackageJson.version + '.dist.build.js\n' +
         'NETWORK:\n*';
 
     __app.get('/webgme.dist.appcache', function (req, res) {
