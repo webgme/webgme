@@ -9,7 +9,8 @@
 var prepublish = require('./prepublish'),
     path = require('path'),
     fs = require('fs'),
-    fName = path.join(__dirname, '..', 'dist', 'webgme.dist.build.js'),
+    webgmeVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version,
+    fName = path.join(__dirname, '..', 'dist', 'webgme.' + webgmeVersion + '.dist.build.js'),
     exists = true;
 
 try {

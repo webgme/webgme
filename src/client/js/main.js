@@ -26,6 +26,7 @@ WebGMEGlobal.SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPo
 // configure require path and modules
 require.config({
     baseUrl: './',
+    waitSeconds: 12,
     map: {
         '*': {
             //layout
