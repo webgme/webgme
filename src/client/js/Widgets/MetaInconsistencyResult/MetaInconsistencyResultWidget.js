@@ -3,32 +3,33 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define([], function () {
+define(['css!./styles/MetaInconsistencyResultWidget.css'], function () {
     'use strict';
 
     function MetaInconsistencyResultWidget(parentEl, options) {
         this._el = $('<div/>', {
-            class: 'meta-inconsistency-results'
+            class: 'meta-inconsistency-result'
         });
 
         this._dividerAtTop = options.dividerAtTop || false;
         this._dividerAtBottom = options.dividerAtBottom || false;
 
-        this._onLinkClick = function () {
-            var path = $(this).data('gme-id');
-
-            if (typeof options.onLinkClick === 'function') {
-                options.onLinkClick(path);
-            }
-        };
+        this._onLinkClickHandler = options.onLinkClick || function () {
+            };
 
         parentEl.append(this._el);
     }
 
-    MetaInconsistencyResultWidget.prototype.showResults = function(results) {
-        var resEl,
+    MetaInconsistencyResultWidget.prototype.showResults = function (results) {
+        var self = this,
+            resEl,
             dl,
-            i,j;
+            i, j;
+
+        function onClick() {
+            var path = $(this).data('gme-id');
+            self._onLinkClickHandler(path);
+        }
 
         results.sort(function (r1, r2) {
             if (r1.message > r2.message) {
@@ -63,7 +64,7 @@ define([], function () {
             dl.append($('<dt>', {text: 'Node path'}));
             dl.append($('<dd>', {text: results[i].path, class: 'path-link'})
                 .data('gme-id', results[i].path)
-                .on('click', this._onLinkClick)
+                .on('click', onClick)
             );
 
             if (results[i].relatedPaths.length > 0) {
@@ -72,14 +73,14 @@ define([], function () {
                     dl.append($('<dd>', {
                         text: results[i].relatedPaths[j],
                         class: 'path-link'
-                    }).data('gme-id', results[i].relatedPaths[j]));
+                    }).data('gme-id', results[i].relatedPaths[j]).on('click', onClick));
                 }
             }
 
             resEl.append(dl);
             this._el.append(resEl);
 
-            if (i === results.length -1 && this._dividerAtBottom) {
+            if (i === results.length - 1 && this._dividerAtBottom) {
                 this._el.append($('<div>', {class: 'meta-inconsistency-divider'}));
             }
         }

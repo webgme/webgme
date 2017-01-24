@@ -17,13 +17,13 @@ $filterPanel-header-min-width: 100px;
     }
   }
 
-  &.show-meta-consistency-results {
+  &.show-meta-consistency-result {
     display: inline-flex;
     .panel-body {
       width: 50%;
     }
 
-    .meta-consistency-results {
+    .meta-consistency-result-container {
       width: 50%;
       overflow-y: scroll;
       margin-top: 30px;
@@ -33,27 +33,6 @@ $filterPanel-header-min-width: 100px;
         i {
           margin-left: 10px;
           cursor: pointer;
-        }
-      }
-      .meta-inconsistency-divider {
-        border-top: 3px lightgray solid;
-        margin: 20px 20px 20px 20px;
-      }
-      .meta-inconsistency {
-        margin-left: 10px;
-        margin-right: 10px;
-        dt {
-          width: 100px;
-        }
-        dd {
-          margin-left: 120px;
-          &.path-link {
-            cursor: pointer;
-            color: blue;
-            &:hover {
-              color: orange;
-            }
-          }
         }
       }
     }

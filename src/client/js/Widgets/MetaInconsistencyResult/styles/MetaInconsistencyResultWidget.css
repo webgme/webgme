@@ -1,0 +1,15 @@
+.meta-inconsistency-result .meta-inconsistency-divider {
+  border-top: 3px lightgray solid;
+  margin: 20px 20px 20px 20px; }
+.meta-inconsistency-result .meta-inconsistency {
+  margin-left: 10px;
+  margin-right: 10px; }
+  .meta-inconsistency-result .meta-inconsistency dt {
+    width: 100px; }
+  .meta-inconsistency-result .meta-inconsistency dd {
+    margin-left: 120px; }
+    .meta-inconsistency-result .meta-inconsistency dd.path-link {
+      cursor: pointer;
+      color: blue; }
+      .meta-inconsistency-result .meta-inconsistency dd.path-link:hover {
+        color: orange; }

@@ -12,6 +12,7 @@ define([
     'js/DragDrop/DragHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
     'js/Controls/iCheckBox',
+    'js/Widgets/MetaInconsistencyResult/MetaInconsistencyResultWidget',
     './MetaEditorPointerNamesDialog',
     'css!./styles/MetaEditorWidget.css'
 ], function (Logger,
@@ -19,6 +20,7 @@ define([
              DragHelper,
              DiagramDesignerWidget,
              ICheckBox,
+             MetaInconsistencyResultWidget,
              MetaEditorPointerNamesDialog) {
 
     'use strict';
@@ -75,9 +77,24 @@ define([
     };
 
     MetaEditorWidget.prototype._initializeMetaConsistencyResult = function () {
-        /**** create FILTER PANEL ****/
+        var self = this;
         this.$metaConsistencyResults = $('<div/>', {
-            class: 'meta-consistency-results'
+            class: 'meta-consistency-result-container'
+        });
+
+        this.$metaConsistencyResults.append($('<h3>', {
+            text: 'Meta-model Inconsistencies',
+            class: 'meta-inconsistency-header'
+        }).append($('<i/>', {
+            class: 'fa fa-check-circle-o close-result pull-left',
+            title: 'Close result view'
+        }).on('click', function () {
+            self.showMetaConsistencyResults([]);
+        })));
+
+        this._metaInconsistencyWidget = new MetaInconsistencyResultWidget(this.$metaConsistencyResults, {
+            dividerAtTop: true,
+            dividerAtBottom: true
         });
 
         this.$el.parent().append(this.$metaConsistencyResults);
@@ -94,82 +111,15 @@ define([
     };
 
     MetaEditorWidget.prototype.showMetaConsistencyResults = function (results) {
-        var self = this,
-            hadInconsistencies = false,
-            resEl,
-            dl,
-            i,j;
+        this._metaInconsistencyWidget.destroy();
 
-        results.sort(function (r1, r2) {
-            if (r1.message > r2.message) {
-                return 1;
-            } else if (r1.message < r2.message) {
-                return -1;
-            }
+        this._metaInconsistencyWidget._onLinkClickHandler = this.onInconsistencyLinkClicked;
 
-            return 0;
-        });
-
-        this.$metaConsistencyResults.find('dd.path-link').off('click');
-        this.$metaConsistencyResults.find('i.close-result').off('click');
-
-        this.$metaConsistencyResults.empty();
-
-        for (i = 0; i < results.length; i += 1) {
-            hadInconsistencies = true;
-            this.$metaConsistencyResults.append($('<div>', {class: 'meta-inconsistency-divider'}));
-
-            resEl = $('<div>', {
-                class: 'meta-inconsistency',
-            });
-
-            dl = $('<dl>', {class: 'dl-horizontal'});
-
-            dl.append($('<dt>', {text: 'Inconsistency'}));
-            dl.append($('<dd>', {text: results[i].message}));
-
-            dl.append($('<dt>', {text: 'Description'}));
-            dl.append($('<dd>', {text: results[i].description}));
-
-            dl.append($('<dt>', {text: 'Hint'}));
-            dl.append($('<dd>', {text: results[i].hint}));
-
-            dl.append($('<dt>', {text: 'Node path'}));
-            dl.append($('<dd>', {text: results[i].path, class: 'path-link'}).data('gme-id', results[i].path));
-
-            if (results[i].relatedPaths.length > 0) {
-                dl.append($('<dt>', {text: 'Related paths'}));
-                for (j = 0; j < results[i].relatedPaths.length; j += 1) {
-                    dl.append($('<dd>', {
-                        text: results[i].relatedPaths[j],
-                        class: 'path-link'
-                    }).data('gme-id', results[i].relatedPaths[j]));
-                }
-            }
-
-            resEl.append(dl);
-            this.$metaConsistencyResults.append(resEl);
-        }
-
-        if (hadInconsistencies === true) {
-            this.$metaConsistencyResults.find('dd.path-link').on('click', function () {
-                var path = $(this).data('gme-id');
-                self.onInconsistencyLinkClicked(path);
-            });
-
-            this.$metaConsistencyResults.prepend($('<h3>', {
-                text: 'Meta-model Inconsistencies',
-                class: 'meta-inconsistency-header'
-            }).append($('<i/>', {
-                class: 'fa fa-check-circle-o close-result pull-left',
-                title: 'Close result view'
-            }).on('click', function () {
-                self.showMetaConsistencyResults([]);
-            })));
-            this.$metaConsistencyResults.append($('<div>', {class: 'meta-inconsistency-divider'}));
-            this.$el.parent().addClass('show-meta-consistency-results');
+        if (results.length > 0) {
+            this._metaInconsistencyWidget.showResults(results);
+            this.$el.parent().addClass('show-meta-consistency-result');
         } else {
-            this.$el.parent().removeClass('show-meta-consistency-results');
+            this.$el.parent().removeClass('show-meta-consistency-result');
         }
     };
 
