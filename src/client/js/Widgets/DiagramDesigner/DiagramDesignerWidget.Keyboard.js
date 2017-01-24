@@ -94,8 +94,8 @@ define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
     DiagramDesignerWidgetKeyboard.prototype.onKeyUp = function (eventArgs) {
         var ret = true;
 
-        // This require changes to the model.
-        if (this.getIsReadOnlyMode() === true) {
+        // These require changes to the model.
+        if (this.getIsReadOnlyMode() === false) {
             switch (eventArgs.combo) {
                 case 'up':
                     this._endMoveSelection();
