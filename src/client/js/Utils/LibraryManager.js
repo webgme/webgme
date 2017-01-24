@@ -150,7 +150,7 @@ define([
         }
     };
 
-    LibraryManager.prototype._clearWatches = function () {
+    LibraryManager.prototype._clearWatchers = function () {
         var projectId;
 
         for (projectId in this._followedProjects) {
@@ -181,9 +181,7 @@ define([
             eventFunction = function (websocket, event) {
                 var libraryName;
 
-                if (event && event.etype && event.etype === CONSTANTS.BRANCH_HASH_UPDATED &&
-                    event.projectId && self._followedProjects[event.projectId]) {
-
+                if (event.etype === CONSTANTS.BRANCH_HASH_UPDATED && self._followedProjects[event.projectId]) {
                     for (libraryName in self._libraryInfos) {
                         if (self._libraryInfos[libraryName].projectId === event.projectId &&
                             event.branchName === self._libraryInfos[libraryName].branchName &&
@@ -224,29 +222,30 @@ define([
 
     LibraryManager.prototype.follow = function () {
         var client = this._client,
-            libraryInfos,
             projectId = client.getActiveProjectId(),
             branchName = client.getActiveBranchName(),
             availableNames,
             info,
+            name,
             i;
 
         if (typeof projectId !== 'string' || typeof branchName !== 'string') {
-            //clear everything
+            // No project or branch -> clear everything.
+
             this._currentProjectId = projectId;
             this._libraryInfos = {};
-            this._clearWatches();
+            this._clearWatchers();
             return;
         } else if (projectId === this._currentProjectId && branchName === this._currentBranchName) {
-            //we check if there was an addition or removal
-            availableNames = client.getLibraryNames();
-            libraryInfos = this._libraryInfos;
+            //Same project and branch -> check if there is any change in the set of libraries.
             
+            availableNames = client.getLibraryNames();
+
             //removals
-            for (i in libraryInfos) {
-                if (availableNames.indexOf(i) === -1) {
-                    this._unwatchProject(libraryInfos[i].projectId);
-                    delete this._libraryInfos[i];
+            for (name in this._libraryInfos) {
+                if (availableNames.indexOf(name) === -1) {
+                    this._unwatchProject(this._libraryInfos[name].projectId);
+                    delete this._libraryInfos[name];
                 }
             }
 
@@ -256,7 +255,7 @@ define([
                     info = client.getLibraryInfo(availableNames[i]);
                     if (info && info.projectId && info.branchName) {
                         this._watchProject(info.projectId);
-                        libraryInfos[availableNames[i]] = {
+                        this._libraryInfos[availableNames[i]] = {
                             projectId: info.projectId,
                             branchName: info.branchName,
                             commitHash: info.commitHash,
@@ -268,18 +267,18 @@ define([
             }
 
         } else {
+            // Project and/or branch changed -> reset the library watchers.
 
             this._currentProjectId = projectId;
             this._currentBranchName = branchName;
             this._libraryInfos = {};
-            libraryInfos = this._libraryInfos;
             availableNames = client.getLibraryNames();
-            this._clearWatches();
+            this._clearWatchers();
             for (i = 0; i < availableNames.length; i += 1) {
                 info = client.getLibraryInfo(availableNames[i]);
                 if (info && info.projectId && info.branchName) {
                     this._watchProject(info.projectId);
-                    libraryInfos[availableNames[i]] = {
+                    this._libraryInfos[availableNames[i]] = {
                         projectId: info.projectId,
                         branchName: info.branchName,
                         commitHash: info.commitHash,
