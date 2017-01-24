@@ -13,7 +13,9 @@
 
 var requirejs = require('requirejs'),
     path = require('path'),
+    fs = require('fs'),
     Q = require('q'),
+    webgmeVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'package.json'), 'utf8')).version,
     config = {
         baseUrl: path.join(__dirname, '../../../src'),
         paths: {
@@ -80,7 +82,7 @@ var requirejs = require('requirejs'),
         include: [
             '../utils/build/dist/includes',
         ],
-        out: path.join(__dirname, '../../../dist/webgme.dist.build.js'),
+        out: path.join(__dirname, '../../../dist/webgme.' + webgmeVersion + '.dist.build.js'),
         optimize: 'uglify2',
         //optimize: 'none',
         generateSourceMaps: true,
@@ -93,7 +95,7 @@ var requirejs = require('requirejs'),
     cssConfig = {
         optimizeCss: 'standard',
         cssIn: path.join(__dirname, '../../../src/client/css/main.css'),
-        out: path.join(__dirname, '../../../dist/webgme.dist.main.css'),
+        out: path.join(__dirname, '../../../dist/webgme.' + webgmeVersion + '.dist.main.css'),
     },
     libConfig = {
         baseUrl: path.join(__dirname, '../../../src'),
@@ -161,7 +163,7 @@ var requirejs = require('requirejs'),
         exclude: ['normalize'],
         optimize: 'uglify2',
         preserveLicenseComments: false,
-        out: path.join(__dirname, '../../../dist/webgme.lib.build.js')
+        out: path.join(__dirname, '../../../dist/webgme.' + webgmeVersion + '.lib.build.js')
     };
 
 function doBuilds(callback) {

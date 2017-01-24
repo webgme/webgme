@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html manifest="webgme.dist.appcache">
 <head>
     <title>WebGME</title>
     <!-- Load main.js with RequireJS and launch the app from there -->
     <script data-main="js/main" src="lib/require/require.min.js"></script>
     <!-- favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
-
+    <meta property="webgme-version" content="<%=webgmeVersion%>">
     <meta property="og:type" content="website"/>
     <meta property="og:site_name" content="WebGME"/>
     <meta property="og:description" content="Web-based Generic Modeling Environment"/>

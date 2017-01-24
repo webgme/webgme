@@ -1,4 +1,4 @@
-/*globals require*/
+/*globals require, document*/
 /*jshint browser:true, camelcase:false*/
 /**
  * N.B. This and mainDEBUG.js should only differ w.r.t. using minified versions or not and
@@ -9,15 +9,24 @@
 
 
 var DEBUG = false,
-    WebGMEGlobal = WebGMEGlobal || {};
+    WebGMEGlobal = WebGMEGlobal || {},
+    metaElms = document.getElementsByTagName('meta'),
+    i;
 
-WebGMEGlobal.version = 'x';
+for (i = 0; i < metaElms.length; i += 1) {
+    if (metaElms[i].getAttribute('property') === 'webgme-version') {
+        WebGMEGlobal.version = metaElms[i].getAttribute('content');
+        break;
+    }
+}
+
 WebGMEGlobal.SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 
 
 // configure require path and modules
 require.config({
     baseUrl: './',
+    waitSeconds: 12,
     map: {
         '*': {
             //layout
@@ -137,15 +146,15 @@ require.config({
 });
 
 require([
-    'css!/dist/webgme.dist.main.css',
+    'css!/dist/webgme.' + WebGMEGlobal.version + '.dist.main.css',
 ], function () {
     'use strict';
 
     require([
-        '/dist/webgme.lib.build.js'
+        '/dist/webgme.' + WebGMEGlobal.version + '.lib.build.js'
     ], function () {
         require([
-            '/dist/webgme.dist.build.js'
+            '/dist/webgme.' + WebGMEGlobal.version + '.dist.build.js'
         ], function () {
 
         });
