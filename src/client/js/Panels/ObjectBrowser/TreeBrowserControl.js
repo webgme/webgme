@@ -809,7 +809,7 @@ define(['js/logger',
             }
         };
 
-        this.locateNode = function (nodeId) {
+        this.locateNode = function (nodeId, isActiveNode) {
             var parentId = nodeId,
                 treeNode;
 
@@ -819,7 +819,9 @@ define(['js/logger',
                     treeNode.tree.activateKey(treeNode.key);
                     treeBrowser._deselectSelectedNodes();
                     nodes[parentId].treeNode.setSelected(true);
-                    if (parentId !== nodeId) {
+                    if (parentId === nodeId && !isActiveNode) {
+                        // We reached the node and it was a selected node -> do not expand it.
+                    } else {
                         treeNode.setExpanded(true);
                     }
 
