@@ -46,8 +46,8 @@ define(['js/logger',
             stateLoaded = 1,
             selfId,
             selfPatterns = {},
-        //local container for accounting the currently opened node list,
-        // its a hashmap with a key of nodeId and a value of { FancyTreeNode, childrenIds[], state }
+            //local container for accounting the currently opened node list,
+            // its a hashmap with a key of nodeId and a value of { FancyTreeNode, childrenIds[], state }
             nodes = {},
             refresh,
             initialize,
@@ -159,7 +159,7 @@ define(['js/logger',
                 c = isMetaNode ? GME_META_MODEL_CLASS : GME_MODEL_CLASS;
             } else {
                 //by default everyone is represented with the atom class
-                c = isMetaNode ? GME_META_ATOM_CLASS :GME_ATOM_CLASS;
+                c = isMetaNode ? GME_META_ATOM_CLASS : GME_ATOM_CLASS;
             }
 
             return c;
@@ -480,6 +480,7 @@ define(['js/logger',
                     menuItems.library.items.refreshLibrary = {
                         name: 'Update library ...',
                         callback: function (/*key, options*/) {
+                            var libraryName = nodeObj.getFullyQualifiedName();
                             self._libraryManager.update(nodeId);
                         },
                         icon: false
@@ -592,6 +593,11 @@ define(['js/logger',
                     updatedObject = client.getNode(objectId);
 
                     if (updatedObject) {
+
+                        if (objectId === CONSTANTS.PROJECT_ROOT_ID) {
+                            self._libraryManager.follow();
+                        }
+
                         currentChildren = updatedObject.getChildrenIds();
                         //check what state the object is in according to the local hashmap
                         if (nodes[objectId].state === stateLoading) {
