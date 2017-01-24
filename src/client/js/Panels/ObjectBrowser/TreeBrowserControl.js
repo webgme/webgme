@@ -50,7 +50,6 @@ define(['js/logger',
             // its a hashmap with a key of nodeId and a value of { FancyTreeNode, childrenIds[], state }
             nodes = {},
             refresh,
-            checkLibraries,
             initialize,
             initialized = false,
             self = this,
@@ -482,11 +481,7 @@ define(['js/logger',
                         name: 'Update library ...',
                         callback: function (/*key, options*/) {
                             var libraryName = nodeObj.getFullyQualifiedName();
-                            self._libraryManager.update(nodeId, function (changed) {
-                                if (changed) {
-                                    delete self._libraryChecks[libraryName];
-                                }
-                            });
+                            self._libraryManager.update(nodeId);
                         },
                         icon: false
                     };
@@ -600,7 +595,7 @@ define(['js/logger',
                     if (updatedObject) {
 
                         if (objectId === CONSTANTS.PROJECT_ROOT_ID) {
-                            checkLibraries();
+                            self._libraryManager.follow();
                         }
 
                         currentChildren = updatedObject.getChildrenIds();
@@ -792,29 +787,6 @@ define(['js/logger',
                 }
             }
             //ENDOF : HANDLE UPDATE
-        };
-
-        checkLibraries = function () {
-            var libraryNames = client.getLibraryNames(),
-                i,
-                checkLibrary = function (name) {
-                    self._libraryChecks[name] = true;
-                    self._libraryManager.check(name,
-                        function (err, notified) {
-                            if (!err && !notified) {
-                                delete self._libraryChecks[name];
-                            }
-                        });
-                };
-
-            self._libraryChecks = self._libraryChecks || {};
-
-            for (i = 0; i < libraryNames.length; i += 1) {
-                if (libraryNames[i].indexOf('.') === -1 &&
-                    self._libraryChecks[libraryNames[i]] !== true) {
-                    checkLibrary(libraryNames[i]);
-                }
-            }
         };
 
         this._eventCallback = function (events) {

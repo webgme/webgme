@@ -20,6 +20,10 @@ define([
         this._getName = new ConfirmDialog();
         this._doNotAskRemove = false;
         this._client = client;
+        this._libraryInfos = {};
+        this._followedProjects = {};
+        this._currentProjectId = null;
+        this._currentBranchName = null;
     };
 
     LibraryManager.prototype.add = function () {
@@ -48,18 +52,19 @@ define([
         });
     };
 
-    LibraryManager.prototype.update = function (nodeId, callback) {
-        var client = this._client,
+    LibraryManager.prototype.update = function (nodeId) {
+        var self = this,
+            client = this._client,
             node = client.getNode(nodeId),
             libraryName = node.getFullyQualifiedName(),
-            libraryInfo = client.getLibraryInfo(libraryName);
+            libraryInfo = this._libraryInfos[libraryName];
 
         this._update.show(nodeId, function (newCommitHash) {
             if (libraryInfo && libraryInfo.commitHash && newCommitHash &&
                 libraryInfo.commitHash !== newCommitHash) {
-                callback(true);
-            } else {
-                callback(false);
+                libraryInfo.commitHash = newCommitHash;
+                libraryInfo.notified = false;
+                self._watchProject(libraryInfo.projectId);
             }
         });
     };
@@ -145,33 +150,143 @@ define([
         }
     };
 
-    LibraryManager.prototype._libraryEvent = function (event) {
-        if (event && event.type && event.type === CONSTANTS.BRANCH_HASH_UPDATED &&
-            event.projectId && this._currentProjectId === event.projectId &&
-            this._libraryInfos[this._currentProjectId] &&
-            this._libraryInfos[this._currentProjectId].branchName === event.branchName &&
-            this._libraryInfos[this._currentProjectId].commitHash !== event.newHash) {
-            // The event is relevant so let us notify the user.
-            this._client.notifyUser({message: 'New version available from [' + name + '] library'});
+    LibraryManager.prototype._clearWatches = function () {
+        var projectId;
+
+        for (projectId in this._followedProjects) {
+            this._client.unwatchProject(projectId, this._followedProjects[projectId]);
+        }
+        this._followedProjects = {};
+    };
+
+    LibraryManager.prototype._unwatchProject = function (projectId) {
+        var libraryName,
+            stillWatching = false;
+
+        for (libraryName in this._libraryInfos) {
+            if (this._libraryInfos[libraryName].projectId === projectId &&
+                this._libraryInfos[libraryName].notified === false) {
+                stillWatching = true;
+            }
+        }
+
+        if (stillWatching === false) {
+            this._client.unwatchProject(projectId, this._followedProjects[projectId]);
+            delete this._followedProjects[projectId];
         }
     };
 
-    LibraryManager.prototype.follow = function (projectId) {
-        var currentLibraries = this._client.getLibraryNames(),
+    LibraryManager.prototype._watchProject = function (projectId) {
+        var self = this,
+            eventFunction = function (websocket, event) {
+                var libraryName;
+
+                if (event && event.etype && event.etype === CONSTANTS.BRANCH_HASH_UPDATED &&
+                    event.projectId && self._followedProjects[event.projectId]) {
+
+                    for (libraryName in self._libraryInfos) {
+                        if (self._libraryInfos[libraryName].projectId === event.projectId &&
+                            event.branchName === self._libraryInfos[libraryName].branchName &&
+                            self._libraryInfos[libraryName].notified === false) {
+                            self._client.notifyUser({
+                                message: 'New version available from [' + libraryName + '] library'
+                            });
+                            self._libraryInfos[libraryName].notified = true;
+                            self._unwatchProject(self._libraryInfos[libraryName].projectId);
+                        }
+                    }
+                }
+            };
+
+        if (!this._followedProjects[projectId]) {
+            this._followedProjects[projectId] = eventFunction;
+            this._client.watchProject(projectId, eventFunction);
+        }
+    };
+
+    LibraryManager.prototype._checkLibrary = function (name) {
+        var self = this,
+            client = this._client,
+            libraryInfo = this._libraryInfos[name];
+        if (libraryInfo) {
+            client.getBranches(libraryInfo.projectId, function (err, branches) {
+                if (err) {
+                    //TODO log the error
+                } else if (branches[libraryInfo.branchName] &&
+                    branches[libraryInfo.branchName] !== libraryInfo.commitHash) {
+                    client.notifyUser({message: 'New version available from [' + name + '] library'});
+                    libraryInfo.notified = true;
+                    self._unwatchProject(libraryInfo.projectId);
+                }
+            });
+        }
+    };
+
+    LibraryManager.prototype.follow = function () {
+        var client = this._client,
+            libraryInfos,
+            projectId = client.getActiveProjectId(),
+            branchName = client.getActiveBranchName(),
+            availableNames,
+            info,
             i;
 
-        this._libraryInfos = this._libraryInfos || {};
-        if (this._currentProjectId !== projectId) {
-            for (i in this._libraryInfos) {
-                this._client.unwatchProject(this._currentProjectId, this._libraryEvent);
-            }
+        if (typeof projectId !== 'string' || typeof branchName !== 'string') {
+            //clear everything
             this._currentProjectId = projectId;
             this._libraryInfos = {};
-        }
-        for (i = 0; i < currentLibraries.length; i += 1) {
-            if (currentLibraries[i].indexOf('.') === -1) {
-                this._libraryInfos[currentLibraries[i]] = this._libraryInfos[currentLibraries[i]] || {};
+            this._clearWatches();
+            return;
+        } else if (projectId === this._currentProjectId && branchName === this._currentBranchName) {
+            //we check if there was an addition or removal
+            availableNames = client.getLibraryNames();
+            libraryInfos = this._libraryInfos;
+            
+            //removals
+            for (i in libraryInfos) {
+                if (availableNames.indexOf(i) === -1) {
+                    this._unwatchProject(libraryInfos[i].projectId);
+                    delete this._libraryInfos[i];
+                }
+            }
 
+            //additions
+            for (i = 0; i < availableNames.length; i += 1) {
+                if (!this._libraryInfos[availableNames[i]]) {
+                    info = client.getLibraryInfo(availableNames[i]);
+                    if (info && info.projectId && info.branchName) {
+                        this._watchProject(info.projectId);
+                        libraryInfos[availableNames[i]] = {
+                            projectId: info.projectId,
+                            branchName: info.branchName,
+                            commitHash: info.commitHash,
+                            notified: false
+                        };
+                        this._checkLibrary(availableNames[i]);
+                    }
+                }
+            }
+
+        } else {
+
+            this._currentProjectId = projectId;
+            this._currentBranchName = branchName;
+            this._libraryInfos = {};
+            libraryInfos = this._libraryInfos;
+            availableNames = client.getLibraryNames();
+            this._clearWatches();
+            for (i = 0; i < availableNames.length; i += 1) {
+                info = client.getLibraryInfo(availableNames[i]);
+                if (info && info.projectId && info.branchName) {
+                    this._watchProject(info.projectId);
+                    libraryInfos[availableNames[i]] = {
+                        projectId: info.projectId,
+                        branchName: info.branchName,
+                        commitHash: info.commitHash,
+                        notified: false
+                    };
+                    this._checkLibrary(availableNames[i]);
+                }
             }
         }
     };
