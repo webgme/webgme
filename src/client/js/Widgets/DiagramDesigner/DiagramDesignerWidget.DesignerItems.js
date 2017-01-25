@@ -6,7 +6,7 @@
  */
 
 
-define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
+define(['./DesignerItem'], function (DesignerItem) {
 
     'use strict';
 

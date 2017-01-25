@@ -8,7 +8,7 @@
 
 define([
     'js/logger',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'
+    './DiagramDesignerWidget.Constants'
 ], function (Logger, DiagramDesignerWidgetConstants) {
 
     'use strict';
