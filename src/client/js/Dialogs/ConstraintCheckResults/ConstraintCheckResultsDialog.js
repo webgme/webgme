@@ -39,7 +39,7 @@ define(['js/util',
     //jscs:enable maximumLineLength
         MESSAGE_ENTRY_BASE = $('<div class="msg"><div class="msg-title"></div><div class="msg-body"></div></div>');
 
-    ConstraintCheckResultsDialog.prototype.show = function (client, pluginResults) {
+    ConstraintCheckResultsDialog.prototype.show = function (client, results) {
         var self = this;
 
         this._dialog = $(pluginResultsDialogTemplate);
@@ -47,7 +47,7 @@ define(['js/util',
             this._dialog.find('h3').first().text(this._dialogTitle);
         }
         this._client = client;
-        this._initDialog(pluginResults);
+        this._initDialog(results);
 
         this._dialog.on('hidden.bs.modal', function () {
             self._dialog.remove();
@@ -65,6 +65,7 @@ define(['js/util',
             resultEntry,
             body = dialog.find('.modal-body'),
             UNREAD_CSS = 'unread',
+            messagesEl,
             result,
             resultHeader,
             spanResultTitle,
@@ -78,7 +79,8 @@ define(['js/util',
             constraintEntry,
             i,
             j,
-            k;
+            k,
+            ii;
 
         for (i = 0; i < results.length; i += 1) {
             result = results[i];
@@ -151,7 +153,20 @@ define(['js/util',
                 for (k = 0; k < constraintNames.length; k++) {
                     constraintEntry = MESSAGE_ENTRY_BASE.clone();
                     constraintEntry.find('.msg-title').text(constraintNames[k]);
-                    constraintEntry.find('.msg-body').html(result[nodeGuids[j]][constraintNames[k]].message);
+                    if (result[nodeGuids[j]][constraintNames[k]].messages instanceof Array &&
+                        result[nodeGuids[j]][constraintNames[k]].messages.length > 0) {
+                        // If messages array is given - show list of violations.
+                        messagesEl = $('<ul class="messages-array"/>');
+                        for (ii = 0; ii < result[nodeGuids[j]][constraintNames[k]].messages.length; ii += 1) {
+                            messagesEl.append($('<li/>', {
+                                text: result[nodeGuids[j]][constraintNames[k]].messages[ii]
+                            }));
+                        }
+
+                        constraintEntry.find('.msg-body').append(messagesEl);
+                    } else {
+                        constraintEntry.find('.msg-body').html(result[nodeGuids[j]][constraintNames[k]].message);
+                    }
 
                     constraintContainer.append(constraintEntry);
                 }

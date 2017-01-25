@@ -67,13 +67,13 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
         return indices;
     }
 
-    function checkNodeTypesAndCardinality(core, nodes, subMetaRules, checkTypeText) {
+    function checkNodeTypesAndCardinality(core, nodes, subMetaRules, checkTypeText, singular) {
         var matches = [],
             i,
             j,
             result = {
                 hasViolation: false,
-                message: ''
+                messages: []
             },
             matchedIndices;
         /*
@@ -100,8 +100,8 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
 
             if (matchedIndices.length === 0) {
                 result.hasViolation = true;
-                result.message += checkTypeText + ' ' + core.getGuid(nodes[i]) +
-                    ' is not an allowed ' + checkTypeText + ' type\n';
+                result.messages.push('Illegal node "' + core.getAttribute(nodes[i], 'name') + '" [' +
+                    core.getPath(nodes[i]) + '] ' + (singular ? 'as ' : 'among ') + checkTypeText + '.');
             } else {
                 // increase the counter for each type it matches.
                 for (j = 0; j < matchedIndices.length; j += 1) {
@@ -113,12 +113,12 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
         for (i = 0; i < subMetaRules.items.length; i += 1) {
             if (subMetaRules.minItems[i] > -1 && subMetaRules.minItems[i] > matches[i]) {
                 result.hasViolation = true;
-                result.message += 'node has fewer ' + checkTypeText + '(s) than needed ( ' +
-                    matches[i] + ' < ' + subMetaRules.minItems[i] + ' )\n';
+                result.messages.push('Fewer ' + checkTypeText + ' than needed - there should be ' +
+                    subMetaRules.minItems[i] + ' but only ' + matches[i] + ' found.');
             } else if (subMetaRules.maxItems[i] > -1 && subMetaRules.maxItems[i] < matches[i]) {
                 result.hasViolation = true;
-                result.message += 'node has more ' + checkTypeText + '(s) than needed ( ' +
-                    matches[i] + ' < ' + subMetaRules.maxItems[i] + ' )\n';
+                result.messages.push('More ' + checkTypeText + ' than allowed - there can only be ' +
+                    subMetaRules.maxItems[i] + ' but ' + matches[i] + ' found.');
             }
         }
 
@@ -129,7 +129,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
     function checkPointerRules(meta, core, node, callback) {
         var result = {
                 hasViolation: false,
-                message: ''
+                messages: []
             },
             metaPointers = filterPointerRules(meta).pointers,
             checkPromises = [],
@@ -142,12 +142,11 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
 
             if (!metaPointer) {
                 if (pointerName === 'base') {
-                    // TODO: Do we need to check anythin on the base?
                     return {hasViolation: false};
                 } else {
                     return Q({
                         hasViolation: true,
-                        message: 'Invalid pointer "' + pointerName + '"\n'
+                        messages: ['Illegal pointer "' + pointerName + '".']
                     });
                 }
             } else {
@@ -157,7 +156,8 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 }
                 return loadNodes(core, node, pointerPaths)
                     .then(function (nodes) {
-                        return checkNodeTypesAndCardinality(core, nodes, metaPointer, pointerName + ' target');
+                        return checkNodeTypesAndCardinality(core, nodes, metaPointer, '"' + pointerName + '" target',
+                            true);
                     });
             }
         });
@@ -167,7 +167,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 results.forEach(function (res) {
                     if (res.hasViolation) {
                         result.hasViolation = true;
-                        result.message += res.message;
+                        result.messages = result.messages.concat(res.messages);
                     }
                 });
 
@@ -178,7 +178,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
     function checkSetRules(meta, core, node, callback) {
         var result = {
                 hasViolation: false,
-                message: ''
+                messages: []
             },
             metaSets = filterPointerRules(meta).sets,
             checkPromises = [],
@@ -215,7 +215,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     } else {
                         return Q({
                             hasViolation: true,
-                            message: 'Invalid set "' + setName + '"\n'
+                            messages: ['Illegal set "' + setName + '".']
                         });
                     }
                 }
@@ -223,7 +223,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 memberPaths = core.getMemberPaths(node, setName);
                 return loadNodes(core, node, memberPaths)
                     .then(function (nodes) {
-                        return checkNodeTypesAndCardinality(core, nodes, metaSet, setName + ' set member');
+                        return checkNodeTypesAndCardinality(core, nodes, metaSet, '"' + setName + '"-members');
                     });
             }
         });
@@ -233,7 +233,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 results.forEach(function (res) {
                     if (res.hasViolation) {
                         result.hasViolation = true;
-                        result.message += res.message;
+                        result.messages = result.messages.concat(res.messages);
                     }
                 });
 
@@ -242,9 +242,9 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
     }
 
     function checkChildrenRules(meta, core, node, callback) {
-        return loadNodes(core, node, core.getChildrenPaths(node))
+        return core.loadChildren(node)
             .then(function (nodes) {
-                return checkNodeTypesAndCardinality(core, nodes, meta.children, 'child');
+                return checkNodeTypesAndCardinality(core, nodes, meta.children, 'children');
             })
             .nodeify(callback);
     }
@@ -252,7 +252,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
     function checkAttributeRules(meta, core, node) {
         var result = {
                 hasViolation: false,
-                message: ''
+                messages: []
             },
             names = core.getAttributeNames(node),
             validNames = core.getValidAttributeNames(node),
@@ -263,13 +263,12 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 try {
                     if (!core.isValidAttributeValueOf(node, names[i], core.getAttribute(node, names[i]))) {
                         result.hasViolation = true;
-                        result.message += 'attribute "' + names[i] + '" has invalid value (' +
-                            core.getAttribute(node, names[i]) + ')\n';
+                        result.messages.push('Attribute "' + names[i] + '" has invalid value "' +
+                            core.getAttribute(node, names[i]) + '".');
                     }
                 } catch (e) {
                     if (e.message.indexOf('Invalid regular expression') > -1) {
-                        result.message = 'Invalid regular expression defined in the meta model for attribute "' +
-                            names[i] + '"!';
+                        result.messages.push('Invalid regular expression defined for attribute "' + names[i] + '"!');
                         result.hasViolation = true;
                     } else {
                         throw e;
@@ -277,7 +276,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 }
             } else {
                 result.hasViolation = true;
-                result.message += 'node has an attribute that is not part of any meta node "' + names[i] + '"\n';
+                result.messages.push('Illegal attribute "' + names[i] + '".');
             }
         }
 
@@ -294,6 +293,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
     function checkNode(core, node, callback) {
         var result = {
                 hasViolation: false,
+                messages: [],
                 message: ''
             },
             meta;
@@ -316,9 +316,11 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 for (i = 0; i < results.length; i += 1) {
                     if (results[i].hasViolation === true) {
                         result.hasViolation = true;
-                        result.message += results[i].message;
+                        result.messages = result.messages.concat(results[i].messages);
                     }
                 }
+
+                result.message = result.messages.join(' ');
                 return result;
             })
             .nodeify(callback);

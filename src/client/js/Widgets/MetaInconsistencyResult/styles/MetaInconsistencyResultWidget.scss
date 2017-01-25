@@ -1,0 +1,23 @@
+.meta-inconsistency-result {
+  .meta-inconsistency-divider {
+    border-top: 3px lightgray solid;
+    margin: 20px 20px 20px 20px;
+  }
+  .meta-inconsistency {
+    margin-left: 10px;
+    margin-right: 10px;
+    dt {
+      width: 100px;
+    }
+    dd {
+      margin-left: 120px;
+      &.path-link {
+        cursor: pointer;
+        color: blue;
+        &:hover {
+          color: orange;
+        }
+      }
+    }
+  }
+}
