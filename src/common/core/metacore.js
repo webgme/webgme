@@ -80,112 +80,6 @@ define([
             return self.getChild(aspectNode, CONSTANTS.META_ASPECT_PREFIX + name);
         }
 
-        function getMetaObjectDiff(bigger, smaller) {
-            //TODO this is a specific diff calculation for META rule JSONs
-            var diff = {},
-                names, i,
-                itemedElementDiff = function (bigItem, smallItem) {
-                    var diffItems = {},
-                        diff, i, index, names;
-                    for (i = 0; i < bigItem.items.length; i++) {
-                        if (smallItem.items.indexOf(bigItem.items[i]) === -1) {
-                            diffItems[bigItem.items[i]] = true;
-                        }
-                    }
-                    names = Object.keys(diffItems);
-                    for (i = 0; i < names.length; i++) {
-                        diff = diff || {items: [], minItems: [], maxItems: []};
-                        index = bigItem.items.indexOf(names[i]);
-                        diff.items.push(bigItem.items[index]);
-                        diff.minItems.push(bigItem.minItems[index]);
-                        diff.maxItems.push(bigItem.maxItems[index]);
-
-                    }
-                    if (bigItem.min && ((smallItem.min && bigItem.min !== smallItem.min) || !smallItem.min)) {
-                        diff = diff || {};
-                        diff.min = bigItem.min;
-                    }
-                    if (bigItem.max && ((smallItem.max && bigItem.max !== smallItem.max) || !smallItem.max)) {
-                        diff = diff || {};
-                        diff.max = bigItem.max;
-                    }
-                    return diff || {};
-                };
-            //attributes
-            if (smaller.attributes) {
-                names = Object.keys(bigger.attributes);
-                for (i = 0; i < names.length; i++) {
-                    if (smaller.attributes[names[i]]) {
-                        //they both have the attribute - if it differs we keep the whole of the bigger
-                        if (CANON.stringify(smaller.attributes[names[i]]) !==
-                            CANON.stringify(bigger.attributes[names[i]])) {
-
-                            diff.attributes = diff.attributes || {};
-                            diff.attributes[names[i]] = bigger.attributes[names[i]];
-                        }
-                    } else {
-                        diff.attributes = diff.attributes || {};
-                        diff.attributes[names[i]] = bigger.attributes[names[i]];
-                    }
-                }
-            } else if (bigger.attributes) {
-                diff.attributes = bigger.attributes;
-            }
-            //children
-            if (smaller.children) {
-                diff.children = itemedElementDiff(bigger.children, smaller.children);
-                if (Object.keys(diff.children).length < 1) {
-                    delete diff.children;
-                }
-            } else if (bigger.children) {
-                diff.children = bigger.children;
-            }
-            //pointers
-            if (smaller.pointers) {
-                diff.pointers = {};
-                names = Object.keys(bigger.pointers);
-                for (i = 0; i < names.length; i++) {
-                    if (smaller.pointers[names[i]]) {
-                        diff.pointers[names[i]] = itemedElementDiff(bigger.pointers[names[i]],
-                            smaller.pointers[names[i]]);
-                        if (Object.keys(diff.pointers[names[i]]).length < 1) {
-                            delete diff.pointers[names[i]];
-                        }
-                    } else {
-                        diff.pointers[names[i]] = bigger.pointers[names[i]];
-                    }
-                }
-            } else if (bigger.pointers) {
-                diff.pointers = bigger.pointers;
-            }
-            if (Object.keys(diff.pointers).length < 1) {
-                delete diff.pointers;
-            }
-            //aspects
-            if (smaller.aspects) {
-                diff.aspects = {};
-                names = Object.keys(bigger.aspects);
-                for (i = 0; i < names.length; i++) {
-                    if (smaller.aspects[names[i]]) {
-                        smaller.aspects[names[i]] = smaller.aspects[names[i]].sort();
-                        bigger.aspects[names[i]] = bigger.aspects[names[i]].sort();
-                        if (bigger.aspects[names[i]].length > smaller.aspects[names[i]].length) {
-                            diff.aspects[names[i]] = bigger.aspects[names[i]].slice(smaller.aspects[names[i]].length);
-                        }
-                    } else {
-                        diff.aspects[names[i]] = bigger.aspects[names[i]];
-                    }
-                }
-            } else if (bigger.aspects) {
-                diff.aspects = bigger.aspects;
-            }
-
-            if (Object.keys(diff.aspects).length < 1) {
-                delete diff.aspects;
-            }
-            return diff;
-        }
-
         //type related extra query functions
         function isOnMetaSheet(node) {
             //MetaAspectSet
@@ -195,6 +89,17 @@ define([
                 return true;
             }
             return false;
+        }
+
+        function isMetaNode(node) {
+            var metaNodes = innerCore.getRoot(node).metaNodes;
+
+            if (metaNodes) {
+                return metaNodes.hasOwnProperty(innerCore.getPath(node));
+            } else {
+                // The meta-cache layer is not used - fallback to check if it's a member of the MetaAspectSet.
+                return isOnMetaSheet(node);
+            }
         }
 
         //</editor-fold>
@@ -469,14 +374,6 @@ define([
 
             return meta;
         };
-
-        //this.getOwnJsonMeta = function (node) {
-        //    var base = self.getBase(node),
-        //        baseMeta = base ? self.getJsonMeta(base) : {},
-        //        meta = self.getJsonMeta(node);
-        //
-        //    return getMetaObjectDiff(meta, baseMeta);
-        //};
 
         this.getOwnJsonMeta = function (node) {
             var meta = {children: {}, attributes: {}, pointers: {}, aspects: {}, constraints: {}},
@@ -769,7 +666,7 @@ define([
         this.getBaseType = function (node) {
             //TODO this functions now uses the fact that we think of META as the MetaSetContainer of the ROOT
             while (node) {
-                if (isOnMetaSheet(node)) {
+                if (isMetaNode(node)) {
                     return node;
                 }
                 node = self.getBase(node);
