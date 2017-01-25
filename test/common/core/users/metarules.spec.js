@@ -229,7 +229,7 @@ describe('Meta Rules', function () {
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
-                expect(result.message).to.contain('more');
+                expect(result.message).to.contain('More children');
             })
             .nodeify(done);
     });
@@ -255,7 +255,8 @@ describe('Meta Rules', function () {
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
-                expect(result.message).to.contain('not an allowed dst target');
+                expect(result.message).to.contain('Illegal node');
+                expect(result.message).to.contain('as "dst" target');
             })
             .nodeify(done);
     });
@@ -268,7 +269,7 @@ describe('Meta Rules', function () {
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
-                expect(result.message).to.contain('attribute that is not part of any meta');
+                expect(result.message).to.contain('Illegal attribute');
             })
             .nodeify(done);
     });
@@ -281,7 +282,8 @@ describe('Meta Rules', function () {
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
-                expect(result.message).to.contain('not an allowed ref target');
+                expect(result.message).to.contain('Illegal node');
+                expect(result.message).to.contain('as "ref" target');
             })
             .nodeify(done);
     });
@@ -294,7 +296,7 @@ describe('Meta Rules', function () {
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
-                expect(result.message).to.contain('more');
+                expect(result.message).to.contain('More "ModelRefs"-members');
             })
             .nodeify(done);
     });
@@ -307,7 +309,7 @@ describe('Meta Rules', function () {
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
-                expect(result.message).to.contain('fewer');
+                expect(result.message).to.contain('Fewer children than');
             })
             .nodeify(done);
     });
@@ -320,7 +322,7 @@ describe('Meta Rules', function () {
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
-                expect(result.message).to.contain('Invalid pointer');
+                expect(result.message).to.contain('Illegal pointer');
             })
             .nodeify(done);
     });
@@ -333,7 +335,7 @@ describe('Meta Rules', function () {
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
-                expect(result.message).to.contain('Invalid set');
+                expect(result.message).to.contain('Illegal set');
             })
             .nodeify(done);
     });
