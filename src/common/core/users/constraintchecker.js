@@ -109,6 +109,8 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
                     } else if (result.state === 'fulfilled') {
                         msg.message = result.value.message;
                         msg.hasViolation = result.value.hasViolation;
+                        // Allow sending messages
+                        msg.messages = result.value.messages;
                     } else {
                         msg.message = 'Unknown Q promise state ' + result.state;
                         msg.hasViolation = true;
@@ -169,49 +171,24 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
     ConstraintChecker.prototype.checkModel = function (nodePath, callback) {
         var self = this,
             deferred = Q.defer(),
-            error = null,
             message = {
                 info: '',
                 commit: self.commitHash,
                 hasViolation: false
             };
 
-        function checkChild(node, cb) {
-            var needed = 2,
-                children = [],
-                nextChild = function (index) {
-                    if (index >= children.length) {
-                        return cb(error, message);
+        function checkChild(node, done) {
+            self._checkNode(node)
+                .then(function (res) {
+
+                    if (res && res.hasViolation === true) {
+                        message.hasViolation = true;
+                        message[self.core.getGuid(node)] = res;
                     }
 
-                    checkChild(children[index], function () {
-                        nextChild(index + 1);
-                    });
-                },
-                childrenLoaded = function () {
-                    needed = children.length;
-                    if (!needed || needed === 0) {
-                        return cb(error, message);
-                    }
-                    nextChild(0);
-                };
-            self._checkNode(node, function (err, msg) {
-                error = error || err;
-                if (msg && msg.hasViolation === true) {
-                    message.hasViolation = true;
-                }
-                message[self.core.getGuid(node)] = msg;
-                if (--needed === 0) {
-                    childrenLoaded();
-                }
-            });
-            self.core.loadChildren(node, function (err, c) {
-                children = c || [];
-                error = error || err;
-                if (--needed === 0) {
-                    childrenLoaded();
-                }
-            });
+                    done();
+                })
+                .catch(done);
         }
 
         self._loadNode(nodePath)
@@ -219,16 +196,14 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
                 if (self.core.getPath(node) === self.core.getPath(self.core.getRoot(node))) {
                     message.info = 'Project Validation';
                 } else {
-                    message.info = 'Model [' + self.core.getPath(node) + '] Validation';
+                    message.info = 'Model "' + (self.core.getAttribute(node, 'name') || '') +
+                        '" [' + nodePath + '] Validation';
                 }
 
-                checkChild(node, function (err, message_) {
-                    if (err) {
-                        deferred.reject(err);
-                    } else {
-                        deferred.resolve(message_);
-                    }
-                });
+                return self.core.traverse(node, null, checkChild);
+            })
+            .then(function () {
+                deferred.resolve(message);
             })
             .catch(function (err) {
                 deferred.reject(err);
@@ -249,7 +224,8 @@ define(['common/core/users/metarules', 'q'], function (metaRules, Q) {
             })
             .then(function (result) {
                 var message = {
-                    info: 'Node [' + (self.core.getAttribute(node, 'name') || '') + '] Validation',
+                    info: 'Node "' + (self.core.getAttribute(node, 'name') || '') +
+                    '" [' + nodePath + '] Validation',
                     commit: self.commitHash,
                     hasViolation: false
                 };
