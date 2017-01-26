@@ -45,7 +45,7 @@ define(['js/logger',
         this._currentNodeID = null;
         this._visualizers = {};
         this._validVisualizers = null;
-        this.defaultVisualizer = VisualizersJSON[0] || null;
+        this.defaultVisualizer = null;
 
         this._loadVisualizers();
 
@@ -133,14 +133,22 @@ define(['js/logger',
     };
 
     VisualizerPanel.prototype._loadVisualizers = function () {
-        var self = this;
+        var self = this,
+            defaultFromConst;
 
         // Set the default visualizer
         for (var i = VisualizersJSON.length; i--;) {
             if (VisualizersJSON[i].default) {
                 self.defaultVisualizer = VisualizersJSON[i];
             }
+
+            // If no default given - use the one from constants.
+            if (VisualizersJSON[i].id === CONSTANTS.DEFAULT_VISUALIZER) {
+                defaultFromConst = VisualizersJSON[i];
+            }
         }
+
+        self.defaultVisualizer  = self.defaultVisualizer || defaultFromConst;
 
         this.addRange(VisualizersJSON, function () {
             self._setActiveVisualizer(self.defaultVisualizer.id, self._ul1);

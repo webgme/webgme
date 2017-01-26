@@ -3,8 +3,7 @@
     "id": "ModelEditor",
     "title": "Composition",
     "panel": "js/Panels/ModelEditor/ModelEditorPanel",
-    "DEBUG_ONLY": false,
-    "default": true
+    "DEBUG_ONLY": false
   },
   {
     "id": "METAAspect",
