@@ -6,8 +6,8 @@
  */
 
 define([
-    'js/Widgets/DiagramDesigner/Connection',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'
+    './Connection',
+    './DiagramDesignerWidget.Constants'
 ], function (Connection, DiagramDesignerWidgetConstants) {
 
     'use strict';

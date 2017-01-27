@@ -185,13 +185,32 @@ describe.skip('Core Performance test', function () {
             .nodeify(done);
     });
 
+    it('should loadTree the entire-model and getBaseType of each node', function (done) {
+        var nodeCnt = 0,
+            cnt = 0;
+        this.timeout(timeout);
+        console.log('\n### getBaseType ###');
+        core.loadTree(rootHash)
+            .then(function (nodes) {
+                nodeCnt = nodes.length;
+                nodes.forEach(function (node) {
+                    core.getBaseType(node);
+                    cnt += 1;
+                });
+
+                console.log('#Nodes  ', nodeCnt);
+                console.log('#Cnt', cnt);
+            })
+            .nodeify(done);
+    });
+
     it('should traverse the whole project without issue', function (done) {
         var count = 0;
         core.loadRoot(rootHash)
             .then(function (root) {
                 return core.traverse(root, {}, function (node, next) {
                     count += 1;
-                    console.log(core.getPath(node), ' - ', count, ' -');
+                    //console.log(core.getPath(node), ' - ', count, ' -');
                     next();
                 });
             })

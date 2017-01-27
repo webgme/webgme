@@ -6,7 +6,7 @@
  */
 
 define([
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    './DiagramDesignerWidget.Constants',
     'raphaeljs'
 ], function (DiagramDesignerWidgetConstants) {
 

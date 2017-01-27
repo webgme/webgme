@@ -6,7 +6,7 @@
  */
 
 define([
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase'
+    './DiagramDesignerWidget.DecoratorBase'
 ], function (DiagramDesignerWidgetDecoratorBase) {
 
     'use strict';

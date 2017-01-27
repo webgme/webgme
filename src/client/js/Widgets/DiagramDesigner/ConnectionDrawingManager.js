@@ -7,7 +7,7 @@
 define([
     'js/logger',
     'js/Constants',
-    'js/Widgets/DiagramDesigner/DragScroll',
+    './DragScroll',
     './DiagramDesignerWidget.Constants'
 ], function (Logger,
              CONSTANTS,
