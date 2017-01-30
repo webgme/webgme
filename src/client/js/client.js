@@ -1303,6 +1303,19 @@ define([
             return state.project;
         };
 
+        /**
+         * Creates a new core instance using the state of the client and loads the root node.
+         * @param {object} [options]
+         * @param {string} [options.commitHash=%state.commitHash%] - If a different commit-hash should be loaded.
+         * @param {GmeLogger} [options.logger=%clientLogger%] - Logger passed to the core instance.
+         * @param {function} callback
+         * @param {Error|null} callback.error - Non-null if failed to retrieve result.
+         * @param {object} callback.result - The result object
+         * @param {Core} callback.result.core - Newly created core instance
+         * @param {Core~Node} callback.result.rootNode - The root-node that was loaded.
+         * @param {string} callback.result.commitHash - The commitHash used as basis for loading root-node.
+         * @param {Project} callback.result.project - A reference to the project.
+         */
         this.getCoreInstance = function (options, callback) {
             options = options || {};
             options.logger = options.logger || logger.fork('core');
