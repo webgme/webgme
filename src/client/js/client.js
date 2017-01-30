@@ -91,7 +91,7 @@ define([
             nodeSetterFunctions,
             coreLibraryFunctions,
             ROOT_PATH = '',
-            //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
+        //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled;
 
         blobClient = new BlobClient({logger: logger.fork('BlobClient')});
@@ -1303,6 +1303,50 @@ define([
             return state.project;
         };
 
+        this.getCoreInstance = function (options, callback) {
+            options = options || {};
+            options.logger = options.logger || logger.fork('core');
+
+            var result = {
+                core: null,
+                rootNode: null,
+                project: state.project,
+                commitHash: options.commitHash || state.commitHash
+            };
+
+            function loadRootNode(rootHash) {
+                result.core = new Core(state.project, {
+                    globConf: gmeConfig,
+                    logger: options.logger
+                });
+
+                result.core.loadRoot(rootHash)
+                    .then(function (rootNode) {
+                        result.rootNode = rootNode;
+                        return result;
+                    })
+                    .nodeify(callback);
+            }
+
+            if (!state.project) {
+                callback(new Error('Cannot get a core instance without an open project.'));
+            } else if (options.commitHash && options.commitHash !== state.commitHash) {
+                state.project.loadObject(options.commitHash, function (err, commitObj) {
+                    if (err) {
+                        callback(err);
+                    } else if (!commitObj || commitObj.type !== CONSTANTS.STORAGE.COMMIT_TYPE) {
+                        callback(new Error('Object at given commit-hash is not a commit-object.'));
+                    } else {
+                        loadRootNode(commitObj.root);
+                    }
+                });
+            } else if (state.rootHash) {
+                loadRootNode(state.rootHash);
+            } else {
+                callback(new Error('No root-hash available in state.'));
+            }
+        };
+
         this.getCommitQueue = function () {
             if (state.project && state.branchName && state.project.branches.hasOwnProperty(state.branchName)) {
                 return state.project.branches[state.branchName].getCommitQueue();
@@ -1563,9 +1607,9 @@ define([
             }
         };
 
-        this.squashCommits = function(projectId, fromCommit, toCommitOrBranch, msg, callback) {
+        this.squashCommits = function (projectId, fromCommit, toCommitOrBranch, msg, callback) {
             // logger.debug('squashing latest commits of branch: ', parameters);
-            storage.squashCommits(projectId,fromCommit,toCommitOrBranch,msg,callback);
+            storage.squashCommits(projectId, fromCommit, toCommitOrBranch, msg, callback);
         };
 
         // Watchers (used in e.g. ProjectNavigator).

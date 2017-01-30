@@ -291,6 +291,118 @@ describe('GME client', function () {
                 });
             });
         });
+
+        it('getCoreInstance should return core at state.commitHash/rootHash if no options given', function (done) {
+            var client = new Client(gmeConfig);
+            projectId = projectName2Id(projectName, gmeConfig, client);
+            client.connectToDatabase(function (err) {
+                expect(err).to.equal(null);
+                client.selectProject(projectId, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.getCoreInstance(null, function (err, result) {
+                        expect(err).to.equal(null);
+
+                        expect(result).to.have.keys('core', 'rootNode', 'project', 'commitHash');
+                        expect(result.commitHash).to.equal(client.getActiveCommitHash());
+                        expect(result.core.getHash(result.rootNode)).to.equal(client.getActiveRootHash());
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('getCoreInstance should return core if commitHash (same as state) given', function (done) {
+            var client = new Client(gmeConfig);
+            projectId = projectName2Id(projectName, gmeConfig, client);
+            client.connectToDatabase(function (err) {
+                expect(err).to.equal(null);
+                client.selectProject(projectId, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    // The commit-hash is the same as the one loaded..
+                    client.getCoreInstance({commitHash: client.getActiveCommitHash()}, function (err, result) {
+                        expect(err).to.equal(null);
+
+                        expect(result).to.have.keys('core', 'rootNode', 'project', 'commitHash');
+                        expect(result.commitHash).to.equal(client.getActiveCommitHash());
+                        expect(result.core.getHash(result.rootNode)).to.equal(client.getActiveRootHash());
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('getCoreInstance should return core if commitHash (different from state) given', function (done) {
+            var client = new Client(gmeConfig);
+            projectId = projectName2Id(projectName, gmeConfig, client);
+            client.connectToDatabase(function (err) {
+                expect(err).to.equal(null);
+                client.selectProject(projectId, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    // The commit-hash is the same as the one loaded..
+                    client.getCoreInstance(null, function (err, result) {
+                        var persisted;
+                        expect(err).to.equal(null);
+
+                        expect(result).to.have.keys('core', 'rootNode', 'project', 'commitHash');
+                        expect(result.commitHash).to.equal(client.getActiveCommitHash());
+                        expect(result.core.getHash(result.rootNode)).to.equal(client.getActiveRootHash());
+
+                        result.core.setAttribute(result.rootNode, 'name', 'differentCommitHashGetCoreInstance');
+                        persisted = result.core.persist(result.rootNode);
+
+                        result.project.makeCommit(null, [result.commitHash], persisted.rootHash, persisted.objects,
+                        'differentCommitHashGetCoreInstance')
+                            .then(function (commitRes) {
+                                client.getCoreInstance({commitHash: commitRes.hash}, function (err, res2) {
+                                    expect(err).to.equal(null);
+                                    expect(res2).to.have.keys('core', 'rootNode', 'project', 'commitHash');
+                                    expect(res2.commitHash).to.not.equal(client.getActiveCommitHash());
+                                    expect(result.core.getHash(res2.rootNode)).to.not.equal(client.getActiveRootHash());
+                                    done();
+                                });
+                            })
+                            .catch(done);
+                    });
+                });
+            });
+        });
+
+        it('getCoreInstance should return error if given commitHash does not exist', function (done) {
+            var client = new Client(gmeConfig);
+            projectId = projectName2Id(projectName, gmeConfig, client);
+            client.connectToDatabase(function (err) {
+                expect(err).to.equal(null);
+                client.selectProject(projectId, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.getCoreInstance({commitHash: '#doesNotExist'}, function (err) {
+                        expect(err.message).to.contain('object does not exist');
+
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('getCoreInstance should return error if given commitHash is a rootHash', function (done) {
+            var client = new Client(gmeConfig);
+            projectId = projectName2Id(projectName, gmeConfig, client);
+            client.connectToDatabase(function (err) {
+                expect(err).to.equal(null);
+                client.selectProject(projectId, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.getCoreInstance({commitHash: client.getActiveRootHash()}, function (err) {
+                        expect(err.message).to.contain('Object at given commit-hash is not a commit-object');
+
+                        done();
+                    });
+                });
+            });
+        });
     });
 
     describe('no database connection', function () {
@@ -408,6 +520,15 @@ describe('GME client', function () {
                 done();
             });
         });
+
+        it('should fail to getCoreInstance when no project open', function (done) {
+            client.getCoreInstance(null, function (err) {
+                expect(err.message).to.contain('Cannot get a core instance without an open project');
+
+                done();
+            });
+        });
+
 
         //it('should fail to make a commit', function (done) {
         //    var commitOptions = {message: 'any message'};
