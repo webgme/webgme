@@ -34,13 +34,25 @@ $abstract-class-name-color: #AAAAAA;
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
-    border-bottom: 1px solid #000000;
+    //border-bottom: 1px solid #000000;
     padding: $name-padding;
 
     input {
       height: 16px !important;
       line-height: 16px !important;
       font-size: 11px !important;
+    }
+  }
+
+  .connection-header {
+    display: none;
+  }
+
+  &.is-connection {
+    .connection-header {
+      display: block;
+      font-size: 9px;
+      color: #AAAAAA;
     }
   }
 
@@ -116,6 +128,10 @@ $abstract-class-name-color: #AAAAAA;
     color: $section-title-color;
     line-height: 13px;
     position: relative;
+  }
+
+  .add-top-border {
+    border-top: 1px solid #000000;
   }
 
   .constraints-title,
