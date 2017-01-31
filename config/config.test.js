@@ -39,23 +39,6 @@ config.server.log = {
             handleExceptions: true,
             depth: 2
         }
-    }, {
-        transportType: 'File',
-        options: {
-            name: 'info-file',
-            filename: './test-tmp/server.log',
-            level: 'info',
-            json: false
-        }
-    }, {
-        transportType: 'File',
-        options: {
-            name: 'error-file',
-            filename: './test-tmp/server-error.log',
-            level: 'error',
-            handleExceptions: true,
-            json: false
-        }
     }]
 };
 

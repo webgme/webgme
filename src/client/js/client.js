@@ -91,7 +91,7 @@ define([
             nodeSetterFunctions,
             coreLibraryFunctions,
             ROOT_PATH = '',
-            //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
+        //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled;
 
         blobClient = new BlobClient({logger: logger.fork('BlobClient')});
@@ -1303,6 +1303,63 @@ define([
             return state.project;
         };
 
+        /**
+         * Creates a new core instance using the state of the client and loads the root node.
+         * @param {object} [options]
+         * @param {string} [options.commitHash=%state.commitHash%] - If a different commit-hash should be loaded.
+         * @param {GmeLogger} [options.logger=%clientLogger%] - Logger passed to the core instance.
+         * @param {function} callback
+         * @param {Error|null} callback.error - Non-null if failed to retrieve result.
+         * @param {object} callback.result - The result object
+         * @param {Core} callback.result.core - Newly created core instance
+         * @param {Core~Node} callback.result.rootNode - The root-node that was loaded.
+         * @param {string} callback.result.commitHash - The commitHash used as basis for loading root-node.
+         * @param {Project} callback.result.project - A reference to the project.
+         */
+        this.getCoreInstance = function (options, callback) {
+            options = options || {};
+            options.logger = options.logger || logger.fork('core');
+
+            var result = {
+                core: null,
+                rootNode: null,
+                project: state.project,
+                commitHash: options.commitHash || state.commitHash
+            };
+
+            function loadRootNode(rootHash) {
+                result.core = new Core(state.project, {
+                    globConf: gmeConfig,
+                    logger: options.logger
+                });
+
+                result.core.loadRoot(rootHash)
+                    .then(function (rootNode) {
+                        result.rootNode = rootNode;
+                        return result;
+                    })
+                    .nodeify(callback);
+            }
+
+            if (!state.project) {
+                callback(new Error('Cannot get a core instance without an open project.'));
+            } else if (options.commitHash && options.commitHash !== state.commitHash) {
+                state.project.loadObject(options.commitHash, function (err, commitObj) {
+                    if (err) {
+                        callback(err);
+                    } else if (!commitObj || commitObj.type !== CONSTANTS.STORAGE.COMMIT_TYPE) {
+                        callback(new Error('Object at given commit-hash is not a commit-object.'));
+                    } else {
+                        loadRootNode(commitObj.root);
+                    }
+                });
+            } else if (state.rootHash) {
+                loadRootNode(state.rootHash);
+            } else {
+                callback(new Error('No root-hash available in state.'));
+            }
+        };
+
         this.getCommitQueue = function () {
             if (state.project && state.branchName && state.project.branches.hasOwnProperty(state.branchName)) {
                 return state.project.branches[state.branchName].getCommitQueue();
@@ -1563,9 +1620,9 @@ define([
             }
         };
 
-        this.squashCommits = function(projectId, fromCommit, toCommitOrBranch, msg, callback) {
+        this.squashCommits = function (projectId, fromCommit, toCommitOrBranch, msg, callback) {
             // logger.debug('squashing latest commits of branch: ', parameters);
-            storage.squashCommits(projectId,fromCommit,toCommitOrBranch,msg,callback);
+            storage.squashCommits(projectId, fromCommit, toCommitOrBranch, msg, callback);
         };
 
         // Watchers (used in e.g. ProjectNavigator).

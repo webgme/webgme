@@ -125,8 +125,8 @@ describe('GME client', function () {
             expect(client).to.include.keys(
                 'startTransaction',
                 'completeTransaction',
-                'setAttributes',
-                'delAttributes',
+                'setAttribute',
+                'delAttribute',
                 'setRegistry',
                 'delRegistry',
                 'copyMoreNodes',
@@ -134,7 +134,7 @@ describe('GME client', function () {
                 'delMoreNodes',
                 'createChild',
                 'createChildren',
-                'makePointer',
+                'setPointer',
                 'delPointer',
                 'addMember',
                 'removeMember',
@@ -291,6 +291,118 @@ describe('GME client', function () {
                 });
             });
         });
+
+        it('getCoreInstance should return core at state.commitHash/rootHash if no options given', function (done) {
+            var client = new Client(gmeConfig);
+            projectId = projectName2Id(projectName, gmeConfig, client);
+            client.connectToDatabase(function (err) {
+                expect(err).to.equal(null);
+                client.selectProject(projectId, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.getCoreInstance(null, function (err, result) {
+                        expect(err).to.equal(null);
+
+                        expect(result).to.have.keys('core', 'rootNode', 'project', 'commitHash');
+                        expect(result.commitHash).to.equal(client.getActiveCommitHash());
+                        expect(result.core.getHash(result.rootNode)).to.equal(client.getActiveRootHash());
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('getCoreInstance should return core if commitHash (same as state) given', function (done) {
+            var client = new Client(gmeConfig);
+            projectId = projectName2Id(projectName, gmeConfig, client);
+            client.connectToDatabase(function (err) {
+                expect(err).to.equal(null);
+                client.selectProject(projectId, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    // The commit-hash is the same as the one loaded..
+                    client.getCoreInstance({commitHash: client.getActiveCommitHash()}, function (err, result) {
+                        expect(err).to.equal(null);
+
+                        expect(result).to.have.keys('core', 'rootNode', 'project', 'commitHash');
+                        expect(result.commitHash).to.equal(client.getActiveCommitHash());
+                        expect(result.core.getHash(result.rootNode)).to.equal(client.getActiveRootHash());
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('getCoreInstance should return core if commitHash (different from state) given', function (done) {
+            var client = new Client(gmeConfig);
+            projectId = projectName2Id(projectName, gmeConfig, client);
+            client.connectToDatabase(function (err) {
+                expect(err).to.equal(null);
+                client.selectProject(projectId, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    // The commit-hash is the same as the one loaded..
+                    client.getCoreInstance(null, function (err, result) {
+                        var persisted;
+                        expect(err).to.equal(null);
+
+                        expect(result).to.have.keys('core', 'rootNode', 'project', 'commitHash');
+                        expect(result.commitHash).to.equal(client.getActiveCommitHash());
+                        expect(result.core.getHash(result.rootNode)).to.equal(client.getActiveRootHash());
+
+                        result.core.setAttribute(result.rootNode, 'name', 'differentCommitHashGetCoreInstance');
+                        persisted = result.core.persist(result.rootNode);
+
+                        result.project.makeCommit(null, [result.commitHash], persisted.rootHash, persisted.objects,
+                        'differentCommitHashGetCoreInstance')
+                            .then(function (commitRes) {
+                                client.getCoreInstance({commitHash: commitRes.hash}, function (err, res2) {
+                                    expect(err).to.equal(null);
+                                    expect(res2).to.have.keys('core', 'rootNode', 'project', 'commitHash');
+                                    expect(res2.commitHash).to.not.equal(client.getActiveCommitHash());
+                                    expect(result.core.getHash(res2.rootNode)).to.not.equal(client.getActiveRootHash());
+                                    done();
+                                });
+                            })
+                            .catch(done);
+                    });
+                });
+            });
+        });
+
+        it('getCoreInstance should return error if given commitHash does not exist', function (done) {
+            var client = new Client(gmeConfig);
+            projectId = projectName2Id(projectName, gmeConfig, client);
+            client.connectToDatabase(function (err) {
+                expect(err).to.equal(null);
+                client.selectProject(projectId, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.getCoreInstance({commitHash: '#doesNotExist'}, function (err) {
+                        expect(err.message).to.contain('object does not exist');
+
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('getCoreInstance should return error if given commitHash is a rootHash', function (done) {
+            var client = new Client(gmeConfig);
+            projectId = projectName2Id(projectName, gmeConfig, client);
+            client.connectToDatabase(function (err) {
+                expect(err).to.equal(null);
+                client.selectProject(projectId, null, function (err) {
+                    expect(err).to.equal(null);
+
+                    client.getCoreInstance({commitHash: client.getActiveRootHash()}, function (err) {
+                        expect(err.message).to.contain('Object at given commit-hash is not a commit-object');
+
+                        done();
+                    });
+                });
+            });
+        });
     });
 
     describe('no database connection', function () {
@@ -408,6 +520,15 @@ describe('GME client', function () {
                 done();
             });
         });
+
+        it('should fail to getCoreInstance when no project open', function (done) {
+            client.getCoreInstance(null, function (err) {
+                expect(err.message).to.contain('Cannot get a core instance without an open project');
+
+                done();
+            });
+        });
+
 
         //it('should fail to make a commit', function (done) {
         //    var commitOptions = {message: 'any message'};
@@ -681,7 +802,6 @@ describe('GME client', function () {
 
                     expect(commits).to.have.length.least(1);
                     expect(commits[0]).to.contain.keys('_id', 'root', 'updater', 'time', 'message', 'type');
-                    expect(commits[0]._id).to.equal(client.getActiveCommitHash());
                     done();
                 });
             });
@@ -1249,7 +1369,7 @@ describe('GME client', function () {
                                 expect(events.length).to.equal(2);
                                 client.removeUI(userGuid);
 
-                                client.setAttributes('', 'name', 'newRootName',
+                                client.setAttribute('', 'name', 'newRootName',
                                     'should raise BRANCH_HASH_UPDATED when the branch is updated.');
                             }
                         }
@@ -1378,12 +1498,12 @@ describe('GME client', function () {
                 number: 1
             };
 
-            client.setAttributes(clientNodePath, 'newAttr', attribute);
+            client.setAttribute(clientNodePath, 'newAttr', attribute);
             expect(clientNode.getAttributeNames()).to.include.members(['newAttr']);
             expect(clientNode.getAttribute('newAttr')).to.eql(attribute);
             expect(clientNode.getEditableAttribute('newAttr')).to.eql(attribute);
             expect(clientNode.getOwnEditableAttribute('newAttr')).to.eql(attribute);
-            client.delAttributes(clientNodePath, 'newAttr');
+            client.delAttribute(clientNodePath, 'newAttr');
         });
 
         it('in case of unknown attribute the result should be undefined', function () {
@@ -1529,7 +1649,7 @@ describe('GME client', function () {
         });
 
         it('should return a list of paths of the possible child node types', function () {
-            expect(clientNode.getValidChildrenTypes()).to.deep.equal(['/701504349']);
+            expect(clientNode.getValidChildrenIds()).to.deep.equal(['/701504349']);
         });
 
         it('should list the names of the defined constraints', function () {
@@ -1624,7 +1744,7 @@ describe('GME client', function () {
                 copyParams[childrenIds[0]] = {attributes: {'name': 'copy'}};
 
                 //we aslo set the name
-                client.setAttributes(childrenIds[0], 'name', childrenIds[0]);
+                client.setAttribute(childrenIds[0], 'name', childrenIds[0]);
             }
             expect(childrenIds).to.have.length(62);
 
@@ -2130,7 +2250,7 @@ describe('GME client', function () {
                         expect(events[i].etype).to.equal('update');
                     }
 
-                    node = client.delMoreNodes([childPath]);
+                    node = client.deleteNodes([childPath]);
                 } else if (tOneState === 'tRemove') {
                     tOneState = null;
                     // Root, parent and child should be updated,
@@ -2189,7 +2309,7 @@ describe('GME client', function () {
                         expect(events[i].etype).to.equal('load');
                     }
                     childPath = '/' + newNodeRelid + '/' + baseChildRelid;
-                    node = client.delMoreNodes([childPath]);
+                    node = client.deleteNodes([childPath]);
                 } else if (tOneState === 'tRemove') {
                     tOneState = null;
                     // Only the root should have an event.
@@ -2332,7 +2452,7 @@ describe('GME client', function () {
                     expect(node).not.to.equal(null);
                     expect(node.getAttribute('name')).to.equal('check');
 
-                    client.setAttributes(events[1].eid, 'name', 'checkModified', 'basic set attribute test');
+                    client.setAttribute(events[1].eid, 'name', 'checkModified', 'basic set attribute test');
                     return;
                 }
 
@@ -2369,7 +2489,7 @@ describe('GME client', function () {
                     expect(node).not.to.equal(null);
                     expect(node.getAttribute('name')).to.equal('check');
 
-                    client.delAttributes(events[1].eid, 'name', 'basic delete attribute test');
+                    client.delAttribute(events[1].eid, 'name', 'basic delete attribute test');
                     return;
                 }
 
@@ -2502,8 +2622,8 @@ describe('GME client', function () {
                     expect(node.getAttribute('name')).to.equal('FCO');
 
                     client.startTransaction('starting a transaction');
-                    client.setAttributes('/1', 'name', 'FCOmodified', 'change without commit');
-                    client.setAttributes('/1', 'newAttribute', 42, 'another change without commit');
+                    client.setAttribute('/1', 'name', 'FCOmodified', 'change without commit');
+                    client.setAttribute('/1', 'newAttribute', 42, 'another change without commit');
                     client.setRegistry('/1', 'position', {x: 50, y: 50});
                     client.completeTransaction('now will the events get generated');
                 }
@@ -2551,7 +2671,7 @@ describe('GME client', function () {
                     node = client.getNode(events[1].eid);
                     expect(node).not.to.equal(null);
 
-                    client.delMoreNodes([events[1].eid], 'basic delete node test');
+                    client.deleteNodes([events[1].eid], 'basic delete node test');
                     return;
                 }
 
@@ -2628,7 +2748,7 @@ describe('GME client', function () {
                     expect(node).not.to.equal(null);
                     expect(node.getPointer('ptr')).to.deep.equal({to: '/323573539', from: []});
 
-                    client.makePointer('/1697300825', 'ptr', null, 'make null pointer test');
+                    client.setPointer('/1697300825', 'ptr', null, 'make null pointer test');
                     return;
                 }
 
@@ -4092,7 +4212,7 @@ describe('GME client', function () {
                     expect(node).not.to.equal(null);
                     expect(node.getOwnEditableAttribute('name')).to.equal('check');
 
-                    client.setAttributes(events[1].eid, 'name', 'cm', 'undo test - modify something');
+                    client.setAttribute(events[1].eid, 'name', 'cm', 'undo test - modify something');
                     return;
                 }
 
@@ -4231,7 +4351,7 @@ describe('GME client', function () {
             prepareBranchForTest('simpleGet', null, function (err) {
                 expect(err).to.equal(null);
 
-                expect(client.getMeta('/1')).to.deep.equal({
+                expect(client.getNode('/1').getJsonMeta()).to.deep.equal({
                     attributes: {
                         name: {
                             type: 'string'
@@ -4260,8 +4380,7 @@ describe('GME client', function () {
         it('should return the flattened meta rules of a node in json format', function (done) {
             prepareBranchForTest('inheritedGet', null, function (err) {
                 expect(err).to.equal(null);
-                var metaRules = client.getMeta('/1865460677');
-                //FIXME: this fails on my machine /patrik
+                var metaRules = client.getNode('/1865460677').getJsonMeta();
 
                 expect(metaRules).to.have.keys('attributes', 'aspects', 'pointers', 'children', 'constraints');
                 expect(metaRules.attributes).to.deep.equal({
@@ -4283,15 +4402,6 @@ describe('GME client', function () {
             });
         });
 
-        it('should return null if the object is not loaded', function (done) {
-            prepareBranchForTest('unknownGet', null, function (err) {
-                expect(err).to.equal(null);
-
-                expect(client.getMeta('/42/42')).to.equal(null);
-                done();
-            });
-        });
-
         it('modify an empty ruleset to empty', function (done) {
             var branchStatusHandler = function (status/*, commitQueue, updateQueue*/) {
                 if (status === client.CONSTANTS.BRANCH_STATUS.SYNC) {
@@ -4301,9 +4411,9 @@ describe('GME client', function () {
             prepareBranchForTest('noChangeSet', branchStatusHandler, function (err) {
                 expect(err).to.equal(null);
 
-                var old = client.getMeta('/1730437907');
+                var old = client.getNode('/1730437907').getJsonMeta();
                 client.setMeta('/1730437907', {});
-                expect(client.getMeta('/1730437907')).to.deep.equal(old);
+                expect(client.getNode('/1730437907').getJsonMeta()).to.deep.equal(old);
             });
         });
 
@@ -4316,12 +4426,12 @@ describe('GME client', function () {
             prepareBranchForTest('addWithSet', branchStatusHandler, function (err) {
                 expect(err).to.equal(null);
 
-                var old = client.getMeta('/1730437907'),
+                var old = client.getNode('/1730437907').getJsonMeta(),
                     newAttribute = {type: 'string'};
                 client.setMeta('/1730437907', {attributes: {newAttr: newAttribute}});
                 //we extend our json format as well
                 old.attributes.newAttr = newAttribute;
-                expect(client.getMeta('/1730437907')).to.deep.equal(old);
+                expect(client.getNode('/1730437907').getJsonMeta()).to.deep.equal(old);
             });
         });
 
@@ -4334,12 +4444,12 @@ describe('GME client', function () {
             prepareBranchForTest('removeWithSet', branchStatusHandler, function (err) {
                 expect(err).to.equal(null);
 
-                var meta = client.getMeta('/1');
+                var meta = client.getNode('/1').getJsonMeta();
 
                 expect(meta.attributes).to.contain.keys('name');
                 delete meta.attributes.name;
                 client.setMeta('/1', meta);
-                expect(client.getMeta('/1').attributes).not.to.include.keys('name');
+                expect(client.getNode('/1').getJsonMeta().attributes).not.to.include.keys('name');
 
             });
         });
