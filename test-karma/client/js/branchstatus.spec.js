@@ -157,7 +157,7 @@ describe('branch status', function () {
                     expect(events.length).to.equal(2);
                     client.removeUI(userGuid);
 
-                    client.setAttributes('', 'name', 'newRootName',
+                    client.setAttribute('', 'name', 'newRootName',
                         'should go from SYNC to AHEAD_SYNC to SYNC when making changes.');
                 }
             }
@@ -275,7 +275,7 @@ describe('branch status', function () {
                                     function (err, result) {
                                         expect(err).to.equal(null);
                                         expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
-                                        client.setAttributes('', 'name', 'newRootyName', 'conflicting change');
+                                        client.setAttribute('', 'name', 'newRootyName', 'conflicting change');
                                         client.completeTransaction('sync_aheadSync_aheadNotSync__stop');
                                     }
                                 );
@@ -314,7 +314,7 @@ describe('branch status', function () {
                     prevStatus = eventData.status;
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
                     expect(eventData.commitQueue.length).to.equal(1);
-                    client.setAttributes('', 'name', 'newRootyName2Test2', 'change when ahead not sync');
+                    client.setAttribute('', 'name', 'newRootyName2Test2', 'change when ahead not sync');
                 } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC) {
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_NOT_SYNC);
                     expect(eventData.commitQueue.length).to.equal(2);
@@ -355,7 +355,7 @@ describe('branch status', function () {
                                     function (err, result) {
                                         expect(err).to.equal(null);
                                         expect(result.status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
-                                        client.setAttributes('', 'name', 'newRootyNameTest2', 'conflicting change');
+                                        client.setAttribute('', 'name', 'newRootyNameTest2', 'conflicting change');
                                         client.completeTransaction('sync_aheadSync_aheadNotSync_aheadNotSync__stop');
                                     }
                                 );

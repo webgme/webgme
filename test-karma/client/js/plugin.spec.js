@@ -247,7 +247,7 @@ describe('Plugin', function () {
                     expect(events.length).to.equal(2);
                     client.removeUI(userGuid);
                     setTimeout(function () {
-                        client.setAttributes('', 'name', 'PluginForkedNameFromClient', 'conflicting change');
+                        client.setAttribute('', 'name', 'PluginForkedNameFromClient', 'conflicting change');
                     }, 50);
                 }
             }
