@@ -39,10 +39,11 @@ function GMEAuth(session, gmeConfig) {
         collection,
         projectCollection,
         metadataStorage = new MetadataStorage(logger, gmeConfig),
+        TokenGenerator = new require(gmeConfig.authentication.jwt.tokenGenerator),
+        tokenGenerator = new TokenGenerator(logger, gmeConfig, jwt),
         Authorizer = require(gmeConfig.authentication.authorizer.path),
         authorizer = new Authorizer(logger, gmeConfig),
     // JWT Keys
-        PRIVATE_KEY,
         PUBLIC_KEY,
         jwtOptions = {
             algorithm: 'RS256',
@@ -52,7 +53,6 @@ function GMEAuth(session, gmeConfig) {
     EventDispatcher.call(this);
 
     if (gmeConfig.authentication.enable === true) {
-        PRIVATE_KEY = fs.readFileSync(gmeConfig.authentication.jwt.privateKey, 'utf8');
         PUBLIC_KEY = fs.readFileSync(gmeConfig.authentication.jwt.publicKey, 'utf8');
     }
 
@@ -193,7 +193,8 @@ function GMEAuth(session, gmeConfig) {
             .then(function () {
                 return Q.all([
                     authorizer.start({collection: collection}),
-                    metadataStorage.start({projectCollection: projectCollection})
+                    metadataStorage.start({projectCollection: projectCollection}),
+                    tokenGenerator.start({})
                 ]);
             })
             .then(function () {
@@ -214,7 +215,7 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function unload(callback) {
-        return Q.all([collection, projectCollection, authorizer.stop(), metadataStorage.stop()])
+        return Q.all([collection, projectCollection, authorizer.stop(), metadataStorage.stop(), tokenGenerator.stop()])
             .finally(function () {
                 return Q.ninvoke(db, 'close');
             })
@@ -252,7 +253,7 @@ function GMEAuth(session, gmeConfig) {
 
         return authenticateUser(userId, password)
             .then(function () {
-                return Q.ninvoke(jwt, 'sign', {userId: userId}, PRIVATE_KEY, jwtOptions);
+                return tokenGenerator.getToken({userId: userId}, jwtOptions);
             })
             .nodeify(callback);
     }
@@ -266,7 +267,7 @@ function GMEAuth(session, gmeConfig) {
                     throw new Error('no such user [' + userId + ']');
                 }
 
-                return Q.ninvoke(jwt, 'sign', {userId: userId}, PRIVATE_KEY, jwtOptions);
+                return tokenGenerator.getToken({userId: userId}, jwtOptions);
             })
             .nodeify(callback);
     }
@@ -275,7 +276,7 @@ function GMEAuth(session, gmeConfig) {
         logger.debug('Regenerate token..');
         return verifyJWToken(token)
             .then(function (result) {
-                return Q.ninvoke(jwt, 'sign', {userId: result.content.userId}, PRIVATE_KEY, jwtOptions);
+                return tokenGenerator.getToken({userId: result.content.userId}, jwtOptions);
             })
             .nodeify(callback);
     }
