@@ -38,6 +38,7 @@ define([
     var MetaDecoratorDiagramDesignerWidget,
         DECORATOR_ID = 'MetaDecorator',
         ABSTRACT_CLASS = 'abstract',
+        IS_CONNECTION_CLASS = 'is-connection',
         TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta"/>'),
         TEXT_META_LOCKED_BASE = $('<i class="glyphicon glyphicon-lock meta-lock"/>');
 
@@ -231,6 +232,7 @@ define([
             this._updateAttributes();
             this._updateConstraints();
             this._updateAbstract();
+            this._updateIsConnection();
             this._updateAspects();
         }
     };
@@ -287,6 +289,23 @@ define([
             }
         } else {
             this.$el.removeClass(ABSTRACT_CLASS);
+        }
+    };
+
+    MetaDecoratorDiagramDesignerWidget.prototype._updateIsConnection = function () {
+        var client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            ptrNames;
+
+        if (nodeObj) {
+            ptrNames = nodeObj.getValidPointerNames();
+            if (ptrNames.indexOf(CONSTANTS.POINTER_SOURCE) > -1 && ptrNames.indexOf(CONSTANTS.POINTER_TARGET) > -1) {
+                this.$el.addClass(IS_CONNECTION_CLASS);
+            } else {
+                this.$el.removeClass(IS_CONNECTION_CLASS);
+            }
+        } else {
+            this.$el.removeClass(IS_CONNECTION_CLASS);
         }
     };
 

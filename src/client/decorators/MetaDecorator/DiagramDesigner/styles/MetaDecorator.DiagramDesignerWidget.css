@@ -15,12 +15,17 @@
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
-    border-bottom: 1px solid #000000;
     padding: 0 17px 0 17px; }
     .meta-decorator .name input {
       height: 16px !important;
       line-height: 16px !important;
       font-size: 11px !important; }
+  .meta-decorator .connection-header {
+    display: none; }
+  .meta-decorator.is-connection .connection-header {
+    display: block;
+    font-size: 9px;
+    color: #AAAAAA; }
   .meta-decorator .attributes,
   .meta-decorator .constraints,
   .meta-decorator .aspects {
@@ -78,6 +83,8 @@
     color: #000000;
     line-height: 13px;
     position: relative; }
+  .meta-decorator .add-top-border {
+    border-top: 1px solid #000000; }
   .meta-decorator .constraints-title,
   .meta-decorator .aspects-title {
     border-top: 1px dashed #999999; }
