@@ -6,7 +6,6 @@
 'use strict';
 
 var TokenGeneratorBase = require('./tokengeneratorbase'),
-    GME_AUTH_CONSTANTS = require('./constants'),
     Q = require('q'),
     fs = require('fs');
 

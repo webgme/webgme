@@ -38,6 +38,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         merge = webgme.requirejs('common/core/users/merge'),
         StorageUtil = webgme.requirejs('common/storage/util'),
         webgmeUtils = require('../../utils'),
+        GUID = webgme.requirejs('common/util/guid'),
 
         versionedAPIPath = mountPath + '/v1',
         latestAPIPath = mountPath;
@@ -208,7 +209,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             .catch(function (err) {
                 if (err.message.indexOf('no such user') === 0) {
                     logger.info('Authenticated user did not exist in db, adding:', userId);
-                    gmeAuth.addUser(userId, 'em@il', 'wordpass', false, {overwrite: false})
+                    gmeAuth.addUser(userId, 'em@il', GUID(), false, {overwrite: false})
                         .then(function (userData) {
                             return gmeAuth.getUser(userId);
                         })
