@@ -32,6 +32,7 @@ var path = require('path'),
                 // These are just examples and should be overwritten
                 publicKey: path.join(__dirname, '../src/server/middleware/auth/EXAMPLE_PUBLIC_KEY'),
                 tokenGenerator: path.join(__dirname, '../src/server/middleware/auth/localtokengenerator.js'),
+                algorithm: 'RS256',
                 // The private key is only needed if using the localtokengenerator
                 privateKey: path.join(__dirname, '../src/server/middleware/auth/EXAMPLE_PRIVATE_KEY')
             }

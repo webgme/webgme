@@ -18,6 +18,11 @@ function TokenGeneratorBase(mainLogger, gmeConfig, jwt) {
 
     this.jwt = jwt;
 
+    this.jwtOptions = {
+        algorithm: gmeConfig.authentication.jwt.algorithm,
+        expiresIn: gmeConfig.authentication.jwt.expiresIn
+    };
+
     /**
      * @type {GmeConfig}
      */
@@ -57,7 +62,7 @@ TokenGeneratorBase.prototype.stop = function (callback) {
     return deferred.promise.nodeify(callback);
 };
 
-TokenGeneratorBase.prototype.getToken = function (content, options, callback) {
+TokenGeneratorBase.prototype.getToken = function (userId, callback) {
     var deferred = Q.defer();
     deferred.reject(new Error('TokenGeneratorBase.getToken is not implemented!'));
     return deferred.promise.nodeify(callback);

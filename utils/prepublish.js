@@ -55,7 +55,7 @@ function prepublish() {
             // TODO: This is a temporary fix since jsdoc doesn't provide a module to load.
             // TODO: Path to the template in the jsdoc.json does not match for npm > 3 when webgme
             // TODO: is installed in another repo. This does not apply when webgme is published on npm.
-            console.warn('SKIP_DOC environment variable is set, skipping docs scripts.');
+            console.warn('SKIP_JS_DOC environment variable is set, skipping docs scripts.');
         } else {
             console.log('Generating webgme docs/source ...');
             require('jsdoc/jsdoc');

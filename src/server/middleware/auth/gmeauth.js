@@ -43,12 +43,8 @@ function GMEAuth(session, gmeConfig) {
         tokenGenerator = new TokenGenerator(logger, gmeConfig, jwt),
         Authorizer = require(gmeConfig.authentication.authorizer.path),
         authorizer = new Authorizer(logger, gmeConfig),
-    // JWT Keys
-        PUBLIC_KEY,
-        jwtOptions = {
-            algorithm: 'RS256',
-            expiresIn: gmeConfig.authentication.jwt.expiresIn
-        };
+        // JWT Keys
+        PUBLIC_KEY;
 
     EventDispatcher.call(this);
 
@@ -253,7 +249,7 @@ function GMEAuth(session, gmeConfig) {
 
         return authenticateUser(userId, password)
             .then(function () {
-                return tokenGenerator.getToken({userId: userId}, jwtOptions);
+                return tokenGenerator.getToken(userId);
             })
             .nodeify(callback);
     }
@@ -267,7 +263,7 @@ function GMEAuth(session, gmeConfig) {
                     throw new Error('no such user [' + userId + ']');
                 }
 
-                return tokenGenerator.getToken({userId: userId}, jwtOptions);
+                return tokenGenerator.getToken(userId);
             })
             .nodeify(callback);
     }
@@ -276,14 +272,14 @@ function GMEAuth(session, gmeConfig) {
         logger.debug('Regenerate token..');
         return verifyJWToken(token)
             .then(function (result) {
-                return tokenGenerator.getToken({userId: result.content.userId}, jwtOptions);
+                return tokenGenerator.getToken(result.content.userId);
             })
             .nodeify(callback);
     }
 
     function verifyJWToken(token, callback) {
         logger.debug('Verifying token..');
-        return Q.ninvoke(jwt, 'verify', token, PUBLIC_KEY, {algorithms: ['RS256']})
+        return Q.ninvoke(jwt, 'verify', token, PUBLIC_KEY, {algorithms: [gmeConfig.authentication.jwt.algorithm]})
             .then(function (content) {
                 var result = {
                     content: content,
