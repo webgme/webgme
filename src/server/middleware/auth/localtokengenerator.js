@@ -30,8 +30,8 @@ function LocalTokenGenerator(mainLogger, gmeConfig, jwt) {
             .nodeify(callback);
     };
 
-    this.getToken = function (content, options) {
-        return Q.ninvoke(jwt, 'sign', content, self.privateKey, options);
+    this.getToken = function (content, options, callback) {
+        return Q.ninvoke(jwt, 'sign', content, self.privateKey, options).nodeify(callback);
     };
 }
 
