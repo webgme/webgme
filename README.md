@@ -5,10 +5,17 @@
 
 #Getting started
 
-WebGME requires [NodeJS](https://nodejs.org/) (0.12 <= version, CI tests are performed on versions 4.x, 6.x and LTS is recommended) and [MongoDB](https://www.mongodb.com/) (version >= 2.6) installed on the host system (the server).
-In addition the npm installation requires [Git](https://git-scm.com) to be installed and available in PATH.
+### Dependencies
+#### Server
+ - [NodeJS](https://nodejs.org/) (0.12 <= version, CI tests are performed on versions 4.x, 6.x and LTS is recommended).
+ - [MongoDB](https://www.mongodb.com/) (version >= 2.6).
+ - [Git](https://git-scm.com) (must be available in PATH).
 
-Options to deploy and run WebGME:
+#### Browser
+We aim to support all the major modern browsers. However we recommend using Chrome for two reasons: manual testing is mostly done using chrome and all performance profiling is done against the [V8 JavaScript Engine](https://en.wikipedia.org/wiki/V8_(JavaScript_engine)).
+
+### Using WebGME
+You can always try out webgme at our public deployment at [webgme.org](https://webgme.org). After a certain point you probably want to host your own server with custom running code and visualization. At this point follow the instructions at 1.
 
 1. [webgme-cli](https://github.com/webgme/webgme-cli). This is the preferred way of using webgme as it allows you to:
  * Automatically generate boilerplate code for [extension components](#extension-components) (w/o manually configuring paths etc.).
