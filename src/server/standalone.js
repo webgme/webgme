@@ -406,6 +406,50 @@ function StandAloneServer(gmeConfig) {
                         next(err);
                     }
                 });
+        } else if (req.query.token) {
+            logger.debug('jwtoken provided in url query string');
+            token = req.query.token;
+            __gmeAuth.verifyJWToken(token)
+                .then(function (result) {
+                    if (result.renew === true) {
+                        __gmeAuth.regenerateJWToken(token)
+                            .then(function (newToken) {
+                                req.userData = {
+                                    token: newToken,
+                                    newToken: true,
+                                    userId: result.content.userId
+                                };
+                                logger.debug('generated new token for user', result.content.userId);
+                                res.cookie(gmeConfig.authentication.jwt.cookieId, newToken);
+                                // Status code for new token??
+                                next();
+                            })
+                            .catch(next);
+                    } else {
+                        req.userData = {
+                            token: token,
+                            userId: result.content.userId
+                        };
+
+                        res.cookie(gmeConfig.authentication.jwt.cookieId, token);
+                        next();
+                    }
+                })
+                .catch(function (err) {
+                    if (err.name === 'TokenExpiredError') {
+                        res.clearCookie(gmeConfig.authentication.jwt.cookieId);
+                        if (res.getHeader('X-WebGME-Media-Type') || !gmeConfig.authentication.logInUrl) {
+                            res.status(401);
+                            next(err);
+                        } else {
+                            res.redirect(gmeConfig.authentication.logInUrl);
+                        }
+                    } else {
+                        logger.error('Cookie verification failed', err);
+                        res.status(401);
+                        next(err);
+                    }
+                });
         } else if (req.cookies[gmeConfig.authentication.jwt.cookieId]) {
             logger.debug('jwtoken provided in cookie');
             token = req.cookies[gmeConfig.authentication.jwt.cookieId];
