@@ -5,7 +5,11 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CONSTANTS) {
+define([
+    'common/core/CoreAssert',
+    'common/core/constants',
+    'common/core/tasync'
+], function (ASSERT, CONSTANTS, TASYNC) {
     'use strict';
 
     function SetCore(innerCore, options) {
@@ -260,7 +264,7 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
             var value;
 
             do {
-                value = getOwnPropertyValue(node,  propertyCollectionName, propertyName, setName, memberPath);
+                value = getOwnPropertyValue(node, propertyCollectionName, propertyName, setName, memberPath);
                 if (value !== undefined) {
                     return value;
                 }
@@ -278,6 +282,20 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
                 self.createSet(node, setName);
             }
         }
+
+        function loadNodesOfPaths(root, paths) {
+            var nodes = [],
+                i,
+                rootHash = self.getHash(root);
+
+            return TASYNC.call(function () {
+                for (i = 0; i < paths.length; i += 1) {
+                    nodes[i] = self.loadByPath(root, paths[i]);
+                }
+                return TASYNC.lift(nodes);
+            }, self.loadPaths(rootHash, paths));
+        }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -569,6 +587,13 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
             }
         };
 
+        this.loadMembers = function (node, setName) {
+            return loadNodesOfPaths(self.getRoot(node), self.getMemberPaths(node, setName));
+        };
+
+        this.loadOwnMembers = function (node, setName) {
+            return loadNodesOfPaths(self.getRoot(node), self.getOwnMemberPaths(node, setName));
+        };
         //</editor-fold>
     }
 
