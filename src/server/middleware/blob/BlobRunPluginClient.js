@@ -12,8 +12,11 @@
 var BlobClientClass = requireJS('blob/BlobClient'),
     BlobMetadata = requireJS('blob/BlobMetadata'),
     Q = require('q'),
+    fs = require('fs'),
+    path = require('path'),
     BufferStreamReader = require('../../util/BufferStreamReader'),
-    StringStreamWriter = require('../../util/StringStreamWriter');
+    StringStreamWriter = require('../../util/StringStreamWriter'),
+    ensureDir = require('../../util/ensureDir');
 
 /**
  * Initializes a new instance of a server side file system object.
@@ -23,9 +26,14 @@ var BlobClientClass = requireJS('blob/BlobClient'),
  * @param {{}} parameters
  * @constructor
  */
-function BlobRunPluginClient(blobBackend, logger) {
+function BlobRunPluginClient(blobBackend, logger, opts) {
     BlobClientClass.call(this, {logger: logger});
     this.blobBackend = blobBackend;
+    this.writeBlobFilesDir = opts && opts.writeBlobFilesDir;
+    if (this.writeBlobFilesDir) {
+        this.logger.warn('writeBlobFilesDir given, will also write blobs to',
+            path.join(process.cwd(), this.writeBlobFilesDir));
+    }
 }
 
 // Inherits from BlobClient
@@ -87,7 +95,9 @@ BlobRunPluginClient.prototype.putMetadata = function (metadataDescriptor, callba
 
 
 BlobRunPluginClient.prototype.putFile = function (name, data, callback) {
-    var deferred = Q.defer();
+    var deferred = Q.defer(),
+        self = this,
+        filePath;
 
     if (Buffer.isBuffer(data)) {
         data = new BufferStreamReader(data);
@@ -101,7 +111,24 @@ BlobRunPluginClient.prototype.putFile = function (name, data, callback) {
         }
     });
 
-    return deferred.promise.nodeify(callback);
+    if (this.writeBlobFilesDir) {
+        filePath = path.join(process.cwd(), this.writeBlobFilesDir, name);
+
+        return ensureDir(path.dirname(filePath))
+            .then(function () {
+                return Q.all([
+                    deferred.promise,
+                    Q.ninvoke(fs, 'writeFile', filePath, data)
+                ]);
+            })
+            .then(function (res) {
+                self.logger.info('Wrote file to', filePath);
+                return res[0]; // The hash
+            })
+            .nodeify(callback);
+    } else {
+        return deferred.promise.nodeify(callback);
+    }
 };
 
 module.exports = BlobRunPluginClient;

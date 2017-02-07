@@ -9,7 +9,8 @@
 'use strict';
 
 var path = require('path'),
-    fs = require('fs');
+    fs = require('fs'),
+    Q = require('q');
 
 function _ensureDir(dir, mode, callback) {
     var existsFunction = fs.exists || path.exists;
@@ -54,6 +55,8 @@ function _ensureDir(dir, mode, callback) {
  */
 
 function ensureDir(dir, mode, callback) {
+    var deferred = Q.defer();
+
     if (mode && typeof mode === 'function') {
         callback = mode;
         mode = null;
@@ -63,10 +66,15 @@ function ensureDir(dir, mode, callback) {
     mode = mode || parseInt('0777', 8) & (~process.umask());
     //jshint bitwise: true
 
-    callback = callback || function () {
-    };
+    _ensureDir(dir, mode, function (err) {
+        if (err) {
+            deferred.reject(err);
+        } else {
+            deferred.resolve();
+        }
+    });
 
-    _ensureDir(dir, mode, callback);
+    return deferred.promise.nodeify(callback);
 }
 
 module.exports = ensureDir;

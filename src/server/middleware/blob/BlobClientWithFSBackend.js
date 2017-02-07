@@ -9,9 +9,9 @@ var Q = require('q'),
     BlobFSBackend = require('./BlobFSBackend'),
     BlobRunPluginClient = require('./BlobRunPluginClient');
 
-function BlobClientWithFSBackend(gmeConfig, logger) {
+function BlobClientWithFSBackend(gmeConfig, logger, opts) {
     var blobBackend = new BlobFSBackend(gmeConfig, logger),
-        blobClient = new BlobRunPluginClient(blobBackend, logger);
+        blobClient = new BlobRunPluginClient(blobBackend, logger, opts);
 
     blobClient.listObjects = function (bucket, callback) {
         var deferred = Q.defer();
