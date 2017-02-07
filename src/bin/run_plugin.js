@@ -50,6 +50,7 @@ main = function (argv, callback) {
         .option('-u, --user [string]', 'the user of the command [if not given we use the default user]',
             gmeConfig.authentication.guestAccount)
         .option('-o, --owner [string]', 'the owner of the project [by default, the user is the owner]')
+        .option('-w, --writeBlobFilesDir [string]', 'If defined will also write blob-files to %cwd%/%writeBlobFilesDir%')
         .option('-j, --pluginConfigPath [string]',
             'Path to json file with plugin options that should be overwritten.', '')
 
@@ -63,6 +64,7 @@ main = function (argv, callback) {
             console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -a /1/b');
             console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -s /1,/1/c,/d');
             console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -c #123..');
+            console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -w plugin-blobs');
             console.log('    $ node run_plugin.js MinimalWorkingExample TestProject -b b1 -c ' +
                 '#def8861ca16237e6756ee22d27678d979bd2fcde');
             console.log();
@@ -141,7 +143,9 @@ main = function (argv, callback) {
             return project.getBranchHash(program.branchName);
         })
         .then(function (commitHash) {
-            var pluginManager = new PluginCliManager(project, logger, gmeConfig),
+            var pluginManager = new PluginCliManager(project, logger, gmeConfig, {
+                    writeBlobFilesDir: program.writeBlobFilesDir
+            }),
                 context = {
                     activeNode: program.activeNode,
                     activeSelection: program.activeSelection || [],

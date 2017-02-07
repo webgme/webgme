@@ -13,11 +13,13 @@ var PluginManagerBase = requireJS('plugin/managerbase'),
  * @param {UserProject} [project] - optional default project, can be passed during initialization of plugin too.
  * @param {object} - mainLogger - logger for manager, plugin-logger will fork from this logger.
  * @param {object} gmeConfig - global configuration
+ * @param {object} [opts] - Optional options
+ * @param {object} [opts.writeBlobFilesDir] - If defined will put blob files with their name inside %cwd%/%writeBlobFilesDir%
  * @constructor
  * @ignore
  */
-function PluginCliManager(project, mainLogger, gmeConfig) {
-    var blobClient = new BlobClientWithFSBackend(gmeConfig, mainLogger);
+function PluginCliManager(project, mainLogger, gmeConfig, opts) {
+    var blobClient = new BlobClientWithFSBackend(gmeConfig, mainLogger, opts);
 
     PluginManagerBase.call(this, blobClient, project, mainLogger, gmeConfig);
 }

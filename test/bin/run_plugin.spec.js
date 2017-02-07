@@ -209,5 +209,30 @@ describe('Run plugin CLI', function () {
                 .nodeify(done);
         });
 
+        it('should run the AddOnGenerator and put files in plugin-blobs if -w specified', function (done) {
+            testFixture.rimraf(testFixture.path.join(process.cwd(), 'test-tmp/plugin-blobs'), function (err) {
+                if (err) {
+                    done(err);
+                    return;
+                }
+
+                runPlugin.main(['node', filename, 'AddOnGenerator', projectName, '-w', 'test-tmp/plugin-blobs'],
+                    function (err, result) {
+                        if (err) {
+                            done(new Error(err));
+                            return;
+                        }
+                        expect(result.success).to.equal(true);
+                        expect(result.error).to.equal(null);
+
+                        expect(testFixture.fs.existsSync(
+                            testFixture.path.join(process.cwd(), 'test-tmp/plugin-blobs/NewAddOn.js'))
+                        ).to.equal(true);
+                        done();
+                    }
+                );
+            });
+        });
+
     });
 });
