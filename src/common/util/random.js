@@ -7,7 +7,7 @@
  * collection of functions that uses random Numbers in WebGME
  */
 
-define(['chance'], function (ChanceJs) {
+define(['chance', 'common/Constants'], function (ChanceJs, CONSTANTS) {
     'use strict';
 
     function _generateRelidRegexp() {
@@ -70,6 +70,31 @@ define(['chance'], function (ChanceJs) {
         return relidRegexp.test(relid);
     }
 
+    function isValidPath(path) {
+        var relid;
+
+        if (path === CONSTANTS.PROJECT_ROOT_ID) {
+            return true;
+        }
+
+        path = path.split(CONSTANTS.CORE.PATH_SEP);
+
+        relid = path.shift();
+
+        if (relid !== CONSTANTS.PROJECT_ROOT_ID) {
+            return false;
+        }
+
+        do {
+            relid = path.shift();
+            if (typeof relid === 'string' && relidRegexp.test(relid) === false) {
+                return false;
+            }
+        } while (relid);
+
+        return true;
+    }
+
     function relidToInteger(relid) {
         var num = 'NaN',
             negative = false,
@@ -104,6 +129,7 @@ define(['chance'], function (ChanceJs) {
             generateGuid: generateGuid,
             generateRelid: generateRelid,
             isValidRelid: isValidRelid,
+            isValidPath: isValidPath,
             relidToInteger: relidToInteger
         };
 

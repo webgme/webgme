@@ -242,6 +242,122 @@ describe('core diff', function () {
             });
         });
 
+        it('should generate diff if set attribute or registry changes', function (done) {
+            var patch = {
+                1303043463: {
+                    2119137141: {
+                        set: {
+                            setPtr: {
+                                attr: {
+                                    something: 'newValue'
+                                },
+                                reg: {
+                                    other: 42
+                                }
+                            }
+                        },
+                        guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                        oGuids: {
+                            '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true
+                        }
+                    },
+                    guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                    oGuids: {
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                    }
+                },
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+            };
+
+            core.applyTreeDiff(rootNode, patch, function (err) {
+                if (err) {
+                    return done(err);
+                }
+
+                var persisted = core.persist(rootNode);
+
+                core.generateTreeDiff(originalRootNode, rootNode, function (err, diff) {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    expect(diff).to.deep.equal(patch);
+                    done();
+                });
+            });
+        });
+
+        it('should generate complex set related diff', function (done) {
+            var patch = {
+                1303043463: {
+                    2119137141: {
+                        set: {
+                            setPtr: {
+                                attr: {
+                                    something: 'newValue'
+                                },
+                                '/1303043463/1448030591': {
+                                    attr: {
+                                        elevation: 'high'
+                                    }
+                                },
+                                '/1303043463/1044885565':{
+                                    reg:{
+                                        position:'*to*delete*'
+                                    }
+                                }
+                            }
+                        },
+                        guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                        oGuids: {
+                            '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true
+                        }
+                    },
+                    guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                    oGuids: {
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                    }
+                },
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+            };
+
+            core.applyTreeDiff(rootNode, patch, function (err) {
+                if (err) {
+                    return done(err);
+                }
+
+                var persisted = core.persist(rootNode);
+
+                core.generateTreeDiff(originalRootNode, rootNode, function (err, diff) {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    expect(diff).to.deep.equal(patch);
+                    done();
+                });
+            });
+        });
     });
 
     describe('tryToConcatChanges', function () {

@@ -185,7 +185,16 @@ define(['common/util/canon',
 
                     names = self.getSetNames(node);
                     for (i = 0; i < names.length; i++) {
-                        data[names[i]] = {};
+                        data[names[i]] = {attr: {}, reg: {}};
+                        keys = self.getOwnSetAttributeNames(node, names[i]);
+                        for (j = 0; j < keys.length; j += 1) {
+                            data[names[i]].attr[keys[j]] = self.getSetAttribute(node, names[i], keys[j]);
+                        }
+                        keys = self.getOwnSetRegistryNames(node, names[i]);
+                        for (j = 0; j < keys.length; j += 1) {
+                            data[names[i]].reg[keys[j]] = self.getSetRegistry(node, names[i], keys[j]);
+                        }
+
                         targets = self.getMemberPaths(node, names[i]);
                         for (j = 0; j < targets.length; j++) {
                             data[names[i]][targets[j]] = {attr: {}, reg: {}};
@@ -1143,27 +1152,27 @@ define(['common/util/canon',
 
         function addMember(node, name, target, data) {
             var memberAttrSetting = function (diff) {
-                    var keys = self.getMemberOwnAttributeNames(node, name, target),
-                        i;
-                    for (i = 0; i < keys.length; i++) {
-                        self.delMemberAttribute(node, name, target, keys[i]);
-                    }
+                    var keys, i;
 
                     keys = Object.keys(diff);
                     for (i = 0; i < keys.length; i++) {
-                        self.setMemberAttribute(node, name, target, keys[i], diff[keys[i]]);
+                        if (diff[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                            self.delMemberAttribute(node, name, target, keys[i]);
+                        } else {
+                            self.setMemberAttribute(node, name, target, keys[i], diff[keys[i]]);
+                        }
                     }
                 },
                 memberRegSetting = function (diff) {
-                    var keys = self.getMemberOwnRegistryNames(node, name, target),
-                        i;
-                    for (i = 0; i < keys.length; i++) {
-                        self.delMemberRegistry(node, name, target, keys[i]);
-                    }
+                    var keys, i;
 
                     keys = Object.keys(diff);
                     for (i = 0; i < keys.length; i++) {
-                        self.setMemberRegistry(node, name, target, keys[i], diff[keys[i]]);
+                        if (diff[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                            self.delMemberRegistry(node, name, target, keys[i]);
+                        } else {
+                            self.setMemberRegistry(node, name, target, keys[i], diff[keys[i]]);
+                        }
                     }
                 };
             return TASYNC.call(function (t) {
@@ -1183,12 +1192,37 @@ define(['common/util/canon',
                     self.deleteSet(node, setNames[i]);
                 } else {
                     self.createSet(node, setNames[i]);
+                    if ((Object.keys(setDiff[setNames[i]].attr || {})).length > 0) {
+                        elements = Object.keys(setDiff[setNames[i]].attr);
+                        for (j = 0; j < elements.length; j += 1) {
+                            if (setDiff[setNames[i]].attr[elements[j]] === CONSTANTS.TO_DELETE_STRING) {
+                                self.delSetAttribute(node, setNames[i], elements[j]);
+                            } else {
+                                self.setSetAttribute(node, setNames[i], elements[j],
+                                    setDiff[setNames[i]].attr[elements[j]]);
+                            }
+                        }
+                    }
+                    if ((Object.keys(setDiff[setNames[i]].reg || {})).length > 0) {
+                        elements = Object.keys(setDiff[setNames[i]].reg);
+                        for (j = 0; j < elements.length; j += 1) {
+                            if (setDiff[setNames[i]].reg[elements[j]] === CONSTANTS.TO_DELETE_STRING) {
+                                self.delSetRegistry(node, setNames[i], elements[j]);
+                            } else {
+                                self.setSetRegistry(node, setNames[i], elements[j],
+                                    setDiff[setNames[i]].reg[elements[j]]);
+                            }
+                        }
+                    }
+
                     elements = Object.keys(setDiff[setNames[i]]);
                     for (j = 0; j < elements.length; j++) {
-                        if (setDiff[setNames[i]][elements[j]] === CONSTANTS.TO_DELETE_STRING) {
-                            self.delMember(node, setNames[i], elements[j]);
-                        } else {
-                            done = addMember(node, setNames[i], elements[j], setDiff[setNames[i]][elements[j]]);
+                        if (RANDOM.isValidPath(elements[j])) {
+                            if (setDiff[setNames[i]][elements[j]] === CONSTANTS.TO_DELETE_STRING) {
+                                self.delMember(node, setNames[i], elements[j]);
+                            } else {
+                                done = addMember(node, setNames[i], elements[j], setDiff[setNames[i]][elements[j]]);
+                            }
                         }
                     }
                 }
