@@ -100,6 +100,7 @@ define([
             self._logger.debug('openProject requested, already opening?', self._openingProject);
             if (self._projectList[projectId].rights.read === true && self._openingProject === false) {
                 self._openingProject = true;
+                self._dialog.modal('hide');
                 self._client.selectProject(projectId, null, function (err) {
                     self._openingProject = false;
                     if (err) {
@@ -107,7 +108,6 @@ define([
                     } else {
                         //WebGMEGlobal.State.registerActiveObject(CONSTANTS.PROJECT_ROOT_ID);
                     }
-                    self._dialog.modal('hide');
                 });
             }
         }
