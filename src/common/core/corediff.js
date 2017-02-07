@@ -1718,6 +1718,29 @@ define(['common/util/canon',
                 conflict = _conflictTheirs;
                 opposingConflict = _conflictMine[opposingPath];
             }
+
+            //set attributes and registry entries
+            keys = Object.keys(diffSet.attr || {});
+            for (j = 0; j < keys.length; j++) {
+                conflict[path + '/attr/' + keys[j]] =
+                    conflict[path + '/attr/' + keys[j]] || {
+                        value: diffSet.attr[keys[j]],
+                        conflictingPaths: {}
+                    };
+                conflict[path + '/attr/' + keys[j]].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path + '/attr/' + keys[j]] = true;
+            }
+            keys = Object.keys(diffSet.reg || {});
+            for (j = 0; j < keys.length; j++) {
+                conflict[path + '/reg/' + keys[j]] =
+                    conflict[path + '/reg/' + keys[j]] || {
+                        value: diffSet.reg[keys[j]],
+                        conflictingPaths: {}
+                    };
+                conflict[path + '/reg/' + keys[j]].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path + '/reg/' + keys[j]] = true;
+            }
+
             for (i = 0; i < relids.length; i++) {
                 if (diffSet[relids[i]] === CONSTANTS.TO_DELETE_STRING) {
                     //single conflict as the element was removed
@@ -1797,6 +1820,19 @@ define(['common/util/canon',
                             };
                             gatherFullSetConflicts(base[names[i]], true, path + '/' + names[i], path + '/' + names[i]);
                         } else {
+                            //now check the set attribute and registry differences
+                            if (base[names[i]].attr && extension[names[i]].attr) {
+                                concatSingleKeyValuePairs(path + '/' +
+                                    names[i] + '/attr',
+                                    base[names[i]].attr,
+                                    extension[names[i]].attr);
+                            }
+                            if (base[names[i]].reg && extension[names[i]].reg) {
+                                concatSingleKeyValuePairs(path + '/' +
+                                    names[i] + '/reg',
+                                    base[names[i]].reg,
+                                    extension[names[i]].reg);
+                            }
                             //now we can only have member or sub-member conflicts...
                             members = getDiffChildrenRelids(extension[names[i]]);
                             for (j = 0; j < members.length; j++) {
