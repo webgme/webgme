@@ -315,10 +315,10 @@ define([
     SVGDecoratorDiagramDesignerWidget.prototype._updateDropArea = function () {
         // enable/disable drag events based on pointers and if it's replaceable.
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            setNames = nodeObj.getValidSetNames();
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
 
-        if (this._getPointerNames().length > 0 || this._isReplaceable() || setNames.length > 0) {
+        if (nodeObj && (this._getPointerNames().length > 0 || this._isReplaceable() ||
+            nodeObj.getValidSetNames().length > 0)) {
             this._enableDragEvents();
         } else {
             this._disableDragEvents();
