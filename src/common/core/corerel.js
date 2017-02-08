@@ -451,6 +451,7 @@ define([
         this.deleteChild = function (parent, relid) {
             var prefix = '/' + relid;
             innerCore.deleteProperty(parent, relid);
+            innerCore.removeChildFromCache(parent, relid);
             if (parent.childrenRelids) {
                 parent.childrenRelids = null;
             }

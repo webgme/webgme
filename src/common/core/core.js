@@ -1726,7 +1726,8 @@ define([
         this.getOwnMemberPaths = function (node, name) {
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
-            var names = core.getSetNames(node).concat(core.getValidSetNames(node));;
+            var names = core.getSetNames(node).concat(core.getValidSetNames(node));
+
             if (names.indexOf(name) === -1) {
                 throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
             }
@@ -3811,6 +3812,54 @@ define([
                 callback(error);
             } else {
                 core.loadInstances(node, callback);
+            }
+        };
+
+        /**
+         * Loads all the members of the given set of the node.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} setName - the name of the set in question.
+         * @param {function} [callback]
+         * @param {Error|CoreIllegalArgumentError|CoreAssertError|null} callback.error - the status of the execution.
+         * @param {module:Core~Node[]} callback.nodes - the found members of the set of the node.
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise
+         * like manner.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         */
+        this.loadMembers = function (node, setName, callback) {
+            ensureType(setName, 'setName', 'string');
+            ensureType(callback, 'callback', 'function');
+            var error = ensureNode(node, 'node', true);
+            if (error) {
+                callback(error);
+            } else {
+                core.loadMembers(node, setName, callback);
+            }
+        };
+
+        /**
+         * Loads all the own members of the given set of the node.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} setName - the name of the set in question.
+         * @param {function} [callback]
+         * @param {Error|CoreIllegalArgumentError|CoreAssertError|null} callback.error - the status of the execution.
+         * @param {module:Core~Node[]} callback.nodes - the found own members of the set of the node.
+         *
+         * @return {External~Promise} If no callback is given, the result will be provided in a promise
+         * like manner.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         */
+        this.loadOwnMembers = function (node, setName, callback) {
+            ensureType(setName, 'setName', 'string');
+            ensureType(callback, 'callback', 'function');
+            var error = ensureNode(node, 'node', true);
+            if (error) {
+                callback(error);
+            } else {
+                core.loadOwnMembers(node, setName, callback);
             }
         };
     }

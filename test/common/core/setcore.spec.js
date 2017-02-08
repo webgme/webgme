@@ -918,4 +918,70 @@ describe('set core', function () {
         persisted = core.persist(root).objects;
         expect(persisted).to.deep.equal({});
     });
+
+    it('should load members correctly', function (done) {
+        var set = core.createNode({parent: root}),
+            memberOne = core.createNode({parent: root, relid: 'm1'}),
+            memberTwo = core.createNode({parent: root, relid: 'm2'});
+
+        core.addMember(set, 'members', memberOne);
+        core.addMember(set, 'members', memberTwo);
+
+        core.loadMembers(set, 'members', function (err, members) {
+            expect(err === null || err === undefined).to.equal(true);
+
+            var memberPaths = [],
+                i;
+
+            expect(members).to.have.length(2);
+            for (i = 0; i < members.length; i += 1) {
+                memberPaths.push(core.getPath(members[i]));
+            }
+            expect(core.getMemberPaths(set, 'members')).to.have.members(memberPaths);
+            done();
+        });
+
+    });
+
+    it('should load own members correctly', function (done) {
+        var set = core.createNode({parent: root}),
+            memberOne = core.createNode({parent: root, relid: 'm1'}),
+            memberTwo = core.createNode({parent: root, relid: 'm2'}),
+            setInstance = core.createNode({parent: root, base: set}),
+            memberThree = core.createNode({parent: root, relid: 'm3'});
+
+        core.addMember(set, 'members', memberOne);
+        core.addMember(set, 'members', memberTwo);
+
+        core.addMember(setInstance, 'members', memberThree);
+
+        core.loadOwnMembers(setInstance, 'members', function (err, members) {
+            expect(err === null || err === undefined).to.equal(true);
+
+            expect(members).to.have.length(1);
+            expect(core.getRelid(members[0])).to.equal('m3');
+
+            core.loadMembers(setInstance, 'members', function (err, members) {
+                expect(err === null || err === undefined).to.equal(true);
+
+                expect(members).to.have.length(3);
+
+                done();
+            });
+        });
+
+    });
+
+    it('should return empty array for loading members of unknown set', function (done) {
+        var set = core.createNode({parent: root});
+
+        core.loadMembers(set, 'anything', function (err, members) {
+            expect(err === null || err === undefined).to.equal(true);
+
+            expect(members).to.have.length(0);
+
+            done();
+        });
+
+    });
 });

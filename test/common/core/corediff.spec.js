@@ -242,6 +242,122 @@ describe('core diff', function () {
             });
         });
 
+        it('should generate diff if set attribute or registry changes', function (done) {
+            var patch = {
+                1303043463: {
+                    2119137141: {
+                        set: {
+                            setPtr: {
+                                attr: {
+                                    something: 'newValue'
+                                },
+                                reg: {
+                                    other: 42
+                                }
+                            }
+                        },
+                        guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                        oGuids: {
+                            '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true
+                        }
+                    },
+                    guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                    oGuids: {
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                    }
+                },
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+            };
+
+            core.applyTreeDiff(rootNode, patch, function (err) {
+                if (err) {
+                    return done(err);
+                }
+
+                var persisted = core.persist(rootNode);
+
+                core.generateTreeDiff(originalRootNode, rootNode, function (err, diff) {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    expect(diff).to.deep.equal(patch);
+                    done();
+                });
+            });
+        });
+
+        it('should generate complex set related diff', function (done) {
+            var patch = {
+                1303043463: {
+                    2119137141: {
+                        set: {
+                            setPtr: {
+                                attr: {
+                                    something: 'newValue'
+                                },
+                                '/1303043463/1448030591': {
+                                    attr: {
+                                        elevation: 'high'
+                                    }
+                                },
+                                '/1303043463/1044885565': {
+                                    reg: {
+                                        position: '*to*delete*'
+                                    }
+                                }
+                            }
+                        },
+                        guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5',
+                        oGuids: {
+                            '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true
+                        }
+                    },
+                    guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
+                    oGuids: {
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                    }
+                },
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+            };
+
+            core.applyTreeDiff(rootNode, patch, function (err) {
+                if (err) {
+                    return done(err);
+                }
+
+                var persisted = core.persist(rootNode);
+
+                core.generateTreeDiff(originalRootNode, rootNode, function (err, diff) {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    expect(diff).to.deep.equal(patch);
+                    done();
+                });
+            });
+        });
     });
 
     describe('tryToConcatChanges', function () {
@@ -702,6 +818,243 @@ describe('core diff', function () {
                 .to.equal('/1303043463/2119137141/set/setPtr//1303043463/1448030591//reg/position');
             expect(result.items[0].theirs.path).to.equal('/1303043463/2119137141/set/setPtr');
             expect(result.items[0].theirs.value).to.equal('*to*delete*');
+        });
+
+        it('should handle complex set changes without conflict', function () {
+            var result,
+                diff1 = {
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: {
+                                    attr: {one: 'two'},
+                                    reg: {three: 'four'},
+                                    '/1303043463/1448030591': {
+                                        reg: {
+                                            position: {
+                                                x: 500,
+                                                y: 200
+                                            }
+                                        },
+                                        attr: {
+                                            one: 'two'
+                                        }
+                                    }
+                                }
+                            },
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                        },
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+                },
+                diff2 = {
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: {
+                                    attr: {one: 'two'},
+                                    reg: {five: 'six'},
+                                    '/1303043463/1448030591': {
+                                        attr: {
+                                            one: 'two',
+                                            five: 'six'
+                                        }
+                                    }
+                                }
+                            },
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                        },
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+                };
+
+            result = core.tryToConcatChanges(diff1, diff2);
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(0);
+            expect(result.merge[1303043463][2119137141].set.setPtr).to.eql({
+                attr: {one: 'two'},
+                reg: {
+                    three: 'four',
+                    five: 'six'
+                },
+                '/1303043463/1448030591': {
+                    attr: {
+                        one: 'two',
+                        five: 'six'
+                    },
+                    reg: {
+                        position: {
+                            x: 500,
+                            y: 200
+                        }
+                    }
+                }
+            });
+
+            result = core.tryToConcatChanges(diff2, diff1);
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(0);
+            expect(result.merge[1303043463][2119137141].set.setPtr).to.eql({
+                attr: {one: 'two'},
+                reg: {
+                    three: 'four',
+                    five: 'six'
+                },
+                '/1303043463/1448030591': {
+                    attr: {
+                        one: 'two',
+                        five: 'six'
+                    },
+                    reg: {
+                        position: {
+                            x: 500,
+                            y: 200
+                        }
+                    }
+                }
+            });
+        });
+
+        it('should handle complex set changes with conflict', function () {
+            var result,
+                diff1 = {
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: {
+                                    attr: {one: 'two'},
+                                    reg: {three: '*to*delete*'},
+                                    '/1303043463/1448030591': {
+                                        reg: {
+                                            position: {
+                                                x: 500,
+                                                y: 200
+                                            }
+                                        },
+                                        attr: {
+                                            one: 'two'
+                                        }
+                                    }
+                                }
+                            },
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                        },
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+                },
+                diff2 = {
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: {
+                                    attr: {one: 'four'},
+                                    reg: {three: 'six'},
+                                    '/1303043463/1448030591': {
+                                        attr: {
+                                            one: 'two',
+                                            five: '*to*delete*'
+                                        }
+                                    }
+                                }
+                            },
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                        },
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+                };
+
+            result = core.tryToConcatChanges(diff1, diff2);
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(2);
+            expect(result.items[0].mine.value).to.equal('two');
+            expect(result.items[0].theirs.value).to.equal('four');
+            expect(result.items[1].mine.value).to.equal('*to*delete*');
+            expect(result.items[1].theirs.value).to.equal('six');
+
+            result = core.tryToConcatChanges(diff2, diff1);
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(2);
+            expect(result.items[0].mine.value).to.equal('four');
+            expect(result.items[0].theirs.value).to.equal('two');
+            expect(result.items[1].theirs.value).to.equal('*to*delete*');
+            expect(result.items[1].mine.value).to.equal('six');
+        });
+
+        it('should handle complex ,whole set conflicts', function () {
+            var result,
+                diff1 = {
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: '*to*delete*'
+                            },
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                        },
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+                },
+                diff2 = {
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: {
+                                    attr: {one: 'four'},
+                                    reg: {three: 'six'},
+                                    '/1303043463/1448030591': {
+                                        attr: {
+                                            one: 'two',
+                                            five: '*to*delete*'
+                                        }
+                                    }
+                                }
+                            },
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                        },
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+                };
+
+            result = core.tryToConcatChanges(diff1, diff2);
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(4);
+            expect(result.items[0].mine.value).to.equal('*to*delete*');
+            expect(result.items[1].mine.value).to.equal('*to*delete*');
+            expect(result.items[2].mine.value).to.equal('*to*delete*');
+            expect(result.items[3].mine.value).to.equal('*to*delete*');
+            expect(result.items[0].theirs.value).to.equal('four');
+            expect(result.items[1].theirs.value).to.equal('six');
+            expect(result.items[2].theirs.value).to.equal('two');
+            expect(result.items[3].theirs.value).to.equal('*to*delete*');
+
+            result = core.tryToConcatChanges(diff2, diff1);
+
+            expect(result).not.to.equal(null);
+            expect(result).to.include.keys('items');
+            expect(result.items).to.have.length(4);
+            expect(result.items[0].mine.value).to.equal('four');
+            expect(result.items[1].mine.value).to.equal('six');
+            expect(result.items[2].mine.value).to.equal('two');
+            expect(result.items[3].mine.value).to.equal('*to*delete*');
+            expect(result.items[0].theirs.value).to.equal('*to*delete*');
+            expect(result.items[1].theirs.value).to.equal('*to*delete*');
+            expect(result.items[2].theirs.value).to.equal('*to*delete*');
+            expect(result.items[3].theirs.value).to.equal('*to*delete*');
         });
 
         //it('should tryToConcatChanges does nothing, and delete the set pointer', function () {
@@ -1518,6 +1871,68 @@ describe('core diff', function () {
             expect(resultPatch['1303043463']).to.include.keys('1763546084');
             expect(resultPatch['1303043463']['1763546084']).not.to.include.keys('1823288916');
 
+        });
+
+        it('should combine and resolve complex set conflicts', function () {
+            var resultConflict,
+                resultPatch,
+                diff1 = {
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: {
+                                    attr: {one: 'two'},
+                                    reg: {three: '*to*delete*'},
+                                    '/1303043463/1448030591': {
+                                        reg: {
+                                            position: {
+                                                x: 500,
+                                                y: 200
+                                            }
+                                        },
+                                        attr: {
+                                            one: 'two'
+                                        }
+                                    }
+                                }
+                            },
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                        },
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+                },
+                diff2 = {
+                    1303043463: {
+                        2119137141: {
+                            set: {
+                                setPtr: {
+                                    attr: {one: 'four'},
+                                    reg: {three: 'six'},
+                                    '/1303043463/1448030591': {
+                                        attr: {
+                                            one: 'two',
+                                            five: '*to*delete*'
+                                        }
+                                    }
+                                }
+                            },
+                            guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                        },
+                        guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+                };
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            resultConflict.items[0].selected = 'theirs';
+            resultPatch = core.applyResolution(resultConflict);
+
+            expect(resultPatch).not.to.equal(null);
+            expect(resultPatch).to.include.keys('1303043463');
+            expect(resultPatch['1303043463']).to.include.keys('2119137141');
+            expect(resultPatch['1303043463']['2119137141'].set.setPtr.attr.one).to.equal('four');
+            expect(resultPatch['1303043463']['2119137141'].set.setPtr.reg.three).to.equal('*to*delete*');
         });
     });
 
@@ -2345,6 +2760,105 @@ describe('core diff', function () {
                 })
                 .then(function (node) {
                     expect(core.getValidPointerNames(node)).to.have.length(0);
+                })
+                .nodeify(done);
+        });
+
+        it('should apply set removal', function (done) {
+            var patch = {
+                1303043463: {
+                    2119137141: {
+                        set: {
+                            setPtr: '*to*delete*'
+                        },
+                        guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                    },
+                    guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                },
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+            };
+
+            Q.nfcall(core.applyTreeDiff, rootNode, patch) // FIXME: what if it results in an error?
+                .then(function () {
+                    return Q.nfcall(core.loadByPath, rootNode, '/1303043463/2119137141');
+                })
+                .then(function (node) {
+                    expect(core.getOwnSetNames(node)).to.have.length(0);
+                })
+                .nodeify(done);
+        });
+
+        it('should apply set attribute and registry changes', function (done) {
+            var patch = {
+                1303043463: {
+                    2119137141: {
+                        set: {
+                            setPtr: {
+                                attr: {
+                                    one: 'two'
+                                },
+                                reg: {
+                                    three: 'four'
+                                }
+                            }
+                        },
+                        guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                    },
+                    guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                },
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+            };
+
+            Q.nfcall(core.applyTreeDiff, rootNode, patch) // FIXME: what if it results in an error?
+                .then(function () {
+                    return Q.nfcall(core.loadByPath, rootNode, '/1303043463/2119137141');
+                })
+                .then(function (node) {
+                    expect(core.getSetAttributeNames(node, 'setPtr')).to.eql(['one']);
+                    expect(core.getSetAttribute(node, 'setPtr', 'one')).to.eql('two');
+                    expect(core.getSetRegistryNames(node, 'setPtr')).to.eql(['three']);
+                    expect(core.getSetRegistry(node, 'setPtr', 'three')).to.eql('four');
+
+                    patch[1303043463][2119137141].set.setPtr.attr.one = '*to*delete*';
+                    patch[1303043463][2119137141].set.setPtr.reg.three = '*to*delete*';
+
+                    return Q.nfcall(core.applyTreeDiff, rootNode, patch);
+                })
+                .then(function () {
+                    return Q.nfcall(core.loadByPath, rootNode, '/1303043463/2119137141');
+                })
+                .then(function (node) {
+                    expect(core.getSetAttributeNames(node, 'setPtr')).to.eql([]);
+                    expect(core.getSetAttribute(node, 'setPtr', 'one')).to.eql(undefined);
+                    expect(core.getSetRegistryNames(node, 'setPtr')).to.eql([]);
+                    expect(core.getSetRegistry(node, 'setPtr', 'three')).to.eql(undefined);
+
+                })
+                .nodeify(done);
+        });
+
+        it('should apply set member removal', function (done) {
+            var patch = {
+                1303043463: {
+                    2119137141: {
+                        set: {
+                            setPtr: {
+                                '/1303043463/1448030591': '*to*delete*'
+                            }
+                        },
+                        guid: '45657d4d-f82d-13ce-1acb-0aadebb5c8b5'
+                    },
+                    guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42'
+                },
+                guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0'
+            };
+
+            Q.nfcall(core.applyTreeDiff, rootNode, patch) // FIXME: what if it results in an error?
+                .then(function () {
+                    return Q.nfcall(core.loadByPath, rootNode, '/1303043463/2119137141');
+                })
+                .then(function (node) {
+                    expect(core.getMemberPaths(node, 'setPtr')).not.to.have.members(['/1303043463/1448030591']);
                 })
                 .nodeify(done);
         });

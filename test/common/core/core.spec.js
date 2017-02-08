@@ -118,7 +118,7 @@ describe('core', function () {
                 'removeLibrary', 'getLibraryGuid', 'renameLibrary', 'getLibraryInfo',
                 'getLibraryRoot', 'getLibraryMetaNodes', 'traverse', 'getClosureInformation',
                 'importClosure', 'getInstancePaths', 'loadInstances', 'delPointer', 'delSet',
-                'getMetaType'
+                'getMetaType', 'loadMembers', 'loadOwnMembers'
             ];
 
         expect(functions).to.have.members(Matches);

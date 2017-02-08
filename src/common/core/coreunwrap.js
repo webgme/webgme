@@ -99,6 +99,8 @@ define(['common/core/CoreAssert', 'common/core/tasync'], function (ASSERT, TASYN
             return TASYNC.call(checkNodes, innercore.loadInstances(node));
         });
 
+        core.loadMembers = TASYNC.unwrap(innercore.loadMembers);
+        core.loadOwnMembers = TASYNC.unwrap(innercore.loadOwnMembers);
 
         return core;
     };

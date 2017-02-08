@@ -185,7 +185,16 @@ define(['common/util/canon',
 
                     names = self.getSetNames(node);
                     for (i = 0; i < names.length; i++) {
-                        data[names[i]] = {};
+                        data[names[i]] = {attr: {}, reg: {}};
+                        keys = self.getOwnSetAttributeNames(node, names[i]);
+                        for (j = 0; j < keys.length; j += 1) {
+                            data[names[i]].attr[keys[j]] = self.getOwnSetAttribute(node, names[i], keys[j]);
+                        }
+                        keys = self.getOwnSetRegistryNames(node, names[i]);
+                        for (j = 0; j < keys.length; j += 1) {
+                            data[names[i]].reg[keys[j]] = self.getOwnSetRegistry(node, names[i], keys[j]);
+                        }
+
                         targets = self.getMemberPaths(node, names[i]);
                         for (j = 0; j < targets.length; j++) {
                             data[names[i]][targets[j]] = {attr: {}, reg: {}};
@@ -1143,27 +1152,27 @@ define(['common/util/canon',
 
         function addMember(node, name, target, data) {
             var memberAttrSetting = function (diff) {
-                    var keys = self.getMemberOwnAttributeNames(node, name, target),
-                        i;
-                    for (i = 0; i < keys.length; i++) {
-                        self.delMemberAttribute(node, name, target, keys[i]);
-                    }
+                    var keys, i;
 
                     keys = Object.keys(diff);
                     for (i = 0; i < keys.length; i++) {
-                        self.setMemberAttribute(node, name, target, keys[i], diff[keys[i]]);
+                        if (diff[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                            self.delMemberAttribute(node, name, target, keys[i]);
+                        } else {
+                            self.setMemberAttribute(node, name, target, keys[i], diff[keys[i]]);
+                        }
                     }
                 },
                 memberRegSetting = function (diff) {
-                    var keys = self.getMemberOwnRegistryNames(node, name, target),
-                        i;
-                    for (i = 0; i < keys.length; i++) {
-                        self.delMemberRegistry(node, name, target, keys[i]);
-                    }
+                    var keys, i;
 
                     keys = Object.keys(diff);
                     for (i = 0; i < keys.length; i++) {
-                        self.setMemberRegistry(node, name, target, keys[i], diff[keys[i]]);
+                        if (diff[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                            self.delMemberRegistry(node, name, target, keys[i]);
+                        } else {
+                            self.setMemberRegistry(node, name, target, keys[i], diff[keys[i]]);
+                        }
                     }
                 };
             return TASYNC.call(function (t) {
@@ -1183,12 +1192,37 @@ define(['common/util/canon',
                     self.deleteSet(node, setNames[i]);
                 } else {
                     self.createSet(node, setNames[i]);
+                    if (Object.keys(setDiff[setNames[i]].attr || {}).length > 0) {
+                        elements = Object.keys(setDiff[setNames[i]].attr);
+                        for (j = 0; j < elements.length; j += 1) {
+                            if (setDiff[setNames[i]].attr[elements[j]] === CONSTANTS.TO_DELETE_STRING) {
+                                self.delSetAttribute(node, setNames[i], elements[j]);
+                            } else {
+                                self.setSetAttribute(node, setNames[i], elements[j],
+                                    setDiff[setNames[i]].attr[elements[j]]);
+                            }
+                        }
+                    }
+                    if ((Object.keys(setDiff[setNames[i]].reg || {})).length > 0) {
+                        elements = Object.keys(setDiff[setNames[i]].reg);
+                        for (j = 0; j < elements.length; j += 1) {
+                            if (setDiff[setNames[i]].reg[elements[j]] === CONSTANTS.TO_DELETE_STRING) {
+                                self.delSetRegistry(node, setNames[i], elements[j]);
+                            } else {
+                                self.setSetRegistry(node, setNames[i], elements[j],
+                                    setDiff[setNames[i]].reg[elements[j]]);
+                            }
+                        }
+                    }
+
                     elements = Object.keys(setDiff[setNames[i]]);
                     for (j = 0; j < elements.length; j++) {
-                        if (setDiff[setNames[i]][elements[j]] === CONSTANTS.TO_DELETE_STRING) {
-                            self.delMember(node, setNames[i], elements[j]);
-                        } else {
-                            done = addMember(node, setNames[i], elements[j], setDiff[setNames[i]][elements[j]]);
+                        if (RANDOM.isValidPath(elements[j])) {
+                            if (setDiff[setNames[i]][elements[j]] === CONSTANTS.TO_DELETE_STRING) {
+                                self.delMember(node, setNames[i], elements[j]);
+                            } else {
+                                done = addMember(node, setNames[i], elements[j], setDiff[setNames[i]][elements[j]]);
+                            }
                         }
                     }
                 }
@@ -1684,6 +1718,29 @@ define(['common/util/canon',
                 conflict = _conflictTheirs;
                 opposingConflict = _conflictMine[opposingPath];
             }
+
+            //set attributes and registry entries
+            keys = Object.keys(diffSet.attr || {});
+            for (j = 0; j < keys.length; j++) {
+                conflict[path + '/attr/' + keys[j]] =
+                    conflict[path + '/attr/' + keys[j]] || {
+                        value: diffSet.attr[keys[j]],
+                        conflictingPaths: {}
+                    };
+                conflict[path + '/attr/' + keys[j]].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path + '/attr/' + keys[j]] = true;
+            }
+            keys = Object.keys(diffSet.reg || {});
+            for (j = 0; j < keys.length; j++) {
+                conflict[path + '/reg/' + keys[j]] =
+                    conflict[path + '/reg/' + keys[j]] || {
+                        value: diffSet.reg[keys[j]],
+                        conflictingPaths: {}
+                    };
+                conflict[path + '/reg/' + keys[j]].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path + '/reg/' + keys[j]] = true;
+            }
+
             for (i = 0; i < relids.length; i++) {
                 if (diffSet[relids[i]] === CONSTANTS.TO_DELETE_STRING) {
                     //single conflict as the element was removed
@@ -1763,6 +1820,19 @@ define(['common/util/canon',
                             };
                             gatherFullSetConflicts(base[names[i]], true, path + '/' + names[i], path + '/' + names[i]);
                         } else {
+                            //now check the set attribute and registry differences
+                            if (base[names[i]].attr && extension[names[i]].attr) {
+                                concatSingleKeyValuePairs(path + '/' +
+                                    names[i] + '/attr',
+                                    base[names[i]].attr,
+                                    extension[names[i]].attr);
+                            }
+                            if (base[names[i]].reg && extension[names[i]].reg) {
+                                concatSingleKeyValuePairs(path + '/' +
+                                    names[i] + '/reg',
+                                    base[names[i]].reg,
+                                    extension[names[i]].reg);
+                            }
                             //now we can only have member or sub-member conflicts...
                             members = getDiffChildrenRelids(extension[names[i]]);
                             for (j = 0; j < members.length; j++) {
