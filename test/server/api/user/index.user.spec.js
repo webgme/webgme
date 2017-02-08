@@ -151,6 +151,10 @@ describe('USER REST API', function () {
                         gmeAuth.addUser('user_not_in_db', 'e@mail.com', 'plaintext', false, {
                             overwrite: true,
                             settings: {comp1: {a: 1}}
+                        }),
+                        gmeAuth.addUser('user_not_in_db2', 'e@mail.com', 'plaintext', false, {
+                            overwrite: true,
+                            settings: {comp1: {a: 1}}
                         })
                     ]);
                 })
@@ -656,13 +660,38 @@ describe('USER REST API', function () {
                 gmeAuth.generateJWTokenForAuthenticatedUser(userId)
                     .then(function (token_) {
                         token = token_;
-                        console.log(token);
                         return gmeAuth.deleteUser(userId, true);
                     })
                     .then(function () {
-                        console.log('removed');
                         agent.get(server.getUrl() + '/api/v1/user')
                             .set('Authorization', 'Bearer ' + token)
+                            .end(function (err, res) {
+                                try {
+                                    expect(res.status).equal(200, err);
+                                    expect(res.body._id).equal(userId);
+                                    expect(res.body.settings).to.deep.equal({});
+                                } catch (e) {
+                                    err = e;
+                                }
+
+                                done(err);
+                            });
+                    })
+                    .catch(done);
+            });
+
+            it('should create user when accessed in db and not existing for user when token in query', function (done) {
+                var userId = 'user_not_in_db2',
+                    token;
+
+                gmeAuth.generateJWTokenForAuthenticatedUser(userId)
+                    .then(function (token_) {
+                        token = token_;
+                        return gmeAuth.deleteUser(userId, true);
+                    })
+                    .then(function () {
+                        agent.get(server.getUrl() + '/api/v1/user')
+                            .query({token: token})
                             .end(function (err, res) {
                                 try {
                                     expect(res.status).equal(200, err);

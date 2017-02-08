@@ -42,7 +42,7 @@ function AuthorizerBase(mainLogger, gmeConfig) {
     /**
      * @type {GmeConfig}
      */
-    this.logger = mainLogger.fork('AuthorizerBase');
+    this.logger = mainLogger.fork('Authorizer');
 
     /**
      * @type {GmeLogger}
