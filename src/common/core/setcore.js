@@ -292,7 +292,15 @@ define([
                 for (i = 0; i < paths.length; i += 1) {
                     nodes[i] = self.loadByPath(root, paths[i]);
                 }
-                return TASYNC.lift(nodes);
+                return TASYNC.call(function (n) {
+                    var newn = [];
+                    for (var i = 0; i < n.length; i++) {
+                        if (n[i] !== null) {
+                            newn.push(n[i]);
+                        }
+                    }
+                    return newn;
+                }, TASYNC.lift(nodes));
             }, self.loadPaths(rootHash, paths));
         }
 

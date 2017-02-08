@@ -1727,7 +1727,7 @@ define([
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
             var names = core.getSetNames(node).concat(core.getValidSetNames(node));
-            ;
+
             if (names.indexOf(name) === -1) {
                 throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
             }

@@ -188,11 +188,11 @@ define(['common/util/canon',
                         data[names[i]] = {attr: {}, reg: {}};
                         keys = self.getOwnSetAttributeNames(node, names[i]);
                         for (j = 0; j < keys.length; j += 1) {
-                            data[names[i]].attr[keys[j]] = self.getSetAttribute(node, names[i], keys[j]);
+                            data[names[i]].attr[keys[j]] = self.getOwnSetAttribute(node, names[i], keys[j]);
                         }
                         keys = self.getOwnSetRegistryNames(node, names[i]);
                         for (j = 0; j < keys.length; j += 1) {
-                            data[names[i]].reg[keys[j]] = self.getSetRegistry(node, names[i], keys[j]);
+                            data[names[i]].reg[keys[j]] = self.getOwnSetRegistry(node, names[i], keys[j]);
                         }
 
                         targets = self.getMemberPaths(node, names[i]);
@@ -1192,7 +1192,7 @@ define(['common/util/canon',
                     self.deleteSet(node, setNames[i]);
                 } else {
                     self.createSet(node, setNames[i]);
-                    if ((Object.keys(setDiff[setNames[i]].attr || {})).length > 0) {
+                    if (Object.keys(setDiff[setNames[i]].attr || {}).length > 0) {
                         elements = Object.keys(setDiff[setNames[i]].attr);
                         for (j = 0; j < elements.length; j += 1) {
                             if (setDiff[setNames[i]].attr[elements[j]] === CONSTANTS.TO_DELETE_STRING) {
