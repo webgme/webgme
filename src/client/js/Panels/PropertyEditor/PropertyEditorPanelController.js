@@ -42,6 +42,10 @@ define(['js/logger',
             REGISTRY_KEYS.VALID_DECORATORS
         ],
         TEMPLATING_SUB_GROUP = 'Templating',
+        LINE_SUB_GROUP = 'Line',
+        COLOR_SUB_GROUP = 'Color',
+        ICON_SUB_GROUP = 'Icon',
+        PREFERENCES_BASIC_SUB_GROUP = 'Basic',
         PREFERENCES_REGISTRY_KEYS = [
             REGISTRY_KEYS.DECORATOR,
             REGISTRY_KEYS.DISPLAY_FORMAT,
@@ -276,9 +280,9 @@ define(['js/logger',
         }
 
         if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_PREFERENCES) {
-            propList[CONSTANTS.PROPERTY_GROUP_PREFERENCES] = {
+            propList[PREFERENCES_BASIC_SUB_GROUP] = {
                 name: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
-                text: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
+                text: PREFERENCES_BASIC_SUB_GROUP,
                 value: undefined,
                 isFolder: true
             };
@@ -324,7 +328,7 @@ define(['js/logger',
                                                                          isAttribute, isRegistry, isPointer) {
         var onlyRootSelected = selectedNodes.length === 1 && selectedNodes[0].getId() === CONSTANTS.PROJECT_ROOT_ID,
             keys = Object.keys(src),
-
+            onlyConnectionsSelected = true,
             canBeReplaceable,
             key,
             range,
@@ -333,6 +337,13 @@ define(['js/logger',
             repKey,
             cbyKey,
             keyParts;
+
+        for (i = 0; i < selectedNodes.length; i += 1) {
+            if (selectedNodes[i].isConnection() === false) {
+                onlyConnectionsSelected = false;
+                break;
+            }
+        }
 
         if (prefix !== '') {
             prefix += '.';
@@ -356,6 +367,20 @@ define(['js/logger',
             if (onlyRootSelected && prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.' &&
                 key !== REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON &&
                 key !== REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) {
+                continue;
+            }
+
+            //if not only the root is selected we hide the 'used addon' and 'valid decorators' fields
+            if (onlyRootSelected !== true && prefix === CONSTANTS.PROPERTY_GROUP_META + '.' &&
+                (key === REGISTRY_KEYS.USED_ADDONS || key === REGISTRY_KEYS.VALID_DECORATORS)) {
+                continue;
+            }
+
+            //if not only connections are selected, the connection related preferences are filtered out
+            if (onlyConnectionsSelected !== true && prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.' &&
+                (key === REGISTRY_KEYS.LINE_END_ARROW || key === REGISTRY_KEYS.LINE_START_ARROW ||
+                key === REGISTRY_KEYS.LINE_LABEL_PLACEMENT || key === REGISTRY_KEYS.LINE_STYLE ||
+                key === REGISTRY_KEYS.LINE_WIDTH)) {
                 continue;
             }
 
@@ -427,30 +452,65 @@ define(['js/logger',
                     } else if (key === REGISTRY_KEYS.SVG_ICON || key === REGISTRY_KEYS.PORT_SVG_ICON ||
                         key === REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON ||
                         key === REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) {
-
-                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
-                        dst[extKey].dialog = DecoratorSVGExplorerDialog;
-                        dst[extKey].value = dst[extKey].value === undefined ?
-                            '' : dst[extKey].value;
+                        dst[ICON_SUB_GROUP] = {
+                            name: ICON_SUB_GROUP,
+                            text: ICON_SUB_GROUP,
+                            value: undefined,
+                            isFolder: true
+                        };
+                        repKey = ICON_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        delete dst[extKey];
+                        dst[repKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
+                        dst[repKey].dialog = DecoratorSVGExplorerDialog;
+                        dst[repKey].value = dst[repKey].value === undefined ? '' : dst[repKey].value;
                     } else if (key === REGISTRY_KEYS.COLOR || key === REGISTRY_KEYS.BORDER_COLOR ||
                         key === REGISTRY_KEYS.TEXT_COLOR) {
-                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.COLOR_PICKER;
+                        dst[COLOR_SUB_GROUP] = {
+                            name: COLOR_SUB_GROUP,
+                            text: COLOR_SUB_GROUP,
+                            value: undefined,
+                            isFolder: true
+                        };
+                        repKey = COLOR_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        delete dst[extKey];
+                        dst[repKey].widget = PROPERTY_GRID_WIDGETS.COLOR_PICKER;
                     } else if (key === REGISTRY_KEYS.LINE_STYLE) {
-                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
-                        dst[extKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_STYLE];
-                        dst[extKey].value = dst[extKey].value || CONSTANTS.LINE_STYLE.PATTERNS.SOLID;
+                        // all option is always available so we create the subgroup only here
+                        dst[LINE_SUB_GROUP] = {
+                            name: LINE_SUB_GROUP,
+                            text: LINE_SUB_GROUP,
+                            value: undefined,
+                            isFolder: true
+                        };
+                        repKey = LINE_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        delete dst[extKey];
+                        dst[repKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
+                        dst[repKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_STYLE];
+                        dst[repKey].value = dst[repKey].value || CONSTANTS.LINE_STYLE.PATTERNS.SOLID;
                     } else if (key === REGISTRY_KEYS.LINE_START_ARROW || key === REGISTRY_KEYS.LINE_END_ARROW) {
-                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
-                        dst[extKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_END_ARROW];
-                        dst[extKey].value = dst[extKey].value || CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
+                        repKey = LINE_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        delete dst[extKey];
+                        dst[repKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
+                        dst[repKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_END_ARROW];
+                        dst[repKey].value = dst[repKey].value || CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
                     } else if (key === REGISTRY_KEYS.LINE_WIDTH) {
-                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
-                        dst[extKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_WIDTH];
-                        dst[extKey].value = dst[extKey].value || 1;
+                        repKey = LINE_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        delete dst[extKey];
+                        dst[repKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
+                        dst[repKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_WIDTH];
+                        dst[repKey].value = dst[repKey].value || 1;
                     } else if (key === REGISTRY_KEYS.LINE_LABEL_PLACEMENT) {
-                        dst[extKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
-                        dst[extKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_LABEL_PLACEMENT];
-                        dst[extKey].value = dst[extKey].value || CONSTANTS.LINE_STYLE.LABEL_PLACEMENTS.MIDDLE;
+                        repKey = LINE_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        delete dst[extKey];
+                        dst[repKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
+                        dst[repKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_LABEL_PLACEMENT];
+                        dst[repKey].value = dst[repKey].value || CONSTANTS.LINE_STYLE.LABEL_PLACEMENTS.MIDDLE;
                     } else if (key === REGISTRY_KEYS.REPLACEABLE) {
                         dst[TEMPLATING_SUB_GROUP] = {
                             name: TEMPLATING_SUB_GROUP,
@@ -944,6 +1004,10 @@ define(['js/logger',
                 getterFn = 'getEditableRegistry';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS) {
                 this._client.setPointer(gmeID, keyArr[1], args.newValue);
+            } else if (keyArr[0] === LINE_SUB_GROUP || keyArr[0] === ICON_SUB_GROUP ||
+                keyArr[0] === COLOR_SUB_GROUP) {
+                setterFn = 'setRegistry';
+                getterFn = 'getEditableRegistry';
             } else if (keyArr[0] === TEMPLATING_SUB_GROUP) {
                 if (keyArr[1] === REGISTRY_KEYS.REPLACEABLE) {
                     setterFn = 'setRegistry';
