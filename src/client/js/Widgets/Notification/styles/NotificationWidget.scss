@@ -1,49 +1,54 @@
-
 .notification-widget {
   ul.dropdown-menu {
     max-height: 60vh;
     overflow-y: scroll;
   }
+
+  i.notification-drop-down-icon {
+    font-size: 10px;
+    padding-left: 5px;
+    &.notification-drop-down-menu-item-success {
+      color: green;
+      text-shadow: 0 0 3px green;
+    }
+    &.notification-drop-down-menu-item-info {
+      color: #2e6da4;
+      text-shadow: 0 0 3px #2e6da4;
+    }
+    &.notification-drop-down-menu-item-warn {
+      color: orange;
+      text-shadow: 0 0 3px orange;
+    }
+    &.notification-drop-down-menu-item-warning {
+      color: orange;
+      text-shadow: 0 0 3px orange;
+    }
+    &.notification-drop-down-menu-item-error {
+      color: #ca1e1e;
+      text-shadow: 0 0 3px #ca1e1e;
+    }
+  }
+
   a.notification-drop-down-menu-item {
+    display: inline-block;
+    width: 90%;
+    padding-left: 10px;
     &:hover {
       cursor: default;
       background-image: none;
-    }
-
-    &.notification-drop-down-menu-item-success {
-      background-color: #ccffcc;
-      &:hover {
-        background-color: #99ff99;
-      }
-    }
-    &.notification-drop-down-menu-item-info {
-      background-color: #cce5ff;
-      &:hover {
-        background-color: #99ccff;
-      }
-    }
-    &.notification-drop-down-menu-item-warn {
-      background-color: #ffffcc;
-      &:hover {
-        background-color: #ffff99;
-      }
-    }
-    &.notification-drop-down-menu-item-warning {
-      background-color: #ffffcc;
-      &:hover {
-        background-color: #ffff99;
-      }
-    }
-    &.notification-drop-down-menu-item-error {
-      background-color: #ffcccc;
-      &:hover {
-        background-color: #ff9999;
-      }
+      background-color: transparent;
     }
     &.notification-drop-down-menu-item-clear {
       font-weight: bold;
+      width: 100%;
+      border-bottom: 1px solid grey;
+      cursor: pointer;
+
+      i.clear-all-icon {
+        padding-right: 10px;
+      }
+
       &:hover {
-        cursor: pointer;
         i.clear-all-icon {
           color: #b30404;
         }
