@@ -166,10 +166,8 @@ define(['./ButtonBase',
     };
 
     ToolbarDropDownButton.prototype.dropDownText = function (value) {
-        var oldHtml = this._dropDownBtn.html(),
-            index,
-            newHtml,
-            label;
+        var label,
+            childCache;
 
         if (typeof value === 'string') {
             this._dropDownTxt = value;
@@ -177,10 +175,10 @@ define(['./ButtonBase',
             if (this._dropDownLimit && label.length > this._dropDownLimit) {
                 label = label.substr(0, this._dropDownLimit) + '...';
             }
+
             //setter
-            index = oldHtml.indexOf('<span');
-            newHtml = label + ' ' + oldHtml.substr(index);
-            this._dropDownBtn.html(newHtml);
+            childCache = this._dropDownBtn.children();
+            this._dropDownBtn.text(label).append(childCache);
         } else {
             //getter
             return this._dropDownTxt;

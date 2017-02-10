@@ -39,7 +39,6 @@
     "jszip": "Stuk/jszip#2.5.0",
     "angular-bootstrap": "0.11.0",
     "jquery.csszoom": "1.0.0",
-    "jquery.fancytree": "fancytree#2.15.0",
     "jquery": "2.2.3",
     "jquery-ui": "1.12.0",
     "bootstrap-multiselect": "0.9.13",
@@ -51,6 +50,7 @@
     "EpicEditor": "0.2.3",
     "jQuery-contextMenu": "2.2.4",
     "raven-js": "3.8.1",
-    "clipboard": "1.5.16"
+    "clipboard": "1.5.16",
+    "jquery.fancytree": "fancytree#2.18.0"
   }
 }

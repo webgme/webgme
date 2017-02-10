@@ -15,7 +15,8 @@ define([], function () {
         button = $('<a/>', {
             class: btnClass,
             href: '#',
-            title: params.title
+            title: params.title,
+            text: params.text
         });
 
         if (params.data) {
@@ -24,7 +25,7 @@ define([], function () {
 
         if (params.icon) {
             if (typeof params.icon === 'string') {
-                button.append($('<i class="' + params.icon + '"></i>'));
+                button.append($('<i/>', {class: params.icon}));
             } else {
                 button.append(params.icon);
             }
@@ -34,7 +35,6 @@ define([], function () {
             if (params.icon) {
                 button.append(' ');
             }
-            button.append(params.text);
         }
 
         if (params.clickFn) {

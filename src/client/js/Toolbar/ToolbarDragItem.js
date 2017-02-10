@@ -22,7 +22,7 @@ define([
         dragSource.makeDraggable(this.el, params);
 
         this.el.append(this._dragBtn);
-    };
+    }
 
     _.extend(ToolbarDragItem.prototype, ToolbarItemBase.prototype);
 
@@ -34,7 +34,7 @@ define([
     ToolbarDragItem.prototype.destroy = function () {
         dragSource.destroyDraggable(this.el);
         ToolbarItemBase.prototype.destroy.call(this);
-    }
+    };
 
     return ToolbarDragItem;
 });

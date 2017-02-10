@@ -81,7 +81,7 @@ define(['jquery'], function () {
                 this._sorted = true;
             }
             if (params.icon && (typeof params.icon === 'string') && params.icon !== '') {
-                this._icon = $('<i class="' + params.icon + '"></i>');
+                this._icon = $('<i/>').addClass(params.icon);
             }
         }
 
@@ -103,9 +103,12 @@ define(['jquery'], function () {
         var itemEl;
 
         if (item.html) {
+            console.warn('Do not pass html text, use $(item.html) and pass as item.el');
             itemEl = $(item.html);
+        } else if (item.el) {
+            itemEl = item.el;
         } else {
-            itemEl = $('<li><a href="#">' + item.text + '</a></li>');
+            itemEl = $('<li/>').append($('<a href="#"/>').text(item.text));
         }
 
         itemEl.data('val', item.value);
