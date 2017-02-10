@@ -142,8 +142,7 @@ define([
             partContainerDiv.decorated.attr({id: partId});
 
             partContainerDiv.onlyName = this.$_DOMBaseForName.clone();
-            partContainerDiv.onlyName.attr({id: partId, title: partDesc.name});
-            partContainerDiv.onlyName.append(partDesc.name);
+            partContainerDiv.onlyName.text(partDesc.name).attr({id: partId, title: partDesc.name});
 
             //render the part inside 'partContainerDiv'
             decoratorInstance.beforeAppend();
