@@ -95,6 +95,7 @@ define(['js/logger',
             minExpandLevel: 1,
             keyboard: false,
             autoScroll: true,
+            escapeTitles: true,
             //focusOnSelect: true,
             imagePath: '/',
             debugLevel: 0,
@@ -196,8 +197,9 @@ define(['js/logger',
             createNode: function (event, data) {
                 self._makeNodeDraggable(data.node);
             },
-            removeNode: function (event, data) {
-                self._destroyDraggable(data.node);
+            modifyChild: function (event, data) {
+                console.log(event, data);
+                //self._destroyDraggable(data.node);
             },
 
             // Extensions
