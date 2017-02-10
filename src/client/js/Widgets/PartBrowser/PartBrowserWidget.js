@@ -265,10 +265,8 @@ define([
             dragSource.destroyDraggable(partContainer.onlyName);
             partContainer.decorated = partContainer.decorated.parent(); //this is the <li> contains the part
             partContainer.decorated.remove();
-            partContainer.decorated.empty();
             partContainer.onlyName = partContainer.onlyName.parent(); //this is the <li> contains the part
             partContainer.onlyName.remove();
-            partContainer.onlyName.empty();
 
             delete this._parts[partId];
             delete this._partDraggableEl[partId];
@@ -306,8 +304,7 @@ define([
                 partDecoratorInstance.beforeAppend();
                 partContainerDiv.decorated.append(partDecoratorInstance.$el);
                 partDecoratorInstance.afterAppend();
-                partContainerDiv.onlyName.empty();
-                partContainerDiv.onlyName.append(partDesc.name);
+                partContainerDiv.onlyName.text(partDesc.name);
 
                 //update in partList
                 this._parts[partId].decoratorInstance = partDecoratorInstance;
@@ -322,8 +319,7 @@ define([
                 partDecoratorInstance.update();
 
                 //update name part
-                partContainerDiv.onlyName.empty();
-                partContainerDiv.onlyName.append(partDesc.name);
+                partContainerDiv.onlyName.text(partDesc.name);
                 //return undefined;
 
                 return partDecoratorInstance;
