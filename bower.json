@@ -51,7 +51,7 @@
     "jQuery-contextMenu": "2.2.4",
     "raven-js": "3.8.1",
     "clipboard": "1.5.16",
-    "jquery.fancytree": "fancytree#^2.21.0"
+    "jquery.fancytree": "fancytree#2.18.0"
   },
   "resolutions": {
     "jquery.fancytree": "^2.21.0"

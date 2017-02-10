@@ -197,9 +197,8 @@ define(['js/logger',
             createNode: function (event, data) {
                 self._makeNodeDraggable(data.node);
             },
-            modifyChild: function (event, data) {
-                console.log(event, data);
-                //self._destroyDraggable(data.node);
+            removeNode: function (event, data) {
+                self._destroyDraggable(data.node);
             },
 
             // Extensions
