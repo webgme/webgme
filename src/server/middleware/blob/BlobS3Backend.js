@@ -18,18 +18,13 @@ var fs = require('fs'),
 
 var BlobS3Backend = function (gmeConfig, logger) {
     BlobBackendBase.call(this, logger);
-    this.awsConfig = {
-        accessKeyId: '123', // TODO get this from an environment variable
-        secretAccessKey: 'abc', // TODO get this from an environment variable
-        region: '',
-        endpoint: 'localhost:4567', // TODO get this from a configuration
-        sslEnabled: false
-    };
+    this.awsConfig = gmeConfig.blob.s3;
     // NOTE: development mode
     // install https://github.com/jubos/fake-s3
     // make sure you apply my patch: https://github.com/jubos/fake-s3/issues/53
     // build and install it
-    // Add to your /etc/hosts
+    // Alternatively use https://github.com/jamhall/s3rver for nodejs
+    // Add to your /etc/hosts (on windows C:\Windows\System32\drivers\etc\hosts and the below are reversed)
     // 127.0.0.1 wg-content.localhost
     // 127.0.0.1 wg-metadata.localhost
     // 127.0.0.1 wg-temp.localhost
@@ -39,6 +34,19 @@ var BlobS3Backend = function (gmeConfig, logger) {
 
     // also tried creating an `EndPoint`:
     this.s3.endpoint = new AWS.Endpoint(this.awsConfig.endpoint);
+
+    // Uncomment to create buckets at start-up when developing
+    // [this.tempBucket, this.contentBucket, this.metadataBucket].forEach( bucket => {
+    //     this.s3.createBucket({
+    //         Bucket: bucket
+    //     }, function(err, data) {
+    //         if (err) {
+    //             console.log(err, err.stack);
+    //         } else {
+    //             console.log(data);
+    //         }
+    //     });
+    // });
 };
 
 // Inherits from BlobManagerBase
