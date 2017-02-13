@@ -483,124 +483,124 @@ describe('storage storageclasses editorstorage', function () {
         // jscs:disable
         var projectId = projectName2Id(projectName),
             commitQueueDump = {
-            "webgmeVersion": "2.9.0-beta1",
-            "projectId": projectId,
-            "branchName": "master",
-            "branchStatus": "AHEAD_SYNC",
-            "commitQueue": [
-                {
-                    "rootHash": "#ac05af30bcfbc3e46f3b8aab2fbd859fe78ae8a4",
-                    "projectId": projectId,
-                    "commitObject": {
-                        "root": "#ac05af30bcfbc3e46f3b8aab2fbd859fe78ae8a4",
-                        "parents": [
-                            "#0c4cca16ee4189d668c8ceb3c756e90cd93cce9a"
-                        ],
-                        "updater": [
-                            "guest"
-                        ],
-                        "time": 1484171011838,
-                        "message": "[\nsetAttribute(/1,name,\"FCO1\")\n]",
-                        "type": "commit",
-                        "__v": "1.1.0",
-                        "_id": "#406151d6d531b2a0f7704aeb9e2b6419ac610ab9"
-                    },
-                    "coreObjects": {
-                        "#5593e5e47f22f778cb0c3d0355245856ac332215": {
-                            "type": "patch",
-                            "base": "#b25794864ce94422ed1087986d3da1ef4f76fb0e",
-                            "patch": [
-                                {
-                                    "op": "replace",
-                                    "path": "/atr/name",
-                                    "value": "FCO1"
-                                }
+                "webgmeVersion": "2.10.0-beta3",
+                "projectId": projectId,
+                "branchName": "master",
+                "branchStatus": "AHEAD_SYNC",
+                "commitQueue": [
+                    {
+                        "rootHash": "#62d07a02c278b90e8ae7ed23ceb188405211c9e5",
+                        "projectId": projectId,
+                        "commitObject": {
+                            "root": "#62d07a02c278b90e8ae7ed23ceb188405211c9e5",
+                            "parents": [
+                                "#653d24e79d36d5988d62722def123c0d8e67558c"
                             ],
-                            "_id": "#5593e5e47f22f778cb0c3d0355245856ac332215"
-                        },
-                        "#ac05af30bcfbc3e46f3b8aab2fbd859fe78ae8a4": {
-                            "type": "patch",
-                            "base": "#ebb87c1adf5f759c0cbe8090f9c78077e7304332",
-                            "patch": [
-                                {
-                                    "op": "replace",
-                                    "path": "/1",
-                                    "value": "#5593e5e47f22f778cb0c3d0355245856ac332215"
-                                }
+                            "updater": [
+                                "guest"
                             ],
-                            "_id": "#ac05af30bcfbc3e46f3b8aab2fbd859fe78ae8a4"
-                        }
-                    },
-                    "changedNodes": {
-                        "load": {},
-                        "unload": {},
-                        "update": {
-                            "/1": true,
-                            "": true
+                            "time": 1487021619137,
+                            "message": "[\nsetAttribute(/1,name,\"FCO1\")\n]",
+                            "type": "commit",
+                            "__v": "1.1.0",
+                            "_id": "#133dd1308018f8365cb398b5e574e9aced9aaa7d"
                         },
-                        "partialUpdate": {}
-                    },
-                    "branchName": "master"
-                },
-                {
-                    "rootHash": "#37abec46171fa75095036221cb0c3c3be735663c",
-                    "projectId": projectId,
-                    "commitObject": {
-                        "root": "#37abec46171fa75095036221cb0c3c3be735663c",
-                        "parents": [
-                            "#406151d6d531b2a0f7704aeb9e2b6419ac610ab9"
-                        ],
-                        "updater": [
-                            "guest"
-                        ],
-                        "time": 1484171013931,
-                        "message": "[\nsetRegistry(/1,position,{\"x\":187,\"y\":159})\n]",
-                        "type": "commit",
-                        "__v": "1.1.0",
-                        "_id": "#4838adb2441aa6231aa7a149ac9d7417ffa39690"
-                    },
-                    "coreObjects": {
-                        "#d03d708da8f26fb76280c907e94a9773df1b21c0": {
-                            "type": "patch",
-                            "base": "#5593e5e47f22f778cb0c3d0355245856ac332215",
-                            "patch": [
-                                {
-                                    "op": "replace",
-                                    "path": "/reg/position",
-                                    "value": {
-                                        "x": 187,
-                                        "y": 159
+                        "coreObjects": {
+                            "#fecc6542f9dba6a548a4e3f5f6c8ce85994b9332": {
+                                "type": "patch",
+                                "base": "#d51484d046f593d83a9e9663346a3c93f80d9018",
+                                "patch": [
+                                    {
+                                        "op": "replace",
+                                        "path": "/atr/name",
+                                        "value": "FCO1"
                                     }
-                                }
-                            ],
-                            "_id": "#d03d708da8f26fb76280c907e94a9773df1b21c0"
+                                ],
+                                "_id": "#fecc6542f9dba6a548a4e3f5f6c8ce85994b9332"
+                            },
+                            "#62d07a02c278b90e8ae7ed23ceb188405211c9e5": {
+                                "type": "patch",
+                                "base": "#4649fd96b7356499351a6e37abbc6321b95ebc5e",
+                                "patch": [
+                                    {
+                                        "op": "replace",
+                                        "path": "/1",
+                                        "value": "#fecc6542f9dba6a548a4e3f5f6c8ce85994b9332"
+                                    }
+                                ],
+                                "_id": "#62d07a02c278b90e8ae7ed23ceb188405211c9e5"
+                            }
                         },
-                        "#37abec46171fa75095036221cb0c3c3be735663c": {
-                            "type": "patch",
-                            "base": "#ac05af30bcfbc3e46f3b8aab2fbd859fe78ae8a4",
-                            "patch": [
-                                {
-                                    "op": "replace",
-                                    "path": "/1",
-                                    "value": "#d03d708da8f26fb76280c907e94a9773df1b21c0"
-                                }
-                            ],
-                            "_id": "#37abec46171fa75095036221cb0c3c3be735663c"
-                        }
-                    },
-                    "changedNodes": {
-                        "load": {},
-                        "unload": {},
-                        "update": {
-                            "/1": true,
-                            "": true
+                        "changedNodes": {
+                            "load": {},
+                            "unload": {},
+                            "update": {
+                                "/1": true,
+                                "": true
+                            },
+                            "partialUpdate": {}
                         },
-                        "partialUpdate": {}
+                        "branchName": "master"
                     },
-                    "branchName": "master"
-                }
-            ]
-        };
+                    {
+                        "rootHash": "#641facf9a9745dc25181bda68eed73e4b023964a",
+                        "projectId": projectId,
+                        "commitObject": {
+                            "root": "#641facf9a9745dc25181bda68eed73e4b023964a",
+                            "parents": [
+                                "#133dd1308018f8365cb398b5e574e9aced9aaa7d"
+                            ],
+                            "updater": [
+                                "guest"
+                            ],
+                            "time": 1487021622093,
+                            "message": "[\nsetRegistry(/1,position,{\"x\":79,\"y\":149})\n]",
+                            "type": "commit",
+                            "__v": "1.1.0",
+                            "_id": "#3fde1479876c769c39c4d545c64e797a5f9f84a5"
+                        },
+                        "coreObjects": {
+                            "#7ac30b6b189e6396445324d4172fbed5674ecc30": {
+                                "type": "patch",
+                                "base": "#fecc6542f9dba6a548a4e3f5f6c8ce85994b9332",
+                                "patch": [
+                                    {
+                                        "op": "replace",
+                                        "path": "/reg/position",
+                                        "value": {
+                                            "x": 79,
+                                            "y": 149
+                                        }
+                                    }
+                                ],
+                                "_id": "#7ac30b6b189e6396445324d4172fbed5674ecc30"
+                            },
+                            "#641facf9a9745dc25181bda68eed73e4b023964a": {
+                                "type": "patch",
+                                "base": "#62d07a02c278b90e8ae7ed23ceb188405211c9e5",
+                                "patch": [
+                                    {
+                                        "op": "replace",
+                                        "path": "/1",
+                                        "value": "#7ac30b6b189e6396445324d4172fbed5674ecc30"
+                                    }
+                                ],
+                                "_id": "#641facf9a9745dc25181bda68eed73e4b023964a"
+                            }
+                        },
+                        "changedNodes": {
+                            "load": {},
+                            "unload": {},
+                            "update": {
+                                "/1": true,
+                                "": true
+                            },
+                            "partialUpdate": {}
+                        },
+                        "branchName": "master"
+                    }
+                ]
+            };
 
         Q.ninvoke(storage, 'persistCommits', commitQueueDump.commitQueue)
             .then(function (commitHash) {
