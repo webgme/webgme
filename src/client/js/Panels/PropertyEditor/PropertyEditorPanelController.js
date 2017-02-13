@@ -363,20 +363,29 @@ define(['js/logger',
                 }
             }
 
-            //if only the root is selected we hide anything in preferences but tree icons
-            if (onlyRootSelected && prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.' &&
-                key !== REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON &&
-                key !== REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) {
-                continue;
+
+            if (onlyRootSelected) {
+                // If only the root is selected...
+                if (prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.' &&
+                    key !== REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON &&
+                    key !== REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) {
+                    // all but the tree icons are hidden in the preferences
+                    continue;
+                } else if (prefix === CONSTANTS.PROPERTY_GROUP_META + '.' &&
+                    key === REGISTRY_KEYS.IS_ABSTRACT || key === REGISTRY_KEYS.IS_PORT) {
+                    // isAbstract and isPort are hidden i meta.
+                    continue;
+                }
+            } else {
+                // If not only the root is selected...
+                if (prefix === CONSTANTS.PROPERTY_GROUP_META + '.' &&
+                    (key === REGISTRY_KEYS.USED_ADDONS || key === REGISTRY_KEYS.VALID_DECORATORS)) {
+                    // we hide the used addon' and 'valid decorators' fields.
+                    continue;
+                }
             }
 
-            //if not only the root is selected we hide the 'used addon' and 'valid decorators' fields
-            if (onlyRootSelected !== true && prefix === CONSTANTS.PROPERTY_GROUP_META + '.' &&
-                (key === REGISTRY_KEYS.USED_ADDONS || key === REGISTRY_KEYS.VALID_DECORATORS)) {
-                continue;
-            }
-
-            //if not only connections are selected, the connection related preferences are filtered out
+            // If not only connections are selected, the connection related preferences are filtered out.
             if (onlyConnectionsSelected !== true && prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.' &&
                 (key === REGISTRY_KEYS.LINE_END_ARROW || key === REGISTRY_KEYS.LINE_START_ARROW ||
                 key === REGISTRY_KEYS.LINE_LABEL_PLACEMENT || key === REGISTRY_KEYS.LINE_STYLE ||
@@ -463,7 +472,7 @@ define(['js/logger',
                         delete dst[extKey];
                         dst[repKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
                         dst[repKey].dialog = DecoratorSVGExplorerDialog;
-                        dst[repKey].value = dst[repKey].value === undefined ? '' : dst[repKey].value;
+                        dst[repKey].value = typeof dst[repKey].value !== 'string' ? '' : dst[repKey].value;
                     } else if (key === REGISTRY_KEYS.COLOR || key === REGISTRY_KEYS.BORDER_COLOR ||
                         key === REGISTRY_KEYS.TEXT_COLOR) {
                         dst[COLOR_SUB_GROUP] = {
@@ -581,6 +590,10 @@ define(['js/logger',
                             dst[extKey].valueItems = WebGMEGlobal.allAddOns;
                             dst[extKey].widget = PROPERTY_GRID_WIDGETS.MULTI_SELECT_WIDGET;
                         }
+                    } else if (key === REGISTRY_KEYS.IS_ABSTRACT || key === REGISTRY_KEYS.IS_PORT) {
+                        // Make sure they're treated like a boolean.
+                        dst[extKey].value = !!dst[extKey].value;
+                        dst[extKey].valueType = 'boolean';
                     }
                 }
             } else if (isPointer === true) {
@@ -746,28 +759,20 @@ define(['js/logger',
     PropertyEditorController.prototype._isResettableRegistry = function (selectedNodes, regName) {
         var i = selectedNodes.length,
             ownRegistryNames,
-            baseRegistryNames,
-            node,
-            baseNode;
+            node;
 
         while (i--) {
             node = selectedNodes[i];
 
             if (node) {
-                baseNode = this._client.getNode(node.getBaseId());
                 ownRegistryNames = node.getOwnRegistryNames();
-                baseRegistryNames = baseNode === null ? [] : baseNode.getRegistryNames();
 
-                if (ownRegistryNames.indexOf(regName) === -1) {
+                if (node.getOwnRegistryNames().indexOf(regName) === -1) {
                     return false;
                 }
-
-                if (baseRegistryNames.indexOf(regName) === -1) {
-                    return false;
-                }
-
             }
         }
+
         return true;
     };
 
@@ -1064,7 +1069,7 @@ define(['js/logger',
             keyArr = propertyName.split('.');
             delFn = undefined;
             if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
-                delFn = 'delAttributes';
+                delFn = 'delAttribute';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES ||
                 keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
                 delFn = 'delRegistry';
@@ -1076,6 +1081,10 @@ define(['js/logger',
                 } else if (keyArr[1] === CONSTANTS.POINTER_CONSTRAINED_BY) {
                     delFn = 'delPointer';
                 }
+            } else if (keyArr[0] === LINE_SUB_GROUP ||
+                keyArr[0] === COLOR_SUB_GROUP ||
+                keyArr[0] === ICON_SUB_GROUP) {
+                delFn = 'delRegistry';
             }
 
             if (delFn) {
