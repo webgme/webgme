@@ -22,15 +22,16 @@ describe('Seeds', function () {
         seedNames = [
             'ActivePanels',
             'EmptyProject',
-            'EmptyWithConstraint',
             'SignalFlowSystem'
         ],
         projects = [],// N.B.: this is getting populated by the createTests function
 
         gmeAuth,
         safeStorage,
+        CC = testFixture.requirejs('common/core/users/constraintchecker'),
+        metaRules = testFixture.requirejs('common/core/users/metarules'),
 
-        //guestAccount = testFixture.getGmeConfig().authentication.guestAccount,
+    //guestAccount = testFixture.getGmeConfig().authentication.guestAccount,
         serverBaseUrl,
         server;
 
@@ -87,8 +88,7 @@ describe('Seeds', function () {
     });
 
     function createTests() {
-        var i,
-            projectContents = {};
+        var i;
 
         function createImportTest(name) {
             var projectName = name + 'Import';
@@ -96,15 +96,29 @@ describe('Seeds', function () {
             projects.push(projectName);
 
             // import seed designs
-            it('should import ' + name, function (done) {
+            it('should import ' + name + ' and check constraints/meta-consistency', function (done) {
                 testFixture.importProject(safeStorage, {
                     projectSeed: 'seeds/' + name + '.webgmex',
                     projectName: projectName,
                     branchName: 'master',
                     gmeConfig: gmeConfig,
                     logger: logger,
-                    doNotLoad: true
+                    //doNotLoad: true
                 })
+                    .then(function (ir) {
+                        var checker = new CC.Checker(ir.core, logger);
+                        if (metaRules.checkMetaConsistency(ir.core, ir.rootNode).length > 0) {
+                            throw new Error('Meta inconsistencies in seed [' + name + ']');
+                        }
+
+                        checker.initialize(ir.rootNode, ir.commitHash, CC.TYPES.META);
+                        return checker.checkModel('');
+                    })
+                    .then(function (result) {
+                        if (result.hasViolation) {
+                            throw new Error('Meta rule violations in seed [' + name + ']');
+                        }
+                    })
                     .nodeify(done);
             });
         }
@@ -122,7 +136,7 @@ describe('Seeds', function () {
                     branchName: 'master',
                     gmeConfig: gmeConfig,
                     logger: logger,
-                    doNotLoad: true
+                    //doNotLoad: true
                 })
                     .then(function (ir) {
                         return testFixture.storageUtil.getProjectJson(ir.project, {commitHash: ir.commitHash});
@@ -150,7 +164,7 @@ describe('Seeds', function () {
                     branchName: 'master',
                     gmeConfig: gmeConfig,
                     logger: logger,
-                    doNotLoad: true
+                    //doNotLoad: true
                 })
                     .then(function (ir_) {
                         ir = ir_;
