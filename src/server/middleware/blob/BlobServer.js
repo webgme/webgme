@@ -10,28 +10,32 @@
 var mime = require('mime'),
     BlobMetadata = requireJS('blob/BlobMetadata'),
     ASSERT = requireJS('common/util/assert'),
-
-    contentDisposition = require('content-disposition'),
-    BlobFSBackend = require('./BlobFSBackend');
-    //BlobFSBackend = require('./BlobS3Backend');
+    express = require('express'),
+    contentDisposition = require('content-disposition');
 
 function createExpressBlob(options) {
-    var express = require('express');
-    var __app = express.Router();
-
-    var blobBackend,
+    var __app = express.Router(),
+        BlobBackend,
+        blobBackend,
         ensureAuthenticated,
         getUserId,
         logger;
+
     ASSERT(typeof options.gmeConfig !== 'undefined', 'gmeConfig required');
-    ASSERT(options.gmeConfig.blob.type === 'FS', 'Only FS blob backend is currently supported.');
     ASSERT(typeof options.ensureAuthenticated === 'function', 'ensureAuthenticated must be given.');
-    ASSERT(typeof options.logger !== 'undefined', 'logger must be given.');
 
     ensureAuthenticated = options.ensureAuthenticated;
     getUserId = options.getUserId;
     logger = options.logger.fork('middleware:BlobServer');
-    blobBackend = new BlobFSBackend(options.gmeConfig, logger);
+    if (options.gmeConfig.blob.type.toUpperCase() === 'FS') {
+        BlobBackend = require('./BlobFSBackend');
+    } else if (options.gmeConfig.blob.type.toUpperCase() === 'S3') {
+        BlobBackend = require('./BlobS3Backend');
+    } else {
+        throw new Error('Unknown blob type ' +  options.gmeConfig.blob.type);
+    }
+
+    blobBackend = new BlobBackend(options.gmeConfig, logger);
 
     /* debugging:
     __app.use(function (req, res, next) {
@@ -49,14 +53,13 @@ function createExpressBlob(options) {
     __app.get('/metadata', ensureAuthenticated, function (req, res) {
         blobBackend.listAllMetadata(req.query.all, function (err, metadata) {
             if (err) {
-                // FIXME: make sure we set the status code correctly like 404 etc.
+                logger.error(err);
                 res.status(err.statusCode || 500);
                 res.send(err.message || err);
             } else {
                 res.status(200);
                 res.setHeader('Content-type', 'application/json');
                 res.end(JSON.stringify(metadata, null, 4));
-
             }
         });
     });
@@ -64,6 +67,7 @@ function createExpressBlob(options) {
     __app.get('/metadata/:metadataHash', ensureAuthenticated, function (req, res) {
         blobBackend.getMetadata(req.params.metadataHash, function (err, hash, metadata) {
             if (err) {
+                logger.error(err);
                 res.status(err.statusCode || 500);
                 res.send(err.message || err);
             } else {
@@ -89,14 +93,14 @@ function createExpressBlob(options) {
             logger.debug('file creation request finished: user[' + getUserId(req) + '], filename[' +
                 req.params.filename + '], error[' + err + '], hash:[' + hash + ']');
             if (err) {
-                // FIXME: make sure we set the status code correctly like 404 etc.
+                logger.error(err);
                 res.status(err.statusCode || 500);
                 res.send(err.message || err);
             } else {
                 // FIXME: it should be enough to send back the hash only
                 blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
                     if (err) {
-                        // FIXME: make sure we set the status code correctly like 404 etc.
+                        logger.error(err);
                         res.status(err.statusCode || 500);
                         res.send(err.message || err);
                     } else {
@@ -131,14 +135,14 @@ function createExpressBlob(options) {
             }
             blobBackend.putMetadata(metadata, function (err, hash) {
                 if (err) {
-                    // FIXME: make sure we set the status code correctly like 404 etc.
+                    logger.error(err);
                     res.status(err.statusCode || 500);
                     res.send(err.message || err);
                 } else {
                     // FIXME: it should be enough to send back the hash only
                     blobBackend.getMetadata(hash, function (err, metadataHash, metadata) {
                         if (err) {
-                            // FIXME: make sure we set the status code correctly like 404 etc.
+                            logger.error(err);
                             res.status(err.statusCode || 500);
                             res.send(err.message || err);
                         } else {

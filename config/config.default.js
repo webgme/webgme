@@ -58,7 +58,14 @@ var path = require('path'),
         blob: {
             type: 'FS', //'FS', 'S3'
             fsDir: './blob-local-storage',
-            s3: {}
+            s3: {
+                accessKeyId: '123',
+                secretAccessKey: 'abc',
+                region: '',
+                s3ForcePathStyle: true,
+                endpoint: 'http://localhost:4567',
+                sslEnabled: false
+            }
         },
 
         client: {

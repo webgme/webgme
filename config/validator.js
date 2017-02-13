@@ -128,7 +128,7 @@ function validateConfig(configOrFileName) {
     assertObject('config.blob', config.blob);
     assertString('config.blob.type', config.blob.type);
     assertString('config.blob.fsDir', config.blob.fsDir);
-    //assertObject('config.blob.s3', config.blob.s3);
+    assertObject('config.blob.s3', config.blob.s3);
 
     // client
     expectedKeys.push('client');
