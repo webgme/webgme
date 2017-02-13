@@ -255,12 +255,8 @@ $input-color: lighten($background-color, 18.5%);
     }
 
     &.closed {
-      li:not(.title),
-      ul li,
-      ul li > * {
-        height: 0;
-        overflow: hidden;
-        border: 0;
+      li:not(.title) {
+        display: none;
       }
 
       li.title {
