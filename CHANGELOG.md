@@ -1,5 +1,40 @@
 # Change Log
 
+## [v2.10.0](https://github.com/webgme/webgme/tree/v2.10.0) (2017-02-13)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.9.0...v2.10.0)
+
+**Implemented enhancements:**
+
+- Git rid of obvious XSS vulnerabilities on the UI  [\#1321](https://github.com/webgme/webgme/issues/1321)
+- Collecting artifacts from the run\_plugin script [\#1313](https://github.com/webgme/webgme/issues/1313)
+- loadMembers shorthand function [\#1310](https://github.com/webgme/webgme/issues/1310)
+- The results from meta constraint checking need improvements. [\#1303](https://github.com/webgme/webgme/issues/1303)
+- Locate in tree should allow expansion of the selected node. [\#1302](https://github.com/webgme/webgme/issues/1302)
+- Pre-release fixes for v2.10.0  [\#1325](https://github.com/webgme/webgme/pull/1325) ([pmeijer](https://github.com/pmeijer))
+- Use the standard 'spec.js' file ending for all mocha tests [\#1324](https://github.com/webgme/webgme/pull/1324) ([kecso](https://github.com/kecso))
+- Allow S3 blob storage [\#1323](https://github.com/webgme/webgme/pull/1323) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1318, \#1321 mozilla fixes and xss vulnerabilities [\#1322](https://github.com/webgme/webgme/pull/1322) ([pmeijer](https://github.com/pmeijer))
+- Fixing preference visibility in property editor. [\#1320](https://github.com/webgme/webgme/pull/1320) ([kecso](https://github.com/kecso))
+- Option for external token generator and allow token to be passed in url query [\#1319](https://github.com/webgme/webgme/pull/1319) ([pmeijer](https://github.com/pmeijer))
+- Load members shorthand function [\#1317](https://github.com/webgme/webgme/pull/1317) ([kecso](https://github.com/kecso))
+- Fixes \#1313 Add option for writing blobs to dir from run\_plugin [\#1316](https://github.com/webgme/webgme/pull/1316) ([pmeijer](https://github.com/pmeijer))
+- Add method on client to get a core instance \(for e.g. queries\) [\#1311](https://github.com/webgme/webgme/pull/1311) ([pmeijer](https://github.com/pmeijer))
+- Indicate that a type is a connection on meta-editor [\#1309](https://github.com/webgme/webgme/pull/1309) ([pmeijer](https://github.com/pmeijer))
+- Prepare for extraction of Model, Set and Crosscut editors [\#1308](https://github.com/webgme/webgme/pull/1308) ([pmeijer](https://github.com/pmeijer))
+- Extract meta-inconsistency-widget and improve the meta-rules results. [\#1307](https://github.com/webgme/webgme/pull/1307) ([pmeijer](https://github.com/pmeijer))
+- Version and add bundled dist files to browsers' app-cache. [\#1305](https://github.com/webgme/webgme/pull/1305) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1301 Fixes \#1302 DiagramDesigner read-only bug and Locate in tree [\#1304](https://github.com/webgme/webgme/pull/1304) ([pmeijer](https://github.com/pmeijer))
+- Library notification [\#1299](https://github.com/webgme/webgme/pull/1299) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- Mozilla Firefox issues [\#1318](https://github.com/webgme/webgme/issues/1318)
+- Project selection from dialog throws exception if dialog closed before project opened. [\#1314](https://github.com/webgme/webgme/issues/1314)
+- TypeError in SVGDecorator when determining if node is a set. [\#1312](https://github.com/webgme/webgme/issues/1312)
+- Keyboard moves in read-only throws exception [\#1301](https://github.com/webgme/webgme/issues/1301)
+- Pre-release fixes for v2.10.0  [\#1325](https://github.com/webgme/webgme/pull/1325) ([pmeijer](https://github.com/pmeijer))
+- Minor ui bug fixes \#1312 fixes \#1314 [\#1315](https://github.com/webgme/webgme/pull/1315) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.9.0](https://github.com/webgme/webgme/tree/v2.9.0) (2017-01-16)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.8.0...v2.9.0)
 
