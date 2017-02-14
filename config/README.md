@@ -62,7 +62,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.authentication.salts = 10`
  - Strength of the salting of the users' passwords [bcrypt](https://github.com/dcodeIO/bcrypt.js).
 - `config.authentication.authorizer.path = './src/server/middleware/auth/defaultauthorizer'`
- - Path (absolute) to module implementing `AuthorizerBase` (located next to `deafultauthorizer`) for getting and setting authorization regarding projects.
+ - Path (absolute) to module implementing `AuthorizerBase` (located next to `deafultauthorizer`) for getting and setting authorization regarding projects and project creation.
 - `config.authentication.authorizer.options = {}`
  - Optional options passed to authorizer module at initialization (via gmeConfig).
 - `config.authentication.jwt.cookieId = 'access_token'`
@@ -75,6 +75,10 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Private RSA256 key used when generating tokens (N.B. if authentication is turned on - the defaults must be changed and the keys must reside outside of the app's root-directory or alt. a rule should be added to `config.server.extlibExcludes`).
 - `config.authentication.jwt.publicKey = './src/server/middleware/auth/EXAMPLE_PRIVATE_KEY'`
  - Public RSA256 key used when evaluating tokens.
+- `config.authentication.jwt.algorithm = 'RS256'`
+ - The algorithm used for encryption (should not be edited w/o chaning keys appropriately).
+- `config.authentication.jwt.tokenGenerator = './src/server/middleware/auth/localtokengenerator.js'`
+ - Replaceable module for generating tokens in case webgme should not generated new tokens by itself.
 
 ##### bin
 
@@ -84,11 +88,11 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 ##### blob
 
 - `config.blob.type = 'FS'`
- - Currently only `FS` (File System) is supported.
+ - Type of storage, available options: `'FS'` (File System), `'S3'` (Simple Storage Service).
 - `config.blob.fsDir = './blob-local-storage'`
- - Directory where to store the blob files.
+ - Directory where to store the blob files in case of `'FS'`.
 - `config.blob.s3 = {}`
- - **Not supported yet**
+ - S3 configuration passed to `aws-sdk` module. See config.default.js for local mock example.
 
 ##### client
 
