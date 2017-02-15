@@ -88,6 +88,13 @@ describe.skip('corediff scenarios', function () {
             });
     }
 
+    function logNodes(nodes) {
+        nodes.forEach(function (node) {
+            console.log(core.getPath(node), 'base' ,core.getBase(node) ? core.getPath(core.getBase(node)) : null);
+        });
+    }
+
+    // Children creation
     it('should assign a new relid when child created in both trees', function (done) {
         var originRoot,
             basePath,
@@ -319,6 +326,90 @@ describe.skip('corediff scenarios', function () {
             .nodeify(done);
     });
 
+    it('should assign a new relid when child created in base and what is to become instance', function (done) {
+        var originRoot,
+            basePath,
+            toBecomeInstancePath;
+
+        loadRootAndFCO(context.rootHash)
+            .then(function (r) {
+                var base = core.createNode({
+                        parent: r.root,
+                        base: r.fco
+                    }),
+                    instance = core.createNode({
+                        parent: r.root,
+                        base: r.fco
+                    });
+
+                basePath = core.getPath(base);
+                toBecomeInstancePath = core.getPath(instance);
+
+                originRoot = r.root;
+                return save(r.root);
+            })
+            .then(function (rootHash) {
+                return Q.all([
+                    loadRootAndFCO(rootHash, [basePath, toBecomeInstancePath]),
+                    loadRootAndFCO(rootHash, [basePath, toBecomeInstancePath]),
+                ]);
+            })
+            .then(function (trees) {
+                // We've loaded two trees from the same rootHash
+                // now let's make changes.
+
+                core.createNode({
+                    parent: trees[0][basePath],
+                    base: trees[0].fco,
+                    relid: 'conflictRelid'
+                });
+
+                core.setBase(trees[0][toBecomeInstancePath], trees[0][basePath]);
+
+                core.createNode({
+                    parent: trees[1][toBecomeInstancePath],
+                    base: trees[1].fco,
+                    relid: 'conflictRelid'
+                });
+
+                // Save to ensure the added nodes are persisted.
+                return Q.all([
+                    save(trees[0].root),
+                    save(trees[1].root)
+                ])
+                    .then(function () {
+                        return Q.all([
+                            core.generateTreeDiff(originRoot, trees[0].root),
+                            core.generateTreeDiff(originRoot, trees[1].root),
+                        ]);
+                    });
+            })
+            .then(function (diffs) {
+                var concatChanges = core.tryToConcatChanges(diffs[0], diffs[1]);
+                console.log(diffs[0]);
+                expect(concatChanges.items.length).to.equal(0); // No conflicts detected
+                return core.applyTreeDiff(originRoot, concatChanges.merge);
+            })
+            .then(function () {
+                // This use-case requires a persist and reload before actions to take place..
+                //TODO: In general which kind of changes requires this? setBase and moveNode??
+                return save(originRoot);
+            })
+            .then(function (newRootHash) {
+                return loadRootAndFCO(newRootHash);
+            })
+            .then(function (r) {
+                return core.loadSubTree(r.root);
+            })
+            .then(function (st) {
+                // Root, fco, base, instance, 3 children
+                logNodes(st);
+                expect(st.length).to.equal(7);
+            })
+            .nodeify(done);
+    });
+
+    // Symmetry
     it('should give conflict when del base in one tree and mod instance in other', function (done) {
         var originRoot,
             basePath,
@@ -369,9 +460,12 @@ describe.skip('corediff scenarios', function () {
                     });
             })
             .then(function (diffs) {
-                var concatChanges = core.tryToConcatChanges(diffs[0], diffs[1]);
+                console.log(JSON.stringify(diffs, null, 2));
+                var concatChanges01 = core.tryToConcatChanges(diffs[0], diffs[1]),
+                    concatChanges10 = core.tryToConcatChanges(diffs[1], diffs[0]);
 
-                expect(concatChanges.items.length).to.equal(1);
+                expect(concatChanges01.items.length).to.equal(1);
+                expect(concatChanges10.items.length).to.equal(1);
             })
             .nodeify(done);
     });
@@ -426,9 +520,12 @@ describe.skip('corediff scenarios', function () {
                     });
             })
             .then(function (diffs) {
-                var concatChanges = core.tryToConcatChanges(diffs[0], diffs[1]);
+                console.log(JSON.stringify(diffs, null, 2));
+                var concatChanges01 = core.tryToConcatChanges(diffs[0], diffs[1]),
+                    concatChanges10 = core.tryToConcatChanges(diffs[1], diffs[0]);
 
-                expect(concatChanges.items.length).to.equal(1);
+                expect(concatChanges01.items.length).to.equal(1);
+                expect(concatChanges10.items.length).to.equal(1);
             })
             .nodeify(done);
     });
