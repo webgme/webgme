@@ -300,11 +300,61 @@ define(['common/util/canon',
             }
         }
 
-        function finalizeDiff() {
-            finalizeMetaDiff(_DIFF);
-            finalizePointerDiff(_DIFF);
-            finalizeSetDiff(_DIFF);
-            normalize(_DIFF);
+        function getDiffChildrenRelids(diff) {
+            var keys = Object.keys(diff || {}),
+                i,
+                filteredKeys = [],
+                forbiddenWords = {
+                    guid: true,
+                    hash: true,
+                    attr: true,
+                    reg: true,
+                    pointer: true,
+                    set: true,
+                    meta: true,
+                    removed: true,
+                    movedFrom: true,
+                    childrenListChanged: true,
+                    oGuids: true,
+                    ooGuids: true,
+                    min: true,
+                    max: true
+                };
+            for (i = 0; i < keys.length; i++) {
+                if (!forbiddenWords[keys[i]]) {
+                    filteredKeys.push(keys[i]);
+                }
+            }
+            return filteredKeys;
+        }
+
+        function diffObjects(source, target) {
+            var diff = {},
+                sKeys = Object.keys(source),
+                tKeys = Object.keys(target),
+                tDiff, i;
+            for (i = 0; i < sKeys.length; i++) {
+                if (tKeys.indexOf(sKeys[i]) === -1) {
+                    diff[sKeys[i]] = CONSTANTS.TO_DELETE_STRING;
+                }
+            }
+            for (i = 0; i < tKeys.length; i++) {
+                if (sKeys.indexOf(tKeys[i]) === -1) {
+                    diff[tKeys[i]] = target[tKeys[i]];
+                } else {
+                    if (typeof target[tKeys[i]] === typeof source[tKeys[i]] &&
+                        typeof target[tKeys[i]] === 'object' &&
+                        (target[tKeys[i]] !== null && source[tKeys[i]] !== null)) {
+                        tDiff = diffObjects(source[tKeys[i]], target[tKeys[i]]);
+                        if (Object.keys(tDiff).length > 0) {
+                            diff[tKeys[i]] = tDiff;
+                        }
+                    } else if (source[tKeys[i]] !== target[tKeys[i]]) {
+                        diff[tKeys[i]] = target[tKeys[i]];
+                    }
+                }
+            }
+            return diff;
         }
 
         function finalizeMetaDiff(diff) {
@@ -353,6 +403,13 @@ define(['common/util/canon',
             }
         }
 
+        function finalizeDiff() {
+            finalizeMetaDiff(_DIFF);
+            finalizePointerDiff(_DIFF);
+            finalizeSetDiff(_DIFF);
+            normalize(_DIFF);
+        }
+
         function isEmptyNodeDiff(diff) {
             if (
                 Object.keys(diff.children || {}).length > 0 ||
@@ -385,11 +442,11 @@ define(['common/util/canon',
                     var sCopy = JSON.parse(JSON.stringify(oDiff.source[path] || {})),
                         tCopy = JSON.parse(JSON.stringify(oDiff.target[path] || {}));
 
-                    if (tCopy['base']) {
+                    if (tCopy.base) {
                         return false;
                     }
 
-                    delete sCopy['base'];
+                    delete sCopy.base;
 
                     return CANON.stringify(sCopy) === CANON.stringify(tCopy);
                 };
@@ -420,6 +477,82 @@ define(['common/util/canon',
                     }
                 }
             }
+        }
+
+        function gatherObstructiveGuids(node) {
+            var result = {},
+                putParents = function (n) {
+                    while (n) {
+                        result[self.getGuid(n)] = true;
+                        n = self.getParent(n);
+                    }
+                };
+            while (node) {
+                putParents(node);
+                node = self.getBase(node);
+            }
+            return result;
+        }
+
+        function fillMissingGuid(root, sRoot, path, diff) {
+            var relids = getDiffChildrenRelids(diff),
+                i,
+                done,
+                subComputationFinished = function (cDiff, relid) {
+                    diff[relid] = cDiff;
+                    return null;
+                };
+
+            for (i = 0; i < relids.length; i++) {
+                done = TASYNC.call(subComputationFinished,
+                    fillMissingGuid(root, sRoot, path + '/' + relids[i], diff[relids[i]]), relids[i]);
+            }
+
+            return TASYNC.call(function () {
+                // if (diff.guid) {
+                //     return diff;
+                // } else {
+                //     return TASYNC.call(function (child) {
+                //         diff.guid = self.getGuid(child);
+                //         diff.hash = self.getHash(child);
+                //         diff.oGuids = gatherObstructiveGuids(child);
+                //         return diff;
+                //     }, self.loadByPath(root, path));
+                // }
+                return TASYNC.call(function (child, sChild) {
+                    if (!child) {
+                        child = sChild;
+                    }
+                    diff.guid = self.getGuid(child);
+                    diff.hash = self.getHash(child);
+                    diff.oGuids = gatherObstructiveGuids(child);
+                    return diff;
+                }, self.loadByPath(root, path), self.loadByPath(sRoot, path));
+            }, done);
+        }
+
+        function mergeObjects(source, target) {
+            var merged = {},
+                sKeys = Object.keys(source),
+                tKeys = Object.keys(target),
+                i;
+            for (i = 0; i < sKeys.length; i++) {
+                merged[sKeys[i]] = source[sKeys[i]];
+            }
+            for (i = 0; i < tKeys.length; i++) {
+                if (sKeys.indexOf(tKeys[i]) === -1) {
+                    merged[tKeys[i]] = target[tKeys[i]];
+                } else {
+                    if (typeof target[tKeys[i]] === typeof source[tKeys[i]] &&
+                        typeof target[tKeys[i]] === 'object' && !(target instanceof Array)) {
+                        merged[tKeys[i]] = mergeObjects(source[tKeys[i]], target[tKeys[i]]);
+                    } else {
+                        merged[tKeys[i]] = target[tKeys[i]];
+                    }
+                }
+            }
+
+            return merged;
         }
 
         function updateDiff(sourceRoot, targetRoot) {
@@ -517,58 +650,6 @@ define(['common/util/canon',
             }, self.loadChildren(sourceRoot), self.loadChildren(targetRoot));
         }
 
-        function gatherObstructiveGuids(node) {
-            var result = {},
-                putParents = function (n) {
-                    while (n) {
-                        result[self.getGuid(n)] = true;
-                        n = self.getParent(n);
-                    }
-                };
-            while (node) {
-                putParents(node);
-                node = self.getBase(node);
-            }
-            return result;
-        }
-
-        function fillMissingGuid(root, sRoot, path, diff) {
-            var relids = getDiffChildrenRelids(diff),
-                i,
-                done,
-                subComputationFinished = function (cDiff, relid) {
-                    diff[relid] = cDiff;
-                    return null;
-                };
-
-            for (i = 0; i < relids.length; i++) {
-                done = TASYNC.call(subComputationFinished,
-                    fillMissingGuid(root, sRoot, path + '/' + relids[i], diff[relids[i]]), relids[i]);
-            }
-
-            return TASYNC.call(function () {
-                // if (diff.guid) {
-                //     return diff;
-                // } else {
-                //     return TASYNC.call(function (child) {
-                //         diff.guid = self.getGuid(child);
-                //         diff.hash = self.getHash(child);
-                //         diff.oGuids = gatherObstructiveGuids(child);
-                //         return diff;
-                //     }, self.loadByPath(root, path));
-                // }
-                return TASYNC.call(function (child, sChild) {
-                    if (!child) {
-                        child = sChild;
-                    }
-                    diff.guid = self.getGuid(child);
-                    diff.hash = self.getHash(child);
-                    diff.oGuids = gatherObstructiveGuids(child);
-                    return diff;
-                }, self.loadByPath(root, path), self.loadByPath(sRoot, path));
-            }, done);
-        }
-
         function expandDiff(root, isDeleted) {
             var diff = {
                 guid: self.getGuid(root),
@@ -612,59 +693,6 @@ define(['common/util/canon',
             sDiff[relid] = mergeObjects(sDiff[relid], diff);
         }
 
-        function diffObjects(source, target) {
-            var diff = {},
-                sKeys = Object.keys(source),
-                tKeys = Object.keys(target),
-                tDiff, i;
-            for (i = 0; i < sKeys.length; i++) {
-                if (tKeys.indexOf(sKeys[i]) === -1) {
-                    diff[sKeys[i]] = CONSTANTS.TO_DELETE_STRING;
-                }
-            }
-            for (i = 0; i < tKeys.length; i++) {
-                if (sKeys.indexOf(tKeys[i]) === -1) {
-                    diff[tKeys[i]] = target[tKeys[i]];
-                } else {
-                    if (typeof target[tKeys[i]] === typeof source[tKeys[i]] &&
-                        typeof target[tKeys[i]] === 'object' &&
-                        (target[tKeys[i]] !== null && source[tKeys[i]] !== null)) {
-                        tDiff = diffObjects(source[tKeys[i]], target[tKeys[i]]);
-                        if (Object.keys(tDiff).length > 0) {
-                            diff[tKeys[i]] = tDiff;
-                        }
-                    } else if (source[tKeys[i]] !== target[tKeys[i]]) {
-                        diff[tKeys[i]] = target[tKeys[i]];
-                    }
-                }
-            }
-            return diff;
-        }
-
-        function mergeObjects(source, target) {
-            var merged = {},
-                sKeys = Object.keys(source),
-                tKeys = Object.keys(target),
-                i;
-            for (i = 0; i < sKeys.length; i++) {
-                merged[sKeys[i]] = source[sKeys[i]];
-            }
-            for (i = 0; i < tKeys.length; i++) {
-                if (sKeys.indexOf(tKeys[i]) === -1) {
-                    merged[tKeys[i]] = target[tKeys[i]];
-                } else {
-                    if (typeof target[tKeys[i]] === typeof source[tKeys[i]] &&
-                        typeof target[tKeys[i]] === 'object' && !(target instanceof Array)) {
-                        merged[tKeys[i]] = mergeObjects(source[tKeys[i]], target[tKeys[i]]);
-                    } else {
-                        merged[tKeys[i]] = target[tKeys[i]];
-                    }
-                }
-            }
-
-            return merged;
-        }
-
         function removePathFromDiff(diff, path) {
             var relId, i, pathArray;
             if (path === '') {
@@ -706,6 +734,34 @@ define(['common/util/canon',
                 }
             };
             _shrink(rootDiff);
+        }
+
+        function insertAtPath(diff, path, object) {
+            ASSERT(typeof path === 'string');
+            var i, base, relid, nodepath;
+
+            if (path === '') {
+                _concatResult = JSON.parse(JSON.stringify(object));
+                return;
+            }
+            nodepath = path.match(/\/\/.*\/\//) || [];
+            nodepath = nodepath[0] || 'there is no nodepath in the path';
+            path = path.replace(nodepath, '/*nodepath*/');
+            nodepath = nodepath.replace(/\/\//g, '/');
+            nodepath = nodepath.slice(0, -1);
+            path = path.split('/');
+            path.shift();
+            if (path.indexOf('*nodepath*') !== -1) {
+                path[path.indexOf('*nodepath*')] = nodepath;
+            }
+            relid = path.pop();
+            base = diff;
+            for (i = 0; i < path.length; i++) {
+                base[path[i]] = base[path[i]] || {};
+                base = base[path[i]];
+            }
+            base[relid] = JSON.parse(JSON.stringify(object));
+            return;
         }
 
         function checkRound() {
@@ -787,34 +843,6 @@ define(['common/util/canon',
             }
 
             return false;
-        }
-
-        function getDiffChildrenRelids(diff) {
-            var keys = Object.keys(diff || {}),
-                i,
-                filteredKeys = [],
-                forbiddenWords = {
-                    guid: true,
-                    hash: true,
-                    attr: true,
-                    reg: true,
-                    pointer: true,
-                    set: true,
-                    meta: true,
-                    removed: true,
-                    movedFrom: true,
-                    childrenListChanged: true,
-                    oGuids: true,
-                    ooGuids: true,
-                    min: true,
-                    max: true
-                };
-            for (i = 0; i < keys.length; i++) {
-                if (!forbiddenWords[keys[i]]) {
-                    filteredKeys.push(keys[i]);
-                }
-            }
-            return filteredKeys;
         }
 
         function getMoveSources(diff, path, toFrom, fromTo) {
@@ -1006,8 +1034,8 @@ define(['common/util/canon',
                 newNode = false;
 
             for (i = 0; i < relids.length; i += 1) {
-                if ((diff[relids[i]].removed === false || added)
-                    && diff[relids[i]].pointer && diff[relids[i]].pointer.base) {
+                if ((diff[relids[i]].removed === false || added) &&
+                    diff[relids[i]].pointer && diff[relids[i]].pointer.base) {
                     newNode = true;
                     children[i] = TASYNC.join(
                         setBaseOfNewNode(root, path + '/' + relids[i], diff[relids[i]].pointer.base),
@@ -1021,53 +1049,6 @@ define(['common/util/canon',
             }
 
             return TASYNC.lift(children);
-        }
-
-        function applyNodeChange(root, path, nodeDiff) {
-            //check for move
-            var node;
-
-            node = self.loadByPath(root, path);
-
-            return TASYNC.call(function (n) {
-                var done,
-                    relids = getDiffChildrenRelids(nodeDiff),
-                    i;
-                if (n === null) {
-                    logger.warn('Missing node [' + path + '] during patch application. ' +
-                        'Could be a conflicting conflict resolution.');
-                    return;
-                }
-                if (nodeDiff.removed === true) {
-                    self.deleteNode(n);
-                    return;
-                }
-                applyAttributeChanges(n, nodeDiff.attr || {});
-                applyRegistryChanges(n, nodeDiff.reg || {});
-                done = applyPointerChanges(n, nodeDiff);
-                done = TASYNC.call(applySetChanges, n, nodeDiff.set || {}, done);
-                if (nodeDiff.meta) {
-                    delete nodeDiff.meta.empty;
-                    done = TASYNC.call(applyMetaChanges, n, nodeDiff.meta, done);
-                }
-                for (i = 0; i < relids.length; i++) {
-                    done = TASYNC.call(function () {
-                        return null;
-                    }, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]), done);
-                    // done = TASYNC.join(done, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]));
-                }
-                /*TASYNC.call(function (d) {
-                 return done;
-                 }, done);*/
-
-                //we should check for possible guid change and restore the expected guid
-                if (self.getGuid(n) !== nodeDiff.guid && nodeDiff.guid) {
-                    done = TASYNC.call(function () {
-                        return null;
-                    }, self.setGuid(n, nodeDiff.guid), done);
-                }
-                return done;
-            }, node);
         }
 
         function applyAttributeChanges(node, attrDiff) {
@@ -1209,6 +1190,25 @@ define(['common/util/canon',
                 return null;
             }, done);
 
+        }
+
+        function jsonConcat(base, extension) {
+            var baseKeys = Object.keys(base),
+                extKeys = Object.keys(extension),
+                concat = JSON.parse(JSON.stringify(base)),
+                i;
+            for (i = 0; i < extKeys.length; i++) {
+                if (baseKeys.indexOf(extKeys[i]) === -1) {
+                    concat[extKeys[i]] = JSON.parse(JSON.stringify(extension[extKeys[i]]));
+                } else {
+                    if (typeof base[extKeys[i]] === 'object' && typeof extension[extKeys[i]] === 'object') {
+                        concat[extKeys[i]] = jsonConcat(base[extKeys[i]], extension[extKeys[i]]);
+                    } else { //either from value to object or object from value we go with the extension
+                        concat[extKeys[i]] = JSON.parse(JSON.stringify(extension[extKeys[i]]));
+                    }
+                }
+            }
+            return concat;
         }
 
         function applyMetaAttributes(node, metaAttrDiff) {
@@ -1379,6 +1379,53 @@ define(['common/util/canon',
             }, done);
         }
 
+        function applyNodeChange(root, path, nodeDiff) {
+            //check for move
+            var node;
+
+            node = self.loadByPath(root, path);
+
+            return TASYNC.call(function (n) {
+                var done,
+                    relids = getDiffChildrenRelids(nodeDiff),
+                    i;
+                if (n === null) {
+                    logger.warn('Missing node [' + path + '] during patch application. ' +
+                        'Could be a conflicting conflict resolution.');
+                    return;
+                }
+                if (nodeDiff.removed === true) {
+                    self.deleteNode(n);
+                    return;
+                }
+                applyAttributeChanges(n, nodeDiff.attr || {});
+                applyRegistryChanges(n, nodeDiff.reg || {});
+                done = applyPointerChanges(n, nodeDiff);
+                done = TASYNC.call(applySetChanges, n, nodeDiff.set || {}, done);
+                if (nodeDiff.meta) {
+                    delete nodeDiff.meta.empty;
+                    done = TASYNC.call(applyMetaChanges, n, nodeDiff.meta, done);
+                }
+                for (i = 0; i < relids.length; i++) {
+                    done = TASYNC.call(function () {
+                        return null;
+                    }, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]), done);
+                    // done = TASYNC.join(done, applyNodeChange(root, path + '/' + relids[i], nodeDiff[relids[i]]));
+                }
+                /*TASYNC.call(function (d) {
+                 return done;
+                 }, done);*/
+
+                //we should check for possible guid change and restore the expected guid
+                if (self.getGuid(n) !== nodeDiff.guid && nodeDiff.guid) {
+                    done = TASYNC.call(function () {
+                        return null;
+                    }, self.setGuid(n, nodeDiff.guid), done);
+                }
+                return done;
+            }, node);
+        }
+
         function getNodeByGuid(diff, guid) {
             var relids, i, node;
 
@@ -1400,34 +1447,6 @@ define(['common/util/canon',
             return null;
         }
 
-        function insertAtPath(diff, path, object) {
-            ASSERT(typeof path === 'string');
-            var i, base, relid, nodepath;
-
-            if (path === '') {
-                _concatResult = JSON.parse(JSON.stringify(object));
-                return;
-            }
-            nodepath = path.match(/\/\/.*\/\//) || [];
-            nodepath = nodepath[0] || 'there is no nodepath in the path';
-            path = path.replace(nodepath, '/*nodepath*/');
-            nodepath = nodepath.replace(/\/\//g, '/');
-            nodepath = nodepath.slice(0, -1);
-            path = path.split('/');
-            path.shift();
-            if (path.indexOf('*nodepath*') !== -1) {
-                path[path.indexOf('*nodepath*')] = nodepath;
-            }
-            relid = path.pop();
-            base = diff;
-            for (i = 0; i < path.length; i++) {
-                base[path[i]] = base[path[i]] || {};
-                base = base[path[i]];
-            }
-            base[relid] = JSON.parse(JSON.stringify(object));
-            return;
-        }
-
         function getSingleNode(node) {
             //removes the children from the node
             var result = JSON.parse(JSON.stringify(node)),
@@ -1438,25 +1457,6 @@ define(['common/util/canon',
             }
             //changeMovedPaths(result);
             return result;
-        }
-
-        function jsonConcat(base, extension) {
-            var baseKeys = Object.keys(base),
-                extKeys = Object.keys(extension),
-                concat = JSON.parse(JSON.stringify(base)),
-                i;
-            for (i = 0; i < extKeys.length; i++) {
-                if (baseKeys.indexOf(extKeys[i]) === -1) {
-                    concat[extKeys[i]] = JSON.parse(JSON.stringify(extension[extKeys[i]]));
-                } else {
-                    if (typeof base[extKeys[i]] === 'object' && typeof extension[extKeys[i]] === 'object') {
-                        concat[extKeys[i]] = jsonConcat(base[extKeys[i]], extension[extKeys[i]]);
-                    } else { //either from value to object or object from value we go with the extension
-                        concat[extKeys[i]] = JSON.parse(JSON.stringify(extension[extKeys[i]]));
-                    }
-                }
-            }
-            return concat;
         }
 
         //FIXME are we going to use this function
@@ -1608,277 +1608,6 @@ define(['common/util/canon',
             return guids;
         }
 
-        function gatherFullNodeConflicts(diffNode, mine, path, opposingPath) {
-            var conflict,
-                opposingConflict,
-                keys, i,
-                createSingleKeyValuePairConflicts = function (pathBase, data) {
-                    var keys, i;
-                    keys = Object.keys(data);
-                    for (i = 0; i < keys.length; i++) {
-                        conflict[pathBase + '/' + keys[i]] = conflict[pathBase + '/' + keys[i]] || {
-                                value: data[keys[i]],
-                                conflictingPaths: {}
-                            };
-                        conflict[pathBase + '/' + keys[i]].conflictingPaths[opposingPath] = true;
-                        opposingConflict.conflictingPaths[pathBase + '/' + keys[i]] = true;
-                    }
-                };
-
-            //setting the conflicts
-            if (mine === true) {
-                conflict = _conflictMine;
-                opposingConflict = _conflictTheirs[opposingPath];
-            } else {
-                conflict = _conflictTheirs;
-                opposingConflict = _conflictMine[opposingPath];
-            }
-            ASSERT(opposingConflict);
-            //if the node was moved we should make a conflict for the whole node as well
-            if (diffNode.movedFrom) {
-                conflict[path] = conflict[path] || {value: path, conflictingPaths: {}};
-                conflict[path].conflictingPaths[opposingPath] = true;
-                opposingConflict.conflictingPaths[path] = true;
-            }
-            createSingleKeyValuePairConflicts(path + '/attr', diffNode.attr || {});
-            createSingleKeyValuePairConflicts(path + '/reg', diffNode.reg || {});
-            createSingleKeyValuePairConflicts(path + '/pointer', diffNode.pointer || {});
-
-            if (diffNode.set) {
-                if (diffNode.set === CONSTANTS.TO_DELETE_STRING) {
-                    conflict[path + '/set'] = conflict[path + '/set'] || {
-                            value: CONSTANTS.TO_DELETE_STRING,
-                            conflictingPaths: {}
-                        };
-                    conflict[path + '/set'].conflictingPaths[opposingPath] = true;
-                    opposingConflict.conflictingPaths[path + '/set'] = true;
-                } else {
-                    keys = Object.keys(diffNode.set);
-                    for (i = 0; i < keys.length; i++) {
-                        if (diffNode.set[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
-                            conflict[path + '/set/' + keys[i]] = conflict[path + '/set/' + keys[i]] || {
-                                    value: CONSTANTS.TO_DELETE_STRING,
-                                    conflictingPaths: {}
-                                };
-                            conflict[path + '/set/' + keys[i]].conflictingPaths[opposingPath] = true;
-                            opposingConflict.conflictingPaths[path + '/set/' + keys[i]] = true;
-                        } else {
-                            gatherFullSetConflicts(diffNode.set[keys[i]], mine, path + '/set/' + keys[i], opposingPath);
-                        }
-                    }
-                }
-            }
-
-            if (diffNode.meta) {
-                gatherFullMetaConflicts(diffNode.meta, mine, path + '/meta', opposingPath);
-            }
-
-            //if the opposing item is theirs, we have to recursively go down in our changes
-            if (mine) {
-                keys = getDiffChildrenRelids(diffNode);
-                for (i = 0; i < keys.length; i++) {
-                    gatherFullNodeConflicts(diffNode[keys[i]], true, path + '/' + keys[i], opposingPath);
-                }
-            }
-
-        }
-
-        function gatherFullSetConflicts(diffSet, mine, path, opposingPath) {
-            var relids = getDiffChildrenRelids(diffSet),
-                i, keys, j, conflict, opposingConflict;
-
-            //setting the conflicts
-            if (mine === true) {
-                conflict = _conflictMine;
-                opposingConflict = _conflictTheirs[opposingPath];
-            } else {
-                conflict = _conflictTheirs;
-                opposingConflict = _conflictMine[opposingPath];
-            }
-
-            //set attributes and registry entries
-            keys = Object.keys(diffSet.attr || {});
-            for (j = 0; j < keys.length; j++) {
-                conflict[path + '/attr/' + keys[j]] =
-                    conflict[path + '/attr/' + keys[j]] || {
-                        value: diffSet.attr[keys[j]],
-                        conflictingPaths: {}
-                    };
-                conflict[path + '/attr/' + keys[j]].conflictingPaths[opposingPath] = true;
-                opposingConflict.conflictingPaths[path + '/attr/' + keys[j]] = true;
-            }
-            keys = Object.keys(diffSet.reg || {});
-            for (j = 0; j < keys.length; j++) {
-                conflict[path + '/reg/' + keys[j]] =
-                    conflict[path + '/reg/' + keys[j]] || {
-                        value: diffSet.reg[keys[j]],
-                        conflictingPaths: {}
-                    };
-                conflict[path + '/reg/' + keys[j]].conflictingPaths[opposingPath] = true;
-                opposingConflict.conflictingPaths[path + '/reg/' + keys[j]] = true;
-            }
-
-            for (i = 0; i < relids.length; i++) {
-                if (diffSet[relids[i]] === CONSTANTS.TO_DELETE_STRING) {
-                    //single conflict as the element was removed
-                    conflict[path + '/' + relids[i] + '/'] = conflict[path + '/' + relids[i] + '/'] || {
-                            value: CONSTANTS.TO_DELETE_STRING,
-                            conflictingPaths: {}
-                        };
-                    conflict[path + '/' + relids[i] + '/'].conflictingPaths[opposingPath] = true;
-                    opposingConflict.conflictingPaths[path + '/' + relids[i] + '/'] = true;
-                } else {
-                    keys = Object.keys(diffSet[relids[i]].attr || {});
-                    for (j = 0; j < keys.length; j++) {
-                        conflict[path + '/' + relids[i] + '//attr/' + keys[j]] =
-                            conflict[path + '/' + relids[i] + '//attr/' + keys[j]] || {
-                                value: diffSet[relids[i]].attr[keys[j]],
-                                conflictingPaths: {}
-                            };
-                        conflict[path + '/' + relids[i] + '//attr/' + keys[j]].conflictingPaths[opposingPath] = true;
-                        opposingConflict.conflictingPaths[path + '/' + relids[i] + '//attr/' + keys[j]] = true;
-                    }
-                    keys = Object.keys(diffSet[relids[i]].reg || {});
-                    for (j = 0; j < keys.length; j++) {
-                        conflict[path + '/' + relids[i] + '//reg/' + keys[j]] =
-                            conflict[path + '/' + relids[i] + '//reg/' + keys[j]] || {
-                                value: diffSet[relids[i]].reg[keys[j]],
-                                conflictingPaths: {}
-                            };
-                        conflict[path + '/' + relids[i] + '//reg/' + keys[j]].conflictingPaths[opposingPath] = true;
-                        opposingConflict.conflictingPaths[path + '/' + relids[i] + '//reg/' + keys[j]] = true;
-                    }
-                }
-            }
-        }
-
-        function concatSingleKeyValuePairs(path, base, extension) {
-            var keys, i, temp;
-            keys = Object.keys(extension);
-            for (i = 0; i < keys.length; i++) {
-                temp = extension[keys[i]];
-                if (typeof temp === 'string' && temp !== CONSTANTS.TO_DELETE_STRING) {
-                    temp = getCommonPathForConcat(temp);
-                }
-                if (base[keys[i]] !== undefined && CANON.stringify(base[keys[i]]) !== CANON.stringify(temp)) {
-                    //conflict
-                    _conflictMine[path + '/' + keys[i]] = {value: base[keys[i]], conflictingPaths: {}};
-                    _conflictTheirs[path + '/' + keys[i]] = {value: extension[keys[i]], conflictingPaths: {}};
-                    _conflictMine[path + '/' + keys[i]].conflictingPaths[path + '/' + keys[i]] = true;
-                    _conflictTheirs[path + '/' + keys[i]].conflictingPaths[path + '/' + keys[i]] = true;
-                } else {
-                    base[keys[i]] = extension[keys[i]];
-                }
-            }
-        }
-
-        function concatSet(path, base, extension) {
-            var names = Object.keys(extension),
-                members, i, j, memberPath;
-
-            for (i = 0; i < names.length; i++) {
-                if (base[names[i]]) {
-                    if (base[names[i]] === CONSTANTS.TO_DELETE_STRING) {
-                        if (extension[names[i]] !== CONSTANTS.TO_DELETE_STRING) {
-                            //whole set conflict
-                            _conflictMine[path + '/' + names[i]] = {
-                                value: CONSTANTS.TO_DELETE_STRING,
-                                conflictingPaths: {}
-                            };
-                            gatherFullSetConflicts(extension[names[i]],
-                                false, path + '/' + names[i], path + '/' + names[i]);
-                        }
-                    } else {
-                        if (extension[names[i]] === CONSTANTS.TO_DELETE_STRING) {
-                            //whole set conflict
-                            _conflictTheirs[path + '/' + names[i]] = {
-                                value: CONSTANTS.TO_DELETE_STRING,
-                                conflictingPaths: {}
-                            };
-                            gatherFullSetConflicts(base[names[i]], true, path + '/' + names[i], path + '/' + names[i]);
-                        } else {
-                            //now check the set attribute and registry differences
-                            if (base[names[i]].attr && extension[names[i]].attr) {
-                                concatSingleKeyValuePairs(path + '/' +
-                                    names[i] + '/attr',
-                                    base[names[i]].attr,
-                                    extension[names[i]].attr);
-                            }
-                            if (base[names[i]].reg && extension[names[i]].reg) {
-                                concatSingleKeyValuePairs(path + '/' +
-                                    names[i] + '/reg',
-                                    base[names[i]].reg,
-                                    extension[names[i]].reg);
-                            }
-                            //now we can only have member or sub-member conflicts...
-                            members = getDiffChildrenRelids(extension[names[i]]);
-                            for (j = 0; j < members.length; j++) {
-                                memberPath = getCommonPathForConcat(members[j]);
-                                if (base[names[i]][memberPath]) {
-                                    if (base[names[i]][memberPath] === CONSTANTS.TO_DELETE_STRING) {
-                                        if (extension[names[i]][members[j]] !== CONSTANTS.TO_DELETE_STRING) {
-                                            //whole member conflict
-                                            _conflictMine[path + '/' + names[i] + '/' + memberPath + '//'] = {
-                                                value: CONSTANTS.TO_DELETE_STRING,
-                                                conflictingPaths: {}
-                                            };
-                                            gatherFullNodeConflicts(extension[names[i]][members[j]],
-                                                false,
-                                                path + '/' + names[i] + '/' + memberPath + '//', path +
-                                                '/' + names[i] + '/' + memberPath + '//');
-                                        }
-                                    } else {
-                                        if (extension[names[i]][members[j]] === CONSTANTS.TO_DELETE_STRING) {
-                                            //whole member conflict
-                                            _conflictTheirs[path + '/' + names[i] + '/' + memberPath + '//'] = {
-                                                value: CONSTANTS.TO_DELETE_STRING,
-                                                conflictingPaths: {}
-                                            };
-                                            gatherFullNodeConflicts(base[names[i]][memberPath],
-                                                true,
-                                                path + '/' + names[i] + '/' + memberPath + '//', path +
-                                                '/' + names[i] + '/' + memberPath + '//');
-                                        } else {
-                                            if (extension[names[i]][members[j]].attr) {
-                                                if (base[names[i]][memberPath].attr) {
-                                                    concatSingleKeyValuePairs(path + '/' +
-                                                        names[i] + '/' + memberPath + '/' + '/attr',
-                                                        base[names[i]][memberPath].attr,
-                                                        extension[names[i]][members[j]].attr);
-                                                } else {
-                                                    base[names[i]][memberPath].attr =
-                                                        extension[names[i]][members[j]].attr;
-                                                }
-                                            }
-                                            if (extension[names[i]][members[j]].reg) {
-                                                if (base[names[i]][memberPath].reg) {
-                                                    concatSingleKeyValuePairs(path + '/' +
-                                                        names[i] + '/' + memberPath + '/' + '/reg',
-                                                        base[names[i]][memberPath].reg,
-                                                        extension[names[i]][members[j]].reg);
-                                                } else {
-                                                    base[names[i]][memberPath].reg =
-                                                        extension[names[i]][members[j]].reg;
-                                                }
-                                            }
-
-                                        }
-                                    }
-                                } else {
-                                    //concat
-                                    base[names[i]][memberPath] = extension[names[i]][members[j]];
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    //simple concatenation
-                    //TODO the path for members should be replaced here as well...
-                    base[names[i]] = extension[names[i]];
-                }
-            }
-        }
-
         function gatherFullMetaConflicts(diffMeta, mine, path, opposingPath) {
             var conflict, opposingConflict,
                 relids, i, j, keys, tPath, key;
@@ -2014,6 +1743,277 @@ define(['common/util/canon',
             }
             //aspects
             //TODO
+        }
+
+        function gatherFullSetConflicts(diffSet, mine, path, opposingPath) {
+            var relids = getDiffChildrenRelids(diffSet),
+                i, keys, j, conflict, opposingConflict;
+
+            //setting the conflicts
+            if (mine === true) {
+                conflict = _conflictMine;
+                opposingConflict = _conflictTheirs[opposingPath];
+            } else {
+                conflict = _conflictTheirs;
+                opposingConflict = _conflictMine[opposingPath];
+            }
+
+            //set attributes and registry entries
+            keys = Object.keys(diffSet.attr || {});
+            for (j = 0; j < keys.length; j++) {
+                conflict[path + '/attr/' + keys[j]] =
+                    conflict[path + '/attr/' + keys[j]] || {
+                        value: diffSet.attr[keys[j]],
+                        conflictingPaths: {}
+                    };
+                conflict[path + '/attr/' + keys[j]].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path + '/attr/' + keys[j]] = true;
+            }
+            keys = Object.keys(diffSet.reg || {});
+            for (j = 0; j < keys.length; j++) {
+                conflict[path + '/reg/' + keys[j]] =
+                    conflict[path + '/reg/' + keys[j]] || {
+                        value: diffSet.reg[keys[j]],
+                        conflictingPaths: {}
+                    };
+                conflict[path + '/reg/' + keys[j]].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path + '/reg/' + keys[j]] = true;
+            }
+
+            for (i = 0; i < relids.length; i++) {
+                if (diffSet[relids[i]] === CONSTANTS.TO_DELETE_STRING) {
+                    //single conflict as the element was removed
+                    conflict[path + '/' + relids[i] + '/'] = conflict[path + '/' + relids[i] + '/'] || {
+                            value: CONSTANTS.TO_DELETE_STRING,
+                            conflictingPaths: {}
+                        };
+                    conflict[path + '/' + relids[i] + '/'].conflictingPaths[opposingPath] = true;
+                    opposingConflict.conflictingPaths[path + '/' + relids[i] + '/'] = true;
+                } else {
+                    keys = Object.keys(diffSet[relids[i]].attr || {});
+                    for (j = 0; j < keys.length; j++) {
+                        conflict[path + '/' + relids[i] + '//attr/' + keys[j]] =
+                            conflict[path + '/' + relids[i] + '//attr/' + keys[j]] || {
+                                value: diffSet[relids[i]].attr[keys[j]],
+                                conflictingPaths: {}
+                            };
+                        conflict[path + '/' + relids[i] + '//attr/' + keys[j]].conflictingPaths[opposingPath] = true;
+                        opposingConflict.conflictingPaths[path + '/' + relids[i] + '//attr/' + keys[j]] = true;
+                    }
+                    keys = Object.keys(diffSet[relids[i]].reg || {});
+                    for (j = 0; j < keys.length; j++) {
+                        conflict[path + '/' + relids[i] + '//reg/' + keys[j]] =
+                            conflict[path + '/' + relids[i] + '//reg/' + keys[j]] || {
+                                value: diffSet[relids[i]].reg[keys[j]],
+                                conflictingPaths: {}
+                            };
+                        conflict[path + '/' + relids[i] + '//reg/' + keys[j]].conflictingPaths[opposingPath] = true;
+                        opposingConflict.conflictingPaths[path + '/' + relids[i] + '//reg/' + keys[j]] = true;
+                    }
+                }
+            }
+        }
+
+        function gatherFullNodeConflicts(diffNode, mine, path, opposingPath) {
+            var conflict,
+                opposingConflict,
+                keys, i,
+                createSingleKeyValuePairConflicts = function (pathBase, data) {
+                    var keys, i;
+                    keys = Object.keys(data);
+                    for (i = 0; i < keys.length; i++) {
+                        conflict[pathBase + '/' + keys[i]] = conflict[pathBase + '/' + keys[i]] || {
+                                value: data[keys[i]],
+                                conflictingPaths: {}
+                            };
+                        conflict[pathBase + '/' + keys[i]].conflictingPaths[opposingPath] = true;
+                        opposingConflict.conflictingPaths[pathBase + '/' + keys[i]] = true;
+                    }
+                };
+
+            //setting the conflicts
+            if (mine === true) {
+                conflict = _conflictMine;
+                opposingConflict = _conflictTheirs[opposingPath];
+            } else {
+                conflict = _conflictTheirs;
+                opposingConflict = _conflictMine[opposingPath];
+            }
+            ASSERT(opposingConflict);
+            //if the node was moved we should make a conflict for the whole node as well
+            if (diffNode.movedFrom) {
+                conflict[path] = conflict[path] || {value: path, conflictingPaths: {}};
+                conflict[path].conflictingPaths[opposingPath] = true;
+                opposingConflict.conflictingPaths[path] = true;
+            }
+            createSingleKeyValuePairConflicts(path + '/attr', diffNode.attr || {});
+            createSingleKeyValuePairConflicts(path + '/reg', diffNode.reg || {});
+            createSingleKeyValuePairConflicts(path + '/pointer', diffNode.pointer || {});
+
+            if (diffNode.set) {
+                if (diffNode.set === CONSTANTS.TO_DELETE_STRING) {
+                    conflict[path + '/set'] = conflict[path + '/set'] || {
+                            value: CONSTANTS.TO_DELETE_STRING,
+                            conflictingPaths: {}
+                        };
+                    conflict[path + '/set'].conflictingPaths[opposingPath] = true;
+                    opposingConflict.conflictingPaths[path + '/set'] = true;
+                } else {
+                    keys = Object.keys(diffNode.set);
+                    for (i = 0; i < keys.length; i++) {
+                        if (diffNode.set[keys[i]] === CONSTANTS.TO_DELETE_STRING) {
+                            conflict[path + '/set/' + keys[i]] = conflict[path + '/set/' + keys[i]] || {
+                                    value: CONSTANTS.TO_DELETE_STRING,
+                                    conflictingPaths: {}
+                                };
+                            conflict[path + '/set/' + keys[i]].conflictingPaths[opposingPath] = true;
+                            opposingConflict.conflictingPaths[path + '/set/' + keys[i]] = true;
+                        } else {
+                            gatherFullSetConflicts(diffNode.set[keys[i]], mine, path + '/set/' + keys[i], opposingPath);
+                        }
+                    }
+                }
+            }
+
+            if (diffNode.meta) {
+                gatherFullMetaConflicts(diffNode.meta, mine, path + '/meta', opposingPath);
+            }
+
+            //if the opposing item is theirs, we have to recursively go down in our changes
+            if (mine) {
+                keys = getDiffChildrenRelids(diffNode);
+                for (i = 0; i < keys.length; i++) {
+                    gatherFullNodeConflicts(diffNode[keys[i]], true, path + '/' + keys[i], opposingPath);
+                }
+            }
+
+        }
+
+        function concatSingleKeyValuePairs(path, base, extension) {
+            var keys, i, temp;
+            keys = Object.keys(extension);
+            for (i = 0; i < keys.length; i++) {
+                temp = extension[keys[i]];
+                if (typeof temp === 'string' && temp !== CONSTANTS.TO_DELETE_STRING) {
+                    temp = getCommonPathForConcat(temp);
+                }
+                if (base[keys[i]] !== undefined && CANON.stringify(base[keys[i]]) !== CANON.stringify(temp)) {
+                    //conflict
+                    _conflictMine[path + '/' + keys[i]] = {value: base[keys[i]], conflictingPaths: {}};
+                    _conflictTheirs[path + '/' + keys[i]] = {value: extension[keys[i]], conflictingPaths: {}};
+                    _conflictMine[path + '/' + keys[i]].conflictingPaths[path + '/' + keys[i]] = true;
+                    _conflictTheirs[path + '/' + keys[i]].conflictingPaths[path + '/' + keys[i]] = true;
+                } else {
+                    base[keys[i]] = extension[keys[i]];
+                }
+            }
+        }
+
+        function concatSet(path, base, extension) {
+            var names = Object.keys(extension),
+                members, i, j, memberPath;
+
+            for (i = 0; i < names.length; i++) {
+                if (base[names[i]]) {
+                    if (base[names[i]] === CONSTANTS.TO_DELETE_STRING) {
+                        if (extension[names[i]] !== CONSTANTS.TO_DELETE_STRING) {
+                            //whole set conflict
+                            _conflictMine[path + '/' + names[i]] = {
+                                value: CONSTANTS.TO_DELETE_STRING,
+                                conflictingPaths: {}
+                            };
+                            gatherFullSetConflicts(extension[names[i]],
+                                false, path + '/' + names[i], path + '/' + names[i]);
+                        }
+                    } else {
+                        if (extension[names[i]] === CONSTANTS.TO_DELETE_STRING) {
+                            //whole set conflict
+                            _conflictTheirs[path + '/' + names[i]] = {
+                                value: CONSTANTS.TO_DELETE_STRING,
+                                conflictingPaths: {}
+                            };
+                            gatherFullSetConflicts(base[names[i]], true, path + '/' + names[i], path + '/' + names[i]);
+                        } else {
+                            //now check the set attribute and registry differences
+                            if (base[names[i]].attr && extension[names[i]].attr) {
+                                concatSingleKeyValuePairs(path + '/' +
+                                    names[i] + '/attr',
+                                    base[names[i]].attr,
+                                    extension[names[i]].attr);
+                            }
+                            if (base[names[i]].reg && extension[names[i]].reg) {
+                                concatSingleKeyValuePairs(path + '/' +
+                                    names[i] + '/reg',
+                                    base[names[i]].reg,
+                                    extension[names[i]].reg);
+                            }
+                            //now we can only have member or sub-member conflicts...
+                            members = getDiffChildrenRelids(extension[names[i]]);
+                            for (j = 0; j < members.length; j++) {
+                                memberPath = getCommonPathForConcat(members[j]);
+                                if (base[names[i]][memberPath]) {
+                                    if (base[names[i]][memberPath] === CONSTANTS.TO_DELETE_STRING) {
+                                        if (extension[names[i]][members[j]] !== CONSTANTS.TO_DELETE_STRING) {
+                                            //whole member conflict
+                                            _conflictMine[path + '/' + names[i] + '/' + memberPath + '//'] = {
+                                                value: CONSTANTS.TO_DELETE_STRING,
+                                                conflictingPaths: {}
+                                            };
+                                            gatherFullNodeConflicts(extension[names[i]][members[j]],
+                                                false,
+                                                path + '/' + names[i] + '/' + memberPath + '//', path +
+                                                '/' + names[i] + '/' + memberPath + '//');
+                                        }
+                                    } else {
+                                        if (extension[names[i]][members[j]] === CONSTANTS.TO_DELETE_STRING) {
+                                            //whole member conflict
+                                            _conflictTheirs[path + '/' + names[i] + '/' + memberPath + '//'] = {
+                                                value: CONSTANTS.TO_DELETE_STRING,
+                                                conflictingPaths: {}
+                                            };
+                                            gatherFullNodeConflicts(base[names[i]][memberPath],
+                                                true,
+                                                path + '/' + names[i] + '/' + memberPath + '//', path +
+                                                '/' + names[i] + '/' + memberPath + '//');
+                                        } else {
+                                            if (extension[names[i]][members[j]].attr) {
+                                                if (base[names[i]][memberPath].attr) {
+                                                    concatSingleKeyValuePairs(path + '/' +
+                                                        names[i] + '/' + memberPath + '/' + '/attr',
+                                                        base[names[i]][memberPath].attr,
+                                                        extension[names[i]][members[j]].attr);
+                                                } else {
+                                                    base[names[i]][memberPath].attr =
+                                                        extension[names[i]][members[j]].attr;
+                                                }
+                                            }
+                                            if (extension[names[i]][members[j]].reg) {
+                                                if (base[names[i]][memberPath].reg) {
+                                                    concatSingleKeyValuePairs(path + '/' +
+                                                        names[i] + '/' + memberPath + '/' + '/reg',
+                                                        base[names[i]][memberPath].reg,
+                                                        extension[names[i]][members[j]].reg);
+                                                } else {
+                                                    base[names[i]][memberPath].reg =
+                                                        extension[names[i]][members[j]].reg;
+                                                }
+                                            }
+
+                                        }
+                                    }
+                                } else {
+                                    //concat
+                                    base[names[i]][memberPath] = extension[names[i]][members[j]];
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    //simple concatenation
+                    //TODO the path for members should be replaced here as well...
+                    base[names[i]] = extension[names[i]];
+                }
+            }
         }
 
         function concatMeta(path, base, extension) {
@@ -2557,6 +2557,13 @@ define(['common/util/canon',
             // return done;
         };
 
+        /**
+         *
+         * @param {object} base - diff1
+         * @param {object} extension - diff2
+         *
+         * @returns {object}
+         */
         this.tryToConcatChanges = function (base, extension) {
             var result = {};
             _conflictItems = [];
