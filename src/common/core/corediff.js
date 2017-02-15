@@ -25,12 +25,15 @@ define(['common/util/canon',
             self = this,
             key,
             //FIXME: There shouldn't be state.
-            _yetToCompute = {},
-            _DIFF = {},
-            _needChecking = true,
-            _rounds = 0,
-            _concatResult,
-            _diffMoves = {},
+            // generateTreeDiff
+            //_yetToCompute = {},
+            //_DIFF = {},
+            //_needChecking = true,
+            //_rounds = 0,
+            //_diffMoves = {},
+
+            // tryToConcatChanges
+            //_concatResult,
             _conflictItems = [],
             _conflictMine,
             _conflictTheirs,
@@ -277,25 +280,25 @@ define(['common/util/canon',
             return {};
         }
 
-        function combineMoveIntoMetaDiff(diff) {
+        function combineMoveIntoMetaDiff(diff, diffMoves) {
             var keys = Object.keys(diff),
                 i;
             for (i = 0; i < keys.length; i++) {
-                if (_diffMoves[keys[i]]) {
-                    diff[_diffMoves[keys[i]]] = diff[keys[i]];
+                if (diffMoves[keys[i]]) {
+                    diff[diffMoves[keys[i]]] = diff[keys[i]];
                     delete diff[keys[i]];
                 } else if (typeof diff[keys[i]] === 'object') {
-                    combineMoveIntoMetaDiff(diff[keys[i]]);
+                    combineMoveIntoMetaDiff(diff[keys[i]], diffMoves);
                 }
             }
         }
 
-        function combineMoveIntoPointerDiff(diff) {
+        function combineMoveIntoPointerDiff(diff, diffMoves) {
             var keys = Object.keys(diff),
                 i;
             for (i = 0; i < keys.length; i++) {
-                if (_diffMoves[diff[keys[i]]]) {
-                    diff[keys[i]] = _diffMoves[diff[keys[i]]];
+                if (diffMoves[diff[keys[i]]]) {
+                    diff[keys[i]] = diffMoves[diff[keys[i]]];
                 }
             }
         }
@@ -357,22 +360,22 @@ define(['common/util/canon',
             return diff;
         }
 
-        function finalizeMetaDiff(diff) {
+        function finalizeMetaDiff(diff, diffMoves) {
             //at this point _DIFF is ready and the _diffMoves is complete...
             var relids = getDiffChildrenRelids(diff),
                 i, sMeta, tMeta;
             if (diff.meta) {
                 sMeta = diff.meta.source || {};
                 tMeta = diff.meta.target || {};
-                combineMoveIntoMetaDiff(sMeta);
+                combineMoveIntoMetaDiff(sMeta, diffMoves);
                 diff.meta = diffObjects(sMeta, tMeta);
             }
             for (i = 0; i < relids.length; i++) {
-                finalizeMetaDiff(diff[relids[i]]);
+                finalizeMetaDiff(diff[relids[i]], diffMoves);
             }
         }
 
-        function finalizePointerDiff(diff) {
+        function finalizePointerDiff(diff, diffMoves) {
             var relids = getDiffChildrenRelids(diff),
                 i, sPointer, tPointer;
             if (diff.pointer) {
@@ -381,33 +384,33 @@ define(['common/util/canon',
                 /*if(diff.movedFrom && !sPointer.base && tPointer.base){
                  delete tPointer.base;
                  }*/
-                combineMoveIntoPointerDiff(sPointer);
+                combineMoveIntoPointerDiff(sPointer, diffMoves);
                 diff.pointer = diffObjects(sPointer, tPointer);
             }
             for (i = 0; i < relids.length; i++) {
-                finalizePointerDiff(diff[relids[i]]);
+                finalizePointerDiff(diff[relids[i]], diffMoves);
             }
         }
 
-        function finalizeSetDiff(diff) {
+        function finalizeSetDiff(diff, diffMoves) {
             var relids = getDiffChildrenRelids(diff),
                 i, sSet, tSet;
             if (diff.set) {
                 sSet = diff.set.source || {};
                 tSet = diff.set.target || {};
-                combineMoveIntoMetaDiff(sSet);
+                combineMoveIntoMetaDiff(sSet, diffMoves);
                 diff.set = diffObjects(sSet, tSet);
             }
             for (i = 0; i < relids.length; i++) {
-                finalizeSetDiff(diff[relids[i]]);
+                finalizeSetDiff(diff[relids[i]], diffMoves);
             }
         }
 
-        function finalizeDiff() {
-            finalizeMetaDiff(_DIFF);
-            finalizePointerDiff(_DIFF);
-            finalizeSetDiff(_DIFF);
-            normalize(_DIFF);
+        function finalizeDiff(DIFF, diffMoves) {
+            finalizeMetaDiff(DIFF, diffMoves);
+            finalizePointerDiff(DIFF, diffMoves);
+            finalizeSetDiff(DIFF, diffMoves);
+            normalize(DIFF);
         }
 
         function isEmptyNodeDiff(diff) {
@@ -555,7 +558,7 @@ define(['common/util/canon',
             return merged;
         }
 
-        function updateDiff(sourceRoot, targetRoot) {
+        function updateDiff(sourceRoot, targetRoot, yetToCompute) {
             var diff = self.nodeDiff(sourceRoot, targetRoot) || {},
                 oDiff = ovrDiff(sourceRoot, targetRoot),
                 getChild = function (childArray, relid) {
@@ -597,9 +600,9 @@ define(['common/util/canon',
                     if (child) {
                         guid = self.getGuid(child);
                         diff[tDiff[i].relid] = {guid: guid, removed: true, hash: self.getHash(child)};
-                        _yetToCompute[guid] = _yetToCompute[guid] || {};
-                        _yetToCompute[guid].from = child;
-                        _yetToCompute[guid].fromExpanded = false;
+                        yetToCompute[guid] = yetToCompute[guid] || {};
+                        yetToCompute[guid].from = child;
+                        yetToCompute[guid].fromExpanded = false;
                     }
                 }
 
@@ -616,9 +619,9 @@ define(['common/util/canon',
                             hash: self.getHash(child),
                             pointer: {source: {}, target: {base: base === null ? null : self.getPath(base)}}
                         };
-                        _yetToCompute[guid] = _yetToCompute[guid] || {};
-                        _yetToCompute[guid].to = child;
-                        _yetToCompute[guid].toExpanded = false;
+                        yetToCompute[guid] = yetToCompute[guid] || {};
+                        yetToCompute[guid].to = child;
+                        yetToCompute[guid].toExpanded = false;
                     }
                 }
 
@@ -626,7 +629,7 @@ define(['common/util/canon',
                     child = getChild(sChildren, self.getRelid(tChildren[i]));
                     if (child && self.getHash(tChildren[i]) !== self.getHash(child)) {
                         done = TASYNC.call(childComputationFinished,
-                            updateDiff(child, tChildren[i]), self.getRelid(child), done);
+                            updateDiff(child, tChildren[i], yetToCompute), self.getRelid(child), done);
                     }
                 }
                 return TASYNC.call(function () {
@@ -650,7 +653,7 @@ define(['common/util/canon',
             }, self.loadChildren(sourceRoot), self.loadChildren(targetRoot));
         }
 
-        function expandDiff(root, isDeleted) {
+        function expandDiff(root, isDeleted, yetToCompute) {
             var diff = {
                 guid: self.getGuid(root),
                 hash: self.getHash(root),
@@ -667,24 +670,24 @@ define(['common/util/canon',
                     };
 
                     if (isDeleted) {
-                        _yetToCompute[guid] = _yetToCompute[guid] || {};
-                        _yetToCompute[guid].from = children[i];
-                        _yetToCompute[guid].fromExpanded = false;
+                        yetToCompute[guid] = yetToCompute[guid] || {};
+                        yetToCompute[guid].from = children[i];
+                        yetToCompute[guid].fromExpanded = false;
                     } else {
-                        _yetToCompute[guid] = _yetToCompute[guid] || {};
-                        _yetToCompute[guid].to = children[i];
-                        _yetToCompute[guid].toExpanded = false;
+                        yetToCompute[guid] = yetToCompute[guid] || {};
+                        yetToCompute[guid].to = children[i];
+                        yetToCompute[guid].toExpanded = false;
                     }
                 }
                 return diff;
             }, self.loadChildren(root));
         }
 
-        function insertIntoDiff(path, diff) {
+        function insertIntoDiff(path, diff, sDiff) {
             var pathArray = path.split('/'),
                 relid = pathArray.pop(),
-                sDiff = _DIFF,
                 i;
+
             pathArray.shift();
             for (i = 0; i < pathArray.length; i++) {
                 sDiff = sDiff[pathArray[i]];
@@ -741,7 +744,7 @@ define(['common/util/canon',
             var i, base, relid, nodepath;
 
             if (path === '') {
-                _concatResult = JSON.parse(JSON.stringify(object));
+                //_concatResult = JSON.parse(JSON.stringify(object));
                 return;
             }
             nodepath = path.match(/\/\/.*\/\//) || [];
@@ -764,22 +767,23 @@ define(['common/util/canon',
             return;
         }
 
-        function checkRound() {
-            var guids = Object.keys(_yetToCompute),
-                done, ytc,
+        function checkRound(yetToCompute, DIFF, diffMoves, needChecking) {
+            var guids = Object.keys(yetToCompute),
+                done,
+                ytc,
                 i,
                 computingMove = function (mDiff, info) {
                     mDiff.guid = self.getGuid(info.from);
                     mDiff.movedFrom = self.getPath(info.from);
                     mDiff.ooGuids = gatherObstructiveGuids(info.from);
-                    _diffMoves[self.getPath(info.from)] = self.getPath(info.to);
-                    insertAtPath(_DIFF, self.getPath(info.to), mDiff);
+                    diffMoves[self.getPath(info.from)] = self.getPath(info.to);
+                    insertAtPath(DIFF, self.getPath(info.to), mDiff);
                     return null;
                 },
                 expandFrom = function (mDiff, info) {
                     mDiff.hash = self.getHash(info.from);
                     mDiff.removed = true;
-                    insertIntoDiff(self.getPath(info.from), mDiff);
+                    insertIntoDiff(self.getPath(info.from), mDiff, DIFF);
                     return null;
                 },
                 expandTo = function (mDiff, info) {
@@ -787,39 +791,40 @@ define(['common/util/canon',
                         mDiff.hash = self.getHash(info.to);
                     }
                     mDiff.removed = false;
-                    insertIntoDiff(self.getPath(info.to), mDiff);
+                    insertIntoDiff(self.getPath(info.to), mDiff, DIFF);
                     return null;
                 };
 
-            if (_needChecking !== true || guids.length < 1) {
-                shrinkDiff(_DIFF);
-                finalizeDiff();
-                return JSON.parse(JSON.stringify(_DIFF));
+            if (needChecking !== true || guids.length < 1) {
+                shrinkDiff(DIFF);
+                finalizeDiff(DIFF, diffMoves);
+                return JSON.parse(JSON.stringify(DIFF));
             }
 
-            _needChecking = false;
+            needChecking = false;
             for (i = 0; i < guids.length; i++) {
-                ytc = _yetToCompute[guids[i]];
+                ytc = yetToCompute[guids[i]];
                 if (ytc.from && ytc.to) {
                     //move
-                    _needChecking = true;
-                    delete _yetToCompute[guids[i]];
-                    done = TASYNC.call(computingMove, updateDiff(ytc.from, ytc.to), ytc);
+                    needChecking = true;
+                    delete yetToCompute[guids[i]];
+                    done = TASYNC.call(computingMove, updateDiff(ytc.from, ytc.to, yetToCompute), ytc);
                 } else {
                     if (ytc.from && ytc.fromExpanded === false) {
                         //expand from
                         ytc.fromExpanded = true;
-                        _needChecking = true;
-                        done = TASYNC.call(expandFrom, expandDiff(ytc.from, true), ytc);
+                        needChecking = true;
+                        done = TASYNC.call(expandFrom, expandDiff(ytc.from, true, yetToCompute), ytc);
                     } else if (ytc.to && ytc.toExpanded === false) {
                         //expand to
                         ytc.toExpanded = true;
-                        _needChecking = true;
-                        done = TASYNC.call(expandTo, expandDiff(ytc.to, false), ytc);
+                        needChecking = true;
+                        done = TASYNC.call(expandTo, expandDiff(ytc.to, false, yetToCompute), ytc);
                     }
                 }
             }
-            return TASYNC.call(checkRound, done);
+
+            return TASYNC.call(checkRound, yetToCompute, DIFF, diffMoves, needChecking, done);
         }
 
         function hasRealChange(diffNode) {
@@ -2527,19 +2532,18 @@ define(['common/util/canon',
         };
 
         this.generateTreeDiff = function (sRoot, tRoot) {
-            _yetToCompute = {};
-            _DIFF = {};
-            _diffMoves = {};
-            _needChecking = true;
-            _rounds = 0;
-            return TASYNC.call(function (d) {
-                _DIFF = d;
-                return checkRound();
-            }, updateDiff(sRoot, tRoot));
+            var yetToCompute = {},
+                diffMoves = {};
+
+            return TASYNC.call(function (diff) {
+
+                return checkRound(yetToCompute, diff, diffMoves, true);
+            }, updateDiff(sRoot, tRoot, yetToCompute));
         };
 
         this.generateLightTreeDiff = function (sRoot, tRoot) {
-            return updateDiff(sRoot, tRoot);
+            var yetToCompute = {};
+            return updateDiff(sRoot, tRoot, yetToCompute);
         };
 
         this.applyTreeDiff = function (root, diff) {
