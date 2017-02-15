@@ -10,7 +10,8 @@ define([
     'common/core/tasync',
     'common/util/random',
     'common/core/constants',
-], function (ASSERT, TASYNC, RANDOM, CONSTANTS) {
+    'common/storage/constants'
+], function (ASSERT, TASYNC, RANDOM, CONSTANTS, STORAGE_CONSTANTS) {
 
     'use strict';
 
@@ -90,15 +91,14 @@ define([
         function getRelativePointerPathFrom(node, source, name) {
             ASSERT(self.isValidNode(node) && typeof source === 'string' && typeof name === 'string');
             var target,
+                ovrInfo,
                 ovrData;
 
             do {
-                ovrData = (innerCore.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {})[source];
-                if (ovrData) {
-                    target = ovrData[name];
-                    if (target !== undefined) {
-                        break;
-                    }
+                ovrInfo = self.overlayInquiry(node, source, name);
+                if (typeof ovrInfo.value === 'string') {
+                    target = ovrInfo.value;
+                    break;
                 }
 
                 source = '/' + innerCore.getRelid(node) + source;
@@ -125,6 +125,160 @@ define([
             }
         }
 
+        function attachOverlays(node) {
+            var overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
+                i,
+                overlayPromises = [];
+
+            if (overlays instanceof Array) {
+                for (i = 0; i < overlays.length; i += 1) {
+                    overlayPromises.push(innerCore.loadObject(overlays[i]));
+                }
+                TASYNC.call(function (overlayObjects) {
+                    node.overlays = [];
+                    node.overlayMutations = [];
+                    for (i = 0; i < overlayObjects.length; i += 1) {
+                        node.overlays.push(overlayObjects[i]);
+                        node.overlayMutations.push(false);
+                    }
+                    return node;
+                }, TASYNC.lift(overlayPromises))
+            } else {
+                return node;
+            }
+        }
+
+        function hasShardedOverlays(node) {
+            return self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY)[CONSTANTS.OVERLAY_SHARD_INDICATOR] === true;
+        }
+
+        function shouldHaveShardedOverlays(node) {
+            var count = 0,
+                source,
+                name,
+                overlaysObject = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
+
+            for (source in overlaysObject) {
+                for (name in overlaysObject[source]) {
+                    count += 1;
+                }
+            }
+
+            return count >= (options.globConf.storage.overlaysShardLimit || 20000);
+        }
+
+        function reserveOverlayShard(node) {
+            // At this point the node should already be mutated.
+            var overlaysData = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
+                shardId = RANDOM.generateRelid(overlaysData),
+                newShardObject = {
+                    type: STORAGE_CONSTANTS.OVERLAY_SHARD_TYPE,
+                    itemCount: 0,
+                    items: {},
+                    id: null
+                };
+
+            overlaysData[shardId] = null;
+            node.overlays[shardId] = newShardObject;
+            node.overlayMutations[shardId] = true;
+
+            self.setProperty(node, CONSTANTS.OVERLAYS_PROPERTY, overlaysData);
+            return shardId;
+        }
+
+        function removeOverlayShard(node, shardId) {
+            // At this point the node should always be mutated.
+            var overlaysData = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
+
+            delete node.overlays[shardId];
+            delete node.overlayMutations[shardId];
+            delete overlaysData[shardId];
+            self.setProperty(node, CONSTANTS.OVERLAYS_PROPERTY, overlaysData);
+        }
+
+        function transformOverlays(node) {
+            var originalOverlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
+                maxEntryPerShard = options.storage.overlayShardSize || 10000,
+                count = maxEntryPerShard,
+                source,
+                name,
+                newOverlaysObject = {},
+                shardId;
+
+            newOverlaysObject[CONSTANTS.OVERLAY_SHARD_INDICATOR] = true;
+            newOverlaysObject.smallest = null;
+
+            node.overlays = {};
+            node.overlayMutations = {};
+            for (source in originalOverlays) {
+                for (name in originalOverlays[source]) {
+                    if (count >= maxEntryPerShard) {
+                        shardId = reserveOverlayShard(node);
+                        newOverlaysObject.smallest = shardId;
+                        count = 0;
+                    }
+
+                    node.overlays[shardId][source] = node.overlays[shardId][source] || {};
+                    node.overlays[shardId][source][name] = originalOverlays[source][name];
+                    count += 1;
+                }
+            }
+
+            //this mutates the node as well
+            self.setProperty(node, CONSTANTS.OVERLAYS_PROPERTY, newOverlaysObject);
+        }
+
+        function updateSmallestOverlayShardIndex(node){
+            var shardId,
+                minimalItemCount = options.storage.overlayShardSize || 10000;
+        }
+
+        function putEntryIntoShardedOverlays(node, source, name, target) {
+            // At this point we expect that everything was checked and we can simply look for
+            // the proper place of the entry.
+            var index = 0,
+                isFull = function (index) {
+                    var item, element, count = 0;
+                    if (node.overlayShardFull[index]) {
+                        return true;
+                    }
+                    for (item in node.overlays[index]) {
+                        for (element in node.overlays[index]) {
+                            count += 1;
+                        }
+                    }
+
+                    return count >= (options.globConf.storage.overlayShardSize || 10000);
+                },
+                overlayData = JSON.parse(JSON.stringify(self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY)));
+
+            while (index < node.overlays.length) {
+                if (isFull(index) === false) {
+                    break;
+                }
+            }
+
+            if (index === node.overlays.length) {
+                node.overlays.push({});
+                overlayData.push(null);
+                node.overlayMutations.push(true);
+                node.overlayShardFull.push(false);
+            }
+
+            node.overlays[index][source] = node.overlays[index][source] || {};
+            node.overlays[index][source][name] = target;
+            node.overlayMutations[index] = true;
+            node.overlayShardFull[index] = isFull(index);
+            overlayData[index] = null;
+
+            self.setProperty(node, CONSTANTS.OVERLAYS_PROPERTY, overlayData);
+        }
+
+        function persistShardedOverlays(node, stackedObjects) {
+            // This recursive function will save objects, right before calling the underlying persist.
+
+        }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -140,11 +294,31 @@ define([
         };
 
         this.persist = function (node) {
-            var persisted = innerCore.persist(node);
+            var stackedObjects = {},
+                persisted = innerCore.persist(node);
 
+            persistShardedOverlays(node, stackedObjects);
             storeNewInverseOverlays(self.getRoot(node));
 
             return persisted;
+        };
+
+        this.loadRoot = function (hash) {
+            return TASYNC.call(function (root) {
+                return attachOverlays(root);
+            }, innerCore.loadRoot(hash));
+        };
+
+        this.loadChild = function (node, relid) {
+            return TASYNC.call(function (child) {
+                return attachOverlays(child);
+            }, innerCore.loadChild(node, relid));
+        };
+
+        this.loadByPath = function (node, relPath) {
+            return TASYNC.call(function (target) {
+                return attachOverlays(target);
+            }, innerCore.loadByPath(node, relPath));
         };
         //</editor-fold>
 
@@ -153,6 +327,8 @@ define([
             var hash,
                 inverseOverlays = {},
                 overlay,
+                overlayArray,
+                i,
                 source,
                 name,
                 target;
@@ -174,15 +350,22 @@ define([
             }
 
             // Otherwise we have to compute it
-            overlay = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
-            overlay = overlay || {};
+            if (hasShardedOverlays(node)) {
+                overlayArray = node.overlays;
+            } else {
+                overlayArray = [self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}];
+            }
+
             inverseOverlays = {};
-            for (source in overlay) {
-                for (name in overlay[source]) {
-                    target = overlay[source][name];
-                    inverseOverlays[target] = inverseOverlays[target] || {};
-                    inverseOverlays[target][name] = inverseOverlays[target][name] || [];
-                    inverseOverlays[target][name].push(source);
+            for (i = 0; i < overlayArray.length; i += 1) {
+                overlay = overlayArray[i];
+                for (source in overlay) {
+                    for (name in overlay[source]) {
+                        target = overlay[source][name];
+                        inverseOverlays[target] = inverseOverlays[target] || {};
+                        inverseOverlays[target][name] = inverseOverlays[target][name] || [];
+                        inverseOverlays[target][name].push(source);
+                    }
                 }
             }
 
@@ -298,21 +481,92 @@ define([
             innerCore.setProperty(node, name, value);
         };
 
+        this.overlayInquiry = function (node, source, name) {
+            // If name is not given, then the whole object returned.
+            // If no entry found, null is returned.
+            var ordinaryOverlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {},
+                i, key,
+                overlayItemList,
+                result = {
+                    index: null,
+                    value: null
+                };
+
+            if (ordinaryOverlays instanceof Array) {
+                for (i = 0; i < node.overlays.length; i += 1) {
+                    overlayItemList = node.overlays[i];
+                    if (overlayItemList.hasOwnProperty(source)) {
+                        if (typeof name === 'string' && typeof overlayItemList[source][name] === 'string') {
+                            result.index = i;
+                            result.value = overlayItemList[source][name];
+                            return result;
+                        } else {
+                            result.value = result.value || {};
+                            result.index = result.index || [];
+                            for (key in overlayItemList[source]) {
+                                result.value[key] = overlayItemList[source][key];
+                            }
+                            result.index.push(i);
+                        }
+                    }
+                }
+
+                return result;
+            } else {
+                if (ordinaryOverlays.hasOwnProperty(source)) {
+                    if (typeof name === 'string') {
+                        result.value = typeof ordinaryOverlays[source][name] === 'string' ?
+                            ordinaryOverlays[source][name] : null;
+                    } else {
+                        result.value = ordinaryOverlays[source];
+                    }
+                }
+
+                return result;
+            }
+
+        };
+
         this.overlayRemove = function (node, source, name, target) {
             ASSERT(self.isValidNode(node));
             ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && self.isPointerName(name));
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
-            var overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
+            var currentOverlayInfo = self.overlayInquiry(node, source, name),
+                index,
+                overlays,
                 overlayNode,
-                index;
+                overlayArray;
 
-            overlayNode = innerCore.getChild(overlays, source);
-            ASSERT(overlayNode && innerCore.getProperty(overlayNode, name) === target);
-            innerCore.deleteProperty(overlayNode, name);
+            ASSERT(currentOverlayInfo.value === target);
 
-            if (innerCore.getKeys(overlayNode).length === 0) {
-                innerCore.deleteProperty(overlays, source);
+            if (hasShardedOverlays(node)) {
+                if (node.overlayMutations[currentOverlayInfo.index] === false) {
+                    // mutate - the node and the overlay as well
+                    overlayArray = JSON.parse(JSON.stringify(self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY)));
+                    node.overlayMutations[currentOverlayInfo.index] = true;
+                    overlayArray[currentOverlayInfo.index] = null;
+                    self.setProperty(node, CONSTANTS.OVERLAYS_PROPERTY, overlayArray);
+                }
+
+                delete node.overlays[currentOverlayInfo.index][source][name];
+
+                //check which portions of the overlays can be cleaned up
+                if (Object.keys(node.overlays[currentOverlayInfo.index][source]).length === 0) {
+                    // delete node.overlays[currentOverlayInfo.index][source];
+                    if (Object.keys(node.overlays[currentOverlayInfo.index]).length === 0) {
+                        node.overlays[currentOverlayInfo.index] = null;
+                    }
+                }
+            } else {
+                overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
+
+                overlayNode = innerCore.getChild(overlays, source);
+                innerCore.deleteProperty(overlayNode, name);
+
+                if (innerCore.getKeys(overlayNode).length === 0) {
+                    innerCore.deleteProperty(overlays, source);
+                }
             }
 
             //Now we check if we need to mutate the inverse overlays
@@ -333,27 +587,35 @@ define([
                     }
                 }
             }
-
         };
 
         this.overlayQuery = function (node, prefix) {
             ASSERT(self.isValidNode(node) && innerCore.isValidPath(prefix));
 
-            var overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {},
+            var overlayArray,
+                overlays,
                 inverseOverlays = self.getInverseOverlayOfNode(node), // We necessarily have to compute at this point,
                 i, path, name, list = [],
                 prefix2 = prefix + CONSTANTS.PATH_SEP;
 
-            for (path in overlays) {
-                if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
-                    for (name in overlays[path]) {
-                        if (self.isPointerName(name)) {
-                            list.push({
-                                s: path,                // source
-                                n: name,                // name
-                                t: overlays[path][name],// target
-                                p: true                 // is forward relation
-                            });
+            if (hasShardedOverlays(node)) {
+                overlayArray = node.overlays;
+            } else {
+                overlayArray = [self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}]
+            }
+            for (i = 0; i < overlayArray.length; i += 1) {
+                overlays = overlayArray[i];
+                for (path in overlays) {
+                    if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
+                        for (name in overlays[path]) {
+                            if (self.isPointerName(name)) {
+                                list.push({
+                                    s: path,                // source
+                                    n: name,                // name
+                                    t: overlays[path][name],// target
+                                    p: true                 // is forward relation
+                                });
+                            }
                         }
                     }
                 }
@@ -382,12 +644,27 @@ define([
             ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && self.isPointerName(name));
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
-            var overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
+            var currentOverlayInfo = self.overlayInquiry(node, source, name),
+                index,
+                overlays,
+                overlay,
+                entryCount,
+                overlayArray;
+
+            ASSERT(currentOverlayInfo.value === null);
+
+            if (hasShardedOverlays(node) === false && shouldHaveShardedOverlays(node)) {
+                transformOverlays(node);
+            }
+
+            if (hasShardedOverlays(node)) {
+                putEntryIntoShardedOverlays(node, source, name, target);
+            } else {
+                overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
                 overlay = self.getChild(overlays, source);
 
-            // Make sure it is an insert
-            ASSERT(self.getProperty(overlay, name) === undefined);
-            self.setProperty(overlay, name, target);
+                self.setProperty(overlay, name, target);
+            }
 
             //First check if we to inverse computed already and if we need to mutate it
             if (node.inverseOverlays) {
@@ -544,7 +821,6 @@ define([
                                 while (data.firstLength-- > 0) {
                                     nodeToChangeOverlay = innerCore.getParent(nodeToChangeOverlay);
                                 }
-                                // overlays = innerCore.getChild(overlays, CONSTANTS.OVERLAYS_PROPERTY);
 
                                 source = innerCore.joinPaths(data.first, entry.s.substr(baseOldPath.length));
                                 target = data.second;
@@ -713,7 +989,6 @@ define([
                         while (data.firstLength-- > 0) {
                             nodeToModifyOverlays = innerCore.getParent(nodeToModifyOverlays);
                         }
-                        // overlays = innerCore.getChild(overlays, CONSTANTS.OVERLAYS_PROPERTY);
 
                         source = innerCore.joinPaths(data.first, entry.s.substr(baseOldPath.length));
                         target = data.second;
@@ -779,7 +1054,7 @@ define([
                 i;
 
             for (i = 0; i < children.length; i += 1) {
-                result.push(innerCore.loadChild(node, children[i]));
+                result.push(self.loadChild(node, children[i]));
             }
 
             return TASYNC.lift(result);
@@ -792,19 +1067,20 @@ define([
         this.getPointerNamesFrom = function (node, source) {
             ASSERT(self.isValidNode(node));
 
-            var names = [];
+            var names = [],
+                name,
+                overlayInfo;
 
             do {
-                var child = (innerCore.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {})[source];
-                if (child) {
-                    for (var name in child) {
+                overlayInfo = self.overlayInquiry(node, source);
+                if (overlayInfo.value !== null) {
+                    for (name in overlayInfo.value) {
                         ASSERT(names.indexOf(name) === -1);
                         if (self.isPointerName(name)) {
                             names.push(name);
                         }
                     }
                 }
-
                 source = '/' + innerCore.getRelid(node) + source;
                 node = innerCore.getParent(node);
             } while (node);
@@ -831,7 +1107,7 @@ define([
             var res = getRelativePointerPathFrom(node, '', name);
 
             if (res.target !== undefined) {
-                return innerCore.loadByPath(res.node, res.target);
+                return self.loadByPath(res.node, res.target);
             } else {
                 return null;
             }
@@ -914,14 +1190,14 @@ define([
             ASSERT(self.isValidNode(node) && typeof name === 'string');
 
             var source = '',
-                overlays;
+                overlayInfo;
 
             do {
-                overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
-                if (overlays && overlays[source] && typeof overlays[source][name] === 'string') {
-                    self.overlayRemove(node, source, name, overlays[source][name]);
+                overlayInfo = self.overlayInquiry(node, source, name);
+                if (typeof overlayInfo.value === 'string') {
+                    self.overlayRemove(node, source, name, overlayInfo.value);
+                    break;
                 }
-
                 source = CONSTANTS.PATH_SEP + self.getRelid(node) + source;
                 node = self.getParent(node);
             } while (node);

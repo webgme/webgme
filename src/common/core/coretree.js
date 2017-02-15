@@ -30,12 +30,12 @@ define([
             roots = [],
             ticks = 0,
             mutateCount = 0,
-            stackedObjects = {},
             self = this;
 
         storage.loadObject = TASYNC.wrap(storage.loadObject);
 
         this.loadPaths = TASYNC.wrap(storage.loadPaths);
+        this.loadObject = storage.loadObject;
         this.logger = logger;
 
         function ASSERT_IS_OBJECT(value) {
@@ -161,7 +161,7 @@ define([
             return relid.charAt(0) !== '_';
         }
 
-        function __saveData(data, root, path) {
+        function __saveData(data, root, path, stackedObjects) {
             ASSERT(__isMutableData(data));
             var cleanData;
 
@@ -177,7 +177,7 @@ define([
                 key = keys[i];
                 child = data[key];
                 if (__isMutableData(child)) {
-                    sub = __saveData(child, root, path + '/' + key);
+                    sub = __saveData(child, root, path + '/' + key, stackedObjects);
                     if (JSON.stringify(sub) === JSON.stringify(__getEmptyData())) {
                         delete data[key];
                     } else {
@@ -819,10 +819,11 @@ define([
             ASSERT(node.children[ID_NAME] === undefined);
         };
 
-        this.persist = function (node) {
+        this.persist = function (node, stackedObjects) {
             var updated = false,
                 result;
 
+            stackedObjects = stackedObjects || {};
             node = self.normalize(node);
 
             //currently there is no reason to call the persist on a non-root object
@@ -832,11 +833,10 @@ define([
                 return {rootHash: node.data[ID_NAME], objects: {}};
             }
 
-            updated = __saveData(node.data, node, '');
+            updated = __saveData(node.data, node, '', stackedObjects);
             if (updated !== __getEmptyData()) {
                 result = {};
                 result.objects = stackedObjects;
-                stackedObjects = {};
                 result.rootHash = node.data[ID_NAME];
             } else {
                 result = {rootHash: node.data[ID_NAME], objects: {}};

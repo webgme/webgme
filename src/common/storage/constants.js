@@ -71,9 +71,10 @@ define([], function () {
     return {
         //Version
         VERSION: '1.1.0',
-        // Database related
+        // Database related     
         MONGO_ID: '_id',
         COMMIT_TYPE: 'commit',
+        OVERLAY_SHARD_TYPE: 'shard',
         PROJECT_INFO_KEYS: ['createdAt', 'creator', 'viewedAt', 'viewer', 'modifiedAt', 'modifier', 'kind'],
         EMPTY_PROJECT_DATA: 'empty',
         PROJECT_ID_SEP: '+',
