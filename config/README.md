@@ -91,6 +91,8 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Type of storage, available options: `'FS'` (File System), `'S3'` (Simple Storage Service).
 - `config.blob.fsDir = './blob-local-storage'`
  - Directory where to store the blob files in case of `'FS'`.
+- `config.blob.namespace = ''`
+ - If defined and not empty the blob buckets will be put under the given namespace.
 - `config.blob.s3 = {}`
  - S3 configuration passed to `aws-sdk` module. See config.default.js for local mock example.
 

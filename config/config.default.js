@@ -58,6 +58,7 @@ var path = require('path'),
         blob: {
             type: 'FS', //'FS', 'S3'
             fsDir: './blob-local-storage',
+            namespace: '',
             s3: {
                 accessKeyId: '123',
                 secretAccessKey: 'abc',

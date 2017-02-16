@@ -17,7 +17,7 @@ var fs = require('fs'),
     BlobBackendBase = require('./BlobBackendBase');
 
 var BlobS3Backend = function (gmeConfig, logger) {
-    BlobBackendBase.call(this, logger);
+    BlobBackendBase.call(this, gmeConfig, logger);
     this.awsConfig = gmeConfig.blob.s3;
     // NOTE: development mode
     // install https://github.com/jubos/fake-s3
