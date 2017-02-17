@@ -57,6 +57,16 @@ describe('UserProject', function () {
         expect(project instanceof ProjectInterface).to.equal(true);
     });
 
+    it('should getProjectInfo', function (done) {
+        project.getProjectInfo()
+            .then(function (projectInfo) {
+                expect(Object.keys(projectInfo)).to.have.members([
+                    '_id', 'branches', 'hooks', 'info', 'name', 'owner', 'rights'
+                ]);
+            })
+            .nodeify(done);
+    });
+
     it('should getBranches', function (done) {
         project.getBranches()
             .then(function (branches_) {
@@ -207,7 +217,7 @@ describe('UserProject', function () {
         project.makeCommit(null, [], importResult.rootHash, {}, 'new disconnected commit')
             .then(function (result) {
                 expect(result.hash).to.include('#');
-                return project.squashCommits(importResult.commitHash, result.hash, 'testing squash to fail')
+                return project.squashCommits(importResult.commitHash, result.hash, 'testing squash to fail');
             })
             .then(function () {
                 throw new Error('missing error handling during squash');
@@ -251,4 +261,4 @@ describe('UserProject', function () {
             })
             .nodeify(done);
     });
-})
+});

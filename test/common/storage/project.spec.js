@@ -1,6 +1,7 @@
 /*jshint node:true, mocha:true*/
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 
@@ -136,6 +137,27 @@ describe('common storage project', function () {
                 expect(project.projectId).to.equal(projectName2Id(projectName));
                 expect(branches.hasOwnProperty('master')).to.equal(true);
                 expect(access).to.deep.equal({read: true, write: true, delete: true});
+            })
+            .nodeify(done);
+    });
+
+    it('should getProjectInfo', function (done) {
+        var project,
+            branches,
+            access;
+
+        Q.nfcall(storage.openProject, projectName2Id(projectName))
+            .then(function (result) {
+                project = result[0];
+                branches = result[1];
+                access = result[2];
+
+                return project.getProjectInfo();
+            })
+            .then(function (projectInfo) {
+                expect(Object.keys(projectInfo)).to.have.members([
+                    '_id', 'branches', 'hooks', 'info', 'name', 'owner', 'rights'
+                ]);
             })
             .nodeify(done);
     });
@@ -708,6 +730,7 @@ describe('common storage project', function () {
         it('should throw not implemented exceptions', function () {
             var projectInterface = new ProjectInterface(projectName2Id(projectName), storage, logger, gmeConfig);
 
+            expect(projectInterface.getProjectInfo).to.throw(Error, /must be overridden in derived class/);
             expect(projectInterface.makeCommit).to.throw(Error, /must be overridden in derived class/);
             expect(projectInterface.setBranchHash).to.throw(Error, /must be overridden in derived class/);
             expect(projectInterface.getBranchHash).to.throw(Error, /must be overridden in derived class/);
