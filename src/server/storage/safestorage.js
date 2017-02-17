@@ -227,7 +227,7 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
  * @param {string} data.projectName - name of new project.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {string} [data.ownerId=data.username]
- * @param {string} [data.kind] - Category of project - typically based on meta.
+ * @param {string} [data.kind] - Category of project typically based on meta.
  * @param {function} [callback]
  * @returns {promise} //TODO: jsdocify this
  */
@@ -243,6 +243,8 @@ SafeStorage.prototype.createProject = function (data, callback) {
         rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+        check(typeof data.kind === 'undefined' || typeof data.kind === 'string', deferred,
+            'data.kind is not a string.') ||
         check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
         check(REGEXP.PROJECT_NAME.test(data.projectName), deferred,
             'data.projectName failed regexp: ' + data.projectName);
@@ -270,11 +272,14 @@ SafeStorage.prototype.createProject = function (data, callback) {
                         creator: data.username,
                         viewer: data.username,
                         modifier: data.username,
-                        kind: data.kind
                     };
 
                 if (ownerRights.write !== true) {
                     throw new Error('Not authorized to create new project for [' + data.ownerId + ']');
+                }
+
+                if (data.kind) {
+                    info.kind = data.kind;
                 }
 
                 return self.metadataStorage.addProject(data.ownerId, data.projectName, info);
@@ -452,11 +457,14 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
                         creator: data.username,
                         viewer: data.username,
                         modifier: data.username,
-                        kind: prevProjectData.info.kind
                     };
 
                 if (ownerRights && ownerRights.write !== true) {
                     throw new Error('Not authorized to create project for [' + data.ownerId + ']');
+                }
+
+                if (prevProjectData.info.kind) {
+                    info.kind = prevProjectData.info.kind;
                 }
 
                 // TODO: Should webhooks be copied over too?

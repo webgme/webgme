@@ -795,6 +795,7 @@ describe('GME authentication', function () {
                 expect(project).to.deep.equal({
                     _id: projId,
                     info: {},
+                    hooks: {},
                     owner: ownerName,
                     name: projectName
                 });
@@ -815,6 +816,7 @@ describe('GME authentication', function () {
                 expect(project).to.deep.equal({
                     _id: projId,
                     info: {createdAt: 'justNow'},
+                    hooks: {},
                     owner: ownerName,
                     name: projectName,
                 });

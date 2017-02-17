@@ -265,9 +265,18 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     blobClient = getBlobClient(webgmeToken);
 
                     _addZippedExportToBlob(filename, blobClient)
-                        .then(function (jsonProject) {
+                        .then(function (projectStr) {
+                            var jsonProject = JSON.parse(projectStr);
+
+                            if (!jsonProject.kind) {
+                                jsonProject.kind = name;
+                                logger.info('Seed did not define a kind, the seed-name [' + name + '] will be used ' +
+                                    'as kind for new project.');
+                            }
+
                             deferred.resolve(JSON.stringify({
-                                seed: JSON.parse(jsonProject),
+                                seed: jsonProject,
+                                msg: 'Seeded project from file-seed ' + name + '.webgmex.'
                             }));
                         })
                         .catch(deferred.reject);
@@ -284,7 +293,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     function _getSeedFromProject(storage, projectId, branchName, commitHash, callback) {
         var deferred = Q.defer(),
-            options = {};
+            options = {},
+            kind;
 
         storage.openProject(projectId, function (err, project, branches/*, access*/) {
             if (err) {
@@ -304,9 +314,17 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 options.branchName = branchName;
             }
 
-            storageUtils.getProjectJson(project, options)
+            project.getProjectInfo()
+                .then(function (projectInfo) {
+                    kind = projectInfo.info.kind;
+                    return storageUtils.getProjectJson(project, options);
+                })
                 .then(function (rawJson) {
-                    deferred.resolve({seed: rawJson, isLegacy: false});
+                    rawJson.kind = kind;
+                    deferred.resolve({
+                        seed: rawJson,
+                        msg: 'Seeded project from project-seed ' + projectId + '@' + commitHash + '.'
+                    });
                 })
                 .catch(deferred.reject);
         });
@@ -314,11 +332,11 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function _createProjectFromRawJson(storage, projectName, ownerId, branchName, jsonProject, callback) {
+    function _createProjectFromRawJson(storage, projectName, ownerId, branchName, jsonProject, msg, callback) {
         var projectId,
             project;
 
-        return Q.ninvoke(storage, 'createProject', projectName, ownerId)
+        return Q.ninvoke(storage, 'createProject', projectName, ownerId, jsonProject.kind)
             .then(function (projectId_) {
                 var deferred = Q.defer();
 
@@ -335,7 +353,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             })
             .then(function () {
                 return storageUtils.insertProjectJson(project, jsonProject, {
-                    commitMessage: 'loading project from package'
+                    commitMessage: msg
                 });
             })
             .then(function (commitResult) {
@@ -406,7 +424,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             })
             .then(function (jsonSeed) {
                 return _createProjectFromRawJson(storage, projectName, ownerId,
-                    parameters.branchName || 'master', jsonSeed.seed);
+                    parameters.branchName || 'master', jsonSeed.seed, jsonSeed.msg);
             })
             .nodeify(finish);
     }
@@ -953,7 +971,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
             })
             .then(function (jsonProject) {
                 return _createProjectFromRawJson(storage, parameters.projectName, parameters.ownerId,
-                    parameters.branchName, jsonProject);
+                    parameters.branchName, jsonProject, 'Imported project from uploaded blob ' +
+                    parameters.blobHash + '.');
             })
             .nodeify(finish);
     }
