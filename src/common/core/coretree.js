@@ -38,6 +38,8 @@ define([
         this.loadObject = storage.loadObject;
         this.logger = logger;
 
+        this.ID_NAME = ID_NAME;
+
         function ASSERT_IS_OBJECT(value) {
             ASSERT(value !== null && typeof value === 'object' && value instanceof Array === false);
         }
@@ -562,6 +564,12 @@ define([
 
             __ageRoots();
             return child;
+        };
+
+        this.childLoaded = function (node, relid) {
+            ASSERT(typeof relid === 'string' && relid !== ID_NAME);
+            node = self.normalize(node);
+            return __getChildNode(node.children, relid) !== null;
         };
 
         this.createChild = function (node, takenRelids, minimumLength) {
