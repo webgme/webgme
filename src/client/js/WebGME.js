@@ -61,9 +61,7 @@ define([
                 layout: '',
                 byProjectName: {
                     nodeAtOpen: {},
-                    layout: {
-                        'Olle': 'DefaultLayout'
-                    }
+                    layout: {}
                 },
                 byProjectId: {
                     nodeAtOpen: {},
@@ -135,7 +133,6 @@ define([
 
                 document.title = config.pageTitle;
 
-                logger.info('init-phase true');
                 WebGMEHistory.initialize();
 
                 GMEConcepts.initialize(client);

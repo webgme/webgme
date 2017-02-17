@@ -4,53 +4,27 @@
  * Utility helper functions for saving WebGME state and reload on browser back
  *
  * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define(['jquery',
-    'js/logger'
-], function (_jquery,
-             Logger) {
+    'js/logger',
+    'js/Utils/WebGMEUrlManager'
+], function (_jquery, Logger, WebGMEUrlManager) {
 
     'use strict';
 
-    var _stateLoading = false,
-        _initialized = false,
+    var _initialized = false,
         logger;
-
-    function _saveState(/* stateObj */) {
-        if (_stateLoading === false) {
-            // HeaderPanel.js sets the url and updates the state using angular
-        }
-    }
-
-
-    function _onLoadState(stateObj) {
-        stateObj = stateObj || window.history.state; //TODO check why it is null - probably jquery bug
-        _stateLoading = true;
-
-        //clear state in silent mode, it will not fire the clear event
-        WebGMEGlobal.State.clear({'silent': true});
-
-        //set the attributes from the saved state
-        logger.debug('loading state:' + JSON.stringify(stateObj));
-        WebGMEGlobal.State.set(stateObj, {suppressVisualizerFromNode: true, suppressHistoryUpdate: true});
-
-        _stateLoading = false;
-    }
-
 
     function _initialize() {
         if (_initialized) {
             return;
         }
+
         logger = Logger.create('gme:WebGME.History', WebGMEGlobal.gmeConfig.client.log);
         _initialized = true;
-        WebGMEGlobal.State.on('change', function (/*model, options*/) {
-            _saveState(WebGMEGlobal.State.toJSON());
-        });
-    }
 
-    if (WebGMEGlobal.history !== true) {
         Object.defineProperty(WebGMEGlobal, 'history', {
             value: true,
             writable: false,
@@ -58,11 +32,36 @@ define(['jquery',
             configurable: false
         });
 
+        var prevQuery = '';
+        WebGMEGlobal.State.on('change', function (model, opts) {
+            var searchQuery = WebGMEUrlManager.serializeStateToUrl(),
+                newPath;
+
+            if (!opts.suppressHistoryUpdate && prevQuery !== searchQuery) {
+                newPath = window.location.pathname;
+
+                if (searchQuery) {
+                    newPath += '?' + searchQuery;
+                }
+
+                // set the state that gets pushed into the history
+                window.history.pushState(WebGMEGlobal.State.toJSON(), '', newPath);
+
+                prevQuery = searchQuery;
+            }
+        });
+
         $(window).on('popstate', function (event) {
-            _onLoadState(event.originalEvent.state);
+            //clear state in silent mode, it will not fire the clear event
+            WebGMEGlobal.State.clear({silent: true});
+
+            //set the attributes from the saved state
+            WebGMEGlobal.State.set(event.originalEvent.state, {
+                suppressVisualizerFromNode: true,
+                suppressHistoryUpdate: true
+            });
         });
     }
-
 
     //return utility functions
     return {initialize: _initialize};

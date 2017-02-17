@@ -228,7 +228,7 @@ var path = require('path'),
             panelPaths: [path.join(__dirname, '../src/client/js/Panels')],
 
             layout: {
-                default: 'SillyLayout',
+                default: 'DefaultLayout',
                 basePaths: [path.join(__dirname, '../src/client/js/Layouts')]
             }
         },

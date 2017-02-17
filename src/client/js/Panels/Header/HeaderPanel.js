@@ -34,33 +34,33 @@ define([
         'gme.ui.headerPanel', [
             'isis.ui.dropdownNavigator',
             'gme.ui.ProjectNavigator'
-        ]).run(['$rootScope', '$location', function ($rootScope, $location) {
-            // FIXME: this might not be the best place to put it...
-            var prevQuery;
-            if (WebGMEGlobal && WebGMEGlobal.State) {
-                WebGMEGlobal.State.on('change', function (model, opts) {
-                    var searchQuery = WebGMEUrlManager.serializeStateToUrl();
-                    if (!opts.suppressHistoryUpdate && prevQuery !== searchQuery) {
-                        // set the state that gets pushed into the history
-                        $location.state(WebGMEGlobal.State.toJSON());
-
-                        // setting the search query based on the state
-                        $location.search(searchQuery);
-
-                        // store the previous for next update
-                        prevQuery = searchQuery;
-
-                        // forcing the update
-                        if (!$rootScope.$$phase) {
-                            $rootScope.$apply();
-                        }
-                    }
-                });
-            } else {
-                // FIXME: this should be a hard error, we do not have a logger here.
-                console.error('WebGMEGlobal.State does not exist, cannot update url based on state changes.');
-            }
-        }]);
+        ]).run(function () {
+            // // FIXME: this might not be the best place to put it...
+            // var prevQuery;
+            // if (WebGMEGlobal && WebGMEGlobal.State) {
+            //     WebGMEGlobal.State.on('change', function (model, opts) {
+            //         var searchQuery = WebGMEUrlManager.serializeStateToUrl();
+            //         if (!opts.suppressHistoryUpdate && prevQuery !== searchQuery) {
+            //             // set the state that gets pushed into the history
+            //             $location.state(WebGMEGlobal.State.toJSON());
+            //
+            //             // setting the search query based on the state
+            //             $location.search(searchQuery);
+            //
+            //             // store the previous for next update
+            //             prevQuery = searchQuery;
+            //
+            //             // forcing the update
+            //             if (!$rootScope.$$phase) {
+            //                 $rootScope.$apply();
+            //             }
+            //         }
+            //     });
+            // } else {
+            //     // FIXME: this should be a hard error, we do not have a logger here.
+            //     console.error('WebGMEGlobal.State does not exist, cannot update url based on state changes.');
+            // }
+        });
 
     HeaderPanel = function (layoutManager, params) {
         var options = {};

@@ -18,14 +18,7 @@ define(['jquery-layout',
 
     'use strict';
 
-    var SillyLayout,
-        SPACING_OPEN_TOUCH = 10,
-        SPACING_CLOSED_TOUCH = 10,
-        SPACING_OPEN_DESKTOP = 3,
-        SPACING_CLOSED_DESKTOP = 6,
-        SPACING_OPEN = WebGMEGlobal.SUPPORTS_TOUCH ? SPACING_OPEN_TOUCH : SPACING_OPEN_DESKTOP,
-        SPACING_CLOSED = WebGMEGlobal.SUPPORTS_TOUCH ? SPACING_CLOSED_TOUCH : SPACING_CLOSED_DESKTOP,
-        SIDE_PANEL_WIDTH = 210;
+    var SillyLayout;
 
     SillyLayout = function (params) {
         this._logger = (params && params.logger) || Logger.create('gme:Layouts:SillyLayout',
@@ -53,9 +46,7 @@ define(['jquery-layout',
         this._body = $('body');
         this._body.html(this._template);
 
-        this._westPanel = this._body.find('div.ui-layout-west');
         this._centerPanel = this._body.find('div.ui-layout-center');
-        this._eastPanel = this._body.find('div.ui-layout-east');
 
         this._headerPanel = this._body.find('div.ui-layout-north');
         this._footerPanel = this._body.find('div.ui-layout-south');
@@ -66,7 +57,6 @@ define(['jquery-layout',
 
         this._body.layout({
             defaults: {},
-
             north: {
                 closable: false,
                 resizable: false,
@@ -81,28 +71,6 @@ define(['jquery-layout',
                 spacing_open: 0, //jshint ignore: line
                 size: 27        //has to match footer CSS settings (height + border)
             },
-            east: {
-                size: SIDE_PANEL_WIDTH,
-                minSize: SIDE_PANEL_WIDTH,
-                resizable: true,
-                slidable: false,
-                spacing_open: SPACING_OPEN, //jshint ignore: line
-                spacing_closed: SPACING_CLOSED, //jshint ignore: line
-                onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
-                    self._onEastResize();
-                }
-            }, west: {
-                size: SIDE_PANEL_WIDTH,
-                minSize: SIDE_PANEL_WIDTH,
-                showOverflowOnHover:true,
-                resizable: true,
-                slidable: false,
-                spacing_open: SPACING_OPEN, //jshint ignore: line
-                spacing_closed: SPACING_CLOSED, //jshint ignore: line
-                onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
-                    self._onWestResize();
-                }
-            },
             center: {
                 onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
                     self._onCenterResize();
@@ -116,16 +84,6 @@ define(['jquery-layout',
             this._headerPanel.append(panel.$pEl);
         } else if (container === 'footer') {
             this._footerPanel.append(panel.$pEl);
-        } else if (container === 'west') {
-            this._westPanel.append(panel.$pEl);
-            this._westPanels.push(panel);
-            this._onWestResize();
-            return this._onWestResize;
-        } else if (container === 'east') {
-            this._eastPanel.append(panel.$pEl);
-            this._eastPanels.push(panel);
-            this._onEastResize();
-            return this._onEastResize;
         } else if (container === 'center') {
             this._centerPanel.append(panel.$pEl);
             this._centerPanels.push(panel);
