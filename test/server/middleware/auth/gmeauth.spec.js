@@ -835,7 +835,7 @@ describe('GME authentication', function () {
             })
             .then(function (data) {
                 expect(data.info).to.deep.equal({createdAt: 'aBitLater', modifiedAt: null, viewedAt: null,
-                viewer: null, modifier: null, creator: null});
+                viewer: null, modifier: null, creator: null, kind: null});
             })
             .nodeify(done);
     });
@@ -851,7 +851,7 @@ describe('GME authentication', function () {
             })
             .then(function (data) {
                 expect(data.info).to.deep.equal({createdAt: 'justNow', modifiedAt: null, viewedAt: null,
-                    viewer: null, modifier: null, creator: null});
+                    viewer: null, modifier: null, creator: null, kind: null});
             })
             .nodeify(done);
     });
@@ -867,7 +867,7 @@ describe('GME authentication', function () {
             })
             .then(function (data) {
                 expect(data.info).to.deep.equal({createdAt: 'justNow', modifiedAt: null, viewedAt: null,
-                    viewer: null, modifier: null, creator: null});
+                    viewer: null, modifier: null, creator: null, kind: null});
             })
             .nodeify(done);
     });
@@ -883,7 +883,8 @@ describe('GME authentication', function () {
                 modifiedAt: now,
                 creator: 'user',
                 viewer: 'user',
-                modifier: 'user'
+                modifier: 'user',
+                kind: 'someKindOfProject'
             };
         auth.metadataStorage.addProject(ownerName, projectName, info)
             .then(function (projectId) {
@@ -946,6 +947,7 @@ describe('GME authentication', function () {
                 expect(project).to.deep.equal({
                     _id: projId,
                     info: {},
+                    hooks: {},
                     owner: ownerName,
                     name: projectName
                 });

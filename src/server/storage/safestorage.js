@@ -243,8 +243,8 @@ SafeStorage.prototype.createProject = function (data, callback) {
         rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
-        check(typeof data.kind === 'undefined' || typeof data.kind === 'string', deferred,
-            'data.kind is not a string.') ||
+        check(data.kind === null || typeof data.kind === 'undefined' || typeof data.kind === 'string', deferred,
+            'data.kind is not a string: "' + data.kind + '"') ||
         check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
         check(REGEXP.PROJECT_NAME.test(data.projectName), deferred,
             'data.projectName failed regexp: ' + data.projectName);
@@ -272,14 +272,11 @@ SafeStorage.prototype.createProject = function (data, callback) {
                         creator: data.username,
                         viewer: data.username,
                         modifier: data.username,
+                        kind: data.kind
                     };
 
                 if (ownerRights.write !== true) {
                     throw new Error('Not authorized to create new project for [' + data.ownerId + ']');
-                }
-
-                if (data.kind) {
-                    info.kind = data.kind;
                 }
 
                 return self.metadataStorage.addProject(data.ownerId, data.projectName, info);
@@ -457,14 +454,11 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
                         creator: data.username,
                         viewer: data.username,
                         modifier: data.username,
+                        kind: prevProjectData.info.kind
                     };
 
                 if (ownerRights && ownerRights.write !== true) {
                     throw new Error('Not authorized to create project for [' + data.ownerId + ']');
-                }
-
-                if (prevProjectData.info.kind) {
-                    info.kind = prevProjectData.info.kind;
                 }
 
                 // TODO: Should webhooks be copied over too?

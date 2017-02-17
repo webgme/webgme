@@ -293,8 +293,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     function _getSeedFromProject(storage, projectId, branchName, commitHash, callback) {
         var deferred = Q.defer(),
-            options = {},
-            kind;
+            options = {};
 
         storage.openProject(projectId, function (err, project, branches/*, access*/) {
             if (err) {
@@ -314,15 +313,12 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 options.branchName = branchName;
             }
 
-            project.getProjectInfo()
-                .then(function (projectInfo) {
-                    kind = projectInfo.info.kind;
-                    return storageUtils.getProjectJson(project, options);
-                })
-                .then(function (rawJson) {
-                    rawJson.kind = kind;
+            Q.all([project.getProjectInfo(), storageUtils.getProjectJson(project, options)])
+                .then(function (res) {
+                    res[1].kind = res[0].info.kind;
+
                     deferred.resolve({
-                        seed: rawJson,
+                        seed: res[1],
                         msg: 'Seeded project from project-seed ' + projectId + '@' + commitHash + '.'
                     });
                 })
