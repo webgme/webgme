@@ -307,6 +307,7 @@ describe('storage storageclasses simpleapi', function () {
                 projects.forEach(function (project) {
                     if (project._id === projectId) {
                         expect(project.info.kind).to.equal('kindest');
+                        found = true;
                     }
                 });
 

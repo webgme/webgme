@@ -1821,6 +1821,28 @@ describe('SafeStorage', function () {
                 .done();
         });
 
+        it('should fail to create if kind is not null empty or string', function (done) {
+            var projectName = 'willNotBeCreated',
+                username = notInOrgCanCreate,
+                ownerId = notInOrgCanCreate,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId,
+                    kind: true
+                };
+
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Invalid argument, data.kind is not a string');
+                    done();
+                })
+                .done();
+        });
+
         it('should fail notInOrgCanNotCreate1', function (done) {
             var projectName = 'notInOrgCanNotCreate1',
                 username = notInOrgCanNotCreate,

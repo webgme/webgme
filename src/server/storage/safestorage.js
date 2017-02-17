@@ -244,7 +244,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
         check(data.kind === null || typeof data.kind === 'undefined' || typeof data.kind === 'string', deferred,
-            'data.kind is not a string: "' + data.kind + '"') ||
+            'data.kind is not a string: ' + data.kind) ||
         check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
         check(REGEXP.PROJECT_NAME.test(data.projectName), deferred,
             'data.projectName failed regexp: ' + data.projectName);
