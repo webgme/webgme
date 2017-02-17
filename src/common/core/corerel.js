@@ -169,11 +169,15 @@ define([
             var count = 0,
                 source,
                 name,
-                overlaysObject = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
+                overlaysObject = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {};
 
             for (source in overlaysObject) {
-                for (name in overlaysObject[source]) {
-                    count += 1;
+                if (source !== CONSTANTS.MUTABLE_PROPERTY) {
+                    for (name in overlaysObject[source]) {
+                        if (name !== CONSTANTS.MUTABLE_PROPERTY) {
+                            count += 1;
+                        }
+                    }
                 }
             }
 
@@ -181,73 +185,72 @@ define([
         }
 
         function reserveOverlayShard(node) {
-            var overlaysData = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
-                shardId = RANDOM.generateRelid(overlaysData),
+            var overlaysNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
+                shardId = RANDOM.generateRelid(overlaysNode.data),
                 newShardObject = {
                     type: STORAGE_CONSTANTS.OVERLAY_SHARD_TYPE,
                     itemCount: 0,
                     items: {}
                 };
 
-            if (self.isMutable(node) !== true) {
-                overlaysData = JSON.parse(JSON.stringify(overlaysData));
-            }
-
             newShardObject[self.ID_NAME] = '';
-            overlaysData[shardId] = null;
             node.overlays[shardId] = newShardObject;
             node.overlayMutations[shardId] = true;
 
-            self.setProperty(node, CONSTANTS.OVERLAYS_PROPERTY, overlaysData);
+            self.setProperty(overlaysNode, shardId, null);
             return shardId;
         }
 
         function removeOverlayShard(node, shardId) {
             // At this point the node should always be mutated.
-            var overlaysData = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
+            var overlaysNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
 
             delete node.overlays[shardId];
             delete node.overlayMutations[shardId];
-            delete overlaysData[shardId];
-            self.setProperty(node, CONSTANTS.OVERLAYS_PROPERTY, overlaysData);
+            self.deleteProperty(overlaysNode, shardId);
         }
 
         function transformOverlays(node) {
             var originalOverlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
-                maxEntryPerShard = options.storage.overlayShardSize || 10000,
+                maxEntryPerShard = options.globConf.storage.overlayShardSize || 10000,
                 count = maxEntryPerShard,
                 source,
                 name,
                 newOverlaysObject = {},
                 shardId;
 
-            newOverlaysObject[CONSTANTS.OVERLAY_SHARD_INDICATOR] = true;
+            self.deleteChild(node, CONSTANTS.OVERLAYS_PROPERTY);
+            self.removeChildFromCache(node, CONSTANTS.OVERLAYS_PROPERTY);
+
+            self.setProperty(self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY), CONSTANTS.OVERLAY_SHARD_INDICATOR, true);
 
             node.overlays = {};
             node.overlayMutations = {};
+            node.overlayInitials = {};
             node.minimalOverlayShardId = null;
             for (source in originalOverlays) {
-                for (name in originalOverlays[source]) {
-                    if (count >= maxEntryPerShard) {
-                        shardId = reserveOverlayShard(node);
-                        node.minimalOverlayShardId = shardId;
-                        count = 0;
-                    }
+                if (source !== CONSTANTS.MUTABLE_PROPERTY) {
+                    for (name in originalOverlays[source]) {
+                        if (name !== CONSTANTS.MUTABLE_PROPERTY) {
+                            if (count >= maxEntryPerShard) {
+                                shardId = reserveOverlayShard(node);
+                                node.minimalOverlayShardId = shardId;
+                                count = 0;
+                            }
 
-                    node.overlays[shardId].items[source] = node.overlays[shardId].items[source] || {};
-                    node.overlays[shardId].items[source][name] = originalOverlays.items[source][name];
-                    node.overlays[shardId].itemCount += 1;
-                    count += 1;
+                            node.overlays[shardId].items[source] = node.overlays[shardId].items[source] || {};
+                            node.overlays[shardId].items[source][name] = originalOverlays[source][name];
+                            node.overlays[shardId].itemCount += 1;
+                            count += 1;
+                        }
+                    }
                 }
             }
-
-            //this mutates the node as well
-            self.setProperty(node, CONSTANTS.OVERLAYS_PROPERTY, newOverlaysObject);
         }
 
         function updateSmallestOverlayShardIndex(node) {
             var shardId,
-                minimalItemCount = options.storage.overlayShardSize || 10000;
+                minimalItemCount = options.globConf.storage.overlayShardSize || 10000;
 
             for (shardId in node.overlays) {
                 if (node.overlays[shardId].itemCount < minimalItemCount) {
@@ -258,24 +261,20 @@ define([
         }
 
         function ensureOverlayShardMutated(node, shardId) {
-            var overlayObject;
+            var overlayNode;
 
             if (node.overlayMutations[shardId] !== true) {
                 node.overlayMutations[shardId] = true;
                 node.overlay[shardId] = JSON.parse(JSON.stringify(node.overlay[shardId]));
-                overlayObject = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
-                if (self.isMutable(node) !== true) {
-                    overlayObject = JSON.parse(JSON.stringify(overlayObject));
-                }
-                overlayObject[shardId] = null;
-                self.setProperty(node, CONSTANTS.OVERLAYS_PROPERTY, overlayObject);
+                overlayNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
+                self.setProperty(overlayNode, shardId, null);
             }
         }
 
         function putEntryIntoOverlayShard(node, shardId, source, name, target) {
-            var limit = options.storage.overlayShardSize || 10000;
+            var limit = options.globConf.storage.overlayShardSize || 10000;
 
-            if (node.overlays[shardId].itemCount >= limit && node.overlays[shardId].hashOwnProperty(source) === false) {
+            if (node.overlays[shardId].itemCount >= limit && node.overlays[shardId].hasOwnProperty(source) === false) {
                 shardId = reserveOverlayShard(node);
                 node.minimalOverlayShardId = shardId;
             }
@@ -286,7 +285,7 @@ define([
             node.overlays[shardId].items[source][name] = target;
             node.overlays[shardId].itemCount += 1;
 
-            if (node.minimalOverlayShardId = shardId && node.overlays[shardId].itemCount >= limit) {
+            if (node.minimalOverlayShardId === shardId && node.overlays[shardId].itemCount >= limit) {
                 updateSmallestOverlayShardIndex(node);
             }
         }
@@ -297,7 +296,7 @@ define([
             var shardId;
 
             for (shardId in node.overlays) {
-                if (node.overlays[shardId].hashOwnProperty(source)) {
+                if (node.overlays[shardId].hasOwnProperty(source)) {
                     putEntryIntoOverlayShard(node, shardId, source, name, target);
                     return;
                 }
@@ -333,8 +332,7 @@ define([
             var relids,
                 shardId,
                 hash,
-                hasOverlayChange = false,
-                overlayObject,
+                overlayNode,
                 i;
 
             if (self.isMutable(node) !== true) {
@@ -349,10 +347,9 @@ define([
                 }
             }
 
-            overlayObject = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
+            overlayNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
             for (shardId in node.overlayMutations) {
                 if (node.overlayMutations[shardId] === true) {
-                    hasOverlayChange = true;
                     node.overlays[shardId][self.ID_NAME] = '';
                     hash = '#' + GENKEY(node.overlays[shardId], options.globConf);
                     node.overlays[shardId][self.ID_NAME] = hash;
@@ -363,12 +360,8 @@ define([
                         newData: node.overlays[shardId]
                     };
 
-                    overlayObject[shardId] = hash;
+                    self.setProperty(overlayNode, shardId, hash);
                 }
-            }
-
-            if (hasOverlayChange) {
-                self.setProperty(node, CONSTANTS.OVERLAYS_PROPERTY, overlayObject);
             }
         }
 
@@ -388,9 +381,10 @@ define([
 
         this.persist = function (node) {
             var stackedObjects = {},
-                persisted = innerCore.persist(node);
+                persisted;
 
             persistShardedOverlays(node, stackedObjects);
+            persisted = innerCore.persist(node,stackedObjects);
             storeNewInverseOverlays(self.getRoot(node));
 
             return persisted;
@@ -420,7 +414,8 @@ define([
             var hash,
                 inverseOverlays = {},
                 overlay,
-                overlayArray,
+                overlaysObject,
+                shardId,
                 i,
                 source,
                 name,
@@ -444,20 +439,24 @@ define([
 
             // Otherwise we have to compute it
             if (hasShardedOverlays(node)) {
-                overlayArray = node.overlays;
+                overlaysObject = node.overlays;
             } else {
-                overlayArray = [self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}];
+                overlaysObject = {'single': {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
             }
 
             inverseOverlays = {};
-            for (i = 0; i < overlayArray.length; i += 1) {
-                overlay = overlayArray[i];
+            for (shardId in overlaysObject) {
+                overlay = overlaysObject[shardId];
                 for (source in overlay) {
-                    for (name in overlay[source]) {
-                        target = overlay[source][name];
-                        inverseOverlays[target] = inverseOverlays[target] || {};
-                        inverseOverlays[target][name] = inverseOverlays[target][name] || [];
-                        inverseOverlays[target][name].push(source);
+                    if (source !== CONSTANTS.MUTABLE_PROPERTY) {
+                        for (name in overlay[source]) {
+                            if (name !== CONSTANTS.MUTABLE_PROPERTY) {
+                                target = overlay[source][name];
+                                inverseOverlays[target] = inverseOverlays[target] || {};
+                                inverseOverlays[target][name] = inverseOverlays[target][name] || [];
+                                inverseOverlays[target][name].push(source);
+                            }
+                        }
                     }
                 }
             }

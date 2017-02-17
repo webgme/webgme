@@ -303,4 +303,154 @@ describe('corerel', function () {
             }, myCore.loadChildren(root));
         }, myCore.loadRoot(myCore.getHash(root)));
     });
+
+    describe('sharded overlay handling', function () {
+        var shardedProject,
+            shardedProjectName = 'shardingTestProject',
+            shardingConfig = JSON.parse(JSON.stringify(gmeConfig)),
+            shardCore,
+            savedShardHash,
+            shardRoot;
+
+        function fillUpWithChildren(number) {
+            var childArray = [];
+
+            while (number--) {
+                childArray.unshift(shardCore.createNode({parent: shardRoot, relid: number + ''}));
+                shardCore.setPointer(childArray[0], 'parent', shardRoot);
+            }
+
+            return childArray;
+        }
+
+        before(function (done) {
+            shardingConfig.storage.overlaysShardLimit = 3;
+            shardingConfig.storage.overlayShardSize = 2;
+
+            storage.openDatabase()
+                .then(function () {
+                    return storage.createProject({projectName: shardedProjectName});
+                })
+                .then(function (dbProject) {
+                    shardedProject = new testFixture.Project(dbProject, storage, logger, shardingConfig);
+
+                    shardCore = new Core(shardedProject, {
+                        globConf: shardingConfig,
+                        logger: testFixture.logger.fork('corerel:core:shard')
+                    });
+
+                    shardRoot = shardCore.createNode();
+                    fillUpWithChildren(4);
+                    shardCore.persist(shardRoot);
+                    savedShardHash = shardCore.getHash(shardRoot);
+                })
+                .then(done)
+                .catch(done);
+        });
+
+        beforeEach(function () {
+            shardRoot = shardCore.createNode();
+        });
+
+        it.only('should split the original overlay once the number of relations reaches the limit', function () {
+            var childArray;
+
+            expect(shardRoot.data.ovr || {}).not.to.have.keys(['sharded']);
+            childArray = fillUpWithChildren(4);
+            expect(childArray).to.have.length(4);
+            expect(shardRoot.data.ovr.sharded).to.equal(true);
+            expect(Object.keys(shardRoot.data.ovr)).to.have.length(4);
+        });
+
+        it.only('should not split the original overlay until the number of relations reaches the limit', function () {
+            var childArray;
+
+            expect(shardRoot.data.ovr || {}).not.to.have.keys(['sharded']);
+            childArray = fillUpWithChildren(3);
+            expect(childArray).to.have.length(3);
+            expect(shardRoot.data.ovr.sharded).to.equal(undefined);
+            expect(shardRoot.data.ovr._mutable).to.equal(true);
+        });
+
+        it.only('should persist the sharded overlay', function () {
+            var childArray = [],
+                numberOfChildren = 4,
+                persisted;
+
+            while (numberOfChildren--) {
+                childArray.unshift(shardCore.createNode({parent: shardRoot, relid: numberOfChildren + ''}));
+                shardCore.setPointer(childArray[0], 'parent', shardRoot);
+            }
+
+            persisted = shardCore.persist(shardRoot);
+            expect(Object.keys(persisted.objects)).to.have.length(4);
+        });
+
+        it.only('should persist the sharded overlay with proper amount of shards', function () {
+            var childArray = [],
+                numberOfChildren = 6,
+                persisted;
+
+            while (numberOfChildren--) {
+                childArray.unshift(shardCore.createNode({parent: shardRoot, relid: numberOfChildren + ''}));
+                shardCore.setPointer(childArray[0], 'parent', shardRoot);
+            }
+
+            persisted = shardCore.persist(shardRoot);
+            expect(Object.keys(persisted.objects)).to.have.length(5);
+        });
+
+        it.only('should not reserve new shard for already used source', function () {
+            var childArray = [],
+                numberOfChildren = 4,
+                i;
+
+            while (numberOfChildren--) {
+                childArray.unshift(shardCore.createNode({parent: shardRoot, relid: numberOfChildren + ''}));
+                shardCore.setPointer(childArray[0], 'parent', shardRoot);
+            }
+
+            for (i = 1; i < numberOfChildren.length; i += 1) {
+                shardCore.setPointer(childArray[0], 'sibling' + i, childArray[i]);
+            }
+
+            expect(Object.keys(shardRoot.overlays)).to.have.length(2);
+        });
+
+        it.only('should use the smallest shard even if one other gets smaller during changes', function () {
+            var childArray = [],
+                numberOfChildren = 4,
+                oldSmallest,
+                extraChild,
+                smallestShardId;
+
+            while (numberOfChildren--) {
+                childArray.unshift(shardCore.createNode({parent: shardRoot, relid: numberOfChildren + ''}));
+                shardCore.setPointer(childArray[0], 'parent', shardRoot);
+            }
+
+            smallestShardId = shardRoot.minimalOverlayShardId;
+            oldSmallest = smallestShardId;
+            expect(typeof smallestShardId).to.equal('string');
+            shardCore.setPointer(shardRoot, 'child0', childArray[0]);
+            smallestShardId = shardRoot.minimalOverlayShardId;
+            expect(oldSmallest).not.to.equal(smallestShardId);
+
+            shardCore.deletePointer(childArray[0], 'parent');
+            expect(smallestShardId).to.equal(shardRoot.minimalOverlayShardId);
+            expect(shardRoot.overlays[smallestShardId].itemCount).to.equal(1);
+
+            extraChild = shardCore.createNode({parent: shardRoot});
+            shardCore.setPointer(extraChild, 'parent', shardRoot);
+            expect(smallestShardId).not.to.equal(shardRoot.minimalOverlayShardId);
+            expect(shardRoot.overlays[smallestShardId].itemCount).to.equal(2);
+        });
+
+        it.only('should load sharded overlays', function (done) {
+            TASYNC.call(function (root) {
+                expect(Object.keys(root.overlays)).to.have.length(2);
+                done();
+            }, shardCore.loadRoot(savedShardHash));
+        });
+    });
 });
