@@ -32,47 +32,29 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     StorageSimpleAPI.prototype = Object.create(StorageWatcher.prototype);
     StorageSimpleAPI.prototype.constructor = StorageSimpleAPI;
 
-    /**
-     * Callback for getProjects.
-     *
-     * @callback StorageSimpleAPI~getProjectsCallback
-     * @param {string} err - error string.
-     * @param {{object[]} projects - All projects in the database.
-     * @example
-     * // projects is of the form
-     * // [{ name: 'projectId', read: true, write: false, delete: false} ]
-     */
-
-    /**
-     * Retrieves all the access info for all projects.
-     *
-     * @param {StorageSimpleAPI~getProjectsCallback} callback
-     */
     StorageSimpleAPI.prototype.getProjects = function (options, callback) {
         this.logger.debug('invoking getProjects', {metadata: options});
         this.webSocket.getProjects(options, callback);
     };
 
-    /**
-     * Callback for getProjectsAndBranches.
-     *
-     * @callback StorageSimpleAPI~getProjectsAndBranches
-     * @param {string} err - error string.
-     * @param {{object[]} projectsWithBranches - Projects the user has at least read-access to.
-     * @example
-     * // projectsWithBranches is of the form
-     * // [{
-     * //    name: 'projectId',
-     * //    read: true, //will always be true
-     * //    write: false,
-     * //    delete: false
-     * //    branches: {
-     * //      master: '#validHash',
-     * //      b1: '#validHashtoo'
-     * //    }
-     * // }]
-     */
+    StorageSimpleAPI.prototype.getProjectInfo = function (projectId, callback) {
+        var data = {
+            projectId: projectId,
+            branches: true,
+            info: true,
+            hooks: true,
+            rights: true
+        };
 
+        this.logger.debug('invoking getProjectInfo', {metadata: data});
+        this.webSocket.getProjects(data, function (err, result) {
+            if (err) {
+                callback(err);
+            } else {
+                callback(null, result[0]);
+            }
+        });
+    };
 
     StorageSimpleAPI.prototype.getBranches = function (projectId, callback) {
         var data = {
@@ -150,16 +132,22 @@ define(['common/storage/storageclasses/watchers'], function (StorageWatcher) {
     };
 
     // Setters
-    StorageSimpleAPI.prototype.createProject = function (projectName, ownerId, callback) {
+    StorageSimpleAPI.prototype.createProject = function (projectName, ownerId, kind, callback) {
         var self = this,
             data = {
-                projectName: projectName,
-                ownerId: ownerId
+                projectName: projectName
             };
 
-        if (callback === undefined && typeof ownerId === 'function') {
-            callback = ownerId;
-            data.ownerId = undefined;
+        if (callback === undefined) {
+            if (typeof ownerId === 'function') {
+                callback = ownerId;
+            } else if (typeof kind === 'function') {
+                data.ownerId = ownerId;
+                callback = kind;
+            }
+        } else {
+            data.ownerId = ownerId;
+            data.kind = kind;
         }
 
         this.logger.debug('invoking createProject', {metadata: data});

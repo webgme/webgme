@@ -1095,9 +1095,11 @@ function createAPI(app, mountPath, middlewareOpts) {
      * @param {string} [req.body.seedBranch='master'] - for 'db' optional branch name to seed from.
      * @param {string} [req.body.seedCommit] - for 'db' optional commit-hash to seed from
      * (if given seedBranch is not used).
-     *
+     * @param {string} [req.body.kind] - If not given:
+     *                  1) type is seed - will use kind stored in seed else name of seed.
+     *                  2) type is db - will use kind stored project info.
      * @example {type:'file', seedName:'EmptyProject'}
-     * @example {type:'db', seedName:'me+myOldProject', seedBranch:'release'}
+     * @example {type:'db', seedName:'guest+aFSMProject', seedBranch:'release', kind: 'FiniteStateMachine'}
      */
     router.put('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),

@@ -58,11 +58,20 @@ define([
                     node: null
                 },
                 nodeAtOpen: '',
+                layout: '',
                 byProjectName: {
-                    nodeAtOpen: {}
+                    nodeAtOpen: {},
+                    layout: {
+                        'Olle': 'DefaultLayout'
+                    }
                 },
                 byProjectId: {
-                    nodeAtOpen: {}
+                    nodeAtOpen: {},
+                    layout: {}
+                },
+                byProjectKind: {
+                    nodeAtOpen: {},
+                    layout: {}
                 }
             };
 
@@ -75,6 +84,8 @@ define([
                 projectOpenDialog,
                 initialProject = true,
                 config = defaultConfig;
+
+            config.layout = config.layout || gmeConfig.visualization.layout.default;
 
             ComponentSettings.resolveWithWebGMEGlobal(config, componentId);
 
@@ -89,7 +100,7 @@ define([
             }
 
             layoutManager = new LayoutManager();
-            layoutManager.loadLayout(initialThingsToDo.layoutToLoad, function () {
+            layoutManager.loadLayout(initialThingsToDo.layoutToLoad || config.layout, function () {
                 var panels = [],
                     layoutPanels = layoutManager._currentLayout.panels,
                     decorators,
@@ -119,7 +130,8 @@ define([
                     client.emitStateNotification();
                 });
 
-                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad, {suppressHistoryUpdate: true});
+                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad || config.layout,
+                    {suppressHistoryUpdate: true});
 
                 document.title = config.pageTitle;
 
@@ -145,6 +157,8 @@ define([
 
                 client.addEventListener(client.CONSTANTS.PROJECT_OPENED, function (_client, projectId) {
                     var projectName,
+                        projectKind,
+                        layout,
                         nodePath;
 
                     document.title = WebGMEGlobal.gmeConfig.authentication.enable ?
@@ -156,28 +170,48 @@ define([
 
                     if (initialProject === false) {
                         projectName = client.getActiveProjectName();
+                        projectKind = client.getProjectInfo().info.kind;
 
                         if (config.byProjectId.nodeAtOpen.hasOwnProperty(projectId)) {
                             nodePath = config.byProjectId.nodeAtOpen[projectId];
                         } else if (config.byProjectName.nodeAtOpen.hasOwnProperty(projectName)) {
                             nodePath = config.byProjectName.nodeAtOpen[projectName];
+                        } else if (projectKind && config.byProjectKind.nodeAtOpen.hasOwnProperty([projectKind])) {
+                            nodePath = config.byProjectKind.nodeAtOpen[projectKind];
                         } else {
-                            nodePath = config.nodeAtOpen;
+                            nodePath = config.nodeAtOpen || CONSTANTS.PROJECT_ROOT_ID;
                         }
 
-                        if (nodePath) {
-                            setActiveNode(nodePath);
+                        if (config.byProjectId.layout.hasOwnProperty(projectId)) {
+                            layout = config.byProjectId.layout[projectId];
+                        } else if (config.byProjectName.layout.hasOwnProperty(projectName)) {
+                            layout = config.byProjectName.layout[projectName];
+                        } else if (projectKind && config.byProjectKind.layout.hasOwnProperty([projectKind])) {
+                            layout = config.byProjectKind.layout[projectKind];
                         } else {
-                            setActiveNode(CONSTANTS.PROJECT_ROOT_ID);
+                            layout = config.layout;
+                        }
+
+                        if (layout !==  WebGMEGlobal.State.getLayout()) {
+                            document.location.href = window.location.href.split('?')[0] + '?' +
+                                WebGMEUrlManager.getSearchQuery({
+                                    projectId: projectId,
+                                    nodePath: nodePath,
+                                    layout: layout
+                                });
+                        } else {
+                            setActiveNode(nodePath);
                         }
                     }
                 });
 
                 //on project close clear the current state
                 client.addEventListener(client.CONSTANTS.PROJECT_CLOSED, function (/* __project, projectName */) {
+                    var layout = WebGMEGlobal.State.getLayout();
                     document.title = config.pageTitle;
                     initialProject = false;
                     WebGMEGlobal.State.clear();
+                    WebGMEGlobal.State.registerLayout(layout, {suppressHistoryUpdate: true});
                 });
 
                 client.decoratorManager = new DecoratorManager();

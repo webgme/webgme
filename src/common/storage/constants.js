@@ -74,7 +74,7 @@ define([], function () {
         // Database related
         MONGO_ID: '_id',
         COMMIT_TYPE: 'commit',
-        PROJECT_INFO_ID: '*info*',
+        PROJECT_INFO_KEYS: ['createdAt', 'creator', 'viewedAt', 'viewer', 'modifiedAt', 'modifier', 'kind'],
         EMPTY_PROJECT_DATA: 'empty',
         PROJECT_ID_SEP: '+',
         PROJECT_DISPLAYED_NAME_SEP: '/',

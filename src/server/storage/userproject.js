@@ -111,6 +111,23 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
             .nodeify(callback);
     };
 
+    this.getProjectInfo = function (callback) {
+        var data = {
+            username: self.userName,
+            projectId: self.projectId,
+            branches: true,
+            info: true,
+            hooks: true,
+            rights: true
+        };
+
+        return storage.getProjects(data)
+            .then(function (res) {
+                return res[0];
+            })
+            .nodeify(callback);
+    };
+
     this.setBranchHash = function (branchName, newHash, oldHash, callback) {
         var data = {
             username: self.userName,

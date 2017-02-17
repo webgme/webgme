@@ -9,6 +9,7 @@ var Core = requireJS('common/core/coreQ'),
     Storage = requireJS('common/storage/nodestorage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
     REGEXP = requireJS('common/regexp'),
+    superagent = require('superagent'),
     merger = requireJS('common/core/users/merge'),
     BlobClientClass = requireJS('blob/BlobClient'),
     blobUtil = requireJS('blob/util'),
@@ -356,6 +357,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} parameters.type - 'db' or 'file'
      * @param {string} [parameters.seedBranch='master'] - If db - optional name of branch.
      * @param {string} [parameters.seedCommit] - If db - optional commit-hash to seed from (if given branchName will not
+     * @param {string} [parameters.kind]
      * be used).
      * @param [function} callback
      */

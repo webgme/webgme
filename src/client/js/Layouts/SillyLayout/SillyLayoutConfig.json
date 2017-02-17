@@ -1,0 +1,34 @@
+{
+  "panels": [
+    {
+      "id": "Header",
+      "panel": "Header/HeaderPanel",
+      "container": "header",
+      "DEBUG_ONLY": false
+    },
+    {
+      "id": "Footer",
+      "panel": "FooterControls/FooterControlsPanel",
+      "container": "footer",
+      "DEBUG_ONLY": false
+    },
+    {
+      "id": "ObjectBrowserPanel",
+      "panel": "ObjectBrowser/ObjectBrowserPanel",
+      "container": "east",
+      "DEBUG_ONLY": false
+    },
+    {
+      "id": "VisualizerPanel",
+      "panel": "Visualizer/VisualizerPanel",
+      "container": "west",
+      "DEBUG_ONLY": false
+    },
+    {
+      "id": "PartBrowserPanel",
+      "panel": "PartBrowser/PartBrowserPanel",
+      "container": "west",
+      "DEBUG_ONLY": false
+    }
+  ]
+}

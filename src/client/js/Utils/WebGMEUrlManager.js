@@ -92,7 +92,7 @@ define([
 
     function parseInitialThingsToDoFromUrl() {
         return {
-            layoutToLoad: util.getURLParameterByName('layout') || WebGMEGlobal.gmeConfig.visualization.layout.default,
+            layoutToLoad: util.getURLParameterByName('layout'),
             commitToLoad: util.getURLParameterByName('commit').toLowerCase(),
             projectToLoad: util.getURLParameterByName('project'),
             objectToLoad: util.getURLParameterByName('node') || CONSTANTS.PROJECT_ROOT_ID,

@@ -20,6 +20,9 @@
     },
     "byProjectId": {
       "nodeAtOpen": {}
+    },
+    "byProjectKind": {
+      "nodeAtOpen": {}
     }
   },
   "GenericUITreeBrowserControl": {
