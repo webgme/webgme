@@ -68,6 +68,10 @@ define([
             this[key] = innerCore[key];
         }
 
+        //removing direct storage functions on this level
+        delete this.loadObject;
+        delete this.insertObject;
+
         this._inverseCache = new InverseOverlaysCache(options.globConf.core.inverseRelationsCacheSize,
             logger.fork('inverseCache'));
 
@@ -135,22 +139,24 @@ define([
 
             var overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
                 shardId,
+                shardIds = [],
                 loadPromises = [];
 
             for (shardId in overlays) {
                 if (REGEXP.DB_HASH.test(overlays[shardId]) === true) {
+                    shardIds.push(shardId);
                     loadPromises.push(innerCore.loadObject(overlays[shardId]));
                 }
             }
 
-            TASYNC.call(function (overlayShards) {
+            return TASYNC.call(function (overlayShards) {
                 var i;
 
                 node.overlays = {};
                 node.overlayMutations = {};
                 node.overlayInitials = {};
                 for (i = 0; i < overlayShards.length; i += 1) {
-                    shardId = overlayShards[i][self.ID_NAME];
+                    shardId = shardIds[i];
                     node.overlays[shardId] = overlayShards[i];
                     node.overlayInitials[shardId] = overlayShards[i];
                     node.overlayMutations[shardId] = false;
@@ -250,7 +256,7 @@ define([
 
         function updateSmallestOverlayShardIndex(node) {
             var shardId,
-                minimalItemCount = options.globConf.storage.overlayShardSize || 10000;
+                minimalItemCount = (options.globConf.storage.overlayShardSize || 10000) +1;
 
             for (shardId in node.overlays) {
                 if (node.overlays[shardId].itemCount < minimalItemCount) {
@@ -265,7 +271,7 @@ define([
 
             if (node.overlayMutations[shardId] !== true) {
                 node.overlayMutations[shardId] = true;
-                node.overlay[shardId] = JSON.parse(JSON.stringify(node.overlay[shardId]));
+                node.overlays[shardId] = JSON.parse(JSON.stringify(node.overlays[shardId]));
                 overlayNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
                 self.setProperty(overlayNode, shardId, null);
             }
@@ -274,7 +280,8 @@ define([
         function putEntryIntoOverlayShard(node, shardId, source, name, target) {
             var limit = options.globConf.storage.overlayShardSize || 10000;
 
-            if (node.overlays[shardId].itemCount >= limit && node.overlays[shardId].hasOwnProperty(source) === false) {
+            if (node.overlays[shardId].itemCount >= limit &&
+                node.overlays[shardId].items.hasOwnProperty(source) === false) {
                 shardId = reserveOverlayShard(node);
                 node.minimalOverlayShardId = shardId;
             }
@@ -296,7 +303,7 @@ define([
             var shardId;
 
             for (shardId in node.overlays) {
-                if (node.overlays[shardId].hasOwnProperty(source)) {
+                if (node.overlays[shardId].items.hasOwnProperty(source)) {
                     putEntryIntoOverlayShard(node, shardId, source, name, target);
                     return;
                 }
@@ -350,9 +357,12 @@ define([
             overlayNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
             for (shardId in node.overlayMutations) {
                 if (node.overlayMutations[shardId] === true) {
+                    node.overlayMutations[shardId] = false;
                     node.overlays[shardId][self.ID_NAME] = '';
+                    node.overlays[shardId].__v = STORAGE_CONSTANTS.VERSION;
                     hash = '#' + GENKEY(node.overlays[shardId], options.globConf);
                     node.overlays[shardId][self.ID_NAME] = hash;
+                    innerCore.insertObject(node.overlays[shardId], stackedObjects);
                     stackedObjects[hash] = {
                         oldhash: node.overlayInitials[shardId] ? node.overlayInitials[shardId][self.ID_NAME] : null,
                         oldData: node.overlayInitials[shardId],
@@ -384,7 +394,7 @@ define([
                 persisted;
 
             persistShardedOverlays(node, stackedObjects);
-            persisted = innerCore.persist(node,stackedObjects);
+            persisted = innerCore.persist(node, stackedObjects);
             storeNewInverseOverlays(self.getRoot(node));
 
             return persisted;

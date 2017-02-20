@@ -12,8 +12,9 @@ define([
     'common/util/random',
     'common/regexp',
     'common/core/constants',
+    'common/storage/constants',
     'common/core/convertData'
-], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS, convertData) {
+], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS, STORAGE_CONSTANTS, convertData) {
 
     'use strict';
 
@@ -36,6 +37,7 @@ define([
 
         this.loadPaths = TASYNC.wrap(storage.loadPaths);
         this.loadObject = storage.loadObject;
+        this.insertObject = storage.insertObject;
         this.logger = logger;
 
         this.ID_NAME = ID_NAME;
@@ -198,6 +200,7 @@ define([
                 ASSERT(hash === '' || hash === undefined);
 
                 if (hash === '') {
+                    data.__v = STORAGE_CONSTANTS.VERSION;
                     //TODO: This is a temporary fix. We should modify CANON.
                     cleanData = JSON.parse(JSON.stringify(data));
                     hash = '#' + GENKEY(cleanData, gmeConfig);
