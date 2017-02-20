@@ -18,6 +18,20 @@ securitySchemes:
             description: Authentication required
           403:
             description: Forbidden
+  - bearer:
+      description: JWT Bearer with authentication token.
+      type: x-{Bearer}
+      describedBy:
+        headers:
+          Authorization:
+            type: string
+            description: Token Bearer
+            example: Bearer eyJhbGcjOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkZW1vIiwiaWF0IjoxNDg3NjEyNjE0LCJleHAiOjE0ODgyMTc0MTR9.LAuYXXa4tQhLD1sUQl1MHZFwkaf6ua7_aA62WXFNAMEN-11tlmM576e5JuoE2KqxvoN2v8PZNXgPmL0vMpKSLc6orxnl5o6YABWGTCBPtbad-iAXnkm79MeQrRceYe3nW-Lhc9_PM6bJ3ftrtrmEUwtOL1bV6nhyBU4ICTE7m38
+        responses:
+          401:
+            description: Authentication required
+          403:
+            description: Forbidden
 
 
 resourceTypes:
@@ -51,7 +65,7 @@ resourceTypes:
       put:
         description: |
           Add a new <<resourcePathName|!singularize>> to WebGME. <<putDesc>>
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         body:
           application/json:
             schema: See example
@@ -67,7 +81,7 @@ resourceTypes:
           404:
       patch:
         description: Update <<resourcePathName|!singularize>> within WebGME. <<patchDesc>>
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         body:
           application/json:
             schema: See example
@@ -79,7 +93,7 @@ resourceTypes:
             404:
       delete:
         description: Delete <<resourcePathName|!singularize>> from WebGME. <<deleteDesc>>
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         responses:
           204:
           403:
@@ -114,7 +128,7 @@ resourceTypes:
 /user:
   get:
     description: Returns with the current user
-    securedBy: [ basic ]
+    securedBy: [ basic, bearer ]
     responses:
       200:
         body:
@@ -122,9 +136,18 @@ resourceTypes:
             example: !include webgme-api-user-retrieve.json
   delete:
     description: Remove the current user
-    securedBy: [ basic ]
+    securedBy: [ basic, bearer ]
     responses:
       204:
+  /token:
+      get:
+        description: Creates and returns a token for the user
+        securedBy: [ basic, bearer ]
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-user-token.json
   /data:
     type:
       collection-item:
@@ -140,14 +163,14 @@ resourceTypes:
   type:
     collection:
       exampleCollection: !include webgme-api-users.json
-      desc: 
+      desc: API regarding users
   /{username}:
     type:
       collection-item:
         exampleItem: !include webgme-api-user-retrieve.json
         putBody: !include webgme-api-user-new.json
         patchBody: !include webgme-api-user-patch.json
-        getDesc: 
+        getDesc: Anyone can get this data.
         putDesc: Requires <b>user.siteAdmin</b>.
         patchDesc: Requires <b>user.siteAdmin</b> if setting siteAdmin.
         deleteDesc: Requires is current user or <b>user.siteAdmin</b>.
@@ -165,7 +188,6 @@ resourceTypes:
 /orgs:
   get:
     description: Collection of available organizations in WebGME
-    securedBy: []
     responses:
       200:
         body:
@@ -174,7 +196,7 @@ resourceTypes:
   /{orgId}:
     get:
       description: Retrives organization data including members.
-      securedBy: [ basic ]
+      securedBy: [ basic, bearer ]
       responses:
         200:
           body:
@@ -183,7 +205,7 @@ resourceTypes:
         404:
     put:
       description: Create a new organization. Requires <b>user.canCreate</b> or <b>user.siteAdmin</b>.
-      securedBy: [ basic ]
+      securedBy: [ basic, bearer ]
       responses:
         200:
           body:
@@ -193,7 +215,7 @@ resourceTypes:
         404:
     delete:
       description: Delete an organization. Requires admin in organization or <b>user.siteAdmin</b>.
-      securedBy: [ basic ]
+      securedBy: [ basic, bearer ]
       responses:
         204:
         403:
@@ -202,7 +224,7 @@ resourceTypes:
     /users/{username}:
       put:
         description: Adds user to the organization. Requires admin in organization or <b>user.siteAdmin</b>.
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         responses:
           200:
           403:
@@ -210,7 +232,7 @@ resourceTypes:
         
       delete:
         description: Delete user from the organization. Requires admin in organization or <b>user.siteAdmin</b>.
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         responses:
           204:
           403:
@@ -219,7 +241,7 @@ resourceTypes:
     /admins/{username}:
       put:
         description: Make user admin for the organization. Requires admin in organization or <b>user.siteAdmin</b>.
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         responses:
           200:
           403:
@@ -227,7 +249,7 @@ resourceTypes:
         
       delete:
         description: Remove user from admins of the organization. Requires admin in organization or <b>user.siteAdmin</b>.
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         responses:
           204:
           403:
@@ -410,11 +432,11 @@ resourceTypes:
             putDesc: Requires <b>write</b> access for project.
             patchDesc: Requires <b>write</b> access for project.
             deleteDesc: Requires <b>write</b> access for project.
-
+            
     /squash:
       put:
         description: Squash multi commits into a single one. Requires <b>write</b> access for project.
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         body:
           application/json:
               example: |
@@ -423,7 +445,7 @@ resourceTypes:
                     "toCommitOrBranch":"master",
                     "message":"feature 'A' squashed into a single commit"
                 }
-
+           
 /decorators:
   get:
     description: Returns with all available decorators

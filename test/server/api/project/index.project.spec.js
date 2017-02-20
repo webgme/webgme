@@ -151,6 +151,32 @@ describe('PROJECT REST API', function () {
                                     if (projectData._id === testFixture.projectName2Id(toBeCreatedProjectName)) {
                                         expect(projectData.name).to.equal(toBeCreatedProjectName);
                                         expect(projectData.owner).to.equal('guest');
+                                        expect(projectData.info.kind).to.equal('EmptyProject');
+                                        wasIncluded = true;
+                                    }
+                                });
+                                expect(wasIncluded).to.equal(true);
+                                done();
+                            });
+                    });
+            });
+
+            it('should create a project from fileSeed /projects/:ownerId/:projectName', function (done) {
+                var toBeCreatedProjectName = 'myVeryNewFileProjectMyAssignedKind';
+                agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(toBeCreatedProjectName))
+                    .send({type: 'file', seedName: 'EmptyProject', kind: 'myOwnKind'})
+                    .end(function (err, res) {
+                        expect(res.status).to.equal(204);
+
+                        agent.get(server.getUrl() + '/api/projects')
+                            .end(function (err, res) {
+                                var wasIncluded = false;
+                                expect(res.status).to.equal(200);
+                                res.body.forEach(function (projectData) {
+                                    if (projectData._id === testFixture.projectName2Id(toBeCreatedProjectName)) {
+                                        expect(projectData.name).to.equal(toBeCreatedProjectName);
+                                        expect(projectData.owner).to.equal('guest');
+                                        expect(projectData.info.kind).to.equal('myOwnKind');
                                         wasIncluded = true;
                                     }
                                 });

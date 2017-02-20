@@ -1789,6 +1789,105 @@ describe('Simple worker', function () {
                 expect(msg.result).not.equal(null);
                 expect(typeof msg.result).to.equal('string');
                 expect(msg.result).to.equal(projectId);
+
+                return storage.getProjects({
+                    info: true,
+                    projectId: projectId
+                });
+            })
+            .then(function (proj) {
+                expect(proj[0].info.kind).equal(null);
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should importProjectFromFile and assign provided kind.', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
+            projectName = 'emptyPackageImportWithKind',
+            projectId = testFixture.projectName2Id(projectName);
+
+        blobClient.putFile('emptyWithKind.webgmex', fs.readFileSync('./test/server/worker/simpleworker/emptyWithKind.webgmex'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.importProjectFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    branchName: 'master',
+                    blobHash: blobHash,
+                    kind: 'myKind'
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(typeof msg.result).to.equal('string');
+                expect(msg.result).to.equal(projectId);
+
+                return storage.getProjects({
+                    info: true,
+                    projectId: projectId
+                });
+            })
+            .then(function (proj) {
+                expect(proj[0].info.kind).equal('myKind');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should importProjectFromFile and assign the kind defined in package.', function (done) {
+        var worker = getSimpleWorker(),
+            blobHash,
+            blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
+            projectName = 'emptyPackageThatHasKindAlreadyImport',
+            projectId = testFixture.projectName2Id(projectName);
+
+        blobClient.putFile('emptyWithKind.webgmex', fs.readFileSync('./test/server/worker/simpleworker/emptyWithKind.webgmex'))
+            .then(function (hash) {
+                blobHash = hash;
+                return worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig});
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.importProjectFromFile,
+                    webGMESessionId: webGMESessionId,
+                    projectName: projectName,
+                    branchName: 'master',
+                    blobHash: blobHash
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result).not.equal(null);
+                expect(typeof msg.result).to.equal('string');
+                expect(msg.result).to.equal(projectId);
+
+                return storage.getProjects({
+                    info: true,
+                    projectId: projectId
+                });
+            })
+            .then(function (proj) {
+                expect(proj[0].info.kind).equal('EmptyProject');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
