@@ -68,12 +68,15 @@ define(['js/logger',
 
         function setTreeRoot() {
             var projectId = client.getActiveProjectId(),
-                projectName = client.getActiveProjectName();
+                projectName = client.getActiveProjectName(),
+                projectKind = client.getActiveProjectKind();
 
             if (config.byProjectId.treeRoot.hasOwnProperty(projectId)) {
                 self._treeRootId = config.byProjectId.treeRoot[projectId];
             } else if (config.byProjectName.treeRoot.hasOwnProperty(projectName)) {
                 self._treeRootId = config.byProjectName.treeRoot[projectName];
+            } else if (projectKind && config.byProjectKind.treeRoot.hasOwnProperty(projectKind)) {
+                self._treeRootId = config.byProjectKind.treeRoot[projectKind];
             } else {
                 self._treeRootId = config.treeRoot;
             }
@@ -877,6 +880,9 @@ define(['js/logger',
                     hideLibraries: false,
                     hideMetaNodes: false
                 }
+            },
+            byProjectKind: {
+                treeRoot: {}
             },
             byProjectName: {
                 treeRoot: {}

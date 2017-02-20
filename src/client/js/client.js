@@ -1287,6 +1287,10 @@ define([
             return state.project && state.project.projectName;
         };
 
+        this.getActiveProjectKind = function () {
+            return state.projectInfo && state.projectInfo.info && state.projectInfo.info.kind;
+        };
+
         this.getActiveBranchName = function () {
             return state.branchName;
         };

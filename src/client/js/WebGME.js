@@ -1,4 +1,4 @@
-/*globals define, _, WebGMEGlobal, $*/
+/*globals define, _, WebGMEGlobal, $, console*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -58,7 +58,7 @@ define([
                     node: null
                 },
                 nodeAtOpen: '',
-                layout: '',
+                layout: 'DefaultLayout',
                 byProjectName: {
                     nodeAtOpen: {},
                     layout: {}
@@ -83,7 +83,13 @@ define([
                 initialProject = true,
                 config = defaultConfig;
 
-            config.layout = config.layout || gmeConfig.visualization.layout.default;
+            if (typeof gmeConfig.visualization.layout.default === 'string') {
+                config.layout = gmeConfig.visualization.layout.default;
+                console.warn('Since v2.11.0 gmeConfig.visualization.layout.default is a component setting of ' +
+                    'GenericUIWebGMEStart.layout and can be configured for projects based on kind, name and ID.' +
+                    'The value in gmeConfig.visualization.layout.default will right now be used for non-specified ' +
+                    'projects.');
+            }
 
             ComponentSettings.resolveWithWebGMEGlobal(config, componentId);
 
@@ -167,7 +173,7 @@ define([
 
                     if (initialProject === false) {
                         projectName = client.getActiveProjectName();
-                        projectKind = client.getProjectInfo().info.kind;
+                        projectKind = client.getActiveProjectKind();
 
                         if (config.byProjectId.nodeAtOpen.hasOwnProperty(projectId)) {
                             nodePath = config.byProjectId.nodeAtOpen[projectId];
@@ -189,7 +195,7 @@ define([
                             layout = config.layout;
                         }
 
-                        if (layout !==  WebGMEGlobal.State.getLayout()) {
+                        if (layout !== WebGMEGlobal.State.getLayout()) {
                             document.location.href = window.location.href.split('?')[0] + '?' +
                                 WebGMEUrlManager.getSearchQuery({
                                     projectId: projectId,
@@ -432,10 +438,10 @@ define([
                         }
 
                         Q.nfcall(client.seedProject, {
-                                type: 'file',
-                                projectName: initialThingsToDo.projectToLoad,
-                                seedName: WebGMEGlobal.gmeConfig.seedProjects.defaultProject
-                            })
+                            type: 'file',
+                            projectName: initialThingsToDo.projectToLoad,
+                            seedName: WebGMEGlobal.gmeConfig.seedProjects.defaultProject
+                        })
                             .then(function () {
                                 return Q.nfcall(client.selectProject, newProjectId, undefined);
                             })

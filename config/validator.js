@@ -10,9 +10,9 @@ function warnDeprecated(name, value, hint) {
     'use strict';
     if (typeof value !== 'undefined') {
         if (hint) {
-            console.warn('Deprecated configuration key', name + '.', hint);
+            console.warn('WARNING! Deprecated configuration key', name + '.', hint);
         } else {
-            console.warn('Deprecated configuration key', name);
+            console.warn('WARNING! Deprecated configuration key', name);
         }
     }
 }
@@ -247,7 +247,10 @@ function validateConfig(configOrFileName) {
     assertArray('config.visualization.panelPaths', config.visualization.panelPaths);
     assertArray('config.visualization.visualizerDescriptors', config.visualization.visualizerDescriptors);
     assertObject('config.visualization.layout', config.visualization.layout);
-    assertString('config.visualization.layout.default', config.visualization.layout.default);
+    warnDeprecated('config.visualization.layout.default', config.visualization.layout.default,
+        'Since v2.11.0 this is a component setting of GenericUIWebGMEStart.layout and can be configured for projects ' +
+        'based on kind, name and ID. The value in gmeConfig.visualization.layout.default will right now be used for ' +
+        'non-specified projects.');
     assertArray('config.visualization.layout.basePaths', config.visualization.layout.basePaths);
 
     //webhooks
