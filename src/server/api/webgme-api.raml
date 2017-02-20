@@ -51,6 +51,7 @@ resourceTypes:
       get:
         description: |
           Get the <<resourcePathName|!singularize>>. <<getDesc>>
+        securedBy: [ basic, bearer ]
         responses:
           200:
             body:
@@ -125,6 +126,25 @@ resourceTypes:
                 "documentation_url": "http://localhost:8888/developer/api"
               }
 
+/componentSettings:
+  get:
+    description: Returns all component settings defined for the deployment, see https://github.com/webgme/webgme/wiki/Component-Settings
+    securedBy: [ basic, bearer ]
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-user-settings-retrieve.json
+  /{componentId}:
+    get:
+      description: Returns a specific component settings defined for the deployment, see https://github.com/webgme/webgme/wiki/Component-Settings
+      securedBy: [ basic, bearer ]
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-user-settings-component-retrieve.json
+
 /user:
   get:
     description: Returns with the current user
@@ -154,10 +174,30 @@ resourceTypes:
         exampleItem: !include webgme-api-user-data-retrieve.json
         putBody: !include webgme-api-user-data-retrieve.json
         patchBody: !include webgme-api-user-data-patch.json
-        getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. N.B. This data will be shared over all projects and apps in a deployment, consider indexing project/app specific data.
+        getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. Consider using settings instead, which provides options for server defaults.
         putDesc: Overwrites the data field.
         patchDesc: Updates/overwrites the user's data with the sent values for matching keys.
         deleteDesc: Clears out the user's data field (sets it to empty dictionary). 
+  /settings:
+    type:
+      collection-item:
+        exampleItem: !include webgme-api-user-settings-retrieve.json
+        putBody: !include webgme-api-user-settings-retrieve.json
+        patchBody: !include webgme-api-user-settings-patch.json
+        getDesc: Gets all component-settings for a user, see https://github.com/webgme/webgme/wiki/Component-Settings
+        putDesc: Overwrites the settings field.
+        patchDesc: Updates/overwrites the user's settings with the sent values for matching keys.
+        deleteDesc: Clears out the user's settings field (sets it to empty dictionary).
+    /{componentId}:
+      type:
+        collection-item:
+          exampleItem: !include webgme-api-user-settings-component-retrieve.json
+          putBody: !include webgme-api-user-settings-component-retrieve.json
+          patchBody: !include webgme-api-user-settings-patch.json
+          getDesc: Gets a specific component settings for a user, see https://github.com/webgme/webgme/wiki/Component-Settings
+          putDesc: Overwrites the settings field for a specific component.
+          patchDesc: Updates/overwrites a specific component settings with the sent values for matching keys.
+          deleteDesc: Clears out the settings for a specific component.
 
 /users:
   type:
@@ -180,10 +220,30 @@ resourceTypes:
           exampleItem: !include webgme-api-user-data-retrieve.json
           putBody: !include webgme-api-user-data-retrieve.json
           patchBody: !include webgme-api-user-data-patch.json
-          getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. N.B. This data will be shared over all projects and apps in a deployment, consider indexing project/app specific data.
+          getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. Consider using settings instead, which provides options for server defaults.
           putDesc: Overwrites the user's data field. Requires is current user or <b>user.siteAdmin</b>.
           patchDesc: Updates/overwrites the user's data with the sent values for matching keys. Requires is current user or <b>user.siteAdmin</b>.
           deleteDesc: Clears out the user's data field (sets it to empty dictionary). Requires is current user or <b>user.siteAdmin</b>.
+    /settings:
+      type:
+        collection-item:
+          exampleItem: !include webgme-api-user-settings-retrieve.json
+          putBody: !include webgme-api-user-settings-retrieve.json
+          patchBody: !include webgme-api-user-settings-patch.json
+          getDesc: Gets all component-settings for a user, see https://github.com/webgme/webgme/wiki/Component-Settings
+          putDesc: Overwrites the settings field.
+          patchDesc: Updates/overwrites the user's settings with the sent values for matching keys.
+          deleteDesc: Clears out the user's settings field (sets it to empty dictionary).
+      /{componentId}:
+        type:
+          collection-item:
+            exampleItem: !include webgme-api-user-settings-component-retrieve.json
+            putBody: !include webgme-api-user-settings-component-retrieve.json
+            patchBody: !include webgme-api-user-settings-patch.json
+            getDesc: Gets a specific component settings for a user, see https://github.com/webgme/webgme/wiki/Component-Settings
+            putDesc: Overwrites the settings field for a specific component.
+            patchDesc: Updates/overwrites a specific component settings with the sent values for matching keys.
+            deleteDesc: Clears out the settings for a specific component.
 
 /orgs:
   get:

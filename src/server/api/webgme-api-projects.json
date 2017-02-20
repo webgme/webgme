@@ -2,8 +2,8 @@
    {
       "_id":"guest+FSM",
       "owner":"guest",
-      "name":"6c",
-      "fullName":"guest/6c",
+      "name":"FSM",
+      "fullName":"guest/FSM",
       "info": {
         "viewedAt": "2017-02-19T00:06:57.842Z",
         "viewer": "guest",
