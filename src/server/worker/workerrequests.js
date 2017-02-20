@@ -8,8 +8,6 @@
 var Core = requireJS('common/core/coreQ'),
     Storage = requireJS('common/storage/nodestorage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
-    REGEXP = requireJS('common/regexp'),
-    superagent = require('superagent'),
     merger = requireJS('common/core/users/merge'),
     BlobClientClass = requireJS('blob/BlobClient'),
     blobUtil = requireJS('blob/util'),
@@ -419,6 +417,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 }
             })
             .then(function (jsonSeed) {
+                jsonSeed.seed.kind = typeof parameters.kind === 'string' ? parameters.kind : jsonSeed.seed.kind;
                 return _createProjectFromRawJson(storage, projectName, ownerId,
                     parameters.branchName || 'master', jsonSeed.seed, jsonSeed.msg);
             })
@@ -606,6 +605,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} [parameters.commitHash] - The tree associated with the commitHash.
      * @param {string} [parameters.branchName] - The tree at the given branch.
      * @param {string} [parameters.withAssets=false] - Bundle the encountered assets linked from attributes.
+     * @param {string} [parameters.kind] - If not given will use the one defined in project (if any).
      * @param {function} callback
      */
     function exportProjectToFile(webgmeToken, parameters, callback) {
@@ -642,7 +642,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return storageUtils.getProjectJson(project, {
                     branchName: parameters.branchName,
                     commitHash: parameters.commitHash,
-                    rootHash: parameters.rootHash
+                    rootHash: parameters.rootHash,
+                    kind: parameters.kind
                 });
             })
             .then(function (rawJson) {
@@ -966,6 +967,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return _importProjectPackage(blobClient, parameters.blobHash, true);
             })
             .then(function (jsonProject) {
+                jsonProject.kind = typeof parameters.kind === 'string' ? parameters.kind : jsonProject.kind;
                 return _createProjectFromRawJson(storage, parameters.projectName, parameters.ownerId,
                     parameters.branchName, jsonProject, 'Imported project from uploaded blob ' +
                     parameters.blobHash + '.');

@@ -229,6 +229,7 @@ define([
          * @param {string} [parameters.commitHash] - The tree associated with the commitHash.
          * @param {string} [parameters.tagName] - The tree at the given tag.
          * @param {string} [parameters.branchName] - The tree at the given branch.
+         * @param {string} [parameters.kind] - If not given will assign the one in project.
          * @param {function} callback
          */
         getProjectJson: function (project, parameters, callback) {
@@ -237,12 +238,18 @@ define([
 
             _getRootHash(project, parameters || {})
                 .then(function (rootHash) {
-                    return _collectObjectAndAssetHashes(project, rootHash);
+                    return Q.all([
+                        _collectObjectAndAssetHashes(project, rootHash),
+                        project.getProjectInfo()
+                    ]);
                 })
-                .then(function (hashes) {
+                .then(function (res) {
+                    var hashes = res[0],
+                        info = res[1];
                     rawJson = {
                         rootHash: parameters.rootHash,
                         projectId: project.projectId,
+                        kind: typeof parameters.kind === 'string' ? parameters.kind : info.info.kind,
                         branchName: parameters.branchName,
                         commitHash: parameters.commitHash,
                         hashes: hashes,
