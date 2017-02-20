@@ -266,7 +266,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                         .then(function (projectStr) {
                             var jsonProject = JSON.parse(projectStr);
 
-                            if (!jsonProject.kind) {
+                            if (typeof jsonProject.kind !== 'string') {
                                 jsonProject.kind = name;
                                 logger.info('Seed did not define a kind, the seed-name [' + name + '] will be used ' +
                                     'as kind for new project.');
@@ -368,9 +368,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} parameters.seedName - Name of seed, file or projectId.
      * @param {string} parameters.type - 'db' or 'file'
      * @param {string} [parameters.seedBranch='master'] - If db - optional name of branch.
-     * @param {string} [parameters.seedCommit] - If db - optional commit-hash to seed from (if given branchName will not
+     * @param {string} [parameters.seedCommit] - If db - optional commit-hash to seed from (if given branchName will not be used).
      * @param {string} [parameters.kind]
-     * be used).
      * @param [function} callback
      */
     function seedProject(webgmeToken, projectName, ownerId, parameters, callback) {
