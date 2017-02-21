@@ -1,8 +1,6 @@
 /*globals define*/
 /*jshint node: true, browser: true*/
 
-// TODO: This files needs refactoring
-
 /**
  * @author kecso / https://github.com/kecso
  */
@@ -24,16 +22,6 @@ define(['common/util/canon',
         var logger = options.logger,
             self = this,
             key,
-            //FIXME: There shouldn't be state.
-            // generateTreeDiff
-            //_yetToCompute = {},
-            //_DIFF = {},
-            //_needChecking = true,
-            //_rounds = 0,
-            //_diffMoves = {},
-
-            // tryToConcatChanges
-            //_concatResult,
             _conflictItems = [],
             _conflictMine,
             _conflictTheirs,
@@ -49,12 +37,27 @@ define(['common/util/canon',
         logger.debug('initialized DiffCore');
 
         //<editor-fold=Helper Functions>
+        function compareRelids(a, b) {
+            var aRel = self.getRelid(a),
+                bRel = self.getRelid(b);
+
+            if (aRel < bRel) {
+                return -1;
+            } else if (aRel > bRel) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+
         function normalize(obj) {
+            // TODO: Does this really need to be called as many times as it is?
             if (!obj) {
                 return obj;
             }
             var keys = Object.keys(obj),
                 i;
+
             if (JSON.stringify(obj.set) === JSON.stringify({})) {
                 delete obj.set;
             }
@@ -87,8 +90,10 @@ define(['common/util/canon',
         function attrDiff(source, target) {
             var sNames = self.getOwnAttributeNames(source),
                 tNames = self.getOwnAttributeNames(target),
-                i,
-                diff = {};
+                diff = {},
+                sAttr,
+                tAttr,
+                i;
 
             for (i = 0; i < sNames.length; i++) {
                 if (tNames.indexOf(sNames[i]) === -1) {
@@ -97,14 +102,13 @@ define(['common/util/canon',
             }
 
             for (i = 0; i < tNames.length; i++) {
-                if (self.getAttribute(source, tNames[i]) === undefined) {
-                    diff[tNames[i]] = self.getAttribute(target, tNames[i]);
-                } else {
-                    if (CANON.stringify(self.getAttribute(source, tNames[i])) !==
-                        CANON.stringify(self.getAttribute(target, tNames[i]))) {
+                sAttr = self.getOwnAttribute(source, tNames[i]);
+                tAttr = self.getOwnAttribute(target, tNames[i]);
 
-                        diff[tNames[i]] = self.getAttribute(target, tNames[i]);
-                    }
+                if (sAttr === undefined) {
+                    diff[tNames[i]] = tAttr;
+                } else if (CANON.stringify(sAttr) !== CANON.stringify(tAttr)) {
+                    diff[tNames[i]] = tAttr;
                 }
             }
 
@@ -114,24 +118,25 @@ define(['common/util/canon',
         function regDiff(source, target) {
             var sNames = self.getOwnRegistryNames(source),
                 tNames = self.getOwnRegistryNames(target),
-                i,
-                diff = {};
+                diff = {},
+                sReg,
+                tReg,
+                i;
 
             for (i = 0; i < sNames.length; i++) {
                 if (tNames.indexOf(sNames[i]) === -1) {
+                    // FIXME: This constant should be renamed to something with . or $ (which is illegal in mongo)
                     diff[sNames[i]] = CONSTANTS.TO_DELETE_STRING;
                 }
             }
 
             for (i = 0; i < tNames.length; i++) {
-                if (self.getRegistry(source, tNames[i]) === undefined) {
-                    diff[tNames[i]] = self.getRegistry(target, tNames[i]);
-                } else {
-                    if (CANON.stringify(self.getRegistry(source, tNames[i])) !==
-                        CANON.stringify(self.getRegistry(target, tNames[i]))) {
-
-                        diff[tNames[i]] = self.getRegistry(target, tNames[i]);
-                    }
+                sReg = self.getOwnRegistry(source, tNames[i]);
+                tReg = self.getOwnRegistry(target, tNames[i]);
+                if (sReg === undefined) {
+                    diff[tNames[i]] = tReg;
+                } else if (CANON.stringify(sReg) !== CANON.stringify(tReg)) {
+                    diff[tNames[i]] = tReg;
                 }
             }
 
@@ -139,6 +144,7 @@ define(['common/util/canon',
         }
 
         function childrenDiff(source, target) {
+            // FIXME: Shouldn't these be ownChildren?
             var sRelids = self.getChildrenRelids(source, true),
                 tRelids = self.getChildrenRelids(target, true),
                 tHashes = self.getChildrenHashes(target),
@@ -159,10 +165,10 @@ define(['common/util/canon',
             }
 
             return diff;
-
         }
 
         function pointerDiff(source, target) {
+            // FIXME: Shouldn't these be ownPointerNames?
             var getPointerData = function (node) {
                     var data = {},
                         names = self.getPointerNames(node),
@@ -227,8 +233,32 @@ define(['common/util/canon',
         }
 
         function ovrDiff(source, target) {
-            var sOvr = self.getRawOverlayInformation(source),
-                tOvr = self.getRawOverlayInformation(target);
+            var getOvrData = function (node) {
+                    var paths, names, i, j,
+                        ovr = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {},
+                        data = {},
+                        base = self.getPath(node);
+
+                    paths = Object.keys(ovr);
+                    for (i = 0; i < paths.length; i++) {
+                        if (paths[i].indexOf('_') === -1) {
+                            data[paths[i]] = {};
+                            names = Object.keys(ovr[paths[i]]);
+                            for (j = 0; j < names.length; j++) {
+                                if (ovr[paths[i]][names[j]] === '/_nullptr') {
+                                    data[paths[i]][names[j]] = null;
+                                    // TODO: -inv check shouldn't be needed anymore.. (it is stripped at load for old data).
+                                } else if (names[j].slice(-4) !== '-inv' && names[j].indexOf('_') === -1 &&
+                                    ovr[paths[i]][names[j]].indexOf('_') === -1) {
+                                    data[paths[i]][names[j]] = self.joinPaths(base, ovr[paths[i]][names[j]]);
+                                }
+                            }
+                        }
+                    }
+                    return data;
+                },
+                sOvr = getOvrData(source),
+                tOvr = getOvrData(target);
 
             if (CANON.stringify(sOvr) !== CANON.stringify(tOvr)) {
                 return {source: sOvr, target: tOvr};
@@ -238,6 +268,7 @@ define(['common/util/canon',
 
         function metaDiff(source, target) {
             //TODO jsonMeta format should be changed in all places!!!
+            // FIXME: which places??
             var convertJsonMeta = function (jsonMeta) {
                     var i, j, names, itemsObject;
                     //children
@@ -361,7 +392,7 @@ define(['common/util/canon',
         }
 
         function finalizeMetaDiff(diff, diffMoves) {
-            //at this point _DIFF is ready and the _diffMoves is complete...
+            // At this point diff is ready and the diffMoves are complete.
             var relids = getDiffChildrenRelids(diff),
                 i, sMeta, tMeta;
             if (diff.meta) {
@@ -406,14 +437,15 @@ define(['common/util/canon',
             }
         }
 
-        function finalizeDiff(DIFF, diffMoves) {
-            finalizeMetaDiff(DIFF, diffMoves);
-            finalizePointerDiff(DIFF, diffMoves);
-            finalizeSetDiff(DIFF, diffMoves);
-            normalize(DIFF);
+        function finalizeDiff(diff, diffMoves) {
+            finalizeMetaDiff(diff, diffMoves);
+            finalizePointerDiff(diff, diffMoves);
+            finalizeSetDiff(diff, diffMoves);
+            normalize(diff);
         }
 
         function isEmptyNodeDiff(diff) {
+            // TODO: This could probably be reversed and optimized.
             if (
                 Object.keys(diff.children || {}).length > 0 ||
                 Object.keys(diff.attr || {}).length > 0 ||
@@ -562,6 +594,8 @@ define(['common/util/canon',
             var diff = self.nodeDiff(sourceRoot, targetRoot) || {},
                 oDiff = ovrDiff(sourceRoot, targetRoot),
                 getChild = function (childArray, relid) {
+                    // TODO: This seems computational expensive - maybe core.loadChild is faster?
+                    // TODO: Alt. created maps for sChildren and tChildren
                     for (var i = 0; i < childArray.length; i++) {
                         if (self.getRelid(childArray[i]) === relid) {
                             return childArray[i];
@@ -569,20 +603,9 @@ define(['common/util/canon',
                     }
                     return null;
                 };
-            return TASYNC.call(function (sChildren, tChildren) {
-                ASSERT(sChildren.length >= 0 && tChildren.length >= 0);
-                function compareRelids(a, b) {
-                    var aRel = self.getRelid(a),
-                        bRel = self.getRelid(b);
 
-                    if (aRel < bRel) {
-                        return -1;
-                    } else if (aRel > bRel) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
-                }
+            return TASYNC.call(function (sChildren, tChildren) {
+                ASSERT(sChildren.length >= 0 && tChildren.length >= 0); // TODO: Needed??
 
                 sChildren.sort(compareRelids);
                 tChildren.sort(compareRelids);
@@ -599,6 +622,7 @@ define(['common/util/canon',
                     child = getChild(sChildren, tDiff[i].relid);
                     if (child) {
                         guid = self.getGuid(child);
+                        // FIXME: Isn't the hash already given at childrenDiff?
                         diff[tDiff[i].relid] = {guid: guid, removed: true, hash: self.getHash(child)};
                         yetToCompute[guid] = yetToCompute[guid] || {};
                         yetToCompute[guid].from = child;
@@ -632,6 +656,7 @@ define(['common/util/canon',
                             updateDiff(child, tChildren[i], yetToCompute), self.getRelid(child), done);
                     }
                 }
+
                 return TASYNC.call(function () {
                     delete diff.children;
                     extendDiffWithOvr(diff, oDiff);
@@ -650,6 +675,7 @@ define(['common/util/canon',
                     }
 
                 }, done);
+            // TODO: Wouldn't loadOwnChildren be enough?
             }, self.loadChildren(sourceRoot), self.loadChildren(targetRoot));
         }
 
@@ -767,7 +793,7 @@ define(['common/util/canon',
             return;
         }
 
-        function checkRound(yetToCompute, DIFF, diffMoves, needChecking) {
+        function checkRound(yetToCompute, diff, diffMoves, needChecking) {
             var guids = Object.keys(yetToCompute),
                 done,
                 ytc,
@@ -777,13 +803,13 @@ define(['common/util/canon',
                     mDiff.movedFrom = self.getPath(info.from);
                     mDiff.ooGuids = gatherObstructiveGuids(info.from);
                     diffMoves[self.getPath(info.from)] = self.getPath(info.to);
-                    insertAtPath(DIFF, self.getPath(info.to), mDiff);
+                    insertAtPath(diff, self.getPath(info.to), mDiff);
                     return null;
                 },
                 expandFrom = function (mDiff, info) {
                     mDiff.hash = self.getHash(info.from);
                     mDiff.removed = true;
-                    insertIntoDiff(self.getPath(info.from), mDiff, DIFF);
+                    insertIntoDiff(self.getPath(info.from), mDiff, diff);
                     return null;
                 },
                 expandTo = function (mDiff, info) {
@@ -791,14 +817,14 @@ define(['common/util/canon',
                         mDiff.hash = self.getHash(info.to);
                     }
                     mDiff.removed = false;
-                    insertIntoDiff(self.getPath(info.to), mDiff, DIFF);
+                    insertIntoDiff(self.getPath(info.to), mDiff, diff);
                     return null;
                 };
 
             if (needChecking !== true || guids.length < 1) {
-                shrinkDiff(DIFF);
-                finalizeDiff(DIFF, diffMoves);
-                return JSON.parse(JSON.stringify(DIFF));
+                shrinkDiff(diff);
+                finalizeDiff(diff, diffMoves);
+                return JSON.parse(JSON.stringify(diff));
             }
 
             needChecking = false;
@@ -824,7 +850,7 @@ define(['common/util/canon',
                 }
             }
 
-            return TASYNC.call(checkRound, yetToCompute, DIFF, diffMoves, needChecking, done);
+            return TASYNC.call(checkRound, yetToCompute, diff, diffMoves, needChecking, done);
         }
 
         function hasRealChange(diffNode) {
@@ -2516,6 +2542,9 @@ define(['common/util/canon',
         //</editor-fold>
 
         //<editor-fold=Added Methods>
+
+        // FIXME: It really looks like the diff requires that no nodes are mutated. This must be documented somewhere.
+        // FIXME: Maybe checking for isMutated in core.js at the roots are enough..
         this.nodeDiff = function (source, target) {
             var diff = {
                 children: childrenDiff(source, target),
@@ -2573,7 +2602,7 @@ define(['common/util/canon',
             _conflictItems = [];
             _conflictMine = {};
             _conflictTheirs = {};
-            _concatBase = base;
+            _concatBase = base; // FIXME: Are these meant to be copies, currently base and extension are mutated?
             _concatExtension = extension;
             _concatBaseRemovals = {};
             _concatMoves = {

@@ -460,9 +460,12 @@ describe.skip('corediff scenarios', function () {
                     });
             })
             .then(function (diffs) {
-                console.log(JSON.stringify(diffs, null, 2));
-                var concatChanges01 = core.tryToConcatChanges(diffs[0], diffs[1]),
-                    concatChanges10 = core.tryToConcatChanges(diffs[1], diffs[0]);
+                var prevDiffs = JSON.parse(JSON.stringify(diffs));
+                console.log('before', JSON.stringify(diffs, null, 2));
+                var concatChanges01 = core.tryToConcatChanges(diffs[0], diffs[1]);
+                console.log('after', JSON.stringify(diffs, null, 2));
+                var concatChanges10 = core.tryToConcatChanges(diffs[1], diffs[0]);
+                expect(prevDiffs).to.deep.equal(diffs);
 
                 expect(concatChanges01.items.length).to.equal(1);
                 expect(concatChanges10.items.length).to.equal(1);
@@ -520,9 +523,12 @@ describe.skip('corediff scenarios', function () {
                     });
             })
             .then(function (diffs) {
-                console.log(JSON.stringify(diffs, null, 2));
-                var concatChanges01 = core.tryToConcatChanges(diffs[0], diffs[1]),
-                    concatChanges10 = core.tryToConcatChanges(diffs[1], diffs[0]);
+                var prevDiffs = JSON.parse(JSON.stringify(diffs));
+                console.log('before', JSON.stringify(diffs, null, 2));
+                var concatChanges01 = core.tryToConcatChanges(diffs[0], diffs[1]);
+                console.log('after', JSON.stringify(diffs, null, 2));
+                var concatChanges10 = core.tryToConcatChanges(diffs[1], diffs[0]);
+                expect(prevDiffs).to.deep.equal(diffs);
 
                 expect(concatChanges01.items.length).to.equal(1);
                 expect(concatChanges10.items.length).to.equal(1);
