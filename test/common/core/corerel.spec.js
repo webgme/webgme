@@ -371,8 +371,8 @@ describe('corerel', function () {
             var childArray;
 
             expect(shardRoot.data.ovr || {}).not.to.have.keys(['sharded']);
-            childArray = fillUpWithChildren(3);
-            expect(childArray).to.have.length(3);
+            childArray = fillUpWithChildren(2);
+            expect(childArray).to.have.length(2);
             expect(shardRoot.data.ovr.sharded).to.equal(undefined);
             expect(shardRoot.data.ovr._mutable).to.equal(true);
         });
@@ -496,6 +496,7 @@ describe('corerel', function () {
                     for (i = 0; i < children.length; i += 1) {
                         shardCore.deletePointer(children[i], 'parent');
                     }
+                    expect(shardCore.getCollectionPaths(root, 'parent')).to.have.length(0);
                     done();
                 }, shardCore.loadChildren(root));
             }, shardCore.loadRoot(savedShardHash));
@@ -529,6 +530,30 @@ describe('corerel', function () {
                     done();
                 }, shardCore.loadChildren(root));
             }, shardCore.loadRoot(savedShardHash));
+        });
+
+        it('should remove shard only after second empty persist', function () {
+            var root = shardCore.createNode(),
+                children = [],
+                i;
+
+            for (i = 0; i < 4; i += 1) {
+                children.unshift(shardCore.createNode({parent: root}));
+                shardCore.setPointer(children[0], 'parentA', root);
+                shardCore.setPointer(children[0], 'parentB', root);
+            }
+            expect(Object.keys(root.overlays)).to.have.length(4);
+            for (i = 0; i < 2; i += 1) {
+                shardCore.deletePointer(children[i], 'parentA');
+                shardCore.deletePointer(children[i], 'parentB');
+            }
+            expect(Object.keys(root.overlays)).to.have.length(4);
+            shardCore.persist(root);
+            expect(Object.keys(root.overlays)).to.have.length(4);
+            shardCore.setPointer(children[0], 'parentA', root);
+            expect(Object.keys(root.overlays)).to.have.length(4);
+            shardCore.persist(root);
+            expect(Object.keys(root.overlays)).to.have.length(3);
         });
     });
 });
