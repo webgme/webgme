@@ -92,6 +92,7 @@
     "webgme-executor-worker": "^1.0.0"
   },
   "main": "webgme",
+  "typings": "typings/webgme.d.ts",
   "scripts": {
     "docs": "./node_modules/.bin/jsdoc -c jsdoc_conf.json",
     "start": "node ./src/bin/start_server.js",
