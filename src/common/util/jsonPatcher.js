@@ -50,6 +50,10 @@ define([
             return false;
         }
 
+        if(path === ''){
+            return true;
+        }
+
         var relIds = path.split('/'),
             result = false,
             i;
@@ -65,10 +69,8 @@ define([
         return result;
     }
 
-    function diff(source, target, basePath, excludeList, noUpdate, innerPath) {
+    function diff(source, target, basePath, excludeList, noUpdate, innerPath, overlay, inOverlay) {
         var result = [],
-            overlay = false,
-            inOverlay = false,
             patchItem,
             path,
             i;
@@ -202,6 +204,21 @@ define([
         return result;
     }
 
+    function overlayShardDiff(sourceJson, targetJson) {
+        var patch,
+            key;
+        patch = diff(sourceJson, targetJson, '/', ['_id', 'type', 'items'], false, '', false, false)
+            .concat(diff(sourceJson.items || {}, targetJson.items || {}, '/items/', [], true, '', true, false));
+
+        for (key in sourceJson.items) {
+            if (targetJson.items.hasOwnProperty(key)) {
+                patch = patch.concat(diff(sourceJson.items[key], targetJson.items[key], '/items/' + _strEncode(key) + '/', [], false));
+            }
+        }
+
+        return patch;
+    }
+
     function create(sourceJson, targetJson) {
         var patch,
             patchItem,
@@ -209,12 +226,17 @@ define([
             i,
             key;
 
+        //if it is an overlay shard, we make a more simple diff
+        if (sourceJson.type === 'shard' && targetJson.type === 'shard') {
+            return overlayShardDiff(sourceJson, targetJson);
+        }
+
         //main level diff
-        patch = diff(sourceJson, targetJson, '/', ['_id', 'ovr', 'atr', 'reg', '_sets'], false);
+        patch = diff(sourceJson, targetJson, '/', ['_id', 'ovr', 'atr', 'reg', '_sets'], false, '', false, false);
 
         //atr
         if (sourceJson.atr && targetJson.atr) {
-            patch = patch.concat(diff(sourceJson.atr, targetJson.atr, '/atr/', [], false));
+            patch = patch.concat(diff(sourceJson.atr, targetJson.atr, '/atr/', [], false, '', false, false));
         } else if (sourceJson.atr) {
             patch.push({
                 op: 'remove',
@@ -230,7 +252,7 @@ define([
 
         //reg
         if (sourceJson.reg && targetJson.reg) {
-            patch = patch.concat(diff(sourceJson.reg, targetJson.reg, '/reg/', [], false));
+            patch = patch.concat(diff(sourceJson.reg, targetJson.reg, '/reg/', [], false, '', false, false));
         } else if (sourceJson.reg) {
             patch.push({
                 op: 'remove',
@@ -246,12 +268,18 @@ define([
 
         //_sets
         if (sourceJson._sets && targetJson._sets) {
-            patch = patch.concat(diff(sourceJson._sets, targetJson._sets, '/_sets/', [], true));
+            patch = patch.concat(diff(sourceJson._sets, targetJson._sets, '/_sets/', [], true, '', false, false));
             for (key in targetJson._sets) {
                 if (sourceJson._sets[key]) {
-                    patch = patch.concat(
-                        diff(sourceJson._sets[key], targetJson._sets[key], '/_sets/' + _strEncode(key) + '/', [], false)
-                    );
+                    patch = patch.concat(diff(
+                        sourceJson._sets[key],
+                        targetJson._sets[key],
+                        '/_sets/' + _strEncode(key) + '/',
+                        [],
+                        false,
+                        '',
+                        false,
+                        false));
                 }
             }
         } else if (sourceJson._sets) {
@@ -269,12 +297,18 @@ define([
 
         //ovr
         if (sourceJson.ovr && targetJson.ovr) {
-            patch = patch.concat(diff(sourceJson.ovr, targetJson.ovr, '/ovr/', [], true));
+            patch = patch.concat(diff(sourceJson.ovr, targetJson.ovr, '/ovr/', [], true, '', true, false));
             for (key in targetJson.ovr) {
                 if (sourceJson.ovr[key]) {
-                    patch = patch.concat(
-                        diff(sourceJson.ovr[key], targetJson.ovr[key], '/ovr/' + _strEncode(key) + '/', [], false, key)
-                    );
+                    patch = patch.concat(diff(
+                        sourceJson.ovr[key],
+                        targetJson.ovr[key],
+                        '/ovr/' + _strEncode(key) + '/',
+                        [],
+                        false,
+                        key,
+                        false,
+                        true));
                 }
             }
         } else if (sourceJson.ovr || targetJson.ovr) {
@@ -292,7 +326,7 @@ define([
             }
 
             // For ovr removal/addition we need to compute updates/partialUpdates
-            diffRes = diff(sourceJson.ovr || {}, targetJson.ovr || {}, '/ovr/', [], true);
+            diffRes = diff(sourceJson.ovr || {}, targetJson.ovr || {}, '/ovr/', [], true, '', true, false);
             for (i = 0; i < diffRes.length; i += 1) {
                 patchItem.partialUpdates = patchItem.partialUpdates.concat(diffRes[i].partialUpdates);
                 patchItem.updates = patchItem.updates.concat(diffRes[i].updates);

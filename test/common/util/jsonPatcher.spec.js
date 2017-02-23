@@ -783,4 +783,237 @@ describe('jsonPatcher', function () {
         createTests(true, ' parent is root.');
         createTests(false, ' parent is NOT root.');
     });
+
+    describe('sharded overlay handling', function () {
+        it('should work fine during first creation', function () {
+            var oldData = {
+                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "_id": "",
+                    "ovr": {
+                        "/6": {
+                            "parentA": "",
+                            "parentB": ""
+                        }
+                    },
+                    "__v": "1.1.0"
+                },
+                newData = {
+                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "_id": "",
+                    "__v": "1.1.0",
+                    "c": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "ovr": {
+                        "9": "#f53f3346eb25868aba13cbfed5abad3ccb7758fd",
+                        "sharded": true,
+                        "l": "#1c29df713f7cc6500bfa999b82a3cffe4956fb1e",
+                        "r": "#4a5ef79b14caf635b7e645c8c66bf35850bc5d15",
+                        "S": "#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e"
+                    },
+                    "X": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "G": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a"
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patcher.apply(oldData, patch).result).to.eql(newData);
+        });
+
+        it('should work fine during shard addition', function () {
+            var oldData = {
+                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "_id": "",
+                    "__v": "1.1.0",
+                    "c": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "ovr": {
+                        "9": "#f53f3346eb25868aba13cbfed5abad3ccb7758fd",
+                        "sharded": true,
+                        "S": "#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e"
+                    },
+                    "X": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "G": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a"
+                },
+                newData = {
+                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "_id": "",
+                    "__v": "1.1.0",
+                    "c": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "ovr": {
+                        "9": "#f53f3346eb25868aba13cbfed5abad3ccb7758fd",
+                        "sharded": true,
+                        "l": "#1c29df713f7cc6500bfa999b82a3cffe4956fb1e",
+                        "r": "#4a5ef79b14caf635b7e645c8c66bf35850bc5d15",
+                        "S": "#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e"
+                    },
+                    "X": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "G": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a"
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patcher.apply(oldData, patch).result).to.eql(newData);
+        });
+
+        it('should work fine during shard removal', function () {
+            var newData = {
+                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "_id": "",
+                    "__v": "1.1.0",
+                    "c": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "ovr": {
+                        "9": "#f53f3346eb25868aba13cbfed5abad3ccb7758fd",
+                        "sharded": true,
+                        "S": "#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e"
+                    },
+                    "X": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "G": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a"
+                },
+                oldData = {
+                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "_id": "",
+                    "__v": "1.1.0",
+                    "c": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "ovr": {
+                        "9": "#f53f3346eb25868aba13cbfed5abad3ccb7758fd",
+                        "sharded": true,
+                        "l": "#1c29df713f7cc6500bfa999b82a3cffe4956fb1e",
+                        "r": "#4a5ef79b14caf635b7e645c8c66bf35850bc5d15",
+                        "S": "#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e"
+                    },
+                    "X": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
+                    "G": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a"
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patcher.apply(oldData, patch).result).to.eql(newData);
+        });
+
+        it('should create a valid patch for updating entry inside shard-item', function () {
+            var oldData = {
+                    "type": "shard",
+                    "itemCount": 2,
+                    "items": {
+                        "/W": {
+                            "parentA": "",
+                            "parentB": ""
+                        }
+                    },
+                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
+                    "__v": "1.1.0"
+                },
+                newData = {
+                    "type": "shard",
+                    "itemCount": 2,
+                    "items": {
+                        "/W": {
+                            "parentA": "",
+                            "parentB": "/some/path"
+                        }
+                    },
+                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
+                    "__v": "1.1.0"
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patch).to.eql([{
+                op: 'replace',
+                path: '/items/%2fW/parentB',
+                value: '/some/path'
+            }]);
+        });
+
+        it('should create a valid patch for adding entry to shard-item', function () {
+            var oldData = {
+                    "type": "shard",
+                    "itemCount": 2,
+                    "items": {
+                        "/W": {
+                            "parentA": "",
+                            "parentB": ""
+                        }
+                    },
+                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
+                    "__v": "1.1.0"
+                },
+                newData = {
+                    "type": "shard",
+                    "itemCount": 2,
+                    "items": {
+                        "/W": {
+                            "parentA": "",
+                            "parentB": "",
+                            "parentC": ""
+                        }
+                    },
+                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
+                    "__v": "1.1.0"
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patch).to.eql([{
+                op: 'add',
+                path: '/items/%2fW/parentC',
+                value: ''
+            }]);
+        });
+
+        it('should create a valid patch for removing entry from shard-item', function () {
+            var oldData = {
+                    "type": "shard",
+                    "itemCount": 2,
+                    "items": {
+                        "/W": {
+                            "parentA": "",
+                            "parentB": ""
+                        }
+                    },
+                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
+                    "__v": "1.1.0"
+                },
+                newData = {
+                    "type": "shard",
+                    "itemCount": 2,
+                    "items": {
+                        "/W": {
+                            "parentA": ""
+                        }
+                    },
+                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
+                    "__v": "1.1.0"
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patch).to.eql([{
+                op: 'remove',
+                path: '/items/%2fW/parentB'
+            }]);
+        });
+
+        it('should create a valid patch for removing a shard entry', function () {
+            var oldData = {
+                    "type": "shard",
+                    "itemCount": 2,
+                    "items": {
+                        "/W": {
+                            "parentA": "",
+                            "parentB": ""
+                        }
+                    },
+                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
+                    "__v": "1.1.0"
+                },
+                newData = {
+                    "type": "shard",
+                    "itemCount": 2,
+                    "items": {},
+                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
+                    "__v": "1.1.0"
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patch).to.eql([{
+                op: 'remove',
+                path: '/items/%2fW',
+                partialUpdates: ['', ''],
+                updates: ['/W', '/W']
+            }]);
+        });
+    });
 });

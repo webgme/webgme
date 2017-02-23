@@ -548,12 +548,33 @@ describe('corerel', function () {
                 shardCore.deletePointer(children[i], 'parentB');
             }
             expect(Object.keys(root.overlays)).to.have.length(4);
-            shardCore.persist(root);
+            console.log(JSON.stringify(shardCore.persist(root),null,2));
             expect(Object.keys(root.overlays)).to.have.length(4);
             shardCore.setPointer(children[0], 'parentA', root);
             expect(Object.keys(root.overlays)).to.have.length(4);
             shardCore.persist(root);
             expect(Object.keys(root.overlays)).to.have.length(3);
+        });
+
+        it('should remove shard only after second empty persist', function () {
+            var root = shardCore.createNode(),
+                children = [],
+                i;
+
+            for (i = 0; i < 1; i += 1) {
+                children.unshift(shardCore.createNode({parent: root}));
+                shardCore.setPointer(children[0], 'parentA', root);
+                shardCore.setPointer(children[0], 'parentB', root);
+            }
+            // expect(Object.keys(root.overlays)).to.have.length(1);
+            console.log(JSON.stringify(shardCore.persist(root),null,2));
+            for (i = 0; i < 3; i += 1) {
+                children.unshift(shardCore.createNode({parent: root}));
+                shardCore.setPointer(children[0], 'parentA', root);
+                shardCore.setPointer(children[0], 'parentB', root);
+            }
+            expect(Object.keys(root.overlays)).to.have.length(4);
+            console.log(JSON.stringify(shardCore.persist(root),null,2));
         });
     });
 });
