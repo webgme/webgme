@@ -323,6 +323,7 @@ define([
                 shardId,
                 hash,
                 overlayNode,
+                shouldUpdateSmallest = false,
                 i;
 
             if (self.isMutable(node) !== true) {
@@ -356,9 +357,15 @@ define([
                     };
 
                     self.setProperty(overlayNode, shardId, hash);
+                    shouldUpdateSmallest = true;
                 } else if (node.overlays[shardId].itemCount === 0) {
                     removeOverlayShard(node, shardId);
+                    shouldUpdateSmallest = true;
                 }
+            }
+
+            if(shouldUpdateSmallest){
+                updateSmallestOverlayShardIndex(node);
             }
         }
 

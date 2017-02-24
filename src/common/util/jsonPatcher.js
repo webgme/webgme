@@ -478,6 +478,10 @@ define([
 
     }
 
+    function _getChangedNodesFromSharding(patch, patchItem, res, hash, gmePath) {
+
+    }
+
     function _getChangedNodesRec(patch, res, hash, gmePath) {
         var nodePatches = patch[hash] && patch[hash].patch, // Changes regarding node with hash
             i, j,
@@ -493,7 +497,10 @@ define([
         for (i = 0; i < nodePatches.length; i += 1) {
             patchPath = nodePatches[i].path;
 
-            if (_isOvr(patchPath) === true) {
+            if (typeof nodePatches[i].preShardRelations === 'object') {
+                //special case when the overlay is converted
+
+            } else if (_isOvr(patchPath) === true) {
                 // Now handle the updates
                 for (j = 0; j < nodePatches[i].partialUpdates.length; j += 1) {
                     absGmePath = gmePath + nodePatches[i].partialUpdates[j];

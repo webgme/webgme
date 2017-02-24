@@ -5,7 +5,7 @@
  */
 var testFixture = require('../../_globals.js');
 
-describe('corerel', function () {
+describe.only('corerel', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('corerel.spec'),
