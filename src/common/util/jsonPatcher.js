@@ -50,7 +50,7 @@ define([
             return false;
         }
 
-        if(path === ''){
+        if (path === '') {
             return true;
         }
 
@@ -74,12 +74,6 @@ define([
             patchItem,
             path,
             i;
-
-        if (basePath === '/ovr/') {
-            overlay = true;
-        } else if (_startsWith(basePath, '/ovr/')) {
-            inOverlay = true;
-        }
 
         //add
         for (i in target) {
@@ -219,6 +213,17 @@ define([
         return patch;
     }
 
+    function getShardingDiff(commonOverlay, shardedOverlay) {
+        var patchItem = {
+            op: 'replace',
+            path: '/ovr',
+            value: shardedOverlay,
+            preShardRelations: commonOverlay
+        };
+
+        return patchItem;
+    }
+
     function create(sourceJson, targetJson) {
         var patch,
             patchItem,
@@ -297,18 +302,23 @@ define([
 
         //ovr
         if (sourceJson.ovr && targetJson.ovr) {
-            patch = patch.concat(diff(sourceJson.ovr, targetJson.ovr, '/ovr/', [], true, '', true, false));
-            for (key in targetJson.ovr) {
-                if (sourceJson.ovr[key]) {
-                    patch = patch.concat(diff(
-                        sourceJson.ovr[key],
-                        targetJson.ovr[key],
-                        '/ovr/' + _strEncode(key) + '/',
-                        [],
-                        false,
-                        key,
-                        false,
-                        true));
+            if (sourceJson.ovr.sharded !== true && targetJson.ovr.sharded === true) {
+                // Transformation into sharded overlays means that we have to collect update information.
+                patch.push(getShardingDiff(sourceJson.ovr, targetJson.ovr));
+            } else {
+                patch = patch.concat(diff(sourceJson.ovr, targetJson.ovr, '/ovr/', [], true, '', true, false));
+                for (key in targetJson.ovr) {
+                    if (sourceJson.ovr[key]) {
+                        patch = patch.concat(diff(
+                            sourceJson.ovr[key],
+                            targetJson.ovr[key],
+                            '/ovr/' + _strEncode(key) + '/',
+                            [],
+                            false,
+                            key,
+                            false,
+                            true));
+                    }
                 }
             }
         } else if (sourceJson.ovr || targetJson.ovr) {
@@ -462,6 +472,10 @@ define([
                 delete res.partialUpdate[gmePath];
             }
         }
+    }
+
+    function _getChangedNodesFromShard(patch, res, hash, gmePath) {
+
     }
 
     function _getChangedNodesRec(patch, res, hash, gmePath) {

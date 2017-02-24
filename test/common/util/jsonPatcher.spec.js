@@ -785,36 +785,40 @@ describe('jsonPatcher', function () {
     });
 
     describe('sharded overlay handling', function () {
+
         it('should work fine during first creation', function () {
             var oldData = {
-                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "_id": "",
-                    "ovr": {
-                        "/6": {
-                            "parentA": "",
-                            "parentB": ""
-                        }
-                    },
-                    "__v": "1.1.0"
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    _id: '',
+                    ovr: {'/6': {parentA: '', 'parentB': ''}},
+                    __v: '1.1.0'
                 },
                 newData = {
-                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "_id": "",
-                    "__v": "1.1.0",
-                    "c": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "ovr": {
-                        "9": "#f53f3346eb25868aba13cbfed5abad3ccb7758fd",
-                        "sharded": true,
-                        "l": "#1c29df713f7cc6500bfa999b82a3cffe4956fb1e",
-                        "r": "#4a5ef79b14caf635b7e645c8c66bf35850bc5d15",
-                        "S": "#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e"
-                    },
-                    "X": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "G": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a"
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    _id: '',
+                    __v: '1.1.0',
+                    ovr: {
+                        9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                        sharded: true,
+                        l: '#1c29df713f7cc6500bfa999b82a3cffe4956fb1e',
+                        r: '#4a5ef79b14caf635b7e645c8c66bf35850bc5d15',
+                        S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
+                    }
                 },
                 patch = patcher.create(oldData, newData);
 
             expect(patcher.apply(oldData, patch).result).to.eql(newData);
+            expect(patch).to.eql([{
+                op: 'replace', path: '/ovr',
+                value: {
+                    9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                    sharded: true,
+                    l: '#1c29df713f7cc6500bfa999b82a3cffe4956fb1e',
+                    r: '#4a5ef79b14caf635b7e645c8c66bf35850bc5d15',
+                    S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
+                },
+                preShardRelations: {'/6': {parentA: '', parentB: ''}}
+            }]);
         });
 
         it('should work fine during shard addition', function () {
