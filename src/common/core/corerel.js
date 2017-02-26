@@ -452,7 +452,7 @@ define([
             if (hasShardedOverlays(node)) {
                 overlaysObject = node.overlays;
             } else {
-                overlaysObject = {'single': {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
+                overlaysObject = {single: {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
             }
 
             inverseOverlays = {};
@@ -1328,6 +1328,42 @@ define([
             }
 
             return true;
+        };
+
+        // by default the function removes any 'sub-node' relations
+        this.getRawOverlayInformation = function (node) {
+            var completeOverlayInfo = {},
+                shardId,
+                source,
+                complexOverlayObject,
+                name;
+
+            if (hasShardedOverlays(node)) {
+                complexOverlayObject = node.overlays;
+            } else {
+                complexOverlayObject = {single: {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
+            }
+
+            for (shardId in complexOverlayObject) {
+                for (source in complexOverlayObject[shardId].items) {
+                    if (source.indexOf('_') === -1) {
+                        completeOverlayInfo[source] = {};
+                        for (name in complexOverlayObject[shardId].items[source]) {
+                            if (name.indexOf('_') === -1) {
+                                if (complexOverlayObject[shardId].items[source][name] === '/_nullptr') {
+                                    completeOverlayInfo[source][name] = null;
+                                } else if (complexOverlayObject[shardId].items[source][name]
+                                        .indexOf('_') === -1) {
+                                    completeOverlayInfo[source][name] =
+                                        complexOverlayObject[shardId].items[source][name];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return completeOverlayInfo;
         };
         //</editor-fold>
     }
