@@ -5,7 +5,7 @@
  */
 var testFixture = require('../../_globals.js');
 
-describe.only('corerel', function () {
+describe('corerel', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         logger = testFixture.logger.fork('corerel.spec'),
@@ -379,13 +379,9 @@ describe.only('corerel', function () {
 
         it('should persist the sharded overlay', function () {
             var childArray = [],
-                numberOfChildren = 4,
                 persisted;
 
-            while (numberOfChildren--) {
-                childArray.unshift(shardCore.createNode({parent: shardRoot, relid: numberOfChildren + ''}));
-                shardCore.setPointer(childArray[0], 'parent', shardRoot);
-            }
+            childArray = fillUpWithChildren(4);
 
             persisted = shardCore.persist(shardRoot);
             expect(Object.keys(persisted.objects)).to.have.length(4);
@@ -393,13 +389,9 @@ describe.only('corerel', function () {
 
         it('should persist the sharded overlay with proper amount of shards', function () {
             var childArray = [],
-                numberOfChildren = 6,
                 persisted;
 
-            while (numberOfChildren--) {
-                childArray.unshift(shardCore.createNode({parent: shardRoot, relid: numberOfChildren + ''}));
-                shardCore.setPointer(childArray[0], 'parent', shardRoot);
-            }
+            childArray = fillUpWithChildren(6);
 
             persisted = shardCore.persist(shardRoot);
             expect(Object.keys(persisted.objects)).to.have.length(5);
@@ -407,15 +399,11 @@ describe.only('corerel', function () {
 
         it('should not reserve new shard for already used source', function () {
             var childArray = [],
-                numberOfChildren = 4,
                 i;
 
-            while (numberOfChildren--) {
-                childArray.unshift(shardCore.createNode({parent: shardRoot, relid: numberOfChildren + ''}));
-                shardCore.setPointer(childArray[0], 'parent', shardRoot);
-            }
+            childArray = fillUpWithChildren(4);
 
-            for (i = 1; i < numberOfChildren.length; i += 1) {
+            for (i = 1; i < childArray.length; i += 1) {
                 shardCore.setPointer(childArray[0], 'sibling' + i, childArray[i]);
             }
 
@@ -424,15 +412,11 @@ describe.only('corerel', function () {
 
         it('should use the smallest shard even if one other gets smaller during changes', function () {
             var childArray = [],
-                numberOfChildren = 4,
                 oldSmallest,
                 extraChild,
                 smallestShardId;
 
-            while (numberOfChildren--) {
-                childArray.unshift(shardCore.createNode({parent: shardRoot, relid: numberOfChildren + ''}));
-                shardCore.setPointer(childArray[0], 'parent', shardRoot);
-            }
+            childArray = fillUpWithChildren(4);
 
             smallestShardId = shardRoot.minimalOverlayShardId;
             oldSmallest = smallestShardId;

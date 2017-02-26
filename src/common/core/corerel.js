@@ -346,6 +346,13 @@ define([
                     node.overlayMutations[shardId] = false;
                     node.overlays[shardId][self.ID_NAME] = '';
                     node.overlays[shardId].__v = STORAGE_CONSTANTS.VERSION;
+
+                    // if we persist an empty shard we have to ensure that its hash will be unique
+                    if (node.overlays[shardId].itemCount === 0) {
+                        node.overlays[shardId].oldHash = node.overlayInitials[shardId] ?
+                            node.overlayInitials[shardId][self.ID_NAME] || null : null;
+                    }
+
                     hash = '#' + GENKEY(node.overlays[shardId], options.globConf);
                     node.overlays[shardId][self.ID_NAME] = hash;
                     innerCore.insertObject(node.overlays[shardId], stackedObjects);
@@ -364,7 +371,7 @@ define([
                 }
             }
 
-            if(shouldUpdateSmallest){
+            if (shouldUpdateSmallest) {
                 updateSmallestOverlayShardIndex(node);
             }
         }
@@ -646,7 +653,7 @@ define([
                     node.inverseOverlaysMutable = true;
                 }
 
-                index = node.inverseOverlays[target][name].indexOf(source);
+                index = (node.inverseOverlays[target][name] || []).indexOf(source);
                 if (index !== -1) {
                     node.inverseOverlays[target][name].splice(index, 1);
                     if (node.inverseOverlays[target][name].length === 0) {
