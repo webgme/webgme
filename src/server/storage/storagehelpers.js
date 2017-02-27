@@ -1,3 +1,4 @@
+/*globals requireJS*/
 /*jshint node: true, newcap: false*/
 /**
  * @author pmeijer / https://github.com/pmeijer
@@ -5,7 +6,8 @@
 
 'use strict';
 
-var Q = require('q');
+var Q = require('q'),
+    REGEXP = requireJS('common/regexp');
 
 function _loadHistoryRec(dbProject, nbr, target, result, added, heads) {
     var latest,
@@ -73,6 +75,56 @@ function loadHistory(dbProject, nbr, target, heads) {
 }
 
 /**
+ * Loads the specific object, and if that object represents a node with sharded overlays,
+ * then it loads those objects as well, and pack it into a single response.
+ *
+ * @param {object} dbProject
+ * @param {string} nodeHash
+ * @returns {function|promise}
+ * @ignore
+ */
+function loadObject(dbProject, nodeHash) {
+    var deferred = Q.defer(),
+        node;
+
+    dbProject.loadObject(nodeHash)
+        .then(function (node_) {
+            var shardLoads = [],
+                shardId;
+            node = node_;
+            if (node && node.ovr && node.ovr.sharded === true) {
+                for (shardId in node.ovr) {
+                    if (REGEXP.DB_HASH.test(node.ovr[shardId]) === true) {
+                        shardLoads.push(innerCore.loadObject(node.ovr[shardId]));
+                    }
+                }
+                return Q.allSettled(shardLoads);
+            } else {
+                deferred.resolve(node);
+                return;
+            }
+        })
+        .then(function (overlayShardResults) {
+            var i,
+                response = {
+                    multipleObjects: true,
+                    objects: {}
+                };
+            response.objects[nodeHash] = node;
+            for (i = 0; i < overlayShardResults.length; i += 1) {
+                if (overlayShardResults[i].state !== 'rejected' && overlayShardResults[i].value._id) {
+                    response.objects[overlayShardResults[i].value._id] = overlayShardResults[i].value;
+                }
+            }
+
+            deferred.resolve(response);
+        })
+        .catch(deferred.reject);
+
+    return deferred.promise;
+}
+
+/**
  * Loads the entire composition chain up till the rootNode for the provided path. And stores the nodes
  * in the loadedObjects. If the any of the objects already exists in loadedObjects - it does not load it
  * from the database.
@@ -89,6 +141,17 @@ function loadPath(dbProject, rootHash, loadedObjects, path, excludeParents) {
     var deferred = Q.defer(),
         pathArray = path.split('/');
 
+    function processLoadResult(hash, result) {
+        var subHash;
+        if (result.hasOwnProperty('multipleObjects') && result.multipleObjects === true) {
+            for (subHash in result.objects) {
+                loadedObjects[subHash] = result.objects(subHash);
+            }
+        } else {
+            loadedObjects[hash] = result;
+        }
+    }
+
     function loadParent(parentHash, relPath) {
         var hash;
         if (loadedObjects[parentHash]) {
@@ -100,16 +163,16 @@ function loadPath(dbProject, rootHash, loadedObjects, path, excludeParents) {
                 deferred.resolve();
             }
         } else {
-            dbProject.loadObject(parentHash)
+            loadObject(dbProject, parentHash)
                 .then(function (object) {
                     if (relPath) {
                         hash = object[relPath];
                         if (!excludeParents) {
-                            loadedObjects[parentHash] = object;
+                            processLoadResult(parentHash, object);
                         }
                         loadParent(hash, pathArray.shift());
                     } else {
-                        loadedObjects[parentHash] = object;
+                        processLoadResult(parentHash, object);
                         deferred.resolve();
                     }
                 })
@@ -140,5 +203,6 @@ function filterArray(arr) {
 module.exports = {
     loadHistory: loadHistory,
     loadPath: loadPath,
-    filterArray: filterArray
+    filterArray: filterArray,
+    loadObject: loadObject
 }

@@ -89,17 +89,36 @@ define([
                             storage.loadObject(projectId, key, function (err, obj2) {
                                 ASSERT(typeof obj2 === 'object' || typeof obj2 === 'undefined');
 
-                                if (obj.length !== 0) {
-                                    ASSERT(missing[key] === obj);
+                                var callbacks,
+                                    subKey,
+                                    cb;
 
-                                    delete missing[key];
-                                    if (!err && obj2) {
-                                        cacheInsert(key, obj2);
+                                if ((obj2 || {}).hasOwnProperty('multipleObjects') && obj2.multipleObjects === true) {
+                                    for (subKey in obj2.objects) {
+                                        callbacks = missing[subKey] || [];
+                                        if (callbacks.length !== 0) {
+                                            delete missing[subKey];
+                                            if (!err && obj2.objects[subKey]) {
+                                                cacheInsert(subKey, obj2.objects[subKey]);
+                                            }
+
+                                            while ((cb = callbacks.pop())) {
+                                                cb(err, obj2);
+                                            }
+                                        }
                                     }
+                                } else {
+                                    if (obj.length !== 0) {
+                                        ASSERT(missing[key] === obj);
 
-                                    var cb;
-                                    while ((cb = obj.pop())) {
-                                        cb(err, obj2);
+                                        delete missing[key];
+                                        if (!err && obj2) {
+                                            cacheInsert(key, obj2);
+                                        }
+
+                                        while ((cb = obj.pop())) {
+                                            cb(err, obj2);
+                                        }
                                     }
                                 }
                             });
