@@ -126,6 +126,9 @@ describe('SafeStorage with Passing Authorizer', function () {
         var projectName = 'project4',
             data = {
                 projectName: projectName,
+                username: 'user1'
+            },
+            dataGet = {
                 username: 'user1',
                 rights: true
             },
@@ -134,7 +137,7 @@ describe('SafeStorage with Passing Authorizer', function () {
         safeStorage.createProject(data)
             .then(function (project) {
                 projectId = project.projectId;
-                return safeStorage.getProjects(data);
+                return safeStorage.getProjects(dataGet);
             })
             .then(function (projects) {
                 var pData = getProjectData(projects, projectId);
@@ -143,8 +146,8 @@ describe('SafeStorage with Passing Authorizer', function () {
                 return safeStorage.deleteProject(data);
             })
             .then(function () {
-                data.username = 'user1';
-                return safeStorage.getProjects(data);
+                dataGet.username = 'user1';
+                return safeStorage.getProjects(dataGet);
             })
             .then(function (projects) {
                 var pData = getProjectData(projects, projectId);

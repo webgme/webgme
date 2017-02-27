@@ -50,7 +50,7 @@
     "ncp": "2.0.0",
     "process": "0.11.9",
     "q": "1.4.1",
-    "raml2html": "2.2.0",
+    "raml2html": "3.0.1",
     "redis": "2.6.2",
     "requirejs": "2.1.20",
     "socket.io": "1.4.8",

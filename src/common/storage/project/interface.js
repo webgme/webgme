@@ -150,6 +150,51 @@ define([
         };
 
         /**
+         * Retrieves the metadata of the project.
+         * @example
+         * {
+         *  _id: 'guest+example',
+         *  owner: 'guest',
+         *  name: 'example',
+         *  info: {
+         *      createdAt: '2016-12-02T17:52:25.029Z',
+         *      viewedAt: '2017-01-30T22:45:15.269Z',
+         *      modifiedAt: '2017-01-20T00:15:34.593Z',
+         *      creator: 'guest',
+         *      viewer: 'guest',
+         *      modifier': 'guest'
+         *  },
+         *  hooks: {
+         *      ConstraintCheckerHook': {
+         *          url: 'http://127.0.0.1:8080/ConstraintCheckerHook',
+         *          description': 'Checks if there are any meta violations in the project',
+         *          events: ['COMMIT'],
+         *          active: true,
+         *          createdAt: '2017-01-19T23:22:46.834Z',
+         *          updatedAt: '2017-01-19T23:22:46.834Z'
+         *      }
+         *  },
+         *  rights: {
+         *      read: true,
+         *      write: true,
+         *      delete: true
+         *  },
+         *  branches: {
+         *      b1: '#998067142c7ff8067cd0c04a0ec4ef80d865606c',
+         *      master: '#36df6f8c17b2ccf4e35a2a75b1e0adb928f82a61'
+         *  }
+         * }
+         * @param {function} [callback] - if provided no promise will be returned.
+         *
+         * @return {external:Promise}  On success the promise will be resolved with
+         * {object} <b>projectInfo</b>.<br>
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
+         */
+        this.getProjectInfo = function (callback) {
+            throw new Error('getProjectInfo must be overridden in derived class');
+        };
+
+        /**
          * Updates the head of the branch.
          * @param {string} branchName - Name of branch to update.
          * @param {module:Storage~CommitHash} newHash - New commit hash for branch head.

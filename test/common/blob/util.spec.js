@@ -38,7 +38,8 @@ describe('Blob/Storage-util', function () {
                     projectName: projectName,
                     branchName: 'master',
                     logger: logger,
-                    gmeConfig: gmeConfig
+                    gmeConfig: gmeConfig,
+                    kind: 'originalKind'
                 };
 
                 return testFixture.importProject(storage, importParam);
@@ -78,6 +79,36 @@ describe('Blob/Storage-util', function () {
             })
             .then(function (metadata) {
                 expect(Object.keys(metadata.content)).to.deep.equal(['project.json']);
+            })
+            .nodeify(done);
+    });
+
+    it('should return original kind in getProjectJson', function (done) {
+        var root;
+
+        core.loadRoot(rootHash)
+            .then(function (root_) {
+                root = root_;
+
+                return storageUtil.getProjectJson(project, {commitHash: commitHash});
+            })
+            .then(function (projectJson) {
+                expect(projectJson.kind).to.equal('originalKind');
+            })
+            .nodeify(done);
+    });
+
+    it('should return given kind in getProjectJson', function (done) {
+        var root;
+
+        core.loadRoot(rootHash)
+            .then(function (root_) {
+                root = root_;
+
+                return storageUtil.getProjectJson(project, {commitHash: commitHash, kind: 'myKind'});
+            })
+            .then(function (projectJson) {
+                expect(projectJson.kind).to.equal('myKind');
             })
             .nodeify(done);
     });

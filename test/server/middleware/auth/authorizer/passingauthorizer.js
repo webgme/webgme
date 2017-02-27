@@ -6,7 +6,7 @@
 'use strict';
 
 var Q = require('q'),
-    AuthorizerBase = require('../../../../../src/server/middleware/auth/defaultauthorizer');
+    AuthorizerBase = require('../../../../../src/server/middleware/auth/authorizerbase');
 
 
 /**
@@ -27,7 +27,7 @@ function PassingAuthorizer(mainLogger, gmeConfig) {
             delete: true
         });
         return deferred.promise.nodeify(callback);
-    }
+    };
 }
 
 PassingAuthorizer.prototype = Object.create(AuthorizerBase.prototype);

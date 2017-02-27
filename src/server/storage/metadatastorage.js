@@ -7,6 +7,7 @@
 'use strict';
 
 var Q = require('q'),
+    STORAGE_CONSTANTS = requireJS('common/storage/constants'),
     storageUtil = requireJS('common/storage/util');
 
 function MetadataStorage(mainLogger, gmeConfig) {
@@ -39,6 +40,15 @@ function MetadataStorage(mainLogger, gmeConfig) {
             .then(function (projects) {
                 return Q.ninvoke(projects, 'toArray');
             })
+            .then(function (projects) {
+                var i;
+
+                for (i = 0; i < projects.length; i += 1) {
+                    projects[i].hooks = projects[i].hooks || {};
+                }
+
+                return projects;
+            })
             .nodeify(callback);
     }
 
@@ -54,6 +64,8 @@ function MetadataStorage(mainLogger, gmeConfig) {
                 if (!projectData) {
                     return Q.reject(new Error('no such project [' + projectId + ']'));
                 }
+
+                projectData.hooks = projectData.hooks || {};
                 return projectData;
             })
             .nodeify(callback);
@@ -136,14 +148,9 @@ function MetadataStorage(mainLogger, gmeConfig) {
                     return Q.reject(new Error('no such project [' + projectId + ']'));
                 }
 
-                projectData.info.viewedAt = info.viewedAt || projectData.info.viewedAt;
-                projectData.info.viewer = info.viewer || projectData.info.viewer;
-
-                projectData.info.modifiedAt = info.modifiedAt || projectData.info.modifiedAt;
-                projectData.info.modifier = info.modifier || projectData.info.modifier;
-
-                projectData.info.createdAt = info.createdAt || projectData.info.createdAt;
-                projectData.info.creator = info.creator || projectData.info.creator;
+                STORAGE_CONSTANTS.PROJECT_INFO_KEYS.forEach(function (infoKey) {
+                    projectData.info[infoKey] = info[infoKey] || projectData.info[infoKey];
+                });
 
                 return self.projectCollection.updateOne({_id: projectId}, projectData, {upsert: true});
             })

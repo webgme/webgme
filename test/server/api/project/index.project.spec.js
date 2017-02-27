@@ -151,6 +151,32 @@ describe('PROJECT REST API', function () {
                                     if (projectData._id === testFixture.projectName2Id(toBeCreatedProjectName)) {
                                         expect(projectData.name).to.equal(toBeCreatedProjectName);
                                         expect(projectData.owner).to.equal('guest');
+                                        expect(projectData.info.kind).to.equal('EmptyProject');
+                                        wasIncluded = true;
+                                    }
+                                });
+                                expect(wasIncluded).to.equal(true);
+                                done();
+                            });
+                    });
+            });
+
+            it('should create a project from fileSeed /projects/:ownerId/:projectName', function (done) {
+                var toBeCreatedProjectName = 'myVeryNewFileProjectMyAssignedKind';
+                agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(toBeCreatedProjectName))
+                    .send({type: 'file', seedName: 'EmptyProject', kind: 'myOwnKind'})
+                    .end(function (err, res) {
+                        expect(res.status).to.equal(204);
+
+                        agent.get(server.getUrl() + '/api/projects')
+                            .end(function (err, res) {
+                                var wasIncluded = false;
+                                expect(res.status).to.equal(200);
+                                res.body.forEach(function (projectData) {
+                                    if (projectData._id === testFixture.projectName2Id(toBeCreatedProjectName)) {
+                                        expect(projectData.name).to.equal(toBeCreatedProjectName);
+                                        expect(projectData.owner).to.equal('guest');
+                                        expect(projectData.info.kind).to.equal('myOwnKind');
                                         wasIncluded = true;
                                     }
                                 });
@@ -229,6 +255,19 @@ describe('PROJECT REST API', function () {
                         expect(res.body.info).to.include.keys('creator', 'viewer', 'modifier',
                             'createdAt', 'viewedAt', 'modifiedAt');
                         expect(res.body.info.creator).to.equal('PerAlbinHansson');
+                        done();
+                    });
+            });
+
+            it('should patch info for project /projects/:ownerId/:projectId', function (done) {
+                agent.patch(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName))
+                    .send({kind: 'MyKind'})
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body).to.have.property('info');
+                        expect(res.body.info).to.include.keys('creator', 'viewer', 'modifier',
+                            'createdAt', 'viewedAt', 'modifiedAt', 'kind');
+                        expect(res.body.info.kind).to.equal('MyKind');
                         done();
                     });
             });

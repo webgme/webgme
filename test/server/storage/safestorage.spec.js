@@ -164,6 +164,25 @@ describe('SafeStorage', function () {
                 .nodeify(done);
         });
 
+        it('should getProjects (rights=true, info=true, branches=true, projectId=%projectId%)', function (done) {
+            var data = {
+                rights: true,
+                info: true,
+                branches: true,
+                hooks: true,
+                projectId: projectId
+            };
+
+            safeStorage.getProjects(data)
+                .then(function (projects) {
+                    expect(projects.length).to.equal(1);
+                    expect(Object.keys(projects[0])).to.have.members([
+                        '_id', 'branches', 'hooks', 'info', 'name', 'owner', 'rights'
+                    ]);
+                })
+                .nodeify(done);
+        });
+
         it('should getLatestCommitData', function (done) {
             var data = {
                 projectId: projectId,
@@ -1802,6 +1821,28 @@ describe('SafeStorage', function () {
                 .done();
         });
 
+        it('should fail to create if kind is not null empty or string', function (done) {
+            var projectName = 'willNotBeCreated',
+                username = notInOrgCanCreate,
+                ownerId = notInOrgCanCreate,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    ownerId: ownerId,
+                    kind: true
+                };
+
+            safeStorage.createProject(data)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.message).to.contain('Invalid argument, data.kind is not a string');
+                    done();
+                })
+                .done();
+        });
+
         it('should fail notInOrgCanNotCreate1', function (done) {
             var projectName = 'notInOrgCanNotCreate1',
                 username = notInOrgCanNotCreate,
@@ -1857,6 +1898,100 @@ describe('SafeStorage', function () {
                 .then(function (projects) {
                     var pData = getProjectData(projects, projectId);
                     expect(pData.rights).to.deep.equal({read: true, write: true, delete: true});
+                })
+                .nodeify(done);
+        });
+
+        it('should create project and set given kind', function (done) {
+            var projectName = 'aKindOfProject',
+                username = notInOrgCanCreate,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    kind: 'MyKindOfProject'
+                },
+                projectId;
+
+            safeStorage.createProject(data)
+                .then(function (project) {
+                    projectId = project.projectId;
+                    data.projectId = projectId;
+                    data.info = true;
+                    return safeStorage.getProjects(data);
+                })
+                .then(function (projects) {
+                    expect(projects.length).to.equal(1);
+                    expect(projects[0].info.kind).to.equal('MyKindOfProject');
+                })
+                .nodeify(done);
+        });
+
+        it('duplicated project should have same kind a source', function (done) {
+            var projectName = 'aKindOfProjectToBeDuplicated',
+                username = notInOrgCanCreate,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    kind: 'SomeKindOfProject'
+                },
+                projectId;
+
+            safeStorage.createProject(data)
+                .then(function (project) {
+                    projectId = project.projectId;
+                    data.projectId = projectId;
+                    data.info = true;
+                    return safeStorage.duplicateProject({
+                        projectId: projectId,
+                        projectName: 'aDuplicateKind',
+                        username: username
+                    });
+                })
+                .then(function (project) {
+                    return safeStorage.getProjects({
+                        username: username,
+                        projectId: project.projectId,
+                        info: true
+                    });
+                })
+                .then(function (projects) {
+                    expect(projects.length).to.equal(1);
+                    expect(projects[0].info.kind).to.equal('SomeKindOfProject');
+                })
+                .nodeify(done);
+        });
+
+        it('transferred project should have same kind a source', function (done) {
+            var projectName = 'aKindOfTransferredProject',
+                username = inOrgCanCreateAdmin,
+                data = {
+                    projectName: projectName,
+                    username: username,
+                    kind: 'SomeOtherKindOfProject'
+                },
+                projectId;
+
+            safeStorage.createProject(data)
+                .then(function (project) {
+                    projectId = project.projectId;
+                    data.projectId = projectId;
+                    data.info = true;
+                    return safeStorage.transferProject({
+                        projectId: projectId,
+                        newOwnerId: 'theOrg',
+                        username: username
+                    });
+                })
+                .then(function (projectId) {
+                    return safeStorage.getProjects({
+                        username: username,
+                        projectId: projectId,
+                        info: true
+                    });
+                })
+                .then(function (projects) {
+                    expect(projects.length).to.equal(1);
+                    expect(projects[0].info.kind).to.equal('SomeOtherKindOfProject');
                 })
                 .nodeify(done);
         });

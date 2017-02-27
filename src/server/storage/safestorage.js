@@ -58,6 +58,8 @@ SafeStorage.prototype.constructor = SafeStorage;
  * @param {boolean} [data.info] - include the info field from the _projects collection.
  * @param {boolean} [data.rights] - include users' authorization information for each project.
  * @param {boolean} [data.branches] - include a dictionary with all branches and their hash.
+ * @param {boolean} [data.hooks] - include the dictionary with all hooks.
+ * @param {string} [data.projectId] - if given will return only single matching project.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {function} [callback]
  * @returns {Promise} //TODO: jsdocify this
@@ -76,7 +78,11 @@ SafeStorage.prototype.getProjects = function (data, callback) {
         check(typeof data.rights === 'undefined' || typeof data.rights === 'boolean', deferred,
             'data.rights is not a boolean.') ||
         check(typeof data.branches === 'undefined' || typeof data.branches === 'boolean', deferred,
-            'data.branches is not a boolean.');
+            'data.branches is not a boolean.') ||
+        check(typeof data.hooks === 'undefined' || typeof data.hooks === 'boolean', deferred,
+            'data.hooks is not a boolean.') ||
+        check(typeof data.projectId === 'undefined' || REGEXP.PROJECT.test(data.projectId), deferred,
+            'data.projectId failed regexp: ' + data.projectId);
 
     if (data.hasOwnProperty('username')) {
         rejected = rejected || check(typeof data.username === 'string', deferred, 'data.username is not a string.');
@@ -85,7 +91,7 @@ SafeStorage.prototype.getProjects = function (data, callback) {
     }
 
     if (rejected === false) {
-        this.metadataStorage.getProjects()
+        (data.projectId ? Q.all([this.metadataStorage.getProject(data.projectId)]) : this.metadataStorage.getProjects())
             .then(function (allProjects) {
                 function getAuthorizedProjects(projectData) {
                     var projectDeferred = Q.defer();
@@ -98,6 +104,9 @@ SafeStorage.prototype.getProjects = function (data, callback) {
                                 }
                                 if (!data.info) {
                                     delete projectData.info;
+                                }
+                                if (!data.hooks) {
+                                    delete projectData.hooks;
                                 }
                                 projectDeferred.resolve(projectData);
                             } else {
@@ -218,6 +227,7 @@ SafeStorage.prototype.deleteProject = function (data, callback) {
  * @param {string} data.projectName - name of new project.
  * @param {string} [data.username=gmeConfig.authentication.guestAccount]
  * @param {string} [data.ownerId=data.username]
+ * @param {string} [data.kind] - Category of project typically based on meta.
  * @param {function} [callback]
  * @returns {promise} //TODO: jsdocify this
  */
@@ -233,6 +243,8 @@ SafeStorage.prototype.createProject = function (data, callback) {
         rejected = false;
 
     rejected = check(data !== null && typeof data === 'object', deferred, 'data is not an object.') ||
+        check(data.kind === null || typeof data.kind === 'undefined' || typeof data.kind === 'string', deferred,
+            'data.kind is not a string: ' + data.kind) ||
         check(typeof data.projectName === 'string', deferred, 'data.projectName is not a string.') ||
         check(REGEXP.PROJECT_NAME.test(data.projectName), deferred,
             'data.projectName failed regexp: ' + data.projectName);
@@ -259,7 +271,8 @@ SafeStorage.prototype.createProject = function (data, callback) {
                         modifiedAt: now,
                         creator: data.username,
                         viewer: data.username,
-                        modifier: data.username
+                        modifier: data.username,
+                        kind: data.kind
                     };
 
                 if (ownerRights.write !== true) {
@@ -422,26 +435,33 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
         self.authorizer.getAccessRights(data.username, data.projectId, projectAuthParams)
             .then(function (projectAccess) {
                 if (projectAccess && projectAccess.read) {
-                    return self.authorizer.getAccessRights(data.username, data.ownerId, userAuthParams);
+                    return Q.all([
+                        self.authorizer.getAccessRights(data.username, data.ownerId, userAuthParams),
+                        self.metadataStorage.getProject(data.projectId)
+                    ]);
                 } else {
                     throw new Error('Not authorized to read project [' + data.projectId + ']');
                 }
             })
-            .then(function (ownerRights) {
-                var now = (new Date()).toISOString(),
+            .then(function (res) {
+                var ownerRights = res[0],
+                    prevProjectData = res[1],
+                    now = (new Date()).toISOString(),
                     info = {
                         createdAt: now,
                         viewedAt: now,
                         modifiedAt: now,
                         creator: data.username,
                         viewer: data.username,
-                        modifier: data.username
+                        modifier: data.username,
+                        kind: prevProjectData.info.kind
                     };
 
                 if (ownerRights && ownerRights.write !== true) {
                     throw new Error('Not authorized to create project for [' + data.ownerId + ']');
                 }
 
+                // TODO: Should webhooks be copied over too?
                 return self.metadataStorage.addProject(data.ownerId, data.projectName, info);
             })
             .then(function (newProjectId) {

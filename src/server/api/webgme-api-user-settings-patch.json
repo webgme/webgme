@@ -1,0 +1,10 @@
+{
+  "Plugin_ConfigurationArtifact__0_1_0": {
+      "carnivore":true
+  },
+  "ICorePanel":{
+    "consoleWindow":{
+      "verticalOrientation":true
+    }
+  }
+}

@@ -1,4 +1,4 @@
-/*globals define, _, WebGMEGlobal, $*/
+/*globals define, _, WebGMEGlobal, $, console*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -58,11 +58,18 @@ define([
                     node: null
                 },
                 nodeAtOpen: '',
+                layout: 'DefaultLayout',
                 byProjectName: {
-                    nodeAtOpen: {}
+                    nodeAtOpen: {},
+                    layout: {}
                 },
                 byProjectId: {
-                    nodeAtOpen: {}
+                    nodeAtOpen: {},
+                    layout: {}
+                },
+                byProjectKind: {
+                    nodeAtOpen: {},
+                    layout: {}
                 }
             };
 
@@ -75,6 +82,14 @@ define([
                 projectOpenDialog,
                 initialProject = true,
                 config = defaultConfig;
+
+            if (typeof gmeConfig.visualization.layout.default === 'string') {
+                config.layout = gmeConfig.visualization.layout.default;
+                console.warn('Since v2.11.0 gmeConfig.visualization.layout.default is a component setting of ' +
+                    'GenericUIWebGMEStart.layout and can be configured for projects based on kind, name and ID.' +
+                    'The value in gmeConfig.visualization.layout.default will right now be used for non-specified ' +
+                    'projects.');
+            }
 
             ComponentSettings.resolveWithWebGMEGlobal(config, componentId);
 
@@ -89,7 +104,7 @@ define([
             }
 
             layoutManager = new LayoutManager();
-            layoutManager.loadLayout(initialThingsToDo.layoutToLoad, function () {
+            layoutManager.loadLayout(initialThingsToDo.layoutToLoad || config.layout, function () {
                 var panels = [],
                     layoutPanels = layoutManager._currentLayout.panels,
                     decorators,
@@ -119,11 +134,11 @@ define([
                     client.emitStateNotification();
                 });
 
-                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad, {suppressHistoryUpdate: true});
+                WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad || config.layout,
+                    {suppressHistoryUpdate: true});
 
                 document.title = config.pageTitle;
 
-                logger.info('init-phase true');
                 WebGMEHistory.initialize();
 
                 GMEConcepts.initialize(client);
@@ -145,6 +160,8 @@ define([
 
                 client.addEventListener(client.CONSTANTS.PROJECT_OPENED, function (_client, projectId) {
                     var projectName,
+                        projectKind,
+                        layout,
                         nodePath;
 
                     document.title = WebGMEGlobal.gmeConfig.authentication.enable ?
@@ -156,28 +173,48 @@ define([
 
                     if (initialProject === false) {
                         projectName = client.getActiveProjectName();
+                        projectKind = client.getActiveProjectKind();
 
                         if (config.byProjectId.nodeAtOpen.hasOwnProperty(projectId)) {
                             nodePath = config.byProjectId.nodeAtOpen[projectId];
                         } else if (config.byProjectName.nodeAtOpen.hasOwnProperty(projectName)) {
                             nodePath = config.byProjectName.nodeAtOpen[projectName];
+                        } else if (projectKind && config.byProjectKind.nodeAtOpen.hasOwnProperty([projectKind])) {
+                            nodePath = config.byProjectKind.nodeAtOpen[projectKind];
                         } else {
-                            nodePath = config.nodeAtOpen;
+                            nodePath = config.nodeAtOpen || CONSTANTS.PROJECT_ROOT_ID;
                         }
 
-                        if (nodePath) {
-                            setActiveNode(nodePath);
+                        if (config.byProjectId.layout.hasOwnProperty(projectId)) {
+                            layout = config.byProjectId.layout[projectId];
+                        } else if (config.byProjectName.layout.hasOwnProperty(projectName)) {
+                            layout = config.byProjectName.layout[projectName];
+                        } else if (projectKind && config.byProjectKind.layout.hasOwnProperty([projectKind])) {
+                            layout = config.byProjectKind.layout[projectKind];
                         } else {
-                            setActiveNode(CONSTANTS.PROJECT_ROOT_ID);
+                            layout = config.layout;
+                        }
+
+                        if (layout !== WebGMEGlobal.State.getLayout()) {
+                            document.location.href = window.location.href.split('?')[0] + '?' +
+                                WebGMEUrlManager.getSearchQuery({
+                                    projectId: projectId,
+                                    nodePath: nodePath,
+                                    layout: layout
+                                });
+                        } else {
+                            setActiveNode(nodePath);
                         }
                     }
                 });
 
                 //on project close clear the current state
                 client.addEventListener(client.CONSTANTS.PROJECT_CLOSED, function (/* __project, projectName */) {
+                    var layout = WebGMEGlobal.State.getLayout();
                     document.title = config.pageTitle;
                     initialProject = false;
                     WebGMEGlobal.State.clear();
+                    WebGMEGlobal.State.registerLayout(layout, {suppressHistoryUpdate: true});
                 });
 
                 client.decoratorManager = new DecoratorManager();
@@ -401,10 +438,10 @@ define([
                         }
 
                         Q.nfcall(client.seedProject, {
-                                type: 'file',
-                                projectName: initialThingsToDo.projectToLoad,
-                                seedName: WebGMEGlobal.gmeConfig.seedProjects.defaultProject
-                            })
+                            type: 'file',
+                            projectName: initialThingsToDo.projectToLoad,
+                            seedName: WebGMEGlobal.gmeConfig.seedProjects.defaultProject
+                        })
                             .then(function () {
                                 return Q.nfcall(client.selectProject, newProjectId, undefined);
                             })

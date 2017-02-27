@@ -18,6 +18,20 @@ securitySchemes:
             description: Authentication required
           403:
             description: Forbidden
+  - bearer:
+      description: JWT Bearer with authentication token.
+      type: x-{Bearer}
+      describedBy:
+        headers:
+          Authorization:
+            type: string
+            description: Token Bearer
+            example: Bearer eyJhbGcjOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkZW1vIiwiaWF0IjoxNDg3NjEyNjE0LCJleHAiOjE0ODgyMTc0MTR9.LAuYXXa4tQhLD1sUQl1MHZFwkaf6ua7_aA62WXFNAMEN-11tlmM576e5JuoE2KqxvoN2v8PZNXgPmL0vMpKSLc6orxnl5o6YABWGTCBPtbad-iAXnkm79MeQrRceYe3nW-Lhc9_PM6bJ3ftrtrmEUwtOL1bV6nhyBU4ICTE7m38
+        responses:
+          401:
+            description: Authentication required
+          403:
+            description: Forbidden
 
 
 resourceTypes:
@@ -37,6 +51,7 @@ resourceTypes:
       get:
         description: |
           Get the <<resourcePathName|!singularize>>. <<getDesc>>
+        securedBy: [ basic, bearer ]
         responses:
           200:
             body:
@@ -51,7 +66,7 @@ resourceTypes:
       put:
         description: |
           Add a new <<resourcePathName|!singularize>> to WebGME. <<putDesc>>
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         body:
           application/json:
             schema: See example
@@ -67,7 +82,7 @@ resourceTypes:
           404:
       patch:
         description: Update <<resourcePathName|!singularize>> within WebGME. <<patchDesc>>
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         body:
           application/json:
             schema: See example
@@ -79,7 +94,7 @@ resourceTypes:
             404:
       delete:
         description: Delete <<resourcePathName|!singularize>> from WebGME. <<deleteDesc>>
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         responses:
           204:
           403:
@@ -111,10 +126,29 @@ resourceTypes:
                 "documentation_url": "http://localhost:8888/developer/api"
               }
 
+/componentSettings:
+  get:
+    description: Returns all component settings defined for the deployment, see https://github.com/webgme/webgme/wiki/Component-Settings
+    securedBy: [ basic, bearer ]
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-user-settings-retrieve.json
+  /{componentId}:
+    get:
+      description: Returns a specific component settings defined for the deployment, see https://github.com/webgme/webgme/wiki/Component-Settings
+      securedBy: [ basic, bearer ]
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-user-settings-component-retrieve.json
+
 /user:
   get:
     description: Returns with the current user
-    securedBy: [ basic ]
+    securedBy: [ basic, bearer ]
     responses:
       200:
         body:
@@ -122,32 +156,61 @@ resourceTypes:
             example: !include webgme-api-user-retrieve.json
   delete:
     description: Remove the current user
-    securedBy: [ basic ]
+    securedBy: [ basic, bearer ]
     responses:
       204:
+  /token:
+      get:
+        description: Creates and returns a token for the user
+        securedBy: [ basic, bearer ]
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include webgme-api-user-token.json
   /data:
     type:
       collection-item:
         exampleItem: !include webgme-api-user-data-retrieve.json
         putBody: !include webgme-api-user-data-retrieve.json
         patchBody: !include webgme-api-user-data-patch.json
-        getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. N.B. This data will be shared over all projects and apps in a deployment, consider indexing project/app specific data.
+        getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. Consider using settings instead, which provides options for server defaults.
         putDesc: Overwrites the data field.
         patchDesc: Updates/overwrites the user's data with the sent values for matching keys.
         deleteDesc: Clears out the user's data field (sets it to empty dictionary). 
+  /settings:
+    type:
+      collection-item:
+        exampleItem: !include webgme-api-user-settings-retrieve.json
+        putBody: !include webgme-api-user-settings-retrieve.json
+        patchBody: !include webgme-api-user-settings-patch.json
+        getDesc: Gets all component-settings for a user, see https://github.com/webgme/webgme/wiki/Component-Settings
+        putDesc: Overwrites the settings field.
+        patchDesc: Updates/overwrites the user's settings with the sent values for matching keys.
+        deleteDesc: Clears out the user's settings field (sets it to empty dictionary).
+    /{componentId}:
+      type:
+        collection-item:
+          exampleItem: !include webgme-api-user-settings-component-retrieve.json
+          putBody: !include webgme-api-user-settings-component-retrieve.json
+          patchBody: !include webgme-api-user-settings-patch.json
+          getDesc: Gets a specific component settings for a user, see https://github.com/webgme/webgme/wiki/Component-Settings
+          putDesc: Overwrites the settings field for a specific component.
+          patchDesc: Updates/overwrites a specific component settings with the sent values for matching keys.
+          deleteDesc: Clears out the settings for a specific component.
 
 /users:
   type:
     collection:
       exampleCollection: !include webgme-api-users.json
-      desc: 
+      desc: API regarding users
   /{username}:
     type:
       collection-item:
         exampleItem: !include webgme-api-user-retrieve.json
         putBody: !include webgme-api-user-new.json
         patchBody: !include webgme-api-user-patch.json
-        getDesc: 
+        getDesc: Anyone can get this data.
         putDesc: Requires <b>user.siteAdmin</b>.
         patchDesc: Requires <b>user.siteAdmin</b> if setting siteAdmin.
         deleteDesc: Requires is current user or <b>user.siteAdmin</b>.
@@ -157,15 +220,34 @@ resourceTypes:
           exampleItem: !include webgme-api-user-data-retrieve.json
           putBody: !include webgme-api-user-data-retrieve.json
           patchBody: !include webgme-api-user-data-patch.json
-          getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. N.B. This data will be shared over all projects and apps in a deployment, consider indexing project/app specific data.
+          getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. Consider using settings instead, which provides options for server defaults.
           putDesc: Overwrites the user's data field. Requires is current user or <b>user.siteAdmin</b>.
           patchDesc: Updates/overwrites the user's data with the sent values for matching keys. Requires is current user or <b>user.siteAdmin</b>.
           deleteDesc: Clears out the user's data field (sets it to empty dictionary). Requires is current user or <b>user.siteAdmin</b>.
+    /settings:
+      type:
+        collection-item:
+          exampleItem: !include webgme-api-user-settings-retrieve.json
+          putBody: !include webgme-api-user-settings-retrieve.json
+          patchBody: !include webgme-api-user-settings-patch.json
+          getDesc: Gets all component-settings for a user, see https://github.com/webgme/webgme/wiki/Component-Settings
+          putDesc: Overwrites the settings field.
+          patchDesc: Updates/overwrites the user's settings with the sent values for matching keys.
+          deleteDesc: Clears out the user's settings field (sets it to empty dictionary).
+      /{componentId}:
+        type:
+          collection-item:
+            exampleItem: !include webgme-api-user-settings-component-retrieve.json
+            putBody: !include webgme-api-user-settings-component-retrieve.json
+            patchBody: !include webgme-api-user-settings-patch.json
+            getDesc: Gets a specific component settings for a user, see https://github.com/webgme/webgme/wiki/Component-Settings
+            putDesc: Overwrites the settings field for a specific component.
+            patchDesc: Updates/overwrites a specific component settings with the sent values for matching keys.
+            deleteDesc: Clears out the settings for a specific component.
 
 /orgs:
   get:
     description: Collection of available organizations in WebGME
-    securedBy: []
     responses:
       200:
         body:
@@ -174,7 +256,7 @@ resourceTypes:
   /{orgId}:
     get:
       description: Retrives organization data including members.
-      securedBy: [ basic ]
+      securedBy: [ basic, bearer ]
       responses:
         200:
           body:
@@ -183,7 +265,7 @@ resourceTypes:
         404:
     put:
       description: Create a new organization. Requires <b>user.canCreate</b> or <b>user.siteAdmin</b>.
-      securedBy: [ basic ]
+      securedBy: [ basic, bearer ]
       responses:
         200:
           body:
@@ -193,7 +275,7 @@ resourceTypes:
         404:
     delete:
       description: Delete an organization. Requires admin in organization or <b>user.siteAdmin</b>.
-      securedBy: [ basic ]
+      securedBy: [ basic, bearer ]
       responses:
         204:
         403:
@@ -202,7 +284,7 @@ resourceTypes:
     /users/{username}:
       put:
         description: Adds user to the organization. Requires admin in organization or <b>user.siteAdmin</b>.
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         responses:
           200:
           403:
@@ -210,7 +292,7 @@ resourceTypes:
         
       delete:
         description: Delete user from the organization. Requires admin in organization or <b>user.siteAdmin</b>.
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         responses:
           204:
           403:
@@ -219,7 +301,7 @@ resourceTypes:
     /admins/{username}:
       put:
         description: Make user admin for the organization. Requires admin in organization or <b>user.siteAdmin</b>.
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         responses:
           200:
           403:
@@ -227,7 +309,7 @@ resourceTypes:
         
       delete:
         description: Remove user from admins of the organization. Requires admin in organization or <b>user.siteAdmin</b>.
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         responses:
           204:
           403:
@@ -410,11 +492,11 @@ resourceTypes:
             putDesc: Requires <b>write</b> access for project.
             patchDesc: Requires <b>write</b> access for project.
             deleteDesc: Requires <b>write</b> access for project.
-
+            
     /squash:
       put:
         description: Squash multi commits into a single one. Requires <b>write</b> access for project.
-        securedBy: [ basic ]
+        securedBy: [ basic, bearer ]
         body:
           application/json:
               example: |
@@ -423,7 +505,7 @@ resourceTypes:
                     "toCommitOrBranch":"master",
                     "message":"feature 'A' squashed into a single commit"
                 }
-
+           
 /decorators:
   get:
     description: Returns with all available decorators

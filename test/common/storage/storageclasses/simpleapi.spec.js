@@ -168,6 +168,56 @@ describe('storage storageclasses simpleapi', function () {
             .nodeify(done);
     });
 
+    it('should getProjectInfo', function (done) {
+        Q.ninvoke(storage, 'getProjectInfo', projectName2Id(projectName))
+            .then(function (projectInfo) {
+                expect(Object.keys(projectInfo)).to.have.members([
+                    '_id', 'branches', 'hooks', 'info', 'name', 'owner', 'rights'
+                ]);
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to getProjectInfo if it not exist', function (done) {
+        Q.ninvoke(storage, 'getProjectInfo', projectName2Id('DoesNotExist'))
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('no such project');
+            })
+            .nodeify(done);
+    });
+
+    it('getProjects with projectId should return one entry with same data as getProjectInfo', function (done) {
+        Q.all([
+            Q.ninvoke(storage, 'getProjects', {
+                projectId: projectName2Id(projectName),
+                branches: true,
+                hooks: true,
+                rights: true,
+                info: true
+            }),
+            Q.ninvoke(storage, 'getProjectInfo', projectName2Id(projectName))
+        ])
+            .then(function (res) {
+                expect(res[0].length).to.equal(1);
+                expect(res[0][0]).to.deep.equal(res[1]);
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to getProjects if projectId given and does not exist', function (done) {
+        Q.ninvoke(storage, 'getProjects', {projectId: projectName2Id('DoesNotExist')})
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('no such project');
+            })
+            .nodeify(done);
+    });
+
     it('should getBranches', function (done) {
         Q.ninvoke(storage, 'getBranches', projectName2Id(projectName))
             .then(function (branches) {
@@ -232,6 +282,36 @@ describe('storage storageclasses simpleapi', function () {
         Q.ninvoke(storage, 'createProject', projectNameCreate)
             .then(function (projectId) {
                 expect(projectId).to.equal(projectName2Id(projectNameCreate));
+            })
+            .nodeify(done);
+    });
+
+    it('should createProject with owner', function (done) {
+        Q.ninvoke(storage, 'createProject', 'aNewProject', 'guest')
+            .then(function (projectId) {
+                expect(projectId).to.equal(projectName2Id('aNewProject'));
+            })
+            .nodeify(done);
+    });
+
+    it('should createProject with owner and kind', function (done) {
+        var projectId;
+        Q.ninvoke(storage, 'createProject', 'aNewProjectWithKind', 'guest', 'kindest')
+            .then(function (projectId_) {
+                projectId = projectId_;
+                expect(projectId).to.equal(projectName2Id('aNewProjectWithKind'));
+                return Q.ninvoke(storage, 'getProjects', {info: true});
+            })
+            .then(function (projects) {
+                var found = false;
+                projects.forEach(function (project) {
+                    if (project._id === projectId) {
+                        expect(project.info.kind).to.equal('kindest');
+                        found = true;
+                    }
+                });
+
+                expect(found).to.equal(true);
             })
             .nodeify(done);
     });

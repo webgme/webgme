@@ -15,11 +15,18 @@
       "node": null
     },
     "nodeAtOpen": "",
+    "layout": "DefaultLayout",
+    "byProjectKind": {
+      "nodeAtOpen": {},
+      "layout": {}
+    },
     "byProjectName": {
-      "nodeAtOpen": {}
+      "nodeAtOpen": {},
+      "layout": {}
     },
     "byProjectId": {
-      "nodeAtOpen": {}
+      "nodeAtOpen": {},
+      "layout": {}
     }
   },
   "GenericUITreeBrowserControl": {
@@ -33,6 +40,9 @@
       }
     },
     "treeRoot": "",
+    "byProjectKind": {
+      "treeRoot": {}
+    },
     "byProjectName": {
       "treeRoot": {}
     },
@@ -42,6 +52,9 @@
   },
   "GenericUIModelEditorControl": {
     "topNode": "",
+    "byProjectKind": {
+      "topNode": {}
+    },
     "byProjectName": {
       "topNode": {}
     },

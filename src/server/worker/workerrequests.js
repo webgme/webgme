@@ -8,7 +8,6 @@
 var Core = requireJS('common/core/coreQ'),
     Storage = requireJS('common/storage/nodestorage'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
-    REGEXP = requireJS('common/regexp'),
     merger = requireJS('common/core/users/merge'),
     BlobClientClass = requireJS('blob/BlobClient'),
     blobUtil = requireJS('blob/util'),
@@ -264,9 +263,18 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     blobClient = getBlobClient(webgmeToken);
 
                     _addZippedExportToBlob(filename, blobClient)
-                        .then(function (jsonProject) {
+                        .then(function (projectStr) {
+                            var jsonProject = JSON.parse(projectStr);
+
+                            if (typeof jsonProject.kind !== 'string') {
+                                jsonProject.kind = name;
+                                logger.info('Seed did not define a kind, the seed-name [' + name + '] will be used ' +
+                                    'as kind for new project.');
+                            }
+
                             deferred.resolve(JSON.stringify({
-                                seed: JSON.parse(jsonProject),
+                                seed: jsonProject,
+                                msg: 'Seeded project from file-seed ' + name + '.webgmex.'
                             }));
                         })
                         .catch(deferred.reject);
@@ -303,9 +311,14 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 options.branchName = branchName;
             }
 
-            storageUtils.getProjectJson(project, options)
-                .then(function (rawJson) {
-                    deferred.resolve({seed: rawJson, isLegacy: false});
+            Q.all([project.getProjectInfo(), storageUtils.getProjectJson(project, options)])
+                .then(function (res) {
+                    res[1].kind = res[0].info.kind;
+
+                    deferred.resolve({
+                        seed: res[1],
+                        msg: 'Seeded project from project-seed ' + projectId + '@' + commitHash + '.'
+                    });
                 })
                 .catch(deferred.reject);
         });
@@ -313,11 +326,11 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function _createProjectFromRawJson(storage, projectName, ownerId, branchName, jsonProject, callback) {
+    function _createProjectFromRawJson(storage, projectName, ownerId, branchName, jsonProject, msg, callback) {
         var projectId,
             project;
 
-        return Q.ninvoke(storage, 'createProject', projectName, ownerId)
+        return Q.ninvoke(storage, 'createProject', projectName, ownerId, jsonProject.kind)
             .then(function (projectId_) {
                 var deferred = Q.defer();
 
@@ -334,7 +347,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
             })
             .then(function () {
                 return storageUtils.insertProjectJson(project, jsonProject, {
-                    commitMessage: 'loading project from package'
+                    commitMessage: msg
                 });
             })
             .then(function (commitResult) {
@@ -355,8 +368,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} parameters.seedName - Name of seed, file or projectId.
      * @param {string} parameters.type - 'db' or 'file'
      * @param {string} [parameters.seedBranch='master'] - If db - optional name of branch.
-     * @param {string} [parameters.seedCommit] - If db - optional commit-hash to seed from (if given branchName will not
-     * be used).
+     * @param {string} [parameters.seedCommit] - If db - optional commit-hash to seed from (if given branchName will not be used).
+     * @param {string} [parameters.kind]
      * @param [function} callback
      */
     function seedProject(webgmeToken, projectName, ownerId, parameters, callback) {
@@ -403,8 +416,9 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 }
             })
             .then(function (jsonSeed) {
+                jsonSeed.seed.kind = typeof parameters.kind === 'string' ? parameters.kind : jsonSeed.seed.kind;
                 return _createProjectFromRawJson(storage, projectName, ownerId,
-                    parameters.branchName || 'master', jsonSeed.seed);
+                    parameters.branchName || 'master', jsonSeed.seed, jsonSeed.msg);
             })
             .nodeify(finish);
     }
@@ -590,6 +604,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
      * @param {string} [parameters.commitHash] - The tree associated with the commitHash.
      * @param {string} [parameters.branchName] - The tree at the given branch.
      * @param {string} [parameters.withAssets=false] - Bundle the encountered assets linked from attributes.
+     * @param {string} [parameters.kind] - If not given will use the one defined in project (if any).
      * @param {function} callback
      */
     function exportProjectToFile(webgmeToken, parameters, callback) {
@@ -626,7 +641,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return storageUtils.getProjectJson(project, {
                     branchName: parameters.branchName,
                     commitHash: parameters.commitHash,
-                    rootHash: parameters.rootHash
+                    rootHash: parameters.rootHash,
+                    kind: parameters.kind
                 });
             })
             .then(function (rawJson) {
@@ -950,8 +966,10 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return _importProjectPackage(blobClient, parameters.blobHash, true);
             })
             .then(function (jsonProject) {
+                jsonProject.kind = typeof parameters.kind === 'string' ? parameters.kind : jsonProject.kind;
                 return _createProjectFromRawJson(storage, parameters.projectName, parameters.ownerId,
-                    parameters.branchName, jsonProject);
+                    parameters.branchName, jsonProject, 'Imported project from uploaded blob ' +
+                    parameters.blobHash + '.');
             })
             .nodeify(finish);
     }

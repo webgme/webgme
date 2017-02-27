@@ -444,6 +444,11 @@ function importProject(storage, parameters, callback) {
         data.ownerId = parameters.ownerId;
     }
 
+    if (parameters.hasOwnProperty('kind')) {
+        exports.expect(typeof parameters.kind).to.equal('string');
+        data.kind = parameters.kind;
+    }
+
     if (typeof parameters.projectSeed === 'string' && parameters.projectSeed.toLowerCase().indexOf('.webgmex')) {
         BC = require('../src/server/middleware/blob/BlobClientWithFSBackend');
         blobClient = new BC(parameters.gmeConfig, parameters.logger);
