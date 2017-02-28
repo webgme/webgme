@@ -94,5 +94,9 @@ define(['js/PanelBase/PanelBaseWithHeader',
         WebGMEGlobal.Toolbar.refresh();
     };
 
+    GraphVizPanel.prototype.getValidTypesInfo = function (/*nodeId*/) {
+        return {};
+    };
+
     return GraphVizPanel;
 });

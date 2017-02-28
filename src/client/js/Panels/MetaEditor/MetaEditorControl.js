@@ -2114,6 +2114,16 @@ define(['js/logger',
         this._radioButtonGroupMetaRelationType.enabled(!isReadOnly);
     };
 
+    MetaEditorControl.prototype.getValidTypesInfo = function (/*nodeId*/) {
+        var containerNode = this._client.getNode(CONSTANTS.PROJECT_ROOT_ID);
+        if (containerNode) {
+            return containerNode.getValidChildrenTypesDetailed(null, true);
+        } else {
+            // Root node is not loaded.
+            return {};
+        }
+    };
+
     MetaEditorControl.getDefaultConfig = function () {
         return {
             autoCheckMetaConsistency: true
