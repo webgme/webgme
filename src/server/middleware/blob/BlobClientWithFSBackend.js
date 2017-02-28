@@ -13,6 +13,11 @@ function BlobClientWithFSBackend(gmeConfig, logger, opts) {
     var blobBackend = new BlobFSBackend(gmeConfig, logger),
         blobClient = new BlobRunPluginClient(blobBackend, logger, opts);
 
+    // Forward the buckets for users.
+    blobClient.contentBucket = blobBackend.contentBucket;
+    blobClient.metadataBucket = blobBackend.metadataBucket;
+    blobClient.tempBucket = blobBackend.tempBucket;
+
     blobClient.listObjects = function (bucket, callback) {
         var deferred = Q.defer();
 
