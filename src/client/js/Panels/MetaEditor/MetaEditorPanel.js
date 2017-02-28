@@ -105,5 +105,9 @@ define(['js/PanelBase/PanelBaseWithHeader',
         WebGMEGlobal.Toolbar.refresh();
     };
 
+    MetaEditorPanel.prototype.getValidTypesInfo = function (nodeId) {
+        return this.control.getValidTypesInfo(nodeId);
+    };
+
     return MetaEditorPanel;
 });

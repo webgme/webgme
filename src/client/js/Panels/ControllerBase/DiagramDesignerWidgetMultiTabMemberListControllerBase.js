@@ -420,6 +420,8 @@ define(['js/logger',
 
                 this._updateSelectedMemberListMembersTerritoryPatterns();
             } else {
+                this._widget.clear();
+                this._displayContainerObjectName();
                 this.displayNoTabMessage();
             }
         }
