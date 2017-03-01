@@ -138,6 +138,16 @@ define([
                                         }
                                     }
                                 }
+
+                                //checking if the node has a sharded overlay, we do not load the shards, yet
+                                if(object.ovr && object.ovr.sharded === true){
+                                    for (key in object.ovr) {
+                                        if (typeof object.ovr[key] === 'string' &&
+                                            REGEXP.HASH.test(object.ovr[key])) {
+                                            objects[object.ovr[key]] = true;
+                                        }
+                                    }
+                                }
                             }
                         }
                         working = false;

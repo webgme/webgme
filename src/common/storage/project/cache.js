@@ -103,7 +103,7 @@ define([
                                             }
 
                                             while ((cb = callbacks.pop())) {
-                                                cb(err, obj2);
+                                                cb(err, obj2.objects[subKey]);
                                             }
                                         }
                                     }

@@ -95,7 +95,7 @@ function loadObject(dbProject, nodeHash) {
             if (node && node.ovr && node.ovr.sharded === true) {
                 for (shardId in node.ovr) {
                     if (REGEXP.DB_HASH.test(node.ovr[shardId]) === true) {
-                        shardLoads.push(innerCore.loadObject(node.ovr[shardId]));
+                        shardLoads.push(dbProject.loadObject(node.ovr[shardId]));
                     }
                 }
                 return Q.allSettled(shardLoads);
