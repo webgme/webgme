@@ -709,5 +709,13 @@ define([
         dialog.show(client.getNode(gmeId), JSON.stringify(metaObj, undefined, 2));
     };
 
+    MetaDecoratorDiagramDesignerWidget.prototype.doSearch = function (searchDesc) {
+        var searchText = searchDesc.toString(),
+            gmeId = (this._metaInfo && this._metaInfo[CONSTANTS.GME_ID]) || '';
+
+        return (this.name && this.name.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) ||
+            (gmeId.indexOf(searchText) > -1);
+    };
+
     return MetaDecoratorDiagramDesignerWidget;
 });

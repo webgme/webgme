@@ -36,9 +36,11 @@ define([
 
     /**** Override from *.WidgetDecoratorBase ****/
     CircleDecoratorCore.prototype.doSearch = function (searchDesc) {
-        var searchText = searchDesc.toString().toLowerCase();
+        var searchText = searchDesc.toString(),
+            gmeId = (this._metaInfo && this._metaInfo[CONSTANTS.GME_ID]) || '';
 
-        return (this.formattedName && this.formattedName.toLowerCase().indexOf(searchText) !== -1);
+        return (this.formattedName && this.formattedName.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) ||
+            (gmeId.indexOf(searchText) > -1);
     };
 
 
