@@ -173,7 +173,7 @@ define([
 
         function shouldHaveShardedOverlays(node) {
             return Object.keys(self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}).length >=
-                (options.globConf.storage.overlaysShardLimit || 20000);
+                (options.globConf.storage.overlaysShardLimit || 20000) && self.getPath(node).indexOf('_') === -1;
         }
 
         function reserveOverlayShard(node) {

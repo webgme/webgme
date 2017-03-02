@@ -70,6 +70,9 @@ describe('Library core ', function () {
         expect = testFixture.expect;
         Q = testFixture.Q;
 
+        gmeConfig.storage.overlaysShardLimit = 5;
+        gmeConfig.storage.overlayShardSize = 3;
+
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
                 gmeAuth = gmeAuth_;

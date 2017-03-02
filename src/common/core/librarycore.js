@@ -226,7 +226,7 @@ define([
 
             function addRelationsFromNodeToClosureInfo(node, allMetaNodes, closureInfo) {
                 var basePath = self.getPath(node),
-                    overlayInfo = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
+                    overlayInfo = self.getRawOverlayInformation(node),
                     overlayKey,
                     pointerName,
                     path,
