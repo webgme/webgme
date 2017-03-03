@@ -309,9 +309,6 @@ define([
 
                     delete node.overlays[shardId].items[source][name];
                     node.overlays[shardId].itemCount -= 1;
-                    if (Object.keys(node.overlays[shardId].items[source]).length === 0) {
-                        delete node.overlays[shardId].items[source];
-                    }
                     break;
                 }
             }
@@ -321,6 +318,7 @@ define([
             // This recursive function will save objects, right before calling the underlying persist.
             var relids,
                 shardId,
+                source,
                 hash,
                 overlayNode,
                 shouldUpdateSmallest = false,
@@ -351,6 +349,13 @@ define([
                     if (node.overlays[shardId].itemCount === 0) {
                         node.overlays[shardId].oldHash = node.overlayInitials[shardId] ?
                             node.overlayInitials[shardId][self.ID_NAME] || null : null;
+                        node.overlays[shardId].items = {};
+                    } else {
+                        for (source in node.overlays[shardId].items) {
+                            if (Object.keys(node.overlays[shardId].items[source]).length === 0) {
+                                delete node.overlays[shardId].items[source];
+                            }
+                        }
                     }
 
                     hash = '#' + GENKEY(node.overlays[shardId], options.globConf);
@@ -931,6 +936,8 @@ define([
             }
             newNode.inverseOverlaysMutable = node.inverseOverlaysMutable;
 
+            var root = self.getRoot(newNode);
+            root.initial[self.getPath(newNode)] = root.initial[self.getPath(node)];
             return newNode;
         };
 
@@ -1098,6 +1105,8 @@ define([
                 base = innerCore.getParent(base);
             }
 
+            var root = self.getRoot(node);
+            root.initial[self.getPath(node)] = root.initial[self.getPath(oldNode)];
             self.deleteNode(oldNode);
 
             return node;

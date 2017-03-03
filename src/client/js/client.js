@@ -653,7 +653,9 @@ define([
                     ASSERT(state.project && state.core && state.branchName);
 
                     logger.debug('is NOT in transaction - will persist.');
+                    console.time('persist');
                     persisted = state.core.persist(state.nodes[ROOT_PATH].node);
+                    console.timeEnd('persist');
                     logger.debug('persisted', persisted);
                     numberOfPersistedObjects = Object.keys(persisted.objects).length;
                     if (numberOfPersistedObjects === 0) {

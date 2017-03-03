@@ -1028,6 +1028,7 @@ describe('jsonPatcher', function () {
     });
 
     describe('sharded overlay handling in core changes', function () {
+        this.timeout(10000);
         var gmeConfig = testFixture.getGmeConfig(),
             Q = testFixture.Q,
             logger = testFixture.logger.fork('jsonPatcher.core.shard.changes.spec'),
@@ -1365,6 +1366,84 @@ describe('jsonPatcher', function () {
                         update: {'/1': true, '/2': true, '/3': true, '/4': true},
                         partialUpdate: {'': true}
                     });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - copy node', function (done) {
+            Q.ninvoke(core, 'loadRoot', shardedRootHash)
+                .then(function (root_) {
+                    root = root_;
+                    return Q.ninvoke(core, 'loadChildren', root);
+                })
+                .then(function (children) {
+                    var patch,
+                        changes,
+                        expectedChanges = {
+                            load: {}, unload: {}, update: {}, partialUpdate: {'': true}
+                        },
+                        i;
+
+                    expect(children).to.have.length(4);
+
+                    expectedChanges.load[core.getPath(core.copyNode(children[0], root))] = true;
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql(expectedChanges);
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - copy more nodes', function (done) {
+            Q.ninvoke(core, 'loadRoot', shardedRootHash)
+                .then(function (root_) {
+                    root = root_;
+                    return Q.ninvoke(core, 'loadChildren', root);
+                })
+                .then(function (children) {
+                    var tempS, tempT;
+
+                    expect(children).to.have.length(4);
+                    tempS = core.createNode({parent: root, relid: 'temp'});
+                    children[0] = core.moveNode(children[0], tempS);
+                    children[1] = core.moveNode(children[1], tempS);
+                    children[2] = core.moveNode(children[2], tempS);
+                    children[3] = core.moveNode(children[3], tempS);
+                    tempT = core.copyNode(tempS, root);
+                    children[0] = core.moveNode(children[0], root);
+                    children[1] = core.moveNode(children[1], root);
+                    children[2] = core.moveNode(children[2], root);
+                    children[3] = core.moveNode(children[3], root);
+
+                    core.setBase(tempS, children[0]);
+                    core.deleteNode(tempS);
+
+                    return Q.nfcall(core.loadChildren, tempT);
+                })
+                .then(function (copies) {
+                    var patch,
+                        tempT,
+                        changes,
+                        expectedChanges = {
+                            load: {}, unload: {}, update: {}, partialUpdate: {'': true}
+                        };
+
+                    expect(copies).to.have.length(4);
+
+                    tempT = core.getParent(copies[0]);
+                    copies[0] = core.moveNode(copies[0], root);
+                    expectedChanges.load[core.getPath(copies[0])] = true;
+                    expectedChanges.load[core.getPath(core.moveNode(copies[1], root))] = true;
+                    expectedChanges.load[core.getPath(core.moveNode(copies[2], root))] = true;
+                    expectedChanges.load[core.getPath(core.moveNode(copies[3], root))] = true;
+
+                    core.setBase(tempT, copies[0]);
+                    core.deleteNode(tempT);
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql(expectedChanges);
                 })
                 .nodeify(done);
         });
