@@ -8,7 +8,6 @@
 
 var io = require('socket.io'),
     redis = require('socket.io-redis'),
-    FS = require('fs'),
     Q = require('q'),
     UTIL = require('../../utils'),
 //COOKIE = require('cookie-parser'),
