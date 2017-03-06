@@ -62,6 +62,8 @@ define([
 
         var logger = innerCore.logger,
             self = this,
+            _shardSize = options.globConf.core.overlayShardSize,
+            _shardingLimit = Math.floor(_shardSize/2),
             key;
 
         for (key in innerCore) {
@@ -173,7 +175,7 @@ define([
 
         function shouldHaveShardedOverlays(node) {
             return Object.keys(self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}).length >=
-                (options.globConf.storage.overlaysShardLimit || 20000) && self.getPath(node).indexOf('_') === -1;
+                _shardingLimit && self.getPath(node).indexOf('_') === -1;
         }
 
         function reserveOverlayShard(node) {
@@ -204,11 +206,9 @@ define([
 
         function transformOverlays(node) {
             var originalOverlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
-                maxEntryPerShard = options.globConf.storage.overlayShardSize || 10000,
-                count = maxEntryPerShard,
+                count = _shardSize,
                 source,
                 name,
-                newOverlaysObject = {},
                 shardId;
 
             self.deleteChild(node, CONSTANTS.OVERLAYS_PROPERTY);
@@ -224,7 +224,7 @@ define([
                 if (source !== CONSTANTS.MUTABLE_PROPERTY) {
                     for (name in originalOverlays[source]) {
                         if (name !== CONSTANTS.MUTABLE_PROPERTY) {
-                            if (count >= maxEntryPerShard) {
+                            if (count >= _shardSize) {
                                 shardId = reserveOverlayShard(node);
                                 node.minimalOverlayShardId = shardId;
                                 count = 0;
@@ -242,7 +242,7 @@ define([
 
         function updateSmallestOverlayShardIndex(node) {
             var shardId,
-                minimalItemCount = (options.globConf.storage.overlayShardSize || 10000) + 1;
+                minimalItemCount = _shardSize + 1;
 
             for (shardId in node.overlays) {
                 if (node.overlays[shardId].itemCount < minimalItemCount) {
@@ -264,9 +264,8 @@ define([
         }
 
         function putEntryIntoOverlayShard(node, shardId, source, name, target) {
-            var limit = options.globConf.storage.overlayShardSize || 10000;
 
-            if (node.overlays[shardId].itemCount >= limit &&
+            if (node.overlays[shardId].itemCount >= _shardSize &&
                 node.overlays[shardId].items.hasOwnProperty(source) === false) {
                 shardId = reserveOverlayShard(node);
                 node.minimalOverlayShardId = shardId;
@@ -278,7 +277,7 @@ define([
             node.overlays[shardId].items[source][name] = target;
             node.overlays[shardId].itemCount += 1;
 
-            if (node.minimalOverlayShardId === shardId && node.overlays[shardId].itemCount >= limit) {
+            if (node.minimalOverlayShardId === shardId && node.overlays[shardId].itemCount >= _shardSize) {
                 updateSmallestOverlayShardIndex(node);
             }
         }

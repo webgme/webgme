@@ -70,7 +70,7 @@ define([], function () {
 
     return {
         //Version
-        VERSION: '1.1.0',
+        VERSION: '1.2.0',
         // Database related     
         MONGO_ID: '_id',
         COMMIT_TYPE: 'commit',

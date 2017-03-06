@@ -459,7 +459,6 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('makeCommit', function (data, callback) {
-                console.log('commit bundle size:', JSON.stringify(data).length / (1024 * 1024), 'Mb');
                 var commitStatus;
                 getUserIdFromToken(socket, data && data.webgmeToken)
                     .then(function (userId) {
