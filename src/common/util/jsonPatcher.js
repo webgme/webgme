@@ -199,23 +199,69 @@ define([
         return result;
     }
 
+    function _isEmptyObject(object) {
+        for (var key in object) {
+            return false;
+        }
+        return true;
+    }
+
+    function wholeShardDiff(items, isAddition) {
+        var patchItem = {
+                updates: [],
+                partialUpdates: []
+            },
+            source,
+            name;
+
+        patchItem.op = 'replace';
+        patchItem.path = '/items';
+
+        if (isAddition) {
+            patchItem.value = items;
+        } else {
+            patchItem.value = {};
+        }
+
+        for (source in items) {
+            patchItem.updates.push(source);
+            for (name in items[source]) {
+                patchItem.partialUpdates.push(items[source][name]);
+            }
+        }
+
+        return patchItem;
+    }
+
     function overlayShardDiff(sourceJson, targetJson) {
         var patch,
-            key;
-        patch = diff(sourceJson, targetJson, '/', ['_id', 'type', 'items'], false, '', false, false)
-            .concat(diff(sourceJson.items || {}, targetJson.items || {}, '/items/', [], true, '', true, false));
+            key,
+            sourceEmpty = _isEmptyObject(sourceJson.items || {}),
+            targetEmpty = _isEmptyObject(targetJson.items || {});
 
-        for (key in sourceJson.items) {
-            if (targetJson.items.hasOwnProperty(key)) {
-                patch = patch.concat(diff(
-                    sourceJson.items[key],
-                    targetJson.items[key],
-                    '/items/' + _strEncode(key) + '/',
-                    [],
-                    false,
-                    key,
-                    false,
-                    true));
+        patch = diff(sourceJson, targetJson, '/', ['_id', 'type', 'items'], false, '', false, false);
+
+        if (sourceEmpty && targetEmpty) {
+            // Do nothing as nothing have changed
+        } else if (sourceEmpty) {
+            patch.push(wholeShardDiff(targetJson.items, true));
+        } else if (targetEmpty) {
+            patch.push(wholeShardDiff(sourceJson.items, false));
+        } else {
+            patch = patch
+                .concat(diff(sourceJson.items || {}, targetJson.items || {}, '/items/', [], true, '', true, false));
+            for (key in sourceJson.items) {
+                if (targetJson.items.hasOwnProperty(key)) {
+                    patch = patch.concat(diff(
+                        sourceJson.items[key],
+                        targetJson.items[key],
+                        '/items/' + _strEncode(key) + '/',
+                        [],
+                        false,
+                        key,
+                        false,
+                        true));
+                }
             }
         }
 

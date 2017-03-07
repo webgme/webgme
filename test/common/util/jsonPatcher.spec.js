@@ -1019,10 +1019,11 @@ describe('jsonPatcher', function () {
                 patch = patcher.create(oldData, newData);
 
             expect(patch).to.eql([{
-                op: 'remove',
-                path: '/items/%2fW',
+                op: 'replace',
+                path: '/items',
+                value: {},
                 partialUpdates: ['', ''],
-                updates: ['/W', '/W']
+                updates: ['/W']
             }]);
         });
     });
@@ -1035,7 +1036,6 @@ describe('jsonPatcher', function () {
             storageUtil = testFixture.requirejs('common/storage/util'),
             storage,
             projectName = 'coreShardChanges',
-            projectId = testFixture.projectName2Id(projectName),
             basicRootHash,
             shardedRootHash,
             core,
@@ -1061,8 +1061,7 @@ describe('jsonPatcher', function () {
         }
 
         before(function (done) {
-            gmeConfig.storage.overlaysShardLimit = 4;
-            gmeConfig.storage.overlayShardSize = 2;
+            gmeConfig.core.overlayShardSize = 10;
             testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
@@ -1381,8 +1380,7 @@ describe('jsonPatcher', function () {
                         changes,
                         expectedChanges = {
                             load: {}, unload: {}, update: {}, partialUpdate: {'': true}
-                        },
-                        i;
+                        };
 
                     expect(children).to.have.length(4);
 

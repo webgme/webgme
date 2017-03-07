@@ -63,7 +63,7 @@ define([
         var logger = innerCore.logger,
             self = this,
             _shardSize = options.globConf.core.overlayShardSize,
-            _shardingLimit = Math.floor(_shardSize/2),
+            _shardingLimit = Math.floor(_shardSize / 2),
             key;
 
         for (key in innerCore) {
@@ -237,6 +237,11 @@ define([
                         }
                     }
                 }
+            }
+
+            // In the unlikely event that during transition the original shard is empty.
+            if (Object.keys(node.overlays).length === 0) {
+                node.minimalOverlayShardId = reserveOverlayShard(node);
             }
         }
 

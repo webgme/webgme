@@ -12,6 +12,7 @@ describe('export CLI tests', function () {
         expect = testFixture.expect,
         exportCli = require('../../src/bin/export'),
         filename = require('path').normalize('src/bin/export.js'),
+        fs = require('fs'),
         projectName = 'exportCliTest',
         __should = testFixture.should,
         //projectId = testFixture.projectName2Id(projectName),
@@ -134,7 +135,7 @@ describe('export CLI tests', function () {
             '-f', outputPath
         ])
             .then(function () {
-                expect()
+                expect(fs.existsSync(outputPath)).to.equal(true);
                 done();
             })
             .catch(done);

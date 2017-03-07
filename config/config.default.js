@@ -86,7 +86,7 @@ var path = require('path'),
         core: {
             enableCustomConstraints: false,
             inverseRelationsCacheSize: 2000,
-            overlayShardSize: 20000
+            overlayShardSize: 10000
         },
 
         debug: false,
