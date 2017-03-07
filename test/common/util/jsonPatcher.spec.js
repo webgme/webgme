@@ -1061,7 +1061,7 @@ describe('jsonPatcher', function () {
         }
 
         before(function (done) {
-            gmeConfig.core.overlayShardSize = 10;
+            gmeConfig.core.overlayShardSize = 8;
             testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
