@@ -823,32 +823,32 @@ describe('jsonPatcher', function () {
 
         it('should work fine during shard addition', function () {
             var oldData = {
-                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "_id": "",
-                    "__v": "1.1.0",
-                    "c": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "ovr": {
-                        "9": "#f53f3346eb25868aba13cbfed5abad3ccb7758fd",
-                        "sharded": true,
-                        "S": "#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e"
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    '_id': '',
+                    '__v': '1.1.0',
+                    c: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    ovr: {
+                        9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                        sharded: true,
+                        S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
                     },
-                    "X": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "G": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a"
+                    X: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    G: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a'
                 },
                 newData = {
-                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "_id": "",
-                    "__v": "1.1.0",
-                    "c": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "ovr": {
-                        "9": "#f53f3346eb25868aba13cbfed5abad3ccb7758fd",
-                        "sharded": true,
-                        "l": "#1c29df713f7cc6500bfa999b82a3cffe4956fb1e",
-                        "r": "#4a5ef79b14caf635b7e645c8c66bf35850bc5d15",
-                        "S": "#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e"
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    '_id': '',
+                    '__v': '1.1.0',
+                    c: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    ovr: {
+                        9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                        sharded: true,
+                        l: '#1c29df713f7cc6500bfa999b82a3cffe4956fb1e',
+                        r: '#4a5ef79b14caf635b7e645c8c66bf35850bc5d15',
+                        S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
                     },
-                    "X": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "G": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a"
+                    X: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    G: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a'
                 },
                 patch = patcher.create(oldData, newData);
 
@@ -857,32 +857,32 @@ describe('jsonPatcher', function () {
 
         it('should work fine during shard removal', function () {
             var newData = {
-                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "_id": "",
-                    "__v": "1.1.0",
-                    "c": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "ovr": {
-                        "9": "#f53f3346eb25868aba13cbfed5abad3ccb7758fd",
-                        "sharded": true,
-                        "S": "#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e"
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    '_id': '',
+                    '__v': '1.1.0',
+                    c: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    ovr: {
+                        9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                        sharded: true,
+                        S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
                     },
-                    "X": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "G": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a"
+                    X: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    G: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a'
                 },
                 oldData = {
-                    "6": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "_id": "",
-                    "__v": "1.1.0",
-                    "c": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "ovr": {
-                        "9": "#f53f3346eb25868aba13cbfed5abad3ccb7758fd",
-                        "sharded": true,
-                        "l": "#1c29df713f7cc6500bfa999b82a3cffe4956fb1e",
-                        "r": "#4a5ef79b14caf635b7e645c8c66bf35850bc5d15",
-                        "S": "#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e"
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    '_id': '',
+                    '__v': '1.1.0',
+                    c: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    ovr: {
+                        9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                        sharded: true,
+                        l: '#1c29df713f7cc6500bfa999b82a3cffe4956fb1e',
+                        r: '#4a5ef79b14caf635b7e645c8c66bf35850bc5d15',
+                        S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
                     },
-                    "X": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a",
-                    "G": "#e1d65cdafc2aeef464efdf67895f6d9ec54f650a"
+                    X: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    G: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a'
                 },
                 patch = patcher.create(oldData, newData);
 
@@ -891,28 +891,28 @@ describe('jsonPatcher', function () {
 
         it('should create a valid patch for updating entry inside shard-item', function () {
             var oldData = {
-                    "type": "shard",
-                    "itemCount": 2,
-                    "items": {
-                        "/W": {
-                            "parentA": "",
-                            "parentB": ""
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: ''
                         }
                     },
-                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
-                    "__v": "1.1.0"
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
                 },
                 newData = {
-                    "type": "shard",
-                    "itemCount": 2,
-                    "items": {
-                        "/W": {
-                            "parentA": "",
-                            "parentB": "/some/path"
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: '/some/path'
                         }
                     },
-                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
-                    "__v": "1.1.0"
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
                 },
                 patch = patcher.create(oldData, newData);
 
@@ -927,29 +927,29 @@ describe('jsonPatcher', function () {
 
         it('should create a valid patch for adding entry to shard-item', function () {
             var oldData = {
-                    "type": "shard",
-                    "itemCount": 2,
-                    "items": {
-                        "/W": {
-                            "parentA": "",
-                            "parentB": ""
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: ''
                         }
                     },
-                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
-                    "__v": "1.1.0"
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
                 },
                 newData = {
-                    "type": "shard",
-                    "itemCount": 2,
-                    "items": {
-                        "/W": {
-                            "parentA": "",
-                            "parentB": "",
-                            "parentC": ""
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: '',
+                            parentC: ''
                         }
                     },
-                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
-                    "__v": "1.1.0"
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
                 },
                 patch = patcher.create(oldData, newData);
 
@@ -964,27 +964,27 @@ describe('jsonPatcher', function () {
 
         it('should create a valid patch for removing entry from shard-item', function () {
             var oldData = {
-                    "type": "shard",
-                    "itemCount": 2,
-                    "items": {
-                        "/W": {
-                            "parentA": "",
-                            "parentB": ""
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: ''
                         }
                     },
-                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
-                    "__v": "1.1.0"
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
                 },
                 newData = {
-                    "type": "shard",
-                    "itemCount": 2,
-                    "items": {
-                        "/W": {
-                            "parentA": ""
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: ''
                         }
                     },
-                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
-                    "__v": "1.1.0"
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
                 },
                 patch = patcher.create(oldData, newData);
 
@@ -998,23 +998,23 @@ describe('jsonPatcher', function () {
 
         it('should create a valid patch for removing a shard entry', function () {
             var oldData = {
-                    "type": "shard",
-                    "itemCount": 2,
-                    "items": {
-                        "/W": {
-                            "parentA": "",
-                            "parentB": ""
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: ''
                         }
                     },
-                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
-                    "__v": "1.1.0"
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
                 },
                 newData = {
-                    "type": "shard",
-                    "itemCount": 2,
-                    "items": {},
-                    "_id": "#6ca0a1a3c52f381e69d7fa930468c7adce47646b",
-                    "__v": "1.1.0"
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {},
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
                 },
                 patch = patcher.create(oldData, newData);
 
@@ -1092,10 +1092,12 @@ describe('jsonPatcher', function () {
                     child1 = core.createNode({parent: root, relid: '1'});
                     child2 = core.createNode({parent: root, relid: '2'});
                     core.setPointer(child1, 'parent', root);
-                    core.setPointer(child2, 'parent', root);
+                    // core.setPointer(child2, 'parent', root);
+                    core.setPointer(root, 'noref', null);
                     core.persist(root);
                     basicRootHash = core.getHash(root);
 
+                    core.setPointer(child2, 'parent', root);
                     child3 = core.createNode({parent: root, relid: '3'});
                     core.setPointer(child3, 'parent', root);
                     child4 = core.createNode({parent: root, relid: '4'});
@@ -1119,6 +1121,7 @@ describe('jsonPatcher', function () {
             Q.ninvoke(core, 'loadRoot', basicRootHash)
                 .then(function (root_) {
                     root = root_;
+                    expect(root.overlays).to.eql(undefined);
                 })
                 .nodeify(done);
         });
@@ -1169,6 +1172,37 @@ describe('jsonPatcher', function () {
                 .nodeify(done);
         });
 
+        it('should generate correct changes - sharding add null relations', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var i,
+                        newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', root);
+                    core.setPointer(newChild, 'parent_', root);
+                    core.setPointer(root, 'nptr', null);
+
+                    for (i = 0; i < oldChildren.length; i += 1) {
+                        core.setPointer(oldChildren[i], 'parent_', root);
+                        core.setPointer(oldChildren[i], 'sibling', newChild);
+                    }
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {},
+                        update: {'/1': true, '/2': true, '': true},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
         it('should generate correct changes - sharding update relations', function (done) {
             Q.ninvoke(core, 'loadChildren', root)
                 .then(function (oldChildren) {
@@ -1198,7 +1232,32 @@ describe('jsonPatcher', function () {
                 .nodeify(done);
         });
 
-        it('should generate correct changes - sharding removed relations', function (done) {
+        it('should generate correct changes - sharding update null relation', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', oldChildren[0]);
+                    core.setPointer(newChild, 'parent_', oldChildren[1]);
+                    core.setPointer(root, 'noref', newChild);
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {},
+                        update: {'': true},
+                        partialUpdate: {'/1': true, '/2': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharding remove relations', function (done) {
             Q.ninvoke(core, 'loadChildren', root)
                 .then(function (oldChildren) {
                     var i,
@@ -1220,8 +1279,34 @@ describe('jsonPatcher', function () {
                     expect(changes).to.eql({
                         load: {'/new': true},
                         unload: {},
-                        update: {'/1': true, '/2': true},
+                        update: {'/1': true},
                         partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharding remove null relation', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', oldChildren[0]);
+                    core.setPointer(newChild, 'parent_', oldChildren[1]);
+
+                    core.deletePointer(root, 'noref');
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {},
+                        update: {'': true},
+                        partialUpdate: {'/1': true, '/2': true}
                     });
                 })
                 .nodeify(done);
@@ -1306,6 +1391,33 @@ describe('jsonPatcher', function () {
                         load: {},
                         unload: {},
                         update: {'/1': true},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharded add null relation', function (done) {
+            Q.ninvoke(core, 'loadRoot', shardedRootHash)
+                .then(function (root_) {
+                    root = root_;
+                    return Q.ninvoke(core, 'loadChild', root, '1');
+                })
+                .then(function (child1) {
+                    var patch,
+                        changes;
+
+                    expect(child1).not.to.eql(null);
+                    core.setPointer(child1, 'nptr', null);
+                    core.setPointer(child1, 'parent', null);
+                    core.setPointer(root, 'nptr', null);
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {},
+                        unload: {},
+                        update: {'/1': true, '': true},
                         partialUpdate: {'': true}
                     });
                 })
@@ -1424,7 +1536,7 @@ describe('jsonPatcher', function () {
                         tempT,
                         changes,
                         expectedChanges = {
-                            load: {}, unload: {}, update: {}, partialUpdate: {'': true}
+                            load: {}, unload: {}, update: {}, partialUpdate: {'':true}
                         };
 
                     expect(copies).to.have.length(4);

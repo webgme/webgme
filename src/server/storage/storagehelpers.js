@@ -92,6 +92,7 @@ function loadObject(dbProject, nodeHash) {
             var shardLoads = [],
                 shardId;
             node = node_;
+
             if (node && node.ovr && node.ovr.sharded === true) {
                 for (shardId in node.ovr) {
                     if (REGEXP.DB_HASH.test(node.ovr[shardId]) === true) {
@@ -111,8 +112,11 @@ function loadObject(dbProject, nodeHash) {
                     objects: {}
                 };
             response.objects[nodeHash] = node;
+
             for (i = 0; i < overlayShardResults.length; i += 1) {
-                if (overlayShardResults[i].state !== 'rejected' && overlayShardResults[i].value._id) {
+                if (overlayShardResults[i].state === 'rejected') {
+                    throw new Error('Loading overlay shard of node [' + nodeHash + '] failed');
+                } else if (overlayShardResults[i].value._id) {
                     response.objects[overlayShardResults[i].value._id] = overlayShardResults[i].value;
                 }
             }
@@ -143,9 +147,9 @@ function loadPath(dbProject, rootHash, loadedObjects, path, excludeParents) {
 
     function processLoadResult(hash, result) {
         var subHash;
-        if (result.hasOwnProperty('multipleObjects') && result.multipleObjects === true) {
+        if (result.multipleObjects === true) {
             for (subHash in result.objects) {
-                loadedObjects[subHash] = result.objects(subHash);
+                loadedObjects[subHash] = result.objects[subHash];
             }
         } else {
             loadedObjects[hash] = result;

@@ -40,7 +40,8 @@ describe('export CLI tests', function () {
                     gmeConfig: gmeConfig,
                     branchName: 'master',
                     userName: gmeConfig.authentication.guestAccount,
-                    projectSeed: './seeds/ActivePanels.webgmex'
+                    // projectSeed: './seeds/ActivePanels.webgmex'
+                    projectSeed: './test/bin/export/minimalShard.webgmex'
                 });
             })
             .then(function () {

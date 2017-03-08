@@ -90,23 +90,19 @@ define([
                         patchItem.partialUpdates = [];
                         patchItem.updates = [];
                         if (inOverlay) {
+                            if (_isGmePath(innerPath)) {
+                                patchItem.updates.push(innerPath);
+                            }
                             if (_isGmePath(target[i])) {
                                 patchItem.partialUpdates.push(target[i]);
-                                if (_isGmePath(innerPath)) {
-                                    patchItem.updates.push(innerPath);
-                                }
-                            } else if (target[i] === '/_nullptr') {
-                                patchItem.updates.push('');
                             }
                         } else {
+                            if (_isGmePath(i)) {
+                                patchItem.updates.push(i);
+                            }
                             for (path in target[i]) {
                                 if (_isGmePath(target[i][path])) {
                                     patchItem.partialUpdates.push(target[i][path]);
-                                    if (_isGmePath(i)) {
-                                        patchItem.updates.push(i);
-                                    }
-                                } else if (target[i][path] === '/_nullptr') {
-                                    patchItem.updates.push('');
                                 }
                             }
                         }
@@ -132,20 +128,16 @@ define([
                         if (inOverlay) {
                             patchItem.partialUpdates = [];
                             patchItem.updates = [];
+                            if (_isGmePath(innerPath)) {
+                                patchItem.updates.push(innerPath);
+                            }
 
                             if (_isGmePath(target[i])) {
                                 patchItem.partialUpdates.push(target[i]);
-                                if (_isGmePath(innerPath)) {
-                                    patchItem.updates.push(innerPath);
-                                }
-                            } else if (target[i] === '/_nullptr') {
-                                patchItem.updates.push('');
                             }
 
                             if (_isGmePath(source[i])) {
                                 patchItem.partialUpdates.push(source[i]);
-                            } else if (source[i] === '/_nullptr') {
-                                patchItem.updates.push('');
                             }
                         }
 
@@ -169,23 +161,19 @@ define([
                         patchItem.partialUpdates = [];
                         patchItem.updates = [];
                         if (inOverlay) {
+                            if (_isGmePath(innerPath)) {
+                                patchItem.updates.push(innerPath);
+                            }
                             if (_isGmePath(source[i])) {
                                 patchItem.partialUpdates.push(source[i]);
-                                if (_isGmePath(innerPath)) {
-                                    patchItem.updates.push(innerPath);
-                                }
-                            } else if (source[i] === '/_nullptr') {
-                                patchItem.updates.push('');
                             }
                         } else {
+                            if (_isGmePath(i)) {
+                                patchItem.updates.push(i);
+                            }
                             for (path in source[i]) {
                                 if (_isGmePath(source[i][path])) {
                                     patchItem.partialUpdates.push(source[i][path]);
-                                    if (_isGmePath(i)) {
-                                        patchItem.updates.push(i);
-                                    }
-                                } else if (source[i][path] === '/_nullptr') {
-                                    patchItem.updates.push('');
                                 }
                             }
                         }
@@ -226,7 +214,9 @@ define([
         for (source in items) {
             patchItem.updates.push(source);
             for (name in items[source]) {
-                patchItem.partialUpdates.push(items[source][name]);
+                if (_isGmePath(items[source][name])) {
+                    patchItem.partialUpdates.push(items[source][name]);
+                }
             }
         }
 
@@ -625,14 +615,18 @@ define([
                                     res.update[absGmePath] = true;
                                 }
 
-                                absGmePath = gmePath + preShardRelations[source][name];
-                                if (_inLoadOrUnload(res, absGmePath) === false) {
-                                    res.partialUpdate[absGmePath] = true;
+                                if (_isGmePath(preShardRelations[source][name])) {
+                                    absGmePath = gmePath + preShardRelations[source][name];
+                                    if (_inLoadOrUnload(res, absGmePath) === false) {
+                                        res.partialUpdate[absGmePath] = true;
+                                    }
                                 }
 
-                                absGmePath = gmePath + shards[i].items[source][name];
-                                if (_inLoadOrUnload(res, absGmePath) === false) {
-                                    res.partialUpdate[absGmePath] = true;
+                                if (_isGmePath(shards[i].items[source][name])) {
+                                    absGmePath = gmePath + shards[i].items[source][name];
+                                    if (_inLoadOrUnload(res, absGmePath) === false) {
+                                        res.partialUpdate[absGmePath] = true;
+                                    }
                                 }
                             }
                         } else {
@@ -642,9 +636,11 @@ define([
                                 res.update[absGmePath] = true;
                             }
 
-                            absGmePath = gmePath + preShardRelations[source][name];
-                            if (_inLoadOrUnload(res, absGmePath) === false) {
-                                res.partialUpdate[absGmePath] = true;
+                            if (_isGmePath(preShardRelations[source][name])) {
+                                absGmePath = gmePath + preShardRelations[source][name];
+                                if (_inLoadOrUnload(res, absGmePath) === false) {
+                                    res.partialUpdate[absGmePath] = true;
+                                }
                             }
                         }
                     }
@@ -657,9 +653,11 @@ define([
                                 res.update[absGmePath] = true;
                             }
 
-                            absGmePath = gmePath + shards[i].items[source][name];
-                            if (_inLoadOrUnload(res, absGmePath) === false) {
-                                res.partialUpdate[absGmePath] = true;
+                            if (_isGmePath(shards[i].items[source][name])) {
+                                absGmePath = gmePath + shards[i].items[source][name];
+                                if (_inLoadOrUnload(res, absGmePath) === false) {
+                                    res.partialUpdate[absGmePath] = true;
+                                }
                             }
                         }
                     }

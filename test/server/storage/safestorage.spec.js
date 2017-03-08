@@ -2985,6 +2985,97 @@ describe('SafeStorage', function () {
         });
     });
 
+    describe('loadPaths - sharded', function () {
+        var projectName = 'loadPathsSharded',
+            projectId,
+            rootHash,
+            storage;
+
+        before(function (done) {
+
+            storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+            storage.openDatabase()
+                .then(function () {
+                    return testFixture.importProject(storage, {
+                        projectSeed: 'test/bin/export/minimalShard.webgmex',
+                        projectName: projectName,
+                        gmeConfig: gmeConfig,
+                        logger: logger
+                    });
+                })
+                .then(function (importResult) {
+                    var project = importResult.project;
+                    projectId = project.projectId;
+                    rootHash = importResult.rootHash;
+                })
+                .then(function () {
+                    done();
+                })
+                .catch(done);
+        });
+
+        after(function (done) {
+            Q.allDone([
+                storage.closeDatabase()
+            ])
+                .nodeify(done);
+        });
+
+        it('should load multiple objects', function (done) {
+            var data = {
+                projectId: projectId,
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: '/K/4'
+                    },
+                    {
+                        parentHash: rootHash,
+                        path: '/K/S'
+                    },
+                    {
+                        parentHash: rootHash,
+                        path: '/K/O'
+                    }
+                ]
+            };
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    expect(Object.keys(objects).length).to.equal(5);
+                    expect(Object.keys(objects)).to.include.members([rootHash,
+                        '#d833388e2cf4812331410bccadce3c1fc753bf79',
+                        '#2a4e5171b11657a2a6e651b21960819df9b7224a']);
+                    done();
+                })
+                .catch(done);
+
+        });
+
+        it('should load root path', function (done) {
+            var data = {
+                projectId: projectId,
+                pathsInfo: [
+                    {
+                        parentHash: rootHash,
+                        path: ''
+                    }
+                ]
+            };
+
+            storage.loadPaths(data)
+                .then(function (objects) {
+                    // console.log(JSON.stringify(objects, null, 2));
+                    expect(Object.keys(objects)).to.have.members([rootHash,
+                        '#d833388e2cf4812331410bccadce3c1fc753bf79',
+                        '#2a4e5171b11657a2a6e651b21960819df9b7224a']);
+                    done();
+                })
+                .catch(done);
+        });
+
+    });
+
     describe('squashCommits', function () {
         var safeStorage,
             projectId,
@@ -3136,7 +3227,7 @@ describe('SafeStorage', function () {
 
             safeStorage.squashCommits(data)
                 .then(function (result) {
-                    expect(result).to.have.keys(['hash','status']);
+                    expect(result).to.have.keys(['hash', 'status']);
                     expect(result.status).to.equal('SYNCED');
                     commitHash = result.hash;
                     return safeStorage.loadObjects({

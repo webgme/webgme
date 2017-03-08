@@ -173,12 +173,13 @@ define([
                 === true;
         }
 
+        // We only shard regular GME nodes, technical sub-nodes do not get sharded
         function shouldHaveShardedOverlays(node) {
             return Object.keys(self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}).length >=
                 _shardingLimit && self.getPath(node).indexOf('_') === -1;
         }
 
-        function reserveOverlayShard(node) {
+        function addNewOverlayShard(node) {
             var overlaysNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
                 shardId = RANDOM.generateRelid(overlaysNode.data),
                 newShardObject = {
@@ -225,7 +226,7 @@ define([
                     for (name in originalOverlays[source]) {
                         if (name !== CONSTANTS.MUTABLE_PROPERTY) {
                             if (count >= _shardSize) {
-                                shardId = reserveOverlayShard(node);
+                                shardId = addNewOverlayShard(node);
                                 node.minimalOverlayShardId = shardId;
                                 count = 0;
                             }
@@ -241,7 +242,7 @@ define([
 
             // In the unlikely event that during transition the original shard is empty.
             if (Object.keys(node.overlays).length === 0) {
-                node.minimalOverlayShardId = reserveOverlayShard(node);
+                node.minimalOverlayShardId = addNewOverlayShard(node);
             }
         }
 
@@ -272,7 +273,7 @@ define([
 
             if (node.overlays[shardId].itemCount >= _shardSize &&
                 node.overlays[shardId].items.hasOwnProperty(source) === false) {
-                shardId = reserveOverlayShard(node);
+                shardId = addNewOverlayShard(node);
                 node.minimalOverlayShardId = shardId;
             }
 
@@ -306,13 +307,14 @@ define([
             var shardId;
 
             for (shardId in node.overlays) {
-                if (node.overlays[shardId].items[source] &&
-                    typeof node.overlays[shardId].items[source][name] === 'string') {
+                if (node.overlays[shardId].items[source]) {
+                    if (typeof node.overlays[shardId].items[source][name] === 'string') {
 
-                    ensureOverlayShardMutated(node, shardId);
+                        ensureOverlayShardMutated(node, shardId);
 
-                    delete node.overlays[shardId].items[source][name];
-                    node.overlays[shardId].itemCount -= 1;
+                        delete node.overlays[shardId].items[source][name];
+                        node.overlays[shardId].itemCount -= 1;
+                    }
                     break;
                 }
             }
@@ -613,6 +615,7 @@ define([
                         } else {
                             result.value = node.overlays[shardId].items[source];
                         }
+                        break;
                     }
                 }
             } else {
@@ -655,14 +658,14 @@ define([
                 }
             }
 
-            //Now we check if we need to mutate the inverse overlays
+            //First check if we the inverse computed already and if we need to mutate it
             if (node.inverseOverlays) {
                 if (node.inverseOverlaysMutable !== true) {
                     node.inverseOverlays = JSON.parse(JSON.stringify(node.inverseOverlays));
                     node.inverseOverlaysMutable = true;
                 }
 
-                index = (node.inverseOverlays[target][name] || []).indexOf(source);
+                index = ((node.inverseOverlays[target] || {})[name] || []).indexOf(source);
                 if (index !== -1) {
                     node.inverseOverlays[target][name].splice(index, 1);
                     if (node.inverseOverlays[target][name].length === 0) {
@@ -745,7 +748,7 @@ define([
                 transformOverlays(node);
             }
 
-            if (hasShardedOverlays(node)) {
+            if (hasShardedOverlays(node) === true) {
                 putEntryIntoShardedOverlays(node, source, name, target);
             } else {
                 overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
