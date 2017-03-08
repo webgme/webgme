@@ -242,41 +242,48 @@ function getSeedDictionary(config) {
  * 1) config/components.<env>.js
  * 2) config/components.json
  * 3) {}
- * @param {gmeLogger} logger 
- * @param [callback]
+ * @param {gmeLogger} [logger] - Optional logger (will fall back to console).
+ * @param {function} [callback] - If not provided promise will be returned.
  * @returns {Promise}
  */
 function getComponentsJson(logger, callback) {
     var deferred = Q.defer(),
         env = process.env.NODE_ENV || 'default',
         configDir = path.join(process.cwd(), 'config'),
+        result,
         filePath;
 
-
+    logger = logger ? logger : {
+        debug: function () {
+            console.log.apply(console, arguments);
+        },
+        warn : function () {
+            console.warn.apply(console, arguments);
+        }
+    };
 
     try {
         filePath = path.join(configDir, 'components.' + env + '.js');
-        deferred.resolve(requireUncached(filePath));
+        result = requireUncached(filePath);
+        deferred.resolve(result);
     } catch (e) {
-        logger.warn('Did not find component settings at', filePath, '(attempting fallbacks see issue #1300)');
+        logger.warn('Did not find component settings at', filePath, '(proceeding with fallbacks see issue #1335)');
         filePath = path.join(configDir, 'components.json');
 
         Q.nfcall(fs.readFile, filePath, 'utf8')
             .then(function (content) {
-                logger.warn('Found components.json', filePath);
-                deferred.resolve(content);
+                logger.debug('Found components.json at', filePath);
+                deferred.resolve(JSON.parse(content));
             })
             .catch(function (err) {
                 if (err.code === 'ENOENT') {
-                    logger.warn('Returning empty object', filePath);
+                    logger.debug('Returning empty object since also did not find ', filePath);
                     deferred.resolve({});
                 } else {
                     deferred.reject(err);
                 }
             });
     }
-
-
 
     return deferred.promise.nodeify(callback);
 }
