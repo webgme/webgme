@@ -1,15 +1,18 @@
 /*jshint node: true, mocha: true*/
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
-describe('configuration', function () {
+describe('configuration and components', function () {
     'use strict';
 
     var should = require('chai').should(),
         expect = require('chai').expect,
         oldNodeEnv = process.env.NODE_ENV || '',
+        oldCwd = process.cwd(),
         path = require('path'),
+        webgme = require('../../webgme'),
         getClientConfig = require('../../config/getclientconfig'),
         configPath = path.join(__dirname, '..', '..', 'config'),
         validateConfig,
@@ -35,10 +38,12 @@ describe('configuration', function () {
     });
 
     beforeEach(function () {
+        process.chdir(oldCwd);
         unloadConfigs();
     });
 
     after(function () {
+        process.chdir(oldCwd);
         unloadConfigs();
         process.env.NODE_ENV = oldNodeEnv;
         // restore config
@@ -184,5 +189,36 @@ describe('configuration', function () {
 
         should.equal(clientConfig.socketIO.hasOwnProperty('serverOptions'), false);
         should.equal(clientConfig.socketIO.hasOwnProperty('adapter'), false);
+    });
+
+    // These really only show up in the coverage..
+    it('getComponentsJson should fallback to default when NODE_ENV is empty', function (done) {
+        process.env.NODE_ENV = '';
+
+        webgme.getComponentsJson()
+            .then(function (json) {
+                expect(json).to.deep.equal({});
+            })
+            .nodeify(done);
+    });
+
+    it('getComponentsJson should fallback to components when NODE_ENV set to non-existing', function (done) {
+        process.env.NODE_ENV = 'noComponentsJsonWithThisNameExists';
+
+        webgme.getComponentsJson()
+            .then(function (json) {
+                expect(json).to.deep.equal({});
+            })
+            .nodeify(done);
+    });
+
+    it('getComponentsJson should fallback to empty object when components.json non-existing', function (done) {
+        process.chdir('./test-tmp');
+
+        webgme.getComponentsJson()
+            .then(function (json) {
+                expect(json).to.deep.equal({});
+            })
+            .nodeify(done);
     });
 });
