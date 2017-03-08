@@ -658,7 +658,7 @@ define([
                 }
             }
 
-            //First check if we the inverse computed already and if we need to mutate it
+            //Now we check if we need to mutate the inverse overlays
             if (node.inverseOverlays) {
                 if (node.inverseOverlaysMutable !== true) {
                     node.inverseOverlays = JSON.parse(JSON.stringify(node.inverseOverlays));
@@ -757,7 +757,7 @@ define([
                 self.setProperty(overlay, name, target);
             }
 
-            //First check if we to inverse computed already and if we need to mutate it
+            //Now we check if we need to mutate the inverse overlays
             if (node.inverseOverlays) {
                 if (node.inverseOverlaysMutable !== true) {
                     node.inverseOverlays = JSON.parse(JSON.stringify(node.inverseOverlays));
