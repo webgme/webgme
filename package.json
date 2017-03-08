@@ -52,6 +52,7 @@
     "q": "1.4.1",
     "raml2html": "3.0.1",
     "redis": "2.6.2",
+    "require-uncached": "^1.0.3",
     "requirejs": "2.1.20",
     "socket.io": "1.4.8",
     "socket.io-client": "1.4.8",

@@ -11,7 +11,8 @@ var fs = require('fs'),
     Q = require('q'),
     genDecoratorSvgList = require('./client/assets/generate_decorator_svg_list'),
     ncp = require('ncp'), // Module for copying entire directory
-    path = require('path');
+    path = require('path'),
+    requireUncached = require('require-uncached');
 
 /**
  * @param name
@@ -236,6 +237,50 @@ function getSeedDictionary(config) {
     return result;
 }
 
+/**
+ * Return the components json in the following attempt order. Not that the result i never cached here.
+ * 1) config/components.<env>.js
+ * 2) config/components.json
+ * 3) {}
+ * @param {gmeLogger} logger 
+ * @param [callback]
+ * @returns {Promise}
+ */
+function getComponentsJson(logger, callback) {
+    var deferred = Q.defer(),
+        env = process.env.NODE_ENV || 'default',
+        configDir = path.join(process.cwd(), 'config'),
+        filePath;
+
+
+
+    try {
+        filePath = path.join(configDir, 'components.' + env + '.js');
+        deferred.resolve(requireUncached(filePath));
+    } catch (e) {
+        logger.warn('Did not find component settings at', filePath, '(attempting fallbacks see issue #1300)');
+        filePath = path.join(configDir, 'components.json');
+
+        Q.nfcall(fs.readFile, filePath, 'utf8')
+            .then(function (content) {
+                logger.warn('Found components.json', filePath);
+                deferred.resolve(content);
+            })
+            .catch(function (err) {
+                if (err.code === 'ENOENT') {
+                    logger.warn('Returning empty object', filePath);
+                    deferred.resolve({});
+                } else {
+                    deferred.reject(err);
+                }
+            });
+    }
+
+
+
+    return deferred.promise.nodeify(callback);
+}
+
 module.exports = {
     isGoodExtraAsset: isGoodExtraAsset,
     getComponentNames: getComponentNames,
@@ -249,4 +294,5 @@ module.exports = {
     getBasePathByName: getBasePathByName,
     getRedirectUrlParameter: getRedirectUrlParameter,
     getSeedDictionary: getSeedDictionary,
+    getComponentsJson: getComponentsJson
 };
