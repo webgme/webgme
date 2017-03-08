@@ -233,12 +233,11 @@ define([
     /**************** END OF - EDIT NODE TITLE ************************/
 
     DocumentDecorator.prototype.doSearch = function (searchDesc) {
-        var searchText = searchDesc.toString();
-        if (this.name && this.name.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
-            return true;
-        }
+        var searchText = searchDesc.toString(),
+            gmeId = (this._metaInfo && this._metaInfo[CONSTANTS.GME_ID]) || '';
 
-        return false;
+        return (this.name && this.name.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) ||
+            (gmeId.indexOf(searchText) > -1);
     };
 
     /**
