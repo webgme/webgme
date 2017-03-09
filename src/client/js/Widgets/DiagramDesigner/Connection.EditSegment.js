@@ -13,7 +13,7 @@ define([
     'use strict';
 
     var ConnectionEditSegment,
-        MIN_WIDTH = 5;
+        MIN_WIDTH = 10;
 
     ConnectionEditSegment = function (params) {
         this.id = params.id;
@@ -51,7 +51,7 @@ define([
             } else {
                 if (this.connection.isBezier) {
                     pathDef.push('C' + (p[i - 1][0] + p[i - 1][2]) + ',' + (p[i - 1][1] + p[i - 1][3]) + ' ' +
-                    (p[i][0] - p[i][2]) + ',' + (p[i][1] - p[i][3]) + ' ' + p[i][0] + ',' + p[i][1]);
+                        (p[i][0] - p[i][2]) + ',' + (p[i][1] - p[i][3]) + ' ' + p[i][0] + ',' + p[i][1]);
                 } else {
                     pathDef.push('L' + p[i][0] + ',' + p[i][1]);
                 }
@@ -63,10 +63,8 @@ define([
         this.path = this.svgPaper.path(this.pathDef);
 
         this.path.attr({
-                'stroke-width': this.width
-            }
-        )
-        ;
+            'stroke-width': this.width * 2
+        });
 
         this.path.node.setAttribute('class', DiagramDesignerWidgetConstants.PATH_EDIT_SEGMENT_CLASS);
 
@@ -159,11 +157,11 @@ define([
 
         if (intersectionsHorizontal.length > 0) {
             distanceH = Math.abs(mouseX - intersectionsHorizontal[0].x) +
-            Math.abs(mouseY - intersectionsHorizontal[0].y);
+                Math.abs(mouseY - intersectionsHorizontal[0].y);
         }
         if (intersectionsVertical.length > 0) {
             distanceW = Math.abs(mouseX - intersectionsVertical[0].x) +
-            Math.abs(mouseY - intersectionsVertical[0].y);
+                Math.abs(mouseY - intersectionsVertical[0].y);
         }
 
         if (distanceH < distanceW) {

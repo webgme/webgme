@@ -124,6 +124,8 @@
       border: 2px solid #000000; }
     .diagram-designer .items svg.connection-container {
       z-index: -1; }
+      .diagram-designer .items svg.connection-container .designer-connection.designer-connection-shadow.connection-hover, .diagram-designer .items svg.connection-container .designer-connection.designer-connection-shadow:hover {
+        opacity: 0.5 !important; }
       .diagram-designer .items svg.connection-container .new-segment-point-marker {
         pointer-events: none;
         fill: #FFFF00;
