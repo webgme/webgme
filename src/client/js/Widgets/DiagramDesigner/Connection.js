@@ -475,10 +475,12 @@ define([
                     if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
                         this._createPathShadow(this._pathPoints);
                         this.skinParts.path.hover(function () {
-                            this.attr('class', DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_HOVER_CLASS);
+                            this.node.setAttribute('class',
+                                DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_HOVER_CLASS);
                         },
                         function () {
-                            this.attr('class', DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_CLASS);
+                            this.node.setAttribute('class',
+                                DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_CLASS);
                         },
                         this.skinParts.pathShadow,
                         this.skinParts.pathShadow);
@@ -550,10 +552,10 @@ define([
             len;
 
         bBoxPath = this._calcRawBoundingBox();
-        if (this.skinParts.pathShadow) {
-            strokeWidthAdjust = this.designerAttributes.shadowWidth;
-            shadowAdjust = this.designerAttributes.shadowArrowEndAdjust;
-        } else if (this.skinParts.path) {
+        // if (this.skinParts.pathShadow) {
+        //     strokeWidthAdjust = this.designerAttributes.shadowWidth;
+        //     shadowAdjust = this.designerAttributes.shadowArrowEndAdjust;
+        if (this.skinParts.path) {
             strokeWidthAdjust = this.designerAttributes.width;
         }
 
