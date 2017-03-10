@@ -67,14 +67,24 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
         return indices;
     }
 
-    function checkNodeTypesAndCardinality(core, nodes, subMetaRules, checkTypeText, singular) {
+    function metaNodePathToName(core, metaNodes, path) {
+        var name = 'Unknown';
+        if (metaNodes[path]) {
+            name = core.getAttribute(metaNodes[path], 'name');
+        }
+
+        return name;
+    }
+
+    function checkNodeTypesAndCardinality(core, node, nodes, subMetaRules, checkTypeText, singular) {
         var matches = [],
-            i,
-            j,
+            metaNodes = core.getAllMetaNodes(node),
             result = {
                 hasViolation: false,
                 messages: []
             },
+            i,
+            j,
             matchedIndices;
         /*
          * example subMetaRules
@@ -113,11 +123,13 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
         for (i = 0; i < subMetaRules.items.length; i += 1) {
             if (subMetaRules.minItems[i] > -1 && subMetaRules.minItems[i] > matches[i]) {
                 result.hasViolation = true;
-                result.messages.push('Fewer ' + checkTypeText + ' than needed - there should be ' +
+                result.messages.push('Fewer ' + checkTypeText + ' (' +
+                    metaNodePathToName(core, metaNodes, subMetaRules.items[i]) + ') than needed - there should be ' +
                     subMetaRules.minItems[i] + ' but only ' + matches[i] + ' found.');
             } else if (subMetaRules.maxItems[i] > -1 && subMetaRules.maxItems[i] < matches[i]) {
                 result.hasViolation = true;
-                result.messages.push('More ' + checkTypeText + ' than allowed - there can only be ' +
+                result.messages.push('More ' + checkTypeText + '(' +
+                    metaNodePathToName(core, metaNodes, subMetaRules.items[i]) + ') than allowed - there can only be ' +
                     subMetaRules.maxItems[i] + ' but ' + matches[i] + ' found.');
             }
         }
@@ -156,8 +168,8 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 }
                 return loadNodes(core, node, pointerPaths)
                     .then(function (nodes) {
-                        return checkNodeTypesAndCardinality(core, nodes, metaPointer, '"' + pointerName + '" target',
-                            true);
+                        return checkNodeTypesAndCardinality(core, node, nodes, metaPointer,
+                            '"' + pointerName + '" target', true);
                     });
             }
         });
@@ -223,7 +235,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 memberPaths = core.getMemberPaths(node, setName);
                 return loadNodes(core, node, memberPaths)
                     .then(function (nodes) {
-                        return checkNodeTypesAndCardinality(core, nodes, metaSet, '"' + setName + '"-members');
+                        return checkNodeTypesAndCardinality(core, node, nodes, metaSet, '"' + setName + '"-members');
                     });
             }
         });
@@ -244,7 +256,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
     function checkChildrenRules(meta, core, node, callback) {
         return core.loadChildren(node)
             .then(function (nodes) {
-                return checkNodeTypesAndCardinality(core, nodes, meta.children, 'children');
+                return checkNodeTypesAndCardinality(core, node, nodes, meta.children, 'children');
             })
             .nodeify(callback);
     }

@@ -309,7 +309,7 @@ describe('Meta Rules', function () {
             })
             .then(function (result) {
                 expect(result.hasViolation).to.equal(true);
-                expect(result.message).to.contain('Fewer children than');
+                expect(result.message).to.contain('Fewer children (FCO) than');
             })
             .nodeify(done);
     });
