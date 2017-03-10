@@ -452,7 +452,7 @@ Storage.prototype.loadObjects = function (data, callback) {
         .then(function (project) {
 
             function loadObject(hash) {
-                return project.loadObject(hash);
+                return storageHelpers.loadObject(project,hash);
             }
 
             Q.allSettled(data.hashes.map(loadObject))

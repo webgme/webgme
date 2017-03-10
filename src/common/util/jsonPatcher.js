@@ -12,8 +12,9 @@
 define([
     'common/util/canon',
     'common/util/random',
-    'common/core/constants'
-], function (CANON, RANDOM, CORE_CONSTANTS) {
+    'common/core/constants',
+    'common/regexp'
+], function (CANON, RANDOM, CORE_CONSTANTS, REGEXP) {
 
     'use strict';
 
@@ -50,6 +51,10 @@ define([
             return false;
         }
 
+        if (path === '') {
+            return true;
+        }
+
         var relIds = path.split('/'),
             result = false,
             i;
@@ -65,19 +70,11 @@ define([
         return result;
     }
 
-    function diff(source, target, basePath, excludeList, noUpdate, innerPath) {
+    function diff(source, target, basePath, excludeList, noUpdate, innerPath, overlay, inOverlay) {
         var result = [],
-            overlay = false,
-            inOverlay = false,
             patchItem,
             path,
             i;
-
-        if (basePath === '/ovr/') {
-            overlay = true;
-        } else if (_startsWith(basePath, '/ovr/')) {
-            inOverlay = true;
-        }
 
         //add
         for (i in target) {
@@ -93,23 +90,19 @@ define([
                         patchItem.partialUpdates = [];
                         patchItem.updates = [];
                         if (inOverlay) {
+                            if (_isGmePath(innerPath)) {
+                                patchItem.updates.push(innerPath);
+                            }
                             if (_isGmePath(target[i])) {
                                 patchItem.partialUpdates.push(target[i]);
-                                if (_isGmePath(innerPath)) {
-                                    patchItem.updates.push(innerPath);
-                                }
-                            } else if (target[i] === '/_nullptr') {
-                                patchItem.updates.push('');
                             }
                         } else {
+                            if (_isGmePath(i)) {
+                                patchItem.updates.push(i);
+                            }
                             for (path in target[i]) {
                                 if (_isGmePath(target[i][path])) {
                                     patchItem.partialUpdates.push(target[i][path]);
-                                    if (_isGmePath(i)) {
-                                        patchItem.updates.push(i);
-                                    }
-                                } else if (target[i][path] === '/_nullptr') {
-                                    patchItem.updates.push('');
                                 }
                             }
                         }
@@ -135,20 +128,16 @@ define([
                         if (inOverlay) {
                             patchItem.partialUpdates = [];
                             patchItem.updates = [];
+                            if (_isGmePath(innerPath)) {
+                                patchItem.updates.push(innerPath);
+                            }
 
                             if (_isGmePath(target[i])) {
                                 patchItem.partialUpdates.push(target[i]);
-                                if (_isGmePath(innerPath)) {
-                                    patchItem.updates.push(innerPath);
-                                }
-                            } else if (target[i] === '/_nullptr') {
-                                patchItem.updates.push('');
                             }
 
                             if (_isGmePath(source[i])) {
                                 patchItem.partialUpdates.push(source[i]);
-                            } else if (source[i] === '/_nullptr') {
-                                patchItem.updates.push('');
                             }
                         }
 
@@ -172,23 +161,19 @@ define([
                         patchItem.partialUpdates = [];
                         patchItem.updates = [];
                         if (inOverlay) {
+                            if (_isGmePath(innerPath)) {
+                                patchItem.updates.push(innerPath);
+                            }
                             if (_isGmePath(source[i])) {
                                 patchItem.partialUpdates.push(source[i]);
-                                if (_isGmePath(innerPath)) {
-                                    patchItem.updates.push(innerPath);
-                                }
-                            } else if (source[i] === '/_nullptr') {
-                                patchItem.updates.push('');
                             }
                         } else {
+                            if (_isGmePath(i)) {
+                                patchItem.updates.push(i);
+                            }
                             for (path in source[i]) {
                                 if (_isGmePath(source[i][path])) {
                                     patchItem.partialUpdates.push(source[i][path]);
-                                    if (_isGmePath(i)) {
-                                        patchItem.updates.push(i);
-                                    }
-                                } else if (source[i][path] === '/_nullptr') {
-                                    patchItem.updates.push('');
                                 }
                             }
                         }
@@ -202,6 +187,88 @@ define([
         return result;
     }
 
+    function _isEmptyObject(object) {
+        for (var key in object) {
+            return false;
+        }
+        return true;
+    }
+
+    function wholeShardDiff(items, isAddition) {
+        var patchItem = {
+                updates: [],
+                partialUpdates: []
+            },
+            source,
+            name;
+
+        patchItem.op = 'replace';
+        patchItem.path = '/items';
+
+        if (isAddition) {
+            patchItem.value = items;
+        } else {
+            patchItem.value = {};
+        }
+
+        for (source in items) {
+            patchItem.updates.push(source);
+            for (name in items[source]) {
+                if (_isGmePath(items[source][name])) {
+                    patchItem.partialUpdates.push(items[source][name]);
+                }
+            }
+        }
+
+        return patchItem;
+    }
+
+    function overlayShardDiff(sourceJson, targetJson) {
+        var patch,
+            key,
+            sourceEmpty = _isEmptyObject(sourceJson.items || {}),
+            targetEmpty = _isEmptyObject(targetJson.items || {});
+
+        patch = diff(sourceJson, targetJson, '/', ['_id', 'type', 'items'], false, '', false, false);
+
+        if (sourceEmpty && targetEmpty) {
+            // Do nothing as nothing have changed
+        } else if (sourceEmpty) {
+            patch.push(wholeShardDiff(targetJson.items, true));
+        } else if (targetEmpty) {
+            patch.push(wholeShardDiff(sourceJson.items, false));
+        } else {
+            patch = patch
+                .concat(diff(sourceJson.items || {}, targetJson.items || {}, '/items/', [], true, '', true, false));
+            for (key in sourceJson.items) {
+                if (targetJson.items.hasOwnProperty(key)) {
+                    patch = patch.concat(diff(
+                        sourceJson.items[key],
+                        targetJson.items[key],
+                        '/items/' + _strEncode(key) + '/',
+                        [],
+                        false,
+                        key,
+                        false,
+                        true));
+                }
+            }
+        }
+
+        return patch;
+    }
+
+    function getShardingDiff(commonOverlay, shardedOverlay) {
+        var patchItem = {
+            op: 'replace',
+            path: '/ovr',
+            value: shardedOverlay,
+            preShardRelations: commonOverlay
+        };
+
+        return patchItem;
+    }
+
     function create(sourceJson, targetJson) {
         var patch,
             patchItem,
@@ -209,12 +276,17 @@ define([
             i,
             key;
 
+        //if it is an overlay shard, we make a more simple diff
+        if (sourceJson.type === 'shard' && targetJson.type === 'shard') {
+            return overlayShardDiff(sourceJson, targetJson);
+        }
+
         //main level diff
-        patch = diff(sourceJson, targetJson, '/', ['_id', 'ovr', 'atr', 'reg', '_sets'], false);
+        patch = diff(sourceJson, targetJson, '/', ['_id', 'ovr', 'atr', 'reg', '_sets'], false, '', false, false);
 
         //atr
         if (sourceJson.atr && targetJson.atr) {
-            patch = patch.concat(diff(sourceJson.atr, targetJson.atr, '/atr/', [], false));
+            patch = patch.concat(diff(sourceJson.atr, targetJson.atr, '/atr/', [], false, '', false, false));
         } else if (sourceJson.atr) {
             patch.push({
                 op: 'remove',
@@ -230,7 +302,7 @@ define([
 
         //reg
         if (sourceJson.reg && targetJson.reg) {
-            patch = patch.concat(diff(sourceJson.reg, targetJson.reg, '/reg/', [], false));
+            patch = patch.concat(diff(sourceJson.reg, targetJson.reg, '/reg/', [], false, '', false, false));
         } else if (sourceJson.reg) {
             patch.push({
                 op: 'remove',
@@ -246,12 +318,18 @@ define([
 
         //_sets
         if (sourceJson._sets && targetJson._sets) {
-            patch = patch.concat(diff(sourceJson._sets, targetJson._sets, '/_sets/', [], true));
+            patch = patch.concat(diff(sourceJson._sets, targetJson._sets, '/_sets/', [], true, '', false, false));
             for (key in targetJson._sets) {
                 if (sourceJson._sets[key]) {
-                    patch = patch.concat(
-                        diff(sourceJson._sets[key], targetJson._sets[key], '/_sets/' + _strEncode(key) + '/', [], false)
-                    );
+                    patch = patch.concat(diff(
+                        sourceJson._sets[key],
+                        targetJson._sets[key],
+                        '/_sets/' + _strEncode(key) + '/',
+                        [],
+                        false,
+                        '',
+                        false,
+                        false));
                 }
             }
         } else if (sourceJson._sets) {
@@ -269,12 +347,25 @@ define([
 
         //ovr
         if (sourceJson.ovr && targetJson.ovr) {
-            patch = patch.concat(diff(sourceJson.ovr, targetJson.ovr, '/ovr/', [], true));
-            for (key in targetJson.ovr) {
-                if (sourceJson.ovr[key]) {
-                    patch = patch.concat(
-                        diff(sourceJson.ovr[key], targetJson.ovr[key], '/ovr/' + _strEncode(key) + '/', [], false, key)
-                    );
+            if (sourceJson.ovr.sharded !== true && targetJson.ovr.sharded === true) {
+                // Transformation into sharded overlays means that we have to collect update information.
+                patch.push(getShardingDiff(sourceJson.ovr, targetJson.ovr));
+            } else if (sourceJson.ovr.sharded === true && targetJson.ovr.sharded === true) {
+                patch = patch.concat(diff(sourceJson.ovr, targetJson.ovr, '/ovr/', [], false, '', true, false));
+            } else {
+                patch = patch.concat(diff(sourceJson.ovr, targetJson.ovr, '/ovr/', [], true, '', true, false));
+                for (key in targetJson.ovr) {
+                    if (sourceJson.ovr[key]) {
+                        patch = patch.concat(diff(
+                            sourceJson.ovr[key],
+                            targetJson.ovr[key],
+                            '/ovr/' + _strEncode(key) + '/',
+                            [],
+                            false,
+                            key,
+                            false,
+                            true));
+                    }
                 }
             }
         } else if (sourceJson.ovr || targetJson.ovr) {
@@ -292,7 +383,7 @@ define([
             }
 
             // For ovr removal/addition we need to compute updates/partialUpdates
-            diffRes = diff(sourceJson.ovr || {}, targetJson.ovr || {}, '/ovr/', [], true);
+            diffRes = diff(sourceJson.ovr || {}, targetJson.ovr || {}, '/ovr/', [], true, '', true, false);
             for (i = 0; i < diffRes.length; i += 1) {
                 patchItem.partialUpdates = patchItem.partialUpdates.concat(diffRes[i].partialUpdates);
                 patchItem.updates = patchItem.updates.concat(diffRes[i].updates);
@@ -430,6 +521,187 @@ define([
         }
     }
 
+    function _isShardChange(patchItem) {
+        if (!_isOvr(patchItem.path)) {
+            return false;
+        }
+
+        if (patchItem.op === 'add' || patchItem.op === 'replace') {
+            return REGEXP.HASH.test(patchItem.value);
+        }
+    }
+
+    function _getChangedNodesFromShard(patch, res, hash, gmePath) {
+        var shardPatch = patch[hash] && patch[hash].patch ? patch[hash] && patch[hash].patch : patch[hash],
+            source,
+            name,
+            i, j,
+            absGmePath;
+
+        if (!shardPatch) {
+            return;
+        }
+
+        if (shardPatch instanceof Array) {
+            // patch objects
+            for (i = 0; i < shardPatch.length; i += 1) {
+                if (shardPatch[i].updates instanceof Array) {
+                    for (j = 0; j < shardPatch[i].updates.length; j += 1) {
+                        absGmePath = gmePath + shardPatch[i].updates[j];
+                        if (_inLoadOrUnload(res, absGmePath) === false) {
+                            res.update[absGmePath] = true;
+                        }
+                    }
+                }
+
+                if (shardPatch[i].partialUpdates instanceof Array) {
+                    for (j = 0; j < shardPatch[i].partialUpdates.length; j += 1) {
+                        absGmePath = gmePath + shardPatch[i].partialUpdates[j];
+                        if (_inLoadOrUnload(res, absGmePath) === false) {
+                            res.partialUpdate[absGmePath] = true;
+                        }
+                    }
+                }
+            }
+        } else {
+            // completely new shard
+            for (source in shardPatch.items || {}) {
+                for (name in shardPatch.items[source]) {
+                    absGmePath = gmePath + source;
+                    if (_inLoadOrUnload(res, absGmePath) === false) {
+                        res.update[absGmePath] = true;
+                    }
+
+                    absGmePath = gmePath + shardPatch.items[source][name];
+                    if (_inLoadOrUnload(res, absGmePath) === false) {
+                        res.partialUpdate[absGmePath] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    function _getChangedNodesFromSharding(patch, patchItem, res, gmePath) {
+        var shards = [],
+            shardId,
+            absGmePath,
+            preShardRelations = patchItem.preShardRelations,
+            foundSource,
+            source,
+            name,
+            i;
+
+        for (shardId in patchItem.value) {
+            if (REGEXP.HASH.test(patchItem.value[shardId])) {
+                if (patch[patchItem.value[shardId]]) {
+                    shards.push(patch[patchItem.value[shardId]]);
+                }
+            }
+        }
+
+        // First handle those relations where we have the source in both states
+        for (source in preShardRelations) {
+            foundSource = false;
+            for (i = 0; i < shards.length; i += 1) {
+                if (shards[i].items.hasOwnProperty(source)) {
+                    foundSource = true;
+                    // check the removal and updates
+                    for (name in preShardRelations[source]) {
+                        if (shards[i].items[source].hasOwnProperty(name)) {
+                            if (shards[i].items[source][name] !== preShardRelations[source][name]) {
+                                // update
+                                absGmePath = gmePath + source;
+                                if (_inLoadOrUnload(res, absGmePath) === false) {
+                                    res.update[absGmePath] = true;
+                                }
+
+                                if (_isGmePath(preShardRelations[source][name])) {
+                                    absGmePath = gmePath + preShardRelations[source][name];
+                                    if (_inLoadOrUnload(res, absGmePath) === false) {
+                                        res.partialUpdate[absGmePath] = true;
+                                    }
+                                }
+
+                                if (_isGmePath(shards[i].items[source][name])) {
+                                    absGmePath = gmePath + shards[i].items[source][name];
+                                    if (_inLoadOrUnload(res, absGmePath) === false) {
+                                        res.partialUpdate[absGmePath] = true;
+                                    }
+                                }
+                            }
+                        } else {
+                            // remove
+                            absGmePath = gmePath + source;
+                            if (_inLoadOrUnload(res, absGmePath) === false) {
+                                res.update[absGmePath] = true;
+                            }
+
+                            if (_isGmePath(preShardRelations[source][name])) {
+                                absGmePath = gmePath + preShardRelations[source][name];
+                                if (_inLoadOrUnload(res, absGmePath) === false) {
+                                    res.partialUpdate[absGmePath] = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // check additions
+                    for (name in shards[i].items[source]) {
+                        if (preShardRelations[source].hasOwnProperty(name) === false) {
+                            absGmePath = gmePath + source;
+                            if (_inLoadOrUnload(res, absGmePath) === false) {
+                                res.update[absGmePath] = true;
+                            }
+
+                            if (_isGmePath(shards[i].items[source][name])) {
+                                absGmePath = gmePath + shards[i].items[source][name];
+                                if (_inLoadOrUnload(res, absGmePath) === false) {
+                                    res.partialUpdate[absGmePath] = true;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+
+            if (!foundSource) {
+                // All relations from this source was removed
+                absGmePath = gmePath + source;
+                if (_inLoadOrUnload(res, absGmePath) === false) {
+                    res.update[absGmePath] = true;
+                }
+
+                for (name in preShardRelations[source]) {
+                    absGmePath = gmePath + preShardRelations[source][name];
+                    if (_inLoadOrUnload(res, absGmePath) === false) {
+                        res.partialUpdate[absGmePath] = true;
+                    }
+                }
+            }
+        }
+
+        // Finally check for completely new sources
+        for (i = 0; i < shards.length; i += 1) {
+            for (source in shards[i].items) {
+                if (preShardRelations.hasOwnProperty(source) === false) {
+                    // All relations from this source was removed
+                    absGmePath = gmePath + source;
+                    if (_inLoadOrUnload(res, absGmePath) === false) {
+                        res.update[absGmePath] = true;
+                    }
+
+                    for (name in shards[i].items[source]) {
+                        absGmePath = gmePath + shards[i].items[source][name];
+                        if (_inLoadOrUnload(res, absGmePath) === false) {
+                            res.partialUpdate[absGmePath] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function _getChangedNodesRec(patch, res, hash, gmePath) {
         var nodePatches = patch[hash] && patch[hash].patch, // Changes regarding node with hash
             i, j,
@@ -445,7 +717,12 @@ define([
         for (i = 0; i < nodePatches.length; i += 1) {
             patchPath = nodePatches[i].path;
 
-            if (_isOvr(patchPath) === true) {
+            if (nodePatches[i].op === 'replace' && typeof nodePatches[i].preShardRelations === 'object') {
+                //special case when the overlay is converted
+                _getChangedNodesFromSharding(patch, nodePatches[i], res, gmePath);
+            } else if (_isShardChange(nodePatches[i])) {
+                _getChangedNodesFromShard(patch, res, nodePatches[i].value, gmePath);
+            } else if (_isOvr(patchPath) === true) {
                 // Now handle the updates
                 for (j = 0; j < nodePatches[i].partialUpdates.length; j += 1) {
                     absGmePath = gmePath + nodePatches[i].partialUpdates[j];

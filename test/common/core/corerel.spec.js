@@ -303,4 +303,243 @@ describe('corerel', function () {
             }, myCore.loadChildren(root));
         }, myCore.loadRoot(myCore.getHash(root)));
     });
+
+    describe('sharded overlay handling', function () {
+        var shardedProject,
+            shardedProjectName = 'shardingTestProject',
+            shardingConfig = JSON.parse(JSON.stringify(gmeConfig)),
+            shardCore,
+            savedShardHash,
+            shardRoot;
+
+        function fillUpWithChildren(number) {
+            var childArray = [];
+
+            while (number--) {
+                childArray.unshift(shardCore.createNode({parent: shardRoot, relid: number + ''}));
+                shardCore.setPointer(childArray[0], 'parent', shardRoot);
+            }
+
+            return childArray;
+        }
+
+        before(function (done) {
+            shardingConfig.core.overlayShardSize = 6;
+
+            storage.openDatabase()
+                .then(function () {
+                    return storage.createProject({projectName: shardedProjectName});
+                })
+                .then(function (dbProject) {
+                    shardedProject = new testFixture.Project(dbProject, storage, logger, shardingConfig);
+
+                    shardCore = new Core(shardedProject, {
+                        globConf: shardingConfig,
+                        logger: testFixture.logger.fork('corerel:core:shard')
+                    });
+
+                    shardRoot = shardCore.createNode();
+                    fillUpWithChildren(12);
+                    shardCore.persist(shardRoot);
+                    savedShardHash = shardCore.getHash(shardRoot);
+
+                    shardCore._inverseCache._backup = {};
+                    shardCore._inverseCache._cache = {};
+                    shardCore._inverseCache._size = 0;
+
+                })
+                .then(done)
+                .catch(done);
+        });
+
+        beforeEach(function () {
+            shardRoot = shardCore.createNode();
+        });
+
+        it('should split the original overlay once the number of relations reaches the limit', function () {
+            var childArray;
+
+            expect(shardRoot.data.ovr || {}).not.to.have.keys(['sharded']);
+            childArray = fillUpWithChildren(4);
+            expect(childArray).to.have.length(4);
+            expect(shardRoot.data.ovr.sharded).to.equal(true);
+            expect(Object.keys(shardRoot.data.ovr)).to.have.length(3);
+        });
+
+        it('should not split the original overlay until the number of relations reaches the limit', function () {
+            var childArray;
+
+            expect(shardRoot.data.ovr || {}).not.to.have.keys(['sharded']);
+            childArray = fillUpWithChildren(2);
+            expect(childArray).to.have.length(2);
+            expect(shardRoot.data.ovr.sharded).to.equal(undefined);
+            expect(shardRoot.data.ovr._mutable).to.equal(true);
+        });
+
+        it('should persist the sharded overlay', function () {
+            var childArray = [],
+                persisted;
+
+            childArray = fillUpWithChildren(4);
+
+            persisted = shardCore.persist(shardRoot);
+            expect(Object.keys(persisted.objects)).to.have.length(3);
+        });
+
+        it('should persist the sharded overlay with proper amount of shards', function () {
+            var childArray = [],
+                persisted;
+
+            childArray = fillUpWithChildren(18);
+
+            persisted = shardCore.persist(shardRoot);
+            expect(Object.keys(persisted.objects)).to.have.length(5);
+        });
+
+        it('should not reserve new shard for already used source', function () {
+            var childArray = [],
+                i;
+
+            childArray = fillUpWithChildren(4);
+
+            for (i = 1; i < childArray.length; i += 1) {
+                shardCore.setPointer(childArray[0], 'sibling' + i, childArray[i]);
+            }
+
+            expect(Object.keys(shardRoot.overlays)).to.have.length(1);
+        });
+
+        it('should use the smallest shard even if one other gets smaller during changes', function () {
+            var childArray = [],
+                i,
+                oldSmallest,
+                extraChild,
+                smallestShardId;
+
+            childArray = fillUpWithChildren(6);
+
+            smallestShardId = shardRoot.minimalOverlayShardId;
+            oldSmallest = smallestShardId;
+            expect(typeof smallestShardId).to.equal('string');
+            shardCore.setPointer(shardRoot, 'child0', childArray[0]);
+            smallestShardId = shardRoot.minimalOverlayShardId;
+            expect(oldSmallest).not.to.equal(smallestShardId);
+
+            for (i = 0; i < 6; i += 1) {
+                shardCore.deletePointer(childArray[i], 'parent');
+            }
+            expect(smallestShardId).to.equal(shardRoot.minimalOverlayShardId);
+            expect(shardRoot.overlays[smallestShardId].itemCount).to.equal(1);
+
+            extraChild = shardCore.createNode({parent: shardRoot});
+            shardCore.setPointer(extraChild, 'parent', shardRoot);
+            expect(smallestShardId).to.equal(shardRoot.minimalOverlayShardId);
+            expect(shardRoot.overlays[smallestShardId].itemCount).to.equal(2);
+        });
+
+        it('should load sharded overlays', function (done) {
+            TASYNC.call(function (root) {
+                expect(Object.keys(root.overlays)).to.have.length(2);
+                done();
+            }, shardCore.loadRoot(savedShardHash));
+        });
+
+        it('should be able to get target from sharded overlays', function (done) {
+            TASYNC.call(function (root) {
+                TASYNC.call(function (children) {
+                    var i;
+                    for (i = 0; i < children.length; i += 1) {
+                        expect(shardCore.getPointerPath(children[i], 'parent')).to.equal('');
+                    }
+                    done();
+                }, shardCore.loadChildren(root));
+            }, shardCore.loadRoot(savedShardHash));
+        });
+
+        it('should be able to get sources from sharded overlays', function (done) {
+            TASYNC.call(function (root) {
+                var sources = shardCore.getCollectionPaths(root, 'parent');
+                expect(sources).to.have.length(12);
+                done();
+            }, shardCore.loadRoot(savedShardHash));
+        });
+
+        it('should be able to handle unknown pointer from sharded overlays', function (done) {
+            TASYNC.call(function (root) {
+                TASYNC.call(function (children) {
+                    expect(children).to.have.length(12);
+                    expect(shardCore.getPointerPath(children[0], 'unknown')).to.equal(undefined);
+                    done();
+                }, shardCore.loadChildren(root));
+            }, shardCore.loadRoot(savedShardHash));
+        });
+
+        it('should be able to removal of relations from sharded overlays', function (done) {
+            TASYNC.call(function (root) {
+                TASYNC.call(function (children) {
+                    var i;
+                    expect(children).to.have.length(12);
+                    for (i = 0; i < children.length; i += 1) {
+                        shardCore.deletePointer(children[i], 'parent');
+                    }
+                    expect(shardCore.getCollectionPaths(root, 'parent')).to.have.length(0);
+                    done();
+                }, shardCore.loadChildren(root));
+            }, shardCore.loadRoot(savedShardHash));
+        });
+
+        it('should stack relations from the same source into the same shard', function (done) {
+            var oldItemCounter;
+            TASYNC.call(function (root) {
+                oldItemCounter = Object.keys(root.data.ovr).length;
+                TASYNC.call(function (children) {
+                    var i;
+                    expect(children).to.have.length(12);
+                    for (i = 0; i < children.length; i += 1) {
+                        shardCore.setPointer(root, 'child' + i, children[i]);
+                    }
+                    expect(Object.keys(root.data.ovr)).to.have.length(oldItemCounter + 2);
+                    done();
+                }, shardCore.loadChildren(root));
+            }, shardCore.loadRoot(savedShardHash));
+        });
+
+        it('should copy node with sharded overlays as well', function (done) {
+            TASYNC.call(function (root) {
+                TASYNC.call(function (children) {
+                    expect(children).to.have.length(12);
+                    var newChild = shardCore.copyNode(children[0], root);
+                    expect(newChild).not.to.equal(undefined);
+                    expect(newChild).not.to.equal(null);
+                    expect(shardCore.getPointerNames(newChild)).to.eql(['parent']);
+                    expect(shardCore.getPointerPath(newChild, 'parent')).to.equal('');
+                    done();
+                }, shardCore.loadChildren(root));
+            }, shardCore.loadRoot(savedShardHash));
+        });
+
+        it('should remove shard only after second empty persist', function () {
+            var root = shardCore.createNode(),
+                children = [],
+                i;
+
+            for (i = 0; i < 8; i += 1) {
+                children.unshift(shardCore.createNode({parent: root}));
+                shardCore.setPointer(children[0], 'parentA', root);
+                shardCore.setPointer(children[0], 'parentB', root);
+            }
+            expect(Object.keys(root.overlays)).to.have.length(3);
+            for (i = 0; i < 2; i += 1) {
+                shardCore.deletePointer(children[i], 'parentA');
+                shardCore.deletePointer(children[i], 'parentB');
+            }
+            expect(Object.keys(root.overlays)).to.have.length(3);
+            shardCore.persist(root);
+            expect(Object.keys(root.overlays)).to.have.length(3);
+            shardCore.setPointer(children[2], 'parentA', root);
+            expect(Object.keys(root.overlays)).to.have.length(3);
+            shardCore.persist(root);
+            expect(Object.keys(root.overlays)).to.have.length(2);
+        });
+    });
 });

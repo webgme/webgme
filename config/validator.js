@@ -148,6 +148,10 @@ function validateConfig(configOrFileName) {
     // core
     expectedKeys.push('core');
     assertBoolean('config.core.enableCustomConstraints', config.core.enableCustomConstraints);
+    assertNumber('config.core.overlayShardSize', config.core.overlayShardSize);
+    if(config.core.overlayShardSize < 1000){
+        throw new Error('Overlay shard size must be at least 1000.');
+    }
 
     // debug
     expectedKeys.push('debug');

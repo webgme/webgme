@@ -12,8 +12,9 @@ define([
     'common/util/random',
     'common/regexp',
     'common/core/constants',
+    'common/storage/constants',
     'common/core/convertData'
-], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS, convertData) {
+], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS, STORAGE_CONSTANTS, convertData) {
 
     'use strict';
 
@@ -30,13 +31,16 @@ define([
             roots = [],
             ticks = 0,
             mutateCount = 0,
-            stackedObjects = {},
             self = this;
 
         storage.loadObject = TASYNC.wrap(storage.loadObject);
 
         this.loadPaths = TASYNC.wrap(storage.loadPaths);
+        this.loadObject = storage.loadObject;
+        this.insertObject = storage.insertObject;
         this.logger = logger;
+
+        this.ID_NAME = ID_NAME;
 
         function ASSERT_IS_OBJECT(value) {
             ASSERT(value !== null && typeof value === 'object' && value instanceof Array === false);
@@ -161,7 +165,7 @@ define([
             return relid.charAt(0) !== '_';
         }
 
-        function __saveData(data, root, path) {
+        function __saveData(data, root, path, stackedObjects) {
             ASSERT(__isMutableData(data));
             var cleanData;
 
@@ -177,7 +181,7 @@ define([
                 key = keys[i];
                 child = data[key];
                 if (__isMutableData(child)) {
-                    sub = __saveData(child, root, path + '/' + key);
+                    sub = __saveData(child, root, path + '/' + key, stackedObjects);
                     if (JSON.stringify(sub) === JSON.stringify(__getEmptyData())) {
                         delete data[key];
                     } else {
@@ -196,6 +200,7 @@ define([
                 ASSERT(hash === '' || hash === undefined);
 
                 if (hash === '') {
+                    data.__v = STORAGE_CONSTANTS.VERSION;
                     //TODO: This is a temporary fix. We should modify CANON.
                     cleanData = JSON.parse(JSON.stringify(data));
                     hash = '#' + GENKEY(cleanData, gmeConfig);
@@ -564,6 +569,12 @@ define([
             return child;
         };
 
+        this.childLoaded = function (node, relid) {
+            ASSERT(typeof relid === 'string' && relid !== ID_NAME);
+            node = self.normalize(node);
+            return __getChildNode(node.children, relid) !== null;
+        };
+
         this.createChild = function (node, takenRelids, minimumLength) {
             node = self.normalize(node);
 
@@ -819,10 +830,11 @@ define([
             ASSERT(node.children[ID_NAME] === undefined);
         };
 
-        this.persist = function (node) {
+        this.persist = function (node, stackedObjects) {
             var updated = false,
                 result;
 
+            stackedObjects = stackedObjects || {};
             node = self.normalize(node);
 
             //currently there is no reason to call the persist on a non-root object
@@ -832,11 +844,10 @@ define([
                 return {rootHash: node.data[ID_NAME], objects: {}};
             }
 
-            updated = __saveData(node.data, node, '');
+            updated = __saveData(node.data, node, '', stackedObjects);
             if (updated !== __getEmptyData()) {
                 result = {};
                 result.objects = stackedObjects;
-                stackedObjects = {};
                 result.rootHash = node.data[ID_NAME];
             } else {
                 result = {rootHash: node.data[ID_NAME], objects: {}};

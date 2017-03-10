@@ -66,62 +66,86 @@ define([
         }
 
         this.loadObject = function (key, callback) {
-            var commitId;
+            var commitId,
+                cachedObject,
+                ownCallbacks;
+
             ASSERT(typeof key === 'string' && typeof callback === 'function');
             logger.debug('loadObject', {metadata: key});
 
-            var obj = cache[key];
-            if (typeof obj === 'undefined') {
-                obj = backup[key];
-                if (typeof obj === 'undefined') {
+            cachedObject = cache[key];
+            if (typeof cachedObject === 'undefined') {
+                cachedObject = backup[key];
+                if (typeof cachedObject === 'undefined') {
                     for (commitId in self.queuedPersists) {
                         if (self.queuedPersists.hasOwnProperty(commitId) && self.queuedPersists[commitId][key]) {
-                            obj = self.queuedPersists[commitId][key];
+                            cachedObject = self.queuedPersists[commitId][key];
                             break;
                         }
                     }
-                    if (typeof obj === 'undefined') {
-                        obj = missing[key];
-                        if (typeof obj === 'undefined') {
-                            obj = [callback];
-                            missing[key] = obj;
+                    if (typeof cachedObject === 'undefined') {
+                        ownCallbacks = missing[key];
+                        if (typeof ownCallbacks === 'undefined') {
+                            ownCallbacks = [callback];
+                            missing[key] = ownCallbacks;
                             logger.debug('object set to be loaded from storage');
-                            storage.loadObject(projectId, key, function (err, obj2) {
-                                ASSERT(typeof obj2 === 'object' || typeof obj2 === 'undefined');
+                            storage.loadObject(projectId, key, function (err, loadResult) {
+                                ASSERT(typeof loadResult === 'object' || typeof loadResult === 'undefined');
 
-                                if (obj.length !== 0) {
-                                    ASSERT(missing[key] === obj);
+                                var callbacks,
+                                    subKey,
+                                    cb;
 
-                                    delete missing[key];
-                                    if (!err && obj2) {
-                                        cacheInsert(key, obj2);
+                                if ((loadResult || {}).multipleObjects === true) {
+                                    for (subKey in loadResult.objects) {
+                                        callbacks = missing[subKey] || [];
+                                        if (callbacks.length !== 0) {
+                                            delete missing[subKey];
+                                            if (!err && loadResult.objects[subKey]) {
+                                                cacheInsert(subKey, loadResult.objects[subKey]);
+                                            }
+
+                                            while ((cb = callbacks.pop())) {
+                                                cb(err, loadResult.objects[subKey]);
+                                            }
+                                        }
                                     }
+                                } else {
+                                    if (ownCallbacks.length !== 0) {
+                                        ASSERT(missing[key] === ownCallbacks);
 
-                                    var cb;
-                                    while ((cb = obj.pop())) {
-                                        cb(err, obj2);
+                                        delete missing[key];
+                                        if (!err && loadResult) {
+                                            cacheInsert(key, loadResult);
+                                        }
+
+                                        while ((cb = ownCallbacks.pop())) {
+                                            cb(err, loadResult);
+                                        }
                                     }
                                 }
                             });
                         } else {
                             logger.debug('object was already queued to be loaded');
-                            obj.push(callback);
+                            ownCallbacks.push(callback);
                         }
                         return;
                     } else {
                         logger.debug('object was erased from cache and backup but present in queuedPersists');
-                        cacheInsert(key, obj);
+                        cacheInsert(key, cachedObject);
                     }
                 } else {
                     logger.debug('object was in backup');
-                    cacheInsert(key, obj);
+                    cacheInsert(key, cachedObject);
                 }
             } else {
                 logger.debug('object was in cache');
             }
 
-            ASSERT(typeof obj === 'object' && obj !== null && obj[CONSTANTS.MONGO_ID] === key);
-            callback(null, obj);
+            ASSERT(typeof cachedObject === 'object' &&
+                cachedObject !== null &&
+                cachedObject[CONSTANTS.MONGO_ID] === key);
+            callback(null, cachedObject);
         };
 
         /**

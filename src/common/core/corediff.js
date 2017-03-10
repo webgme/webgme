@@ -224,31 +224,8 @@ define(['common/util/canon',
         }
 
         function ovrDiff(source, target) {
-            var getOvrData = function (node) {
-                    var paths, names, i, j,
-                        ovr = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {},
-                        data = {},
-                        base = self.getPath(node);
-
-                    paths = Object.keys(ovr);
-                    for (i = 0; i < paths.length; i++) {
-                        if (paths[i].indexOf('_') === -1) {
-                            data[paths[i]] = {};
-                            names = Object.keys(ovr[paths[i]]);
-                            for (j = 0; j < names.length; j++) {
-                                if (ovr[paths[i]][names[j]] === '/_nullptr') {
-                                    data[paths[i]][names[j]] = null;
-                                } else if (names[j].slice(-4) !== '-inv' && names[j].indexOf('_') === -1 &&
-                                    ovr[paths[i]][names[j]].indexOf('_') === -1) {
-                                    data[paths[i]][names[j]] = self.joinPaths(base, ovr[paths[i]][names[j]]);
-                                }
-                            }
-                        }
-                    }
-                    return data;
-                },
-                sOvr = getOvrData(source),
-                tOvr = getOvrData(target);
+            var sOvr = self.getRawOverlayInformation(source),
+                tOvr = self.getRawOverlayInformation(target);
 
             if (CANON.stringify(sOvr) !== CANON.stringify(tOvr)) {
                 return {source: sOvr, target: tOvr};
