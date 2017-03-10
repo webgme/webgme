@@ -105,9 +105,7 @@ define(['common/util/canon',
                 sAttr = self.getOwnAttribute(source, tNames[i]);
                 tAttr = self.getOwnAttribute(target, tNames[i]);
 
-                if (sAttr === undefined) {
-                    diff[tNames[i]] = tAttr;
-                } else if (CANON.stringify(sAttr) !== CANON.stringify(tAttr)) {
+                if (CANON.stringify(sAttr) !== CANON.stringify(tAttr)) {
                     diff[tNames[i]] = tAttr;
                 }
             }
@@ -125,7 +123,6 @@ define(['common/util/canon',
 
             for (i = 0; i < sNames.length; i++) {
                 if (tNames.indexOf(sNames[i]) === -1) {
-                    // FIXME: This constant should be renamed to something with . or $ (which is illegal in mongo)
                     diff[sNames[i]] = CONSTANTS.TO_DELETE_STRING;
                 }
             }
@@ -133,9 +130,7 @@ define(['common/util/canon',
             for (i = 0; i < tNames.length; i++) {
                 sReg = self.getOwnRegistry(source, tNames[i]);
                 tReg = self.getOwnRegistry(target, tNames[i]);
-                if (sReg === undefined) {
-                    diff[tNames[i]] = tReg;
-                } else if (CANON.stringify(sReg) !== CANON.stringify(tReg)) {
+                if (CANON.stringify(sReg) !== CANON.stringify(tReg)) {
                     diff[tNames[i]] = tReg;
                 }
             }
@@ -144,7 +139,6 @@ define(['common/util/canon',
         }
 
         function childrenDiff(source, target) {
-            // FIXME: Shouldn't these be ownChildren?
             var sRelids = self.getChildrenRelids(source, true),
                 tRelids = self.getChildrenRelids(target, true),
                 tHashes = self.getChildrenHashes(target),
@@ -243,8 +237,6 @@ define(['common/util/canon',
         }
 
         function metaDiff(source, target) {
-            //TODO jsonMeta format should be changed in all places!!!
-            // FIXME: which places??
             var convertJsonMeta = function (jsonMeta) {
                     var i, j, names, itemsObject;
                     //children

@@ -673,6 +673,10 @@ define([
                 }
 
                 for (name in preShardRelations[source]) {
+                    if (preShardRelations[source][name] instanceof Array) {
+                        // Sharding from v < 1 with inverse relations stored.
+                        continue;
+                    }
                     absGmePath = gmePath + preShardRelations[source][name];
                     if (_inLoadOrUnload(res, absGmePath) === false) {
                         res.partialUpdate[absGmePath] = true;
