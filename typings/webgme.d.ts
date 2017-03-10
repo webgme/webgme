@@ -3,8 +3,6 @@
 // Definitions by: Fred Eisele <https://github.com/phreed>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-/// <reference types="node" />
-
 // Based on examination of
 // Example: https://github.com/typed-typings/env-node/blob/master/0.12/node.d.ts
 // Source: https://raw.githubusercontent.com/phreed/typed-npm-webgme/master/webgme.d.ts
@@ -13,14 +11,10 @@
 declare module "blob/BlobMetadata" {
     export default class BlobMetadata implements Blobs.BlobMetadata {
         constructor();
-        name: string;
-        size: number;
-        mime: string;
-        context: Core.DataObject;
-        contentType: string;
     }
 }
 
+type Promise<T> = any;
 
 
 declare module "plugin/PluginConfig" {
@@ -76,7 +70,9 @@ declare module "js/Utils/PreferencesHelper" {
 
 declare module "plugin/PluginBase" {
     // const pb: GmePlugin.PluginBase;
-    export = GmePlugin.PluginBase;
+    export default class PluginBase implements GmePlugin.PluginBase {
+    constructor();
+    }
 }
 
 declare namespace Gme {
@@ -2183,7 +2179,7 @@ declare namespace GmeClasses {
         createBranch: {
             /** Name of branch to create. */
             (branchName: string, newHash: GmeStorage.CommitHash, callback: GmeCommon.ResultCallback<GmeStorage.CommitResult>): void;
-            (branchName: string, newHash: GmeStorage.CommitHash, ): Promise<GmeStorage.CommitResult>;
+            (branchName: string, newHash: GmeStorage.CommitHash): Promise<GmeStorage.CommitResult>;
         }
         /**
          * Creates a new tag pointing to the provided commit hash.
@@ -2198,7 +2194,7 @@ declare namespace GmeClasses {
         deleteBranch: {
             /** Name of branch to delete. */
             (branchName: string, oldHash: GmeStorage.CommitHash, callback: GmeCommon.ResultCallback<GmeStorage.CommitResult>): void;
-            (branchName: string, oldHash: GmeStorage.CommitHash, ): Promise<GmeStorage.CommitResult>;
+            (branchName: string, oldHash: GmeStorage.CommitHash): Promise<GmeStorage.CommitResult>;
         }
         /**
          * Deletes the given tag.
@@ -2316,9 +2312,7 @@ declare namespace GmePlugin {
     /**
     The base plugin object from which all plugins should inherit.
     */
-    class PluginBase {
-        constructor();
-
+    interface PluginBase {
         activeNode: Core.Node;
         activeSelection: Core.Node[];
         blobClient: Blobs.BlobClient;
@@ -2668,7 +2662,7 @@ declare namespace GmeCommon {
     export type Path = string;
 
     export type DataObject = Core.Node;
-    export type Buffer = GLbyte[];
+    export type Buffer = any[];
     export type Payload = string | Buffer | Buffer[];
     export type Content = DataObject | Buffer | Buffer[];
     export type ContentString = string;
@@ -2725,8 +2719,8 @@ declare namespace GmeCommon {
         };
         pointers: {
             ptr: MetaCardRule & {
-                min: 1;
-                max: 1;
+                min: number;
+                max: number;
             };
             set: MetaCardRule & {
                 min: number;
@@ -2783,7 +2777,7 @@ declare namespace GmeUtil {
 
     export let CANON: Canon;
 
-    export function ASSERT(condition: boolean): never;
+    export function ASSERT(condition: boolean): void;
 }
 
 declare namespace Blobs {
