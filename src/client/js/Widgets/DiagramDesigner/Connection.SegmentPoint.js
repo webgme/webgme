@@ -13,7 +13,7 @@ define([
     'use strict';
 
     var ConnectionSegmentPoint,
-        MIN_WIDTH = 5,
+        MIN_WIDTH = 10,
         EVENTPOSTFIX = 'ConnectionSegmentPoint',
         MOUSEMOVE = 'mousemove.' + EVENTPOSTFIX,
         MOUSEUP = 'mouseup.' + EVENTPOSTFIX,

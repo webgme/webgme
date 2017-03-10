@@ -23,15 +23,15 @@ define([
 
     var Connection,
         TEXT_ID_PREFIX = 't_',
-        MIN_WIDTH_NOT_TO_NEED_SHADOW = 5,
+        MIN_WIDTH_NOT_TO_NEED_SHADOW = 10,
         CONNECTION_DEFAULT_WIDTH = 1,
         CONNECTION_DEFAULT_COLOR = '#000000',
         CONNECTION_DEFAULT_PATTERN = DiagramDesignerWidgetConstants.LINE_PATTERNS.SOLID,
         CONNECTION_NO_END = DiagramDesignerWidgetConstants.LINE_ARROWS.NONE,
         CONNECTION_DEFAULT_END = CONNECTION_NO_END,
         CONNECTION_SHADOW_DEFAULT_OPACITY = 0,
-        CONNECTION_SHADOW_DEFAULT_WIDTH = 5,
-        CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 1,
+        CONNECTION_SHADOW_DEFAULT_WIDTH = 20,
+        CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 0.5,
         CONNECTION_SHADOW_DEFAULT_COLOR = '#B9DCF7',
         CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE,
         SHADOW_MARKER_SIZE_INCREMENT = 3,
@@ -474,6 +474,16 @@ define([
 
                     if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
                         this._createPathShadow(this._pathPoints);
+                        this.skinParts.path.hover(function () {
+                            this.node.setAttribute('class',
+                                DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_HOVER_CLASS);
+                        },
+                        function () {
+                            this.node.setAttribute('class',
+                                DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_CLASS);
+                        },
+                        this.skinParts.pathShadow,
+                        this.skinParts.pathShadow);
                     }
                     if (this.selected) {
                         this.onSelect(this.selectedInMultiSelection);
@@ -542,10 +552,10 @@ define([
             len;
 
         bBoxPath = this._calcRawBoundingBox();
-        if (this.skinParts.pathShadow) {
-            strokeWidthAdjust = this.designerAttributes.shadowWidth;
-            shadowAdjust = this.designerAttributes.shadowArrowEndAdjust;
-        } else if (this.skinParts.path) {
+        // if (this.skinParts.pathShadow) {
+        //     strokeWidthAdjust = this.designerAttributes.shadowWidth;
+        //     shadowAdjust = this.designerAttributes.shadowArrowEndAdjust;
+        if (this.skinParts.path) {
             strokeWidthAdjust = this.designerAttributes.width;
         }
 
@@ -917,7 +927,7 @@ define([
 
             $(this.skinParts.pathShadow.node).attr({
                 id: DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX + this.id,
-                class: DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS
+                class: DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_CLASS
             });
 
             this.skinParts.pathShadow.attr({
@@ -932,7 +942,7 @@ define([
 
                 $(this.skinParts.pathShadowArrowStart.node).attr({
                     id: DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
-                    class: DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS
+                    class: DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_CLASS
                 });
             } else {
                 if (this.skinParts.pathShadowArrowStart) {
@@ -947,7 +957,7 @@ define([
 
                 $(this.skinParts.pathShadowArrowEnd.node).attr({
                     id: DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
-                    class: DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS
+                    class: DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_CLASS
                 });
 
             } else {

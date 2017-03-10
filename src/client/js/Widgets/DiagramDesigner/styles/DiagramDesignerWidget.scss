@@ -187,6 +187,12 @@ $tabs-container-height: 26px;
       z-index: -1;
 
       .designer-connection {
+        &.designer-connection-shadow {
+          &.connection-hover,
+          &:hover {
+            opacity: 0.5 !important;
+          }
+        }
       }
 
       .new-segment-point-marker {
