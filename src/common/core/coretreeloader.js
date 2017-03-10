@@ -86,18 +86,23 @@ define(['common/core/CoreAssert', 'common/core/tasync'], function (ASSERT, TASYN
                     }
 
                 },
-                nodeLoaded = function (err, node) {
-                    error = error || err;
-                    if (!err && node) {
-                        extendLoadQueue(node);
-                    }
-                    visitFn(node, visitNext);
-                },
                 visitNext = function (err) {
                     error = error || err;
                     ongoingVisits -= 1;
                     if (error && options.stopOnError) {
                         loadQueue = [];
+                    }
+                },
+                nodeLoaded = function (err, node) {
+                    error = error || err;
+                    if (!err && node) {
+                        extendLoadQueue(node);
+                    }
+
+                    if (!node) {
+                        visitNext(err);
+                    } else {
+                        visitFn(node, visitNext);
                     }
                 };
 

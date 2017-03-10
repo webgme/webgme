@@ -7,7 +7,7 @@
 var testFixture = require('../../_globals.js');
 
 describe('tree loading functions', function () {
-    'user strict';
+    'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -21,14 +21,7 @@ describe('tree loading functions', function () {
         commit,
         baseRootHash,
         gmeAuth,
-        baseNodes = {
-            '': null,
-            '/1924875415': null,
-            '/1924875415/1059131120': null,
-            '/1924875415/1359805212': null,
-            '/1924875415/1544821790': null,
-
-        };
+        irNull;
 
     before(function (done) {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
@@ -52,6 +45,15 @@ describe('tree loading functions', function () {
                 rootNode = result.rootNode;
                 commit = result.commitHash;
                 baseRootHash = result.rootHash;
+                return testFixture.importProject(storage, {
+                    projectSeed: 'seeds/EmptyProject.webgmex',
+                    projectName: 'TraverseNullNodes',
+                    gmeConfig: gmeConfig,
+                    logger: logger
+                });
+            })
+            .then(function (result) {
+                irNull = result;
             })
             .nodeify(done);
     });
@@ -166,4 +168,72 @@ describe('tree loading functions', function () {
             .nodeify(done);
     });
 
+    it('should not invoke visitFn with null nodes', function (done) {
+        var cnt = 0,
+            res1,
+            basePath;
+
+        function visitFn(node, next) {
+            expect(node).to.not.equal(null);
+            cnt += 1;
+            next();
+        }
+
+        function makeCommitAndLoadNewRoot(rootNode, parentHash) {
+            var persisted = irNull.core.persist(rootNode),
+                newHash;
+
+            return irNull.project.makeCommit(null, [parentHash], persisted.rootHash, persisted.objects, 'msg')
+                .then(function (commitResult) {
+                    newHash = commitResult.hash;
+                    return irNull.core.loadRoot(persisted.rootHash);
+                })
+                .then(function (newRootNode) {
+                    return {
+                        rootNode: newRootNode,
+                        commitHash: newHash
+                    };
+                });
+        }
+
+        irNull.core.loadByPath(irNull.rootNode, '/1')
+            .then(function (fco) {
+                var base = irNull.core.createNode({
+                    parent: irNull.rootNode,
+                    base: fco
+                });
+
+                basePath = irNull.core.getPath(base);
+
+                irNull.core.createNode({
+                    parent: irNull.rootNode,
+                    base: base
+                });
+
+                cnt = 0;
+                return irNull.core.traverse(irNull.rootNode, null, visitFn);
+            })
+            .then(function () {
+                expect(cnt).to.equal(4);
+                return makeCommitAndLoadNewRoot(irNull.rootNode, irNull.commitHash);
+            })
+            .then(function (result) {
+                res1 = result;
+                return irNull.core.loadByPath(res1.rootNode, basePath);
+            })
+            .then(function (baseNode) {
+                irNull.core.deleteNode(baseNode);
+                return makeCommitAndLoadNewRoot(res1.rootNode, res1.commitHash);
+            })
+            .then(function (result) {
+                // After deletion of the base the visit should only find 2 nodes.
+                cnt = 0;
+                return irNull.core.traverse(result.rootNode, null, visitFn);
+            })
+            .then(function () {
+                expect(cnt).to.equal(2);
+            })
+            .nodeify(done);
+
+    });
 });
