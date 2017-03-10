@@ -13,7 +13,7 @@ define([
     'use strict';
 
     var ConnectionEditSegment,
-        MIN_WIDTH = 10;
+        MIN_WIDTH = 7;
 
     ConnectionEditSegment = function (params) {
         this.id = params.id;

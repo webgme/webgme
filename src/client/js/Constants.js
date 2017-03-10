@@ -72,7 +72,8 @@ define([
                 OVAL: 'oval',
                 DIAMOND2: 'diamond2',
                 INHERITANCE: 'inheritance'
-            }
+            },
+            LINE_SHOW_CONNECTION_AREAS: 'LINE_SHOW_CONNECTION_AREAS'
         },
 
         DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$',

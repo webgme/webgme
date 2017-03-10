@@ -71,6 +71,8 @@ define(['js/Constants',
                 break;
         }
 
+        params[DiagramDesignerWidgetConstants.LINE_SHOW_CONNECTION_AREAS] = false;
+
         return params;
     }
 

@@ -511,8 +511,10 @@ define([
     ConnectionRouteManager3.prototype._modifyItem = function (id, fn) {
         if (this._onItemCreateQueue[id] === null) {  // Item has been created
             fn();
-        } else {  // Store the operation
+        } else if (this._onItemCreateQueue[id] instanceof Array) {  // Store the operation
             this._onItemCreateQueue[id].push(fn);
+        } else {
+           // Avoids exception to be thrown here..
         }
     };
 

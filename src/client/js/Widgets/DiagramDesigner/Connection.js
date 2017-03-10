@@ -142,6 +142,9 @@ define([
         this.srcTextEdit = objDescriptor.srcTextEdit || false;
         this.dstTextEdit = objDescriptor.dstTextEdit || false;
 
+        this.showConnectionAreas = typeof objDescriptor[DiagramDesignerWidgetConstants.LINE_SHOW_CONNECTION_AREAS] ===
+            'boolean' ? objDescriptor[DiagramDesignerWidgetConstants.LINE_SHOW_CONNECTION_AREAS] : true;
+
         //get segnment points
         this.segmentPoints = [];
         if (objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS]) {
@@ -1279,8 +1282,10 @@ define([
         if (this._readOnly === false && this._editMode !== editMode) {
             this._editMode = editMode;
             this.setConnectionRenderData(this._pathPoints);
+            this.showEndConnectors();
             if (this._editMode === false) {
                 this.hideEndReconnectors();
+                this.hideEndConnectors();
             }
         }
     };
@@ -1571,6 +1576,10 @@ define([
     };
 
     Connection.prototype.showEndConnectors = function () {
+        if (!this.showConnectionAreas) {
+            return;
+        }
+
         this._connectionConnector = this._connectionConnector ||
         $('<div/>', {class: 'connector connection-connector'});
 
