@@ -42,3 +42,6 @@ webgme-*.tgz
 executor-temp/
 jobList.nedb
 workerList.nedb
+
+# ignore generated documentation
+typed_docs/

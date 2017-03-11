@@ -1,0 +1,37 @@
+{
+	"tags":
+	{
+		"allowUnknownTags" : true
+	},
+	"plugins":[
+		 "plugins/markdown"
+		,"/home/phred/.nvm/versions/node/v6.10.0/lib/node_modules/tsdoc/template/plugins/TSDoc.js"
+	],
+	"opts":
+	{
+		"template"	:"/home/phred/.nvm/versions/node/v6.10.0/lib/node_modules/tsdoc/template",
+		"recurse"	:"true"
+	},
+	"templates" : {
+		"cleverLinks"     : false,
+		"monospaceLinks"  : false
+	},
+	"source":
+	{
+		"includePattern": "(\\.d)?\\.ts$"
+	},
+	"markdown"  : {
+		"parser"   : "gfm",
+		"hardwrap" : true
+	},
+	"tsdoc":{
+		"source"		:"/home/phred/Projects/webgme-lib/src/",
+		"destination"	:"/home/phred/Projects/webgme-lib/docs",
+		"tutorials"		:"",
+		"systemName"	: "webgme-lib",
+		"footer"		: "",
+		"copyright"		: "webgme-lib Copyright © 2017 phred.",
+		"outputSourceFiles" : true,
+		"commentsOnly": true
+	}
+}

@@ -95,6 +95,7 @@
   "typings": "typings/webgme.d.ts",
   "scripts": {
     "docs": "./node_modules/.bin/jsdoc -c jsdoc_conf.json",
+    "tsdocs": "typedoc --out typed_docs --mode modules --includeDeclarations --target ES6 --exclude node_modules ./typings",
     "start": "node ./src/bin/start_server.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
     "test_ci": "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test",

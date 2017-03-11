@@ -9,6 +9,7 @@
 // Example: https://github.com/typed-typings/env-node/blob/master/0.12/node.d.ts
 // Source: https://raw.githubusercontent.com/phreed/typed-npm-webgme/master/webgme.d.ts
 // Documentation: https://editor.webgme.org/docs/source/index.html
+// https://github.com/webgme/webgme/tree/master/config
 
 declare module "blob/BlobMetadata" {
     export default class BlobMetadata implements Blobs.BlobMetadata {
@@ -3155,64 +3156,504 @@ declare namespace GmeConfig {
     export class GmeConfig {
         constructor();
         /**  Add-on related settings. */
-        addOns: any;
+        addOns: {
+            /**
+             * If true enables add-ons.
+             *    config.addOn.enable = false;
+             */
+            enable: boolean;
+            /**
+             * In milliseconds, the waiting time before add-ons 
+             * (or the monitoring of such) is stopped after 
+             * the last client leaves a branch.
+             *    config.addOn.monitorTimeout = 5000;
+             */
+            monitorTimeout: number;
+            /**
+             * Array of paths to custom add-ons. 
+             * If you have an add-on at C:/SomeAddOns/MyAddOn/MyAddOn.js 
+             * the path to append would be C:/SomeAddOns or a relative path 
+             * (from the current working directory). 
+             * N.B. this will also expose any other add-on in that directory, 
+             * e.g. C:/SomeAddOns/MyOtherAddOn/MyOtherAddOn.js.
+             *    config.addOn.basePaths = ['./src/addon/core'];
+             */
+            basePaths: string[];
+        }
         /**  Authentication related settings. */
         authentication: {
-            enable: boolean,
-            jwt: { privateKey: string, publicKey: string },
-            logInUrl: string,
-            logOutUrl: string
-        };
+            /**
+             * If true certain parts will require that users are authenticated.
+             *    config.authentication.enable = false;
+             */
+            enable: boolean;
+            /**
+             * Generate a guest account for non-authenticated connections.
+             *    config.authentication.allowGuests = true;
+             */
+            allowGuests: boolean;
+            /**
+             * Allow clients to create new users via the REST api.
+             *    config.authentication.allowUserRegistration = true;
+             */
+            allowUserRegistration: boolean;
+            /**
+             * User account which non-authenticated connections will access the storage.
+             *    config.authentication.guestAccount = 'guest';
+             */
+            guestAccount: string;
+            /**
+             * Where clients are redirected if not authenticated.
+             *    config.authentication.logInUrl = '/profile/login';
+             */
+            logInUrl: string;
+            /**
+             * Where clients are redirected after logout.
+             *   config.authentication.logOutUrl = '/profile/login';
+             */
+            logOutUrl: string;
+            /**
+             * Strength of the salting of the users' passwords bcrypt.
+             *   config.authentication.salts = 10;
+             */
+            salts: number;
+            authorizer: {
+                /**
+                 * Path (absolute) to module implementing AuthorizerBase 
+                 * (located next to deafultauthorizer) for getting and 
+                 * setting authorization regarding projects and project creation.
+                 *   config.authentication.authorizer.path = './src/server/middleware/auth/defaultauthorizer';
+                 */
+                path: string;
+                /**
+                 * Optional options passed to authorizer module at initialization (via gmeConfig).
+                 *    config.authentication.authorizer.options = {};
+                 */
+                options: any;
+            }
+            jwt: {
+                /**
+                 * Id of token used when placed inside of a cookie.
+                 *    config.authentication.jwt.cookieId = 'access_token';
+                 */
+                cookieId: string;
+                /**
+                 * Lifetime of tokens in seconds.
+                 *   config.authentication.jwt.expiresIn = 3600 * 24 * 7;
+                 */
+                expiresIn: number;
+                /**
+                 * Interval in seconds, if there is less time until 
+                 * expiration the token will be automatically renewed.
+                 *  (Set this to less or equal to 0 to disabled automatic renewal.)
+                 *   config.authentication.jwt.renewBeforeExpires = 3600;
+                 */
+                renewBeforeExpires: number;
+                /**
+                 * Private RSA256 key used when generating tokens 
+                 * (N.B. if authentication is turned on 
+                 * - the defaults must be changed and the keys must 
+                 * reside outside of the app's root-directory or alt. 
+                 * a rule should be added to config.server.extlibExcludes).
+                 *   config.authentication.jwt.privateKey = './src/server/middleware/auth/EXAMPLE_PRIVATE_KEY';
+                 */
+                privateKey: string;
+                /**
+                 * Public RSA256 key used when evaluating tokens.
+                 *   config.authentication.jwt.publicKey = './src/server/middleware/auth/EXAMPLE_PRIVATE_KEY';
+                 */
+                publicKey: string;
+                /**
+                 * The algorithm used for encryption (should not be edited w/o chaning keys appropriately).
+                 *   config.authentication.jwt.algorithm = 'RS256';
+                 */
+                algorithm: string;
+                /**
+                 * Replaceable module for generating tokens in case 
+                 * webgme should not generated new tokens by itself.
+                 *   config.authentication.jwt.tokenGenerator = './src/server/middleware/auth/localtokengenerator.js';
+                 */
+                tokenGenerator: string;
+            }
+        }
         /** Bin script related settings. */
-        bin: any;
+        bin: {
+            /**
+             * Logger settings when running bin scripts.
+             *   config.bin.log = see config
+             */
+            log: any;
+        };
         /** Blob related settings. */
         blob: Blobs.ObjectBlob;
         /** Client related settings. */
         client: ClientOptions;
         /** Client related settings. */
-        core: GmeClasses.Core;
-        /** Enables debug mode. */
+        core: {
+            // GmeClasses.Core;
+            /**
+             * If true will enable validation (which takes place on the server) 
+             * of custom constraints defined in the meta nodes.
+             *   config.core.enableCustomConstraints = false;
+             */
+            enableCustomConstraints: boolean;
+        }
+        /**
+         * If true will add extra debug messages and also 
+         * enable experimental Visualizers, (URL equivalent (only on client side) ?debug=true).
+         */
         public debug: boolean;
         /** Executor related settings. */
-        executor: any;
+        executor: {
+            /**
+             *  If true will enable the executor.
+             *   config.executor.enable = false;
+             */
+            enable: boolean;
+            /**
+             * If defined this is the secret shared between the server and attached workers.
+             *   config.executor.nonce = null;
+             */
+            nonce: null | string;
+            /**
+             * Time interval in milliseconds that attached 
+             * workers will request jobs from the server.
+             *   config.executor.workerRefreshInterval = 5000;
+             */
+            workerRefreshInterval: number;
+            /**
+             * Time in milliseconds that output is stored after a job has finished.
+             *   config.executor.clearOutputTimeout = 60000;
+             */
+            clearOutputTimeout: number;
+            /**
+             * If true, all data stored for jobs 
+             * (jobInfos, outputs, workerInfos, etc.) 
+             * is cleared when the server starts.
+             *   config.executor.clearOldDataAtStartUp = false;
+             */
+            clearOldDataAtStartUp: boolean;
+            /**
+             * Path to configuration file for label jobs for the workers.
+             *   config.executor.labelJobs = './labelJobs.json';
+             */
+            labelJobs: string;
+        }
         /** Mongo database related settings. */
-        mongo: { uri: string };
+        mongo: {
+            /**
+             * MongoDB connection uri
+             * config.mongo.uri = 'mongodb://127.0.0.1:27017/multi';
+             */
+            uri: string;
+            /**
+             * Options for MongoClient.connect
+             * config.mongo.options = see config
+             */
+            options: string;
+        };
         /** Plugin related settings. */
         plugin: {
-            basePaths: string[],
-            allowBrowserExecution: boolean,
-            allowServerExecution: boolean
-        };
-        /** Additional paths to for requirejs. */
+            /**
+             * If true will enable execution of plugins on the server.
+             *   config.plugin.allowBrowserExecution = true;
+             */
+            allowBrowserExecution: boolean;
+            /**
+             * If true will enable execution of plugins on 
+             * the server.config.plugin.allowServerExecution = false;
+             */
+            allowServerExecution: boolean;
+            /**
+             * Same as for `config.addOns.basePath' 
+             * [TODO: link to AddOns] but for plugins instead.
+             *   config.plugin.basePaths = ['./src/plugin/coreplugins']
+             */
+            basePaths: string[];
+            /**
+             * If true there is no need to register plugins on the 
+             * root-node of project - all will be available from the drop-down.
+             *   config.plugin.displayAll = false;
+             */
+            displayAll: boolean;
+            /**
+             * Time, in milliseconds, results will be stored on 
+             * the server after they have finished (when invoked via the REST api).
+             *   config.plugin.serverResultTimeout = 60000;
+             */
+            serverResultTimeout: number;
+        }
+        /** Additional paths to for requirejs. 
+         * Custom paths that will be added to the 
+         * paths of requirejs configuration. 
+         * Paths added here will also be served under the given key, 
+         * i.e. {myPath: './aPath/aSubPath/'} 
+         * will expose files via <host>/myPath/someFile.js.
+         */
         requirejsPaths: GmeCommon.Dictionary<string>;
         /** REST related settings. */
-        rest: any;
+        rest: {
+            /**
+             * Routing path (keys) from origin and file-path 
+             * (values) to custom REST components.
+             * Use the RestRouterGenerator plugin to generate 
+             * a template router (see the generated file for more info).
+             *   config.rest.components = {};
+             */
+            components: any;
+        }
         /** Seed related settings. */
         seedProjects: {
-            basePaths: string[],
-            panelPaths: string[],
-            enable: boolean,
-            allowDuplication: boolean
-        };
+            /**
+             * Enables creation of new projects using seeds.
+             *   config.seedProjects.enable = true;
+             */
+            enable: boolean;
+            /**
+             * Enables duplication of entire project with 
+             * full history (requires at least mongodb 2.6).
+             *   config.seedProjects.allowDuplication = true;
+             */
+            allowDuplication: boolean;
+            /**
+             * Used by the GUI when highlighting/selecting
+             * the default project to seed from.
+             *   config.seedProjects.defaultProject = 'EmptyProject';
+             */
+            defaultProject: string;
+            /**
+             * List of directories where project seeds are stored.
+             *   config.seedProjects.basePaths = ['./seeds'];
+             */
+            basePaths: string[];
+        }
         /** Server related settings. */
         server: {
-            port: number, handle: { fd: number },
-            log: any
-        };
+            /**
+             * Port the server is hosted from.
+             *   config.server.port = 8888;
+             */
+            port: number;
+            /**
+             * Optional handle object passed to server.listen 
+             * (aligning port must still be given).
+             *   config.server.handle = null;
+             */
+            handle: null | { fd: number };
+            /**
+             * If greater than -1 will set the timeout property of the http-server. 
+             * (This can be used to enable large, > 1Gb, file uploads.)
+             *  config.server.timeout = -1;
+             */
+            timeout: number;
+            /**
+             * Maximum number of child process spawned for workers.
+             *   config.server.maxWorkers = 10;
+             */
+            maxWorkers: number;
+            /**
+             * Transports and options for the server (winston) logger. 
+             *   config.server.log = see config
+             */
+            log: any;
+            /**
+             * Array of regular expressions that will hinder access to files via the '/extlib/' route. 
+             * Requests to files matching any of the provided pattern will result in 403.
+             *   config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']
+             */
+            extlibExcludes: string[];
+            /**
+             * Indicate if the webgme server is behind a secure proxy 
+             * (needed for adding correct OG Metadata in index.html).
+             *   config.server.behindSecureProxy = false
+             */
+            behindSecureProxy: boolean;
+        }
         /** Socket IO related settings. */
-        socketIO: any;
+        socketIO: {
+            /**
+             * Options passed to the socketIO client when connecting to the sever.
+             *   config.socketIO.clientOptions = see config
+             */
+            clientOptions: any;
+            /**
+             * Options passed to the socketIO server when attaching to the server.
+             *   config.socketIO.serverOptions = see config
+             */
+            serverOptions: any;
+        }
+
         /** Storage related settings. */
-        storage: any;
+        storage: {
+            /**
+             * Number of core-objects stored before emptying cache (server side).
+             *  config.storage.cache = 2000;
+             */
+            cache: number;
+            /**
+             * Number of core-objects stored before emptying cache (client side).
+             *   config.storage.clientCache = 2000;
+             */
+            clientCache: number;
+            /**
+             * If true, events regarding project/branch creation/deletion 
+             * are only broadcasted and not emitted back to the socket who made the change. 
+             * Only modify this if you are writing a custom GUI.
+             *  config.storage.broadcastProjectEvents = false;
+             */
+            broadcastProjectEvents: boolean;
+            /**
+             * If greater than -1, the maximum number of core objects 
+             * that will be emitted to other clients. 
+             * N.B. this only applies to newly created nodes, 
+             * any modified data will always be sent as patches.
+             *   config.storage.maxEmittedCoreObjects = -1;
+             */
+            maxEmittedCoreObjects: number;
+            /**
+             * Size of bucket before triggering a load of objects from the server.
+             *   config.storage.loadBucketSize = 100;
+             */
+            loadBucketSize: number;
+            /**
+             * Time in milliseconds (after a new bucket has been created) 
+             * before triggering a load of objects from the server.
+             *   config.storage.loadBucketTimer = 10;
+             */
+            loadBucketTimer: number;
+            /**
+             * Algorithm used when hashing the objects in the database, 
+             * can be 'plainSHA1', 'rand160Bits' or 'ZSSHA'.
+             *   config.storage.keyType = 'plainSha';
+             */
+            keyType: "plainSHA1" | "rand160Bits" | "ZSSHA";
+            /**
+             * Since v2.6.2 patched objects on the server are being 
+             * checked for consistency w.r.t. the provided hash 
+             * before insertion into database. 
+             * If true, no checking at all will take place.
+             *   config.storage.disableHashChecks = false;
+             */
+            disableHashChecks: boolean;
+            /**
+             * If config.storage.disableHashChecks is set to 
+             * false and this option is set to true, 
+             * will not insert objects if the hashes do not match. 
+             * Set this to false to only log the errors.
+             *   config.storage.requireHashesToMatch = true;
+             */
+            requireHashesToMatch: boolean;
+            /**
+             * (N.B. Experimental feature) 
+             * If enable, incoming commits to branches that initially 
+             * were FORKED will be attempted to be merged with the head of the branch. 
+             * Use with caution as larger (+100k nodes) projects can slow down the commit rate.
+             *   config.storage.autoMerge.enable = false;
+             */
+            autoMerge: {
+                enable: boolean;
+            }
+
+            database: {
+                /**
+             * Type of database to store the data (metadata e.g. _users is always stored in mongo), 
+             * can be 'mongo', 'redis' or 'memory'.
+             *   config.storage.database.type = 'mongo';
+             */
+                type: "mongo" | "redis" | "memory";
+            }
+            /**
+             * Options passed to database client 
+             * (unless mongo is specified, in that case config.mongo.options are used).
+             *   config.storage.database.options = '{}';
+             */
+            options: string;
+        }
+
+
         /** Visualization related settings. */
         visualization: {
-            panelPaths: string[],
-            visualizerDescriptors: string[],
-            extraCss: string[]
-        };
+            /**
+             * Array of paths to decorators that should be available.
+             * 
+             * decoratorPaths = ['./src/client/decorators']
+             */
+            decoratorPaths: string[];
+            /**
+             * Array of decorators (by id) that should be downloaded from the
+             *  server before the editor starts 
+             * - when set to null all available decorators will be downloaded.
+             */
+            decoratorToPreload: number | null;
+            /**
+             * Array of paths (in the requirejs sense) to 
+             * css files that should be loaded at start up. 
+             * (To use this option a path would typically 
+             * have to be added at config.requirejsPaths.)
+             */
+            extraCss: string[];
+            /**
+             * Array of paths to directories containing SVG-files 
+             * that will be copied and made available as SVGs 
+             * for decorators (ConstraintIcons is currently reserved).
+             */
+            svgDirs: string[];
+            /**
+             * Array of paths to json-files containing meta-data about the used visualizers.
+             * 
+             * visualizerDescriptors = ['../src/client/js/Visualizers.json']
+             */
+            visualizerDescriptors: string[];
+            /**
+             * Array of base paths that will be mapped from 'panels' in requirejs.
+             * 
+             * panelPaths = ['../src/client/js/Panels']
+             */
+            panelPaths: string[];
+            /**
+             * Specifies which layout to use 
+             * (directory name must be present in any of the provided base-paths).
+             * 
+             */
+            layout: {
+                /**
+                 * default = 'DefaultLayout'
+                 */
+                default: string;
+                /**
+                 * Array of base paths for the layouts.
+                 *  basePaths = ['../src/client/js/Layouts']
+                 * 
+                 * @type {string[]}
+                 */
+                basePaths: string[];
+            }
+        }
 
+        webhooks: {
+            /**
+             * If true will start a webhook-manager from the server.
+             *  config.webhooks.enable = true;
+             */
+            enable: boolean;
+            /**
+             * Type of webhook-manager for detecting events, can be 'memory', 'redis'. 
+             * Memory runs in the server process, 
+             * whereas redis is running in a sub-process. 
+             * Redis requires the socket.io adapter to be of type redis. 
+             * (It is also possible to run the redis manager separately from the webgme server.)
+             *   config.webhooks.manager = 'memory';
+             */
+            manager: "memory" | "redis";
+        }
+        /**
+         *  Serialize the configuration.
+         * @returns {*} 
+         * @memberOf GmeConfig
+         */
         serialize(): any;
-    }
 
+    }
 
     export class PluginConfig extends GmeConfig {
         [propName: string]: any;
