@@ -2114,7 +2114,7 @@ define(['js/logger',
         this._radioButtonGroupMetaRelationType.enabled(!isReadOnly);
     };
 
-    MetaEditorControl.prototype.getValidTypesInfo = function (/*nodeId*/) {
+    MetaEditorControl.prototype.getValidTypesInfo = function (/*nodeId, aspect*/) {
         var containerNode = this._client.getNode(CONSTANTS.PROJECT_ROOT_ID);
         if (containerNode) {
             return containerNode.getValidChildrenTypesDetailed(null, true);
