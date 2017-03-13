@@ -12,6 +12,7 @@ node_modules
 
 *.log
 .idea
+.vscode
 .sass-cache
 .DS_Store
 tmp
