@@ -161,10 +161,17 @@ Storage.prototype.getLatestCommitData = function (data, callback) {
         })
         .then(function (commitObject) {
             result.commitObject = commitObject;
-            return project.loadObject(commitObject.root);
+            return storageHelpers.loadObject(project, commitObject.root);
         })
         .then(function (rootObject) {
-            result.coreObjects.push(rootObject);
+            var hash;
+            if ((rootObject || {}).multipleObjects === true) {
+                for (hash in rootObject.objects) {
+                    result.coreObjects.push(rootObject.objects[hash]);
+                }
+            } else {
+                result.coreObjects.push(rootObject);
+            }
             return result;
         })
         .nodeify(callback);
@@ -452,7 +459,7 @@ Storage.prototype.loadObjects = function (data, callback) {
         .then(function (project) {
 
             function loadObject(hash) {
-                return storageHelpers.loadObject(project,hash);
+                return storageHelpers.loadObject(project, hash);
             }
 
             Q.allSettled(data.hashes.map(loadObject))

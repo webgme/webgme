@@ -283,7 +283,7 @@ define(['js/logger',
             activePanel = WebGMEGlobal.PanelManager.getActivePanel();
 
             if (activePanel && typeof activePanel.getValidTypesInfo === 'function') {
-                validInfo = activePanel.getValidTypesInfo(containerNode.getId());
+                validInfo = activePanel.getValidTypesInfo(containerNode.getId(), this._aspect);
             } else {
                 // default is the containment based elements.
                 validInfo = containerNode.getValidChildrenTypesDetailed(this._aspect);

@@ -31,6 +31,7 @@ describe('storage storageclasses simpleapi', function () {
         webgmeToken,
 
         projectName = 'SimpleAPIProject',
+        shardedProjectName = 'ShardedSimpleAPIProject',
         projectNameCreate = 'SimpleAPICreateProject',
         projectNameCreate2 = 'SimpleAPICreateProject2',
         projectNameDelete = 'SimpleAPIDeleteProject',
@@ -51,7 +52,8 @@ describe('storage storageclasses simpleapi', function () {
                 return;
             }
 
-            testFixture.clearDBAndGetGMEAuth(gmeConfig, [projectName, projectNameCreate, projectNameCreate2, projectNameDelete])
+            testFixture.clearDBAndGetGMEAuth(gmeConfig,
+                [projectName, shardedProjectName, projectNameCreate, projectNameCreate2, projectNameDelete])
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
                     return gmeAuth.addOrganization('orgId');
@@ -71,6 +73,12 @@ describe('storage storageclasses simpleapi', function () {
                         testFixture.importProject(safeStorage, {
                             projectSeed: 'seeds/EmptyProject.webgmex',
                             projectName: projectName,
+                            gmeConfig: gmeConfig,
+                            logger: logger
+                        }),
+                        testFixture.importProject(safeStorage, {
+                            projectSeed: 'test/bin/export/minimalShard.webgmex',
+                            projectName: shardedProjectName,
                             gmeConfig: gmeConfig,
                             logger: logger
                         })
@@ -158,12 +166,16 @@ describe('storage storageclasses simpleapi', function () {
         });
     });
 
-
     it('should getProjects', function (done) {
         Q.ninvoke(storage, 'getProjects', {})
             .then(function (projects) {
-                expect(projects.length).to.equal(1);
-                expect(projects[0]._id).to.equal(projectName2Id(projectName));
+                var ids = [];
+
+                expect(projects.length).to.equal(2);
+
+                ids.push(projects[0]._id);
+                ids.push(projects[1]._id);
+                expect(ids).to.have.members([projectName2Id(projectName), projectName2Id(shardedProjectName)]);
             })
             .nodeify(done);
     });
@@ -266,6 +278,19 @@ describe('storage storageclasses simpleapi', function () {
             .then(function (commitData) {
                 expect(commitData.branchName).to.equal('master');
                 expect(commitData.commitObject._id).to.equal(importResult.commitHash);
+            })
+            .nodeify(done);
+    });
+
+    it('should getLatestCommitData from project with overlay shards', function (done) {
+        Q.ninvoke(storage, 'getLatestCommitData', projectName2Id(shardedProjectName), 'master')
+            .then(function (commitData) {
+                expect(commitData.branchName).to.equal('master');
+                expect(commitData.coreObjects).to.have.length(3);
+                expect(commitData.coreObjects[0]._id).to.eql('#c1ea6c321019b2d4642f0c8a3dc1d3708b1f72c9');
+                expect(commitData.coreObjects[0].ovr.sharded).to.eql(true);
+                expect(commitData.coreObjects[1].type).to.eql('shard');
+                expect(commitData.coreObjects[2].type).to.eql('shard');
             })
             .nodeify(done);
     });
