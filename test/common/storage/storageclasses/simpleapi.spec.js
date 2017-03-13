@@ -169,8 +169,13 @@ describe('storage storageclasses simpleapi', function () {
     it('should getProjects', function (done) {
         Q.ninvoke(storage, 'getProjects', {})
             .then(function (projects) {
-                expect(projects.length).to.equal(1);
-                expect(projects[0]._id).to.equal(projectName2Id(projectName));
+                var ids = [];
+
+                expect(projects.length).to.equal(2);
+
+                ids.push(projects[0]._id);
+                ids.push(projects[1]._id);
+                expect(ids).to.have.members([projectName2Id(projectName), projectName2Id(shardedProjectName)]);
             })
             .nodeify(done);
     });
