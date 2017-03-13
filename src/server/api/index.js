@@ -39,6 +39,8 @@ function createAPI(app, mountPath, middlewareOpts) {
         StorageUtil = webgme.requirejs('common/storage/util'),
         webgmeUtils = require('../../utils'),
         GUID = webgme.requirejs('common/util/guid'),
+        STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
+        CORE_CONSTANTS = webgme.requirejs('common/core/constants'),
 
         versionedAPIPath = mountPath + '/v1',
         latestAPIPath = mountPath;
@@ -962,14 +964,49 @@ function createAPI(app, mountPath, middlewareOpts) {
                 return safeStorage.loadPaths(loadPathsParams);
             })
             .then(function (dataObjects) {
-                var hashes = Object.keys(dataObjects);
+                var hashes = Object.keys(dataObjects),
+                    dataObj,
+                    newOvr,
+                    relid,
+                    hash,
+                    ovrPath;
+
                 if (hashes.length === 1) {
                     return dataObjects[hashes[0]];
                 } else if (hashes.length === 0) {
                     throw new Error('Path does not exist ' + path);
                 } else {
-                    // This should never happen..
-                    throw new Error('safeStorage.loadPaths returned with more than one object');
+                    // There are multiple hashes -> the overlay is shared so build up the complete object
+                    for (hash in dataObjects) {
+                        if (dataObjects[hash].type !== STORAGE_CONSTANTS.OVERLAY_SHARD_TYPE) {
+                            dataObj = dataObjects[hash];
+                            break;
+                        }
+                    }
+
+                    if (!dataObj) {
+                        throw new Error('loadPaths did not return with a dataObj hash, only shards');
+                    } else if (!dataObj.ovr || Object.keys(dataObj.ovr) === 0) {
+                        throw new Error('loadPaths returned with multiple objects but missing or empty ovr..');
+                    }
+
+                    newOvr = {};
+                    for (relid in dataObj.ovr) {
+                        if (relid !== CORE_CONSTANTS.OVERLAY_SHARD_INDICATOR) {
+                            hash = dataObj.ovr[relid];
+                            if (dataObjects[hash] && dataObjects[hash].type === STORAGE_CONSTANTS.OVERLAY_SHARD_TYPE) {
+                                for (ovrPath in dataObjects[hash].items) {
+                                    newOvr[ovrPath] = dataObjects[hash].items[ovrPath];
+                                }
+                            } else {
+                                logger.error('Did not find shard for overlay', hash);
+                            }
+                        }
+                    }
+
+                    dataObj.ovr = newOvr;
+
+                    return dataObj;
                 }
             });
     }

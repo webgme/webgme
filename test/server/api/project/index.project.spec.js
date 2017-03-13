@@ -30,6 +30,7 @@ describe('PROJECT REST API', function () {
                 importResult,
                 unauthorizedProjectName = 'unauthorized_project',
                 toDeleteProjectName = 'project_to_delete',
+                shardedProjectName = 'sharded_project',
                 safeStorage,
                 gmeAuth,
                 guestAccount = gmeConfig.authentication.guestAccount;
@@ -68,6 +69,12 @@ describe('PROJECT REST API', function () {
                             testFixture.importProject(safeStorage, {
                                 projectSeed: 'seeds/EmptyProject.webgmex',
                                 projectName: toDeleteProjectName,
+                                gmeConfig: gmeConfig,
+                                logger: logger
+                            }),
+                            testFixture.importProject(safeStorage, {
+                                projectSeed: 'test/bin/export/minimalShard.webgmex',
+                                projectName: shardedProjectName,
                                 gmeConfig: gmeConfig,
                                 logger: logger
                             })
@@ -128,7 +135,7 @@ describe('PROJECT REST API', function () {
             it('should list projects /projects', function (done) {
                 agent.get(server.getUrl() + '/api/projects').end(function (err, res) {
                     expect(res.status).equal(200, err);
-                    expect(res.body.length).to.equal(3);
+                    expect(res.body.length).to.equal(4);
                     res.body.forEach(function (projectData) {
                         expect(projectData).to.have.keys('_id', 'info', 'owner', 'name');
                     });
@@ -572,6 +579,24 @@ describe('PROJECT REST API', function () {
                 function (done) {
                     var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/' +
                         'master/tree/';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body).to.have.property('1');
+                            expect(res.body).to.have.property('_id');
+                            expect(res.body).to.have.property('_meta');
+                            expect(res.body).to.have.property('atr');
+                            expect(res.body).to.have.property('ovr');
+
+                            done();
+                        });
+                }
+            );
+
+            it('should return virtual rootNode from shards /projects/:ownerId/:projectId/branches/:branchId/tree/',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(shardedProjectName) +
+                        '/branches/master/tree/';
                     agent.get(url)
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
