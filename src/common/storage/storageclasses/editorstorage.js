@@ -401,18 +401,18 @@ define([
                 i;
 
             //handling patch object creation
-            //console.time('patch-computation');
+            // console.time('patch-computation');
             for (i = 0; i < keys.length; i += 1) {
                 if (UTIL.coreObjectHasOldAndNewData(coreObjects[keys[i]])) {
                     // Patch type object.
                     persistQueueElement[keys[i]] = coreObjects[keys[i]].newData;
                     if (keys[i] === rootHash) {
-                        //console.time('root-patch-computation');
+                        // console.time('root-patch-computation');
                     }
                     commitData.coreObjects[keys[i]] = UTIL.getPatchObject(coreObjects[keys[i]].oldData,
                         coreObjects[keys[i]].newData);
                     //if (keys[i] === rootHash) {
-                    //console.timeEnd('root-patch-computation');
+                    // console.timeEnd('root-patch-computation');
                     //}
                 } else if (coreObjects[keys[i]].newData && coreObjects[keys[i]].newHash) {
                     // A new object with no previous data (send the entire data).
@@ -424,11 +424,12 @@ define([
                     persistQueueElement[keys[i]] = coreObjects[keys[i]];
                 }
             }
-            //console.timeEnd('patch-computation');
-            //console.time('getChangedNodes');
+            // console.timeEnd('patch-computation');
+            // console.time('getChangedNodes');
+            
             commitData.changedNodes = UTIL.getChangedNodes(commitData.coreObjects, rootHash);
 
-            //console.timeEnd('getChangedNodes');
+            // console.timeEnd('getChangedNodes');
 
             commitData.commitObject = self._getCommitObject(projectId, parents, commitData.rootHash, msg);
 

@@ -1,3 +1,4 @@
+/*globals requireJS*/
 /*jshint node: true*/
 
 /**
@@ -186,7 +187,7 @@ function getUnusedMetaHashes(blobClient, metadatastorage, storage) {
         allHashesArray,
         i;
 
-    blobClient.listObjects('wg-metadata')
+    blobClient.listObjects(blobClient.metadataBucket)
         .then(function (all) {
             allHashesArray = all;
             return getUsedMetaHashes(metadatastorage, storage, blobClient);
@@ -215,18 +216,18 @@ function removeBasedOnMetaHashes(blobClient, metaHashes) {
         };
 
     for (i = 0; i < metaHashes.length; i += 1) {
-        promises.push(blobClient.deleteObject('wg-metadata', metaHashes[i]));
+        promises.push(blobClient.deleteObject(blobClient.metadataBucket, metaHashes[i]));
     }
 
     Q.all(promises)
-        .then(function (results) {
+        .then(function (/*results*/) {
             return getUnusedDataHashes(blobClient);
         })
         .then(function (unusedDataHashes) {
             removals.data = unusedDataHashes;
             promises = [];
             for (i = 0; i < unusedDataHashes.length; i += 1) {
-                promises.push(blobClient.deleteObject('wg-content', unusedDataHashes[i]));
+                promises.push(blobClient.deleteObject(blobClient.contentBucket, unusedDataHashes[i]));
             }
             return Q.allSettled(promises);
         })

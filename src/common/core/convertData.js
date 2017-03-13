@@ -76,10 +76,14 @@ define(['common/core/constants', 'common/storage/constants'], function (CORE_CON
             '1.0.0': zeroToOne,
             '1.1.0': function (dataObject) {
                 return oneToOnePointOne(zeroToOne(dataObject));
+            },
+            '1.2.0': function (dataObject) {
+                return oneToOnePointOne(zeroToOne(dataObject));
             }
         },
         '1.0.0': {
-            '1.1.0': oneToOnePointOne
+            '1.1.0': oneToOnePointOne,
+            '1.2.0': oneToOnePointOne
         }
     };
 

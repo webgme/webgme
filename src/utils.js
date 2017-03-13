@@ -11,7 +11,8 @@ var fs = require('fs'),
     Q = require('q'),
     genDecoratorSvgList = require('./client/assets/generate_decorator_svg_list'),
     ncp = require('ncp'), // Module for copying entire directory
-    path = require('path');
+    path = require('path'),
+    requireUncached = require('require-uncached');
 
 /**
  * @param name
@@ -236,6 +237,57 @@ function getSeedDictionary(config) {
     return result;
 }
 
+/**
+ * Return the components json in the following attempt order. Not that the result i never cached here.
+ * 1) config/components.<env>.js
+ * 2) config/components.json
+ * 3) {}
+ * @param {gmeLogger} [logger] - Optional logger (will fall back to console).
+ * @param {function} [callback] - If not provided promise will be returned.
+ * @returns {Promise}
+ */
+function getComponentsJson(logger, callback) {
+    var deferred = Q.defer(),
+        env = process.env.NODE_ENV || 'default',
+        configDir = path.join(process.cwd(), 'config'),
+        result,
+        filePath;
+
+    logger = logger ? logger : {
+        debug: function () {
+            console.log.apply(console, arguments);
+        },
+        warn : function () {
+            console.warn.apply(console, arguments);
+        }
+    };
+
+    try {
+        filePath = path.join(configDir, 'components.' + env + '.js');
+        result = requireUncached(filePath);
+        deferred.resolve(result);
+    } catch (e) {
+        logger.warn('Did not find component settings at', filePath, '(proceeding with fallbacks see issue #1335)');
+        filePath = path.join(configDir, 'components.json');
+
+        Q.nfcall(fs.readFile, filePath, 'utf8')
+            .then(function (content) {
+                logger.debug('Found components.json at', filePath);
+                deferred.resolve(JSON.parse(content));
+            })
+            .catch(function (err) {
+                if (err.code === 'ENOENT') {
+                    logger.debug('Returning empty object since also did not find ', filePath);
+                    deferred.resolve({});
+                } else {
+                    deferred.reject(err);
+                }
+            });
+    }
+
+    return deferred.promise.nodeify(callback);
+}
+
 module.exports = {
     isGoodExtraAsset: isGoodExtraAsset,
     getComponentNames: getComponentNames,
@@ -249,4 +301,5 @@ module.exports = {
     getBasePathByName: getBasePathByName,
     getRedirectUrlParameter: getRedirectUrlParameter,
     getSeedDictionary: getSeedDictionary,
+    getComponentsJson: getComponentsJson
 };

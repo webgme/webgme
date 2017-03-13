@@ -108,5 +108,9 @@ define(['js/PanelBase/PanelBaseWithHeader',
         WebGMEGlobal.Toolbar.refresh();
     };
 
+    CrosscutPanel.prototype.getValidTypesInfo = function (/*nodeId*/) {
+        return {};
+    };
+
     return CrosscutPanel;
 });

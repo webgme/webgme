@@ -18,10 +18,17 @@ var fs = require('fs'),
     StringStreamReader = require('../../util/StringStreamReader'),
     StringStreamWriter = require('../../util/StringStreamWriter');
 
-var BlobBackendBase = function (logger) {
-    this.contentBucket = 'wg-content';
-    this.metadataBucket = 'wg-metadata';
-    this.tempBucket = 'wg-temp';
+var BlobBackendBase = function (gmeConfig, logger) {
+    if (gmeConfig.blob.namespace) {
+        this.contentBucket = gmeConfig.blob.namespace + '/wg-content';
+        this.metadataBucket = gmeConfig.blob.namespace + '/wg-metadata';
+        this.tempBucket = gmeConfig.blob.namespace + '/wg-temp';
+    } else {
+        this.contentBucket = 'wg-content';
+        this.metadataBucket = 'wg-metadata';
+        this.tempBucket = 'wg-temp';
+    }
+
     this.shaMethod = BlobConfig.hashMethod;
     this.logger = logger.fork('BlobBackend');
 };

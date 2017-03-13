@@ -10,6 +10,7 @@
 var CONSTANTS = requireJS('common/storage/constants'),
     GENKEY = requireJS('common/util/key'),
     UTIL = requireJS('common/storage/util'),
+    HELPER = require('./storagehelpers'),
     ProjectInterface = requireJS('common/storage/project/interface');
 
 /**
@@ -27,7 +28,12 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
     var self = this,
         objectLoader = {
             loadObject: function (projectId, key, callback) {
-                dbProject.loadObject(key, callback);
+                // dbProject.loadObject(key, callback);
+                HELPER.loadObject(dbProject, key)
+                    .then(function (result) {
+                        callback(null, result);
+                    })
+                    .catch(callback);
             },
             loadPaths: function (projectId, pathsInfo, excludes, callback) {
                 var data = {
@@ -108,6 +114,23 @@ function UserProject(dbProject, storage, mainLogger, gmeConfig) {
         }
 
         return storage.makeCommit(data)
+            .nodeify(callback);
+    };
+
+    this.getProjectInfo = function (callback) {
+        var data = {
+            username: self.userName,
+            projectId: self.projectId,
+            branches: true,
+            info: true,
+            hooks: true,
+            rights: true
+        };
+
+        return storage.getProjects(data)
+            .then(function (res) {
+                return res[0];
+            })
             .nodeify(callback);
     };
 

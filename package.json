@@ -1,9 +1,9 @@
 {
   "name": "webgme",
-  "version": "2.10.0",
+  "version": "2.11.0-beta1",
   "description": "Web-based Generic Modeling Environment",
   "engines": {
-    "node": ">=0.12.0 <5.0.0"
+    "node": ">=0.12.0"
   },
   "homepage": "http://github.com/webgme/webgme",
   "keywords": [
@@ -50,8 +50,9 @@
     "ncp": "2.0.0",
     "process": "0.11.9",
     "q": "1.4.1",
-    "raml2html": "2.2.0",
+    "raml2html": "3.0.1",
     "redis": "2.6.2",
+    "require-uncached": "1.0.3",
     "requirejs": "2.1.20",
     "socket.io": "1.4.8",
     "socket.io-client": "1.4.8",

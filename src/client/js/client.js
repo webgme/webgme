@@ -52,6 +52,7 @@ define([
                 exception: null,
                 project: null,
                 projectAccess: null,
+                projectInfo: null,
                 core: null,
                 branchName: null,
                 branchStatus: null, //CONSTANTS.BRANCH_STATUS. SYNC/AHEAD_SYNC/AHEAD_FORKED/PULLING/ERROR or null
@@ -652,7 +653,9 @@ define([
                     ASSERT(state.project && state.core && state.branchName);
 
                     logger.debug('is NOT in transaction - will persist.');
+                    // console.time('persist');
                     persisted = state.core.persist(state.nodes[ROOT_PATH].node);
+                    // console.timeEnd('persist');
                     logger.debug('persisted', persisted);
                     numberOfPersistedObjects = Object.keys(persisted.objects).length;
                     if (numberOfPersistedObjects === 0) {
@@ -746,6 +749,9 @@ define([
         function closeProject(projectId, callback) {
 
             state.project = null;
+            state.projectAccess = null;
+            state.projectInfo = null;
+            state.readOnlyProject = false;
             //TODO what if for some reason we are in transaction?
             storage.closeProject(projectId, function (err) {
                 if (err) {
@@ -892,76 +898,85 @@ define([
 
             function projectOpened(err, project, branches, access) {
                 if (err) {
-                    callback(new Error(err));
+                    callback(err);
                     return;
                 }
-                state.project = project;
-                state.readOnlyProject = access.write === false;
-                state.core = new Core(project, {
-                    globConf: gmeConfig,
-                    logger: logger.fork('core')
-                });
-                state.projectAccess = access;
 
-                logState('info', 'projectOpened');
-                logger.debug('projectOpened, branches: ', branches);
-                self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
-
-                if (branches.hasOwnProperty(branchToOpen) === false) {
-                    if (branchName) {
-                        logger.error('Given branch does not exist "' + branchName + '"');
-                        closeProject(projectId, function (err) {
-                            if (err) {
-                                logger.error('closeProject after missing branch failed with err', err);
-                            }
-                            callback(new Error('Given branch does not exist "' + branchName + '"'));
-                        });
+                project.getProjectInfo(function (err, projectInfo) {
+                    if (err) {
+                        callback(err);
                         return;
                     }
-                    logger.warn('Project "' + projectId + '" did not have branch', branchToOpen);
-                    branchToOpen = Object.keys(branches)[0] || null;
-                    logger.debug('Picked "' + branchToOpen + '".');
-                }
 
-                if (branchToOpen) {
-                    self.selectBranch(branchToOpen, null, function (err) {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
-                        logState('info', 'selectBranch');
-                        reLaunchUsers();
-                        callback(null);
+                    state.project = project;
+                    state.projectAccess = access;
+                    state.projectInfo = projectInfo;
+                    state.readOnlyProject = access.write === false;
+                    state.core = new Core(project, {
+                        globConf: gmeConfig,
+                        logger: logger.fork('core')
                     });
-                } else {
-                    logger.warn('No branches available in project, will attempt to select latest commit.');
-                    self.getCommits(projectId, (new Date()).getTime(), 1, function (err, commitObjects) {
-                        if (err || commitObjects.length === 0) {
-                            logger.error(err);
+
+                    logState('info', 'projectOpened');
+                    logger.debug('projectOpened, branches: ', branches);
+                    self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
+
+                    if (branches.hasOwnProperty(branchToOpen) === false) {
+                        if (branchName) {
+                            logger.error('Given branch does not exist "' + branchName + '"');
                             closeProject(projectId, function (err) {
                                 if (err) {
-                                    logger.error('closeProject after missing any commits failed with err', err);
+                                    logger.error('closeProject after missing branch failed with err', err);
                                 }
-                                callback(new Error('Project does not have any commits.'));
+                                callback(new Error('Given branch does not exist "' + branchName + '"'));
                             });
                             return;
                         }
-                        self.selectCommit(commitObjects[0]._id, function (err) {
+                        logger.warn('Project "' + projectId + '" did not have branch', branchToOpen);
+                        branchToOpen = Object.keys(branches)[0] || null;
+                        logger.debug('Picked "' + branchToOpen + '".');
+                    }
+
+                    if (branchToOpen) {
+                        self.selectBranch(branchToOpen, null, function (err) {
                             if (err) {
+                                callback(err);
+                                return;
+                            }
+                            logState('info', 'selectBranch');
+                            reLaunchUsers();
+                            callback(null);
+                        });
+                    } else {
+                        logger.warn('No branches available in project, will attempt to select latest commit.');
+                        self.getCommits(projectId, (new Date()).getTime(), 1, function (err, commitObjects) {
+                            if (err || commitObjects.length === 0) {
                                 logger.error(err);
                                 closeProject(projectId, function (err) {
                                     if (err) {
                                         logger.error('closeProject after missing any commits failed with err', err);
                                     }
-                                    callback(new Error('Failed selecting commit when opening project.'));
+                                    callback(new Error('Project does not have any commits.'));
                                 });
                                 return;
                             }
-                            reLaunchUsers();
-                            callback(null);
+                            self.selectCommit(commitObjects[0]._id, function (err) {
+                                if (err) {
+                                    logger.error(err);
+                                    closeProject(projectId, function (err) {
+                                        if (err) {
+                                            logger.error('closeProject after missing any commits failed with err', err);
+                                        }
+                                        callback(new Error('Failed selecting commit when opening project.'));
+                                    });
+                                    return;
+                                }
+                                reLaunchUsers();
+                                callback(null);
+                            });
                         });
-                    });
-                }
+                    }
+                });
             }
 
             if (state.project) {
@@ -1274,6 +1289,10 @@ define([
             return state.project && state.project.projectName;
         };
 
+        this.getActiveProjectKind = function () {
+            return state.projectInfo && state.projectInfo.info && state.projectInfo.info.kind;
+        };
+
         this.getActiveBranchName = function () {
             return state.branchName;
         };
@@ -1297,6 +1316,14 @@ define([
 
         this.isReadOnly = function () {
             return state.viewer || state.readOnlyProject;
+        };
+
+        this.getProjectAccess = function () {
+            return state.projectAccess;
+        };
+
+        this.getProjectInfo = function () {
+            return state.projectInfo;
         };
 
         this.getProjectObject = function () {
@@ -1377,10 +1404,6 @@ define([
             }
 
             return false;
-        };
-
-        this.getProjectAccess = function () {
-            return state.projectAccess;
         };
 
         this.downloadError = function () {

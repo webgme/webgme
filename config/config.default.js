@@ -58,6 +58,7 @@ var path = require('path'),
         blob: {
             type: 'FS', //'FS', 'S3'
             fsDir: './blob-local-storage',
+            namespace: '',
             s3: {
                 accessKeyId: '123',
                 secretAccessKey: 'abc',
@@ -84,7 +85,8 @@ var path = require('path'),
 
         core: {
             enableCustomConstraints: false,
-            inverseRelationsCacheSize: 2000
+            inverseRelationsCacheSize: 2000,
+            overlayShardSize: 10000
         },
 
         debug: false,
@@ -228,7 +230,6 @@ var path = require('path'),
             panelPaths: [path.join(__dirname, '../src/client/js/Panels')],
 
             layout: {
-                default: 'DefaultLayout',
                 basePaths: [path.join(__dirname, '../src/client/js/Layouts')]
             }
         },

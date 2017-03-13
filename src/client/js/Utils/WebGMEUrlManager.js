@@ -21,11 +21,11 @@ define([
         if (stateInfo.branchName) {
             searchQuery += '&branch=' + stateInfo.branchName;
         } else if (stateInfo.commitId) {
-            searchQuery += '&commit=' + stateInfo.commitId;
+            searchQuery += '&commit=' + encodeURIComponent(stateInfo.commitId);
         }
 
         if (stateInfo.nodeId) {
-            searchQuery += '&node=' + stateInfo.nodeId;
+            searchQuery += '&node=' + encodeURIComponent(stateInfo.nodeId);
         } else if (stateInfo.nodeId === CONSTANTS.PROJECT_ROOT_ID) {
             searchQuery += '&node=root';
         }
@@ -44,7 +44,7 @@ define([
 
         // leave this last, url may exceeds the max url limit
         if (stateInfo.selection) {
-            searchQuery += '&selection=' + stateInfo.selection.join(',');
+            searchQuery += '&selection=' + encodeURIComponent(stateInfo.selection.join(','));
         }
 
         return searchQuery;
@@ -92,7 +92,7 @@ define([
 
     function parseInitialThingsToDoFromUrl() {
         return {
-            layoutToLoad: util.getURLParameterByName('layout') || WebGMEGlobal.gmeConfig.visualization.layout.default,
+            layoutToLoad: util.getURLParameterByName('layout'),
             commitToLoad: util.getURLParameterByName('commit').toLowerCase(),
             projectToLoad: util.getURLParameterByName('project'),
             objectToLoad: util.getURLParameterByName('node') || CONSTANTS.PROJECT_ROOT_ID,

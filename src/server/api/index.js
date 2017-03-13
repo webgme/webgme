@@ -210,7 +210,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 if (err.message.indexOf('no such user') === 0) {
                     logger.info('Authenticated user did not exist in db, adding:', userId);
                     gmeAuth.addUser(userId, 'em@il', GUID(), false, {overwrite: false})
-                        .then(function (userData) {
+                        .then(function (/*userData*/) {
                             return gmeAuth.getUser(userId);
                         })
                         .then(deferred.resolve)
@@ -366,44 +366,19 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.get('/componentSettings', ensureAuthenticated, function (req, res, next) {
-        var componentsPath = path.join(process.cwd(), 'config', 'components.json');
-        logger.debug('Reading in default componentSettings at:', componentsPath);
-        // TODO: Consider using a file watcher and cache the file between updates..
-
-        Q.nfcall(fs.readFile, componentsPath, 'utf8')
-            .then(function (content) {
-                res.json(JSON.parse(content));
+        webgmeUtils.getComponentsJson(logger)
+            .then(function (componentsJson) {
+                res.json(componentsJson);
             })
-            .catch(function (err) {
-                if (err.code === 'ENOENT') {
-                    logger.debug('File did not exist returning empty obj', componentsPath);
-                    res.json({});
-                } else {
-                    logger.error('Errors reading in: ', componentsPath, err);
-                    next(err);
-                }
-            });
+            .catch(next);
     });
 
     router.get('/componentSettings/:componentId', ensureAuthenticated, function (req, res, next) {
-        var componentsPath = path.join(process.cwd(), 'config', 'components.json');
-        logger.debug('Reading in default componentSettings at:', componentsPath);
-        // TODO: Consider using a file watcher and cache the file between updates..
-
-        Q.nfcall(fs.readFile, componentsPath, 'utf8')
-            .then(function (content) {
-                var contentObj = JSON.parse(content);
-                res.json(contentObj[req.params.componentId] || {});
+        webgmeUtils.getComponentsJson(logger)
+            .then(function (componentsJson) {
+                res.json(componentsJson[req.params.componentId] || {});
             })
-            .catch(function (err) {
-                if (err.code === 'ENOENT') {
-                    logger.debug('File did not exist returning empty obj', componentsPath);
-                    res.json({});
-                } else {
-                    logger.error('Errors reading in: ', componentsPath, err);
-                    next(err);
-                }
-            });
+            .catch(next);
     });
 
     router.get('/user/settings', ensureAuthenticated, function (req, res, next) {
@@ -449,7 +424,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             .then(function (/*userData*/) {
                 return gmeAuth.updateUserSettings(userId, {}, true);
             })
-            .then(function (settings) {
+            .then(function (/*settings*/) {
                 res.sendStatus(204);
             })
             .catch(next);
@@ -1095,9 +1070,11 @@ function createAPI(app, mountPath, middlewareOpts) {
      * @param {string} [req.body.seedBranch='master'] - for 'db' optional branch name to seed from.
      * @param {string} [req.body.seedCommit] - for 'db' optional commit-hash to seed from
      * (if given seedBranch is not used).
-     *
+     * @param {string} [req.body.kind] - If not given:
+     *                  1) type is seed - will use kind stored in seed else name of seed.
+     *                  2) type is db - will use kind stored project info.
      * @example {type:'file', seedName:'EmptyProject'}
-     * @example {type:'db', seedName:'me+myOldProject', seedBranch:'release'}
+     * @example {type:'db', seedName:'guest+aFSMProject', seedBranch:'release', kind: 'FiniteStateMachine'}
      */
     router.put('/projects/:ownerId/:projectName', function (req, res, next) {
         var userId = getUserId(req),
@@ -1804,7 +1781,6 @@ function createAPI(app, mountPath, middlewareOpts) {
     // TODO: These variables should not be defined here.
     // TODO: runningPlugins should be stored in a database.
     var runningPlugins = {};
-    var GUID = requireJS('common/util/guid');
     var PLUGIN_CONSTANTS = {
         RUNNING: 'RUNNING',
         FINISHED: 'FINISHED', // Could still be that result.success=false.
@@ -2108,7 +2084,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     logger.debug('Latest api path: ' + latestAPIPath);
     app.use(latestAPIPath, router);
 
-    return Q();
+    return Q(); //jshint ignore: line
 }
 
 module.exports = {

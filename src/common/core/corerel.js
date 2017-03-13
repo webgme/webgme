@@ -10,7 +10,10 @@ define([
     'common/core/tasync',
     'common/util/random',
     'common/core/constants',
-], function (ASSERT, TASYNC, RANDOM, CONSTANTS) {
+    'common/storage/constants',
+    'common/util/key',
+    'common/regexp'
+], function (ASSERT, TASYNC, RANDOM, CONSTANTS, STORAGE_CONSTANTS, GENKEY, REGEXP) {
 
     'use strict';
 
@@ -59,11 +62,17 @@ define([
 
         var logger = innerCore.logger,
             self = this,
+            _shardSize = options.globConf.core.overlayShardSize,
+            _shardingLimit = Math.floor(_shardSize / 2),
             key;
 
         for (key in innerCore) {
             this[key] = innerCore[key];
         }
+
+        //removing direct storage functions on this level
+        delete this.loadObject;
+        delete this.insertObject;
 
         this._inverseCache = new InverseOverlaysCache(options.globConf.core.inverseRelationsCacheSize,
             logger.fork('inverseCache'));
@@ -90,15 +99,14 @@ define([
         function getRelativePointerPathFrom(node, source, name) {
             ASSERT(self.isValidNode(node) && typeof source === 'string' && typeof name === 'string');
             var target,
+                ovrInfo,
                 ovrData;
 
             do {
-                ovrData = (innerCore.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {})[source];
-                if (ovrData) {
-                    target = ovrData[name];
-                    if (target !== undefined) {
-                        break;
-                    }
+                ovrInfo = self.overlayInquiry(node, source, name);
+                if (typeof ovrInfo.value === 'string') {
+                    target = ovrInfo.value;
+                    break;
                 }
 
                 source = '/' + innerCore.getRelid(node) + source;
@@ -116,12 +124,266 @@ define([
             var hash = self.getHash(node),
                 relid;
 
-            if (hash && node.inverseOverlays) {
+            if (hash && node.inverseOverlays && node.inverseOverlaysMutable) {
                 self._inverseCache.setItem(hash, node.inverseOverlays);
                 delete node.inverseOverlaysMutable;
                 for (relid in node.children) {
                     storeNewInverseOverlays(node.children[relid]);
                 }
+            }
+        }
+
+        function attachOverlays(node) {
+
+            if (hasShardedOverlays(node) !== true) {
+                return node;
+            }
+
+            var overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
+                shardId,
+                shardIds = [],
+                loadPromises = [];
+
+            for (shardId in overlays) {
+                if (REGEXP.DB_HASH.test(overlays[shardId]) === true) {
+                    shardIds.push(shardId);
+                    loadPromises.push(innerCore.loadObject(overlays[shardId]));
+                }
+            }
+
+            return TASYNC.call(function (overlayShards) {
+                var i;
+
+                node.overlays = {};
+                node.overlayMutations = {};
+                node.overlayInitials = {};
+                for (i = 0; i < overlayShards.length; i += 1) {
+                    shardId = shardIds[i];
+                    node.overlays[shardId] = overlayShards[i];
+                    node.overlayInitials[shardId] = overlayShards[i];
+                    node.overlayMutations[shardId] = false;
+                }
+                updateSmallestOverlayShardIndex(node);
+                return node;
+            }, TASYNC.lift(loadPromises));
+        }
+
+        function hasShardedOverlays(node) {
+            return (self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {})[CONSTANTS.OVERLAY_SHARD_INDICATOR]
+                === true;
+        }
+
+        // We only shard regular GME nodes, technical sub-nodes do not get sharded
+        function shouldHaveShardedOverlays(node) {
+            return Object.keys(self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}).length >=
+                _shardingLimit && self.getPath(node).indexOf('_') === -1;
+        }
+
+        function addNewOverlayShard(node) {
+            var overlaysNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
+                shardId = RANDOM.generateRelid(overlaysNode.data),
+                newShardObject = {
+                    type: STORAGE_CONSTANTS.OVERLAY_SHARD_TYPE,
+                    itemCount: 0,
+                    items: {}
+                };
+
+            newShardObject[self.ID_NAME] = '';
+            node.overlays[shardId] = newShardObject;
+            node.overlayMutations[shardId] = true;
+
+            self.setProperty(overlaysNode, shardId, null);
+            return shardId;
+        }
+
+        function removeOverlayShard(node, shardId) {
+            // At this point the node should always be mutated.
+            var overlaysNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
+
+            delete node.overlays[shardId];
+            delete node.overlayMutations[shardId];
+            self.deleteProperty(overlaysNode, shardId);
+        }
+
+        function transformOverlays(node) {
+            var originalOverlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY),
+                count = _shardSize,
+                source,
+                name,
+                shardId;
+
+            self.deleteChild(node, CONSTANTS.OVERLAYS_PROPERTY);
+            self.removeChildFromCache(node, CONSTANTS.OVERLAYS_PROPERTY);
+
+            self.setProperty(self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY), CONSTANTS.OVERLAY_SHARD_INDICATOR, true);
+
+            node.overlays = {};
+            node.overlayMutations = {};
+            node.overlayInitials = {};
+            node.minimalOverlayShardId = null;
+            for (source in originalOverlays) {
+                if (source !== CONSTANTS.MUTABLE_PROPERTY) {
+                    for (name in originalOverlays[source]) {
+                        if (name !== CONSTANTS.MUTABLE_PROPERTY) {
+                            if (count >= _shardSize) {
+                                shardId = addNewOverlayShard(node);
+                                node.minimalOverlayShardId = shardId;
+                                count = 0;
+                            }
+
+                            node.overlays[shardId].items[source] = node.overlays[shardId].items[source] || {};
+                            node.overlays[shardId].items[source][name] = originalOverlays[source][name];
+                            node.overlays[shardId].itemCount += 1;
+                            count += 1;
+                        }
+                    }
+                }
+            }
+
+            // In the unlikely event that during transition the original shard is empty.
+            if (Object.keys(node.overlays).length === 0) {
+                node.minimalOverlayShardId = addNewOverlayShard(node);
+            }
+        }
+
+        function updateSmallestOverlayShardIndex(node) {
+            var shardId,
+                minimalItemCount = _shardSize + 1;
+
+            for (shardId in node.overlays) {
+                if (node.overlays[shardId].itemCount < minimalItemCount) {
+                    minimalItemCount = node.overlays[shardId].itemCount;
+                    node.minimalOverlayShardId = shardId;
+                }
+            }
+        }
+
+        function ensureOverlayShardMutated(node, shardId) {
+            var overlayNode;
+
+            if (node.overlayMutations[shardId] !== true) {
+                node.overlayMutations[shardId] = true;
+                node.overlays[shardId] = JSON.parse(JSON.stringify(node.overlays[shardId]));
+                overlayNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
+                self.setProperty(overlayNode, shardId, null);
+            }
+        }
+
+        function putEntryIntoOverlayShard(node, shardId, source, name, target) {
+
+            if (node.overlays[shardId].itemCount >= _shardSize &&
+                node.overlays[shardId].items.hasOwnProperty(source) === false) {
+                shardId = addNewOverlayShard(node);
+                node.minimalOverlayShardId = shardId;
+            }
+
+            ensureOverlayShardMutated(node, shardId);
+
+            node.overlays[shardId].items[source] = node.overlays[shardId].items[source] || {};
+            node.overlays[shardId].items[source][name] = target;
+            node.overlays[shardId].itemCount += 1;
+
+            if (node.minimalOverlayShardId === shardId && node.overlays[shardId].itemCount >= _shardSize) {
+                updateSmallestOverlayShardIndex(node);
+            }
+        }
+
+        function putEntryIntoShardedOverlays(node, source, name, target) {
+            // At this point we expect that everything was checked and we can simply look for
+            // the proper place of the entry.
+            var shardId;
+
+            for (shardId in node.overlays) {
+                if (node.overlays[shardId].items.hasOwnProperty(source)) {
+                    putEntryIntoOverlayShard(node, shardId, source, name, target);
+                    return;
+                }
+            }
+
+            putEntryIntoOverlayShard(node, node.minimalOverlayShardId, source, name, target);
+        }
+
+        function removeEntryFromShardedOverlays(node, source, name) {
+            var shardId;
+
+            for (shardId in node.overlays) {
+                if (node.overlays[shardId].items[source]) {
+                    if (typeof node.overlays[shardId].items[source][name] === 'string') {
+
+                        ensureOverlayShardMutated(node, shardId);
+
+                        delete node.overlays[shardId].items[source][name];
+                        node.overlays[shardId].itemCount -= 1;
+                    }
+                    break;
+                }
+            }
+        }
+
+        function persistShardedOverlays(node, stackedObjects) {
+            // This recursive function will save objects, right before calling the underlying persist.
+            var relids,
+                shardId,
+                source,
+                hash,
+                overlayNode,
+                shouldUpdateSmallest = false,
+                i;
+
+            if (self.isMutable(node) !== true) {
+                return;
+            }
+
+            relids = self.getChildrenRelids(node);
+
+            for (i = 0; i < relids.length; i += 1) {
+                if (self.childLoaded(node, relids[i]) === true) {
+                    persistShardedOverlays(self.getChild(node, relids[i]), stackedObjects);
+                }
+            }
+
+            overlayNode = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
+            for (shardId in node.overlayMutations) {
+                // We only remove shards if they were empty at loading as well. Otherwise
+                // node eventing would be impossible.
+                if (node.overlayMutations[shardId] === true) {
+                    node.overlayMutations[shardId] = false;
+                    node.overlays[shardId][self.ID_NAME] = '';
+                    node.overlays[shardId].__v = STORAGE_CONSTANTS.VERSION;
+
+                    // if we persist an empty shard we have to ensure that its hash will be unique
+                    if (node.overlays[shardId].itemCount === 0) {
+                        node.overlays[shardId].oldHash = node.overlayInitials[shardId] ?
+                            node.overlayInitials[shardId][self.ID_NAME] || null : null;
+                        node.overlays[shardId].items = {};
+                    } else {
+                        for (source in node.overlays[shardId].items) {
+                            if (Object.keys(node.overlays[shardId].items[source]).length === 0) {
+                                delete node.overlays[shardId].items[source];
+                            }
+                        }
+                    }
+
+                    hash = '#' + GENKEY(node.overlays[shardId], options.globConf);
+                    node.overlays[shardId][self.ID_NAME] = hash;
+                    innerCore.insertObject(node.overlays[shardId], stackedObjects);
+                    stackedObjects[hash] = {
+                        oldHash: node.overlayInitials[shardId] ? node.overlayInitials[shardId][self.ID_NAME] : null,
+                        oldData: node.overlayInitials[shardId],
+                        newHash: hash,
+                        newData: node.overlays[shardId]
+                    };
+
+                    self.setProperty(overlayNode, shardId, hash);
+                    shouldUpdateSmallest = true;
+                } else if (node.overlays[shardId].itemCount === 0) {
+                    removeOverlayShard(node, shardId);
+                    shouldUpdateSmallest = true;
+                }
+            }
+
+            if (shouldUpdateSmallest) {
+                updateSmallestOverlayShardIndex(node);
             }
         }
 
@@ -140,11 +402,32 @@ define([
         };
 
         this.persist = function (node) {
-            var persisted = innerCore.persist(node);
+            var stackedObjects = {},
+                persisted;
 
+            persistShardedOverlays(node, stackedObjects);
+            persisted = innerCore.persist(node, stackedObjects);
             storeNewInverseOverlays(self.getRoot(node));
 
             return persisted;
+        };
+
+        this.loadRoot = function (hash) {
+            return TASYNC.call(function (root) {
+                return attachOverlays(root);
+            }, innerCore.loadRoot(hash));
+        };
+
+        this.loadChild = function (node, relid) {
+            return TASYNC.call(function (child) {
+                return attachOverlays(child);
+            }, innerCore.loadChild(node, relid));
+        };
+
+        this.loadByPath = function (node, relPath) {
+            return TASYNC.call(function (target) {
+                return attachOverlays(target);
+            }, innerCore.loadByPath(node, relPath));
         };
         //</editor-fold>
 
@@ -153,6 +436,9 @@ define([
             var hash,
                 inverseOverlays = {},
                 overlay,
+                overlaysObject,
+                shardId,
+                i,
                 source,
                 name,
                 target;
@@ -174,15 +460,26 @@ define([
             }
 
             // Otherwise we have to compute it
-            overlay = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
-            overlay = overlay || {};
+            if (hasShardedOverlays(node)) {
+                overlaysObject = node.overlays;
+            } else {
+                overlaysObject = {single: {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
+            }
+
             inverseOverlays = {};
-            for (source in overlay) {
-                for (name in overlay[source]) {
-                    target = overlay[source][name];
-                    inverseOverlays[target] = inverseOverlays[target] || {};
-                    inverseOverlays[target][name] = inverseOverlays[target][name] || [];
-                    inverseOverlays[target][name].push(source);
+            for (shardId in overlaysObject) {
+                overlay = overlaysObject[shardId];
+                for (source in overlay.items) {
+                    if (source !== CONSTANTS.MUTABLE_PROPERTY) {
+                        for (name in overlay.items[source]) {
+                            if (name !== CONSTANTS.MUTABLE_PROPERTY) {
+                                target = overlay.items[source][name];
+                                inverseOverlays[target] = inverseOverlays[target] || {};
+                                inverseOverlays[target][name] = inverseOverlays[target][name] || [];
+                                inverseOverlays[target][name].push(source);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -298,21 +595,67 @@ define([
             innerCore.setProperty(node, name, value);
         };
 
+        this.overlayInquiry = function (node, source, name) {
+            // If name is not given, then the whole object returned.
+            // If no entry found, null is returned.
+            var shardId,
+                ordinaryOverlays,
+                result = {
+                    shardId: null,
+                    value: null
+                };
+
+            if (hasShardedOverlays(node) === true) {
+                for (shardId in node.overlays) {
+                    if (node.overlays[shardId].items[source]) {
+                        result.shardId = shardId;
+                        if (typeof name === 'string') {
+                            result.value = typeof node.overlays[shardId].items[source][name] === 'string' ?
+                                node.overlays[shardId].items[source][name] : null;
+                        } else {
+                            result.value = node.overlays[shardId].items[source];
+                        }
+                        break;
+                    }
+                }
+            } else {
+                ordinaryOverlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {};
+                if (ordinaryOverlays.hasOwnProperty(source)) {
+                    if (typeof name === 'string') {
+                        result.value = typeof ordinaryOverlays[source][name] === 'string' ?
+                            ordinaryOverlays[source][name] : null;
+                    } else {
+                        result.value = ordinaryOverlays[source];
+                    }
+                }
+            }
+
+            return result;
+        };
+
         this.overlayRemove = function (node, source, name, target) {
             ASSERT(self.isValidNode(node));
             ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && self.isPointerName(name));
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
-            var overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
-                overlayNode,
-                index;
+            var currentOverlayInfo = self.overlayInquiry(node, source, name),
+                index,
+                overlays,
+                overlayNode;
 
-            overlayNode = innerCore.getChild(overlays, source);
-            ASSERT(overlayNode && innerCore.getProperty(overlayNode, name) === target);
-            innerCore.deleteProperty(overlayNode, name);
+            ASSERT(currentOverlayInfo.value === target);
 
-            if (innerCore.getKeys(overlayNode).length === 0) {
-                innerCore.deleteProperty(overlays, source);
+            if (hasShardedOverlays(node)) {
+                removeEntryFromShardedOverlays(node, source, name);
+            } else {
+                overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
+
+                overlayNode = innerCore.getChild(overlays, source);
+                innerCore.deleteProperty(overlayNode, name);
+
+                if (innerCore.getKeys(overlayNode).length === 0) {
+                    innerCore.deleteProperty(overlays, source);
+                }
             }
 
             //Now we check if we need to mutate the inverse overlays
@@ -322,7 +665,7 @@ define([
                     node.inverseOverlaysMutable = true;
                 }
 
-                index = node.inverseOverlays[target][name].indexOf(source);
+                index = ((node.inverseOverlays[target] || {})[name] || []).indexOf(source);
                 if (index !== -1) {
                     node.inverseOverlays[target][name].splice(index, 1);
                     if (node.inverseOverlays[target][name].length === 0) {
@@ -333,27 +676,37 @@ define([
                     }
                 }
             }
-
         };
 
         this.overlayQuery = function (node, prefix) {
             ASSERT(self.isValidNode(node) && innerCore.isValidPath(prefix));
 
-            var overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {},
+            var overlays,
+                overlaysObject,
+                shardId,
                 inverseOverlays = self.getInverseOverlayOfNode(node), // We necessarily have to compute at this point,
                 i, path, name, list = [],
                 prefix2 = prefix + CONSTANTS.PATH_SEP;
 
-            for (path in overlays) {
-                if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
-                    for (name in overlays[path]) {
-                        if (self.isPointerName(name)) {
-                            list.push({
-                                s: path,                // source
-                                n: name,                // name
-                                t: overlays[path][name],// target
-                                p: true                 // is forward relation
-                            });
+            if (hasShardedOverlays(node)) {
+                overlaysObject = node.overlays;
+            } else {
+                overlaysObject = {'single': {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
+            }
+
+            for (shardId in overlaysObject) {
+                overlays = overlaysObject[shardId].items;
+                for (path in overlays) {
+                    if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
+                        for (name in overlays[path]) {
+                            if (self.isPointerName(name)) {
+                                list.push({
+                                    s: path,                // source
+                                    n: name,                // name
+                                    t: overlays[path][name],// target
+                                    p: true                 // is forward relation
+                                });
+                            }
                         }
                     }
                 }
@@ -382,14 +735,29 @@ define([
             ASSERT(innerCore.isValidPath(source) && innerCore.isValidPath(target) && self.isPointerName(name));
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
-            var overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
+            var currentOverlayInfo = self.overlayInquiry(node, source, name),
+                index,
+                overlays,
+                overlay,
+                entryCount,
+                overlayArray;
+
+            ASSERT(currentOverlayInfo.value === null);
+
+            if (hasShardedOverlays(node) === false && shouldHaveShardedOverlays(node)) {
+                transformOverlays(node);
+            }
+
+            if (hasShardedOverlays(node) === true) {
+                putEntryIntoShardedOverlays(node, source, name, target);
+            } else {
+                overlays = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY);
                 overlay = self.getChild(overlays, source);
 
-            // Make sure it is an insert
-            ASSERT(self.getProperty(overlay, name) === undefined);
-            self.setProperty(overlay, name, target);
+                self.setProperty(overlay, name, target);
+            }
 
-            //First check if we to inverse computed already and if we need to mutate it
+            //Now we check if we need to mutate the inverse overlays
             if (node.inverseOverlays) {
                 if (node.inverseOverlaysMutable !== true) {
                     node.inverseOverlays = JSON.parse(JSON.stringify(node.inverseOverlays));
@@ -544,7 +912,6 @@ define([
                                 while (data.firstLength-- > 0) {
                                     nodeToChangeOverlay = innerCore.getParent(nodeToChangeOverlay);
                                 }
-                                // overlays = innerCore.getChild(overlays, CONSTANTS.OVERLAYS_PROPERTY);
 
                                 source = innerCore.joinPaths(data.first, entry.s.substr(baseOldPath.length));
                                 target = data.second;
@@ -576,6 +943,8 @@ define([
             }
             newNode.inverseOverlaysMutable = node.inverseOverlaysMutable;
 
+            var root = self.getRoot(newNode);
+            root.initial[self.getPath(newNode)] = root.initial[self.getPath(node)];
             return newNode;
         };
 
@@ -713,7 +1082,6 @@ define([
                         while (data.firstLength-- > 0) {
                             nodeToModifyOverlays = innerCore.getParent(nodeToModifyOverlays);
                         }
-                        // overlays = innerCore.getChild(overlays, CONSTANTS.OVERLAYS_PROPERTY);
 
                         source = innerCore.joinPaths(data.first, entry.s.substr(baseOldPath.length));
                         target = data.second;
@@ -744,6 +1112,8 @@ define([
                 base = innerCore.getParent(base);
             }
 
+            var root = self.getRoot(node);
+            root.initial[self.getPath(node)] = root.initial[self.getPath(oldNode)];
             self.deleteNode(oldNode);
 
             return node;
@@ -779,7 +1149,7 @@ define([
                 i;
 
             for (i = 0; i < children.length; i += 1) {
-                result.push(innerCore.loadChild(node, children[i]));
+                result.push(self.loadChild(node, children[i]));
             }
 
             return TASYNC.lift(result);
@@ -792,19 +1162,20 @@ define([
         this.getPointerNamesFrom = function (node, source) {
             ASSERT(self.isValidNode(node));
 
-            var names = [];
+            var names = [],
+                name,
+                overlayInfo;
 
             do {
-                var child = (innerCore.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {})[source];
-                if (child) {
-                    for (var name in child) {
+                overlayInfo = self.overlayInquiry(node, source);
+                if (overlayInfo.value !== null) {
+                    for (name in overlayInfo.value) {
                         ASSERT(names.indexOf(name) === -1);
                         if (self.isPointerName(name)) {
                             names.push(name);
                         }
                     }
                 }
-
                 source = '/' + innerCore.getRelid(node) + source;
                 node = innerCore.getParent(node);
             } while (node);
@@ -831,7 +1202,7 @@ define([
             var res = getRelativePointerPathFrom(node, '', name);
 
             if (res.target !== undefined) {
-                return innerCore.loadByPath(res.node, res.target);
+                return self.loadByPath(res.node, res.target);
             } else {
                 return null;
             }
@@ -914,14 +1285,14 @@ define([
             ASSERT(self.isValidNode(node) && typeof name === 'string');
 
             var source = '',
-                overlays;
+                overlayInfo;
 
             do {
-                overlays = self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY);
-                if (overlays && overlays[source] && typeof overlays[source][name] === 'string') {
-                    self.overlayRemove(node, source, name, overlays[source][name]);
+                overlayInfo = self.overlayInquiry(node, source, name);
+                if (typeof overlayInfo.value === 'string') {
+                    self.overlayRemove(node, source, name, overlayInfo.value);
+                    break;
                 }
-
                 source = CONSTANTS.PATH_SEP + self.getRelid(node) + source;
                 node = self.getParent(node);
             } while (node);
@@ -973,6 +1344,42 @@ define([
             }
 
             return true;
+        };
+
+        // by default the function removes any 'sub-node' relations
+        this.getRawOverlayInformation = function (node) {
+            var completeOverlayInfo = {},
+                shardId,
+                source,
+                complexOverlayObject,
+                name;
+
+            if (hasShardedOverlays(node)) {
+                complexOverlayObject = node.overlays;
+            } else {
+                complexOverlayObject = {single: {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
+            }
+
+            for (shardId in complexOverlayObject) {
+                for (source in complexOverlayObject[shardId].items) {
+                    if (source.indexOf('_') === -1) {
+                        completeOverlayInfo[source] = {};
+                        for (name in complexOverlayObject[shardId].items[source]) {
+                            if (name.indexOf('_') === -1) {
+                                if (complexOverlayObject[shardId].items[source][name] === '/_nullptr') {
+                                    completeOverlayInfo[source][name] = null;
+                                } else if (complexOverlayObject[shardId].items[source][name]
+                                        .indexOf('_') === -1) {
+                                    completeOverlayInfo[source][name] =
+                                        complexOverlayObject[shardId].items[source][name];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return completeOverlayInfo;
         };
         //</editor-fold>
     }

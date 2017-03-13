@@ -79,6 +79,7 @@ define([
      * @param {object} parameters.gmeConfig
      * @param {object} parameters.logger
      * @param {object} parameters.project
+     * @param {object} parameters.patch
      * @param {string} parameters.branchOrCommit
      * @param {string} [parameters.branchName]
      * @param {boolean} [parameters.noUpdate=false]

@@ -74,6 +74,8 @@ define([], function () {
         MAX_AGE: 3,
         MAX_TICKS: 2000,
         MAX_MUTATE: 30000,
-        MAXIMUM_STARTING_RELID_LENGTH: 5
+        MAXIMUM_STARTING_RELID_LENGTH: 5,
+
+        OVERLAY_SHARD_INDICATOR : 'sharded'
     };
 });

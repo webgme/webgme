@@ -241,6 +241,7 @@ define(['js/logger',
         var containerNode = this._client.getNode(this._containerNodeId),
             metaNodes = this._client.getAllMetaNodes(),
             descriptorCollection = {},
+            activePanel,
             descriptor,
             validInfo,
             keys,
@@ -279,23 +280,12 @@ define(['js/logger',
         }
 
         if (containerNode) {
-            if (this._visualizer === 'GraphViz') {
-                //do nothing as partBrowser should not have any element in GraphViz
-                validInfo = {};
-            } else if (this._visualizer === 'SetEditor') {
-                //i = getSetName();
-                //if (i) {
-                //    validInfo = containerNode.getValidSetMemberTypesDetailed(i);
-                //} else {
-                //    validInfo = {};
-                //} //TODO now we cannot create elements in set editor
-                validInfo = {};
-            } else if (this._visualizer === 'METAAspect') {
-                //here we should override the container node to the META container node - ROOT as of now
-                containerNode = this._client.getNode(CONSTANTS.PROJECT_ROOT_ID);
-                validInfo = containerNode.getValidChildrenTypesDetailed(null, true);
+            activePanel = WebGMEGlobal.PanelManager.getActivePanel();
+
+            if (activePanel && typeof activePanel.getValidTypesInfo === 'function') {
+                validInfo = activePanel.getValidTypesInfo(containerNode.getId());
             } else {
-                //default is the containment based elements
+                // default is the containment based elements.
                 validInfo = containerNode.getValidChildrenTypesDetailed(this._aspect);
             }
 

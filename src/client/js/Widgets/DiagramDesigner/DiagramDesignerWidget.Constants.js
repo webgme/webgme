@@ -21,6 +21,8 @@ define(['js/Constants'], function (CONSTANTS) {
          */
         DESIGNER_ITEM_CLASS: 'designer-item',
         DESIGNER_CONNECTION_CLASS: 'designer-connection',
+        DESIGNER_CONNECTION_SHADOW_CLASS: 'designer-connection designer-connection-shadow',
+        DESIGNER_CONNECTION_SHADOW_HOVER_CLASS: 'designer-connection designer-connection-shadow connection-hover',
         CONNECTION_DRAGGABLE_END_CLASS: 'c-d-end',
         CONNECTOR_CLASS: 'connector',
         CONNECTION_END_SRC: 'src',
@@ -56,6 +58,7 @@ define(['js/Constants'], function (CONSTANTS) {
         LINE_ARROWS: CONSTANTS.LINE_STYLE.LINE_ARROWS,
         LINE_LABEL_PLACEMENT: CONSTANTS.LINE_STYLE.LABEL_PLACEMENT,
         LINE_LABEL_PLACEMENTS: CONSTANTS.LINE_STYLE.LABEL_PLACEMENTS,
+        LINE_SHOW_CONNECTION_AREAS: CONSTANTS.LINE_STYLE.LINE_SHOW_CONNECTION_AREAS,
 
         /*
          * CONNECTION CONSTANTS

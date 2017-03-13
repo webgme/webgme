@@ -1,7 +1,7 @@
 {
   "hookOne": {
     "events": [
-      "commit"
+      "COMMIT"
     ],
     "description": "The first ever webhook for WebGME",
     "url": "http://index.hu",
@@ -9,9 +9,9 @@
   },
   "hookOther": {
     "events": [
-      "commit",
-      "branchDeleted",
-      "branchUpdated"
+      "COMMIT",
+      "BRANCH_DELETED",
+      "BRANCH_UPDATED"
     ],
     "description": "The second webhook for WebGME",
     "url": "http://origo.hu",

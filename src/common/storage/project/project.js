@@ -40,6 +40,11 @@ define([
                 .nodeify(callback);
         };
 
+        this.getProjectInfo = function (callback) {
+            return Q.ninvoke(storage, 'getProjectInfo', self.projectId)
+                .nodeify(callback);
+        };
+
         this.setBranchHash = function (branchName, newHash, oldHash, callback) {
             return Q.ninvoke(storage, 'setBranchHash', self.projectId, branchName, newHash, oldHash)
                 .nodeify(callback);

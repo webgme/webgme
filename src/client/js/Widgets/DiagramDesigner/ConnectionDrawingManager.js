@@ -455,9 +455,13 @@ define([
 
         this._minimalDistanceMet = false;
 
-        //ask the decorator if it wants to specify custom line-in-draw-visual-properties for the connection being drawn
-        this._setTempConnectionInDrawProperties(
-            this._diagramDesigner.items[objId].getDrawnConnectionVisualStyle(sCompId));
+
+        if (typeof this._diagramDesigner.items[objId].getDrawnConnectionVisualStyle === 'function') {
+            // ask the decorator if it wants to specify custom line-in-draw-visual-properties for the
+            // connection being drawn
+            this._setTempConnectionInDrawProperties(
+                this._diagramDesigner.items[objId].getDrawnConnectionVisualStyle(sCompId));
+        }
 
         this._connectionInDrawProps = {
             src: objId,

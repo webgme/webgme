@@ -783,4 +783,779 @@ describe('jsonPatcher', function () {
         createTests(true, ' parent is root.');
         createTests(false, ' parent is NOT root.');
     });
+
+    describe('sharded overlay handling', function () {
+
+        it('should work fine during first creation', function () {
+            var oldData = {
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    _id: '',
+                    ovr: {'/6': {parentA: '', 'parentB': ''}},
+                    __v: '1.1.0'
+                },
+                newData = {
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    _id: '',
+                    __v: '1.1.0',
+                    ovr: {
+                        9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                        sharded: true,
+                        l: '#1c29df713f7cc6500bfa999b82a3cffe4956fb1e',
+                        r: '#4a5ef79b14caf635b7e645c8c66bf35850bc5d15',
+                        S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
+                    }
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patcher.apply(oldData, patch).result).to.eql(newData);
+            expect(patch).to.eql([{
+                op: 'replace', path: '/ovr',
+                value: {
+                    9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                    sharded: true,
+                    l: '#1c29df713f7cc6500bfa999b82a3cffe4956fb1e',
+                    r: '#4a5ef79b14caf635b7e645c8c66bf35850bc5d15',
+                    S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
+                },
+                preShardRelations: {'/6': {parentA: '', parentB: ''}}
+            }]);
+        });
+
+        it('should work fine during shard addition', function () {
+            var oldData = {
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    '_id': '',
+                    '__v': '1.1.0',
+                    c: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    ovr: {
+                        9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                        sharded: true,
+                        S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
+                    },
+                    X: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    G: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a'
+                },
+                newData = {
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    '_id': '',
+                    '__v': '1.1.0',
+                    c: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    ovr: {
+                        9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                        sharded: true,
+                        l: '#1c29df713f7cc6500bfa999b82a3cffe4956fb1e',
+                        r: '#4a5ef79b14caf635b7e645c8c66bf35850bc5d15',
+                        S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
+                    },
+                    X: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    G: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a'
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patcher.apply(oldData, patch).result).to.eql(newData);
+        });
+
+        it('should work fine during shard removal', function () {
+            var newData = {
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    '_id': '',
+                    '__v': '1.1.0',
+                    c: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    ovr: {
+                        9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                        sharded: true,
+                        S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
+                    },
+                    X: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    G: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a'
+                },
+                oldData = {
+                    6: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    '_id': '',
+                    '__v': '1.1.0',
+                    c: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    ovr: {
+                        9: '#f53f3346eb25868aba13cbfed5abad3ccb7758fd',
+                        sharded: true,
+                        l: '#1c29df713f7cc6500bfa999b82a3cffe4956fb1e',
+                        r: '#4a5ef79b14caf635b7e645c8c66bf35850bc5d15',
+                        S: '#3fb07aae598bd03cfa059ba55acb1ea8c6c1634e'
+                    },
+                    X: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a',
+                    G: '#e1d65cdafc2aeef464efdf67895f6d9ec54f650a'
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patcher.apply(oldData, patch).result).to.eql(newData);
+        });
+
+        it('should create a valid patch for updating entry inside shard-item', function () {
+            var oldData = {
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: ''
+                        }
+                    },
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
+                },
+                newData = {
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: '/some/path'
+                        }
+                    },
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patch).to.eql([{
+                op: 'replace',
+                path: '/items/%2fW/parentB',
+                value: '/some/path',
+                updates: ['/W'],
+                partialUpdates: ['/some/path', '']
+            }]);
+        });
+
+        it('should create a valid patch for adding entry to shard-item', function () {
+            var oldData = {
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: ''
+                        }
+                    },
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
+                },
+                newData = {
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: '',
+                            parentC: ''
+                        }
+                    },
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patch).to.eql([{
+                op: 'add',
+                path: '/items/%2fW/parentC',
+                value: '',
+                updates: ['/W'],
+                partialUpdates: ['']
+            }]);
+        });
+
+        it('should create a valid patch for removing entry from shard-item', function () {
+            var oldData = {
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: ''
+                        }
+                    },
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
+                },
+                newData = {
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: ''
+                        }
+                    },
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patch).to.eql([{
+                op: 'remove',
+                path: '/items/%2fW/parentB',
+                updates: ['/W'],
+                partialUpdates: ['']
+            }]);
+        });
+
+        it('should create a valid patch for removing a shard entry', function () {
+            var oldData = {
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {
+                        '/W': {
+                            parentA: '',
+                            parentB: ''
+                        }
+                    },
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
+                },
+                newData = {
+                    type: 'shard',
+                    itemCount: 2,
+                    items: {},
+                    '_id': '#6ca0a1a3c52f381e69d7fa930468c7adce47646b',
+                    '__v': '1.1.0'
+                },
+                patch = patcher.create(oldData, newData);
+
+            expect(patch).to.eql([{
+                op: 'replace',
+                path: '/items',
+                value: {},
+                partialUpdates: ['', ''],
+                updates: ['/W']
+            }]);
+        });
+    });
+
+    describe('sharded overlay handling in core changes', function () {
+        this.timeout(10000);
+        var gmeConfig = testFixture.getGmeConfig(),
+            Q = testFixture.Q,
+            logger = testFixture.logger.fork('jsonPatcher.core.shard.changes.spec'),
+            storageUtil = testFixture.requirejs('common/storage/util'),
+            storage,
+            projectName = 'coreShardChanges',
+            basicRootHash,
+            shardedRootHash,
+            core,
+            root,
+            gmeAuth;
+
+        function persistAndGetPatches() {
+            var persisted = core.persist(root),
+                hash,
+                patch = {};
+
+            for (hash in persisted.objects) {
+                if (storageUtil.coreObjectHasOldAndNewData(persisted.objects[hash])) {
+                    patch[hash] = storageUtil.getPatchObject(
+                        persisted.objects[hash].oldData,
+                        persisted.objects[hash].newData);
+                } else if (persisted.objects[hash].newData) {
+                    patch[hash] = persisted.objects[hash].newData;
+                }
+            }
+
+            return patch;
+        }
+
+        before(function (done) {
+            gmeConfig.core.overlayShardSize = 8;
+            testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
+                .then(function (gmeAuth_) {
+                    gmeAuth = gmeAuth_;
+                    storage = testFixture.getMemoryStorage(logger, gmeConfig, gmeAuth);
+                    return storage.openDatabase();
+                })
+                .then(function () {
+                    return storage.openDatabase();
+                })
+                .then(function () {
+                    return storage.createProject({projectName: projectName});
+                })
+                .then(function (dbProject) {
+
+                    var project = new testFixture.Project(dbProject, storage, logger, gmeConfig),
+                        root,
+                        child1,
+                        child2,
+                        child3,
+                        child4;
+
+                    core = new testFixture.WebGME.core(project, {
+                        globConf: gmeConfig,
+                        logger: logger.fork('core')
+                    });
+
+                    root = core.createNode();
+                    child1 = core.createNode({parent: root, relid: '1'});
+                    child2 = core.createNode({parent: root, relid: '2'});
+                    core.setPointer(child1, 'parent', root);
+                    // core.setPointer(child2, 'parent', root);
+                    core.setPointer(root, 'noref', null);
+                    core.persist(root);
+                    basicRootHash = core.getHash(root);
+
+                    core.setPointer(child2, 'parent', root);
+                    child3 = core.createNode({parent: root, relid: '3'});
+                    core.setPointer(child3, 'parent', root);
+                    child4 = core.createNode({parent: root, relid: '4'});
+                    core.setPointer(child4, 'parent', root);
+                    core.persist(root);
+                    shardedRootHash = core.getHash(root);
+
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            Q.allDone([
+                storage.closeDatabase(),
+                gmeAuth.unload()
+            ])
+                .nodeify(done);
+        });
+
+        beforeEach(function (done) {
+            Q.ninvoke(core, 'loadRoot', basicRootHash)
+                .then(function (root_) {
+                    root = root_;
+                    expect(root.overlays).to.eql(undefined);
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharding add relation', function () {
+            var newChild = core.createNode({parent: root, relid: 'new'}),
+                patch,
+                changes;
+            core.setPointer(newChild, 'parent', root);
+            core.setPointer(newChild, 'parent_', root);
+            patch = persistAndGetPatches();
+            changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+            expect(changes).to.eql({
+                load: {'/new': true},
+                unload: {},
+                update: {},
+                partialUpdate: {'': true}
+            });
+        });
+
+        it('should generate correct changes - sharding add relations', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var i,
+                        newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', root);
+                    core.setPointer(newChild, 'parent_', root);
+
+                    for (i = 0; i < oldChildren.length; i += 1) {
+                        core.setPointer(oldChildren[i], 'parent_', root);
+                        core.setPointer(oldChildren[i], 'sibling', newChild);
+                    }
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {},
+                        update: {'/1': true, '/2': true},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharding add null relations', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var i,
+                        newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', root);
+                    core.setPointer(newChild, 'parent_', root);
+                    core.setPointer(root, 'nptr', null);
+
+                    for (i = 0; i < oldChildren.length; i += 1) {
+                        core.setPointer(oldChildren[i], 'parent_', root);
+                        core.setPointer(oldChildren[i], 'sibling', newChild);
+                    }
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {},
+                        update: {'/1': true, '/2': true, '': true},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharding update relations', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var i,
+                        newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', root);
+                    core.setPointer(newChild, 'parent_', root);
+
+                    for (i = 0; i < oldChildren.length; i += 1) {
+                        core.setPointer(oldChildren[i], 'parent', newChild);
+                    }
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {},
+                        update: {'/1': true, '/2': true},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharding update null relation', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', oldChildren[0]);
+                    core.setPointer(newChild, 'parent_', oldChildren[1]);
+                    core.setPointer(root, 'noref', newChild);
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {},
+                        update: {'': true},
+                        partialUpdate: {'/1': true, '/2': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharding remove relations', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var i,
+                        newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', root);
+                    core.setPointer(newChild, 'parent_', root);
+
+                    for (i = 0; i < oldChildren.length; i += 1) {
+                        core.deletePointer(oldChildren[i], 'parent');
+                    }
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {},
+                        update: {'/1': true},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharding remove null relation', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', oldChildren[0]);
+                    core.setPointer(newChild, 'parent_', oldChildren[1]);
+
+                    core.deletePointer(root, 'noref');
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {},
+                        update: {'': true},
+                        partialUpdate: {'/1': true, '/2': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharding add and remove relations', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var i,
+                        newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', root);
+                    core.setPointer(newChild, 'parent_', root);
+
+                    for (i = 0; i < oldChildren.length; i += 1) {
+                        core.deletePointer(oldChildren[i], 'parent');
+                        core.setPointer(oldChildren[i], 'sibling', newChild);
+                    }
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {},
+                        update: {'/1': true, '/2': true},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharding remove relations and nodes', function (done) {
+            Q.ninvoke(core, 'loadChildren', root)
+                .then(function (oldChildren) {
+                    var i,
+                        newChild = core.createNode({parent: root, relid: 'new'}),
+                        patch,
+                        changes;
+
+                    expect(oldChildren).to.have.length(2);
+
+                    core.setPointer(newChild, 'parent', root);
+                    core.setPointer(newChild, 'parent_', root);
+
+                    for (i = 0; i < oldChildren.length; i += 1) {
+                        core.setBase(oldChildren[i], newChild);
+                        core.deleteNode(oldChildren[i]);
+                    }
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/new': true},
+                        unload: {'/1': true, '/2': true},
+                        update: {},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharded add relation', function (done) {
+            Q.ninvoke(core, 'loadRoot', shardedRootHash)
+                .then(function (root_) {
+                    root = root_;
+                    return Q.ninvoke(core, 'loadChild', root, '1');
+                })
+                .then(function (child1) {
+                    var patch,
+                        changes;
+
+                    expect(child1).not.to.eql(null);
+                    core.setPointer(child1, 'parent_', root);
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {},
+                        unload: {},
+                        update: {'/1': true},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharded add null relation', function (done) {
+            Q.ninvoke(core, 'loadRoot', shardedRootHash)
+                .then(function (root_) {
+                    root = root_;
+                    return Q.ninvoke(core, 'loadChild', root, '1');
+                })
+                .then(function (child1) {
+                    var patch,
+                        changes;
+
+                    expect(child1).not.to.eql(null);
+                    core.setPointer(child1, 'nptr', null);
+                    core.setPointer(child1, 'parent', null);
+                    core.setPointer(root, 'nptr', null);
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {},
+                        unload: {},
+                        update: {'/1': true, '': true},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharded add shard', function (done) {
+            Q.ninvoke(core, 'loadRoot', shardedRootHash)
+                .then(function (root_) {
+                    var patch,
+                        changes,
+                        newChild1, newChild2, newChild3;
+
+                    root = root_;
+
+                    newChild1 = core.createNode({parent: root, relid: 'n1'});
+                    core.setPointer(newChild1, 'parent', root);
+                    newChild2 = core.createNode({parent: root, relid: 'n2'});
+                    core.setPointer(newChild2, 'parent', root);
+                    newChild3 = core.createNode({parent: root, relid: 'n3'});
+                    core.setPointer(newChild3, 'parent', root);
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {'/n1': true, '/n2': true, '/n3': true},
+                        unload: {},
+                        update: {},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - sharded remove relations', function (done) {
+            Q.ninvoke(core, 'loadRoot', shardedRootHash)
+                .then(function (root_) {
+                    root = root_;
+                    return Q.ninvoke(core, 'loadChildren', root);
+                })
+                .then(function (children) {
+                    var patch,
+                        changes,
+                        i;
+
+                    expect(children).to.have.length(4);
+
+                    for (i = 0; i < children.length; i += 1) {
+                        core.deletePointer(children[i], 'parent');
+                    }
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql({
+                        load: {},
+                        unload: {},
+                        update: {'/1': true, '/2': true, '/3': true, '/4': true},
+                        partialUpdate: {'': true}
+                    });
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - copy node', function (done) {
+            Q.ninvoke(core, 'loadRoot', shardedRootHash)
+                .then(function (root_) {
+                    root = root_;
+                    return Q.ninvoke(core, 'loadChildren', root);
+                })
+                .then(function (children) {
+                    var patch,
+                        changes,
+                        expectedChanges = {
+                            load: {}, unload: {}, update: {}, partialUpdate: {'': true}
+                        };
+
+                    expect(children).to.have.length(4);
+
+                    expectedChanges.load[core.getPath(core.copyNode(children[0], root))] = true;
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql(expectedChanges);
+                })
+                .nodeify(done);
+        });
+
+        it('should generate correct changes - copy more nodes', function (done) {
+            Q.ninvoke(core, 'loadRoot', shardedRootHash)
+                .then(function (root_) {
+                    root = root_;
+                    return Q.ninvoke(core, 'loadChildren', root);
+                })
+                .then(function (children) {
+                    var tempS, tempT;
+
+                    expect(children).to.have.length(4);
+                    tempS = core.createNode({parent: root, relid: 'temp'});
+                    children[0] = core.moveNode(children[0], tempS);
+                    children[1] = core.moveNode(children[1], tempS);
+                    children[2] = core.moveNode(children[2], tempS);
+                    children[3] = core.moveNode(children[3], tempS);
+                    tempT = core.copyNode(tempS, root);
+                    children[0] = core.moveNode(children[0], root);
+                    children[1] = core.moveNode(children[1], root);
+                    children[2] = core.moveNode(children[2], root);
+                    children[3] = core.moveNode(children[3], root);
+
+                    core.setBase(tempS, children[0]);
+                    core.deleteNode(tempS);
+
+                    return Q.nfcall(core.loadChildren, tempT);
+                })
+                .then(function (copies) {
+                    var patch,
+                        tempT,
+                        changes,
+                        expectedChanges = {
+                            load: {}, unload: {}, update: {}, partialUpdate: {'':true}
+                        };
+
+                    expect(copies).to.have.length(4);
+
+                    tempT = core.getParent(copies[0]);
+                    copies[0] = core.moveNode(copies[0], root);
+                    expectedChanges.load[core.getPath(copies[0])] = true;
+                    expectedChanges.load[core.getPath(core.moveNode(copies[1], root))] = true;
+                    expectedChanges.load[core.getPath(core.moveNode(copies[2], root))] = true;
+                    expectedChanges.load[core.getPath(core.moveNode(copies[3], root))] = true;
+
+                    core.setBase(tempT, copies[0]);
+                    core.deleteNode(tempT);
+
+                    patch = persistAndGetPatches();
+                    changes = patcher.getChangedNodes(patch, core.getHash(root), '');
+                    expect(changes).to.eql(expectedChanges);
+                })
+                .nodeify(done);
+        });
+    });
 });

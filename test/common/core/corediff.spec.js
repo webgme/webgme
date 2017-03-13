@@ -360,6 +360,117 @@ describe('core diff', function () {
         });
     });
 
+    describe('diff with overlay shards present', function () {
+        var shardCore,
+            shardProject,
+            shardProjectName = 'shardCoreDiffTest',
+            shardProjectId = testFixture.projectName2Id(shardProjectName),
+            shardRootHash,
+            shardRoot,
+            shardConfig;
+
+        before(function (done) {
+            shardConfig = JSON.parse(JSON.stringify(gmeConfig));
+            shardConfig.storage.overlaysShardLimit = 4;
+            shardConfig.storage.overlayShardSize = 10;
+
+            testFixture.importProject(storage, {
+                projectSeed: 'seeds/ActivePanels.webgmex',
+                projectName: shardProjectName,
+                branchName: 'master',
+                gmeConfig: shardConfig,
+                logger: logger.fork('shard')
+            })
+                .then(function (result) {
+                    var child, i;
+                    shardProject = result.project;
+                    shardCore = result.core;
+                    shardRoot = result.rootNode;
+
+                    for (i = 0; i < 4; i += 1) {
+                        child = shardCore.createNode({parent: shardRoot, relid: 'child' + i});
+                        shardCore.setPointer(child, 'toRoot', shardRoot);
+                    }
+
+                    shardCore.persist(shardRoot);
+                    shardRootHash = shardCore.getHash(shardRoot);
+                })
+                .nodeify(done);
+        });
+
+        beforeEach(function (done) {
+            Q.ninvoke(shardCore, 'loadRoot', shardRootHash)
+                .then(function (root_) {
+                    shardRoot = root_;
+                })
+                .nodeify(done);
+        });
+
+        it('should have correct entries in case of pointer additions', function (done) {
+            Q.nfcall(shardCore.loadChildren, shardRoot)
+                .then(function (children) {
+                    var c0, c1, i;
+                    expect(children.length > 4).to.eql(true);
+
+                    for (i = 0; i < children.length; i += 1) {
+                        if (shardCore.getRelid(children[i]) === 'child0') {
+                            c0 = children[i];
+                        } else if (shardCore.getRelid(children[i]) === 'child1') {
+                            c1 = children[i];
+                        }
+                    }
+
+                    expect(c0).not.to.eql(undefined);
+                    expect(c1).not.to.eql(undefined);
+
+                    shardCore.setPointer(c0, 'sibling', c1);
+
+                    shardCore.persist(shardRoot);
+
+                    return Q.nfcall(shardCore.loadRoot, shardRootHash);
+                })
+                .then(function (oldRoot) {
+                    return Q.nfcall(shardCore.generateTreeDiff, oldRoot, shardRoot);
+                })
+                .then(function (diff) {
+                    expect(diff).to.include.keys(['child0']);
+                    expect(diff).not.to.include.keys(['child1']);
+                    expect(diff.child0.pointer.sibling).to.eql('/child1');
+                })
+                .nodeify(done);
+        });
+
+        it('should have correct entries in case of pointer removal', function (done) {
+            Q.nfcall(shardCore.loadChildren, shardRoot)
+                .then(function (children) {
+                    var c2, i;
+                    expect(children.length > 4).to.eql(true);
+
+                    for (i = 0; i < children.length; i += 1) {
+                        if (shardCore.getRelid(children[i]) === 'child2') {
+                            c2 = children[i];
+                        }
+                    }
+
+                    expect(c2).not.to.eql(undefined);
+
+                    shardCore.deletePointer(c2, 'toRoot');
+
+                    shardCore.persist(shardRoot);
+
+                    return Q.nfcall(shardCore.loadRoot, shardRootHash);
+                })
+                .then(function (oldRoot) {
+                    return Q.nfcall(shardCore.generateTreeDiff, oldRoot, shardRoot);
+                })
+                .then(function (diff) {
+                    expect(diff).to.include.keys(['child2']);
+                    expect(diff.child2.pointer.toRoot).to.eql('*to*delete*');
+                })
+                .nodeify(done);
+        });
+    });
+
     describe('tryToConcatChanges', function () {
 
         beforeEach(function (done) {

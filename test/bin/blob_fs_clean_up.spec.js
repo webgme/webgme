@@ -129,14 +129,14 @@ describe('BLOB cleanup script tests', function () {
         Q.ninvoke(bc, 'putFile', 'test.txt', "just some single file")
             .then(function (fileMetaHash) {
                 metaHash = fileMetaHash;
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (allHashes) {
                 expect(allHashes).to.include(metaHash);
                 return cleanup({del: true});
             })
             .then(function () {
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (allHashes) {
                 expect(allHashes).not.to.include(metaHash);
@@ -154,14 +154,14 @@ describe('BLOB cleanup script tests', function () {
             })
             .then(function (fileMetaHash) {
                 metaHashes.push(fileMetaHash);
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (allHashes) {
                 expect(allHashes).to.include.members(metaHashes);
                 return cleanup({del: true});
             })
             .then(function () {
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (allHashes) {
                 expect(allHashes).not.to.include.members(metaHashes);
@@ -176,14 +176,14 @@ describe('BLOB cleanup script tests', function () {
             .then(function (fileMetaHash) {
                 metaHash = fileMetaHash;
                 FS.writeFileSync('test-tmp/goodHash.json', JSON.stringify([metaHash]), 'utf8');
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (allHashes) {
                 expect(allHashes).to.include(metaHash);
                 return cleanup({input: 'test-tmp/goodHash.json'});
             })
             .then(function () {
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (allHashes) {
                 expect(allHashes).not.to.include(metaHash);
@@ -208,14 +208,14 @@ describe('BLOB cleanup script tests', function () {
             .then(function (hash_) {
                 complexHash = hash_;
 
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (allHashes) {
                 expect(allHashes).to.include(complexHash);
                 return cleanup({del: true});
             })
             .then(function () {
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (allHashes) {
                 expect(allHashes).not.to.include(complexHash);
@@ -234,7 +234,7 @@ describe('BLOB cleanup script tests', function () {
             .then(function (hash_) {
                 sofLinkedHash = hash_;
 
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (allHashes) {
                 expect(allHashes).to.include(sofLinkedHash);
@@ -265,14 +265,14 @@ describe('BLOB cleanup script tests', function () {
                     [importResult.commitHash], persisted.rootHash, persisted.objects, 'adding complex asset');
             })
             .then(function () {
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (all) {
                 expect(all).to.contains.members([complexHash]);
                 return cleanup({del: true});
             })
             .then(function () {
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (all) {
                 expect(all).to.contains.members([complexHash]);
@@ -296,14 +296,14 @@ describe('BLOB cleanup script tests', function () {
                     [importResult.commitHash], persisted.rootHash, persisted.objects, 'adding complex asset');
             })
             .then(function () {
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (all) {
                 expect(all).to.contains.members([softHash]);
                 return cleanup({del: true});
             })
             .then(function () {
-                return bc.listObjects('wg-metadata');
+                return bc.listObjects(bc.metadataBucket);
             })
             .then(function (all) {
                 expect(all).to.contains.members([softHash]);
