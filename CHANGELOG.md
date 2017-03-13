@@ -1,5 +1,37 @@
 # Change Log
 
+## [v2.11.0](https://github.com/webgme/webgme/tree/v2.11.0) (2017-03-13)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.10.0...v2.11.0)
+
+**Implemented enhancements:**
+
+- Revise API Documentation [\#1326](https://github.com/webgme/webgme/issues/1326)
+- Pre 2.11.0 release fixes [\#1342](https://github.com/webgme/webgme/pull/1342) ([pmeijer](https://github.com/pmeijer))
+- Add Typescript bindings [\#1341](https://github.com/webgme/webgme/pull/1341) ([phreed](https://github.com/phreed))
+- Enable connections to be drawn from connections when selected. [\#1340](https://github.com/webgme/webgme/pull/1340) ([pmeijer](https://github.com/pmeijer))
+- Highlight connections on hover and increase selection area. [\#1336](https://github.com/webgme/webgme/pull/1336) ([pmeijer](https://github.com/pmeijer))
+- Component settings can be defined in a javascript file. [\#1335](https://github.com/webgme/webgme/pull/1335) ([pmeijer](https://github.com/pmeijer))
+- Enable search by path in decorators from diagram designers. [\#1334](https://github.com/webgme/webgme/pull/1334) ([pmeijer](https://github.com/pmeijer))
+- Shard large overlays of core data-blobs [\#1333](https://github.com/webgme/webgme/pull/1333) ([kecso](https://github.com/kecso))
+- Allow visualizer to define getValidTypesInfo to list part-browser nodes. [\#1332](https://github.com/webgme/webgme/pull/1332) ([pmeijer](https://github.com/pmeijer))
+- Enable namespacing for the blob storage [\#1330](https://github.com/webgme/webgme/pull/1330) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Uncaught exception in meta rules validation. [\#1337](https://github.com/webgme/webgme/issues/1337)
+- Deletion of the last Cross Cut tab leaves the members on the canvas. [\#1331](https://github.com/webgme/webgme/issues/1331)
+- Enable connections to be drawn from connections when selected. [\#1340](https://github.com/webgme/webgme/pull/1340) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1337 Core traverse should not invoke visit on null nodes. [\#1339](https://github.com/webgme/webgme/pull/1339) ([pmeijer](https://github.com/pmeijer))
+- Remove global state in core diff for async method and add tests cases. [\#1338](https://github.com/webgme/webgme/pull/1338) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Move url-query update \(based on ui-state\) from header panel. [\#1328](https://github.com/webgme/webgme/issues/1328)
+
+**Merged pull requests:**
+
+- Introduces project kind and enables layout switching based on kind. [\#1327](https://github.com/webgme/webgme/pull/1327) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.10.0](https://github.com/webgme/webgme/tree/v2.10.0) (2017-02-13)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.9.0...v2.10.0)
 
