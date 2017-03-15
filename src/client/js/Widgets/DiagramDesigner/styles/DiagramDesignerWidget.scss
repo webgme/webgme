@@ -258,6 +258,23 @@ $tabs-container-height: 26px;
           min-width: 50px;
         }
       }
+
+      &.is-selected {
+        .c-text {
+          .c-name,
+          .c-dst,
+          .c-src {
+            background-color: #B9DCF7;
+            padding: 2px 2px 2px 2px;
+            margin-left: -2px;
+            border-radius: 2px;
+            z-index: 4;
+            &.v {
+              left: 1px;
+            }
+          }
+        }
+      }
     }
 
     &.highlight-mode {

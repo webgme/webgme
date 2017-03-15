@@ -166,6 +166,18 @@
         .diagram-designer .items div.c-t div.c-text input {
           height: 20px !important;
           min-width: 50px; }
+      .diagram-designer .items div.c-t.is-selected .c-text .c-name,
+      .diagram-designer .items div.c-t.is-selected .c-text .c-dst,
+      .diagram-designer .items div.c-t.is-selected .c-text .c-src {
+        background-color: #B9DCF7;
+        padding: 2px 2px 2px 2px;
+        margin-left: -2px;
+        border-radius: 2px;
+        z-index: 4; }
+        .diagram-designer .items div.c-t.is-selected .c-text .c-name.v,
+        .diagram-designer .items div.c-t.is-selected .c-text .c-dst.v,
+        .diagram-designer .items div.c-t.is-selected .c-text .c-src.v {
+          left: 1px; }
     .diagram-designer .items.highlight-mode .designer-item,
     .diagram-designer .items.highlight-mode .designer-connection,
     .diagram-designer .items.highlight-mode .c-t {
