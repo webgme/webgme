@@ -12,6 +12,7 @@ var Core = requireJS('common/core/coreQ'),
     BlobClientClass = requireJS('blob/BlobClient'),
     blobUtil = requireJS('blob/util'),
     constraint = requireJS('common/core/users/constraintchecker'),
+    metaRules = requireJS('common/core/users/metarules'),
     webgmeUtils = require('../../utils'),
     storageUtils = requireJS('common/storage/util'),
     commonUtils = requireJS('common/util/util'),
@@ -578,7 +579,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 return _getCoreAndRootNode(storage, projectId, parameters.commitHash);
             })
             .then(function (res) {
-                var constraintChecker = new constraint.Checker(res.core, logger);
+                var constraintChecker,
+                    metaInconsistencies;
 
                 function checkFromPath(nodePath) {
                     if (parameters.includeChildren) {
@@ -588,6 +590,14 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     }
                 }
 
+                if (checkType === constraint.TYPES.META || checkType === constraint.TYPES.BOTH) {
+                    metaInconsistencies = metaRules.checkMetaConsistency(res.core, res.rootNode);
+                    if (metaInconsistencies.length > 0) {
+                        return {metaInconsistencies: metaInconsistencies};
+                    }
+                }
+
+                constraintChecker = new constraint.Checker(res.core, logger);
                 constraintChecker.initialize(res.rootNode, parameters.commitHash, checkType);
 
                 return Q.all(parameters.nodePaths.map(checkFromPath));

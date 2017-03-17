@@ -92,6 +92,11 @@ define(['js/util',
                 delete result.__unread;
             }
 
+            if (result.hasOwnProperty('metaInconsistencies')) {
+                // TODO: Add an entry with metaInconsistencies widget...
+                body.append($('<div/>').text(JSON.stringify(result)));
+            }
+
             resultHeader = PLUGIN_RESULT_HEADER_BASE.clone();
             if (result.hasViolation === true) {
                 resultHeader.addClass(RESULT_ERROR_CLASS);

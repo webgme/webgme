@@ -1914,7 +1914,14 @@ define([
                     logger.error(err);
                 }
 
-                self.dispatchEvent(CONSTANTS.META_RULES_RESULT, result);
+                if (result) {
+                    self.dispatchEvent(CONSTANTS.META_RULES_RESULT, result);
+                } else {
+                    self.notifyUser({
+                        severity: 'error',
+                        message: 'Evaluating Meta rules failed with error.'
+                    });
+                }
 
                 if (callback) {
                     callback(err, result);
@@ -1943,7 +1950,14 @@ define([
                     logger.error(err);
                 }
 
-                self.dispatchEvent(CONSTANTS.CONSTRAINT_RESULT, result);
+                if (result) {
+                    self.dispatchEvent(CONSTANTS.CONSTRAINT_RESULT, result);
+                } else {
+                    self.notifyUser({
+                        severity: 'error',
+                        message: 'Evaluating custom constraints failed with error.'
+                    });
+                }
 
                 if (callback) {
                     callback(err, result);
