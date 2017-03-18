@@ -188,6 +188,25 @@ define([
                 return CONSTANTS.NULL_GUID;
             }
         };
+
+        this.copyNode = function (node, parent) {
+            var newNode = innerCore.copyNode(node, parent);
+
+            setDataGuid(newNode, GUID());
+
+            return newNode;
+        };
+
+        this.copyNodes = function (nodes, parent) {
+            var newNodes = innerCore.copyNodes(nodes, parent),
+                i;
+
+            for (i = 0; i < newNodes.length; i += 1) {
+                setDataGuid(newNodes[i], GUID());
+            }
+
+            return newNodes;
+        };
         //</editor-fold>
     }
 
