@@ -318,8 +318,8 @@ define(['js/logger',
 
         if (metaInconsistencies.length > 0) {
             this._client.dispatchEvent(this._client.CONSTANTS.NOTIFICATION, {
-                severity: 'info',
-                message: 'Click the check-mark furthest to the right in the header toolbar for details.'
+                severity: 'error',
+                message: 'Click the check-mark furthest to the right in the MetaEditor\'s header toolbar for more details.'
             });
         }
 
