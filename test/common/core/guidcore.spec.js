@@ -50,9 +50,9 @@ describe('Core GUID handling', function () {
 
     after(function (done) {
         Q.allDone([
-                storage.closeDatabase(),
-                gmeAuth.unload()
-            ])
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
             .nodeify(done);
     });
 
@@ -129,7 +129,7 @@ describe('Core GUID handling', function () {
                     oldGuids[core.getPath(children[i])] = core.getGuid(children[i]);
                 }
 
-                return core.setGuid(container, '12345678-1234-1234-1234-123456789012')
+                return core.setGuid(container, '12345678-1234-1234-1234-123456789012');
             })
             .then(function () {
                 expect(core.getGuid(container)).to.equal('12345678-1234-1234-1234-123456789012');
@@ -153,37 +153,85 @@ describe('Core GUID handling', function () {
             container,
             i;
         core.loadRoot(rootHash)
-            .then(function(rootNode){
-                return core.loadByPath(rootNode,'/682825457');
+            .then(function (rootNode) {
+                return core.loadByPath(rootNode, '/682825457');
             })
-            .then(function(node){
+            .then(function (node) {
                 container = node;
 
                 return core.loadSubTree(container);
             })
-            .then(function(nodes){
+            .then(function (nodes) {
                 numOfNodes = nodes.length;
-                for(i=0;i<nodes.length;i+=1){
+                for (i = 0; i < nodes.length; i += 1) {
                     guid = core.getGuid(nodes[i]);
                     expect(guids.indexOf(guid)).to.equal(-1);
                     guids.push(guid);
                 }
 
                 //now copy the whole FMreceiver node
-                var newContainer = core.copyNode(container,core.getParent(container));
+                var newContainer = core.copyNode(container, core.getParent(container));
 
                 return core.loadSubTree(newContainer);
             })
-            .then(function(nodes){
+            .then(function (nodes) {
                 expect(nodes).to.have.length(numOfNodes);
 
-                for(i=0;i<nodes.length;i+=1){
+                for (i = 0; i < nodes.length; i += 1) {
                     guid = core.getGuid(nodes[i]);
                     expect(guids.indexOf(guid)).to.equal(-1);
                     guids.push(guid);
                 }
             })
             .nodeify(done);
+    });
+
+    it('should not allow GUID collision as a result of copies', function () {
+        var root = core.createNode({guid: '00000000-0000-0000-0000-000000000000'}),
+            levelOne = core.createNode({parent: root, relid: '1', guid: '00000000-0000-0000-0000-000000000001'}),
+            levelTwo = core.createNode({parent: levelOne, relid: '1', guid: '00000000-0000-0000-0000-000000000010'}),
+            levelThree = core.createNode({parent: levelTwo, relid: '1', guid: '00000000-0000-0000-0000-000000000100'}),
+            copyPerLevel = 30,
+            nodes = [root, levelOne, levelTwo, levelThree],
+            i, j,
+            guids = {};
+
+        for (i = 3; i > 0; i -= 1) {
+            for (j = 0; j < copyPerLevel; j += 1) {
+                nodes.push(core.copyNode(nodes[i], nodes[i - 1]));
+            }
+        }
+
+        for (i = 0; i < nodes.length; i += 1) {
+            expect(guids.hasOwnProperty(core.getGuid(nodes[i]))).to.eql(false);
+            guids[core.getGuid(nodes[i])] = true;
+        }
+    });
+
+    it('should not allow GUID collision as a result of bundle-copies', function () {
+        var root = core.createNode({guid: '00000000-0000-0000-0000-000000000000'}),
+            levelOne = core.createNode({parent: root, relid: '1', guid: '00000000-0000-0000-0000-000000000001'}),
+            levelTwo = core.createNode({parent: levelOne, relid: '1', guid: '00000000-0000-0000-0000-000000000010'}),
+            levelThree = core.createNode({parent: levelTwo, relid: '1', guid: '00000000-0000-0000-0000-000000000100'}),
+            copyPerLevel = 20,
+            level = [],
+            nodes = [root, levelOne, levelTwo, levelThree],
+            i, j,
+            guids = {};
+
+        for (i = 3; i > 0; i -= 1) {
+            level = [];
+            for (j = 0; j < copyPerLevel; j += 1) {
+                level.unshift(core.copyNode(nodes[i], nodes[i - 1]));
+                nodes.push(level[0]);
+            }
+            core.copyNodes(level, nodes[i]);
+        }
+
+        for (i = 0; i < nodes.length; i += 1) {
+            expect(guids.hasOwnProperty(core.getGuid(nodes[i]))).to.eql(false);
+            guids[core.getGuid(nodes[i])] = true;
+        }
     });
 
 });

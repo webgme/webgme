@@ -36,7 +36,8 @@ describe('CorePlugins', function () {
             'ConstraintEvaluator',
             'FastForward',
             'RestRouterGenerator',
-            'CustomPluginConfig'
+            'CustomPluginConfig',
+            'GuidCollider'
         ],
 
         pluginsShouldFail = [
@@ -55,7 +56,7 @@ describe('CorePlugins', function () {
         gmeAuth,
         safeStorage,
 
-    //guestAccount = testFixture.getGmeConfig().authentication.guestAccount,
+        //guestAccount = testFixture.getGmeConfig().authentication.guestAccount,
         serverBaseUrl,
         server,
 
