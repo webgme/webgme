@@ -593,7 +593,12 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 if (checkType === constraint.TYPES.META || checkType === constraint.TYPES.BOTH) {
                     metaInconsistencies = metaRules.checkMetaConsistency(res.core, res.rootNode);
                     if (metaInconsistencies.length > 0) {
-                        return {metaInconsistencies: metaInconsistencies};
+                        return [{
+                            info: 'Inconsistent Meta',
+                            commit: parameters.commitHash,
+                            hasViolation: true,
+                            metaInconsistencies: metaInconsistencies
+                        }];
                     }
                 }
 
