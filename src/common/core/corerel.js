@@ -944,6 +944,7 @@ define([
             newNode.inverseOverlaysMutable = node.inverseOverlaysMutable;
 
             if (hasShardedOverlays(node)) {
+                // Copy the shards-info for nodes with sharded overlay #1343
                 newNode.overlays = JSON.parse(JSON.stringify(node.overlays));
                 newNode.overlayMutations = JSON.parse(JSON.stringify(node.overlayMutations));
                 newNode.minimalOverlayShardId = node.minimalOverlayShardId;
