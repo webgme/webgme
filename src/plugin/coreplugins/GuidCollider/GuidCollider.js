@@ -3,8 +3,8 @@
 
 /**
  * Plugin mainly used for testing.
- * @author lattmann / https://github.com/lattmann
- * @module CorePlugins:MinimalWorkingExample
+ * @author kecso / https://github.com/kecso
+ * @module CorePlugins:GuidCollider
  */
 
 define([
@@ -80,7 +80,7 @@ define([
         Q.ninvoke(self.core, 'traverse', self.rootNode, null, visitFn)
             .then(function () {
                 if (hasCollision && currentConfiguration.checkOnly === false) {
-                    return Q.ninvoke(self, 'save', 'guid collision fix');
+                    return self.save('guid collision fix');
                 } else {
                     return {};
                 }

@@ -192,6 +192,7 @@ define([
         this.copyNode = function (node, parent) {
             var newNode = innerCore.copyNode(node, parent);
 
+            // Generate new guid at copy #1344
             setDataGuid(newNode, GUID());
 
             return newNode;
@@ -201,6 +202,7 @@ define([
             var newNodes = innerCore.copyNodes(nodes, parent),
                 i;
 
+            // Generate new guids at copy #1344
             for (i = 0; i < newNodes.length; i += 1) {
                 setDataGuid(newNodes[i], GUID());
             }
