@@ -31,3 +31,6 @@
       text-transform: uppercase;
       color: #999999;
       border-bottom: 1px solid #999999; }
+  .constraint-check-results-dialog .modal-body div.constraint-check-result .messages .meta-inconsistency-result {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd; }

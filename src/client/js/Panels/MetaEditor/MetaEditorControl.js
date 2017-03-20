@@ -316,6 +316,13 @@ define(['js/logger',
             this._client.dispatchEvent(this._client.CONSTANTS.NOTIFICATION, metaInconsistencies[i]);
         }
 
+        if (metaInconsistencies.length > 0) {
+            this._client.dispatchEvent(this._client.CONSTANTS.NOTIFICATION, {
+                severity: 'error',
+                message: 'Click the check-mark furthest to the right in the MetaEditor\'s header toolbar for more details.'
+            });
+        }
+
         //there was change in the territory
         if (territoryChanged === true) {
             this._client.updateTerritory(this._metaAspectMembersTerritoryId, this._metaAspectMemberPatterns);

@@ -66,6 +66,7 @@ describe('Simple worker', function () {
         },
         constraintProjectName = 'ConstraintProject',
         constraintProjectImportResult,
+        constraintProjectImportResult2,
         oldSend = process.send,
         oldOn = process.on,
         socket,
@@ -187,17 +188,26 @@ describe('Simple worker', function () {
             .then(function (result) {
                 expect(result.status).to.equal(project.CONSTANTS.SYNCED);
 
-                return testFixture.importProject(storage,
-                    {
+                return Q.allDone([
+                    testFixture.importProject(storage, {
                         projectSeed: './test/common/core/users/meta/metaRules.webgmex',
                         projectName: constraintProjectName,
                         branchName: 'master',
                         logger: logger,
                         gmeConfig: gmeConfig
-                    });
+                    }),
+                    testFixture.importProject(storage, {
+                        projectSeed: './test/server/worker/simpleworker/MetaInconsistencies.webgmex',
+                        projectName: 'MetaInconsistencies_SW',
+                        branchName: 'master',
+                        logger: logger,
+                        gmeConfig: gmeConfig
+                    })
+                ]);
             })
             .then(function (result) {
-                constraintProjectImportResult = result;
+                constraintProjectImportResult = result[0];
+                constraintProjectImportResult2 = result[1];
                 return Q.ninvoke(server, 'start');
             })
             .then(function () {
@@ -1374,6 +1384,42 @@ describe('Simple worker', function () {
             .done();
     });
 
+    it('checkMetaRules should return metaInconsitencies if Meta has inconsistencies', function (done) {
+        var command = {
+                command: CONSTANTS.workerCommands.checkConstraints,
+                projectId: constraintProjectImportResult2.project.projectId,
+                commitHash: constraintProjectImportResult2.commitHash,
+                nodePaths: ['/1'],
+                includeChildren: false,
+                webGMESessionId: webGMESessionId
+            },
+            worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send(command);
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+
+                expect(msg.result instanceof Array).to.equal(true);
+
+                expect(msg.result.length).to.equal(1);
+                expect(msg.result[0].hasViolation).to.equal(true);
+                expect(msg.result[0].commit).to.equal(constraintProjectImportResult2.commitHash);
+                expect(msg.result[0].metaInconsistencies.length).to.equal(1);
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+    });
+
     it('should succeed to check custom constraints if enabled', function (done) {
         var command = {
                 command: CONSTANTS.workerCommands.checkConstraints,
@@ -1897,8 +1943,8 @@ describe('Simple worker', function () {
         var worker = getSimpleWorker(),
             blobHash,
             blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
-            projectName = 'badPackageImport',
-            projectId = testFixture.projectName2Id(projectName);
+            projectName = 'badPackageImport';
+            //projectId = testFixture.projectName2Id(projectName);
 
         blobClient.putFile('bad.webgmex', fs.readFileSync('./test/server/worker/simpleworker/bad.webgmex'))
             .then(function (hash) {
@@ -1917,7 +1963,7 @@ describe('Simple worker', function () {
                     blobHash: blobHash
                 });
             })
-            .then(function (msg) {
+            .then(function () {
                 done(new Error('misisng error handling'));
             })
             .catch(function (err) {
@@ -1931,8 +1977,8 @@ describe('Simple worker', function () {
         var worker = getSimpleWorker(),
             blobHash,
             blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
-            projectName = 'badPackageImport',
-            projectId = testFixture.projectName2Id(projectName);
+            projectName = 'badPackageImport';
+            //projectId = testFixture.projectName2Id(projectName);
 
         blobClient.putFile('model.webgmexm', fs.readFileSync('./test/server/worker/simpleworker/export_v110.webgmexm'))
             .then(function (hash) {
@@ -1951,7 +1997,7 @@ describe('Simple worker', function () {
                     blobHash: blobHash
                 });
             })
-            .then(function (msg) {
+            .then(function () {
                 done(new Error('missing error handling'));
             })
             .catch(function (err) {
@@ -2620,7 +2666,7 @@ describe('Simple worker', function () {
                 expect(typeof msg.result).to.equal('object');
                 expect(msg.result.downloadUrl).to.include('/rest/blob/download/');
                 expect(typeof msg.result.fileName === 'string' && msg.result.fileName !== '').to.equal(true);
-                expect(typeof msg.result.hash === 'string' && !!msg.result.hash !== '').to.equal(true);
+                expect(typeof msg.result.hash === 'string' && msg.result.hash !== '').to.equal(true);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);

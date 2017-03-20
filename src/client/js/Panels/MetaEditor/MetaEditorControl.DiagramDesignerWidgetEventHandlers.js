@@ -1035,14 +1035,7 @@ define(['js/logger',
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onInconsistencyLinkClicked = function (gmeId) {
-        var componentId = this._GMEID2ComponentID[gmeId],
-            result = false;
-        if (componentId) {
-            this.diagramDesigner.select([componentId]);
-            result = true;
-        }
-
-        return result;
+        WebGMEGlobal.State.registerActiveSelection([gmeId]);
     };
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;

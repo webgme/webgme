@@ -9,9 +9,10 @@
 define(['js/util',
     'common/regexp',
     'js/logger',
+    'js/Widgets/MetaInconsistencyResult/MetaInconsistencyResultWidget',
     'text!./templates/ConstraintCheckResultsDialog.html',
     'css!./styles/ConstraintCheckResultsDialog.css'
-], function (clientUtil, REGEXP, Logger, pluginResultsDialogTemplate) {
+], function (clientUtil, REGEXP, Logger, MetaInconsistencyResultWidget, DIALOG_TEMPLATE) {
 
     'use strict';
 
@@ -42,14 +43,18 @@ define(['js/util',
     ConstraintCheckResultsDialog.prototype.show = function (client, results) {
         var self = this;
 
-        this._dialog = $(pluginResultsDialogTemplate);
+        this._dialog = $(DIALOG_TEMPLATE);
         if (this._dialogTitle) {
             this._dialog.find('h3').first().text(this._dialogTitle);
         }
         this._client = client;
+        this._metaInconsistencyWidgets = [];
         this._initDialog(results);
 
         this._dialog.on('hidden.bs.modal', function () {
+            self._metaInconsistencyWidgets.forEach(function (widget) {
+                widget.destroy();
+            });
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -62,6 +67,7 @@ define(['js/util',
         var dialog = this._dialog,
             client = this._client,
             self = this,
+            metaInconWidget,
             resultEntry,
             body = dialog.find('.modal-body'),
             UNREAD_CSS = 'unread',
@@ -81,6 +87,31 @@ define(['js/util',
             j,
             k,
             ii;
+
+        function openNode(nodeId) {
+            var patterns = {},
+                territoryId = client.addUI(null, function (events) {
+                    var nodeLoaded = false;
+                    events.forEach(function (event) {
+                        if (event.etype === 'load' && event.eid === nodeId) {
+                            nodeLoaded = true;
+                        }
+                    });
+
+                    client.removeUI(territoryId);
+
+                    if (nodeLoaded) {
+                        WebGMEGlobal.State.registerActiveObject(nodeId);
+                        WebGMEGlobal.State.registerActiveSelection([]);
+                        dialog.modal('hide');
+                    } else {
+                        self.logger.error('Could not load the linked node at path', nodeId);
+                    }
+                });
+
+            patterns[nodeId] = {children: 0};
+            client.updateTerritory(territoryId, patterns);
+        }
 
         for (i = 0; i < results.length; i += 1) {
             result = results[i];
@@ -115,6 +146,22 @@ define(['js/util',
             resultDetailsBtn.addClass('main-details');
             resultHeader.append(resultDetailsBtn);
 
+            nodeContainer = RESULT_DETAILS_BASE.clone();
+            if (result.hasOwnProperty('metaInconsistencies')) {
+                metaInconWidget = new MetaInconsistencyResultWidget(nodeContainer, {
+                    onLinkClick: openNode,
+                    dividerAtTop: true,
+                    dividerAtBottom: true
+                });
+
+                metaInconWidget.showResults(result.metaInconsistencies);
+                this._metaInconsistencyWidgets.push(metaInconWidget);
+                resultHeader.append(nodeContainer);
+                resultEntry.append(resultHeader);
+                body.append(resultEntry);
+                continue;
+            }
+
             //collecting the nodes which has violation
             nodeGuids = Object.keys(result);
             j = nodeGuids.length;
@@ -124,7 +171,6 @@ define(['js/util',
                 }
             }
 
-            nodeContainer = RESULT_DETAILS_BASE.clone();
             for (j = 0; j < nodeGuids.length; j++) {
                 nodeEntry = NODE_ENTRY_BASE.clone();
 
@@ -175,12 +221,12 @@ define(['js/util',
                 nodeContainer.append(nodeEntry);
 
             }
-            resultHeader.append(nodeContainer);
 
             if (j === 0) {
                 resultDetailsBtn.addClass('no-details-available');
             }
 
+            resultHeader.append(nodeContainer);
             resultEntry.append(resultHeader);
 
             body.append(resultEntry);
@@ -204,29 +250,8 @@ define(['js/util',
         });
 
         dialog.on('click', '.btn-node', function (/* event */) {
-            var nodeId = $(this).parent().attr('GMEpath'),
-                patterns = {},
-                territoryId = client.addUI(this, function (events) {
-                    var nodeLoaded = false;
-                    events.forEach(function (event) {
-                        if (event.etype === 'load' && event.eid === nodeId) {
-                            nodeLoaded = true;
-                        }
-                    });
-
-                    client.removeUI(territoryId);
-
-                    if (nodeLoaded) {
-                        WebGMEGlobal.State.registerActiveObject(nodeId);
-                        WebGMEGlobal.State.registerActiveSelection([]);
-                        dialog.modal('hide');
-                    } else {
-                        self.logger.error('Could not load the linked node at path', nodeId);
-                    }
-                });
-
-            patterns[nodeId] = {children: 0};
-            client.updateTerritory(territoryId, patterns);
+            var nodeId = $(this).parent().attr('GMEpath');
+            openNode(nodeId);
         });
 
     };
