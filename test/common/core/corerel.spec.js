@@ -541,5 +541,27 @@ describe('corerel', function () {
             shardCore.persist(root);
             expect(Object.keys(root.overlays)).to.have.length(2);
         });
+
+        it('should copy the shards of a sharded node', function () {
+            var root = shardCore.createNode(),
+                sourceParent = shardCore.createNode({parent: root, relid: 'source'}),
+                targetParent,
+                children = [],
+                i;
+
+            for (i = 0; i < 8; i += 1) {
+                children.unshift(shardCore.createNode({parent: sourceParent}));
+                shardCore.setPointer(children[0], 'pA', sourceParent);
+                shardCore.setPointer(children[0], 'pB', sourceParent);
+            }
+            expect(Object.keys(sourceParent.overlays)).to.have.length(3);
+            targetParent = shardCore.copyNode(sourceParent, root);
+            expect(Object.keys(targetParent.overlays)).to.have.length(3);
+            expect(shardCore.getCollectionPaths(sourceParent, 'pA')).to.have
+                .length(shardCore.getCollectionPaths(targetParent, 'pA').length);
+            expect(shardCore.getChildrenRelids(sourceParent)).to.have
+                .members(shardCore.getChildrenRelids(targetParent));
+
+        });
     });
 });

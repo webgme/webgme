@@ -169,8 +169,8 @@ define([
         }
 
         function hasShardedOverlays(node) {
-            return (self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {})[CONSTANTS.OVERLAY_SHARD_INDICATOR]
-                === true;
+            return (self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) ||
+                {})[CONSTANTS.OVERLAY_SHARD_INDICATOR] === true;
         }
 
         // We only shard regular GME nodes, technical sub-nodes do not get sharded
@@ -942,6 +942,13 @@ define([
                 newNode.inverseOverlays = node.inverseOverlays;
             }
             newNode.inverseOverlaysMutable = node.inverseOverlaysMutable;
+
+            if (hasShardedOverlays(node)) {
+                // Copy the shards-info for nodes with sharded overlay #1343
+                newNode.overlays = JSON.parse(JSON.stringify(node.overlays));
+                newNode.overlayMutations = JSON.parse(JSON.stringify(node.overlayMutations));
+                newNode.minimalOverlayShardId = node.minimalOverlayShardId;
+            }
 
             var root = self.getRoot(newNode);
             root.initial[self.getPath(newNode)] = root.initial[self.getPath(node)];
