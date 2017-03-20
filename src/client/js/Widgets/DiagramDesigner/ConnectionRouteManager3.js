@@ -273,9 +273,26 @@ define([
         }
     };
 
-    ConnectionRouteManager3.prototype.redrawConnections = function (ids) {
+    ConnectionRouteManager3.prototype._shouldRouteConnection = function (connId) {
+        var connInstance = this.diagramDesigner.items[connId];
 
-        this.simpleRouter.redrawConnections(ids);
+        if (!connInstance || connInstance.segmentPoints.length > 0 || connInstance.isBezier) {
+            // These should not be handled by the AutoRouter
+            // However it looks like it should support segmentPoints...)
+            return false;
+        }
+
+        return true;
+    };
+
+    ConnectionRouteManager3.prototype.redrawConnections = function (ids) {
+        var partialPreDraw = false;
+
+        if (ids.length !== this.diagramDesigner.connectionIds.length) {
+            partialPreDraw = true;
+        }
+
+        this.simpleRouter.redrawConnections(ids, partialPreDraw);
 
         if (!this._initialized) {
             this._initializeGraph();
@@ -356,18 +373,36 @@ define([
 
     ConnectionRouteManager3.prototype.insertConnection = function (connId) {
         var canvas = this.diagramDesigner,
-            srcObjId = canvas.connectionEndIDs[connId].srcObjId,
-            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId,
-            dstObjId = canvas.connectionEndIDs[connId].dstObjId,
-            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId,
-            sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
-            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId,
-            connMetaInfo = canvas.items[connId].getMetaInfo(),
-            srcConnAreas = canvas.items[srcObjId].getConnectionAreas(srcSubCompId, false, connMetaInfo),
-            dstConnAreas = canvas.items[dstObjId].getConnectionAreas(dstSubCompId, true, connMetaInfo),
-            srcPorts = {},
-            dstPorts = {},
+            srcObjId,
+            srcSubCompId,
+            dstObjId,
+            dstSubCompId,
+            sId,
+            tId,
+            connMetaInfo,
+            srcConnAreas,
+            dstConnAreas,
+            srcPorts,
+            dstPorts,
             j;
+
+        if (this._shouldRouteConnection(connId) === false) {
+            // These should not be handled by the AutoRouter
+            // (However it looks like it should support segmentPoints...
+            return;
+        }
+
+        srcObjId = canvas.connectionEndIDs[connId].srcObjId;
+        srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId;
+        dstObjId = canvas.connectionEndIDs[connId].dstObjId;
+        dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
+        sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId;
+        tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId;
+        connMetaInfo = canvas.items[connId].getMetaInfo();
+        srcConnAreas = canvas.items[srcObjId].getConnectionAreas(srcSubCompId, false, connMetaInfo);
+        dstConnAreas = canvas.items[dstObjId].getConnectionAreas(dstSubCompId, true, connMetaInfo);
+        srcPorts = {};
+        dstPorts = {};
 
         this._updatePort(srcObjId, srcSubCompId);//Adding ports for connection
         this._updatePort(dstObjId, dstSubCompId);
