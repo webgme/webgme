@@ -17,7 +17,6 @@ $port-height: 13px;
 
 @mixin svg_decorator_core {
   .svg-decorator {
-    text-align: center;
     position: relative;
 
     .svg-content {

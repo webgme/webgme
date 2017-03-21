@@ -60,6 +60,7 @@ define([
 
         if (this.skinParts.$name) {
             this.renderLayoutInfo.nameWidth = this.skinParts.$name.outerWidth();
+            this.renderLayoutInfo.nameHeight = this.skinParts.$name.outerHeight();
         }
     };
 
@@ -81,7 +82,7 @@ define([
         var size = this.circleSize;
 
         if (this.hostDesignerItem) {
-            this.hostDesignerItem.setSize(size, size);
+            this.hostDesignerItem.setSize(size, size + 12);
         }
     };
 

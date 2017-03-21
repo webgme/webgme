@@ -11,6 +11,13 @@
 //overwrite / extend with local modifications
 .designer-item {
   .svg-decorator {
+    .name {
+      position: absolute;
+    }
+    .replaceable {
+      text-align: center;
+      margin-top: 16px;
+    }
     .svg-content {
       svg {
         border: $border;

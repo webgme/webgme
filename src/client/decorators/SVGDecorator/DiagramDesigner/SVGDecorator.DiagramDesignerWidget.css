@@ -6,7 +6,6 @@
  */
 /*#DBEAFC;*/
 .svg-decorator {
-  text-align: center;
   position: relative; }
   .svg-decorator .svg-content svg {
     vertical-align: top; }
@@ -61,6 +60,11 @@
       -o-transform: scaleX(-1);
       transform: scaleX(-1); }
 
+.designer-item .svg-decorator .name {
+  position: absolute; }
+.designer-item .svg-decorator .replaceable {
+  text-align: center;
+  margin-top: 16px; }
 .designer-item .svg-decorator .svg-content svg {
   border: none; }
   .designer-item .svg-decorator .svg-content svg .connector {

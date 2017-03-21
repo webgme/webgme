@@ -6,7 +6,6 @@
  */
 /*#DBEAFC;*/
 .part .svg-decorator {
-  text-align: center;
   position: relative; }
   .part .svg-decorator .svg-content svg {
     vertical-align: top; }
@@ -25,7 +24,7 @@
     line-height: 16px; }
   .part .svg-decorator.abstract .name {
     font-style: italic;
-    color: #aaaaaa; }
+    color: #AAAAAA; }
   .part .svg-decorator .ports {
     position: absolute;
     top: 0;
@@ -60,3 +59,5 @@
       -ms-transform: scaleX(-1);
       -o-transform: scaleX(-1);
       transform: scaleX(-1); }
+.part .svg-decorator .name {
+  max-width: 140px; }
