@@ -461,6 +461,14 @@ define([
                     if (this.skinParts.pathShadow) {
                         this._updatePathShadow(this._pathPoints);
                     }
+
+                    if (this._connectionConnector) {
+                        var pos = this._getMidPoint();
+                        this._connectionConnector.css({
+                            left: pos.x,
+                            top: pos.y
+                        });
+                    }
                 } else {
                     this.logger.debug('Drawing connection with ID: "' + this.id + '"');
                     /*CREATE PATH*/
@@ -1897,6 +1905,10 @@ define([
 
         if (this.dstText) {
             drawEnd();
+        }
+
+        if (this.selected) {
+            this.skinParts.textContainer.addClass('is-selected');
         }
     };
 
