@@ -46,6 +46,9 @@ $tabs-container-height: 26px;
     .designer-item,
     .designer-connection {
       cursor: pointer;
+      &.selected {
+        z-index: 1;
+      }
     }
 
     .rubberband {

@@ -6,6 +6,9 @@
     .diagram-designer .items .designer-item,
     .diagram-designer .items .designer-connection {
       cursor: pointer; }
+      .diagram-designer .items .designer-item.selected,
+      .diagram-designer .items .designer-connection.selected {
+        z-index: 1; }
     .diagram-designer .items .rubberband {
       background: rgba(219, 234, 252, 0.49);
       border: #52A8EC solid 1px;
