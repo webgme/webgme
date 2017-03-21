@@ -31,7 +31,8 @@ define([
         CONNECTION_DEFAULT_END = CONNECTION_NO_END,
         CONNECTION_SHADOW_DEFAULT_OPACITY = 0,
         CONNECTION_SHADOW_DEFAULT_WIDTH = 20,
-        CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 0.5,
+        CONNECTION_SHADOW_DEFAULT_SELECTED_WIDTH = 5,
+        CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 1,
         CONNECTION_SHADOW_DEFAULT_COLOR = '#B9DCF7',
         CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE,
         SHADOW_MARKER_SIZE_INCREMENT = 3,
@@ -96,27 +97,30 @@ define([
         this.editable = !!objDescriptor.editable;
 
         this.isBezier = (objDescriptor[DiagramDesignerWidgetConstants.LINE_TYPE] ||
-        DiagramDesignerWidgetConstants.LINE_TYPES.NONE).toLowerCase() ===
-        DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER;
+            DiagramDesignerWidgetConstants.LINE_TYPES.NONE).toLowerCase() ===
+            DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER;
 
         /*PathAttributes*/
         this.designerAttributes.arrowStart = objDescriptor[DiagramDesignerWidgetConstants.LINE_START_ARROW] ||
-        CONNECTION_DEFAULT_END;
+            CONNECTION_DEFAULT_END;
         this.designerAttributes.arrowEnd = objDescriptor[DiagramDesignerWidgetConstants.LINE_END_ARROW] ||
-        CONNECTION_DEFAULT_END;
+            CONNECTION_DEFAULT_END;
         this.designerAttributes.color = objDescriptor[DiagramDesignerWidgetConstants.LINE_COLOR] ||
-        CONNECTION_DEFAULT_COLOR;
+            CONNECTION_DEFAULT_COLOR;
         this.designerAttributes.width = parseInt(objDescriptor[DiagramDesignerWidgetConstants.LINE_WIDTH], 10) ||
-        CONNECTION_DEFAULT_WIDTH;
+            CONNECTION_DEFAULT_WIDTH;
         this.designerAttributes.pattern = objDescriptor[DiagramDesignerWidgetConstants.LINE_PATTERN] ||
-        CONNECTION_DEFAULT_PATTERN;
+            CONNECTION_DEFAULT_PATTERN;
         this.designerAttributes.shadowWidth = this.designerAttributes.width + CONNECTION_SHADOW_DEFAULT_WIDTH -
-        CONNECTION_DEFAULT_WIDTH;
+            CONNECTION_DEFAULT_WIDTH;
+        this.designerAttributes.shadowSelectedWidth = this.designerAttributes.width +
+            CONNECTION_SHADOW_DEFAULT_SELECTED_WIDTH - CONNECTION_DEFAULT_WIDTH;
+
         this.designerAttributes.shadowOpacity = CONNECTION_SHADOW_DEFAULT_OPACITY;
         this.designerAttributes.shadowOpacityWhenSelected = CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED;
         this.designerAttributes.shadowColor = CONNECTION_SHADOW_DEFAULT_COLOR;
         this.designerAttributes.lineType = objDescriptor[DiagramDesignerWidgetConstants.LINE_TYPE] ||
-        CONNECTION_DEFAULT_LINE_TYPE;
+            CONNECTION_DEFAULT_LINE_TYPE;
 
         this.designerAttributes.shadowEndArrowWidth = this.designerAttributes.width + SHADOW_MARKER_SIZE_INCREMENT;
         if (this.designerAttributes.arrowStart.indexOf('-xx') !== -1 ||
@@ -124,7 +128,7 @@ define([
             this.designerAttributes.arrowStart.indexOf('-x') !== -1 ||
             this.designerAttributes.arrowEnd.indexOf('-x') !== -1) {
             this.designerAttributes.shadowEndArrowWidth = this.designerAttributes.width +
-            SHADOW_MARKER_SIZE_INCREMENT_X;
+                SHADOW_MARKER_SIZE_INCREMENT_X;
         }
 
         this.designerAttributes.shadowArrowStartAdjust = this._raphaelArrowAdjustForSizeToRefSize(
@@ -143,7 +147,7 @@ define([
         this.dstTextEdit = objDescriptor.dstTextEdit || false;
 
         this.showConnectionAreas = typeof objDescriptor[DiagramDesignerWidgetConstants.LINE_SHOW_CONNECTION_AREAS] ===
-            'boolean' ? objDescriptor[DiagramDesignerWidgetConstants.LINE_SHOW_CONNECTION_AREAS] : true;
+        'boolean' ? objDescriptor[DiagramDesignerWidgetConstants.LINE_SHOW_CONNECTION_AREAS] : true;
 
         //get segnment points
         this.segmentPoints = [];
@@ -237,11 +241,11 @@ define([
         if (isEnd) {
             this.designerAttributes.endArrowMarkerSize = this.designerAttributes.width * raphaelMarkerW;
             this.designerAttributes.shadowEndArrowMarkerSize = this.designerAttributes.shadowEndArrowWidth *
-            raphaelMarkerW;
+                raphaelMarkerW;
         } else {
             this.designerAttributes.startArrowMarkerSize = this.designerAttributes.width * raphaelMarkerW;
             this.designerAttributes.shadowStartArrowMarkerSize = this.designerAttributes.shadowEndArrowWidth *
-            raphaelMarkerW;
+                raphaelMarkerW;
         }
 
         return refX * (size - refSize);
@@ -457,6 +461,14 @@ define([
                     if (this.skinParts.pathShadow) {
                         this._updatePathShadow(this._pathPoints);
                     }
+
+                    if (this._connectionConnector) {
+                        var pos = this._getMidPoint();
+                        this._connectionConnector.css({
+                            left: pos.x,
+                            top: pos.y
+                        });
+                    }
                 } else {
                     this.logger.debug('Drawing connection with ID: "' + this.id + '"');
                     /*CREATE PATH*/
@@ -478,15 +490,15 @@ define([
                     if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
                         this._createPathShadow(this._pathPoints);
                         this.skinParts.path.hover(function () {
-                            this.node.setAttribute('class',
-                                DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_HOVER_CLASS);
-                        },
-                        function () {
-                            this.node.setAttribute('class',
-                                DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_CLASS);
-                        },
-                        this.skinParts.pathShadow,
-                        this.skinParts.pathShadow);
+                                this.node.setAttribute('class',
+                                    DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_HOVER_CLASS);
+                            },
+                            function () {
+                                this.node.setAttribute('class',
+                                    DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_SHADOW_CLASS);
+                            },
+                            this.skinParts.pathShadow,
+                            this.skinParts.pathShadow);
                     }
                     if (this.selected) {
                         this.onSelect(this.selectedInMultiSelection);
@@ -554,11 +566,17 @@ define([
             bPoints,
             len;
 
-        bBoxPath = this._calcRawBoundingBox();
-        // if (this.skinParts.pathShadow) {
-        //     strokeWidthAdjust = this.designerAttributes.shadowWidth;
-        //     shadowAdjust = this.designerAttributes.shadowArrowEndAdjust;
-        if (this.skinParts.path) {
+        if (this.isBezier) {
+            // Only when the connection is bezier will we use the help from raphael (which is slow).
+            bBoxPath = this.skinParts.pathShadow.getBBox();
+        } else {
+            bBoxPath = this._calcRawBoundingBox();
+        }
+
+        if (this.skinParts.pathShadow) {
+            strokeWidthAdjust = this.designerAttributes.shadowWidth;
+            shadowAdjust = this.designerAttributes.shadowArrowEndAdjust;
+        } else if (this.skinParts.path) {
             strokeWidthAdjust = this.designerAttributes.width;
         }
 
@@ -607,11 +625,11 @@ define([
             dy = shadowAdjust * Math.sin(this._pathEndAngle);
 
             endMarkerBBox = endMarkerBBox || {
-                x: this.endCoordinates.x + dx,
-                y: this.endCoordinates.y + dy,
-                x2: this.endCoordinates.x + dx,
-                y2: this.endCoordinates.y + dy
-            };
+                    x: this.endCoordinates.x + dx,
+                    y: this.endCoordinates.y + dy,
+                    x2: this.endCoordinates.x + dx,
+                    y2: this.endCoordinates.y + dy
+                };
 
 
             len = bPoints.length;
@@ -841,6 +859,11 @@ define([
                     this._setEditMode(true);
                 }
             }
+
+            if (this.skinParts.textContainer) {
+                this.skinParts.textContainer.addClass('is-selected');
+            }
+
             callback(this);
         } else {  // Not yet rendered
             this.onRenderCallback = callback;
@@ -852,6 +875,10 @@ define([
         this.selectedInMultiSelection = false;
         this.onRenderCallback = null;
 
+        if (this.skinParts.textContainer) {
+            this.skinParts.textContainer.removeClass('is-selected');
+        }
+
         this._unHighlightPath();
         this._setEditMode(false);
         if (typeof callback === 'function') {
@@ -862,7 +889,10 @@ define([
     Connection.prototype._highlightPath = function () {
         this._createPathShadow(this._pathPoints);
 
-        this.skinParts.pathShadow.attr({opacity: this.designerAttributes.shadowOpacityWhenSelected});
+        this.skinParts.pathShadow.attr({
+            opacity: this.designerAttributes.shadowOpacityWhenSelected,
+            'stroke-width': this.designerAttributes.shadowSelectedWidth
+        });
         if (this.skinParts.pathShadowArrowStart) {
             this.skinParts.pathShadowArrowStart.attr({opacity: this.designerAttributes.shadowOpacityWhenSelected});
         }
@@ -873,7 +903,10 @@ define([
 
     Connection.prototype._unHighlightPath = function () {
         if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
-            this.skinParts.pathShadow.attr({opacity: this.designerAttributes.shadowOpacity});
+            this.skinParts.pathShadow.attr({
+                opacity: this.designerAttributes.shadowOpacity,
+                'stroke-width': this.designerAttributes.shadowWidth
+            });
             if (this.skinParts.pathShadowArrowStart) {
                 this.skinParts.pathShadowArrowStart.attr({opacity: this.designerAttributes.shadowOpacity});
             }
@@ -1214,11 +1247,11 @@ define([
         if (this.reconnectable) {
             //editor handle at src
             this.skinParts.srcDragPoint = this.skinParts.srcDragPoint || $('<div/>', {
-                'data-end': DiagramDesignerWidgetConstants.CONNECTION_END_SRC,
-                'data-id': this.id,
-                class: DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS + ' ' +
-                DiagramDesignerWidgetConstants.CONNECTION_END_SRC
-            });
+                    'data-end': DiagramDesignerWidgetConstants.CONNECTION_END_SRC,
+                    'data-id': this.id,
+                    class: DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS + ' ' +
+                    DiagramDesignerWidgetConstants.CONNECTION_END_SRC
+                });
             this.skinParts.srcDragPoint.html('S');
 
             this.skinParts.srcDragPoint.css({
@@ -1231,11 +1264,11 @@ define([
 
 
             this.skinParts.dstDragPoint = this.skinParts.dstDragPoint || $('<div/>', {
-                'data-end': DiagramDesignerWidgetConstants.CONNECTION_END_DST,
-                'data-id': this.id,
-                class: DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS + ' ' +
-                DiagramDesignerWidgetConstants.CONNECTION_END_DST
-            });
+                    'data-end': DiagramDesignerWidgetConstants.CONNECTION_END_DST,
+                    'data-id': this.id,
+                    class: DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS + ' ' +
+                    DiagramDesignerWidgetConstants.CONNECTION_END_DST
+                });
             this.skinParts.dstDragPoint.html('D');
 
             this.skinParts.dstDragPoint.css({
@@ -1581,7 +1614,7 @@ define([
         }
 
         this._connectionConnector = this._connectionConnector ||
-        $('<div/>', {class: 'connector connection-connector'});
+            $('<div/>', {class: 'connector connection-connector'});
 
         this._connectionConnector.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID, this.id);
 
@@ -1873,6 +1906,10 @@ define([
         if (this.dstText) {
             drawEnd();
         }
+
+        if (this.selected) {
+            this.skinParts.textContainer.addClass('is-selected');
+        }
     };
 
     Connection.prototype._hideTexts = function () {
@@ -1997,12 +2034,12 @@ define([
 
             for (i = 0; i < segmentXings.length; i += 1) {
                 resultIntersectionPathDefs[segNum] = resultIntersectionPathDefs[segNum] || {
-                    t: [],
-                    paths: {},
-                    segmentLength: segmentXings[i].length,
-                    xings: {},
-                    sweepFlag: 0
-                };
+                        t: [],
+                        paths: {},
+                        segmentLength: segmentXings[i].length,
+                        xings: {},
+                        sweepFlag: 0
+                    };
 
                 xRadius = Math.max(this.designerAttributes.width, segmentXings[i].otherWidth) + JUMP_XING_RADIUS;
 
@@ -2050,7 +2087,7 @@ define([
                 }
 
                 xingCurve = 'L' + pointBefore.x + ',' + pointBefore.y + 'A' + xRadius + ',' + xRadius + ' 0 0,' +
-                sweepFlag + ' ' + pointAfter.x + ',' + pointAfter.y;
+                    sweepFlag + ' ' + pointAfter.x + ',' + pointAfter.y;
 
                 resultIntersectionPathDefs[segNum].t.push(segmentXings[i].t);
                 resultIntersectionPathDefs[segNum].paths[segmentXings[i].t] = xingCurve;
@@ -2084,13 +2121,13 @@ define([
                     xRadius = Math.max(xing.xRadius, xing1.xRadius);
 
                     xingCurve = 'L' + xing.pointBefore.x + ',' + xing.pointBefore.y + 'A' + xRadius + ',' + xRadius +
-                    ' 0 0,' + sweepFlag + ' ' + xing1.pointAfter.x + ',' + xing1.pointAfter.y;
+                        ' 0 0,' + sweepFlag + ' ' + xing1.pointAfter.x + ',' + xing1.pointAfter.y;
 
                     //try to not draw a huge arc, more like a small arc and a path inbetween - doesn't look that good
                     /*
-                    var totalLength = Math.sqrt((xing1.pointAfter.x - xing.pointBefore.x) *
-                    (xing1.pointAfter.x - xing.pointBefore.x) + (xing1.pointAfter.y - xing.pointBefore.y) *
-                    (xing1.pointAfter.y - xing.pointBefore.y));
+                     var totalLength = Math.sqrt((xing1.pointAfter.x - xing.pointBefore.x) *
+                     (xing1.pointAfter.x - xing.pointBefore.x) + (xing1.pointAfter.y - xing.pointBefore.y) *
+                     (xing1.pointAfter.y - xing.pointBefore.y));
                      var c1 = this._getPointAtLength(xing.pointBefore.x, xing.pointBefore.y, xing1.pointAfter.x,
                      xing1.pointAfter.y, xRadius);
                      var c2 = this._getPointAtLength(xing.pointBefore.x, xing.pointBefore.y, xing1.pointAfter.x,
@@ -2099,13 +2136,13 @@ define([
                      var ddx = c1.x - xing.pointBefore.x;
                      var ddy = c1.y - xing.pointBefore.y;
                      xingCurve = 'L' + xing.pointBefore.x + ',' + xing.pointBefore.y + 'A' + xRadius + ',' + xRadius +
-                      ' 0 0,' + sweepFlag + ' ' + (c1.x + ddy) + ',' + (c1.y + ddx);
+                     ' 0 0,' + sweepFlag + ' ' + (c1.x + ddy) + ',' + (c1.y + ddx);
 
                      ddx = xing1.pointAfter.x - c2.x;
                      ddy = xing1.pointAfter.y - c2.y;
                      xingCurve += ' L' + (c2.x + ddy) + ',' + (c2.y + ddx) + 'A' + xRadius + ',' + xRadius + ' 0 0,' +
-                      sweepFlag + ' ' + xing1.pointAfter.x + ',' + xing1.pointAfter.y;
-                      */
+                     sweepFlag + ' ' + xing1.pointAfter.x + ',' + xing1.pointAfter.y;
+                     */
 
                     resultIntersectionPathDefs[segNum].paths[t] = xingCurve;
 
@@ -2368,7 +2405,7 @@ define([
                 //C x1,y1 x2,y2 x,y
                 //draws a quadratic Bezier from the current point via control points x1,y1 and x2,y2 to x,y
                 pathDef.push('C' + (pp.x + pcX) + ',' + (pp.y + pcY) + ' ' + (p.x - cX) + ',' + (p.y - cY) + ' ' +
-                p.x + ',' + p.y);
+                    p.x + ',' + p.y);
 
                 pp = p;
                 pcX = cX;

@@ -79,6 +79,14 @@ ol.unstyled {
     -ms-user-select:element;
 }
 
+.user-select-text {
+    -moz-user-select:text;
+    -webkit-user-select:text;
+    -o-user-select:text;
+    user-select:text;
+    -ms-user-select:text;
+}
+
 input[type=text],
 input[type=password],
 input, /*stupid jsTree does not specify type for input (renaming node)*/

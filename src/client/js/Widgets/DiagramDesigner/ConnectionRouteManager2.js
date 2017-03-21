@@ -32,7 +32,7 @@ define(['js/logger'], function (Logger) {
     ConnectionRouteManager2.prototype.destroy = function () {
     };
 
-    ConnectionRouteManager2.prototype.redrawConnections = function (reqIdList) {
+    ConnectionRouteManager2.prototype.redrawConnections = function (reqIdList, partialPreDraw) {
         var idList,
             i,
             notReady;
@@ -42,7 +42,8 @@ define(['js/logger'], function (Logger) {
         //NOTE: here it is not enough to update the connections the canvas asked for
         //because updating one connections' endpoint (connection area switch) can cause
         //other connections to be redrawn that was originally not requested to do so
-        idList = this.diagramDesigner.connectionIds.slice(0);
+        // However this can be enforced by partialPreDraw set to true..
+        idList = partialPreDraw ? reqIdList : this.diagramDesigner.connectionIds.slice(0);
         while (idList.length > 0) {
 
 

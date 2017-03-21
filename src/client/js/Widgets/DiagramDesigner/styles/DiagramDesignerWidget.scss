@@ -137,10 +137,12 @@ $tabs-container-height: 26px;
         @include connector_basics;
 
         background-color: $connection-connector-background-color;
-        border-radius: $connector-size;
+        border-radius: 10px;
+        height: 6px;
+        width: 6px;
 
-        margin-left: $connector-size / -2;
-        margin-top: $connector-size / -2;
+        margin-left: -4px;
+        margin-top: -4px;
       }
     }
 
@@ -256,6 +258,26 @@ $tabs-container-height: 26px;
         input {
           height: 20px !important;
           min-width: 50px;
+        }
+      }
+
+      &.is-selected {
+        .c-text {
+          .c-name,
+          .c-dst,
+          .c-src {
+            background-color: #B9DCF7;
+            padding: 2px 2px 2px 2px;
+            margin-left: -2px;
+            border-radius: 2px;
+            z-index: 4;
+            &.editing {
+              z-index: -3;
+            }
+            &.v {
+              left: 1px;
+            }
+          }
         }
       }
     }

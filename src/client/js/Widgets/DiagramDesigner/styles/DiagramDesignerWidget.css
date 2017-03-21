@@ -75,9 +75,11 @@
       border: 1px solid #0000FF;
       z-index: 10;
       background-color: #FFFFFF;
-      border-radius: 12px;
-      margin-left: -6px;
-      margin-top: -6px; }
+      border-radius: 10px;
+      height: 6px;
+      width: 6px;
+      margin-left: -4px;
+      margin-top: -4px; }
       .diagram-designer .items .connection-connector.connector:hover {
         border-color: rgba(82, 168, 236, 0.8);
         -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
@@ -166,6 +168,22 @@
         .diagram-designer .items div.c-t div.c-text input {
           height: 20px !important;
           min-width: 50px; }
+      .diagram-designer .items div.c-t.is-selected .c-text .c-name,
+      .diagram-designer .items div.c-t.is-selected .c-text .c-dst,
+      .diagram-designer .items div.c-t.is-selected .c-text .c-src {
+        background-color: #B9DCF7;
+        padding: 2px 2px 2px 2px;
+        margin-left: -2px;
+        border-radius: 2px;
+        z-index: 4; }
+        .diagram-designer .items div.c-t.is-selected .c-text .c-name.editing,
+        .diagram-designer .items div.c-t.is-selected .c-text .c-dst.editing,
+        .diagram-designer .items div.c-t.is-selected .c-text .c-src.editing {
+          z-index: -3; }
+        .diagram-designer .items div.c-t.is-selected .c-text .c-name.v,
+        .diagram-designer .items div.c-t.is-selected .c-text .c-dst.v,
+        .diagram-designer .items div.c-t.is-selected .c-text .c-src.v {
+          left: 1px; }
     .diagram-designer .items.highlight-mode .designer-item,
     .diagram-designer .items.highlight-mode .designer-connection,
     .diagram-designer .items.highlight-mode .c-t {
