@@ -1,5 +1,19 @@
 # Change Log
 
+## [v2.11.1](https://github.com/webgme/webgme/tree/v2.11.1) (2017-03-21)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.11.0...v2.11.1)
+
+**Implemented enhancements:**
+
+- Connection fixes and improvements [\#1346](https://github.com/webgme/webgme/pull/1346) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Connection fixes and improvements [\#1346](https://github.com/webgme/webgme/pull/1346) ([pmeijer](https://github.com/pmeijer))
+- Fixes constraint evaluation exception by first evaluating the meta consistency. [\#1345](https://github.com/webgme/webgme/pull/1345) ([pmeijer](https://github.com/pmeijer))
+- Fixes potential GUID collisions among copied nodes [\#1344](https://github.com/webgme/webgme/pull/1344) ([kecso](https://github.com/kecso))
+- Sharded copy fix [\#1343](https://github.com/webgme/webgme/pull/1343) ([kecso](https://github.com/kecso))
+
 ## [v2.11.0](https://github.com/webgme/webgme/tree/v2.11.0) (2017-03-13)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.10.0...v2.11.0)
 
