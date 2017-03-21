@@ -238,19 +238,21 @@ define([
         this.$svgContent.empty();
         this.$svgContent.removeClass();
         this.$svgContent.addClass('svg-content');
-        this.$svgContent.addClass(svg.replace(REGEXP.INVALID_CSS_CHARS, '__'));
+        if (svg) {
+            this.$svgContent.addClass(svg.replace(REGEXP.INVALID_CSS_CHARS, '__'));
+        }
 
         //remove existing connectors (if any)
         this.$el.find('> .' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).remove();
 
         this._defaultSVGUsed = false;
 
-        if (this.svgCache[svg]) {
+        if (svg && this.svgCache[svg]) {
             svgIcon = this.svgCache[svg].el.clone();
         } else {
             svgIcon = defaultSVG.clone();
             if (svg !== '') {
-                $(svgIcon.find('text')).html('!!! ' + svg + ' !!!');
+                $(svgIcon.find('text')).html('!!! ' + (svg || 'No svgIcon selected') + ' !!!');
             } else {
                 this._defaultSVGUsed = true;
             }

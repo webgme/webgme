@@ -5,4 +5,9 @@
 
 .part {
   @include svg_decorator_core;
+  .svg-decorator {
+    .name {
+      max-width: 140px;
+    }
+  }
 }

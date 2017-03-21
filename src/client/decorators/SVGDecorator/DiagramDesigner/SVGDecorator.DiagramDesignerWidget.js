@@ -78,6 +78,14 @@ define([
             event.preventDefault();
         });
 
+        if (this.$replaceable) {
+            this.$replaceable.on('dblclick.replDblClick', function (event) {
+                self._control._replaceBaseDialog(self._metaInfo[CONSTANTS.GME_ID]);
+                event.stopPropagation();
+                event.preventDefault();
+            });
+        }
+
         this._updateDropArea();
     };
     //jshint camelcase: true
@@ -94,19 +102,34 @@ define([
         this.svgWidth = this.$svgContent.find('svg').outerWidth(true);
         this.svgHeight = this.$svgContent.find('svg').outerHeight(true);
         this.svgBorderWidth = parseInt(this.$svgContent.find('svg').css('border-width'), 10);
+        this.nameWidth = this.$name.outerWidth();
+        this.nameHeight = this.$name.outerHeight();
+        this.replaceableHeight = this.$replaceable ? this.$replaceable.outerHeight() : 0;
 
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.call(this);
     };
 
     SVGDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
-        var xShift = Math.ceil((this.svgContainerWidth - this.svgWidth) / 2 + this.svgBorderWidth),
-            connectors = this.$el.find('> .' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+        if (this.renderLayoutInfo) {
+            if (this.$name) {
+                var shift = (this.svgWidth - this.nameWidth) / 2;
 
-        connectors.css('transform', 'translateX(' + xShift + 'px)');
+                this.$name.css({left: shift});
+                this.$el.css({
+                    width: this.svgWidth,
+                    height: this.svgHeight
+                });
+            }
+        }
 
-        this._fixPortContainerPosition(xShift);
+        //let the parent decorator class do its job finally
+        DiagramDesignerWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.apply(this, arguments);
+    };
 
-        DiagramDesignerWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.call(this);
+    SVGDecoratorDiagramDesignerWidget.prototype.calculateDimension = function () {
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.setSize(this.svgWidth, this.svgHeight + this.nameHeight + this.replaceableHeight);
+        }
     };
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
@@ -114,7 +137,7 @@ define([
         var result = [],
             edge = 10,
             LEN = 20,
-            xShift = (this.svgContainerWidth - this.svgWidth) / 2;
+            xShift = 0;
 
         if (id === undefined || id === this.hostDesignerItem.id) {
             if (this._customConnectionAreas && this._customConnectionAreas.length > 0) {
