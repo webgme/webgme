@@ -11,7 +11,8 @@ define(['common/util/canon',
     'common/regexp',
     'common/util/random',
     'common/core/constants',
-], function (CANON, TASYNC, ASSERT, REGEXP, RANDOM, CONSTANTS) {
+    'common/util/diff'
+], function (CANON, TASYNC, ASSERT, REGEXP, RANDOM, CONSTANTS, DIFF) {
     'use strict';
 
     function DiffCore(innerCore, options) {
@@ -305,25 +306,10 @@ define(['common/util/canon',
         function getDiffChildrenRelids(diff) {
             var keys = Object.keys(diff || {}),
                 i,
-                filteredKeys = [],
-                forbiddenWords = {
-                    guid: true,
-                    hash: true,
-                    attr: true,
-                    reg: true,
-                    pointer: true,
-                    set: true,
-                    meta: true,
-                    removed: true,
-                    movedFrom: true,
-                    childrenListChanged: true,
-                    oGuids: true,
-                    ooGuids: true,
-                    min: true,
-                    max: true
-                };
+                filteredKeys = [];
+
             for (i = 0; i < keys.length; i++) {
-                if (!forbiddenWords[keys[i]]) {
+                if (DIFF.FORBIDDEN_WORDS[keys[i]] !== true) {
                     filteredKeys.push(keys[i]);
                 }
             }
@@ -643,7 +629,7 @@ define(['common/util/canon',
                     }
 
                 }, done);
-            // TODO: Wouldn't loadOwnChildren be enough?
+                // TODO: Wouldn't loadOwnChildren be enough?
             }, self.loadChildren(sourceRoot), self.loadChildren(targetRoot));
         }
 
@@ -678,11 +664,11 @@ define(['common/util/canon',
         }
 
         function insertIntoDiff(path, diff, sDiff) {
-            var pathArray = path.split('/'),
+            var pathObject = DIFF.pathToObject(path),
+                pathArray = pathObject.pathArray,
                 relid = pathArray.pop(),
                 i;
 
-            pathArray.shift();
             for (i = 0; i < pathArray.length; i++) {
                 sDiff = sDiff[pathArray[i]];
             }
@@ -691,18 +677,15 @@ define(['common/util/canon',
         }
 
         function removePathFromDiff(diff, path) {
-            var relId, i, pathArray;
-            if (path === '') {
-                diff = null;
-            } else {
-                pathArray = path.split('/');
-                pathArray.shift();
-                relId = pathArray.pop();
-                for (i = 0; i < pathArray.length; i++) {
-                    diff = diff[pathArray[i]];
-                }
-                delete diff[relId];
+            var relId, i,
+                pathObject = DIFF.pathToObject(path),
+                pathArray = pathObject.pathArray;
+
+            relId = pathArray.pop();
+            for (i = 0; i < pathArray.length; i++) {
+                diff = diff[pathArray[i]];
             }
+            delete diff[relId];
         }
 
         function shrinkDiff(rootDiff) {
@@ -735,27 +718,14 @@ define(['common/util/canon',
 
         function insertAtPath(diff, path, object) {
             ASSERT(typeof path === 'string');
-            var i, base, relid, nodepath;
+            var i, base,
+                pathObject = DIFF.pathToObject(path),
+                relid = pathObject.pathArray.pop();
 
-            if (path === '') {
-                //_concatResult = JSON.parse(JSON.stringify(object));
-                return;
-            }
-            nodepath = path.match(/\/\/.*\/\//) || [];
-            nodepath = nodepath[0] || 'there is no nodepath in the path';
-            path = path.replace(nodepath, '/*nodepath*/');
-            nodepath = nodepath.replace(/\/\//g, '/');
-            nodepath = nodepath.slice(0, -1);
-            path = path.split('/');
-            path.shift();
-            if (path.indexOf('*nodepath*') !== -1) {
-                path[path.indexOf('*nodepath*')] = nodepath;
-            }
-            relid = path.pop();
             base = diff;
-            for (i = 0; i < path.length; i++) {
-                base[path[i]] = base[path[i]] || {};
-                base = base[path[i]];
+            for (i = 0; i < pathObject.pathArray.length; i += 1) {
+                base[pathObject.pathArray[i]] = base[pathObject.pathArray[i]] || {};
+                base = base[pathObject.pathArray[i]];
             }
             base[relid] = JSON.parse(JSON.stringify(object));
             return;
@@ -2418,12 +2388,14 @@ define(['common/util/canon',
                         mine: {
                             path: keys[i],
                             info: keys[i].replace(/\//g, ' / '),
-                            value: _conflictMine[keys[i]].value
+                            value: _conflictMine[keys[i]].value,
+                            nodePath: DIFF.pathToObject(keys[i]).node
                         },
                         theirs: {
                             path: conflicts[j],
                             info: conflicts[j].replace(/\//g, ' / '),
-                            value: _conflictTheirs[conflicts[j]].value
+                            value: _conflictTheirs[conflicts[j]].value,
+                            nodePath: DIFF.pathToObject(conflicts[j]).node
                         }
                     });
                 }

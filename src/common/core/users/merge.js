@@ -10,12 +10,14 @@ define([
     'common/core/coreQ',
     'common/storage/constants',
     'q',
-    'common/core/users/getroot'
+    'common/core/users/getroot',
+    'common/util/diff'
 ], function (REGEXP,
              Core,
              CONSTANTS,
              Q,
-             getRoot) {
+             getRoot,
+             DIFF) {
     'use strict';
 
     function save(parameters, callback) {
@@ -48,6 +50,19 @@ define([
             });
     }
 
+    function _diff(parameters) {
+        var deferred = Q.defer();
+        parameters.core.generateTreeDiff(parameters.sourceRoot, parameters.targetRoot, function (err, diff) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+            deferred.resolve(diff);
+        });
+
+        return deferred.promise;
+    }
+
     function diff(parameters, callback) {
         var deferred = Q.defer(),
             core = new Core(parameters.project, {
@@ -60,14 +75,9 @@ define([
             getRoot({project: parameters.project, core: core, id: parameters.branchOrCommitB})
         ])
             .then(function (results) {
-                core.generateTreeDiff(results[0].root, results[1].root, function (err, diff) {
-                    if (err) {
-                        deferred.reject(err);
-                        return;
-                    }
-                    deferred.resolve(diff);
-                });
+                return _diff({core: core, sourceRoot: results[0].root, targetRoot: results[1].root});
             })
+            .then(deferred.resolve)
             .catch(deferred.reject);
 
         return deferred.promise.nodeify(callback);
@@ -129,6 +139,7 @@ define([
             result = {},
             theirRoot = null,
             myRoot = null,
+            baseRoot = null,
             core = new Core(parameters.project, {
                 globConf: parameters.gmeConfig,
                 logger: parameters.logger.fork('core')
@@ -155,26 +166,93 @@ define([
                 });
         }
 
+        function addBaseValues() {
+            var conflictNodePaths = {},
+                addPath = function (path, index) {
+                    var pathObject = DIFF.pathToObject(path),
+                        nodePath = pathObject.node,
+                        subPath;
+
+                    if (typeof nodePath === 'string') {
+                        subPath = path.substr(nodePath.length);
+                        if (conflictNodePaths.hasOwnProperty(nodePath)) {
+                            conflictNodePaths[nodePath][subPath] = index;
+                            return null;
+                        } else {
+                            conflictNodePaths[nodePath] = {};
+                            conflictNodePaths[nodePath][subPath] = index;
+                            return nodePath;
+                        }
+                    }
+                    return null;
+                },
+                processNode = function (nodePath) {
+                    var deferred = Q.defer();
+                    Q.ninvoke(core, 'loadByPath', baseRoot, nodePath)
+                        .then(function (node) {
+                            var subPath,
+                                newItem;
+
+                            for (subPath in conflictNodePaths[nodePath]) {
+                                newItem = result.conflict.items[conflictNodePaths[nodePath][subPath]];
+                                newItem.other = {
+                                    path: newItem.mine.path,
+                                    info: newItem.mine.info,
+                                    value: DIFF.getValueFromNode(core, node, subPath)
+                                };
+
+                            }
+                            deferred.resolve();
+                        })
+                        .catch(function (err) {
+                            parameters.logger.error('Ignore during base value collection ignored:', err);
+                            deferred.resolve();
+                        });
+
+                    return deferred.promise;
+                },
+                item,
+                processes = [],
+                nodePathToCheck,
+                i;
+
+            for (i = 0; i < result.conflict.items.length; i += 1) {
+                item = result.conflict.items[i];
+                if (item.mine.path === item.theirs.path &&
+                    item.mine.value !== CONSTANTS.TO_DELETE_STRING &&
+                    item.theirs.value !== CONSTANTS.TO_DELETE_STRING &&
+                    JSON.stringify(item.mine.value) !== JSON.stringify(item.theirs.value)) {
+                    // We only able to provide a third option if the conflict is not a result of removal
+                    nodePathToCheck = addPath(item.mine.path, i);
+                    if (nodePathToCheck !== null) {
+                        processes.push(processNode(nodePathToCheck));
+                    }
+                }
+            }
+
+            return Q.all(processes);
+        }
+
         function doMerge() {
             var mergeDeferred = Q.defer(),
                 noApply = false;
 
-            Q.allSettled([
-                diff({
-                    gmeConfig: parameters.gmeConfig,
-                    logger: parameters.logger,
-                    project: parameters.project,
-                    branchOrCommitA: result.baseCommitHash,
-                    branchOrCommitB: parameters.myBranchOrCommit
-                }),
-                diff({
-                    gmeConfig: parameters.gmeConfig,
-                    logger: parameters.logger,
-                    project: parameters.project,
-                    branchOrCommitA: result.baseCommitHash,
-                    branchOrCommitB: parameters.theirBranchOrCommit
+            getRoot({project: parameters.project, core: core, id: result.baseCommitHash})
+                .then(function (_result) {
+                    baseRoot = _result.root;
+                    return Q.allSettled([
+                        _diff({
+                            core: core,
+                            sourceRoot: baseRoot,
+                            targetRoot: myRoot
+                        }),
+                        _diff({
+                            core: core,
+                            sourceRoot: baseRoot,
+                            targetRoot: theirRoot
+                        })
+                    ]);
                 })
-            ])
                 .then(function (diffs) {
                     if (diffs[0].state === 'rejected') {
                         parameters.logger.error('Initial diff generation failed (base->mine)', diffs[0].reason);
@@ -207,7 +285,7 @@ define([
                         }
                         result.projectId = parameters.project.projectId;
                         noApply = true;
-                        return;
+                        return addBaseValues();
                     }
 
                     return apply({
@@ -274,8 +352,8 @@ define([
             })
             .then(function () {
                 var ms = Date.now() - startTime,
-                    min = Math.floor(ms/1000/60),
-                    sec = (ms/1000) % 60;
+                    min = Math.floor(ms / 1000 / 60),
+                    sec = (ms / 1000) % 60;
                 parameters.logger.debug('Merge exec time', min, 'min', sec, 'sec');
                 deferred.resolve(result);
             })
