@@ -793,15 +793,10 @@ function StandAloneServer(gmeConfig) {
                     return svgName.substring('/assets/DecoratorSVG/'.length);
                 }));
             })
-            .catch(next);
-    });
-
-    __app.get('/assets/decoratorSVGMap.json', ensureAuthenticated, function (req, res, next) {
-        webgmeUtils.getSVGMap(gmeConfig, logger)
-            .then(function (svgMap) {
-                res.json(svgMap);
-            })
-            .catch(next);
+            .catch(function (err) {
+                logger.error(err);
+                next(err);
+            });
     });
 
     logger.debug('creating external library specific routing rules');

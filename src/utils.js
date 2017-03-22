@@ -90,6 +90,24 @@ function getSVGMap(gmeConfig, logger, callback) {
         return '/' + paths.join('/');
     }
 
+    function walkExtraDir(svgDir) {
+        return Q.nfcall(walkDir, svgDir)
+            .then(function (extraSvgFiles) {
+                extraSvgFiles.forEach(function (fname) {
+                    var dirName = path.parse(svgDir).name,
+                        relativeFilePath = path.relative(svgDir, fname),
+                        p = joinPath(['assets', 'DecoratorSVG', dirName].concat(relativeFilePath.split(path.sep)));
+
+                    if (svgMap.hasOwnProperty(p)) {
+                        logger.warn('Colliding SVG paths [', p, '] between [', svgMap[p], '] and [',
+                            fname, ']. Will proceed and use the latter...');
+                    }
+
+                    svgMap[p] = fname;
+                });
+            });
+    }
+
     if (SVGMapDeffered) {
         return SVGMapDeffered.promise.nodeify(callback);
     }
@@ -105,21 +123,7 @@ function getSVGMap(gmeConfig, logger, callback) {
             });
 
             return Q.all(gmeConfig.visualization.svgDirs.map(function (svgDir) {
-                var dirName = path.parse(svgDir).name;
-
-                return Q.nfcall(walkDir, svgDir)
-                    .then(function (extraSvgFiles) {
-                        extraSvgFiles.forEach(function (fname) {
-                            var p = joinPath(['assets', 'DecoratorSVG', dirName, path.basename(fname)]);
-
-                            if (svgMap.hasOwnProperty(p)) {
-                                logger.warn('Colliding SVG paths [', p, '] between [', svgMap[p], '] and [',
-                                    fname, ']. Will proceed and use the latter...');
-                            }
-
-                            svgMap[p] = fname;
-                        });
-                    });
+                return walkExtraDir(svgDir);
             }));
         })
         .then(function () {

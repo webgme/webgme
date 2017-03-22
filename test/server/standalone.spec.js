@@ -94,7 +94,7 @@ describe('standalone server', function () {
             server = WebGME.standaloneServer(gmeConfig);
             server.start(function (err) {
                 expect(err.code).to.equal('EADDRINUSE');
-                httpServer.close(function(err1) {
+                httpServer.close(function (err1) {
                     server._setIsRunning(true); //This ensures stopping modules.
                     server.stop(function (err2) {
                         done(err1 || err2 || null);
@@ -277,7 +277,7 @@ describe('standalone server', function () {
         ]
     }];
 
-     function addScenario(scenario) {
+    function addScenario(scenario) {
 
         describe(scenario.type + ' server ' + (scenario.authentication ? 'with' : 'without') + ' auth', function () {
             var gmeAuth,
@@ -300,7 +300,7 @@ describe('standalone server', function () {
                         return Q.allDone([
                             gmeAuth.addUser(account, account + '@example.com', account, true, {overwrite: true}),
                             gmeAuth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true})
-                            ]);
+                        ]);
                     })
                     .then(function () {
                         return gmeAuth.authorizeByUserId('user', 'project', 'create', {
@@ -388,13 +388,14 @@ describe('standalone server', function () {
     }
 
 
-    describe('http server without decorators', function () {
+    describe('http server decorators and svgs', function () {
         var server;
 
         before(function (done) {
             // we have to set the config here
             var gmeConfig = testFixture.getGmeConfig();
             gmeConfig.visualization.decoratorPaths = [];
+            gmeConfig.visualization.svgDirs.push(testFixture.path.join(__dirname, 'extra-svgs'));
 
             server = WebGME.standaloneServer(gmeConfig);
             serverBaseUrl = server.getUrl();
@@ -408,6 +409,52 @@ describe('standalone server', function () {
         it('should return 404 /decorators/DefaultDecorator/DefaultDecorator.js', function (done) {
             agent.get(serverBaseUrl + '/decorators/DefaultDecorator/DefaultDecorator.js').end(function (err, res) {
                 should.equal(res.status, 404, err);
+                done();
+            });
+        });
+
+        it('should list svgs at /assets/decoratorSVGList.json', function (done) {
+            agent.get(serverBaseUrl + '/assets/decoratorSVGList.json').end(function (err, res) {
+                expect(res.status).to.equal(200);
+                expect(res.body).to.include.members([
+                    'extra-svgs/level1.svg',
+                    'extra-svgs/nested/level2.svg',
+                    'extra-svgs/nested/nested/level3.svg'
+                ]);
+                done();
+            });
+        });
+
+        it('should return svg file if exists /assets/DecoratorSVG/Attribute.svg', function (done) {
+            agent.get(serverBaseUrl + '/assets/DecoratorSVG/Attribute.svg').end(function (err, res) {
+                expect(res.status).to.equal(200);
+                expect(res.body.toString('utf8')).to.contain('</svg>');
+                done();
+            });
+        });
+
+        it('should return svg file if exists /assets/DecoratorSVG/extra-svgs/level1.svg', function (done) {
+            agent.get(serverBaseUrl + '/assets/DecoratorSVG/extra-svgs/level1.svg').end(function (err, res) {
+                expect(res.status).to.equal(200);
+                expect(res.body.toString('utf8')).to.contain('</svg>');
+                done();
+            });
+        });
+
+        it('should return svg file if exists /assets/DecoratorSVG/extra-svgs/nested/nested/level3.svg',
+            function (done) {
+                agent.get(serverBaseUrl + '/assets/DecoratorSVG/extra-svgs/nested/nested/level3.svg')
+                    .end(function (err, res) {
+                        expect(res.status).to.equal(200);
+                        expect(res.body.toString('utf8')).to.contain('</svg>');
+                        done();
+                    });
+            }
+        );
+
+        it('should return 404 if svg file does not exist /assets/DecoratorSVG/NoSuchSvg.svg', function (done) {
+            agent.get(serverBaseUrl + '/assets/DecoratorSVG/NoSuchSvg.sv').end(function (err, res) {
+                expect(res.status).to.equal(404);
                 done();
             });
         });
