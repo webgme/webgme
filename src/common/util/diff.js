@@ -34,13 +34,17 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
             firstRun = path.split(CONSTANTS.PATH_SEP + CONSTANTS.PATH_SEP),
             i;
 
-        ASSERT(firstRun.length === 1 || firstRun.length === 3);
+        ASSERT(firstRun.length >= 1 && firstRun.length <= 3);
 
         if (firstRun.length === 3) {
             object.embeddedNode = firstRun[1].length === 0 ? '' : CONSTANTS.PATH_SEP + firstRun[1];
             object.pathArray = firstRun[2].split(CONSTANTS.PATH_SEP);
             object.pathArray.unshift(object.embeddedNode);
             object.pathArray = firstRun[0].split(CONSTANTS.PATH_SEP).concat(object.pathArray);
+        } else if (firstRun.length === 2) {
+            object.embeddedNode = firstRun[1].length === 0 ? '' : CONSTANTS.PATH_SEP + firstRun[1];
+            object.pathArray = firstRun[0].split(CONSTANTS.PATH_SEP);
+            object.pathArray.push(object.embeddedNode);
         } else {
             object.pathArray = path.split(CONSTANTS.PATH_SEP);
         }
@@ -61,7 +65,6 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
     function getSetValueFromNode(core, node, memberPath, pathArray) {
         var setName = pathArray[0];
 
-        console.log(pathArray, memberPath);
         if (typeof memberPath === 'string') {
             switch (pathArray[2]) {
                 case 'attr':
@@ -81,10 +84,34 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
         return undefined;
     }
 
-    function getMetaValueFromNode(core, node, pathArray) {
+    function getObjectValue(object, pathArray) {
+        var value = object;
+        while (value !== null && value !== undefined && pathArray.length > 0) {
+            value = value[pathArray.shift()];
+        }
+
+        return value;
+    }
+
+    function getMetaValueFromNode(core, node, embeddedPath, pathArray) {
+        switch (pathArray[0]) {
+            case 'children':
+                return getObjectValue(core.getChildrenMeta(node), pathArray.slice(1));
+            case 'pointers':
+                return getObjectValue(core.getPointerMeta(node, pathArray[1]), pathArray.slice(2));
+            case 'attributes':
+                return getObjectValue(core.getAttributeMeta(node, pathArray[1]), pathArray.slice(2));
+            case 'aspects':
+                // aspect changes cannot generate conflicts
+                break;
+            case 'constraints':
+                return getObjectValue((core.getConstraint(node, pathArray[1])), pathArray.slice(2));
+        }
+
         return undefined;
     }
 
+    // this function is intended to get simple values of the base state of the project knowing the place of conflict
     function getValueFromNode(core, node, subNodePath) {
         var pathObject = diffPathStringToObject(subNodePath);
 
@@ -103,15 +130,34 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
             case 'set':
                 return getSetValueFromNode(core, node, pathObject.embeddedNode, pathObject.pathArray.slice(1));
             case 'meta':
-                return getMetaValueFromNode(core, node, pathObject.pathArray.slice(1));
+                return getMetaValueFromNode(core, node, pathObject.embeddedNode, pathObject.pathArray.slice(1));
             default:
                 return undefined;
         }
     }
 
+    function getChangedNodePaths(completeDiff) {
+        var changedNodes = {},
+            recGetNodePath = function (path, diff) {
+                var key;
+
+                changedNodes[path] = true;
+
+                for (key in diff) {
+                    if (FORBIDDEN_WORDS[key] !== true) {
+                        recGetNodePath(path + CONSTANTS.PATH_SEP + key, diff[key]);
+                    }
+                }
+            };
+
+        recGetNodePath('', completeDiff);
+        return Object.keys(changedNodes);
+    }
+
     return {
         pathToObject: diffPathStringToObject,
         getValueFromNode: getValueFromNode,
+        getChangedNodePaths: getChangedNodePaths,
         FORBIDDEN_WORDS: FORBIDDEN_WORDS
     };
 });

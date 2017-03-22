@@ -316,6 +316,23 @@ define(['common/util/canon',
             return filteredKeys;
         }
 
+        function arrayDiff(source, target) {
+            var i,
+                diff = {};
+            for (i = 0; i < source.length; i += 1) {
+                if (target.indexOf(source[i]) === -1) {
+                    diff[source[i]] = CONSTANTS.TO_DELETE_STRING;
+                }
+            }
+
+            for (i = 0; i < target.length; i += 1) {
+                if (source.indexOf(target[i])) {
+                    diff[target[i]] = true;
+                }
+            }
+            return diff;
+        }
+
         function diffObjects(source, target) {
             var diff = {},
                 sKeys = Object.keys(source),
@@ -330,10 +347,14 @@ define(['common/util/canon',
                 if (sKeys.indexOf(tKeys[i]) === -1) {
                     diff[tKeys[i]] = target[tKeys[i]];
                 } else {
-                    if (typeof target[tKeys[i]] === typeof source[tKeys[i]] &&
-                        typeof target[tKeys[i]] === 'object' &&
-                        (target[tKeys[i]] !== null && source[tKeys[i]] !== null)) {
-                        tDiff = diffObjects(source[tKeys[i]], target[tKeys[i]]);
+                    if (typeof target[tKeys[i]] === typeof source[tKeys[i]]) {
+                        tDiff = {};
+                        if (source[tKeys[i]] instanceof Array && target[tKeys[i]] instanceof Array) {
+                            tDiff = arrayDiff(source[tKeys[i]], target[tKeys[i]]);
+                        } else if (typeof target[tKeys[i]] === 'object' &&
+                            target[tKeys[i]] !== null && source[tKeys[i]] !== null) {
+                            tDiff = diffObjects(source[tKeys[i]], target[tKeys[i]]);
+                        }
                         if (Object.keys(tDiff).length > 0) {
                             diff[tKeys[i]] = tDiff;
                         }
