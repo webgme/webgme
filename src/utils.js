@@ -9,10 +9,40 @@
 
 var fs = require('fs'),
     Q = require('q'),
-    genDecoratorSvgList = require('./client/assets/generate_decorator_svg_list'),
-    ncp = require('ncp'), // Module for copying entire directory
     path = require('path'),
-    requireUncached = require('require-uncached');
+    requireUncached = require('require-uncached'),
+    SVGMapDeffered;
+
+function walkDir (dir, done) {
+    var results = [];
+    fs.readdir(dir, function (err, list) {
+        if (err) {
+            return done(err);
+        }
+        var pending = list.length;
+        if (!pending) {
+            return done(null, results);
+        }
+        list.forEach(function (file) {
+            file = path.join(dir, file);
+            fs.stat(file, function (err, stat) {
+                if (stat && stat.isDirectory()) {
+                    walkDir(file, function (err, res) {
+                        results = results.concat(res);
+                        if (!--pending) {
+                            done(null, results);
+                        }
+                    });
+                } else {
+                    results.push(file);
+                    if (!--pending) {
+                        done(null, results);
+                    }
+                }
+            });
+        });
+    });
+}
 
 /**
  * @param name
@@ -52,39 +82,52 @@ function getComponentNames(basePaths) {
     return names.sort();
 }
 
-/**
- * @param gmeConfig
- * @param logger
- * @param callback
- * @returns {*}
- */
-function copySvgDirsAndRegenerateSVGList(gmeConfig, logger, callback) {
-    var deferred = Q.defer(),
-        svgAssetDir = path.join(__dirname, 'client', 'assets', 'DecoratorSVG');
+function getSVGMap(gmeConfig, logger, callback) {
+    var svgAssetDir = path.join(__dirname, 'client', 'assets', 'DecoratorSVG'),
+        svgMap;
 
-    ncp.stopOnErr = true;
+    function joinPath(paths) {
+        return '/' + paths.join('/');
+    }
 
-    Q.all(gmeConfig.visualization.svgDirs.map(function (svgDir) {
-        var dirName = path.parse(svgDir).name,
-            destination = path.join(svgAssetDir, dirName);
+    if (SVGMapDeffered) {
+        return SVGMapDeffered.promise.nodeify(callback);
+    }
 
-        logger.info('Custom SVGs will be copied', svgDir, destination);
+    SVGMapDeffered = Q.defer();
+    svgMap = {};
 
-        return Q.nfcall(ncp, svgDir, destination);
-    }))
+    Q.nfcall(walkDir, svgAssetDir)
+        .then(function (svgFiles) {
+            svgFiles.forEach(function (fname) {
+                var p = joinPath(['assets', 'DecoratorSVG', path.basename(fname)]);
+                svgMap[p] = fname;
+            });
+
+            return Q.all(gmeConfig.visualization.svgDirs.map(function (svgDir) {
+                var dirName = path.parse(svgDir).name;
+
+                return Q.nfcall(walkDir, svgDir)
+                    .then(function (extraSvgFiles) {
+                        extraSvgFiles.forEach(function (fname) {
+                            var p = joinPath(['assets', 'DecoratorSVG', dirName, path.basename(fname)]);
+
+                            if (svgMap.hasOwnProperty(p)) {
+                                logger.warn('Colliding SVG paths [', p, '] between [', svgMap[p], '] and [',
+                                    fname, ']. Will proceed and use the latter...');
+                            }
+
+                            svgMap[p] = fname;
+                        });
+                    });
+            }));
+        })
         .then(function () {
-            return genDecoratorSvgList();
+            SVGMapDeffered.resolve(svgMap);
         })
-        .then(function (svgList) {
-            logger.info('New SVG list generated at ', svgList);
-            deferred.resolve();
-        })
-        .catch(function (err) {
-            logger.error('Failed copying over custom svg directories', err);
-            deferred.reject(err);
-        });
+        .catch(SVGMapDeffered.reject);
 
-    return deferred.promise.nodeify(callback);
+    return SVGMapDeffered.promise.nodeify(callback);
 }
 
 function getPackageJson(callback) {
@@ -291,7 +334,7 @@ function getComponentsJson(logger, callback) {
 module.exports = {
     isGoodExtraAsset: isGoodExtraAsset,
     getComponentNames: getComponentNames,
-    copySvgDirsAndRegenerateSVGList: copySvgDirsAndRegenerateSVGList,
+    getSVGMap: getSVGMap,
     getPackageJson: getPackageJson,
     getPackageJsonSync: getPackageJsonSync,
     expressFileSending: expressFileSending,

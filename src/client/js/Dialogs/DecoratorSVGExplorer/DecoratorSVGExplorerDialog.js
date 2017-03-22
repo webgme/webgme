@@ -7,11 +7,11 @@
  */
 
 define(['js/Constants',
-    'assets/decoratorSVG',
+    'text!assets/decoratorSVGList.json',
     'text!./templates/DecoratorSVGExplorerDialog.html',
     'css!./styles/DecoratorSVGExplorerDialog.css'
 ], function (CONSTANTS,
-             decoratorSVG,
+             decoratorSVGList,
              DecoratorSVGExplorerDialogTemplate) {
 
     'use strict';
@@ -20,7 +20,7 @@ define(['js/Constants',
         IMG_BASE = $('<div class="image-container"><img src=""/><div class="desc">description</div></div>'),
         GROUP_TXT = '<li class="tab"><a href="#" data-toggle="tab">__GROUP_NAME__</a></li>',
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
-        DecoratorSVGIconList = [''].concat(decoratorSVG.DecoratorSVGIconList.slice(0)),
+        DecoratorSVGIconList = JSON.parse(decoratorSVGList),
         DATA_FILENAME = 'data-filename',
         DATA_SVG = 'data-normalized-filename',
         DATA_TAB = 'data-tab-group',
