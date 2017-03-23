@@ -3,6 +3,8 @@
 
 /**
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
+ * @author brollb / https://github.com/brollb
  */
 
 'use strict';
@@ -14,15 +16,20 @@ var fs = require('fs'),
     SVGMapDeffered;
 
 function walkDir (dir, done) {
-    var results = [];
+    var deferred = Q.defer(),
+        results = [];
+
     fs.readdir(dir, function (err, list) {
         if (err) {
-            return done(err);
+            deferred.reject(err);
+            return;
         }
         var pending = list.length;
         if (!pending) {
-            return done(null, results);
+            deferred.resolve(results);
+            return;
         }
+
         list.forEach(function (file) {
             file = path.join(dir, file);
             fs.stat(file, function (err, stat) {
@@ -30,18 +37,20 @@ function walkDir (dir, done) {
                     walkDir(file, function (err, res) {
                         results = results.concat(res);
                         if (!--pending) {
-                            done(null, results);
+                            deferred.resolve(results);
                         }
                     });
                 } else {
                     results.push(file);
                     if (!--pending) {
-                        done(null, results);
+                        deferred.resolve(results);
                     }
                 }
             });
         });
     });
+
+    return deferred.promise.nodeify(done);
 }
 
 /**
@@ -91,7 +100,7 @@ function getSVGMap(gmeConfig, logger, callback) {
     }
 
     function walkExtraDir(svgDir) {
-        return Q.nfcall(walkDir, svgDir)
+        return walkDir(svgDir)
             .then(function (extraSvgFiles) {
                 extraSvgFiles.forEach(function (fname) {
                     var dirName = path.parse(svgDir).name,
