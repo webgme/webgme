@@ -3,11 +3,13 @@
 [![Version](https://badge.fury.io/js/webgme.svg)](https://www.npmjs.com/package/webgme)
 [![Downloads](http://img.shields.io/npm/dm/webgme.svg?style=flat)](http://img.shields.io/npm/dm/webgme.svg?style=flat)
 
-WebGME is a web-based generic modeling environment for creating Domain Specific Modeling Languages (DSML) right in the browser. Specify modeling concepts, their relationships, attributes, and aspects by drawing a UML class diagram-based metamodel and WebGME automatically configures itself to support the DSML.
+# WebGME - Web-based Generic Modeling Environment
 
-WebGME supports collaboration where each change is translated into a micro-commit broadcast to all connected users. A lightweight branching scheme is transparently supported by the infrastructure. Code generators and externals tools can work on consistent snapshots (specific commits) while users can continue editing the models.
+Create your own Domain Specific Modeling Languages (DSML) right in the browser. Specify modeling concepts, their relationships, attributes, and aspects by drawing a UML class diagram-based metamodel and WebGME automatically configures itself to support the DSML.
 
-WebGME provides a variety of extension points to customize your application including: plugins, decorators, visualizers, server routers, webhooks, layouts etc. All these can be neatly generated, shared and imported using a command line interface. 
+WebGME promtes collaboration where each change is translated into a micro-commit broadcast to all connected users. A lightweight branching scheme is transparently supported by the infrastructure. Code generators and externals tools can work on consistent snapshots (specific commits) while users can continue editing the models.
+
+WebGME provides a variety of extension points for you to customize your application. See below for a list and explainations. All these can be neatly generated, shared and imported using a [command line interface](https://github.com/webgme/webgme-cli).
 
 ![WebGME-User-Interface](img/UI_2.11.1.png "WebGME UI - try it out at https://webgme.org")
 
