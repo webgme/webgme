@@ -3,6 +3,18 @@
  * 
  * Author: Robert Kereskenyi
  */
+ul.split-panel-dropdown-list {
+  min-width: 205px;
+  a.dropdown-list-button {
+    padding-left: 10px;
+    .split-panel-dropdown-icon {
+      float: left;
+      margin-right: 8px;
+      margin-top: 2px;
+    }
+  }
+}
+
 
 .split-panel {
   //background-color: #FF0000;
@@ -11,28 +23,25 @@
   left: 0;
   margin: 0;
 
-  .p1,
-  .p2 {
+  .split-panel-panel-container {
     position: absolute;
     overflow: hidden;
   }
 
   .splitter {
     z-index: 1000;
-    background: #DDD;
-    border: 0 solid #BBB;
+    //background: #DDD;
+    //border: 0 solid #BBB;
     position: absolute;
     box-sizing: border-box;
 
     &.vertical {
-      border-left-width: 1px;
-      border-right-width: 1px;
+      border-left: #DDD solid 2px;
       cursor: ew-resize;
     }
 
     &.horizontal {
-      border-top-width: 1px;
-      border-bottom-width: 1px;
+      border-top: #DDD solid 2px;
       cursor: ns-resize;
     }
 

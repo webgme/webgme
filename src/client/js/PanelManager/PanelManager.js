@@ -1,4 +1,4 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -15,13 +15,8 @@ define(['js/logger', 'js/Constants'], function (Logger, CONSTANTS) {
         this._activePanel = undefined;
     };
 
-
     PanelManager.prototype.setActivePanel = function (p) {
-        if (this._activePanel === p) {
-            // [lattmann] we need to call setActive in order to get the split panel working correctly
-            this._activePanel.setActive(true);
-
-        } else {
+        if (this._activePanel !== p) {
             if (this._activePanel) {
                 //deactivate currently active panel
                 this._activePanel.setActive(false);
@@ -29,12 +24,17 @@ define(['js/logger', 'js/Constants'], function (Logger, CONSTANTS) {
 
             this._activePanel = undefined;
 
-            if (p && _.isFunction(p.setActive)) {
+            if (p) {
                 this._activePanel = p;
-                this._activePanel.setActive(true);
-            }
 
-            WebGMEGlobal.State.registerActiveVisualizer(this._activePanel[CONSTANTS.VISUALIZER_PANEL_IDENTIFIER]);
+                if (typeof p.setActive === 'function') {
+                    this._activePanel.setActive(true);
+                }
+
+                WebGMEGlobal.State.registerActiveVisualizer(this._activePanel[CONSTANTS.VISUALIZER_PANEL_IDENTIFIER], {
+                    invoker: this
+                });
+            }
         }
 
         WebGMEGlobal.KeyboardManager.captureFocus();
