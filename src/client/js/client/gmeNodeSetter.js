@@ -66,9 +66,10 @@ define([], function () {
                 };
 
             // In order to preserve the relationships between the copied nodes. These steps are take:
-            // 1) A temporary container tempFrom is created.
+            // 0) A temporary container tempContainer is created to preserve all current paths.
+            // 1) A temporary container tempFrom is created under parent tempContainer.
             // 2) The nodes are moved to tempFrom.
-            // 3) tempFrom is copied (including the children) to tempTo
+            // 3) tempFrom is copied (including the children) to tempTo (under tempContainer).
             // 4) The nodes from tempFrom are moved back to their parent(s).
             // 5) The nodes from tempTo are moved to the targeted parent.
             // 6) tempFrom and tempTo are removed.

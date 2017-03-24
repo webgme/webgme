@@ -1506,21 +1506,24 @@ describe('jsonPatcher', function () {
         });
 
         it('should generate correct changes - copy more nodes', function (done) {
+            var temp,tempS, tempT;
+
             Q.ninvoke(core, 'loadRoot', shardedRootHash)
                 .then(function (root_) {
                     root = root_;
                     return Q.ninvoke(core, 'loadChildren', root);
                 })
                 .then(function (children) {
-                    var tempS, tempT;
 
                     expect(children).to.have.length(4);
-                    tempS = core.createNode({parent: root, relid: 'temp'});
+                    temp = core.createNode({parent: root, relid: 'temp'});
+                    tempS = core.createNode({parent: temp, relid: 'tempS'});
                     children[0] = core.moveNode(children[0], tempS);
                     children[1] = core.moveNode(children[1], tempS);
                     children[2] = core.moveNode(children[2], tempS);
                     children[3] = core.moveNode(children[3], tempS);
-                    tempT = core.copyNode(tempS, root);
+                    tempT = core.copyNode(tempS, temp);
+
                     children[0] = core.moveNode(children[0], root);
                     children[1] = core.moveNode(children[1], root);
                     children[2] = core.moveNode(children[2], root);
@@ -1533,15 +1536,13 @@ describe('jsonPatcher', function () {
                 })
                 .then(function (copies) {
                     var patch,
-                        tempT,
                         changes,
                         expectedChanges = {
-                            load: {}, unload: {}, update: {}, partialUpdate: {'':true}
+                            load: {}, unload: {}, update: {}, partialUpdate: {'': true}
                         };
 
                     expect(copies).to.have.length(4);
 
-                    tempT = core.getParent(copies[0]);
                     copies[0] = core.moveNode(copies[0], root);
                     expectedChanges.load[core.getPath(copies[0])] = true;
                     expectedChanges.load[core.getPath(core.moveNode(copies[1], root))] = true;
@@ -1550,6 +1551,9 @@ describe('jsonPatcher', function () {
 
                     core.setBase(tempT, copies[0]);
                     core.deleteNode(tempT);
+
+                    core.setBase(temp, copies[0]);
+                    core.deleteNode(temp);
 
                     patch = persistAndGetPatches();
                     changes = patcher.getChangedNodes(patch, core.getHash(root), '');
