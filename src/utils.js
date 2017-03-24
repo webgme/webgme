@@ -124,7 +124,7 @@ function getSVGMap(gmeConfig, logger, callback) {
     SVGMapDeffered = Q.defer();
     svgMap = {};
 
-    Q.nfcall(walkDir, svgAssetDir)
+    walkDir(svgAssetDir)
         .then(function (svgFiles) {
             svgFiles.forEach(function (fname) {
                 var p = joinPath(['assets', 'DecoratorSVG', path.basename(fname)]);
