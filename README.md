@@ -3,7 +3,17 @@
 [![Version](https://badge.fury.io/js/webgme.svg)](https://www.npmjs.com/package/webgme)
 [![Downloads](http://img.shields.io/npm/dm/webgme.svg?style=flat)](http://img.shields.io/npm/dm/webgme.svg?style=flat)
 
-#Getting started
+# WebGME - Web-based Generic Modeling Environment
+
+Create your own Domain Specific Modeling Languages (DSML) right in the browser. Specify modeling concepts, their relationships, attributes, and aspects by drawing a UML class diagram-based metamodel and WebGME automatically configures itself to support the DSML.
+
+WebGME promotes collaboration where each change is translated into a micro-commit broadcast to all connected users. A lightweight branching scheme is transparently supported by the infrastructure. Code generators and externals tools can work on consistent snapshots (specific commits) while users can continue editing the models.
+
+WebGME provides a variety of extension points for you to customize your application. See below for a list and explainations. All these can be neatly generated, shared and imported using a [command line interface](https://github.com/webgme/webgme-cli).
+
+![WebGME-User-Interface](img/UI_2.11.1.png "WebGME UI - try it out at https://webgme.org")
+
+# Getting started
 
 ### Dependencies
 #### Server
@@ -32,7 +42,7 @@ You can always try out webgme at our public deployment at [webgme.org](https://w
 After the webgme server is up and there are no error messages in the console. Open a valid webgme address in the browser. The default is `http://127.0.0.1:8888/`, you should see all valid addresses in the console where you started webgme.
 To view the available documentation visit `<host>/api`.
 
-#Command line interface
+# Command line interface
 
 All runnable javascript programs are stored in the `src/bin` directory, you should start them with node from the root directory of the repository, e.g. `node src/bin/start_server.js` starts the web server.
 Each script supports the `--help` or `-h` command line parameter, which will list all possible parameters.
@@ -45,7 +55,7 @@ Each script supports the `--help` or `-h` command line parameter, which will lis
 * `export.js`: exports a (snapshot of a) branch into a webgmex-file.
 * `import.js`: imports a (snapshot of a) branch (from webgmex-file) into a webgme project.
 
-#Extension Components
+# Extension Components
 * [Plugins](./src/plugin/README.md) - Model interpretation for e.g. code generation.
 * [AddOns](./src/addon/README.md) - Continuous model interpretation for e.g. constraint evaluation.
 * [Executor](./src/server/middleware/executor/Readme.md) - Code execution framework.
@@ -57,11 +67,11 @@ Each script supports the `--help` or `-h` command line parameter, which will lis
 
 See [gme-config](./config/README.md) for available configuration parameters.
 
-#Change log
+# Change log
 See [CHANGELOG](./CHANGELOG.md)
 
-#Contributing
+# Contributing
 See [CONTRIBUTING](./CONTRIBUTING.md)
 
-#License
+# License
 See the [LICENSE](LICENSE) file.
