@@ -7,11 +7,11 @@
  */
 
 define(['js/Constants',
-    'assets/decoratorSVG',
+    'text!assets/decoratorSVGList.json',
     'text!./templates/DecoratorSVGExplorerDialog.html',
     'css!./styles/DecoratorSVGExplorerDialog.css'
 ], function (CONSTANTS,
-             decoratorSVG,
+             decoratorSVGList,
              DecoratorSVGExplorerDialogTemplate) {
 
     'use strict';
@@ -20,12 +20,12 @@ define(['js/Constants',
         IMG_BASE = $('<div class="image-container"><img src=""/><div class="desc">description</div></div>'),
         GROUP_TXT = '<li class="tab"><a href="#" data-toggle="tab">__GROUP_NAME__</a></li>',
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
-        DecoratorSVGIconList = [''].concat(decoratorSVG.DecoratorSVGIconList.slice(0)),
+        DecoratorSVGIconList = JSON.parse(decoratorSVGList),
         DATA_FILENAME = 'data-filename',
         DATA_SVG = 'data-normalized-filename',
         DATA_TAB = 'data-tab-group',
         TAB_GROUP_PREFIX = 'tab-group-',
-        UNGROUPED = '__UNGROUPED__';
+        DEFAULT_TAB_GROUP = 'Default';
 
 
     DecoratorSVGExplorerDialog = function () {
@@ -110,10 +110,11 @@ define(['js/Constants',
 
             if (namePieces.length === 1) {
                 // These are the "old" SVGs at the root.
-                divImg.addClass(TAB_GROUP_PREFIX + UNGROUPED);
+                divImg.addClass(TAB_GROUP_PREFIX + DEFAULT_TAB_GROUP);
             } else {
                 divImg.addClass(TAB_GROUP_PREFIX + namePieces[0]);
                 this._groups[namePieces[0]] = true;
+                divImg.addClass('not-in-tab-group');
             }
 
             this._modalBody.append(divImg);
@@ -122,9 +123,23 @@ define(['js/Constants',
         }
 
         this._groupNames = Object.keys(this._groups);
+        this._groupNames.sort(function (a, b) {
+            var la = a.toLowerCase(),
+                lb = b.toLowerCase();
+
+            if (la > lb) {
+                return 1;
+            } else if (la < lb) {
+                return -1;
+            }
+
+            return 0;
+        });
+
         // Add the groups tabs
-        tabGroupEl = $(GROUP_TXT.replace('__GROUP_NAME__', 'All'));
-        tabGroupEl.addClass('All active');
+        tabGroupEl = $(GROUP_TXT.replace('__GROUP_NAME__', DEFAULT_TAB_GROUP));
+        tabGroupEl.addClass('active');
+        tabGroupEl.data(DATA_TAB, DEFAULT_TAB_GROUP);
         this._groupTabList.append(tabGroupEl);
 
         for (i = 0; i < this._groupNames.length; i += 1) {
@@ -163,19 +178,15 @@ define(['js/Constants',
                 groupClass;
             self._setSelected();
 
-            if (el.hasClass('All')) {
-                self._modalBody.find('div.image-container').removeClass('not-in-tab-group');
-            } else {
-                groupClass = TAB_GROUP_PREFIX + el.data(DATA_TAB);
-                self._modalBody.find('div.image-container').each(function () {
-                    var divImg = $(this);
-                    if (divImg.hasClass(groupClass)) {
-                        divImg.removeClass('not-in-tab-group');
-                    } else {
-                        divImg.addClass('not-in-tab-group');
-                    }
-                });
-            }
+            groupClass = TAB_GROUP_PREFIX + el.data(DATA_TAB);
+            self._modalBody.find('div.image-container').each(function () {
+                var divImg = $(this);
+                if (divImg.hasClass(groupClass)) {
+                    divImg.removeClass('not-in-tab-group');
+                } else {
+                    divImg.addClass('not-in-tab-group');
+                }
+            });
         });
     };
 

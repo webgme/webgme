@@ -206,10 +206,6 @@ function StandAloneServer(gmeConfig) {
                     promises.push(__executorServer.start({mongoClient: db}));
                 }
 
-                if (gmeConfig.visualization.svgDirs.length > 0) {
-                    promises.push(webgmeUtils.copySvgDirsAndRegenerateSVGList(gmeConfig, logger));
-                }
-
                 return Q.all(promises);
             })
             .then(function () {
@@ -772,8 +768,36 @@ function StandAloneServer(gmeConfig) {
         gmeConfig.visualization.layout.basePaths, logger, __baseDir));
 
     // Panel paths
-    logger.debug('creating path specific routing rules');
+    logger.debug('creating panel specific routing rules');
     __app.get(/^\/panel\/.*/, webgmeUtils.getRouteFor('panel', gmeConfig.visualization.panelPaths, __baseDir, logger));
+
+    // Assets paths (svgs)
+    logger.debug('creating assets/svgs specific routing rules');
+    __app.get(/^\/assets\/DecoratorSVG\/.*/, ensureAuthenticated, function (req, res, next) {
+        webgmeUtils.getSVGMap(gmeConfig, logger)
+            .then(function (svgMap) {
+                if (svgMap.hasOwnProperty(req.path)) {
+                    res.sendFile(svgMap[req.path]);
+                } else {
+                    logger.warn('Requested DecoratorSVG not found', req.path);
+                    res.sendStatus(404);
+                }
+            })
+            .catch(next);
+    });
+
+    __app.get('/assets/decoratorSVGList.json', ensureAuthenticated, function (req, res, next) {
+        webgmeUtils.getSVGMap(gmeConfig, logger)
+            .then(function (svgMap) {
+                res.json(Object.keys(svgMap).map(function (svgName) {
+                    return svgName.substring('/assets/DecoratorSVG/'.length);
+                }));
+            })
+            .catch(function (err) {
+                logger.error(err);
+                next(err);
+            });
+    });
 
     logger.debug('creating external library specific routing rules');
     gmeConfig.server.extlibExcludes.forEach(function (regExStr) {
