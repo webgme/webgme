@@ -2045,6 +2045,65 @@ describe('core diff', function () {
             expect(resultPatch['1303043463']['2119137141'].set.setPtr.attr.one).to.equal('four');
             expect(resultPatch['1303043463']['2119137141'].set.setPtr.reg.three).to.equal('*to*delete*');
         });
+
+        it('should combine and resolve: rename and move + rename', function () {
+            var resultPatch,
+                resultConflict,
+                diff1 = {
+                    175547009: {
+                        471466181: {
+                            attr: {name: 'one'},
+                            guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                            oGuids: {
+                                'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                            }
+                        },
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+                },
+                diff2 = {
+                    175547009: {
+                        471466181: {
+                            attr: {name: 'two'},
+                            guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                            oGuids: {
+                                'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                            }
+                        },
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+                };
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            expect(resultConflict.items).to.have.length(1);
+            resultConflict.items[0].other = JSON.parse(JSON.stringify(resultConflict.items[0].theirs));
+            resultConflict.items[0].other.value = 'three';
+
+            resultConflict.items[0].selected = 'other';
+            resultPatch = core.applyResolution(resultConflict);
+
+            expect(resultPatch['175547009']['471466181'].attr.name).to.eql('three');
+        });
     });
 
     describe('patch', function () {

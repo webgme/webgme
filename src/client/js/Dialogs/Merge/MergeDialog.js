@@ -179,7 +179,6 @@ define([
 
                 link = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
                     '&commit=' + encodeURIComponent(mergeResult.theirCommitHash) +
-                    // FIXME: regexp parses out the path
                     '&node=' + encodeURIComponent(getParentPath(pathObject.node)) +
                     '&selection=' + encodeURIComponent(pathObject.node);
 
@@ -191,6 +190,7 @@ define([
                     '</div>');
 
                 conflictItemE.find('.value-theirs').append(value);
+                this._addClickHandler(conflictItem, conflictItemE, value, 'theirs');
 
                 if (conflictItem.theirs.path === conflictItem.mine.path) {
                     text = JSON.stringify(conflictItem.mine.value);
@@ -201,35 +201,33 @@ define([
                 pathObject = DIFF.pathToObject(conflictItem.mine.path);
                 link = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
                     '&commit=' + encodeURIComponent(mergeResult.myCommitHash) +
-                    // FIXME: regexp parses out the path
                     '&node=' + encodeURIComponent(getParentPath(pathObject.node)) +
                     '&selection=' + encodeURIComponent(pathObject.node);
                 value = $('<div>' +
-                    // FIXME: should we use fa-link instead ???
                     '<a class="glyphicon glyphicon-link" href="' + link + '"  target="_blank" tooltip="Open"></a>' +
                     '<span><code style="word-wrap: break-word; white-space: normal">' + text + '</code></span>' +
                     '</div>');
 
                 conflictItemE.find('.value-mine').append(value);
+                this._addClickHandler(conflictItem, conflictItemE, value, 'mine');
 
                 if (conflictItem.other) {
                     pathObject = DIFF.pathToObject(conflictItem.other.path);
                     link = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
                         '&commit=' + encodeURIComponent(mergeResult.baseCommitHash) +
-                        // FIXME: regexp parses out the path
                         '&node=' + encodeURIComponent(getParentPath(pathObject.node)) +
                         '&selection=' + encodeURIComponent(pathObject.node);
                     value = $('<div>' +
-                        // FIXME: should we use fa-link instead ???
                         '<a class="glyphicon glyphicon-link" href="' + link + '"  target="_blank" tooltip="Open"></a>' +
                         '<span><input type="text" value=\'' + JSON.stringify(conflictItem.other.value) +
                         '\' style="word-wrap: break-word; white-space: normal"></input></span></div>');
 
                     conflictItemE.find('.value-other').append(value);
-
+                    this._addClickHandler(conflictItem, conflictItemE, value, 'other');
+                    this._addTypeChecker(conflictItem, value);
                 }
                 this._updateSelection(conflictItem, conflictItemE);
-                this._addClickHandler(conflictItem, conflictItemE);
+                this._addGlobalClickHandler(conflictItem, conflictItemE);
 
                 conflictsE.append(conflictItemE);
             }
@@ -238,25 +236,77 @@ define([
         this._diffPlaceholder.append(diff);
     };
 
-    MergeDialog.prototype._addClickHandler = function (conflictItem, conflictItemE) {
+    MergeDialog.prototype._addTypeChecker = function (conflictItem, valueE) {
+        var inputField = valueE.find('input'),
+            value;
+        inputField.on('keyup', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            value = inputField.val();
+            try {
+                if (typeof conflictItem.other.value === typeof JSON.parse(value)) {
+                    valueE.removeClass('text-danger');
+                    conflictItem.other.value = JSON.parse(value);
+                } else {
+                    valueE.addClass('text-danger');
+                }
+            } catch (e) {
+                valueE.addClass('text-danger');
+            }
+        });
+    };
+
+    MergeDialog.prototype._addGlobalClickHandler = function (conflictItem, conflictItemE) {
         var self = this;
 
         conflictItemE.on('click', function (event) {
+            if (event.target.tagName === 'A') {
+                // clicked on an A tag we do not need to change the selection.
+                return;
+            }
+
+            event.stopPropagation();
+            event.preventDefault();
+
+            //We rotate the selection
+            switch (conflictItem.selected) {
+                case 'theirs':
+                    conflictItem.selected = 'mine';
+                    break;
+                case 'mine':
+                    if (conflictItem.other) {
+                        conflictItem.selected = 'other';
+                    } else {
+                        conflictItem.selected = 'theirs';
+                    }
+                    break;
+                case 'other':
+                    conflictItem.selected = 'theirs';
+                    break;
+            }
+
+            self._updateSelection(conflictItem, conflictItemE);
+        });
+    };
+
+    MergeDialog.prototype._addClickHandler = function (conflictItem, conflictItemE, conflictItemSegmentE, type) {
+        var self = this;
+
+        conflictItemSegmentE.on('click', function (event) {
 
             if (event.target.tagName === 'A') {
                 // clicked on an A tag we do not need to change the selection.
                 return;
             }
 
-            if (conflictItem.selected === 'mine') {
-                conflictItem.selected = 'theirs';
-            } else if (conflictItem.selected === 'theirs') {
-                conflictItem.selected = 'mine';
-            } else {
-                // default
-                conflictItem.selected = 'mine';
+            event.stopPropagation();
+            event.preventDefault();
+
+            if (conflictItem.selected !== type) {
+                conflictItem.selected = type;
+                self._updateSelection(conflictItem, conflictItemE);
             }
-            self._updateSelection(conflictItem, conflictItemE);
         });
     };
 
@@ -264,10 +314,13 @@ define([
         if (conflictItem.selected === 'mine') {
             conflictItemE.find('.value-mine').addClass('selected');
             conflictItemE.find('.value-theirs').removeClass('selected');
+            conflictItemE.find('.value-other').removeClass('selected');
         } else if (conflictItem.selected === 'theirs') {
             conflictItemE.find('.value-mine').removeClass('selected');
+            conflictItemE.find('.value-other').removeClass('selected');
             conflictItemE.find('.value-theirs').addClass('selected');
         } else {
+            conflictItemE.find('.value-other').addClass('selected');
             conflictItemE.find('.value-mine').removeClass('selected');
             conflictItemE.find('.value-theirs').removeClass('selected');
         }

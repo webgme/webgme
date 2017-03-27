@@ -2600,8 +2600,14 @@ define(['common/util/canon',
             for (i = 0; i < conflictObject.items.length; i++) {
                 if (conflictObject.items[i].selected !== 'mine') {
                     removePathFromDiff(conflictObject.merge, conflictObject.items[i].mine.path);
-                    insertAtPath(conflictObject.merge,
-                        conflictObject.items[i].theirs.path, conflictObject.items[i].theirs.value);
+                    if (conflictObject.items[i].selected === 'theirs') {
+                        insertAtPath(conflictObject.merge,
+                            conflictObject.items[i].theirs.path, conflictObject.items[i].theirs.value);
+                    } else {
+                        insertAtPath(conflictObject.merge,
+                            conflictObject.items[i].other.path, conflictObject.items[i].other.value);
+                    }
+
                 }
             }
 
