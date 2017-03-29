@@ -5,11 +5,11 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.skip('corediff scenarios', function () {
+describe('corediff scenarios', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         projectName = 'coreDiffScenarios',
-    //projectId = testFixture.projectName2Id(projectName),
+        //projectId = testFixture.projectName2Id(projectName),
         Q = testFixture.Q,
         expect = testFixture.expect,
         logger = testFixture.logger.fork('corediff.scenarios'),
@@ -90,7 +90,7 @@ describe.skip('corediff scenarios', function () {
 
     function logNodes(nodes) {
         nodes.forEach(function (node) {
-            console.log(core.getPath(node), 'base' ,core.getBase(node) ? core.getPath(core.getBase(node)) : null);
+            console.log(core.getPath(node), 'base', core.getBase(node) ? core.getPath(core.getBase(node)) : null);
         });
     }
 
@@ -139,7 +139,6 @@ describe.skip('corediff scenarios', function () {
                     relid: 'conflictRelid'
                 });
 
-
                 // Save to ensure the added nodes are persisted.
                 return Q.all([
                     save(trees[0].root),
@@ -163,8 +162,18 @@ describe.skip('corediff scenarios', function () {
                 return core.loadSubTree(originRoot);
             })
             .then(function (st) {
-                // Root, fco, base, instance, 2 children
-                expect(st.length).to.equal(6);
+                // Root, fco, base, instance, 2+2 children (the nodes are created under the base node)
+                var numOfConflictPaths = 0,
+                    i;
+
+                expect(st.length).to.equal(8);
+
+                for (i = 0; i < st.length; i += 1) {
+                    if (core.getPath(st[i]).indexOf('/conflictRelid') !== -1) {
+                        numOfConflictPaths += 1;
+                    }
+                }
+                expect(numOfConflictPaths).to.eql(2);
             })
             .nodeify(done);
     });
@@ -213,6 +222,80 @@ describe.skip('corediff scenarios', function () {
                     relid: 'conflictRelid'
                 });
 
+                // Save to ensure the added nodes are persisted.
+                return Q.all([
+                    save(trees[0].root),
+                    save(trees[1].root)
+                ])
+                    .then(function () {
+                        return Q.all([
+                            core.generateTreeDiff(originRoot, trees[0].root),
+                            core.generateTreeDiff(originRoot, trees[1].root),
+                        ]);
+                    });
+            })
+            .then(function (diffs) {
+                var concatChanges = core.tryToConcatChanges(diffs[0], diffs[1]);
+
+                expect(concatChanges.items.length).to.equal(0); // No conflicts detected
+                return core.applyTreeDiff(originRoot, concatChanges.merge);
+            })
+            .then(function () {
+                return core.loadSubTree(originRoot);
+            })
+            .then(function (st) {
+                // Root, fco, base, instance, 3 children
+                expect(st.length).to.equal(7);
+            })
+            .nodeify(done);
+    });
+
+    it('should assign a new relid when child moved into one base and created in one instance', function (done) {
+        var originRoot,
+            basePath,
+            instancePath,
+            moveSourcePath;
+
+        loadRootAndFCO(context.rootHash)
+            .then(function (r) {
+                var base = core.createNode({
+                        parent: r.root,
+                        base: r.fco
+                    }),
+                    instance = core.createNode({
+                        parent: r.root,
+                        base: base
+                    }),
+                    moveNode = core.createNode({
+                        parent: r.root,
+                        base: r.fco,
+                        relid: 'conflictRelid'
+                    });
+
+                moveSourcePath = core.getPath(moveNode);
+                basePath = core.getPath(base);
+                instancePath = core.getPath(instance);
+
+                originRoot = r.root;
+                return save(r.root);
+            })
+            .then(function (rootHash) {
+                return Q.all([
+                    loadRootAndFCO(rootHash, [basePath, instancePath, moveSourcePath]),
+                    loadRootAndFCO(rootHash, [basePath, instancePath]),
+                ]);
+            })
+            .then(function (trees) {
+                // We've loaded two trees from the same rootHash
+                // now let's make changes.
+
+                core.moveNode(trees[0][moveSourcePath], trees[0][basePath]);
+
+                core.createNode({
+                    parent: trees[1][instancePath],
+                    base: trees[1].fco,
+                    relid: 'conflictRelid'
+                });
 
                 // Save to ensure the added nodes are persisted.
                 return Q.all([
@@ -286,7 +369,6 @@ describe.skip('corediff scenarios', function () {
                     relid: 'conflictRelid'
                 });
 
-
                 // Save to ensure the added nodes are persisted.
                 return Q.all([
                     core.loadChildren(trees[0][instancePath]),
@@ -335,11 +417,13 @@ describe.skip('corediff scenarios', function () {
             .then(function (r) {
                 var base = core.createNode({
                         parent: r.root,
-                        base: r.fco
+                        base: r.fco,
+                        relid: 'base'
                     }),
                     instance = core.createNode({
                         parent: r.root,
-                        base: r.fco
+                        base: r.fco,
+                        relid: 'instance'
                     });
 
                 basePath = core.getPath(base);
@@ -386,7 +470,6 @@ describe.skip('corediff scenarios', function () {
             })
             .then(function (diffs) {
                 var concatChanges = core.tryToConcatChanges(diffs[0], diffs[1]);
-                console.log(diffs[0]);
                 expect(concatChanges.items.length).to.equal(0); // No conflicts detected
                 return core.applyTreeDiff(originRoot, concatChanges.merge);
             })
@@ -403,7 +486,90 @@ describe.skip('corediff scenarios', function () {
             })
             .then(function (st) {
                 // Root, fco, base, instance, 3 children
-                logNodes(st);
+                // logNodes(st);
+                expect(st.length).to.equal(7);
+            })
+            .nodeify(done);
+    });
+
+    it('should assign a new relid when child created in base and instance changes its base', function (done) {
+        var originRoot,
+            basePath,
+            toBecomeInstancePath;
+
+        loadRootAndFCO(context.rootHash)
+            .then(function (r) {
+                var base = core.createNode({
+                        parent: r.root,
+                        base: r.fco,
+                        relid: 'base'
+                    }),
+                    instance = core.createNode({
+                        parent: r.root,
+                        base: r.fco,
+                        relid: 'instance'
+                    }),
+                    conflictChild = core.createNode({
+                    parent: base,
+                    base: r.fco,
+                    relid: 'conflictRelid'
+                });
+
+                basePath = core.getPath(base);
+                toBecomeInstancePath = core.getPath(instance);
+
+                originRoot = r.root;
+                return save(r.root);
+            })
+            .then(function (rootHash) {
+                return Q.all([
+                    loadRootAndFCO(rootHash, [basePath, toBecomeInstancePath]),
+                    loadRootAndFCO(rootHash, [basePath, toBecomeInstancePath]),
+                ]);
+            })
+            .then(function (trees) {
+                // We've loaded two trees from the same rootHash
+                // now let's make changes.
+
+                core.setBase(trees[0][toBecomeInstancePath], trees[0][basePath]);
+
+                core.createNode({
+                    parent: trees[1][toBecomeInstancePath],
+                    base: trees[1].fco,
+                    relid: 'conflictRelid'
+                });
+
+                // Save to ensure the added nodes are persisted.
+                return Q.all([
+                    save(trees[0].root),
+                    save(trees[1].root)
+                ])
+                    .then(function () {
+                        return Q.all([
+                            core.generateTreeDiff(originRoot, trees[0].root),
+                            core.generateTreeDiff(originRoot, trees[1].root),
+                        ]);
+                    });
+            })
+            .then(function (diffs) {
+                var concatChanges = core.tryToConcatChanges(diffs[0], diffs[1]);
+                expect(concatChanges.items.length).to.equal(0); // No conflicts detected
+                return core.applyTreeDiff(originRoot, concatChanges.merge);
+            })
+            .then(function () {
+                // This use-case requires a persist and reload before actions to take place..
+                //TODO: In general which kind of changes requires this? setBase and moveNode??
+                return save(originRoot);
+            })
+            .then(function (newRootHash) {
+                return loadRootAndFCO(newRootHash);
+            })
+            .then(function (r) {
+                return core.loadSubTree(r.root);
+            })
+            .then(function (st) {
+                // Root, fco, base, instance, 3 children
+                // logNodes(st);
                 expect(st.length).to.equal(7);
             })
             .nodeify(done);
@@ -446,7 +612,6 @@ describe.skip('corediff scenarios', function () {
 
                 core.setAttribute(trees[1][instancePath], 'name', 'newName');
 
-
                 // Save to ensure the added nodes are persisted.
                 return Q.all([
                     save(trees[0].root),
@@ -461,9 +626,9 @@ describe.skip('corediff scenarios', function () {
             })
             .then(function (diffs) {
                 var prevDiffs = JSON.parse(JSON.stringify(diffs));
-                console.log('before', JSON.stringify(diffs, null, 2));
+                // console.log('before', JSON.stringify(diffs, null, 2));
                 var concatChanges01 = core.tryToConcatChanges(diffs[0], diffs[1]);
-                console.log('after', JSON.stringify(diffs, null, 2));
+                // console.log('after', JSON.stringify(diffs, null, 2));
                 var concatChanges10 = core.tryToConcatChanges(diffs[1], diffs[0]);
                 expect(prevDiffs).to.deep.equal(diffs);
 
@@ -509,7 +674,6 @@ describe.skip('corediff scenarios', function () {
 
                 core.setAttribute(trees[0][instancePath], 'name', 'newName');
 
-
                 // Save to ensure the added nodes are persisted.
                 return Q.all([
                     save(trees[0].root),
@@ -524,9 +688,9 @@ describe.skip('corediff scenarios', function () {
             })
             .then(function (diffs) {
                 var prevDiffs = JSON.parse(JSON.stringify(diffs));
-                console.log('before', JSON.stringify(diffs, null, 2));
+                // console.log('before', JSON.stringify(diffs, null, 2));
                 var concatChanges01 = core.tryToConcatChanges(diffs[0], diffs[1]);
-                console.log('after', JSON.stringify(diffs, null, 2));
+                // console.log('after', JSON.stringify(diffs, null, 2));
                 var concatChanges10 = core.tryToConcatChanges(diffs[1], diffs[0]);
                 expect(prevDiffs).to.deep.equal(diffs);
 

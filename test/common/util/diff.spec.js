@@ -61,6 +61,8 @@ describe('DIFF', function () {
             childrenListChanged: true,
             oGuids: true,
             ooGuids: true,
+            oBaseGuids:true,
+            ooBaseGuids:true,
             min: true,
             max: true
         });
@@ -207,23 +209,5 @@ describe('DIFF', function () {
         expect(DIFF.getValueFromNode(core, node, '/meta/constraints/c/unknown')).to.eql(undefined);
         expect(DIFF.getValueFromNode(core, node, '/meta/constraints/unknown')).to.eql(null);
     });
-
-    it('should get the correct constraint value', function (done) {
-        var source = core.createNode(),
-            child = core.createNode({parent: source}),
-            target = core.createNode({guid: core.getGuid(source)});
-
-        // core.setConstraint(source, 'c', {script: 'a', priority: 'b', info: 'c'});
-        // core.setConstraint(target, 'c', {script: 'a', priority: 'b', info: 'd'});
-        // core.setAspectMetaTarget(source, 'a', source);
-        core.setAspectMetaTarget(source, 'a', child);
-        core.setAspectMetaTarget(target, 'a', target);
-        console.log(JSON.stringify(core.getOwnJsonMeta(source)));
-        core.generateTreeDiff(source, target, function (err, diff) {
-            console.log(JSON.stringify(diff, null, 2));
-            done();
-        });
-    });
-
 });
 

@@ -7,7 +7,6 @@
 
 var testFixture = require('../../_globals.js');
 
-
 describe('corediff-merge', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
@@ -40,7 +39,6 @@ describe('corediff-merge', function () {
                 .nodeify(next);
         };
 
-
     before(function (done) {
         testFixture.clearDBAndGetGMEAuth(gmeConfig/*, projectName*/)
             .then(function (gmeAuth_) {
@@ -55,12 +53,11 @@ describe('corediff-merge', function () {
 
     after(function (done) {
         Q.allSettled([
-                gmeAuth.unload(),
-                storage.closeDatabase()
-            ])
+            gmeAuth.unload(),
+            storage.closeDatabase()
+        ])
             .nodeify(done);
     });
-
 
     describe('basic', function () {
         var projectName = 'corediffMergeTesting',
@@ -106,10 +103,10 @@ describe('corediff-merge', function () {
 
             it('initial value check', function (done) {
                 Q.allDone([
-                        core.loadByPath(rootNode, '/579542227/651215756'),
-                        core.loadByPath(rootNode, '/579542227/2088994530')
+                    core.loadByPath(rootNode, '/579542227/651215756'),
+                    core.loadByPath(rootNode, '/579542227/2088994530')
 
-                    ])
+                ])
                     .then(function (nodes) {
                         core.getAttribute(nodes[0], 'priority').should.be.equal(100);
                         core.getAttribute(nodes[1], 'priority').should.be.equal(100);
@@ -477,9 +474,9 @@ describe('corediff-merge', function () {
         describe('registry', function () {
             it('initial value check', function (done) {
                 Q.allDone([
-                        core.loadByPath(rootNode, '/579542227/651215756'),
-                        core.loadByPath(rootNode, '/579542227/2088994530')
-                    ])
+                    core.loadByPath(rootNode, '/579542227/651215756'),
+                    core.loadByPath(rootNode, '/579542227/2088994530')
+                ])
                     .then(function (nodes) {
                         expect(core.getRegistry(nodes[0], 'position')).to.eql({x: 69, y: 276});
                         expect(core.getRegistry(nodes[1], 'position')).to.eql({x: 243, y: 184});
@@ -944,12 +941,12 @@ describe('corediff-merge', function () {
 
         before(function (done) {
             testFixture.importProject(storage, {
-                    projectSeed: 'test/common/core/corediff/base003.webgmex',
-                    projectName: projectName,
-                    branchName: 'master',
-                    gmeConfig: gmeConfig,
-                    logger: logger
-                })
+                projectSeed: 'test/common/core/corediff/base003.webgmex',
+                projectName: projectName,
+                branchName: 'master',
+                gmeConfig: gmeConfig,
+                logger: logger
+            })
                 .then(function (result) {
                     project = result.project;
                     core = result.core;
@@ -1148,8 +1145,8 @@ describe('corediff-merge', function () {
 
                     change.diff = change.conflict.merge;
 
-                    expect(Object.keys(change.diff.K)).to.have.length(5);
-                    expect(change.diff.K).to.include.keys('oGuids', 'guid', 'S', 'childrenListChanged');
+                    expect(Object.keys(change.diff.K)).to.have.length(6);
+                    expect(change.diff.K).to.include.keys('oGuids', 'guid', 'S', 'childrenListChanged', 'oBaseGuids');
 
                     applyParams.changeObject = change;
                     return Q.nfcall(applyChange, applyParams);
@@ -1345,8 +1342,8 @@ describe('corediff-merge', function () {
                     change.conflict = core.tryToConcatChanges(changeA.computedDiff, changeB.computedDiff);
                     expect(change.conflict.items).to.have.length(2);
 
-                    expect(change.conflict.items[0].theirs.path).to.equal('/K/S/removed');
-                    expect(change.conflict.items[1].theirs.path).to.equal('/K/S/removed');
+                    expect(change.conflict.items[0].theirs.path).to.equal('/Y/S/removed');
+                    expect(change.conflict.items[1].theirs.path).to.equal('/Y/S/removed');
                     change.diff = core.applyResolution(change.conflict);
 
                     applyParams.changeObject = change;

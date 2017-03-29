@@ -20,11 +20,27 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
         childrenListChanged: true,
         oGuids: true,
         ooGuids: true,
+        oBaseGuids: true,
+        ooBaseGuids: true,
         min: true,
         max: true
     };
 
-    function diffPathStringToObject(path) {
+    /**
+     *
+     * @param {string} path - arbitrary string where the legs of the path are separated with '/' character.
+     * @return {object} The function returns an object with processed information about the path.
+     *
+     * @example
+     * {
+     *  full: "/a/b/set/mySet//a/c//reg/position",
+     *  node: "/a/b",
+     *  embededdNode: "/a/c",
+     *  pathArray:["a","b","set","mySet","/a/c","reg","position"]
+     *  }
+     *
+     */
+    function pathToObject(path) {
         var object = {
                 full: path,
                 node: null,
@@ -111,9 +127,17 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
         return undefined;
     }
 
-    // this function is intended to get simple values of the base state of the project knowing the place of conflict
+    /**
+     *
+     * @param {object} core - the core object that allows access to the Core API
+     * @param (module:Core~Node) node - the node whose value we are interested in
+     * @param {string} subNodePath - a string that has the path structure and represents the sub-node location
+     * of the value we are interested in.
+     * @returns {undefined|*} - if the value is undefined, that means there is no such value, otherwise the value will
+     * be returned back.
+     */
     function getValueFromNode(core, node, subNodePath) {
-        var pathObject = diffPathStringToObject(subNodePath);
+        var pathObject = pathToObject(subNodePath);
 
         ASSERT(pathObject.node === '');
         ASSERT(FORBIDDEN_WORDS[pathObject.pathArray[0]] === true);
@@ -136,6 +160,12 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
         }
     }
 
+    /**
+     *
+     * @param {object} completeDiff - a diff object, that we would like to process and gather information from.
+     * @returns {string[]} An array of string of the paths of the affected nodes are returned. No partial update nodes
+     * are returned as we cannot gather that intel completely.
+     */
     function getChangedNodePaths(completeDiff) {
         var changedNodes = {},
             recGetNodePath = function (path, diff) {
@@ -155,7 +185,7 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
     }
 
     return {
-        pathToObject: diffPathStringToObject,
+        pathToObject: pathToObject,
         getValueFromNode: getValueFromNode,
         getChangedNodePaths: getChangedNodePaths,
         FORBIDDEN_WORDS: FORBIDDEN_WORDS
