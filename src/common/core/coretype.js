@@ -775,68 +775,68 @@ define([
             return newnode;
         };
 
-        this.copyNodes = function (nodes, parent, relidLength) {
-            var copiedNodes,
-                i, j, index, base,
-                relations = [],
-                names, pointer,
-                longestNewRelid = '',
-                paths = [];
-
-            //here we also have to copy the inherited relations which points inside the copy area
-            for (i = 0; i < nodes.length; i++) {
-                paths.push(self.getPath(nodes[i]));
-            }
-
-            for (i = 0; i < nodes.length; i++) {
-                names = inheritedPointerNames(nodes[i]);
-                pointer = {};
-                for (j = 0; j < names.length; j++) {
-                    index = paths.indexOf(self.getPointerPath(nodes[i], names[j]));
-                    if (index !== -1) {
-                        pointer[names[j]] = index;
-                    }
-                }
-                relations.push(pointer);
-            }
-
-            relidLength = relidLength || innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
-            //making the actual copy
-            copiedNodes = innerCore.copyNodes(nodes, parent, self.getChildrenRelids(parent, true), relidLength);
-
-            //setting internal-inherited relations
-            for (i = 0; i < nodes.length; i++) {
-                names = Object.keys(relations[i]);
-                for (j = 0; j < names.length; j++) {
-                    self.setPointer(copiedNodes[i], names[j], copiedNodes[relations[i][names[j]]]);
-                }
-            }
-
-            //setting base relation
-            for (i = 0; i < nodes.length; i++) {
-                base = nodes[i].base;
-                copiedNodes[i].base = base;
-                innerCore.setPointer(copiedNodes[i], CONSTANTS.BASE_POINTER, base);
-                innerCore.deleteProperty(copiedNodes[i], CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
-            }
-
-            //searching for the longest new relid and then process it towards the bases of the parent
-            for (i = 0; i < copiedNodes.length; i += 1) {
-                j = this.getRelid(copiedNodes[i]);
-                if (j.length > longestNewRelid) {
-                    longestNewRelid = j;
-                }
-            }
-
-            this.processRelidReservation(parent, longestNewRelid);
-
-            // Addition to #1232
-            if (isInheritedChild(parent)) {
-                self.processRelidReservation(self.getParent(parent), self.getRelid(parent));
-            }
-
-            return copiedNodes;
-        };
+        // this.copyNodes = function (nodes, parent, relidLength) {
+        //     var copiedNodes,
+        //         i, j, index, base,
+        //         relations = [],
+        //         names, pointer,
+        //         longestNewRelid = '',
+        //         paths = [];
+        //
+        //     //here we also have to copy the inherited relations which points inside the copy area
+        //     for (i = 0; i < nodes.length; i++) {
+        //         paths.push(self.getPath(nodes[i]));
+        //     }
+        //
+        //     for (i = 0; i < nodes.length; i++) {
+        //         names = inheritedPointerNames(nodes[i]);
+        //         pointer = {};
+        //         for (j = 0; j < names.length; j++) {
+        //             index = paths.indexOf(self.getPointerPath(nodes[i], names[j]));
+        //             if (index !== -1) {
+        //                 pointer[names[j]] = index;
+        //             }
+        //         }
+        //         relations.push(pointer);
+        //     }
+        //
+        //     relidLength = relidLength || innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
+        //     //making the actual copy
+        //     copiedNodes = innerCore.copyNodes(nodes, parent, self.getChildrenRelids(parent, true), relidLength);
+        //
+        //     //setting internal-inherited relations
+        //     for (i = 0; i < nodes.length; i++) {
+        //         names = Object.keys(relations[i]);
+        //         for (j = 0; j < names.length; j++) {
+        //             self.setPointer(copiedNodes[i], names[j], copiedNodes[relations[i][names[j]]]);
+        //         }
+        //     }
+        //
+        //     //setting base relation
+        //     for (i = 0; i < nodes.length; i++) {
+        //         base = nodes[i].base;
+        //         copiedNodes[i].base = base;
+        //         innerCore.setPointer(copiedNodes[i], CONSTANTS.BASE_POINTER, base);
+        //         innerCore.deleteProperty(copiedNodes[i], CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
+        //     }
+        //
+        //     //searching for the longest new relid and then process it towards the bases of the parent
+        //     for (i = 0; i < copiedNodes.length; i += 1) {
+        //         j = this.getRelid(copiedNodes[i]);
+        //         if (j.length > longestNewRelid) {
+        //             longestNewRelid = j;
+        //         }
+        //     }
+        //
+        //     this.processRelidReservation(parent, longestNewRelid);
+        //
+        //     // Addition to #1232
+        //     if (isInheritedChild(parent)) {
+        //         self.processRelidReservation(self.getParent(parent), self.getRelid(parent));
+        //     }
+        //
+        //     return copiedNodes;
+        // };
 
         this.deleteNode = function (node, technical) {
             //currently we only check if the node is inherited from its parents children

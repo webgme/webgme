@@ -956,49 +956,126 @@ define([
         };
 
         this.copyNodes = function (nodes, parent, takenRelids, relidLength) {
-            //copying multiple nodes at once for keeping their internal relations
-            var paths = [],
-                i, j, index, names, pointer, newNode,
-                copiedNodes = [],
-                // Every single element will be an object with the
-                // internally pointing relations and the index of the target.
-                internalRelationPaths = [];
+            var old2NewPath = {},
+                paths = [],
+                relationsToCopyOver = [],
+                copies = [],
+                source, target, oldTarget,
+                pathInDomain = function (path, domain) {
+                    return path === domain | path.indexOf(domain + CONSTANTS.PATH_SEP) === 0;
+                },
+                gatherRelations = function (commonPathInformation, firstNode, secondNode) {
+                    var commonParent,
+                        overlaysToCheck,
+                        i;
 
-            for (i = 0; i < nodes.length; i++) {
-                paths.push(innerCore.getPath(nodes[i]));
+                    commonParent = firstNode;
+                    while (self.getPath(commonParent) !== commonPathInformation.common) {
+                        commonParent = self.getParent(commonParent);
+                    }
+
+                    // first -> second
+                    overlaysToCheck = self.overlayQuery(commonParent, commonPathInformation.first);
+                    for (i = 0; i < overlaysToCheck.length; i += 1) {
+                        if (pathInDomain(overlaysToCheck[i].t, commonPathInformation.second)) {
+                            relationsToCopyOver.push({
+                                source: innerCore.joinPaths(commonPathInformation.common, overlaysToCheck[i].s),
+                                sourceBase: innerCore.joinPaths(commonPathInformation.common,
+                                    commonPathInformation.first),
+                                target: innerCore.joinPaths(commonPathInformation.common, overlaysToCheck[i].t),
+                                targetBase: innerCore.joinPaths(commonPathInformation.common,
+                                    commonPathInformation.second),
+                                name: overlaysToCheck[i].n
+                            });
+                        }
+                    }
+                },
+                i, j;
+
+            //first we collect the relations that we need to preserve
+            for (i = 0; i < nodes.length; i += 1) {
+                paths.push(self.getPath(nodes[i]));
             }
 
-            for (i = 0; i < nodes.length; i++) {
-                names = self.getPointerNames(nodes[i]);
-                pointer = {};
-                for (j = 0; j < names.length; j++) {
-                    index = paths.indexOf(self.getPointerPath(nodes[i], names[j]));
-                    if (index !== -1) {
-                        pointer[names[j]] = index;
+            for (i = 0; i < nodes.length; i += 1) {
+                for (j = 0; j < nodes.length; j += 1) {
+                    if (j !== i) {
+                        gatherRelations(innerCore.getCommonPathPrefixData(paths[i], paths[j]), nodes[i], nodes[j]);
                     }
                 }
-                internalRelationPaths.push(pointer);
             }
 
-            //now we use our simple copy
-            for (i = 0; i < nodes.length; i++) {
-                newNode = self.copyNode(nodes[i], parent, takenRelids, relidLength);
-                copiedNodes.push(newNode);
-                if (takenRelids) {
-                    takenRelids[self.getRelid(newNode)] = true;
+            //do the actual copying
+            for (i = 0; i < nodes.length; i += 1) {
+                copies.push(self.copyNode(nodes[i], parent));
+                old2NewPath[self.getPath(nodes[i])] = self.getPath(copies[i]);
+            }
+
+            // create the relations, that have to be preserved
+            for (i = 0; i < relationsToCopyOver.length; i += 1) {
+                source = relationsToCopyOver[i].source.replace(
+                    relationsToCopyOver[i].sourceBase,
+                    old2NewPath[relationsToCopyOver[i].sourceBase]
+                );
+                target = relationsToCopyOver[i].target.replace(
+                    relationsToCopyOver[i].targetBase,
+                    old2NewPath[relationsToCopyOver[i].targetBase]
+                );
+
+                oldTarget = self.overlayInquiry(parent, source, relationsToCopyOver[i].name);
+                if (oldTarget !== null && typeof oldTarget.value === 'string') {
+                    self.overlayRemove(parent, source, relationsToCopyOver[i].name, oldTarget.value);
                 }
+                self.overlayInsert(parent, source, relationsToCopyOver[i].name, target);
             }
 
-            //and now back to the relations
-            for (i = 0; i < internalRelationPaths.length; i++) {
-                names = Object.keys(internalRelationPaths[i]);
-                for (j = 0; j < names.length; j++) {
-                    self.setPointer(copiedNodes[i], names[j], copiedNodes[internalRelationPaths[i][names[j]]]);
-                }
-            }
-
-            return copiedNodes;
+            return copies;
         };
+
+        // this.copyNodes = function (nodes, parent, takenRelids, relidLength) {
+        //     //copying multiple nodes at once for keeping their internal relations
+        //     var paths = [],
+        //         i, j, index, names, pointer, newNode,
+        //         copiedNodes = [],
+        //         // Every single element will be an object with the
+        //         // internally pointing relations and the index of the target.
+        //         internalRelationPaths = [];
+        //
+        //     for (i = 0; i < nodes.length; i++) {
+        //         paths.push(innerCore.getPath(nodes[i]));
+        //     }
+        //
+        //     for (i = 0; i < nodes.length; i++) {
+        //         names = self.getPointerNames(nodes[i]);
+        //         pointer = {};
+        //         for (j = 0; j < names.length; j++) {
+        //             index = paths.indexOf(self.getPointerPath(nodes[i], names[j]));
+        //             if (index !== -1) {
+        //                 pointer[names[j]] = index;
+        //             }
+        //         }
+        //         internalRelationPaths.push(pointer);
+        //     }
+        //
+        //     //now we use our simple copy
+        //     for (i = 0; i < nodes.length; i++) {
+        //         newNode = self.copyNode(nodes[i], parent, takenRelids, relidLength);
+        //         copiedNodes.push(newNode);
+        //         if (takenRelids) {
+        //             takenRelids[self.getRelid(newNode)] = true;
+        //         }
+        //     }
+        //
+        //     //and now back to the relations
+        //     for (i = 0; i < internalRelationPaths.length; i++) {
+        //         names = Object.keys(internalRelationPaths[i]);
+        //         for (j = 0; j < names.length; j++) {
+        //             self.setPointer(copiedNodes[i], names[j], copiedNodes[internalRelationPaths[i][names[j]]]);
+        //         }
+        //     }
+        //
+        //     return copiedNodes;
+        // };
 
         this.moveNode = function (node, parent, takenRelids, relidLength) {
             ASSERT(self.isValidNode(node) && self.isValidNode(parent));
