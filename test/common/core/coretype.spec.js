@@ -233,6 +233,7 @@ describe('coretype', function () {
             }, core.loadChildren(instance));
         }, core.loadChildren(root));
     });
+
     it('copying nodes around', function (done) {
         TASYNC.call(function (children) {
             var base, instance, i, bCopy, copies;
@@ -263,6 +264,7 @@ describe('coretype', function () {
             done();
         }, core.loadChildren(root));
     });
+
     it('removing base', function (done) {
         TASYNC.call(function (children) {
             var base, instance, i;

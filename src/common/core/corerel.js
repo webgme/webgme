@@ -387,6 +387,10 @@ define([
             }
         }
 
+        function isPathInSubTree(path, subTreeRoot) {
+            return path === subTreeRoot | path.indexOf(subTreeRoot + CONSTANTS.PATH_SEP) === 0;
+        }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -953,6 +957,58 @@ define([
             var root = self.getRoot(newNode);
             root.initial[self.getPath(newNode)] = root.initial[self.getPath(node)];
             return newNode;
+        };
+
+        this.gatherRelationsAmongSubtrees = function (sourceRoot, targetRoot) {
+            var relationInformation = [],
+                overlaysToCheck,
+                commonParent, i,
+                commonPathInformation = innerCore.getCommonPathPrefixData(
+                    self.getPath(sourceRoot),
+                    self.getPath(targetRoot));
+
+            commonParent = sourceRoot;
+            while (self.getPath(commonParent) !== commonPathInformation.common) {
+                commonParent = self.getParent(commonParent);
+            }
+
+            overlaysToCheck = self.overlayQuery(commonParent, commonPathInformation.first);
+            for (i = 0; i < overlaysToCheck.length; i += 1) {
+                if (isPathInSubTree(overlaysToCheck[i].t, commonPathInformation.second)) {
+                    relationInformation.push({
+                        source: innerCore.joinPaths(commonPathInformation.common, overlaysToCheck[i].s),
+                        sourceBase: innerCore.joinPaths(commonPathInformation.common,
+                            commonPathInformation.first),
+                        target: innerCore.joinPaths(commonPathInformation.common, overlaysToCheck[i].t),
+                        targetBase: innerCore.joinPaths(commonPathInformation.common,
+                            commonPathInformation.second),
+                        name: overlaysToCheck[i].n
+                    });
+                }
+            }
+
+            return relationInformation;
+        };
+
+        this.gatherRelationsOfSubtree = function (root, sourceRelPath, targetRelPath) {
+            var relationInformation = [],
+                rootPath = self.getPath(root),
+                overlaysToCheck, i;
+
+            overlaysToCheck = self.overlayQuery(root, sourceRelPath);
+            for (i = 0; i < overlaysToCheck.length; i += 1) {
+                if (isPathInSubTree(overlaysToCheck[i].t, targetRelPath)) {
+                    relationInformation.push({
+                        source: innerCore.joinPaths(rootPath, overlaysToCheck[i].s),
+                        sourceBase: innerCore.joinPaths(rootPath, sourceRelPath),
+                        target: innerCore.joinPaths(rootPath, overlaysToCheck[i].t),
+                        targetBase: innerCore.joinPaths(rootPath, targetRelPath),
+                        name: overlaysToCheck[i].n
+                    });
+                }
+            }
+
+            return relationInformation;
         };
 
         this.copyNodes = function (nodes, parent, takenRelids, relidLength) {
