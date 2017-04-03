@@ -51,10 +51,14 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - If true certain parts will require that users are authenticated.
 - `config.authentication.allowGuests = true`
  - Generate a guest account for non-authenticated connections.
-- `config.authentication.allowUserRegistration = true`
- - Allow clients to create new users via the REST api.
 - `config.authentication.guestAccount = 'guest'`
  - User account which non-authenticated connections will access the storage.
+- `config.authentication.allowUserRegistration = true`
+ - Allows user-creation via the REST api without being an authenticated site admin.
+- `config.authentication.registeredUsersCanCreate = true`
+ - Set this option to `false` if user registration is `true` and registered users should not be able to create projects (site-admins can edit the `canCreate` property post-hoc for existing users).
+- `config.authentication.inferredUsersCanCreate = false`
+ - Users authenticated by externally generated tokens are automatically put in the database at their first login. By default these users cannot create new projects unless this option is set to `true`.
 - `config.authentication.logInUrl = '/profile/login'`
  - Where clients are redirected if not authenticated.
 - `config.authentication.logOutUrl = '/profile/login'`
@@ -76,7 +80,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.authentication.jwt.publicKey = './src/server/middleware/auth/EXAMPLE_PRIVATE_KEY'`
  - Public RSA256 key used when evaluating tokens.
 - `config.authentication.jwt.algorithm = 'RS256'`
- - The algorithm used for encryption (should not be edited w/o chaning keys appropriately).
+ - The algorithm used for encryption (should not be edited w/o changing keys appropriately).
 - `config.authentication.jwt.tokenGenerator = './src/server/middleware/auth/localtokengenerator.js'`
  - Replaceable module for generating tokens in case webgme should not generated new tokens by itself.
 
