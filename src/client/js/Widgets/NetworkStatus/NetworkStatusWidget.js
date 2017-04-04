@@ -133,7 +133,7 @@ define([
 
         this._disconnected = true;
         this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
-        this._popoverBox.show('Connection to the server has been lost...', this._popoverBox.alertLevels.WARNING, false);
+        this._popoverBox.show('Connection to the server has been lost...', this._popoverBox.alertLevels.WARNING, true);
     };
 
     NetworkStatusWidget.prototype._modeIncompatible = function () {
