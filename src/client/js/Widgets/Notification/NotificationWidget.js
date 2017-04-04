@@ -18,7 +18,7 @@ define([
     var NotificationWidget,
         ITEM_VALUE_CLEAR = 'clearAll',
         CLEAR_ALL_HTML = '<li><a class="notification-drop-down-menu-item notification-drop-down-menu-item-clear ' +
-            'empty"><i class="glyphicon glyphicon-trash clear-all-icon"/>Notifications</a></li>';
+            'empty"><i class="glyphicon glyphicon-trash clear-all-icon"/></a></li>';
 
     NotificationWidget = function (containerEl, client) {
         this._logger = Logger.create('gme:Widgets:NotificationWidget', WebGMEGlobal.gmeConfig.client.log);
@@ -49,8 +49,6 @@ define([
         this._ddNotification.setColor(DropDownMenu.prototype.COLORS.BLUE);
 
         this._ddNotification.onDropDownMenuOpen = function () {
-            var ddEl = self._ddNotification.getEl();
-            ddEl.find('notification-drop-down-menu-item-clear').show();
             self._popoverBox.hide();
         };
 

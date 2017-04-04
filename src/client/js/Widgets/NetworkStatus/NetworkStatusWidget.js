@@ -51,6 +51,12 @@ define([
 
         this._el.append(this._ddNetworkStatus.getEl());
 
+        this._popoverBox = new PopoverBox(this._ddNetworkStatus.getEl());
+
+        this._ddNetworkStatus.onDropDownMenuOpen = function () {
+            self._popoverBox.hide();
+        };
+
         this._ddNetworkStatus.onItemClicked = function (value) {
             if (value === ITEM_VALUE_CONNECT) {
 
@@ -132,7 +138,6 @@ define([
         this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
 
         this._disconnected = true;
-        this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
         this._popoverBox.show('Connection to the server has been lost...', this._popoverBox.alertLevels.WARNING, true);
     };
 
@@ -146,7 +151,6 @@ define([
         });
 
         this._disconnected = true;
-        this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
         this._popoverBox.show('New connection is not compatible with client - refresh required.',
             this._popoverBox.alertLevels.ERROR, true);
     };
@@ -161,7 +165,6 @@ define([
         });
 
         this._disconnected = true;
-        this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
         this._popoverBox.show('Token has expired - a new login is required.',
             this._popoverBox.alertLevels.ERROR, true);
     };
@@ -176,7 +179,6 @@ define([
         });
 
         this._disconnected = true;
-        this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
         this._popoverBox.show('Unexpected connection error - refresh required.',
             this._popoverBox.alertLevels.ERROR, true);
     };
@@ -194,7 +196,6 @@ define([
             value: ITEM_VALUE_DOWNLOAD_ERROR
         });
 
-        this._popoverBox = this._popoverBox || new PopoverBox(this._ddNetworkStatus.getEl());
         this._popoverBox.show('Uncaught exception - click here for actions',
             this._popoverBox.alertLevels.ERROR, true);
     };

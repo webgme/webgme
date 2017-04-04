@@ -52,6 +52,12 @@ define([
 
         this._el.append(this._ddBranchStatus.getEl());
 
+        this._popoverBox = new PopoverBox(this._ddBranchStatus.getEl());
+
+        this._ddBranchStatus.onDropDownMenuOpen = function () {
+            self._popoverBox.hide();
+        };
+
         this._ddBranchStatus.onItemClicked = function (value) {
             var branchName = self._client.getActiveBranchName(),
                 projectName = self._client.getActiveProjectId();
@@ -233,7 +239,7 @@ define([
 
         this._ddBranchStatus.setTitle('AHEAD[' + eventData.commitQueue.length + ']');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
-        this._popoverBox = this._popoverBox || new PopoverBox(this._ddBranchStatus.getEl());
+
         this._popoverBox.show('You are out of sync from the origin.',
             this._popoverBox.alertLevels.WARNING, true);
     };
@@ -264,7 +270,6 @@ define([
         this._ddBranchStatus.clear();
         this._ddBranchStatus.setTitle('ERROR');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.RED);
-        this._popoverBox = this._popoverBox || new PopoverBox(this._ddBranchStatus.getEl());
         this._popoverBox.show('Critical error - detached from branch.',
             this._popoverBox.alertLevels.ERROR, true);
         this._ddBranchStatus.addItem({

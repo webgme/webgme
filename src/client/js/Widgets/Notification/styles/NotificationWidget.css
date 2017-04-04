@@ -3,7 +3,7 @@
   overflow-y: scroll; }
 .notification-widget i.notification-drop-down-icon {
   font-size: 10px;
-  padding-left: 5px; }
+  padding-left: 25px; }
   .notification-widget i.notification-drop-down-icon.notification-drop-down-menu-item-success {
     color: green;
     text-shadow: 0 0 3px green; }
@@ -21,18 +21,18 @@
     text-shadow: 0 0 3px #ca1e1e; }
 .notification-widget a.notification-drop-down-menu-item {
   display: inline-block;
-  width: 90%;
-  padding-left: 10px; }
+  width: calc(100% - 40px);
+  padding-left: 5px;
+  padding-right: 40px;
+  font-size: 12px; }
   .notification-widget a.notification-drop-down-menu-item:hover {
     cursor: default;
     background-image: none;
     background-color: transparent; }
   .notification-widget a.notification-drop-down-menu-item.notification-drop-down-menu-item-clear {
-    font-weight: bold;
-    width: 100%;
-    border-bottom: 1px solid grey;
-    cursor: pointer; }
-    .notification-widget a.notification-drop-down-menu-item.notification-drop-down-menu-item-clear i.clear-all-icon {
-      padding-right: 10px; }
+    cursor: pointer;
+    position: fixed;
+    width: auto;
+    padding: 5px 5px 5px 5px; }
     .notification-widget a.notification-drop-down-menu-item.notification-drop-down-menu-item-clear:hover i.clear-all-icon {
       color: #b30404; }

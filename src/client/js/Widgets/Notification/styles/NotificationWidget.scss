@@ -6,7 +6,7 @@
 
   i.notification-drop-down-icon {
     font-size: 10px;
-    padding-left: 5px;
+    padding-left: 25px;
     &.notification-drop-down-menu-item-success {
       color: green;
       text-shadow: 0 0 3px green;
@@ -31,21 +31,23 @@
 
   a.notification-drop-down-menu-item {
     display: inline-block;
-    width: 90%;
-    padding-left: 10px;
+    width: calc(100% - 40px);
+    padding-left: 5px;
+    padding-right: 40px;
+    font-size: 12px;
     &:hover {
       cursor: default;
       background-image: none;
       background-color: transparent;
     }
     &.notification-drop-down-menu-item-clear {
-      font-weight: bold;
-      width: 100%;
-      border-bottom: 1px solid grey;
       cursor: pointer;
+      position: fixed;
+      width: auto;
+      padding: 5px 5px 5px 5px;
 
       i.clear-all-icon {
-        padding-right: 10px;
+
       }
 
       &:hover {
