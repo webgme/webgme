@@ -390,10 +390,16 @@ define([
         this.splitPath = function (path) {
             ASSERT(self.isValidPath(path));
 
-            path = path.split('/');
+            path = path.split(CONSTANTS.PATH_SEP);
             path.splice(0, 1);
 
             return path;
+        };
+
+        this.getParentPath = function (path) {
+            path = path.split(CONSTANTS.PATH_SEP);
+            path.splice(-1, 1);
+            return path.join(CONSTANTS.PATH_SEP);
         };
 
         this.buildPath = function (path) {

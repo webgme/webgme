@@ -155,7 +155,8 @@ describe('gmeNodeSetter', function () {
     it('should copy more node at once', function () {
         var parameters = {
             parentId: ''
-        };
+        },
+        oldNodeCount;
 
         parameters['/1303043463/2119137141'] = {
             attributes: {
@@ -168,11 +169,9 @@ describe('gmeNodeSetter', function () {
             }
         };
 
-        expect(basicState.nodes['/2119137141']).to.eql(undefined);
-        expect(basicState.nodes['/1044885565']).to.eql(undefined);
+        oldNodeCount = Object.keys(basicState.nodes).length;
         setNode.copyMoreNodes(parameters);
-        expect(basicState.nodes['/2119137141']).not.to.eql(undefined);
-        expect(basicState.nodes['/1044885565']).not.to.eql(undefined);
+        expect(Object.keys(basicState.nodes)).to.have.length(oldNodeCount+2);
     });
 
     it('should move a node', function () {

@@ -43,16 +43,8 @@ define([], function () {
         }
 
         function _copyMultipleNodes(paths, parentNode) {
-            var i,
-                tempContainer,
-                tempFrom,
-                tempTo,
-                helpArray,
-                subPathArray,
-                result = {},
-                childrenRelIds,
-                childNode,
-                newNode,
+            var copiedNodes, result = {},
+                i, originalNodes = [],
                 checkPaths = function () {
                     var i,
                         result = true;
@@ -65,65 +57,17 @@ define([], function () {
                     return result;
                 };
 
-            // In order to preserve the relationships between the copied nodes. These steps are take:
-            // 0) A temporary container tempContainer is created to preserve all current paths.
-            // 1) A temporary container tempFrom is created under parent tempContainer.
-            // 2) The nodes are moved to tempFrom.
-            // 3) tempFrom is copied (including the children) to tempTo (under tempContainer).
-            // 4) The nodes from tempFrom are moved back to their parent(s).
-            // 5) The nodes from tempTo are moved to the targeted parent.
-            // 6) tempFrom and tempTo are removed.
-
             if (parentNode && checkPaths()) {
-                helpArray = {};
-                subPathArray = {};
-
-                // 0) create a container for the tempNodes to preserve the relids of the original nodes
-                tempContainer = state.core.createNode({
-                    parent: state.core.getRoot(parentNode),
-                    base: state.core.getTypeRoot(state.nodes[paths[0]].node)
-                });
-
-                // 1) creating the 'from' object
-                tempFrom = state.core.createNode({
-                    parent: tempContainer
-                });
-
-                // 2) and moving every node under it
                 for (i = 0; i < paths.length; i += 1) {
-                    helpArray[paths[i]] = {};
-                    helpArray[paths[i]].origparent = state.core.getParent(state.nodes[paths[i]].node);
-                    helpArray[paths[i]].tempnode = state.core.moveNode(state.nodes[paths[i]].node, tempFrom);
-                    subPathArray[state.core.getRelid(helpArray[paths[i]].tempnode)] = paths[i];
-                    delete state.nodes[paths[i]];
+                    originalNodes.push(state.nodes[paths[i]].node);
                 }
 
-                // 3) do the copy
-                tempTo = state.core.copyNode(tempFrom, tempContainer);
+                copiedNodes = state.core.copyNodes(originalNodes, parentNode);
 
-                // 4) moving back the temporary source
                 for (i = 0; i < paths.length; i += 1) {
-                    helpArray[paths[i]].node = state.core.moveNode(helpArray[paths[i]].tempnode,
-                        helpArray[paths[i]].origparent);
-                    storeNode(helpArray[paths[i]].node);
+                    result[paths[i]] = copiedNodes[i];
+                    storeNode(copiedNodes[i]);
                 }
-
-                // 5) gathering the destination nodes and move them to targeted parent
-                childrenRelIds = state.core.getChildrenRelids(tempTo);
-
-                for (i = 0; i < childrenRelIds.length; i += 1) {
-                    if (subPathArray[childrenRelIds[i]]) {
-                        childNode = state.core.getChild(tempTo, childrenRelIds[i]);
-                        newNode = state.core.moveNode(childNode, parentNode);
-                        storeNode(newNode);
-                        result[subPathArray[state.core.getRelid(childNode)]] = newNode;
-                    } else {
-                        state.logger.error(new Error('Unexpected error when copying nodes!'));
-                    }
-                }
-
-                // 6) clean up the temporary container nodes.
-                state.core.deleteNode(tempContainer);
             }
 
             return result;

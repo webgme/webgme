@@ -109,7 +109,7 @@ define([
                     break;
                 }
 
-                source = '/' + innerCore.getRelid(node) + source;
+                source = CONSTANTS.PATH_SEP + innerCore.getRelid(node) + source;
                 node = innerCore.getParent(node);
 
             } while (node);
@@ -385,10 +385,6 @@ define([
             if (shouldUpdateSmallest) {
                 updateSmallestOverlayShardIndex(node);
             }
-        }
-
-        function isPathInSubTree(path, subTreeRoot) {
-            return path === subTreeRoot | path.indexOf(subTreeRoot + CONSTANTS.PATH_SEP) === 0;
         }
 
         //</editor-fold>
@@ -821,7 +817,7 @@ define([
          * @param {string} relid - Relid of the child to be removed.
          */
         this.deleteChild = function (parent, relid) {
-            var prefix = '/' + relid;
+            var prefix = CONSTANTS.PATH_SEP + relid;
             innerCore.deleteProperty(parent, relid);
             innerCore.removeChildFromCache(parent, relid);
             if (parent.childrenRelids) {
@@ -884,7 +880,7 @@ define([
                 ancestorNewPath = innerCore.getPath(newNode, ancestor);
 
                 base = innerCore.getParent(node);
-                baseOldPath = '/' + innerCore.getRelid(node);
+                baseOldPath = CONSTANTS.PATH_SEP + innerCore.getRelid(node);
                 aboveAncestor = 1;
 
                 while (base) {
@@ -901,7 +897,7 @@ define([
 
                         if (entry.p) {
                             ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
-                            ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === '/');
+                            ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === CONSTANTS.PATH_SEP);
 
                             if (aboveAncestor < 0) {
                                 //below ancestor node - further from root
@@ -932,7 +928,7 @@ define([
                         }
                     }
 
-                    baseOldPath = '/' + innerCore.getRelid(base) + baseOldPath;
+                    baseOldPath = CONSTANTS.PATH_SEP + innerCore.getRelid(base) + baseOldPath;
                     base = innerCore.getParent(base);
                 }
             } else {
@@ -974,7 +970,7 @@ define([
 
             overlaysToCheck = self.overlayQuery(commonParent, commonPathInformation.first);
             for (i = 0; i < overlaysToCheck.length; i += 1) {
-                if (isPathInSubTree(overlaysToCheck[i].t, commonPathInformation.second)) {
+                if (self.isPathInSubTree(overlaysToCheck[i].t, commonPathInformation.second)) {
                     relationInformation.push({
                         source: innerCore.joinPaths(commonPathInformation.common, overlaysToCheck[i].s),
                         sourceBase: innerCore.joinPaths(commonPathInformation.common,
@@ -997,7 +993,7 @@ define([
 
             overlaysToCheck = self.overlayQuery(root, sourceRelPath);
             for (i = 0; i < overlaysToCheck.length; i += 1) {
-                if (isPathInSubTree(overlaysToCheck[i].t, targetRelPath)) {
+                if (self.isPathInSubTree(overlaysToCheck[i].t, targetRelPath)) {
                     relationInformation.push({
                         source: innerCore.joinPaths(rootPath, overlaysToCheck[i].s),
                         sourceBase: innerCore.joinPaths(rootPath, sourceRelPath),
@@ -1160,7 +1156,7 @@ define([
             }
 
             base = innerCore.getParent(node);
-            baseOldPath = '/' + innerCore.getRelid(node);
+            baseOldPath = CONSTANTS.PATH_SEP + innerCore.getRelid(node);
             aboveAncestor = 1;
 
             var oldNode = node;
@@ -1207,7 +1203,7 @@ define([
                     }
 
                     ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
-                    ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === '/');
+                    ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === CONSTANTS.PATH_SEP);
 
                     if (aboveAncestor < 0) {
                         //below ancestor node
@@ -1248,7 +1244,7 @@ define([
                     self.overlayInsert(nodeToModifyOverlays, source, entry.n, target);
                 }
 
-                baseOldPath = '/' + innerCore.getRelid(base) + baseOldPath;
+                baseOldPath = CONSTANTS.PATH_SEP + innerCore.getRelid(base) + baseOldPath;
                 base = innerCore.getParent(base);
             }
 
@@ -1277,7 +1273,7 @@ define([
                 i;
 
             for (i = 0; i < relids.length; i += 1) {
-                result.push(path + '/' + relids[i]);
+                result.push(path + CONSTANTS.PATH_SEP + relids[i]);
             }
 
             return result;
@@ -1316,7 +1312,7 @@ define([
                         }
                     }
                 }
-                source = '/' + innerCore.getRelid(node) + source;
+                source = CONSTANTS.PATH_SEP + innerCore.getRelid(node) + source;
                 node = innerCore.getParent(node);
             } while (node);
 
@@ -1473,8 +1469,8 @@ define([
         this.isValidRelid = RANDOM.isValidRelid;
 
         this.isContainerPath = function (path, parentPath) {
-            var pathArray = (path || '').split('/'),
-                parentArray = (parentPath || '').split('/'),
+            var pathArray = (path || '').split(CONSTANTS.PATH_SEP),
+                parentArray = (parentPath || '').split(CONSTANTS.PATH_SEP),
                 i;
 
             for (i = 0; i < parentArray.length; i += 1) {
@@ -1486,6 +1482,9 @@ define([
             return true;
         };
 
+        this.isPathInSubTree = function (path, subTreeRoot) {
+            return path === subTreeRoot | path.indexOf(subTreeRoot + CONSTANTS.PATH_SEP) === 0;
+        }
         // by default the function removes any 'sub-node' relations
         this.getRawOverlayInformation = function (node) {
             var completeOverlayInfo = {},
