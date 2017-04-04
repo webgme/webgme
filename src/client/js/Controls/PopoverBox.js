@@ -21,8 +21,6 @@ define(['jquery', 'css!./styles/PopoverBox.css'], function () {
         var self = this,
             data = this._messageQueue[0];
 
-        console.log('Showing new', JSON.stringify(data));
-
         this._el.popover({
             placement: 'top',
             content: data.message,
