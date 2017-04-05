@@ -575,6 +575,43 @@ describe('coretype', function () {
         }, core.loadByPath(root, '/v/d/c'));
     });
 
+    // FIXME: according to the theoretical view of inheritance, these test cases should run
+    // but the current implementation cannot discover the whole chain of inheritance shyncronously
+    it.skip('should provide the info of instance-internal collections (second instance)', function (done) {
+        var root = core.createNode(),
+            A = core.createNode({parent: root, base: null, relid: 'A'}),
+            B = core.createNode({parent: A, base: null, relid: 'B'}),
+            C = core.createNode({parent: A, base: null, relid: 'C'}),
+            aP = core.createNode({parent: root, base: A, relid: 'a'}),
+            bP, bPP, cP;
+
+        core.setPointer(B, 'ref', C);
+
+        TASYNC.call(function (bP_, cP_) {
+            bP = bP_;
+            cP = cP_;
+            bPP = core.createNode({parent: aP, base: bP, relid: 'b'});
+            console.log(core.getPointerPath(bPP, 'ref'));
+            expect(core.getCollectionPaths(cP, 'ref')).to.have.length(2);
+            done();
+        }, core.loadByPath(aP, '/B'), core.loadByPath(aP, '/B'));
+    });
+
+    it.skip('should provide the info of collections throughout instances', function (done) {
+        var root = core.createNode(),
+            C = core.createNode({parent: root, base: null, relid: 'C'}),
+            C1 = core.createNode({parent: C, base: null, relid: 'C1'}),
+            C2 = core.createNode({parent: C, base: null, relid: 'C2'}),
+            CC1 = core.createNode({parent: C1, base: null, relid: '1'}),
+            CC1P = core.createNode({parent: C1, base: CC1, relid: '1P'}),
+            CC1PP = core.createNode({parent: C1, base: CC1P, relid: '1PP'});
+
+        core.setPointer(CC1, 'ref', C2);
+
+        expect(core.getCollectionPaths(C2, 'ref')).to.have.members(['/C/C1/1', '/C/C1/1P', '/C/C1/1PP']);
+        done();
+    });
+
     it('isValidNewParent should return true when new-parent is root', function () {
         var node = core.createNode({parent: root});
 
@@ -1458,7 +1495,7 @@ describe('coretype', function () {
             }
             expect(core.getPointerPath(cFrom, 'ref')).to.eql(core.getPath(cTo));
 
-            instanceChild = core.createNode({parent: instanceOne, base: cFrom, relid:'ic1'});
+            instanceChild = core.createNode({parent: instanceOne, base: cFrom, relid: 'ic1'});
 
             expect(core.getPointerPath(instanceChild, 'ref')).to.eql(core.getPath(cTo));
 
