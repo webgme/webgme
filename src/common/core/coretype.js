@@ -908,6 +908,9 @@ define([
                         continue;
                     }
 
+                    node = nodes[i];
+                    basePath = self.getPath(node);
+
                     while (node) {
                         relations = innerCore.gatherRelationsAmongSubtrees(node, nodes[j]);
                         nodePath = self.getPath(node);
