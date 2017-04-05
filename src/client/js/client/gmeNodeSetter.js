@@ -42,8 +42,9 @@ define([], function () {
             }
         }
 
-        function _copyMultipleNodes(paths, parentNode) {
+        function _copyMultipleNodes(paths, parentNode, resultAsArray) {
             var copiedNodes, result = {},
+                resultAsArray = [],
                 i, originalNodes = [],
                 checkPaths = function () {
                     var i,
@@ -64,9 +65,17 @@ define([], function () {
 
                 copiedNodes = state.core.copyNodes(originalNodes, parentNode);
 
+                if (copiedNodes instanceof Error) {
+                    return copiedNodes;
+                }
+
                 for (i = 0; i < paths.length; i += 1) {
                     result[paths[i]] = copiedNodes[i];
-                    storeNode(copiedNodes[i]);
+                    resultAsArray.push(storeNode(copiedNodes[i]));
+                }
+
+                if (resultAsArray) {
+                    return resultAsArray;
                 }
             }
 
@@ -1288,6 +1297,30 @@ define([], function () {
             return null;
         }
 
+        function copyNodes(pathsToCopy, parentPath, msg) {
+            var parentNode = _getNode(parentPath),
+                copyResult;
+
+            if (parentNode) {
+                copyResult = _copyMultipleNodes(pathsToCopy, parentNode, true);
+
+                if (copyResult instanceof Error) {
+                    printCoreError(copyResult);
+                    return;
+                }
+
+                if ((copyResult || []).length !== pathsToCopy.length) {
+                    state.logger.error('not all nodes were available - denied -');
+                    return;
+                }
+
+                saveRoot(msg);
+                return copyResult;
+            } else {
+                state.logger.error('parent cannot be found - denied -');
+            }
+        }
+
         return {
             setAttribute: setAttribute,
             setAttributes: function () {
@@ -1304,6 +1337,7 @@ define([], function () {
             delRegistry: delRegistry,
 
             copyNode: copyNode,
+            copyNodes: copyNodes,
             copyMoreNodes: copyMoreNodes,
             moveNode: moveNode,
             moveMoreNodes: moveMoreNodes,
