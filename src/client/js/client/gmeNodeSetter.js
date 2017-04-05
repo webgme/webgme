@@ -44,7 +44,7 @@ define([], function () {
 
         function _copyMultipleNodes(paths, parentNode, resultAsArray) {
             var copiedNodes, result = {},
-                resultAsArray = [],
+                resultArray = [],
                 i, originalNodes = [],
                 checkPaths = function () {
                     var i,
@@ -71,11 +71,11 @@ define([], function () {
 
                 for (i = 0; i < paths.length; i += 1) {
                     result[paths[i]] = copiedNodes[i];
-                    resultAsArray.push(storeNode(copiedNodes[i]));
+                    resultArray.push(storeNode(copiedNodes[i]));
                 }
 
-                if (resultAsArray) {
-                    return resultAsArray;
+                if (resultAsArray === true) {
+                    return resultArray;
                 }
             }
 
