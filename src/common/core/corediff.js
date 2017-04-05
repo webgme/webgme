@@ -532,7 +532,7 @@ define(['common/util/canon',
             return TASYNC.call(function () {
                 return TASYNC.call(function (child, sChild) {
                     if (!child) {
-                        child === sChild;
+                        child = sChild;
                     }
                     diff.guid = self.getGuid(child);
                     diff.hash = self.getHash(child);
@@ -905,7 +905,7 @@ define(['common/util/canon',
             if (REGEXP.GUID.test(guid) !== true) {
                 return null;
             }
-            return _getPathOfGuidR(diff, guid, '')
+            return _getPathOfGuidR(diff, guid, '');
         }
 
         function getRelidFromPath(path) {
