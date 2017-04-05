@@ -4,10 +4,11 @@ services:
   - redis-server
 sudo: false
 
+# https://github.com/travis-ci/apt-source-whitelist/blob/master/ubuntu.json
 addons:
   apt:
     sources:
-      - mongodb-3.4-precise
+      - mongodb-3.2-precise
 
     packages:
       - mongodb-org-server
