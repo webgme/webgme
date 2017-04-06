@@ -77,63 +77,25 @@ describe('core diff', function () {
 
         it('should generate diff if an object is deleted', function (done) {
             var patch = {
-                175547009: {
-                    471466181: {
-                        guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
-                        oGuids: {
-                            'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
-                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
-                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
-                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
-                        }
-                    },
-                    871430202: {
-                        guid: '18eb3c1d-c951-b757-c8c4-0ea8736c2470',
-                        oGuids: {
-                            '18eb3c1d-c951-b757-c8c4-0ea8736c2470': true,
-                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
-                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
-                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
-                        }
-                    },
-                    1104061497: {
-                        guid: 'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb',
-                        oGuids: {
-                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true,
-                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
-                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
-                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
-                        }
-                    },
-                    1817665259: {
-                        guid: '5f73946c-68aa-9de1-7979-736d884171af',
-                        oGuids: {
-                            '5f73946c-68aa-9de1-7979-736d884171af': true,
-                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
-                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
-                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
-                        }
-                    },
-                    guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
-                    oGuids: {
-                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
-                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
-                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
-                    }
-                },
                 1303043463: {
                     guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
                     removed: true,
-                    oGuids: {
-                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
-                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                    oBaseGuids: {
                         '5f73946c-68aa-9de1-7979-736d884171af': true,
-                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
                         'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                    },
+                    oGuids: {
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true
                     }
                 },
                 childrenListChanged: true,
                 guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                oBaseGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true},
                 oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
             };
 
@@ -231,6 +193,29 @@ describe('core diff', function () {
             });
         });
 
+        it('should generate the correct diff if the base of a node is changed', function (done) {
+            var node,
+                base;
+
+            Q.ninvoke(core, 'loadByPath', rootNode, '/1303043463/902088723')
+                .then(function (node_) {
+                    node = node_;
+                    return Q.ninvoke(core, 'loadByPath', rootNode, '/175547009/1104061497');
+                })
+                .then(function (base_) {
+                    base = base_;
+                    core.setBase(node, base);
+
+                    core.persist(rootNode);
+
+                    return Q.ninvoke(core, 'generateTreeDiff', originalRootNode, rootNode);
+                })
+                .then(function (diff) {
+                    expect(diff['1303043463']['902088723'].pointer.base).to.eql('/175547009/1104061497');
+                })
+                .nodeify(done);
+        });
+
         //TODO check if the light function can be removed as currently it has no real users
         it.skip('should generate light tree diff', function (done) {
             core.generateLightTreeDiff(originalRootNode, originalRootNode, function (err, diff) {
@@ -264,6 +249,11 @@ describe('core diff', function () {
                             'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
                             'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
                             'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true
+                        },
+                        oBaseGuids: {
+                            '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true
                         }
                     },
                     guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
@@ -273,10 +263,16 @@ describe('core diff', function () {
                         '5f73946c-68aa-9de1-7979-736d884171af': true,
                         'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
                         'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                    },
+                    oBaseGuids: {
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                     }
                 },
                 guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
-                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true},
+                oBaseGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
             };
 
             core.applyTreeDiff(rootNode, patch, function (err) {
@@ -326,6 +322,11 @@ describe('core diff', function () {
                             'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
                             'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
                             'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true
+                        },
+                        oBaseGuids: {
+                            '45657d4d-f82d-13ce-1acb-0aadebb5c8b5': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                            'f05865fa-6f8b-0bc8-dea0-6bfdd1f552fb': true
                         }
                     },
                     guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
@@ -335,10 +336,16 @@ describe('core diff', function () {
                         '5f73946c-68aa-9de1-7979-736d884171af': true,
                         'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
                         'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                    },
+                    oBaseGuids: {
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
                     }
                 },
                 guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
-                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+                oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true},
+                oBaseGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
             };
 
             core.applyTreeDiff(rootNode, patch, function (err) {
@@ -1636,6 +1643,71 @@ describe('core diff', function () {
             expect(result1.items).to.have.length(0);
             expect(result1.merge).to.eql(result2.merge);
         });
+
+        it('should present original colliding path when there were collision resolution', function () {
+            var diff1 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-2312-5e3a-7eb9b96b2ae7',
+                        removed: false,
+                        hash: '#e341ba304b75ad76642dcf11dd920ca4a403be60',
+                        pointer: {
+                            base: '/2'
+                        },
+                        oGuids: {
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'cd891e7b-1111-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    1: {
+                        guid: 'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',
+                        removed: true,
+                        oGuids: {
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                diff2 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-1111-5e3a-7eb9b96b2ae7',
+                        removed: false,
+                        movedFrom: '/E/F',
+                        pointer: {
+                            base: '/1'
+                        },
+                        oGuids: {
+                            'ef812549-4970-1111-5e3a-7eb9b96b2ae7': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        },
+                        ooGuids: {
+                            'ef812549-4970-1111-5e3a-7eb9b96b2ae7': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    E: {
+                        childrenListChanged: true,
+                        guid: 'ef812549-4970-1111-1111-7eb9b96b2ae7',
+                        oGuids: {
+                            'ef812549-4970-1111-1111-7eb9b96b2ae7': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                result1 = core.tryToConcatChanges(diff1, diff2),
+                result2 = core.tryToConcatChanges(diff2, diff1);
+
+            expect(result1.items[0].theirs.originalNodePath).to.eql('/D');
+            expect(result2.items[0].mine.originalNodePath).to.eql('/D');
+        });
     });
 
     describe('resolve', function () {
@@ -2044,6 +2116,65 @@ describe('core diff', function () {
             expect(resultPatch['1303043463']).to.include.keys('2119137141');
             expect(resultPatch['1303043463']['2119137141'].set.setPtr.attr.one).to.equal('four');
             expect(resultPatch['1303043463']['2119137141'].set.setPtr.reg.three).to.equal('*to*delete*');
+        });
+
+        it('should combine and resolve: rename and move + rename', function () {
+            var resultPatch,
+                resultConflict,
+                diff1 = {
+                    175547009: {
+                        471466181: {
+                            attr: {name: 'one'},
+                            guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                            oGuids: {
+                                'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                            }
+                        },
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+                },
+                diff2 = {
+                    175547009: {
+                        471466181: {
+                            attr: {name: 'two'},
+                            guid: 'be36b1a1-8d82-8aba-9eda-03d655a8bf3e',
+                            oGuids: {
+                                'be36b1a1-8d82-8aba-9eda-03d655a8bf3e': true,
+                                'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                                '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                                'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                            }
+                        },
+                        guid: 'd926b4e8-676d-709b-e10e-a6fe730e71f5',
+                        oGuids: {
+                            'd926b4e8-676d-709b-e10e-a6fe730e71f5': true,
+                            '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
+                    oGuids: {'86236510-f1c7-694f-1c76-9bad3a2aa4e0': true}
+                };
+
+            resultConflict = core.tryToConcatChanges(diff1, diff2);
+            expect(resultConflict.items).to.have.length(1);
+            resultConflict.items[0].other = JSON.parse(JSON.stringify(resultConflict.items[0].theirs));
+            resultConflict.items[0].other.value = 'three';
+
+            resultConflict.items[0].selected = 'other';
+            resultPatch = core.applyResolution(resultConflict);
+
+            expect(resultPatch['175547009']['471466181'].attr.name).to.eql('three');
         });
     });
 
