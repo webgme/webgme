@@ -128,6 +128,7 @@ define([
                 '</div>'),
             conflictItemE,
             pathObject,
+            path,
             text,
             value,
             link,
@@ -174,13 +175,14 @@ define([
                 conflictItemE = conflictItemTemplate.clone();
 
                 pathObject = DIFF.pathToObject(conflictItem.theirs.path);
+                path = conflictItem.originalNodePath || pathObject.node;
                 conflictItemE.find('.path').text('"' + pathObject.node + '" [' +
                     pathObject.full.substr(pathObject.node.length) + ']');
 
                 link = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
                     '&commit=' + encodeURIComponent(mergeResult.theirCommitHash) +
-                    '&node=' + encodeURIComponent(getParentPath(pathObject.node)) +
-                    '&selection=' + encodeURIComponent(pathObject.node);
+                    '&node=' + encodeURIComponent(getParentPath(path)) +
+                    '&selection=' + encodeURIComponent(path);
 
                 value = $('<div>' +
                     '<a class="glyphicon glyphicon-link" href="' + link +
@@ -199,10 +201,11 @@ define([
                 }
 
                 pathObject = DIFF.pathToObject(conflictItem.mine.path);
+                path = conflictItem.originalNodePath || pathObject.node;
                 link = '?project=' + encodeURIComponent(self._client.getActiveProjectId()) +
                     '&commit=' + encodeURIComponent(mergeResult.myCommitHash) +
-                    '&node=' + encodeURIComponent(getParentPath(pathObject.node)) +
-                    '&selection=' + encodeURIComponent(pathObject.node);
+                    '&node=' + encodeURIComponent(getParentPath(path)) +
+                    '&selection=' + encodeURIComponent(path);
                 value = $('<div>' +
                     '<a class="glyphicon glyphicon-link" href="' + link + '"  target="_blank" tooltip="Open"></a>' +
                     '<span><code style="word-wrap: break-word; white-space: normal">' + text + '</code></span>' +

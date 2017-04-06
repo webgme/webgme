@@ -79,7 +79,19 @@ describe('core diff', function () {
             var patch = {
                 1303043463: {
                     guid: 'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42',
-                    removed: true
+                    removed: true,
+                    oBaseGuids: {
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                    },
+                    oGuids: {
+                        '5f73946c-68aa-9de1-7979-736d884171af': true,
+                        '86236510-f1c7-694f-1c76-9bad3a2aa4e0': true,
+                        'ae1b4f8e-32ea-f26f-93b3-ab9c8daa8a42': true,
+                        'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true,
+                        'd926b4e8-676d-709b-e10e-a6fe730e71f5': true
+                    }
                 },
                 childrenListChanged: true,
                 guid: '86236510-f1c7-694f-1c76-9bad3a2aa4e0',
@@ -1630,6 +1642,71 @@ describe('core diff', function () {
             expect(result1.items).to.have.length(result2.items.length);
             expect(result1.items).to.have.length(0);
             expect(result1.merge).to.eql(result2.merge);
+        });
+
+        it('should present original colliding path when there were collision resolution', function () {
+            var diff1 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-2312-5e3a-7eb9b96b2ae7',
+                        removed: false,
+                        hash: '#e341ba304b75ad76642dcf11dd920ca4a403be60',
+                        pointer: {
+                            base: '/2'
+                        },
+                        oGuids: {
+                            'ef812549-4970-2312-5e3a-7eb9b96b2ae7': true,
+                            '03d36072-9e09-7866-cb4e-d0a36ff825f6': true,
+                            'cd891e7b-1111-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    1: {
+                        guid: 'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045',
+                        removed: true,
+                        oGuids: {
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                diff2 = {
+                    childrenListChanged: true,
+                    D: {
+                        guid: 'ef812549-4970-1111-5e3a-7eb9b96b2ae7',
+                        removed: false,
+                        movedFrom: '/E/F',
+                        pointer: {
+                            base: '/1'
+                        },
+                        oGuids: {
+                            'ef812549-4970-1111-5e3a-7eb9b96b2ae7': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        },
+                        ooGuids: {
+                            'ef812549-4970-1111-5e3a-7eb9b96b2ae7': true,
+                            'cd891e7b-e2ea-e929-f6cd-9faf4f1fc045': true
+                        }
+                    },
+                    E: {
+                        childrenListChanged: true,
+                        guid: 'ef812549-4970-1111-1111-7eb9b96b2ae7',
+                        oGuids: {
+                            'ef812549-4970-1111-1111-7eb9b96b2ae7': true
+                        }
+                    },
+                    guid: '03d36072-9e09-7866-cb4e-d0a36ff825f6',
+                    oGuids: {
+                        '03d36072-9e09-7866-cb4e-d0a36ff825f6': true
+                    }
+                },
+                result1 = core.tryToConcatChanges(diff1, diff2),
+                result2 = core.tryToConcatChanges(diff2, diff1);
+
+            expect(result1.items[0].theirs.originalNodePath).to.eql('/D');
+            expect(result2.items[0].mine.originalNodePath).to.eql('/D');
         });
     });
 

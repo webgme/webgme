@@ -997,6 +997,7 @@ define(['common/util/canon',
                     //now the actual place switching
                     parent = getPathOfDiff(diffBase, getParentPath(path));
                     parent[newRelid] = diff;
+                    parent[newRelid].collidingRelid = getRelidFromPath(path);
                     delete parent[getRelidFromPath(path)];
                     dst2src[newPath] = dst2src[path];
                     delete dst2src[path];
@@ -1072,6 +1073,7 @@ define(['common/util/canon',
                 //now the actual place switching
                 parent = getPathOfDiff(globalDiff, getParentPath(path));
                 parent[newRelid] = nodeDiff;
+                parent[newRelid].collidingRelid = relid;
                 delete parent[relid];
                 dst2src[newPath] = dst2src[path];
                 delete dst2src[path];
@@ -2525,16 +2527,16 @@ define(['common/util/canon',
 
         }
 
-        function generateConflictItems() {
-            var items = [],
-                keys, i, j, conflicts;
+        function generateConflictItems(mine, theirs) {
+            var items = [], item,
+                keys, i, j, conflicts, diffNode;
             keys = Object.keys(_conflictMine);
 
             for (i = 0; i < keys.length; i++) {
                 conflicts = Object.keys(_conflictMine[keys[i]].conflictingPaths || {});
                 ASSERT(conflicts.length > 0);
                 for (j = 0; j < conflicts.length; j++) {
-                    items.push({
+                    item = {
                         selected: 'mine',
                         mine: {
                             path: keys[i],
@@ -2548,7 +2550,20 @@ define(['common/util/canon',
                             value: _conflictTheirs[conflicts[j]].value,
                             nodePath: DIFF.pathToObject(conflicts[j]).node
                         }
-                    });
+                    };
+                    diffNode = getPathOfDiff(mine, item.mine.nodePath);
+                    if (typeof diffNode.collidingRelid === 'string') {
+                        item.mine.originalNodePath = getParentPath(item.mine.nodePath) +
+                            CONSTANTS.PATH_SEP + diffNode.collidingRelid;
+                    }
+
+                    diffNode = getPathOfDiff(theirs, item.theirs.nodePath);
+                    if (typeof diffNode.collidingRelid === 'string') {
+                        item.theirs.originalNodePath = getParentPath(item.theirs.nodePath) +
+                            CONSTANTS.PATH_SEP + diffNode.collidingRelid;
+                    }
+                    items.push(item);
+
                 }
             }
             return items;
@@ -2693,7 +2708,7 @@ define(['common/util/canon',
             _conflictItems = [];
             _conflictMine = {};
             _conflictTheirs = {};
-            _concatBase = JSON.parse(JSON.stringify(base)); // FIXME: Are these meant to be copies, currently base and extension are mutated?
+            _concatBase = JSON.parse(JSON.stringify(base));
             _concatExtension = JSON.parse(JSON.stringify(extension));
             _concatBaseRemovals = {};
             _concatMoves = {
@@ -2717,7 +2732,7 @@ define(['common/util/canon',
             fixCollision('', null, _concatBase, _concatExtension);
             tryToConcatNodeChange(_concatExtension, '');
 
-            result.items = generateConflictItems();
+            result.items = generateConflictItems(_concatBase, _concatExtension);
             result.mine = _conflictMine;
             result.theirs = _conflictTheirs;
             result.merge = _concatBase;

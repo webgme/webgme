@@ -61,10 +61,11 @@ describe('DIFF', function () {
             childrenListChanged: true,
             oGuids: true,
             ooGuids: true,
-            oBaseGuids:true,
-            ooBaseGuids:true,
+            oBaseGuids: true,
+            ooBaseGuids: true,
             min: true,
-            max: true
+            max: true,
+            collidingRelid: true
         });
     });
 

@@ -23,7 +23,8 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
         oBaseGuids: true,
         ooBaseGuids: true,
         min: true,
-        max: true
+        max: true,
+        collidingRelid: true
     };
 
     /**
