@@ -50,40 +50,27 @@ define([
             return node;
         }
 
-        function loadChild(node, relid) {
-            var child = null,
-                base = self.getBase(node),
-                basechild = null;
-            if (base) {
-                //the parent is inherited
-                if (self.getChildrenRelids(base, true)[relid]) {
-                    //inherited child
-                    if (innerCore.getChildrenRelids(node).indexOf(relid) !== -1) {
-                        //but it is overwritten so we should load it
-                        child = innerCore.loadChild(node, relid);
-                    }
-                    basechild = self.loadChild(base, relid);
-                    return TASYNC.call(function (b, c, n, r) {
-                        if (c) {
-                            child = c;
-                            child.base = b;
-                            return child;
-                        } else {
-                            child = innerCore.getChild(n, r);
-                            self.setHashed(child, true, true);
-                            child.base = b;
+        function loadBase2(node, target) {
+            if (typeof node.base !== null && typeof node.base === 'object' &&
+                (innerCore.getPath(node.base) === innerCore.getPath(target))) {
+                //TODO somehow the object already loaded properly and we do no know about it!!!
+                return node;
+            } else {
+                ASSERT(node.base === undefined || node.base === null); //kecso
 
-                            return child;
-                        }
-                    }, basechild, child, node, relid);
+                if (target === null) {
+                    // At this point the base node should be a valid node
+                    logger.warn('node [' + innerCore.getPath(node) +
+                        '] removed due to missing base in inheritance chain');
+                    innerCore.deleteNode(node);
+                    //core.persist(core.getRoot(node));
+                    return null;
                 }
-            }
-            //normal child - as every node should have a base, it is normally mean a direct child of the ROOT
-            if (self.getChildrenRelids(node, true)[relid] !== true) {
-                return null;
-            }
 
-            return TASYNC.call(loadBase, innerCore.loadChild(node, relid));
+                node.base = target;
+
+                return node;
+            }
         }
 
         function loadBase(node) {
@@ -125,27 +112,40 @@ define([
             }
         }
 
-        function loadBase2(node, target) {
-            if (typeof node.base !== null && typeof node.base === 'object' &&
-                (innerCore.getPath(node.base) === innerCore.getPath(target))) {
-                //TODO somehow the object already loaded properly and we do no know about it!!!
-                return node;
-            } else {
-                ASSERT(node.base === undefined || node.base === null); //kecso
+        function loadChild(node, relid) {
+            var child = null,
+                base = self.getBase(node),
+                basechild = null;
+            if (base) {
+                //the parent is inherited
+                if (self.getChildrenRelids(base, true)[relid]) {
+                    //inherited child
+                    if (innerCore.getChildrenRelids(node).indexOf(relid) !== -1) {
+                        //but it is overwritten so we should load it
+                        child = innerCore.loadChild(node, relid);
+                    }
+                    basechild = self.loadChild(base, relid);
+                    return TASYNC.call(function (b, c, n, r) {
+                        if (c) {
+                            child = c;
+                            child.base = b;
+                            return child;
+                        } else {
+                            child = innerCore.getChild(n, r);
+                            self.setHashed(child, true, true);
+                            child.base = b;
 
-                if (target === null) {
-                    // At this point the base node should be a valid node
-                    logger.warn('node [' + innerCore.getPath(node) +
-                        '] removed due to missing base in inheritance chain');
-                    innerCore.deleteNode(node);
-                    //core.persist(core.getRoot(node));
-                    return null;
+                            return child;
+                        }
+                    }, basechild, child, node, relid);
                 }
-
-                node.base = target;
-
-                return node;
             }
+            //normal child - as every node should have a base, it is normally mean a direct child of the ROOT
+            if (self.getChildrenRelids(node, true)[relid] !== true) {
+                return null;
+            }
+
+            return TASYNC.call(loadBase, innerCore.loadChild(node, relid));
         }
 
         function loadDescendantByPath(node, pathArray, index) {
@@ -271,91 +271,18 @@ define([
             return paths;
         }
 
-        function inheritedPointerNames(node) {
-            var allNames = self.getPointerNames(node),
-                ownNames = self.getOwnPointerNames(node),
-                names = [],
-                i;
-
-            for (i = 0; i < allNames.length; i++) {
-                if (ownNames.indexOf(allNames[i]) === -1) {
-                    names.push(allNames[i]);
-                }
-            }
-
-            return names;
-        }
-
         function isValidNodeThrow(node) {
             test('core', innerCore.isValidNode(node));
             test('base', typeof node.base === 'object');
         }
 
-        function getProperty(node, name) {
-            var property;
-            while (property === undefined && node !== null) {
-                property = innerCore.getProperty(node, name);
-                node = self.getBase(node);
-            }
-            return property;
-        }
-
-        function getSimpleBasePath(node, source, name) {
-            var path = innerCore.getPointerPathFrom(node, source, name);
-            if (path === undefined) {
-                if (node.base !== null && node.base !== undefined) {
-                    return getSimpleBasePath(node.base, source, name);
-                } else {
-                    return undefined;
-                }
-            } else {
-                return path;
-            }
-        }
-
-        function getParentOfBasePath(node) {
-            var parent;
-            if (node.base) {
-                parent = self.getParent(node.base);
-                if (parent) {
-                    return self.getPath(parent);
-                } else {
-                    return undefined;
-                }
-            } else {
-                return undefined;
-            }
-        }
-
-        function getBaseOfParentPath(node) {
-            var parent = self.getParent(node);
-            if (parent) {
-                if (parent.base) {
-                    return self.getPath(parent.base);
-                } else {
-                    return undefined;
-                }
-            } else {
-                return undefined;
-            }
-        }
-
-        function getTargetRelPath(node, relSource, name) {
-            var ovr = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
-                source = self.getChild(ovr, relSource);
-            return getProperty(source, name);
-        }
-
-        // function checkCollNames(node, draft) {
-        //     var filtered = [],
-        //         i, sources;
-        //     for (i = 0; i < draft.length; i++) {
-        //         sources = self.getCollectionPaths(node, draft[i]);
-        //         if (sources.length > 0) {
-        //             filtered.push(draft[i]);
-        //         }
+        // function getProperty(node, name) {
+        //     var property;
+        //     while (property === undefined && node !== null) {
+        //         property = innerCore.getProperty(node, name);
+        //         node = self.getBase(node);
         //     }
-        //     return filtered;
+        //     return property;
         // }
 
         function isBase(node, compareNode) {
@@ -1106,7 +1033,6 @@ define([
 
             var baseRoot,
                 base,
-                relPath = '',
                 basePath,
                 targetPath;
 

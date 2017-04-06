@@ -1122,7 +1122,7 @@ define([
                         bases: {},
                         relations: {preserved: {}, lost: {}}
                     },
-                    infoLosses = {},
+                    // infoLosses = {},
                     allMetaNodes,
                     path,
                     node,

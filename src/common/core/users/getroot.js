@@ -10,6 +10,7 @@ define(['common/regexp', 'q'], function (REGEXP, Q) {
 
     function getRoot(parameters, callback) {
         var deferred = Q.defer(),
+            result = {},
             loadRoot = function (hash) {
                 parameters.core.loadRoot(hash, function (err, root) {
                     if (err) {
@@ -32,8 +33,7 @@ define(['common/regexp', 'q'], function (REGEXP, Q) {
                     result.rootHash = commitObj.root;
                     loadRoot(commitObj.root);
                 });
-            },
-            result = {};
+            };
 
         if (REGEXP.HASH.test(parameters.id)) {
             loadCommit(parameters.id);

@@ -76,6 +76,6 @@ define([], function () {
         MAX_MUTATE: 30000,
         MAXIMUM_STARTING_RELID_LENGTH: 5,
 
-        OVERLAY_SHARD_INDICATOR : 'sharded'
+        OVERLAY_SHARD_INDICATOR: 'sharded'
     };
 });

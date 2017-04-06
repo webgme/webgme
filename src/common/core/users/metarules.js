@@ -405,6 +405,17 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             };
         }
 
+        function getMixinError(mixinError) {
+            return {
+                severity: mixinError.severity,
+                message: mixinError.message,
+                description: 'Mixin violations makes it hard to see which definition is used.',
+                hint: mixinError.hint,
+                path: path,
+                relatedPaths: mixinError.collisionPaths || []
+            };
+        }
+
         for (path in metaNodes) {
             metaNode = metaNodes[path];
             metaName = core.getFullyQualifiedName(metaNode);
@@ -436,16 +447,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             }
 
             // Get the mixin errors.
-            result = result.concat(core.getMixinErrors(metaNode).map(function (mixinError) {
-                return {
-                    severity: mixinError.severity,
-                    message: mixinError.message,
-                    description: 'Mixin violations makes it hard to see which definition is used.',
-                    hint: mixinError.hint,
-                    path: path,
-                    relatedPaths: mixinError.collisionPaths || []
-                };
-            }));
+            result = result.concat(core.getMixinErrors(metaNode).map(getMixinError));
 
             if (ownMetaJson.children.items) {
                 for (i = 0; i < ownMetaJson.children.items.length; i += 1) {

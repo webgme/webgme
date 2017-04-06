@@ -99,8 +99,7 @@ define([
         function getRelativePointerPathFrom(node, source, name) {
             ASSERT(self.isValidNode(node) && typeof source === 'string' && typeof name === 'string');
             var target,
-                ovrInfo,
-                ovrData;
+                ovrInfo;
 
             do {
                 ovrInfo = self.overlayInquiry(node, source, name);
@@ -129,6 +128,23 @@ define([
                 delete node.inverseOverlaysMutable;
                 for (relid in node.children) {
                     storeNewInverseOverlays(node.children[relid]);
+                }
+            }
+        }
+
+        function hasShardedOverlays(node) {
+            return (self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) ||
+                {})[CONSTANTS.OVERLAY_SHARD_INDICATOR] === true;
+        }
+
+        function updateSmallestOverlayShardIndex(node) {
+            var shardId,
+                minimalItemCount = _shardSize + 1;
+
+            for (shardId in node.overlays) {
+                if (node.overlays[shardId].itemCount < minimalItemCount) {
+                    minimalItemCount = node.overlays[shardId].itemCount;
+                    node.minimalOverlayShardId = shardId;
                 }
             }
         }
@@ -166,11 +182,6 @@ define([
                 updateSmallestOverlayShardIndex(node);
                 return node;
             }, TASYNC.lift(loadPromises));
-        }
-
-        function hasShardedOverlays(node) {
-            return (self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) ||
-                {})[CONSTANTS.OVERLAY_SHARD_INDICATOR] === true;
         }
 
         // We only shard regular GME nodes, technical sub-nodes do not get sharded
@@ -243,18 +254,6 @@ define([
             // In the unlikely event that during transition the original shard is empty.
             if (Object.keys(node.overlays).length === 0) {
                 node.minimalOverlayShardId = addNewOverlayShard(node);
-            }
-        }
-
-        function updateSmallestOverlayShardIndex(node) {
-            var shardId,
-                minimalItemCount = _shardSize + 1;
-
-            for (shardId in node.overlays) {
-                if (node.overlays[shardId].itemCount < minimalItemCount) {
-                    minimalItemCount = node.overlays[shardId].itemCount;
-                    node.minimalOverlayShardId = shardId;
-                }
             }
         }
 
@@ -438,7 +437,6 @@ define([
                 overlay,
                 overlaysObject,
                 shardId,
-                i,
                 source,
                 name,
                 target;
@@ -691,7 +689,7 @@ define([
             if (hasShardedOverlays(node)) {
                 overlaysObject = node.overlays;
             } else {
-                overlaysObject = {'single': {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
+                overlaysObject = {single: {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
             }
 
             for (shardId in overlaysObject) {
@@ -736,11 +734,8 @@ define([
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
             var currentOverlayInfo = self.overlayInquiry(node, source, name),
-                index,
                 overlays,
-                overlay,
-                entryCount,
-                overlayArray;
+                overlay;
 
             ASSERT(currentOverlayInfo.value === null);
 
@@ -897,7 +892,8 @@ define([
 
                         if (entry.p) {
                             ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
-                            ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === CONSTANTS.PATH_SEP);
+                            ASSERT(entry.s === baseOldPath ||
+                                entry.s.charAt(baseOldPath.length) === CONSTANTS.PATH_SEP);
 
                             if (aboveAncestor < 0) {
                                 //below ancestor node - further from root
@@ -1013,10 +1009,7 @@ define([
                 relationsToCopyOver = [],
                 copies = [],
                 source, target, oldTarget,
-                pathInDomain = function (path, domain) {
-                    return path === domain | path.indexOf(domain + CONSTANTS.PATH_SEP) === 0;
-                },
-                gatherRelations = function (commonPathInformation, firstNode, secondNode) {
+                gatherRelations = function (commonPathInformation, firstNode) {
                     var commonParent,
                         overlaysToCheck,
                         i;
@@ -1029,7 +1022,7 @@ define([
                     // first -> second
                     overlaysToCheck = self.overlayQuery(commonParent, commonPathInformation.first);
                     for (i = 0; i < overlaysToCheck.length; i += 1) {
-                        if (pathInDomain(overlaysToCheck[i].t, commonPathInformation.second)) {
+                        if (self.isPathInSubTree(overlaysToCheck[i].t, commonPathInformation.second)) {
                             relationsToCopyOver.push({
                                 source: innerCore.joinPaths(commonPathInformation.common, overlaysToCheck[i].s),
                                 sourceBase: innerCore.joinPaths(commonPathInformation.common,
@@ -1052,15 +1045,18 @@ define([
             for (i = 0; i < nodes.length; i += 1) {
                 for (j = 0; j < nodes.length; j += 1) {
                     if (j !== i) {
-                        gatherRelations(innerCore.getCommonPathPrefixData(paths[i], paths[j]), nodes[i], nodes[j]);
+                        gatherRelations(innerCore.getCommonPathPrefixData(paths[i], paths[j]), nodes[i]);
                     }
                 }
             }
 
             //do the actual copying
             for (i = 0; i < nodes.length; i += 1) {
-                copies.push(self.copyNode(nodes[i], parent));
-                old2NewPath[self.getPath(nodes[i])] = self.getPath(copies[i]);
+                copies.push(self.copyNode(nodes[i], parent, takenRelids, relidLength));
+                old2NewPath[paths[i]] = self.getPath(copies[i]);
+                if (takenRelids) {
+                    takenRelids[self.getRelid(copies[i])] = true;
+                }
             }
 
             // create the relations, that have to be preserved
@@ -1482,9 +1478,6 @@ define([
             return true;
         };
 
-        this.isPathInSubTree = function (path, subTreeRoot) {
-            return path === subTreeRoot | path.indexOf(subTreeRoot + CONSTANTS.PATH_SEP) === 0;
-        }
         // by default the function removes any 'sub-node' relations
         this.getRawOverlayInformation = function (node) {
             var completeOverlayInfo = {},
