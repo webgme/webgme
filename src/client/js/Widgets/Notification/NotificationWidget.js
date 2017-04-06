@@ -105,7 +105,7 @@ define([
             if (eventData.severity.toLowerCase() === 'error') {
                 self._popoverBox.show(eventData.message, alertLevel, 3000);
             } else {
-                self._popoverBox.show(eventData.message, alertLevel, 500);
+                self._popoverBox.show(eventData.message, alertLevel, 1000);
             }
         }
         //self._ddNotification.addItem({

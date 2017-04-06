@@ -862,7 +862,6 @@ define(['js/logger',
             validConnectionTypes,
             j,
             parentID = this.currentNodeInfo.id,
-            client = this._client,
             aspect = this._selectedAspect,
             targetNode,
             p;

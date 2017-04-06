@@ -82,7 +82,7 @@ define(['js/logger',
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDiagramDesignerWidgetEventHandlers();
 
-        this._updateTopNode();
+        //this._updateTopNode();
         this.logger.debug('ModelEditorControl ctor finished');
     };
 
@@ -127,7 +127,6 @@ define(['js/logger',
                 this.currentNodeInfo.parentId = desc.parentId;
             }
 
-            this._refreshBtnModelHierarchyUp();
             node = this._client.getNode(nodeId);
 
             if (this._selectedAspect !== CONSTANTS.ASPECT_ALL) {
@@ -869,15 +868,6 @@ define(['js/logger',
         this._client.removeUI(this._territoryId);
     };
 
-    ModelEditorControl.prototype._onModelHierarchyUp = function () {
-        var myId = this.currentNodeInfo.id;
-        if (this.currentNodeInfo.parentId ||
-            this.currentNodeInfo.parentId === CONSTANTS.PROJECT_ROOT_ID) {
-            WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.parentId);
-            WebGMEGlobal.State.registerActiveSelection([myId]);
-        }
-    };
-
     ModelEditorControl.prototype._removeConnectionSegmentPoints = function () {
         var idList = this.designerCanvas.selectionManager.getSelectedElements(),
             len = idList.length,
@@ -1038,7 +1028,7 @@ define(['js/logger',
     };
 
     ModelEditorControl.prototype._activeProjectChanged = function (/*model, activeProjectId*/) {
-        this._updateTopNode();
+        //this._updateTopNode();
     };
 
     ModelEditorControl.prototype._updateTopNode = function () {
@@ -1099,8 +1089,6 @@ define(['js/logger',
                 this._toolbarItems[i].show();
             }
         }
-
-        this._refreshBtnModelHierarchyUp();
     };
 
     ModelEditorControl.prototype._hideToolbarItems = function () {
@@ -1139,18 +1127,6 @@ define(['js/logger',
         this._toolbarItems.push(this.$btnConnectionRemoveSegmentPoints);
         this.$btnConnectionRemoveSegmentPoints.enabled(false);
 
-        /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
-        this.$btnModelHierarchyUp = toolBar.addButton({
-            title: 'Go to parent',
-            icon: 'glyphicon glyphicon-circle-arrow-up',
-            clickFn: function (/*data*/) {
-                self._onModelHierarchyUp();
-            }
-        });
-        this._toolbarItems.push(this.$btnModelHierarchyUp);
-
-        this.$btnModelHierarchyUp.enabled(false);
-
         this._toolbarInitialized = true;
     };
 
@@ -1158,13 +1134,6 @@ define(['js/logger',
         return this.currentNodeInfo.id;
     };
 
-    ModelEditorControl.prototype._refreshBtnModelHierarchyUp = function () {
-        if (this.currentNodeInfo.id && this.currentNodeInfo.id !== this._topNode) {
-            this.$btnModelHierarchyUp.enabled(true);
-        } else {
-            this.$btnModelHierarchyUp.enabled(false);
-        }
-    };
 
     ModelEditorControl.prototype._updateAspects = function () {
         var nodeId = this.currentNodeInfo.id,

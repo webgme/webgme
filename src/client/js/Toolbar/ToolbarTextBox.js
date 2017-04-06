@@ -21,21 +21,23 @@ define(['./ToolbarItemBase'], function (ToolbarItemBase) {
             textBox = TEXTBOX_BASE.clone(),
             oldVal;
 
+        params = params || {};
+
         this.el = EL_BASE.clone();
 
         this._textBox = textBox;
 
-        if (params && params.label) {
+        if (params.label) {
             label = LABEL_BASE.clone();
             label.text(params.label + ': ');
         }
 
-        if (params && params.prependContent) {
+        if (params.prependContent) {
             label = LABEL_BASE.clone();
             label.html(params.prependContent);
         }
 
-        if (params && params.collapse) {
+        if (params.collapse) {
             textBox.addClass('no-focus-collapse');
         }
 
@@ -43,13 +45,17 @@ define(['./ToolbarItemBase'], function (ToolbarItemBase) {
             txtGroup.append(label);
         }
 
-        if (params && params.placeholder) {
+        if (params.placeholder) {
             textBox.attr('placeholder', params.placeholder);
+        }
+
+        if (params.extraCss) {
+            textBox.addClass(params.extraCss);
         }
 
         txtGroup.append(textBox);
 
-        if (params && params.textChangedFn) {
+        if (params.textChangedFn) {
             textBox.on('keyup', function (/*e*/) {
                 var val = $(this).val();
 

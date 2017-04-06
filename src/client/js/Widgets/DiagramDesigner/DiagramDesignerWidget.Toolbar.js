@@ -27,25 +27,36 @@ define([
 
         this.toolbarItems = {};
 
-        //if and external toolbar exist for the component
+        //if an external toolbar exist for the component
         if (toolbar) {
             this.toolbarItems.beginSeparator = toolbar.addSeparator();
 
-            this.toolbarItems.btnGridLayout = toolbar.addButton({
-                title: 'Compact Grid Layout',
+            this.toolbarItems.btnGridLayouts = toolbar.addDropDownButton({
+                title: 'Arrange items',
                 icon: 'glyphicon glyphicon-th',
-                data: {mode: 'grid'},
-                clickFn: function (data) {
-                    self.itemAutoLayout(data.mode);
-                }
-            });
+                //menuClass: 'split-panel-dropdown-list',
+                clickFn: function () {
+                    self.toolbarItems.btnGridLayouts.clear();
 
-            this.toolbarItems.btnCozyGridLayout = toolbar.addButton({
-                title: 'Sparse Grid Layout',
-                icon: 'glyphicon glyphicon-th-large',
-                data: {mode: 'cozygrid'},
-                clickFn: function (data) {
-                    self.itemAutoLayout(data.mode);
+                    self.toolbarItems.btnGridLayouts.addButton({
+                        text: 'Arrange items on canvas compactly',
+                        title: 'Compact Grid Layout',
+                        //icon: 'glyphicon glyphicon-th',
+                        data: {mode: 'grid'},
+                        clickFn: function (data) {
+                            self.itemAutoLayout(data.mode);
+                        }
+                    });
+
+                    self.toolbarItems.btnGridLayouts.addButton({
+                        text: 'Arrange items on canvas sparsely',
+                        title: 'Sparse Grid Layout',
+                        //icon: 'glyphicon glyphicon-th-large',
+                        data: {mode: 'cozygrid'},
+                        clickFn: function (data) {
+                            self.itemAutoLayout(data.mode);
+                        }
+                    });
                 }
             });
 
