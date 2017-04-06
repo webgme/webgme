@@ -18,7 +18,7 @@ define([
     var NotificationWidget,
         ITEM_VALUE_CLEAR = 'clearAll',
         CLEAR_ALL_HTML = '<li><a class="notification-drop-down-menu-item notification-drop-down-menu-item-clear ' +
-            'empty"><i class="glyphicon glyphicon-trash clear-all-icon"/>Notifications</a></li>';
+            'empty"><i class="glyphicon glyphicon-trash clear-all-icon"/></a></li>';
 
     NotificationWidget = function (containerEl, client) {
         this._logger = Logger.create('gme:Widgets:NotificationWidget', WebGMEGlobal.gmeConfig.client.log);
@@ -48,6 +48,10 @@ define([
         this._ddNotification.setTitle('NOTIFICATIONS [0]');
         this._ddNotification.setColor(DropDownMenu.prototype.COLORS.BLUE);
 
+        this._ddNotification.onDropDownMenuOpen = function () {
+            self._popoverBox.hide();
+        };
+
         this._ddNotification.onItemClicked = function (value) {
             if (value === ITEM_VALUE_CLEAR) {
                 self._notifications = [];
@@ -59,7 +63,7 @@ define([
 
         this._el.append(this._ddNotification.getEl());
 
-        this._popoverBox = this._popoverBox || new PopoverBox(this._ddNotification.getEl());
+        this._popoverBox = new PopoverBox(this._ddNotification.getEl());
 
         this._client.addEventListener(CONSTANTS.CLIENT.NOTIFICATION, function (__client, eventData) {
                 //self._logger.warn('TODO: process new notification ', eventData);
@@ -99,9 +103,9 @@ define([
         if (this._ddNotification._el.hasClass('open') === false) {
             // Don't show popover when dropdown list is open
             if (eventData.severity.toLowerCase() === 'error') {
-                self._popoverBox.show(eventData.message, alertLevel, 5000);
+                self._popoverBox.show(eventData.message, alertLevel, 3000);
             } else {
-                self._popoverBox.show('New message', alertLevel, 500);
+                self._popoverBox.show(eventData.message, alertLevel, 500);
             }
         }
         //self._ddNotification.addItem({

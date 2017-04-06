@@ -14,40 +14,69 @@ define(['jquery', 'css!./styles/PopoverBox.css'], function () {
 
     PopoverBox = function (el) {
         this._el = el;
-        this._timeout = null;
+        this._messageQueue = [];
+    };
+
+    PopoverBox.prototype._showNew = function () {
+        var self = this,
+            data = this._messageQueue[0];
+
+        this._el.popover({
+            placement: 'top',
+            content: data.message,
+            container: this._el,
+            trigger: 'manual'
+        });
+
+        this._el.addClass('pobox');
+
+        this._el.popover('show');
+        this._el.find('.popover').addClass('pobox ' + data.level);
+        this._el.popover('show');
+        this._el.find('.popover').addClass(data.level);
+
+        this._el.on('hidden.bs.popover', function () {
+            if (self._timeout) {
+                clearTimeout(self._timeout);
+                self._timeout = null;
+            }
+
+            self._el.off('hidden.bs.popover');
+
+            setTimeout(function () {
+                self._messageQueue.shift();
+
+                if (self._messageQueue.length > 0) {
+                    self._showNew();
+                }
+            });
+        });
+
+        if (data.delay) {
+            this._timeout = setTimeout(function () {
+                self._el.popover('destroy');
+            }, data.delay);
+        }
     };
 
     PopoverBox.prototype.show = function (message, alertLevel, autoHideOrDelay) {
-        var el = this._el,
-            autoHide = autoHideOrDelay === true || autoHideOrDelay > 0;
-
         if (autoHideOrDelay === true) {
             autoHideOrDelay = AUTO_HIDE_MILLISEC;
         }
 
-        clearTimeout(this._timeout);
-        el.addClass('pobox');
-
-        //show new
-        el.popover({
-            placement: 'top',
-            content: message,
-            container: this._el
+        this._messageQueue.push({
+            message: message,
+            level: alertLevel || this.alertLevels.info,
+            delay: autoHideOrDelay
         });
 
-        el.popover('show');
-        el.find('.popover').addClass('pobox');
-        el.popover('show');
-
-        if (alertLevel) {
-            el.find('.popover').addClass(alertLevel);
+        if (this._messageQueue.length === 1) {
+            this._showNew();
         }
+    };
 
-        if (autoHide === true) {
-            this._timeout = setTimeout(function () {
-                el.popover('destroy');
-            }, autoHideOrDelay);
-        }
+    PopoverBox.prototype.hide = function () {
+        this._messageQueue = [];
     };
 
     PopoverBox.prototype.alertLevels = {
