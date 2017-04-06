@@ -254,7 +254,7 @@ define(['js/logger',
 
         //setting the active object to the root of the graph
         if (typeof this._currentNodeId === 'string') {
-            WebGMEGlobal.State.registerActiveObject(this._currentNodeId);
+            WebGMEGlobal.State.registerActiveObject(this._currentNodeId, {suppressVisualizerFromNode: true});
         }
     };
 

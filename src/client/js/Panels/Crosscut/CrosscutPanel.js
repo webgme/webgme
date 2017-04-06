@@ -53,7 +53,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         };
 
         this.widget.onUIActivity = function () {
-            WebGMEGlobal.PanelManager.setActivePanel(self);
+            //WebGMEGlobal.PanelManager.setActivePanel(self);
             WebGMEGlobal.KeyboardManager.setListener(self.widget);
         };
 
