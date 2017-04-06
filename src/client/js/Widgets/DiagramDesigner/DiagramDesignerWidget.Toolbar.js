@@ -355,6 +355,14 @@ define([
                         }
                     });
             }
+
+            this.toolbarItems.printDiagram = toolbar.addButton({
+                title: 'Print',
+                icon: 'fa fa-print',
+                clickFn: function () {
+                    self.prepAndPrintCanvas();
+                }
+            });
         }
 
         this._toolbarInitialized = true;
