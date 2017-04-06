@@ -26,7 +26,7 @@ define([
 
         if (persisted.hasOwnProperty('objects') === false || Object.keys(persisted.objects).length === 0) {
             parameters.logger.warn('empty patch was inserted - not making commit');
-            return new Q({
+            return Q({
                 hash: parameters.parents[0], //if there is no change, we return the first parent!!!
                 branchName: parameters.branchName
             })
