@@ -82,14 +82,22 @@ main = function (argv) {
 
     program
         .command('userlist [username]')
+        .option('-t, --generateToken', 'Generates a token for given username', false)
         .description('lists all users or the specified user')
         .action(function (username, options) {
             setupGMEAuth(options.parent.db, function (/*err*/) {
                 if (username) {
                     auth.getUser(username)
                         .then(function (userObject) {
-                            // TODO: pretty print users
-                            console.log(userObject);
+                            if (options.generateToken) {
+                                return auth.generateJWTokenForAuthenticatedUser(username);
+                            } else {
+                                // TODO: pretty print users
+                                return userObject;
+                            }
+                        })
+                        .then(function (output) {
+                            console.log(output);
                             mainDeferred.resolve();
                         })
                         .catch(mainDeferred.reject)

@@ -97,7 +97,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         gmeAuth.addUser(receivedData.userId,
             receivedData.email,
             receivedData.password,
-            true,
+            gmeConfig.authentication.registeredUsersCanCreate,
             {overwrite: false},
             function (err/*, updateData*/) {
                 if (err) {
@@ -211,7 +211,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             .catch(function (err) {
                 if (err.message.indexOf('no such user') === 0) {
                     logger.info('Authenticated user did not exist in db, adding:', userId);
-                    gmeAuth.addUser(userId, 'em@il', GUID(), false, {overwrite: false})
+                    gmeAuth.addUser(userId, 'em@il', GUID(), gmeConfig.authentication.inferredUsersCanCreate, {overwrite: false})
                         .then(function (/*userData*/) {
                             return gmeAuth.getUser(userId);
                         })

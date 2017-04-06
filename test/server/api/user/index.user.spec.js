@@ -560,7 +560,7 @@ describe('USER REST API', function () {
             });
         });
 
-        describe('auth enabled, allowGuests false, allowUserRegistration=true', function () {
+        describe('auth enabled, allowGuests false, allowUserRegistration=true, registerUsersCanCreate=true', function () {
             var server,
                 agent;
 
@@ -569,6 +569,7 @@ describe('USER REST API', function () {
                 gmeConfig.authentication.enable = true;
                 gmeConfig.authentication.allowGuests = false;
                 gmeConfig.authentication.allowUserRegistration = true;
+                gmeConfig.authentication.registeredUsersCanCreate = true;
 
                 server = WebGME.standaloneServer(gmeConfig);
                 server.start(done);
@@ -696,6 +697,7 @@ describe('USER REST API', function () {
                                 try {
                                     expect(res.status).equal(200, err);
                                     expect(res.body._id).equal(userId);
+                                    expect(res.body.canCreate).equal(false);
                                     expect(res.body.settings).to.deep.equal({});
                                 } catch (e) {
                                     err = e;
@@ -974,6 +976,7 @@ describe('USER REST API', function () {
                             .end(function (err, res) {
                                 expect(res.status).equal(200, err);
                                 expect(res.body._id).to.equal('reg_user');
+                                expect(res.body.canCreate).to.equal(true);
                                 done();
                             });
                     });
@@ -1011,7 +1014,54 @@ describe('USER REST API', function () {
 
         });
 
-        describe('auth enabled, allowGuests true, allowUserRegistration=false', function () {
+        describe('auth enabled, allowGuests false, allowUserRegistration=true, registerUsersCanCreate=false', function () {
+            var server,
+                agent;
+
+            before(function (done) {
+                var gmeConfig = testFixture.getGmeConfig();
+                gmeConfig.authentication.enable = true;
+                gmeConfig.authentication.allowGuests = false;
+                gmeConfig.authentication.allowUserRegistration = true;
+                gmeConfig.authentication.registeredUsersCanCreate = false;
+
+                server = WebGME.standaloneServer(gmeConfig);
+                server.start(done);
+            });
+
+            after(function (done) {
+                server.stop(done);
+            });
+
+            beforeEach(function () {
+                agent = superagent.agent();
+            });
+
+            it('should add user when posting /api/v1/register', function (done) {
+                var newUser = {
+                    userId: 'reg_user_no_create',
+                    email: 'em@il',
+                    password: 'pass'
+                };
+
+                agent.post(server.getUrl() + '/api/v1/register')
+                    .send(newUser)
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+
+                        agent.get(server.getUrl() + '/api/v1/user')
+                            .set('Authorization', 'Basic ' + new Buffer('reg_user_no_create:pass').toString('base64'))
+                            .end(function (err, res) {
+                                expect(res.status).equal(200, err);
+                                expect(res.body._id).to.equal('reg_user_no_create');
+                                expect(res.body.canCreate).to.equal(false);
+                                done();
+                            });
+                    });
+            });
+        });
+
+        describe('auth enabled, allowGuests true, allowUserRegistration=false, inferredUsersCanCreate=true', function () {
             var server,
                 agent,
                 guestAccount = 'guest';
@@ -1022,6 +1072,7 @@ describe('USER REST API', function () {
                 gmeConfig.authentication.allowGuests = true;
                 gmeConfig.authentication.guestAccount = guestAccount;
                 gmeConfig.authentication.allowUserRegistration = false;
+                gmeConfig.authentication.inferredUsersCanCreate = true;
 
                 server = WebGME.standaloneServer(gmeConfig);
                 server.start(done);
@@ -1598,6 +1649,34 @@ describe('USER REST API', function () {
                             })
                             .nodeify(done);
                     });
+            });
+
+            it('should create user when accessed in db and not existing for user when token in query', function (done) {
+                var userId = 'user_not_in_db2',
+                    token;
+
+                gmeAuth.generateJWTokenForAuthenticatedUser(userId)
+                    .then(function (token_) {
+                        token = token_;
+                        return gmeAuth.deleteUser(userId, true);
+                    })
+                    .then(function () {
+                        agent.get(server.getUrl() + '/api/v1/user')
+                            .query({token: token})
+                            .end(function (err, res) {
+                                try {
+                                    expect(res.status).equal(200, err);
+                                    expect(res.body._id).equal(userId);
+                                    expect(res.body.canCreate).equal(true);
+                                    expect(res.body.settings).to.deep.equal({});
+                                } catch (e) {
+                                    err = e;
+                                }
+
+                                done(err);
+                            });
+                    })
+                    .catch(done);
             });
             // Fail cases
 

@@ -21,6 +21,8 @@ var path = require('path'),
 
             allowGuests: true,
             allowUserRegistration: true,
+            registeredUsersCanCreate: true,
+            inferredUsersCanCreate: false,
             guestAccount: 'guest',
             logOutUrl: '/profile/login',
             logInUrl: '/profile/login',
