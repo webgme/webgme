@@ -112,11 +112,11 @@ define(['js/logger',
 
             this._graphVizWidget.setTitle(desc.name.toUpperCase());
 
-            if (desc.parentId || desc.parentId === CONSTANTS.PROJECT_ROOT_ID) {
-                this.$btnModelHierarchyUp.show();
-            } else {
-                this.$btnModelHierarchyUp.hide();
-            }
+            // if (desc.parentId || desc.parentId === CONSTANTS.PROJECT_ROOT_ID) {
+            //     this.$btnModelHierarchyUp.show();
+            // } else {
+            //     this.$btnModelHierarchyUp.hide();
+            // }
 
             this._currentNodeParentId = desc.parentId;
 
@@ -304,15 +304,15 @@ define(['js/logger',
         this._toolbarItems.push(toolBar.addSeparator());
 
         /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
-        this.$btnModelHierarchyUp = toolBar.addButton({
-            title: 'Go to parent',
-            icon: 'glyphicon glyphicon-circle-arrow-up',
-            clickFn: function (/*data*/) {
-                WebGMEGlobal.State.registerActiveObject(self._currentNodeParentId);
-            }
-        });
-        this._toolbarItems.push(this.$btnModelHierarchyUp);
-        this.$btnModelHierarchyUp.hide();
+        // this.$btnModelHierarchyUp = toolBar.addButton({
+        //     title: 'Go to parent',
+        //     icon: 'glyphicon glyphicon-circle-arrow-up',
+        //     clickFn: function (/*data*/) {
+        //         WebGMEGlobal.State.registerActiveObject(self._currentNodeParentId);
+        //     }
+        // });
+        // this._toolbarItems.push(this.$btnModelHierarchyUp);
+        // this.$btnModelHierarchyUp.hide();
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
         /************** MODEL / CONNECTION filter *******************/

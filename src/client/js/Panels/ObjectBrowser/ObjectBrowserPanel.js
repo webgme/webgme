@@ -51,6 +51,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     ObjectBrowserPanel.prototype._initialize = function () {
         var self = this,
+            toolbarItems = {},
             toolbar,
             compositionTreeBrowserWidget,
             compositionTreeBrowserControl,
@@ -143,8 +144,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
         toolbar = WebGMEGlobal.Toolbar;
         if (toolbar) {
             toolbar.addSeparator();
-            toolbar.addButton({
-                title: 'Locate in tree browser',
+            toolbarItems.locate = toolbar.addButton({
+                title: 'Locate node in tree browser',
                 icon: 'glyphicon glyphicon-screenshot',
                 data: {},
                 clickFn: function (/*data*/) {
@@ -162,6 +163,31 @@ define(['js/PanelBase/PanelBaseWithHeader',
                     }
                 }
             });
+
+            toolbarItems.navigateToParent = toolbar.addButton({
+                title: 'Go to parent',
+                icon: 'glyphicon glyphicon-circle-arrow-up',
+                clickFn: function (/*data*/) {
+                    var nodeId = WebGMEGlobal.State.getActiveObject(),
+                        node;
+
+                    if (typeof nodeId === 'string') {
+                        node = self._client.getNode(nodeId);
+
+                        if (nodeId === compositionTreeBrowserControl._treeRootId) {
+                            self._client.notifyUser({
+                                message: 'Top node already open..',
+                                severity: 'info'
+                            });
+                        } else if (node && typeof node.getParentId() === 'string') {
+                            WebGMEGlobal.State.registerActiveObject(node.getParentId());
+                            WebGMEGlobal.State.registerActiveSelection([nodeId]);
+                        }
+                    }
+                }
+            });
+
+            toolbarItems.navigateToParent.enabled(false);
         }
 
         // Add event handler for locate node events.
@@ -169,6 +195,16 @@ define(['js/PanelBase/PanelBaseWithHeader',
             compositionEl.click();
             if (typeof eventData.nodeId === 'string') {
                 compositionTreeBrowserControl.locateNode(eventData.nodeId, eventData.isActiveNode);
+            }
+        });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model_, activeNodeId) {
+            if (toolbarItems.navigateToParent) {
+                if (activeNodeId === compositionTreeBrowserControl._treeRootId) {
+                    toolbarItems.navigateToParent.enabled(false);
+                } else {
+                    toolbarItems.navigateToParent.enabled(true);
+                }
             }
         });
     };
