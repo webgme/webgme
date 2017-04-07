@@ -69,7 +69,7 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
 
         //Create Panel's HEADER
         this.$panelHeader = $('<div/>', {
-            class: 'panel-header'
+            class: 'panel-header no-print'
         });
 
         //Create Panel's BODY
@@ -100,7 +100,7 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
             this.$_el.append(this.$panelHeader);
             this.$panelHeader.addClass('absolute-header');
             this.$floatingTitle = $('<div/>', {
-                class: 'floating-title'
+                class: 'floating-title no-print'
             });
             this.$panelHeaderTitle = $('<div/>', {
                 class: 'panel-header-title'

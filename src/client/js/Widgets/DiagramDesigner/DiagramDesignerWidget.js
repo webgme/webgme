@@ -35,6 +35,7 @@ define([
     './DiagramDesignerWidget.Toolbar',
     './DiagramDesignerWidget.Mouse',
     './DiagramDesignerWidget.Tabs',
+    './DiagramDesignerWidget.Print',
     'js/Utils/ComponentSettings',
     'css!./styles/DiagramDesignerWidget.css'
 ], function (Logger,
@@ -64,6 +65,7 @@ define([
              DiagramDesignerWidgetToolbar,
              DiagramDesignerWidgetMouse,
              DiagramDesignerWidgetTabs,
+             DiagramDesignerWidgetPrint,
              ComponentSettings) {
 
     'use strict';
@@ -1199,6 +1201,8 @@ define([
             } else {
                 this._backGroundText = this.skinParts.SVGPaper.text(this._svgPaperSize.w / 2, this._svgPaperSize.h / 2,
                     text);
+
+                this._backGroundText.node.setAttribute('class', 'no-print');
             }
         } else {
             svgParams.text = text;
@@ -1539,6 +1543,7 @@ define([
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetToolbar.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetMouse.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetTabs.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetPrint.prototype);
 
     DiagramDesignerWidget.getDefaultConfig = function () {
         return {

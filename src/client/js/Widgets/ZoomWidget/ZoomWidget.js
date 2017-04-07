@@ -26,7 +26,7 @@ define(['jquery-csszoom', 'css!./styles/ZoomWidget.css'], function () {
             '<i class="glyphicon glyphicon-plus"/></a>'),
             zoomOutBtn = $('<a tabindex="0" class="btn-zoom btn-zoom-out ui-corner-all ui-state-default">' +
                 '<i class="glyphicon glyphicon-minus"/></a>'),
-            zoomContainer = $('<div/>', {class: 'zoom-widget-container ' + options.class}),
+            zoomContainer = $('<div/>', {class: 'zoom-widget-container no-print ' + options.class}),
             zoomSlider = $('<div/>', {class: options.sliderClass}),
             zoomLabel = $('<label/>', {class: 'zoom-widget-label'});
 

@@ -30,7 +30,7 @@ define([
     DiagramDesignerWidgetTabs.prototype._initializeTabs = function () {
         var self = this;
 
-        this.$tabsContainer = $('<div/>', {class: TABS_CONTAINER});
+        this.$tabsContainer = $('<div/>', {class: TABS_CONTAINER + ' no-print'});
 
         this.$el.parent().append(this.$tabsContainer);
         this.$el.parent().addClass(WITH_TABS_CLASS);

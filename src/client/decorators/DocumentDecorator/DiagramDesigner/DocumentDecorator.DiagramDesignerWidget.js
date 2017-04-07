@@ -27,7 +27,8 @@ define([
 
     var DocumentDecorator,
         DECORATOR_ID = 'DocumentDecorator',
-        TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta" title="Edit documentation" />');
+        TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta no-print" ' +
+            'title="Edit documentation" />');
 
     DocumentDecorator = function (options) {
         var opts = _.extend({}, options);
