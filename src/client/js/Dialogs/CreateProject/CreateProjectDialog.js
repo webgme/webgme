@@ -252,7 +252,7 @@ define(['js/Loader/LoaderCircles',
             }
 
             if (err) {
-                self.logger.error(err);
+                self._logger.error(err);
                 self._loader.stop();
                 return;
             }
