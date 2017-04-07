@@ -1201,6 +1201,8 @@ define([
             } else {
                 this._backGroundText = this.skinParts.SVGPaper.text(this._svgPaperSize.w / 2, this._svgPaperSize.h / 2,
                     text);
+
+                this._backGroundText.node.setAttribute('class', 'no-print');
             }
         } else {
             svgParams.text = text;
