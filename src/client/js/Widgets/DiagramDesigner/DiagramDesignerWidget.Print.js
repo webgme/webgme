@@ -22,7 +22,15 @@ define([
                 value;
 
             // Any other values?
-            ['background-color', 'color'].forEach(function (type) {
+            [
+                'background-color',
+                'color',
+                'border-color',
+                'border-top-color',
+                'border-right-color',
+                'border-bottom-color',
+                'border-left-color',
+            ].forEach(function (type) {
                 value = el.css(type);
                 if (value && el[0].style) {
                     el[0].style.setProperty(type, value, 'important');

@@ -39,7 +39,7 @@ define([
         DECORATOR_ID = 'MetaDecorator',
         ABSTRACT_CLASS = 'abstract',
         IS_CONNECTION_CLASS = 'is-connection',
-        TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta"/>'),
+        TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta no-print"/>'),
         TEXT_META_LOCKED_BASE = $('<i class="glyphicon glyphicon-lock meta-lock"/>');
 
     MetaDecoratorDiagramDesignerWidget = function (options) {

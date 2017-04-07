@@ -64,7 +64,7 @@ define([
     MetaEditorWidget.prototype._initializeFilterPanel = function () {
         /**** create FILTER PANEL ****/
         this.$filterPanel = $('<div/>', {
-            class: 'filterPanel'
+            class: 'filterPanel no-print'
         });
 
         this.$filterPanel.html('<div class="header">FILTER</div><ul class="body"></ul>');

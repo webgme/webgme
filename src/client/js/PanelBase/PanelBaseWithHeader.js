@@ -69,7 +69,7 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
 
         //Create Panel's HEADER
         this.$panelHeader = $('<div/>', {
-            class: 'panel-header'
+            class: 'panel-header no-print'
         });
 
         //Create Panel's BODY
