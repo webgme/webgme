@@ -105,7 +105,7 @@ define(['js/logger',
 
         this._nodes = {};
 
-        if (this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID) {
+        if ((this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID) && desc) {
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = {children: 0};
