@@ -118,6 +118,17 @@ describe('corerel', function () {
         }, core.loadChildren(root));
     });
 
+    it('should preserve relation among nodes that being copied', function () {
+        var root = core.createNode(),
+            source = core.createNode({parent: root}),
+            target = core.createNode({parent: root}),
+            copies;
+
+        core.setPointer(source, 'follow', target);
+        copies = core.copyNodes([source, target], root);
+        expect(core.getPointerPath(copies[0], 'follow')).to.eql(core.getPath(copies[1]));
+    });
+
     it('loading collection and pointer', function (done) {
         TASYNC.call(function (children) {
             expect(children).to.have.length(1);

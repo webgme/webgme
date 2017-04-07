@@ -843,7 +843,8 @@ define([
          * @param {module:Core~Node[]} nodes - the nodes to be copied.
          * @param {module:Core~Node} parent - the parent node of the copy.
          *
-         * @return {module:Core~Node[]} The function returns an array of the copied nodes.
+         * @return {module:Core~Node[]} The function returns an array of the copied nodes. The order follows
+         * the order of originals.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.

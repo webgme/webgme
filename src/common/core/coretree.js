@@ -111,6 +111,10 @@ define([
             return null;
         }
 
+        function __getEmptyData() {
+            return {};
+        }
+
         function __getChildData(data, relid) {
             ASSERT(typeof relid === 'string');
 
@@ -134,10 +138,6 @@ define([
             } else {
                 return false;
             }
-        }
-
-        function __getEmptyData() {
-            return {};
         }
 
         function __areEquivalent(data1, data2) {
@@ -181,7 +181,7 @@ define([
                 key = keys[i];
                 child = data[key];
                 if (__isMutableData(child)) {
-                    sub = __saveData(child, root, path + '/' + key, stackedObjects);
+                    sub = __saveData(child, root, path + CONSTANTS.PATH_SEP + key, stackedObjects);
                     if (JSON.stringify(sub) === JSON.stringify(__getEmptyData())) {
                         delete data[key];
                     } else {
@@ -377,29 +377,35 @@ define([
 
             var path = '';
             while (node.relid !== null && node !== base) {
-                path = '/' + node.relid + path;
+                path = CONSTANTS.PATH_SEP + node.relid + path;
                 node = node.parent;
             }
             return path;
         };
 
         this.isValidPath = function (path) {
-            return typeof path === 'string' && (path === '' || path.charAt(0) === '/');
+            return typeof path === 'string' && (path === '' || path.charAt(0) === CONSTANTS.PATH_SEP);
         };
 
         this.splitPath = function (path) {
             ASSERT(self.isValidPath(path));
 
-            path = path.split('/');
+            path = path.split(CONSTANTS.PATH_SEP);
             path.splice(0, 1);
 
             return path;
         };
 
+        this.getParentPath = function (path) {
+            path = path.split(CONSTANTS.PATH_SEP);
+            path.splice(-1, 1);
+            return path.join(CONSTANTS.PATH_SEP);
+        };
+
         this.buildPath = function (path) {
             ASSERT(path instanceof Array);
 
-            return path.length === 0 ? '' : '/' + path.join('/');
+            return path.length === 0 ? '' : CONSTANTS.PATH_SEP + path.join(CONSTANTS.PATH_SEP);
         };
 
         this.joinPaths = function (first, second) {
@@ -426,6 +432,10 @@ define([
                 second: self.buildPath(second.slice(i)),
                 secondLength: second.length - i
             };
+        };
+
+        this.isPathInSubTree = function (path, subTreeRoot) {
+            return path === subTreeRoot || path.indexOf(subTreeRoot + CONSTANTS.PATH_SEP) === 0;
         };
 
         this.normalize = function (node) {
@@ -896,9 +906,9 @@ define([
 
         this.loadByPath = function (node, path) {
             ASSERT(self.isValidNode(node));
-            ASSERT(path === '' || path.charAt(0) === '/');
+            ASSERT(path === '' || path.charAt(0) === CONSTANTS.PATH_SEP);
 
-            path = path.split('/');
+            path = path.split(CONSTANTS.PATH_SEP);
             return __loadDescendantByPath2(node, path, 1);
         };
 

@@ -213,7 +213,7 @@ define([
             return innerCore.getOwnValidPointerNames(node).concat(innerCore.getOwnValidSetNames(node));
         }
 
-        function containmentGetter(node) {
+        function containmentGetter(/*node*/) {
             return ['containment'];
         }
 
@@ -370,10 +370,8 @@ define([
         this.getJsonMeta = function (node) {
             var meta = {children: {}, attributes: {}, pointers: {}, aspects: {}, constraints: {}},
                 nullRule = {items: [], minItems: [], maxItems: []},
-                tempNode,
                 names,
-                pointer,
-                i, j;
+                i;
 
             meta.children = self.getChildrenMeta(node);
             if (meta.children) {
@@ -642,8 +640,8 @@ define([
                                     targetNode: targetNode,
                                     collisionPaths: [definitions[keys[k]].path, path],
                                     collisionNodes: [mixinNodes[definitions[keys[k]].index], mixinNodes[j]],
-                                    message: '[' + ownName + ']: inherits pointer (' + names[i]
-                                    + ') target definition of ' + targetInfoTxt +
+                                    message: '[' + ownName + ']: inherits pointer (' + names[i] +
+                                    ') target definition of ' + targetInfoTxt +
                                     ' from [' + definitions[keys[k]].name + '] and [' + name + ']',
                                     hint: 'Remove one of the mixin relations'
                                 });
@@ -688,8 +686,8 @@ define([
                                     targetNode: targetNode,
                                     collisionPaths: [definitions[keys[k]].path, path],
                                     collisionNodes: [mixinNodes[definitions[keys[k]].index], mixinNodes[j]],
-                                    message: '[' + ownName + ']: inherits set (' + names[i]
-                                    + ') member definition of ' + targetInfoTxt +
+                                    message: '[' + ownName + ']: inherits set (' + names[i] +
+                                    ') member definition of ' + targetInfoTxt +
                                     ' from [' + definitions[keys[k]].name + '] and [' + name + ']',
                                     hint: 'Remove one of the mixin relations'
                                 });
@@ -782,7 +780,7 @@ define([
         };
 
         this.delMixin = function (node, mixinPath) {
-            var metaNodes = innerCore.getAllMetaNodes(node);
+            // var metaNodes = innerCore.getAllMetaNodes(node);
 
             innerCore.delMember(node, CONSTANTS.MIXINS_SET, mixinPath);
         };

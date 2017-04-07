@@ -203,13 +203,15 @@ define(['common/core/core', 'q'], function (Core, Q) {
         var updateLibraryOrg = this.updateLibrary;
         this.updateLibrary = function (node, name, updatedLibraryRootHash, libraryInfo, updateInstructions, callback) {
             var deferred = Q.defer();
-            updateLibraryOrg(node, name, updatedLibraryRootHash, libraryInfo, updateInstructions, function (err, result) {
-                if (err) {
-                    deferred.reject(err);
-                } else {
-                    deferred.resolve(result);
+            updateLibraryOrg(node, name, updatedLibraryRootHash, libraryInfo, updateInstructions,
+                function (err, result) {
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve(result);
+                    }
                 }
-            });
+            );
 
             return deferred.promise.nodeify(callback);
         };

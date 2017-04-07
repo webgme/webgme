@@ -12,7 +12,7 @@ describe('coretype', function () {
         Q = testFixture.Q,
         logger = testFixture.logger.fork('coretype.spec'),
         storage,
-    // Has to be in sync with relidPool in util/random.js
+        // Has to be in sync with relidPool in util/random.js
         RELID_POOL = '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'.split(''),
         expect = testFixture.expect,
         __should = testFixture.should,
@@ -233,6 +233,7 @@ describe('coretype', function () {
             }, core.loadChildren(instance));
         }, core.loadChildren(root));
     });
+
     it('copying nodes around', function (done) {
         TASYNC.call(function (children) {
             var base, instance, i, bCopy, copies;
@@ -263,6 +264,7 @@ describe('coretype', function () {
             done();
         }, core.loadChildren(root));
     });
+
     it('removing base', function (done) {
         TASYNC.call(function (children) {
             var base, instance, i;
@@ -573,6 +575,43 @@ describe('coretype', function () {
         }, core.loadByPath(root, '/v/d/c'));
     });
 
+    // FIXME: according to the theoretical view of inheritance, these test cases should run
+    // but the current implementation cannot discover the whole chain of inheritance shyncronously
+    it.skip('should provide the info of instance-internal collections (second instance)', function (done) {
+        var root = core.createNode(),
+            A = core.createNode({parent: root, base: null, relid: 'A'}),
+            B = core.createNode({parent: A, base: null, relid: 'B'}),
+            C = core.createNode({parent: A, base: null, relid: 'C'}),
+            aP = core.createNode({parent: root, base: A, relid: 'a'}),
+            bP, bPP, cP;
+
+        core.setPointer(B, 'ref', C);
+
+        TASYNC.call(function (bP_, cP_) {
+            bP = bP_;
+            cP = cP_;
+            bPP = core.createNode({parent: aP, base: bP, relid: 'b'});
+            console.log(core.getPointerPath(bPP, 'ref'));
+            expect(core.getCollectionPaths(cP, 'ref')).to.have.length(2);
+            done();
+        }, core.loadByPath(aP, '/B'), core.loadByPath(aP, '/B'));
+    });
+
+    it.skip('should provide the info of collections throughout instances', function (done) {
+        var root = core.createNode(),
+            C = core.createNode({parent: root, base: null, relid: 'C'}),
+            C1 = core.createNode({parent: C, base: null, relid: 'C1'}),
+            C2 = core.createNode({parent: C, base: null, relid: 'C2'}),
+            CC1 = core.createNode({parent: C1, base: null, relid: '1'}),
+            CC1P = core.createNode({parent: C1, base: CC1, relid: '1P'}),
+            CC1PP = core.createNode({parent: C1, base: CC1P, relid: '1PP'});
+
+        core.setPointer(CC1, 'ref', C2);
+
+        expect(core.getCollectionPaths(C2, 'ref')).to.have.members(['/C/C1/1', '/C/C1/1P', '/C/C1/1PP']);
+        done();
+    });
+
     it('isValidNewParent should return true when new-parent is root', function () {
         var node = core.createNode({parent: root});
 
@@ -691,9 +730,7 @@ describe('coretype', function () {
         TASYNC.call(function (instanceChild) {
             expect(instanceChild.length).to.equal(1);
             core.setAttribute(instanceChild[0], 'name', 'cNode');
-            console.log('settingBase');
             core.setBase(node, newBase);
-            console.log('baseSet');
             TASYNC.call(function (childAfterSetBase) {
                 expect(core.getPath(childAfterSetBase)).to.equal('/n/a');
                 expect(core.getAttribute(childAfterSetBase, 'name')).to.eql('cNode');
@@ -1377,4 +1414,97 @@ describe('coretype', function () {
         }, core.loadRoot(core.getHash(root)));
     });
 
+    it('should copyNodes take care of inherited relations preservation', function (done) {
+        var root = core.createNode({}),
+            baseA = core.createNode({parent: root, relid: 'A'}),
+            baseB = core.createNode({parent: root, relid: 'B'}),
+            containerOne = core.createNode({parent: root, base: baseA, relid: 'C1'}),
+            childOne = core.createNode({parent: containerOne, base: baseB, relid: '1'}),
+            childTwo = core.createNode({parent: containerOne, base: baseB, relid: '2'}),
+            instanceOne = core.createNode({parent: root, base: containerOne, relid: 'I1'}),
+            containerTwo = core.createNode({parent: root, base: baseA, relid: 'C2'}),
+            instanceTwo = core.createNode({parent: root, base: containerTwo, relid: 'I2'}),
+            copiedNodes;
+
+        core.setPointer(childOne, 'ref', childTwo);
+        copiedNodes = core.copyNodes([instanceOne, instanceTwo], root);
+
+        expect(copiedNodes).to.have.length(2);
+
+        TASYNC.call(function (copiedChildren) {
+
+            expect(copiedChildren).to.have.length(2);
+            if (core.getRelid(copiedChildren[0]) === '1') {
+                expect(core.getPointerPath(copiedChildren[0], 'ref')).to.eql(core.getPath(copiedChildren[1]));
+            } else {
+                expect(core.getPointerPath(copiedChildren[1], 'ref')).to.eql(core.getPath(copiedChildren[0]));
+            }
+            done();
+        }, core.loadChildren(copiedNodes[0]));
+    });
+
+    it('should copyNodes take care of partially inherited relations preservation', function (done) {
+        var root = core.createNode({}),
+            baseA = core.createNode({parent: root, relid: 'A'}),
+            baseB = core.createNode({parent: root, relid: 'B'}),
+            containerOne = core.createNode({parent: root, base: baseA, relid: 'C1'}),
+            childOne = core.createNode({parent: containerOne, base: baseB, relid: '1'}),
+            childTwo = core.createNode({parent: containerOne, base: baseB, relid: '2'}),
+            instanceOne = core.createNode({parent: root, base: containerOne, relid: 'I1'}),
+            containerTwo = core.createNode({parent: root, base: baseA, relid: 'C2'}),
+            instanceTwo = core.createNode({parent: root, base: containerTwo, relid: 'I2'}),
+            copiedNodes;
+
+        core.setPointer(childOne, 'ref', instanceTwo);
+        copiedNodes = core.copyNodes([instanceOne, instanceTwo], root);
+
+        expect(copiedNodes).to.have.length(2);
+
+        TASYNC.call(function (copiedChildren) {
+
+            expect(copiedChildren).to.have.length(2);
+            if (core.getRelid(copiedChildren[0]) === '1') {
+                expect(core.getPointerPath(copiedChildren[0], 'ref')).to.eql(core.getPath(copiedNodes[1]));
+            } else {
+                expect(core.getPointerPath(copiedChildren[1], 'ref')).to.eql(core.getPath(copiedNodes[1]));
+            }
+            done();
+        }, core.loadChildren(copiedNodes[0]));
+    });
+
+    it('should copyNodes take care of complex inherited relations preservation', function (done) {
+        var root = core.createNode({}),
+            baseA = core.createNode({parent: root, relid: 'A'}),
+            baseB = core.createNode({parent: root, relid: 'B'}),
+            containerOne = core.createNode({parent: root, base: baseA, relid: 'C1'}),
+            childOne = core.createNode({parent: containerOne, base: baseB, relid: '1'}),
+            childTwo = core.createNode({parent: containerOne, base: baseB, relid: '2'}),
+            instanceOne = core.createNode({parent: root, base: containerOne, relid: 'I1'}),
+            instanceChild,
+            copiedNodes;
+
+        core.setPointer(childOne, 'ref', childTwo);
+        TASYNC.call(function (instanceOneChildren) {
+            var cFrom, cTo;
+            if (core.getRelid(instanceOneChildren[0]) === '1') {
+                cFrom = instanceOneChildren[0];
+                cTo = instanceOneChildren[1];
+            } else {
+                cFrom = instanceOneChildren[1];
+                cTo = instanceOneChildren[0];
+            }
+            expect(core.getPointerPath(cFrom, 'ref')).to.eql(core.getPath(cTo));
+
+            instanceChild = core.createNode({parent: instanceOne, base: cFrom, relid: 'ic1'});
+
+            expect(core.getPointerPath(instanceChild, 'ref')).to.eql(core.getPath(cTo));
+
+            copiedNodes = core.copyNodes([instanceChild, cTo], instanceOne);
+
+            expect(copiedNodes).to.have.length(2);
+            expect(core.getPointerPath(copiedNodes[0], 'ref')).to.eql(core.getPath(copiedNodes[1]));
+
+            done();
+        }, core.loadChildren(instanceOne));
+    });
 });

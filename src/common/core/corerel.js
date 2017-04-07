@@ -99,8 +99,7 @@ define([
         function getRelativePointerPathFrom(node, source, name) {
             ASSERT(self.isValidNode(node) && typeof source === 'string' && typeof name === 'string');
             var target,
-                ovrInfo,
-                ovrData;
+                ovrInfo;
 
             do {
                 ovrInfo = self.overlayInquiry(node, source, name);
@@ -109,7 +108,7 @@ define([
                     break;
                 }
 
-                source = '/' + innerCore.getRelid(node) + source;
+                source = CONSTANTS.PATH_SEP + innerCore.getRelid(node) + source;
                 node = innerCore.getParent(node);
 
             } while (node);
@@ -129,6 +128,23 @@ define([
                 delete node.inverseOverlaysMutable;
                 for (relid in node.children) {
                     storeNewInverseOverlays(node.children[relid]);
+                }
+            }
+        }
+
+        function hasShardedOverlays(node) {
+            return (self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) ||
+                {})[CONSTANTS.OVERLAY_SHARD_INDICATOR] === true;
+        }
+
+        function updateSmallestOverlayShardIndex(node) {
+            var shardId,
+                minimalItemCount = _shardSize + 1;
+
+            for (shardId in node.overlays) {
+                if (node.overlays[shardId].itemCount < minimalItemCount) {
+                    minimalItemCount = node.overlays[shardId].itemCount;
+                    node.minimalOverlayShardId = shardId;
                 }
             }
         }
@@ -166,11 +182,6 @@ define([
                 updateSmallestOverlayShardIndex(node);
                 return node;
             }, TASYNC.lift(loadPromises));
-        }
-
-        function hasShardedOverlays(node) {
-            return (self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) ||
-                {})[CONSTANTS.OVERLAY_SHARD_INDICATOR] === true;
         }
 
         // We only shard regular GME nodes, technical sub-nodes do not get sharded
@@ -243,18 +254,6 @@ define([
             // In the unlikely event that during transition the original shard is empty.
             if (Object.keys(node.overlays).length === 0) {
                 node.minimalOverlayShardId = addNewOverlayShard(node);
-            }
-        }
-
-        function updateSmallestOverlayShardIndex(node) {
-            var shardId,
-                minimalItemCount = _shardSize + 1;
-
-            for (shardId in node.overlays) {
-                if (node.overlays[shardId].itemCount < minimalItemCount) {
-                    minimalItemCount = node.overlays[shardId].itemCount;
-                    node.minimalOverlayShardId = shardId;
-                }
             }
         }
 
@@ -438,7 +437,6 @@ define([
                 overlay,
                 overlaysObject,
                 shardId,
-                i,
                 source,
                 name,
                 target;
@@ -691,7 +689,7 @@ define([
             if (hasShardedOverlays(node)) {
                 overlaysObject = node.overlays;
             } else {
-                overlaysObject = {'single': {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
+                overlaysObject = {single: {items: self.getProperty(node, CONSTANTS.OVERLAYS_PROPERTY) || {}}};
             }
 
             for (shardId in overlaysObject) {
@@ -736,11 +734,8 @@ define([
             ASSERT(innerCore.getCommonPathPrefixData(source, target).common === '');
 
             var currentOverlayInfo = self.overlayInquiry(node, source, name),
-                index,
                 overlays,
-                overlay,
-                entryCount,
-                overlayArray;
+                overlay;
 
             ASSERT(currentOverlayInfo.value === null);
 
@@ -817,7 +812,7 @@ define([
          * @param {string} relid - Relid of the child to be removed.
          */
         this.deleteChild = function (parent, relid) {
-            var prefix = '/' + relid;
+            var prefix = CONSTANTS.PATH_SEP + relid;
             innerCore.deleteProperty(parent, relid);
             innerCore.removeChildFromCache(parent, relid);
             if (parent.childrenRelids) {
@@ -880,7 +875,7 @@ define([
                 ancestorNewPath = innerCore.getPath(newNode, ancestor);
 
                 base = innerCore.getParent(node);
-                baseOldPath = '/' + innerCore.getRelid(node);
+                baseOldPath = CONSTANTS.PATH_SEP + innerCore.getRelid(node);
                 aboveAncestor = 1;
 
                 while (base) {
@@ -897,7 +892,8 @@ define([
 
                         if (entry.p) {
                             ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
-                            ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === '/');
+                            ASSERT(entry.s === baseOldPath ||
+                                entry.s.charAt(baseOldPath.length) === CONSTANTS.PATH_SEP);
 
                             if (aboveAncestor < 0) {
                                 //below ancestor node - further from root
@@ -928,7 +924,7 @@ define([
                         }
                     }
 
-                    baseOldPath = '/' + innerCore.getRelid(base) + baseOldPath;
+                    baseOldPath = CONSTANTS.PATH_SEP + innerCore.getRelid(base) + baseOldPath;
                     base = innerCore.getParent(base);
                 }
             } else {
@@ -955,50 +951,179 @@ define([
             return newNode;
         };
 
-        this.copyNodes = function (nodes, parent, takenRelids, relidLength) {
-            //copying multiple nodes at once for keeping their internal relations
-            var paths = [],
-                i, j, index, names, pointer, newNode,
-                copiedNodes = [],
-                // Every single element will be an object with the
-                // internally pointing relations and the index of the target.
-                internalRelationPaths = [];
+        this.gatherRelationsAmongSubtrees = function (sourceRoot, targetRoot) {
+            var relationInformation = [],
+                overlaysToCheck,
+                commonParent, i,
+                commonPathInformation = innerCore.getCommonPathPrefixData(
+                    self.getPath(sourceRoot),
+                    self.getPath(targetRoot));
 
-            for (i = 0; i < nodes.length; i++) {
-                paths.push(innerCore.getPath(nodes[i]));
+            commonParent = sourceRoot;
+            while (self.getPath(commonParent) !== commonPathInformation.common) {
+                commonParent = self.getParent(commonParent);
             }
 
-            for (i = 0; i < nodes.length; i++) {
-                names = self.getPointerNames(nodes[i]);
-                pointer = {};
-                for (j = 0; j < names.length; j++) {
-                    index = paths.indexOf(self.getPointerPath(nodes[i], names[j]));
-                    if (index !== -1) {
-                        pointer[names[j]] = index;
+            overlaysToCheck = self.overlayQuery(commonParent, commonPathInformation.first);
+            for (i = 0; i < overlaysToCheck.length; i += 1) {
+                if (self.isPathInSubTree(overlaysToCheck[i].t, commonPathInformation.second)) {
+                    relationInformation.push({
+                        source: innerCore.joinPaths(commonPathInformation.common, overlaysToCheck[i].s),
+                        sourceBase: innerCore.joinPaths(commonPathInformation.common,
+                            commonPathInformation.first),
+                        target: innerCore.joinPaths(commonPathInformation.common, overlaysToCheck[i].t),
+                        targetBase: innerCore.joinPaths(commonPathInformation.common,
+                            commonPathInformation.second),
+                        name: overlaysToCheck[i].n
+                    });
+                }
+            }
+
+            return relationInformation;
+        };
+
+        this.gatherRelationsOfSubtree = function (root, sourceRelPath, targetRelPath) {
+            var relationInformation = [],
+                rootPath = self.getPath(root),
+                overlaysToCheck, i;
+
+            overlaysToCheck = self.overlayQuery(root, sourceRelPath);
+            for (i = 0; i < overlaysToCheck.length; i += 1) {
+                if (self.isPathInSubTree(overlaysToCheck[i].t, targetRelPath)) {
+                    relationInformation.push({
+                        source: innerCore.joinPaths(rootPath, overlaysToCheck[i].s),
+                        sourceBase: innerCore.joinPaths(rootPath, sourceRelPath),
+                        target: innerCore.joinPaths(rootPath, overlaysToCheck[i].t),
+                        targetBase: innerCore.joinPaths(rootPath, targetRelPath),
+                        name: overlaysToCheck[i].n
+                    });
+                }
+            }
+
+            return relationInformation;
+        };
+
+        this.copyNodes = function (nodes, parent, takenRelids, relidLength) {
+            var old2NewPath = {},
+                paths = [],
+                relationsToCopyOver = [],
+                copies = [],
+                source, target, oldTarget,
+                gatherRelations = function (commonPathInformation, firstNode) {
+                    var commonParent,
+                        overlaysToCheck,
+                        i;
+
+                    commonParent = firstNode;
+                    while (self.getPath(commonParent) !== commonPathInformation.common) {
+                        commonParent = self.getParent(commonParent);
+                    }
+
+                    // first -> second
+                    overlaysToCheck = self.overlayQuery(commonParent, commonPathInformation.first);
+                    for (i = 0; i < overlaysToCheck.length; i += 1) {
+                        if (self.isPathInSubTree(overlaysToCheck[i].t, commonPathInformation.second)) {
+                            relationsToCopyOver.push({
+                                source: innerCore.joinPaths(commonPathInformation.common, overlaysToCheck[i].s),
+                                sourceBase: innerCore.joinPaths(commonPathInformation.common,
+                                    commonPathInformation.first),
+                                target: innerCore.joinPaths(commonPathInformation.common, overlaysToCheck[i].t),
+                                targetBase: innerCore.joinPaths(commonPathInformation.common,
+                                    commonPathInformation.second),
+                                name: overlaysToCheck[i].n
+                            });
+                        }
+                    }
+                },
+                i, j;
+
+            //first we collect the relations that we need to preserve
+            for (i = 0; i < nodes.length; i += 1) {
+                paths.push(self.getPath(nodes[i]));
+            }
+
+            for (i = 0; i < nodes.length; i += 1) {
+                for (j = 0; j < nodes.length; j += 1) {
+                    if (j !== i) {
+                        gatherRelations(innerCore.getCommonPathPrefixData(paths[i], paths[j]), nodes[i]);
                     }
                 }
-                internalRelationPaths.push(pointer);
             }
 
-            //now we use our simple copy
-            for (i = 0; i < nodes.length; i++) {
-                newNode = self.copyNode(nodes[i], parent, takenRelids, relidLength);
-                copiedNodes.push(newNode);
+            //do the actual copying
+            for (i = 0; i < nodes.length; i += 1) {
+                copies.push(self.copyNode(nodes[i], parent, takenRelids, relidLength));
+                old2NewPath[paths[i]] = self.getPath(copies[i]);
                 if (takenRelids) {
-                    takenRelids[self.getRelid(newNode)] = true;
+                    takenRelids[self.getRelid(copies[i])] = true;
                 }
             }
 
-            //and now back to the relations
-            for (i = 0; i < internalRelationPaths.length; i++) {
-                names = Object.keys(internalRelationPaths[i]);
-                for (j = 0; j < names.length; j++) {
-                    self.setPointer(copiedNodes[i], names[j], copiedNodes[internalRelationPaths[i][names[j]]]);
+            // create the relations, that have to be preserved
+            for (i = 0; i < relationsToCopyOver.length; i += 1) {
+                source = relationsToCopyOver[i].source.replace(
+                    relationsToCopyOver[i].sourceBase,
+                    old2NewPath[relationsToCopyOver[i].sourceBase]
+                );
+                target = relationsToCopyOver[i].target.replace(
+                    relationsToCopyOver[i].targetBase,
+                    old2NewPath[relationsToCopyOver[i].targetBase]
+                );
+
+                oldTarget = self.overlayInquiry(parent, source, relationsToCopyOver[i].name);
+                if (oldTarget !== null && typeof oldTarget.value === 'string') {
+                    self.overlayRemove(parent, source, relationsToCopyOver[i].name, oldTarget.value);
                 }
+                self.overlayInsert(parent, source, relationsToCopyOver[i].name, target);
             }
 
-            return copiedNodes;
+            return copies;
         };
+
+        // this.copyNodes = function (nodes, parent, takenRelids, relidLength) {
+        //     //copying multiple nodes at once for keeping their internal relations
+        //     var paths = [],
+        //         i, j, index, names, pointer, newNode,
+        //         copiedNodes = [],
+        //         // Every single element will be an object with the
+        //         // internally pointing relations and the index of the target.
+        //         internalRelationPaths = [];
+        //
+        //     for (i = 0; i < nodes.length; i++) {
+        //         paths.push(innerCore.getPath(nodes[i]));
+        //     }
+        //
+        //     for (i = 0; i < nodes.length; i++) {
+        //         names = self.getPointerNames(nodes[i]);
+        //         pointer = {};
+        //         for (j = 0; j < names.length; j++) {
+        //             index = paths.indexOf(self.getPointerPath(nodes[i], names[j]));
+        //             if (index !== -1) {
+        //                 pointer[names[j]] = index;
+        //             }
+        //         }
+        //         internalRelationPaths.push(pointer);
+        //     }
+        //
+        //     //now we use our simple copy
+        //     for (i = 0; i < nodes.length; i++) {
+        //         newNode = self.copyNode(nodes[i], parent, takenRelids, relidLength);
+        //         copiedNodes.push(newNode);
+        //         if (takenRelids) {
+        //             takenRelids[self.getRelid(newNode)] = true;
+        //         }
+        //     }
+        //
+        //     //and now back to the relations
+        //     for (i = 0; i < internalRelationPaths.length; i++) {
+        //         names = Object.keys(internalRelationPaths[i]);
+        //         for (j = 0; j < names.length; j++) {
+        //             self.setPointer(copiedNodes[i], names[j], copiedNodes[internalRelationPaths[i][names[j]]]);
+        //         }
+        //     }
+        //
+        //     return copiedNodes;
+        // };
 
         this.moveNode = function (node, parent, takenRelids, relidLength) {
             ASSERT(self.isValidNode(node) && self.isValidNode(parent));
@@ -1027,7 +1152,7 @@ define([
             }
 
             base = innerCore.getParent(node);
-            baseOldPath = '/' + innerCore.getRelid(node);
+            baseOldPath = CONSTANTS.PATH_SEP + innerCore.getRelid(node);
             aboveAncestor = 1;
 
             var oldNode = node;
@@ -1074,7 +1199,7 @@ define([
                     }
 
                     ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
-                    ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === '/');
+                    ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === CONSTANTS.PATH_SEP);
 
                     if (aboveAncestor < 0) {
                         //below ancestor node
@@ -1115,7 +1240,7 @@ define([
                     self.overlayInsert(nodeToModifyOverlays, source, entry.n, target);
                 }
 
-                baseOldPath = '/' + innerCore.getRelid(base) + baseOldPath;
+                baseOldPath = CONSTANTS.PATH_SEP + innerCore.getRelid(base) + baseOldPath;
                 base = innerCore.getParent(base);
             }
 
@@ -1144,7 +1269,7 @@ define([
                 i;
 
             for (i = 0; i < relids.length; i += 1) {
-                result.push(path + '/' + relids[i]);
+                result.push(path + CONSTANTS.PATH_SEP + relids[i]);
             }
 
             return result;
@@ -1183,7 +1308,7 @@ define([
                         }
                     }
                 }
-                source = '/' + innerCore.getRelid(node) + source;
+                source = CONSTANTS.PATH_SEP + innerCore.getRelid(node) + source;
                 node = innerCore.getParent(node);
             } while (node);
 
@@ -1340,8 +1465,8 @@ define([
         this.isValidRelid = RANDOM.isValidRelid;
 
         this.isContainerPath = function (path, parentPath) {
-            var pathArray = (path || '').split('/'),
-                parentArray = (parentPath || '').split('/'),
+            var pathArray = (path || '').split(CONSTANTS.PATH_SEP),
+                parentArray = (parentPath || '').split(CONSTANTS.PATH_SEP),
                 i;
 
             for (i = 0; i < parentArray.length; i += 1) {

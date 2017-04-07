@@ -50,40 +50,27 @@ define([
             return node;
         }
 
-        function loadChild(node, relid) {
-            var child = null,
-                base = self.getBase(node),
-                basechild = null;
-            if (base) {
-                //the parent is inherited
-                if (self.getChildrenRelids(base, true)[relid]) {
-                    //inherited child
-                    if (innerCore.getChildrenRelids(node).indexOf(relid) !== -1) {
-                        //but it is overwritten so we should load it
-                        child = innerCore.loadChild(node, relid);
-                    }
-                    basechild = self.loadChild(base, relid);
-                    return TASYNC.call(function (b, c, n, r) {
-                        if (c) {
-                            child = c;
-                            child.base = b;
-                            return child;
-                        } else {
-                            child = innerCore.getChild(n, r);
-                            self.setHashed(child, true, true);
-                            child.base = b;
+        function loadBase2(node, target) {
+            if (typeof node.base !== null && typeof node.base === 'object' &&
+                (innerCore.getPath(node.base) === innerCore.getPath(target))) {
+                //TODO somehow the object already loaded properly and we do no know about it!!!
+                return node;
+            } else {
+                ASSERT(node.base === undefined || node.base === null); //kecso
 
-                            return child;
-                        }
-                    }, basechild, child, node, relid);
+                if (target === null) {
+                    // At this point the base node should be a valid node
+                    logger.warn('node [' + innerCore.getPath(node) +
+                        '] removed due to missing base in inheritance chain');
+                    innerCore.deleteNode(node);
+                    //core.persist(core.getRoot(node));
+                    return null;
                 }
-            }
-            //normal child - as every node should have a base, it is normally mean a direct child of the ROOT
-            if (self.getChildrenRelids(node, true)[relid] !== true) {
-                return null;
-            }
 
-            return TASYNC.call(loadBase, innerCore.loadChild(node, relid));
+                node.base = target;
+
+                return node;
+            }
         }
 
         function loadBase(node) {
@@ -125,27 +112,40 @@ define([
             }
         }
 
-        function loadBase2(node, target) {
-            if (typeof node.base !== null && typeof node.base === 'object' &&
-                (innerCore.getPath(node.base) === innerCore.getPath(target))) {
-                //TODO somehow the object already loaded properly and we do no know about it!!!
-                return node;
-            } else {
-                ASSERT(node.base === undefined || node.base === null); //kecso
+        function loadChild(node, relid) {
+            var child = null,
+                base = self.getBase(node),
+                basechild = null;
+            if (base) {
+                //the parent is inherited
+                if (self.getChildrenRelids(base, true)[relid]) {
+                    //inherited child
+                    if (innerCore.getChildrenRelids(node).indexOf(relid) !== -1) {
+                        //but it is overwritten so we should load it
+                        child = innerCore.loadChild(node, relid);
+                    }
+                    basechild = self.loadChild(base, relid);
+                    return TASYNC.call(function (b, c, n, r) {
+                        if (c) {
+                            child = c;
+                            child.base = b;
+                            return child;
+                        } else {
+                            child = innerCore.getChild(n, r);
+                            self.setHashed(child, true, true);
+                            child.base = b;
 
-                if (target === null) {
-                    // At this point the base node should be a valid node
-                    logger.warn('node [' + innerCore.getPath(node) +
-                        '] removed due to missing base in inheritance chain');
-                    innerCore.deleteNode(node);
-                    //core.persist(core.getRoot(node));
-                    return null;
+                            return child;
+                        }
+                    }, basechild, child, node, relid);
                 }
-
-                node.base = target;
-
-                return node;
             }
+            //normal child - as every node should have a base, it is normally mean a direct child of the ROOT
+            if (self.getChildrenRelids(node, true)[relid] !== true) {
+                return null;
+            }
+
+            return TASYNC.call(loadBase, innerCore.loadChild(node, relid));
         }
 
         function loadDescendantByPath(node, pathArray, index) {
@@ -271,91 +271,18 @@ define([
             return paths;
         }
 
-        function inheritedPointerNames(node) {
-            var allNames = self.getPointerNames(node),
-                ownNames = self.getOwnPointerNames(node),
-                names = [],
-                i;
-
-            for (i = 0; i < allNames.length; i++) {
-                if (ownNames.indexOf(allNames[i]) === -1) {
-                    names.push(allNames[i]);
-                }
-            }
-
-            return names;
-        }
-
         function isValidNodeThrow(node) {
             test('core', innerCore.isValidNode(node));
             test('base', typeof node.base === 'object');
         }
 
-        function getProperty(node, name) {
-            var property;
-            while (property === undefined && node !== null) {
-                property = innerCore.getProperty(node, name);
-                node = self.getBase(node);
-            }
-            return property;
-        }
-
-        function getSimpleBasePath(node, source, name) {
-            var path = innerCore.getPointerPathFrom(node, source, name);
-            if (path === undefined) {
-                if (node.base !== null && node.base !== undefined) {
-                    return getSimpleBasePath(node.base, source, name);
-                } else {
-                    return undefined;
-                }
-            } else {
-                return path;
-            }
-        }
-
-        function getParentOfBasePath(node) {
-            var parent;
-            if (node.base) {
-                parent = self.getParent(node.base);
-                if (parent) {
-                    return self.getPath(parent);
-                } else {
-                    return undefined;
-                }
-            } else {
-                return undefined;
-            }
-        }
-
-        function getBaseOfParentPath(node) {
-            var parent = self.getParent(node);
-            if (parent) {
-                if (parent.base) {
-                    return self.getPath(parent.base);
-                } else {
-                    return undefined;
-                }
-            } else {
-                return undefined;
-            }
-        }
-
-        function getTargetRelPath(node, relSource, name) {
-            var ovr = self.getChild(node, CONSTANTS.OVERLAYS_PROPERTY),
-                source = self.getChild(ovr, relSource);
-            return getProperty(source, name);
-        }
-
-        // function checkCollNames(node, draft) {
-        //     var filtered = [],
-        //         i, sources;
-        //     for (i = 0; i < draft.length; i++) {
-        //         sources = self.getCollectionPaths(node, draft[i]);
-        //         if (sources.length > 0) {
-        //             filtered.push(draft[i]);
-        //         }
+        // function getProperty(node, name) {
+        //     var property;
+        //     while (property === undefined && node !== null) {
+        //         property = innerCore.getProperty(node, name);
+        //         node = self.getBase(node);
         //     }
-        //     return filtered;
+        //     return property;
         // }
 
         function isBase(node, compareNode) {
@@ -477,6 +404,103 @@ define([
             }
         }
 
+        function collectInheritanceInternalRelations(sourceRoot, targetRoot) {
+            var sourceBases = [],
+                sourceBaseInfo = [],
+                node, originalNode, nodePath, relPath, originalRelPath,
+                targetBase = null,
+                targetRelPath = '',
+                relationsToCheck, i, index,
+                originalSourcePath = self.getPath(sourceRoot),
+                originalTargetPath = self.getPath(targetRoot),
+                relations = [];
+
+            node = sourceRoot;
+            relPath = '';
+            originalNode = sourceRoot;
+            originalRelPath = '';
+            while (node) {
+                while (innerCore.getPointerPath(node, CONSTANTS.BASE_POINTER) === undefined) {
+                    relPath = CONSTANTS.PATH_SEP + innerCore.getRelid(node);
+                    originalSourcePath = self.getParentPath(originalSourcePath);
+                    originalRelPath = CONSTANTS.PATH_SEP + self.getRelid(originalNode) + originalRelPath;
+                    originalNode = self.getParent(originalNode);
+
+                    node = innerCore.getParent(node);
+                }
+                sourceBases.push(node);
+                sourceBaseInfo.push({
+                    originalPath: originalSourcePath,
+                    relPath: relPath,
+                    originalRelPath: originalRelPath
+                });
+                node = self.getBase(node);
+            }
+
+            node = targetRoot;
+            originalNode = targetRoot;
+            originalRelPath = '';
+            // while (node && targetBase === null) {
+            //     while (innerCore.getPointerPath(node, CONSTANTS.BASE_POINTER) === undefined) {
+            //         targetRelPath = CONSTANTS.PATH_SEP + innerCore.getRelid(node);
+            //         originalTargetPath = self.getParentPath(originalTargetPath);
+            //         originalRelPath = CONSTANTS.PATH_SEP + self.getRelid(originalNode) + originalRelPath;
+            //         originalNode = self.getParent(originalNode);
+            //         node = innerCore.getParent(node);
+            //     }
+            //     if (sourceBases.indexOf(node) !== -1) {
+            //         targetBase = node;
+            //     }
+            //     node = self.getBase(node);
+            // }
+            while (innerCore.getPointerPath(node, CONSTANTS.BASE_POINTER) === undefined) {
+                targetRelPath = CONSTANTS.PATH_SEP + innerCore.getRelid(node);
+                originalTargetPath = self.getParentPath(originalTargetPath);
+                originalRelPath = CONSTANTS.PATH_SEP + self.getRelid(originalNode) + originalRelPath;
+                originalNode = self.getParent(originalNode);
+                node = innerCore.getParent(node);
+            }
+            if (sourceBases.indexOf(node) !== -1) {
+                targetBase = node;
+            }
+
+            if (targetBase === null) {
+                return relations;
+            }
+
+            // We know that there is a common base/container that can hold inherited information...
+            node = targetBase;
+            index = sourceBases.indexOf(node);
+
+            while (node) {
+                relationsToCheck = innerCore.gatherRelationsOfSubtree(node,
+                    sourceBaseInfo[index].relPath, targetRelPath);
+                nodePath = self.getPath(node);
+                for (i = 0; i < relationsToCheck.length; i += 1) {
+                    relationsToCheck[i].source =
+                        relationsToCheck[i].source.replace(
+                            nodePath + sourceBaseInfo[index].relPath,
+                            sourceBaseInfo[index].originalPath + sourceBaseInfo[index].originalRelPath);
+                    relationsToCheck[i].sourceBase =
+                        relationsToCheck[i].sourceBase.replace(
+                            nodePath + sourceBaseInfo[index].relPath,
+                            sourceBaseInfo[index].originalPath + sourceBaseInfo[index].originalRelPath);
+                    relationsToCheck[i].target =
+                        relationsToCheck[i].target.replace(
+                            nodePath + targetRelPath,
+                            originalTargetPath + originalRelPath);
+                    relationsToCheck[i].targetBase =
+                        relationsToCheck[i].targetBase.replace(
+                            nodePath + targetRelPath,
+                            originalTargetPath + originalRelPath);
+                }
+                relations = relationsToCheck.concat(relations);
+                node = self.getBase(node);
+            }
+
+            return relations;
+        }
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -510,8 +534,8 @@ define([
 
         this.loadByPath = function (node, path) {
             ASSERT(self.isValidNode(node));
-            ASSERT(path === '' || path.charAt(0) === '/');
-            path = path.split('/');
+            ASSERT(path === '' || path.charAt(0) === CONSTANTS.PATH_SEP);
+            path = path.split(CONSTANTS.PATH_SEP);
             return loadDescendantByPath(node, path, 1);
         };
 
@@ -776,59 +800,114 @@ define([
         };
 
         this.copyNodes = function (nodes, parent, relidLength) {
-            var copiedNodes,
-                i, j, index, base,
+            // Due to inheritance we have 3 types of relations, that needs to be preserved:
+            // 1. Direct relations among any two subtrees involved in the copy (same as corerel level)
+            // 2. Inherited relations that goes between affected subtrees but remain the scope of the copy
+            // This option means that both ends of the relation is inside an inheritance that defines the
+            // relation (Example: You have inherited child A that points to inherited child B, you copy them
+            // together under the same parent. If their relationship would not be flatten, then copyA would
+            // point to B instead of copy B).
+            // 3. Inherited relationship, when the original target is in the copy. (Example: inherited child A
+            // points to container B, we copy the container of A and B as well. We expect copyA to point to copyB
+            // instead of the original container B).
+            // +1. If for some reason we copy an inherited child, then its base should be set properly (otherwise
+            // it would lose base information).
+
+            var copiedNodes = [],
+                old2NewPath = {},
+                source,
+                target,
+                oldTarget,
+                relationsToPreserve = [],
+                longestNewRelid = 0,
                 relations = [],
-                names, pointer,
-                longestNewRelid = '',
-                paths = [];
+                basePath,
+                nodePath,
+                node,
+                i, j, k;
 
-            //here we also have to copy the inherited relations which points inside the copy area
-            for (i = 0; i < nodes.length; i++) {
-                paths.push(self.getPath(nodes[i]));
-            }
+            // This collects 1 and 3
+            for (i = 0; i < nodes.length; i += 1) {
+                node = nodes[i];
+                basePath = self.getPath(node);
+                for (j = 0; j < nodes.length; j += 1) {
+                    if (i === j) {
+                        continue;
+                    }
 
-            for (i = 0; i < nodes.length; i++) {
-                names = inheritedPointerNames(nodes[i]);
-                pointer = {};
-                for (j = 0; j < names.length; j++) {
-                    index = paths.indexOf(self.getPointerPath(nodes[i], names[j]));
-                    if (index !== -1) {
-                        pointer[names[j]] = index;
+                    node = nodes[i];
+                    basePath = self.getPath(node);
+
+                    while (node) {
+                        relations = innerCore.gatherRelationsAmongSubtrees(node, nodes[j]);
+                        nodePath = self.getPath(node);
+                        if (basePath !== nodePath) {
+                            for (k = 0; k < relations.length; k += 1) {
+                                relations[k].source = relations[k].source.replace(nodePath, basePath);
+                                relations[k].sourceBase = relations[k].sourceBase.replace(nodePath, basePath);
+                            }
+                        }
+
+                        relationsToPreserve = relations.concat(relationsToPreserve);
+                        node = self.getBase(node);
                     }
                 }
-                relations.push(pointer);
             }
 
-            relidLength = relidLength || innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
-            //making the actual copy
-            copiedNodes = innerCore.copyNodes(nodes, parent, self.getChildrenRelids(parent, true), relidLength);
+            // Then collecting 2
+            for (i = 0; i < nodes.length; i += 1) {
+                for (j = 0; j < nodes.length; j += 1) {
+                    if (i === j) {
+                        continue;
+                    }
 
-            //setting internal-inherited relations
-            for (i = 0; i < nodes.length; i++) {
-                names = Object.keys(relations[i]);
-                for (j = 0; j < names.length; j++) {
-                    self.setPointer(copiedNodes[i], names[j], copiedNodes[relations[i][names[j]]]);
+                    relationsToPreserve = collectInheritanceInternalRelations(nodes[i], nodes[j])
+                        .concat(relationsToPreserve);
                 }
             }
 
-            //setting base relation
-            for (i = 0; i < nodes.length; i++) {
-                base = nodes[i].base;
-                copiedNodes[i].base = base;
-                innerCore.setPointer(copiedNodes[i], CONSTANTS.BASE_POINTER, base);
-                innerCore.deleteProperty(copiedNodes[i], CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
-            }
-
-            //searching for the longest new relid and then process it towards the bases of the parent
-            for (i = 0; i < copiedNodes.length; i += 1) {
-                j = this.getRelid(copiedNodes[i]);
-                if (j.length > longestNewRelid) {
+            // The actual copy of nodes
+            relidLength = relidLength || innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
+            for (i = 0; i < nodes.length; i += 1) {
+                node = innerCore.copyNode(nodes[i], parent, self.getChildrenRelids(parent, true), relidLength);
+                copiedNodes.push(node);
+                old2NewPath[self.getPath(nodes[i])] = CONSTANTS.PATH_SEP + self.getRelid(node);
+                j = (self.getRelid(node) || '').length;
+                if (j > longestNewRelid) {
                     longestNewRelid = j;
                 }
             }
 
-            this.processRelidReservation(parent, longestNewRelid);
+            self.processRelidReservation(parent, longestNewRelid);
+
+            // Setting the preserved relations
+            // create the relations, that have to be preserved
+            for (i = 0; i < relationsToPreserve.length; i += 1) {
+                if (old2NewPath.hasOwnProperty(relationsToPreserve[i].sourceBase) &&
+                    old2NewPath.hasOwnProperty(relationsToPreserve[i].targetBase)) {
+                    source = relationsToPreserve[i].source.replace(
+                        relationsToPreserve[i].sourceBase,
+                        old2NewPath[relationsToPreserve[i].sourceBase]
+                    );
+                    target = relationsToPreserve[i].target.replace(
+                        relationsToPreserve[i].targetBase,
+                        old2NewPath[relationsToPreserve[i].targetBase]
+                    );
+
+                    oldTarget = self.overlayInquiry(parent, source, relationsToPreserve[i].name);
+                    if (oldTarget !== null && typeof oldTarget.value === 'string') {
+                        self.overlayRemove(parent, source, relationsToPreserve[i].name, oldTarget.value);
+                    }
+                    self.overlayInsert(parent, source, relationsToPreserve[i].name, target);
+                }
+            }
+
+            // Setting bases
+            for (i = 0; i < nodes.length; i += 1) {
+                innerCore.setPointer(copiedNodes[i], CONSTANTS.BASE_POINTER, self.getBase(nodes[i]));
+                copiedNodes[i].base = nodes[i].base;
+                innerCore.deleteProperty(copiedNodes[i], CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY);
+            }
 
             // Addition to #1232
             if (isInheritedChild(parent)) {
@@ -954,51 +1033,43 @@ define([
         this.getPointerPathFrom = function (node, source, name) {
             ASSERT(self.isValidNode(node) && typeof name === 'string');
 
-            var ownPointerPath = innerCore.getPointerPathFrom(node, source, name);
-            if (ownPointerPath !== undefined) {
-                return ownPointerPath;
-            }
-            var target,
+            var baseRoot,
+                base,
                 basePath,
-                hasNullTarget = false;
+                targetPath;
 
-            basePath = node.base ? getSimpleBasePath(node.base, source, name) : undefined;
+            targetPath = innerCore.getPointerPathFrom(node, source, name);
+            if (typeof targetPath === 'string' || targetPath === null) {
+                return targetPath;
+            }
 
-            while (node) {
-                target = getTargetRelPath(node, source, name);
-                if (target !== undefined) {
-                    if (target.indexOf('_nullptr') !== -1) {
-                        hasNullTarget = true;
-                        target = undefined;
-                    } else {
-                        break;
+            base = node;
+            baseRoot = base;
+            basePath = self.getPath(base);
+            while (base) {
+                while (innerCore.getPointerPath(baseRoot, CONSTANTS.BASE_POINTER) === undefined) {
+                    basePath = self.getParentPath(basePath);
+                    baseRoot = self.getParent(baseRoot);
+                }
+                base = self.getBase(base);
+                baseRoot = self.getBase(baseRoot);
+                if (base && baseRoot) {
+                    targetPath = innerCore.getPointerPathFrom(base, source, name);
+                    if (targetPath === null) {
+                        return targetPath;
+                    }
+
+                    if (typeof targetPath === 'string') {
+                        if (self.isPathInSubTree(targetPath, self.getPath(baseRoot))) {
+                            return targetPath.replace(self.getPath(baseRoot), basePath);
+                        }
+
+                        return targetPath;
                     }
                 }
-
-                source = '/' + self.getRelid(node) + source;
-                if (getParentOfBasePath(node) === getBaseOfParentPath(node)) {
-                    node = self.getParent(node);
-                } else {
-                    node = null;
-                }
             }
 
-            if (target !== undefined) {
-                ASSERT(node);
-                target = innerCore.joinPaths(innerCore.getPath(node), target);
-            }
-
-            if (typeof target === 'string') {
-                return target;
-            }
-            if (typeof basePath === 'string') {
-                return basePath;
-            }
-            if (hasNullTarget === true) {
-                return null;
-            }
             return undefined;
-
         };
 
         this.getPointerPath = function (node, name) {
@@ -1011,7 +1082,7 @@ define([
             var relids = self.getChildrenRelids(node);
             // Remark: It's fine to mutate this array since we're using Object.keys on the cached object..
             for (var i = 0; i < relids.length; ++i) {
-                relids[i] = path + '/' + relids[i];
+                relids[i] = path + CONSTANTS.PATH_SEP + relids[i];
             }
 
             return relids;
@@ -1129,7 +1200,7 @@ define([
                     // Do not account for old relids..
                     if (nodeChildren[i].length <= CONSTANTS.MAXIMUM_STARTING_RELID_LENGTH) {
                         minRelidLength = nodeChildren[i].length + 1 > minRelidLength ?
-                        nodeChildren[i].length + 1 : minRelidLength;
+                            nodeChildren[i].length + 1 : minRelidLength;
                     }
                 }
 
