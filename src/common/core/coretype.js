@@ -878,6 +878,8 @@ define([
                 }
             }
 
+            self.processRelidReservation(parent, longestNewRelid);
+
             // Setting the preserved relations
             // create the relations, that have to be preserved
             for (i = 0; i < relationsToPreserve.length; i += 1) {
