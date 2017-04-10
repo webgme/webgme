@@ -574,7 +574,7 @@ define([
         }
 
         if (this.skinParts.pathShadow) {
-            strokeWidthAdjust = this.designerAttributes.shadowWidth;
+            strokeWidthAdjust = this.designerAttributes.width;;
             shadowAdjust = this.designerAttributes.shadowArrowEndAdjust;
         } else if (this.skinParts.path) {
             strokeWidthAdjust = this.designerAttributes.width;
