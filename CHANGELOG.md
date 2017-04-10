@@ -1,5 +1,44 @@
 # Change Log
 
+## [v2.12.0](https://github.com/webgme/webgme/tree/v2.12.0) (2017-04-10)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.11.1...v2.12.0)
+
+**Implemented enhancements:**
+
+- Allow the user to choose whether to split vertically or horizontally when using the "split view" [\#1361](https://github.com/webgme/webgme/issues/1361)
+- Have the "go to parent" button be more conveniently placed [\#1360](https://github.com/webgme/webgme/issues/1360)
+- SVG Decorator items do not align correctly [\#862](https://github.com/webgme/webgme/issues/862)
+- The selected object did not get brought to the front [\#745](https://github.com/webgme/webgme/issues/745)
+- Minor UI fixes before merge [\#1369](https://github.com/webgme/webgme/pull/1369) ([pmeijer](https://github.com/pmeijer))
+- Updates to travis and appveyor [\#1365](https://github.com/webgme/webgme/pull/1365) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1360 navigate to parent is now owned by tree-browser. [\#1364](https://github.com/webgme/webgme/pull/1364) ([pmeijer](https://github.com/pmeijer))
+- Copy nodes [\#1359](https://github.com/webgme/webgme/pull/1359) ([kecso](https://github.com/kecso))
+- Authentication enhancements for integrating/embedding webgme in other app. [\#1356](https://github.com/webgme/webgme/pull/1356) ([pmeijer](https://github.com/pmeijer))
+- Give a short introduction to webgme in README [\#1350](https://github.com/webgme/webgme/pull/1350) ([pmeijer](https://github.com/pmeijer))
+- Diagram Designer Item selection and alignment fixes [\#1347](https://github.com/webgme/webgme/pull/1347) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Client exception related to notifications and user interaction [\#1355](https://github.com/webgme/webgme/issues/1355)
+- Uncaught exception in Create Project Dialog [\#1354](https://github.com/webgme/webgme/issues/1354)
+- Uncaught exception in GraphViz [\#1349](https://github.com/webgme/webgme/issues/1349)
+- Sometimes when starting server it never comes up [\#1169](https://github.com/webgme/webgme/issues/1169)
+- Fixes \#1354 uncaught exception in create-project dialog [\#1367](https://github.com/webgme/webgme/pull/1367) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1349 Uncaught exception in GraphViz [\#1363](https://github.com/webgme/webgme/pull/1363) ([kecso](https://github.com/kecso))
+- Closes \#1355 Exception in popover for notifications [\#1357](https://github.com/webgme/webgme/pull/1357) ([pmeijer](https://github.com/pmeijer))
+- Fixing jsonPatcher testcase for copying multiple nodes. [\#1351](https://github.com/webgme/webgme/pull/1351) ([kecso](https://github.com/kecso))
+- Closes \#1169 Extra svgs are linked to and served from their actual location. [\#1348](https://github.com/webgme/webgme/pull/1348) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Add option to generate JW-token from bin script [\#1352](https://github.com/webgme/webgme/issues/1352)
+
+**Merged pull requests:**
+
+- Add print option for diagram designer that preserves colors [\#1366](https://github.com/webgme/webgme/pull/1366) ([pmeijer](https://github.com/pmeijer))
+- Panels can be split arbitrarily many times [\#1362](https://github.com/webgme/webgme/pull/1362) ([pmeijer](https://github.com/pmeijer))
+- Third option conflict [\#1353](https://github.com/webgme/webgme/pull/1353) ([kecso](https://github.com/kecso))
+
 ## [v2.11.1](https://github.com/webgme/webgme/tree/v2.11.1) (2017-03-21)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.11.0...v2.11.1)
 
