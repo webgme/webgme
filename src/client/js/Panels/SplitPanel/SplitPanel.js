@@ -125,10 +125,10 @@ define([
         // the panel instance is still null at this point.
         WebGMEGlobal.PanelManager.setActivePanel(null);
 
-        // We register one all three mouse events in case ui elements in the visualizer
-        // prevents bubbling of any of these.
+        // We register one mousedown/up events in case ui elements in the visualizer
+        // prevents bubbling one of these.
         // (Setting the same panel as active will only trigger one setActive in the PanelManager)
-        this.$el.on('mousedown click mouseup', '.' + PANEL_CONTAINER_CLASS, function (/*event*/) {
+        this.$el.on('mousedown mouseup', '.' + PANEL_CONTAINER_CLASS, function (/*event*/) {
             var el = $(this),
                 panelId = el.data(PANEL_ID_DATA_KEY);
 
