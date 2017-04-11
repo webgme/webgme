@@ -401,11 +401,72 @@ describe('gmeNodeSetter', function () {
     });
 
     it('should copy more node at once with copyNodes', function () {
-        var oldNodeCount;
+        var containerId = setNode.createNode({
+                parentId: '',
+                baseId: '/1'
+            }),
+            numOfCopies = 0,
+            nodeIds,
+            i;
 
-        oldNodeCount = Object.keys(basicState.nodes).length;
-        setNode.copyNodes(['/1303043463/2119137141', '/1303043463/1044885565'], '');
-        expect(Object.keys(basicState.nodes)).to.have.length(oldNodeCount + 2);
+        setNode.copyNodes(['/1303043463/2119137141', '/1303043463/1044885565'], containerId);
+        nodeIds = Object.keys(basicState.nodes);
+        for (i = 0; i < nodeIds.length; i += 1) {
+            if (nodeIds[i].indexOf(containerId + '/') === 0) {
+                numOfCopies += 1;
+            }
+        }
+        expect(numOfCopies).to.eql(2);
+
+        setNode.deleteNode(containerId);
+    });
+
+    it('should copy a node multiple times with copyNodes', function () {
+        var containerId = setNode.createNode({
+                parentId: '',
+                baseId: '/1'
+            }),
+            numOfCopies = 0,
+            nodeIds,
+            i;
+
+        setNode.copyNodes(['/1', '/1'], containerId);
+        nodeIds = Object.keys(basicState.nodes);
+        for (i = 0; i < nodeIds.length; i += 1) {
+            if (nodeIds[i].indexOf(containerId + '/') === 0) {
+                numOfCopies += 1;
+            }
+        }
+        expect(numOfCopies).to.eql(2);
+
+        setNode.deleteNode(containerId);
+    });
+
+    it.only('should copy a node many times with copyNodes', function () {
+        var containerId = setNode.createNode({
+                parentId: '',
+                baseId: '/1'
+            }),
+            nodesToCopy = [],
+            numOfCopies = 0,
+            nodeIds,
+            i;
+
+        for (i = 0; i < 300; i += 1) {
+            nodesToCopy.push('/1');
+        }
+        setNode.copyNodes(nodesToCopy, containerId);
+        nodeIds = Object.keys(basicState.nodes);
+        console.log(containerId);
+        console.log(nodeIds);
+        for (i = 0; i < nodeIds.length; i += 1) {
+            if (nodeIds[i].indexOf(containerId + '/') === 0) {
+                numOfCopies += 1;
+            }
+        }
+        expect(numOfCopies).to.eql(300);
+
+        setNode.deleteNode(containerId);
     });
 
     it('should copy more node at once with copyNodes and return back the new ids', function () {
