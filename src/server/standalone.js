@@ -852,7 +852,7 @@ function StandAloneServer(gmeConfig) {
         '/dist/webgme.' + nmpPackageJson.version + '.dist.build.js\n' +
         'NETWORK:\n*';
 
-    __app.get('/webgme.dist.appcache', function (req, res) {
+    __app.get('/webgme.dist.' + nmpPackageJson.version + '.appcache', function (req, res) {
         res.set('Content-Type', 'text/cache-manifest');
         res.send(cacheManifest);
     });
