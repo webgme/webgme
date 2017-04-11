@@ -835,6 +835,10 @@ define([
                         continue;
                     }
 
+                    if (nodes[i] === nodes[j]) {
+                        continue;
+                    }
+
                     node = nodes[i];
                     basePath = self.getPath(node);
 
@@ -858,6 +862,10 @@ define([
             for (i = 0; i < nodes.length; i += 1) {
                 for (j = 0; j < nodes.length; j += 1) {
                     if (i === j) {
+                        continue;
+                    }
+
+                    if (nodes[i] === nodes[j]) {
                         continue;
                     }
 
