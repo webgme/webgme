@@ -112,7 +112,8 @@ function getSVGMap(gmeConfig, logger, callback) {
                             fname, ']. Will proceed and use the latter...');
                     }
 
-                    svgMap[p] = path.join(process.cwd(), fname);
+                    fname = path.isAbsolute(fname) ? fname : path.join(process.cwd(), fname);
+                    svgMap[p] = fname;
                 });
             });
     }
