@@ -1,5 +1,13 @@
 # Change Log
 
+## [v2.12.1](https://github.com/webgme/webgme/tree/v2.12.1) (2017-04-11)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.12.0...v2.12.1)
+
+**Fixed bugs:**
+
+- Copying the same node multiple times [\#1371](https://github.com/webgme/webgme/pull/1371) ([kecso](https://github.com/kecso))
+- FIX \#1348 svgs paths failed with relative paths [\#1370](https://github.com/webgme/webgme/pull/1370) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.12.0](https://github.com/webgme/webgme/tree/v2.12.0) (2017-04-10)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.11.1...v2.12.0)
 
