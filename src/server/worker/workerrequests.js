@@ -34,8 +34,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
     function getConnectedStorage(webgmeToken, callback) {
         var deferred = Q.defer(),
-            host = '127.0.0.1', //TODO: this should come from gmeConfig
-            storage = Storage.createStorage(host, webgmeToken, logger, gmeConfig);
+            storage = Storage.createStorage(null, webgmeToken, logger, gmeConfig);
 
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {

@@ -104,28 +104,6 @@ function connectedWorkerStart(webgmeToken, projectId, branchName, callback) {
         .catch(finish);
 }
 
-//function connectedWorkerQuery(webGMESessionId, projectId, branchName, addOnId, commitHash, queryParams, callback) {
-//    logger.info('connectedWorkerQuery', addOnName);
-//    logger.debug('connectedWorkerQuery', parameters);
-//    function finish(err, message) {
-//        if (err) {
-//            err = err instanceof Error ? err : new Error(err);
-//            logger.error('connectedWorkerQuery failed', err);
-//            callback(err);
-//        } else {
-//            logger.info('connectedWorkerQuery done');
-//            callback(null, message);
-//        }
-//    }
-//
-//    if (addOnManager) {
-//        addOnManager.queryAddOn(addOnName, parameters)
-//            .nodeify(finish);
-//    } else {
-//        finish(new Error('No AddOn is running'));
-//    }
-//}
-
 function connectedWorkerStop(webgmeToken, projectId, branchName, callback) {
     var addOnManager;
 

@@ -87,7 +87,7 @@ describe('ProjectCache', function () {
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
                 socket = result.socket;
-                storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
+                storage = NodeStorage.createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);

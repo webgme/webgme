@@ -18,6 +18,8 @@ var Q = require('q'),
  * @param {string} branchName
  * @param {object} gmeConfig
  * @param {object} mainLogger
+ * @param {object} [options]
+ * @param {object} [options.webgmeUrl]
  * @constructor
  * @ignore
  */

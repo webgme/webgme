@@ -144,7 +144,7 @@ describe('storage storageclasses simpleapi', function () {
             .then(function (result) {
                 socket = result.socket;
                 webgmeToken = result.webgmeToken;
-                storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
+                storage = NodeStorage.createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);

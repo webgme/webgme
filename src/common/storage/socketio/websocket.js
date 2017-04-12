@@ -22,6 +22,7 @@ define([
         self.socket = null;
         self.userId = null;
         self.serverVersion = null;
+        self.ioClient = ioClient;
 
         logger.debug('ctor');
         EventDispatcher.call(this);

@@ -124,6 +124,14 @@ define([
             }
         };
 
+        this.getToken = function () {
+            return webSocket.ioClient.getToken();
+        };
+
+        this.setToken = function (newToken) {
+            return webSocket.ioClient.setToken(newToken);
+        };
+
         /**
          * Callback for openProject.
          *

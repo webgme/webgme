@@ -20,7 +20,6 @@ describe('storage nodestorage', function () {
 
     before(function (done) {
         server = WebGME.standaloneServer(gmeConfig);
-        host = '127.0.0.1' /*server.getUrl()*/;
         server.start(done);
     });
 
@@ -29,7 +28,7 @@ describe('storage nodestorage', function () {
     });
 
     it('should create a node storage', function () {
-        var nodeStorage = NodeStorage.createStorage(host, null, logger, gmeConfig);
+        var nodeStorage = NodeStorage.createStorage(null, null, logger, gmeConfig);
         expect(nodeStorage).to.not.equal(undefined);
         expect(nodeStorage).to.not.equal(null);
         expect(typeof nodeStorage).to.equal('object');

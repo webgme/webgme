@@ -6,6 +6,7 @@
 'use strict';
 
 var Q = require('q'),
+    superagent = require('superagent'),
     BranchMonitor = require('./branchmonitor'),
     EventDispatcher = requireJS('common/EventDispatcher'),
     STORAGE_CONSTANTS = requireJS('common/storage/constants'),
@@ -19,10 +20,12 @@ var Q = require('q'),
  * @param {object} gmeConfig
  * @param {number} gmeConfig.addOn.monitorTimeout - Time to wait before stopping a monitor after only the monitor itself
  * is connected to the branch.
+ * @param {object} [options]
+ * @param {object} [options.webgmeUrl=http://127.0.0.1:gmeConfig.server.port]
  * @constructor
  * @ignore
  */
-function AddOnManager(projectId, mainLogger, gmeConfig) {
+function AddOnManager(projectId, mainLogger, gmeConfig, options) {
     var self = this,
         host = '127.0.0.1',
         logger = mainLogger.fork('AddOnManager:' + projectId),
@@ -45,6 +48,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
     this.storage = null;
     this.initRequested = false;
     this.closeRequested = false;
+    this.renewingToken = false;
 
     this.inStoppedAndStarted = {};
 
@@ -76,7 +80,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
             initDeferred = Q.defer();
             self.initRequested = true;
 
-            self.storage = Storage.createStorage(host, webgmeToken, logger, gmeConfig);
+            self.storage = Storage.createStorage(options.webgmeUrl, webgmeToken, logger, gmeConfig);
             self.storage.open(function (networkStatus) {
                 if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
                     self.storage.openProject(projectId, function (err, project, branches, rights) {
@@ -99,6 +103,21 @@ function AddOnManager(projectId, mainLogger, gmeConfig) {
                         self.initialized = true;
                         initDeferred.resolve();
                     });
+                } else if (networkStatus === STORAGE_CONSTANTS.JWT_ABOUT_TO_EXPIRE) {
+                    if (!self.renewingToken) {
+                        self.renewingToken = true;
+                        superagent.get(webgmeUrl + '/api/user/token')
+                            .set('Authorization', 'Bearer ' + webgmeToken)
+                            .end(function (err, res) {
+                                self.renewingToken = false;
+                                if (err) {
+                                    logger.error(err);
+                                }
+
+                                webgmeToken = res.body.webgmeToken;
+
+                            });
+                    }
                 } else {
                     logger.error(new Error('Connection problems' + networkStatus));
                     self.storage.close(function (err) {

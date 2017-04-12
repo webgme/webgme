@@ -9,13 +9,11 @@
 define(['socket.io-client'], function (io) {
     'use strict';
 
-    function IoClient(host, webgmeToken, mainLogger, gmeConfig) {
+    function IoClient(hostUrl, webgmeToken, mainLogger, gmeConfig) {
         var logger = mainLogger.fork('socketio-nodeclient');
 
         this.connect = function (callback) {
-            var socketIoOptions = JSON.parse(JSON.stringify(gmeConfig.socketIO.clientOptions)),
-                protocol = 'http',
-                hostUrl = protocol + '://' + host + ':' + gmeConfig.server.port;
+            var socketIoOptions = JSON.parse(JSON.stringify(gmeConfig.socketIO.clientOptions));
 
             logger.debug('Connecting to "' + hostUrl + '" with options', {metadata: socketIoOptions});
 
@@ -32,6 +30,10 @@ define(['socket.io-client'], function (io) {
 
         this.getToken = function () {
             return webgmeToken;
+        };
+
+        this.setToken = function (newToken) {
+            webgmeToken = newToken;
         };
     }
 

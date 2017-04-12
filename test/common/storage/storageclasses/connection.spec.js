@@ -128,7 +128,7 @@ describe('storage-connection', function () {
                 var deferred = Q.defer();
                 socket = result.socket;
                 webgmeToken = result.webgmeToken;
-                res = createStorage('127.0.0.1', /*server.getUrl()*/
+                res = createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -186,7 +186,7 @@ describe('storage-connection', function () {
                 var deferred = Q.defer();
                 socket = result.socket;
                 webgmeToken = result.webgmeToken;
-                res = createStorage('127.0.0.1', /*server.getUrl()*/
+                res = createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -249,7 +249,7 @@ describe('storage-connection', function () {
                 var deferred = Q.defer();
                 socket = result.socket;
                 webgmeToken = result.webgmeToken;
-                res = createStorage('127.0.0.1', /*server.getUrl()*/
+                res = createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -327,7 +327,7 @@ describe('storage-connection', function () {
                 var deferred = Q.defer();
                 socket = result.socket;
                 webgmeToken = result.webgmeToken;
-                res = createStorage('127.0.0.1', /*server.getUrl()*/
+                res = createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -422,7 +422,7 @@ describe('storage-connection', function () {
                 var deferred = Q.defer();
                 socket = result.socket;
                 webgmeToken = result.webgmeToken;
-                res = createStorage('127.0.0.1', /*server.getUrl()*/
+                res = createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -522,7 +522,7 @@ describe('storage-connection', function () {
                 var deferred = Q.defer();
                 socket = result.socket;
                 webgmeToken = result.webgmeToken;
-                res = createStorage('127.0.0.1', /*server.getUrl()*/
+                res = createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -629,7 +629,7 @@ describe('storage-connection', function () {
                 var deferred = Q.defer();
                 socket = result.socket;
                 webgmeToken = result.webgmeToken;
-                res = createStorage('127.0.0.1', /*server.getUrl()*/
+                res = createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -743,7 +743,7 @@ describe('storage-connection', function () {
                 var deferred = Q.defer();
                 socket = result.socket;
                 webgmeToken = result.webgmeToken;
-                res = createStorage('127.0.0.1', /*server.getUrl()*/
+                res = createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
