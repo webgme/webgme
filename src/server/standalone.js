@@ -20,7 +20,6 @@ var path = require('path'),
     multipart = require('connect-multiparty'),
     Http = require('http'),
     ejs = requireJS('common/util/ejs'),
-    RANDOM = requireJS('common/util/random'),
 
     MongoAdapter = require('./storage/mongo'),
     RedisAdapter = require('./storage/datastores/redisadapter'),
