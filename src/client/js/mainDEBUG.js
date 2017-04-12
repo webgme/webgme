@@ -11,7 +11,7 @@
 var DEBUG = false,
     WebGMEGlobal = WebGMEGlobal || {};
 
-WebGMEGlobal.version = 'x';
+WebGMEGlobal.version = 'DEBUG';
 WebGMEGlobal.SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 
 

@@ -44,6 +44,10 @@ require(
         }
 
         WebGMEGlobal.gmeConfig = gmeConfig;
+        if (WebGMEGlobal.version !== 'DEBUG' && WebGMEGlobal.version !== npmJSON.version) {
+            // If the index.html was cached from a previous version force a reload of the page.
+            window.location.reload();
+        }
 
         WebGMEGlobal.version = npmJSON.version;
         WebGMEGlobal.NpmVersion = npmJSON.dist ? npmJSON.version : '';

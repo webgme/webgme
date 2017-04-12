@@ -676,8 +676,6 @@ function StandAloneServer(gmeConfig) {
                 res.setHeader('Pragma', 'no-cache'); // HTTP 1.0.
                 res.setHeader('Expires', '0'); // Proxies.
 
-                // Override the ETag with random string (26 is the length of default express tag).
-                res.setHeader('ETag', RANDOM.generateRandomString(26));
                 res.send(ejs.render(indexTemp, {
                     webgmeVersion: nmpPackageJson.version,
                     url: url,
