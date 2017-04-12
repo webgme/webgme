@@ -20,6 +20,7 @@ var path = require('path'),
     multipart = require('connect-multiparty'),
     Http = require('http'),
     ejs = requireJS('common/util/ejs'),
+    RANDOM = requireJS('common/util/random'),
 
     MongoAdapter = require('./storage/mongo'),
     RedisAdapter = require('./storage/datastores/redisadapter'),
@@ -674,6 +675,9 @@ function StandAloneServer(gmeConfig) {
                 res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // HTTP 1.1.
                 res.setHeader('Pragma', 'no-cache'); // HTTP 1.0.
                 res.setHeader('Expires', '0'); // Proxies.
+
+                // Override the ETag with random string (26 is the length of default express tag).
+                res.setHeader('ETag', RANDOM.generateRandomString(26));
                 res.send(ejs.render(indexTemp, {
                     webgmeVersion: nmpPackageJson.version,
                     url: url,

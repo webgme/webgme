@@ -62,6 +62,13 @@ define(['chance', 'common/Constants'], function (ChanceJs, CONSTANTS) {
         return relid;
     }
 
+    function generateRandomString(length) {
+        return chance.string({
+            pool: relidPool,
+            length: length
+        });
+    }
+
     function isValidRelid(relid) {
 
         if (typeof relid !== 'string') {
@@ -130,7 +137,8 @@ define(['chance', 'common/Constants'], function (ChanceJs, CONSTANTS) {
             generateRelid: generateRelid,
             isValidRelid: isValidRelid,
             isValidPath: isValidPath,
-            relidToInteger: relidToInteger
+            relidToInteger: relidToInteger,
+            generateRandomString: generateRandomString
         };
 
     return random;
