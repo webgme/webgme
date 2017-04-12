@@ -670,6 +670,11 @@ function StandAloneServer(gmeConfig) {
                 res.send(404);
             } else {
                 res.contentType('text/html');
+                //http://stackoverflow.com/questions/49547/how-to-control-web-page-caching-across-all-browsers
+                res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // HTTP 1.1.
+                res.setHeader('Pragma', 'no-cache'); // HTTP 1.0.
+                res.setHeader('Expires', '0'); // Proxies.
+
                 res.send(ejs.render(indexTemp, {
                     webgmeVersion: nmpPackageJson.version,
                     url: url,
@@ -852,7 +857,7 @@ function StandAloneServer(gmeConfig) {
         '/dist/webgme.' + nmpPackageJson.version + '.dist.build.js\n' +
         'NETWORK:\n*';
 
-    __app.get('/webgme.dist.appcache', function (req, res) {
+    __app.get('/webgme.dist.' + nmpPackageJson.version + '.appcache', function (req, res) {
         res.set('Content-Type', 'text/cache-manifest');
         res.send(cacheManifest);
     });
