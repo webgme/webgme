@@ -670,6 +670,7 @@ function StandAloneServer(gmeConfig) {
                 res.send(404);
             } else {
                 res.contentType('text/html');
+                res.setHeader('Cache-Control', 'no-cache');
                 res.send(ejs.render(indexTemp, {
                     webgmeVersion: nmpPackageJson.version,
                     url: url,
