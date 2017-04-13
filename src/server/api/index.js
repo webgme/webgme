@@ -1593,14 +1593,14 @@ function createAPI(app, mountPath, middlewareOpts) {
             .then(function (projectAccess) {
 
                 if (projectAccess && projectAccess.read) {
-                    return metadataStorage.getProject(projectId);
+                    return metadataStorage.getProjectHooks(projectId);
                 }
 
                 res.status(403);
                 throw new Error('Not authorized to read project [' + projectId + ']');
             })
-            .then(function (projectData) {
-                res.json(projectData.hooks || {});
+            .then(function (hooks) {
+                res.json(hooks);
             })
             .catch(function (err) {
                 if (err.message.indexOf('no such project') > -1) {
@@ -1622,21 +1622,17 @@ function createAPI(app, mountPath, middlewareOpts) {
             .then(function (projectAccess) {
 
                 if (projectAccess && projectAccess.read) {
-                    return metadataStorage.getProject(projectId);
+                    return metadataStorage.getProjectHook(projectId);
                 }
 
                 res.status(403);
                 throw new Error('Not authorized to read project [' + projectId + ']');
             })
-            .then(function (projectData) {
-                if (projectData.hooks && projectData.hooks[req.params.hookId]) {
-                    res.json(projectData.hooks[req.params.hookId]);
-                } else {
-                    res.sendStatus(404);
-                }
+            .then(function (hook) {
+                res.json(hook);
             })
             .catch(function (err) {
-                if (err.message.indexOf('no such project') > -1) {
+                if (err.message.indexOf('no such project') > -1 || err.message.indexOf('no such hook') > -1) {
                     res.status(404);
                 }
 
@@ -1646,7 +1642,6 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.put('/projects/:ownerId/:projectName/hooks/:hookId', ensureAuthenticated, function (req, res, next) {
         var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
-            projectData,
             userId = getUserId(req),
             projectAuthParams = {
                 entityType: authorizer.ENTITY_TYPES.PROJECT
@@ -1655,40 +1650,20 @@ function createAPI(app, mountPath, middlewareOpts) {
         authorizer.getAccessRights(userId, projectId, projectAuthParams)
             .then(function (projectAccess) {
                 if (projectAccess && projectAccess.write) {
-                    return metadataStorage.getProject(projectId);
+                    return metadataStorage.getProject(projectId, req.params.hookId, req.body);
                 }
 
                 res.status(403);
                 throw new Error('Not authorized to modify project [' + projectId + ']');
             })
-            .then(function (projectData_) {
-                var now = (new Date()).toISOString();
-
-                projectData = projectData_;
-                if (projectData.hooks && projectData.hooks[req.params.hookId]) {
-                    res.status(403);
-                    throw new Error('Hook \'' + req.params.hookId + '\' already exists for this project!');
-                } else {
-                    projectData.hooks = projectData.hooks || {};
-
-                    //fill out default information:
-                    // TODO do we need some checking for a minimal syntax???
-                    if (req.body.active !== false) {
-                        req.body.active = true;
-                    }
-                    req.body.createdAt = now;
-                    req.body.updatedAt = now;
-                    projectData.hooks[req.params.hookId] = req.body;
-
-                    return metadataStorage.updateProjectHooks(projectId, projectData.hooks);
-                }
-            })
-            .then(function () {
-                res.json(projectData.hooks[req.params.hookId]);
+            .then(function (hook) {
+                res.json(hook);
             })
             .catch(function (err) {
                 if (err.message.indexOf('no such project') > -1) {
                     res.status(404);
+                } else if (err.message.indexOf('hook already exists') > -1) {
+                    res.status(403);
                 }
                 next(err);
             });
@@ -1696,7 +1671,6 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.patch('/projects/:ownerId/:projectName/hooks/:hookId', ensureAuthenticated, function (req, res, next) {
         var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
-            projectData,
             userId = getUserId(req),
             projectAuthParams = {
                 entityType: authorizer.ENTITY_TYPES.PROJECT
@@ -1706,39 +1680,17 @@ function createAPI(app, mountPath, middlewareOpts) {
             .then(function (projectAccess) {
 
                 if (projectAccess && projectAccess.write) {
-                    return metadataStorage.getProject(projectId);
+                    return metadataStorage.updateProjectHook(projectId, req.params.hookId, req.body);
                 }
 
                 res.status(403);
                 throw new Error('Not authorized to modify project [' + projectId + ']');
             })
-            .then(function (projectData_) {
-                var now = (new Date()).toISOString(),
-                    hook;
-
-                projectData = projectData_;
-                if (projectData.hooks && projectData.hooks[req.params.hookId]) {
-                    hook = projectData.hooks[req.params.hookId];
-
-                    hook.events = req.body.events || hook.events;
-                    hook.description = req.body.description || hook.description;
-                    hook.url = req.body.url || hook.url;
-                    if (req.body.active === true || req.body.active === false) {
-                        hook.active = req.body.active;
-                    }
-                    req.body.updatedAt = now;
-
-                    return metadataStorage.updateProjectHooks(projectId, projectData.hooks);
-                } else {
-                    res.status(404);
-                    throw new Error('Cannot updated unknown [' + req.params.hookId + '] hook!');
-                }
-            })
-            .then(function () {
-                res.json(projectData.hooks[req.params.hookId]);
+            .then(function (hook) {
+                res.json(hook);
             })
             .catch(function (err) {
-                if (err.message.indexOf('no such project') > -1) {
+                if (err.message.indexOf('no such project') > -1 || err.message.indexOf('no such hook') > -1) {
                     res.status(404);
                 }
                 next(err);
@@ -1747,7 +1699,6 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.delete('/projects/:ownerId/:projectName/hooks/:hookId', ensureAuthenticated, function (req, res, next) {
         var projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId, req.params.projectName),
-            projectData,
             userId = getUserId(req),
             projectAuthParams = {
                 entityType: authorizer.ENTITY_TYPES.PROJECT
@@ -1757,28 +1708,17 @@ function createAPI(app, mountPath, middlewareOpts) {
             .then(function (projectAccess) {
 
                 if (projectAccess && projectAccess.write) {
-                    return metadataStorage.getProject(projectId);
+                    return metadataStorage.removeProjectHook(projectId, req.params.hookId);
                 }
 
                 res.status(403);
                 throw new Error('Not authorized to modify project [' + projectId + ']');
             })
-            .then(function (projectData_) {
-                projectData = projectData_;
-                if (projectData.hooks && projectData.hooks[req.params.hookId]) {
-                    delete projectData.hooks[req.params.hookId];
-
-                    return metadataStorage.updateProjectHooks(projectId, projectData.hooks);
-                } else {
-                    res.status(404);
-                    throw new Error('Cannot delete unknown [' + req.params.hookId + '] hook!');
-                }
-            })
-            .then(function () {
-                res.json(projectData.hooks);
+            .then(function (hooks) {
+                res.json(hooks);
             })
             .catch(function (err) {
-                if (err.message.indexOf('no such project') > -1) {
+                if (err.message.indexOf('no such project') > -1 || err.message.indexOf('no such hook') > -1) {
                     res.status(404);
                 }
                 next(err);
