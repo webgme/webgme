@@ -6,7 +6,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['common/core/constants'], function (CoreConstants) {
+define(['common/core/constants', 'common/storage/constants'], function (CORE, STORAGE) {
     'use strict';
     //return string constants
     return {
@@ -51,7 +51,17 @@ define(['common/core/constants'], function (CoreConstants) {
          */
         RELATION_CONTAINMENT: 'containment',
 
-        CORE: CoreConstants
+        CORE: CORE,
+        STORAGE: STORAGE,
 
+        WEBHOOK_EVENTS: {
+            BRANCH_DELETED: 'BRANCH_DELETED',
+            BRANCH_CREATED: 'BRANCH_CREATED',
+            BRANCH_HASH_UPDATED: 'BRANCH_HASH_UPDATED',
+            TAG_DELETED: 'TAG_DELETED',
+            TAG_CREATED: 'TAG_CREATED',
+            COMMIT: 'COMMIT',
+            PROJECT_DELETED: 'PROJECT_DELETED'
+        }
     };
 });
