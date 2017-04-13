@@ -972,6 +972,113 @@ describe('GME authentication', function () {
             .nodeify(done);
     });
 
+    // Project hooks
+    it('should add a hook that did not exist', function (done) {
+        var projectName = 'project_with_hooks1',
+            ownerName = 'someUser',
+            hookData = {
+                url: 'http://my.org'
+            };
+
+        auth.metadataStorage.addProject(ownerName, projectName, {})
+            .then(function (projectId) {
+
+                return auth.metadataStorage.addProjectHook(projectId, 'hookId', hookData);
+            })
+            .then(function (data) {
+                expect(data.url).to.equal(hookData.url);
+                expect(data.events).to.deep.equal([]);
+                expect(data.active).to.equal(true);
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to add a hook that exists', function (done) {
+        var projectName = 'project_with_hooks2',
+            ownerName = 'someUser',
+            hookData = {
+                url: 'http://my.org'
+            },
+            projectId;
+
+        auth.metadataStorage.addProject(ownerName, projectName, {})
+            .then(function (projectId_) {
+                projectId = projectId_;
+                return auth.metadataStorage.addProjectHook(projectId, 'exists', hookData);
+            })
+            .then(function (/*data*/) {
+                return auth.metadataStorage.addProjectHook(projectId, 'exists', hookData);
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('hook already exists');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to add a hook with faulty events', function (done) {
+        var projectName = 'project_with_hooks3',
+            ownerName = 'someUser',
+            hookData = {
+                url: 'http://my.org',
+                events: ['NOT_A_VALID_EVENT']
+            },
+            projectId;
+
+        auth.metadataStorage.addProject(ownerName, projectName, {})
+            .then(function (projectId_) {
+                projectId = projectId_;
+                return auth.metadataStorage.addProjectHook(projectId, 'hookId', hookData);
+            })
+            .then(function (data) {
+                throw new Error('Should have failed:' + JSON.stringify(data));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('not among valid events');
+            })
+            .nodeify(done);
+    });
+
+    it('should add a hook with events="all"', function (done) {
+        var projectName = 'project_with_hooks4',
+            ownerName = 'someUser',
+            hookData = {
+                url: 'http://my.org',
+                events: 'all'
+            },
+            projectId;
+
+        auth.metadataStorage.addProject(ownerName, projectName, {})
+            .then(function (projectId_) {
+                projectId = projectId_;
+                return auth.metadataStorage.addProjectHook(projectId, 'hookId', hookData);
+            })
+            .then(function (data) {
+                expect(data.events).to.equal('all');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to add a hook with no url', function (done) {
+        var projectName = 'project_with_hooks5',
+            ownerName = 'someUser',
+            hookData = {
+            },
+            projectId;
+
+        auth.metadataStorage.addProject(ownerName, projectName, {})
+            .then(function (projectId_) {
+                projectId = projectId_;
+                return auth.metadataStorage.addProjectHook(projectId, 'hookId', hookData);
+            })
+            .then(function (data) {
+                throw new Error('Should have failed:' + JSON.stringify(data));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('data.url empty or not a string');
+            })
+            .nodeify(done);
+    });
+
     // Organizations
     it('should fail to get non existent organization', function (done) {
         auth.getOrganization('does_not_exist')

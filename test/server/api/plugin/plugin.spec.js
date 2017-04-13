@@ -83,9 +83,9 @@ describe('PLUGIN REST API', function () {
                     });
             });
 
-            it.skip('should list all available metadata for plugins and null where none exist /api/plugins/metadata',
+            it('should list all available metadata for plugins and null where none exist /api/plugins/metadata',
                 function (done) {
-                    var testPlugins = ['InvalidActiveNode', 'MultipleMainCallbackCalls', 'PluginForked'],
+                    var testPlugins = [],
                         pluginNames;
 
                     agent.get(server.getUrl() + '/api/v1/plugins')
@@ -102,7 +102,7 @@ describe('PLUGIN REST API', function () {
                                     expect(Object.keys(metadata)).to.deep.equal(pluginNames);
                                     pluginNames.forEach(function (name) {
                                         if (testPlugins.indexOf(name) === -1) {
-                                            expect(Object.keys(metadata[name])).to.deep.equal([
+                                            expect(Object.keys(metadata[name])).to.include.members([
                                                 'id',
                                                 'name',
                                                 'version',

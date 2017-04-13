@@ -7,7 +7,7 @@
 'use strict';
 
 var Q = require('q'),
-    STORAGE_CONSTANTS = requireJS('common/storage/constants'),
+    CONSTANTS = requireJS('common/Constants'),
     storageUtil = requireJS('common/storage/util');
 
 function MetadataStorage(mainLogger, gmeConfig) {
@@ -145,10 +145,10 @@ function MetadataStorage(mainLogger, gmeConfig) {
         return self.projectCollection.findOne({_id: projectId})
             .then(function (projectData) {
                 if (!projectData) {
-                    return Q.reject(new Error('no such project [' + projectId + ']'));
+                    throw new Error('no such project [' + projectId + ']');
                 }
 
-                STORAGE_CONSTANTS.PROJECT_INFO_KEYS.forEach(function (infoKey) {
+                CONSTANTS.STORAGE.PROJECT_INFO_KEYS.forEach(function (infoKey) {
                     projectData.info[infoKey] = info[infoKey] || projectData.info[infoKey];
                 });
 
@@ -160,11 +160,48 @@ function MetadataStorage(mainLogger, gmeConfig) {
             .nodeify(callback);
     }
 
+    function _ensureValidEvents(events) {
+        var i;
+
+        if (events instanceof Array === false) {
+            if (events !== 'all') {
+                throw new Error('Event [' + events + '] is not array and not "all"');
+            }
+        } else {
+            for (i = 0; i < events.length; i += 1) {
+                if (CONSTANTS.WEBHOOK_EVENTS.hasOwnProperty(events[i]) === false) {
+                    throw new Error('Event [' + events[i] + '] not among valid events. Valid events: ' +
+                        Object.keys(CONSTANTS.WEBHOOK_EVENTS));
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * @param projectId
+     * @param callback
+     */
+    function getProjectHooks(projectId, callback) {
+        return getProject(projectId)
+            .then(function (projectData) {
+                return projectData.hooks;
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     * This method isn't safe and should only be used privately or for removing all hooks.
+     * @param projectId
+     * @param hooks
+     * @param callback
+     * @returns {*}
+     */
     function updateProjectHooks(projectId, hooks, callback) {
         return self.projectCollection.findOne({_id: projectId})
             .then(function (projectData) {
                 if (!projectData) {
-                    return Q.reject(new Error('no such project [' + projectId + ']'));
+                    throw new Error('no such project [' + projectId + ']');
                 }
 
                 // always update webhook information as a whole to allow remove and create and update as well
@@ -174,6 +211,164 @@ function MetadataStorage(mainLogger, gmeConfig) {
             })
             .then(function () {
                 return getProject(projectId);
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param projectId
+     * @param hookId
+     * @param callback
+     */
+    function getProjectHook(projectId, hookId, callback) {
+        return getProjectHooks(projectId)
+            .then(function (hooks) {
+                if (typeof hookId !== 'string' || !hookId) {
+                    throw new Error('hookId empty or not a string [' + hookId + ']');
+                }
+
+                if (hooks.hasOwnProperty(hookId) === false) {
+                    throw new Error('no such hook [' + hookId + ']');
+                }
+
+                return hooks[hookId];
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param {string} projectId
+     * @param {string} hookId
+     * @param {object} data
+     * @param [callback]
+     * @returns {*}
+     */
+    function addProjectHook(projectId, hookId, data, callback) {
+        return getProjectHooks(projectId)
+            .then(function (hooks) {
+                var now = (new Date()).toISOString(),
+                    hookData = {
+                        createdAt: now,
+                        updatedAt: now,
+                        active: true,
+                        description: 'No description given',
+                        events: []
+                };
+
+                if (typeof hookId !== 'string' || !hookId) {
+                    throw new Error('hookId empty or not a string [' + hookId + ']');
+                }
+
+                if (typeof data.url !== 'string' || !data.url) {
+                    throw new Error('data.url empty or not a string [' + data.url + ']');
+                }
+
+                if (data.events) {
+                    _ensureValidEvents(data.events);
+                }
+
+                if (hooks.hasOwnProperty(hookId) === true) {
+                    throw new Error('hook already exists [' + hookId + ']');
+                }
+
+                hookData.url = data.url;
+
+                if (data.active === false) {
+                    hookData.active = false;
+                }
+
+                hookData.description = data.description || hookData.description;
+                hookData.events = data.events || hookData.events;
+
+                hooks[hookId] = hookData;
+
+                return updateProjectHooks(projectId, hooks);
+            })
+            .then(function (projectData) {
+                return projectData.hooks[hookId];
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param {string} projectId
+     * @param {string} hookId
+     * @param {object} data
+     * @param [callback]
+     * @returns {*}
+     */
+    function updateProjectHook(projectId, hookId, data, callback) {
+        return self.projectCollection.findOne({_id: projectId})
+            .then(function (projectData) {
+                if (!projectData) {
+                    throw new Error('no such project [' + projectId + ']');
+                }
+
+                if (typeof hookId !== 'string' || !hookId) {
+                    throw new Error('hookId empty or not a string [' + hookId + ']');
+                }
+
+                if (!projectData.hooks[hookId]) {
+                    throw new Error('no such hook [' + hookId + ']');
+                }
+
+                if (data.url) {
+                    if (typeof data.url !== 'string') {
+                        throw new Error('data.url not a string [' + data.url + ']');
+                    }
+
+                    projectData.hooks[hookId].url = data.url;
+                }
+
+                if (data.events) {
+                    _ensureValidEvents(data.events);
+
+                    projectData.hooks[hookId].events = data.events;
+                }
+
+                if (data.active === false) {
+                    projectData.hooks[hookId].active = false;
+                }
+
+                projectData.hooks[hookId].description = data.description || projectData.hooks[hookId].description;
+
+                projectData.hooks[hookId].updatedAt = (new Date()).toISOString();
+
+                return self.projectCollection.updateOne({_id: projectId}, projectData, {upsert: true});
+            })
+            .then(function () {
+                return getProjectHook(projectId, hookId);
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param {string} projectId
+     * @param {string} hookId
+     * @param [callback]
+     * @returns {*}
+     */
+    function removeProjectHook(projectId, hookId, callback) {
+        return getProjectHooks(projectId)
+            .then(function (hooks) {
+                if (typeof hookId !== 'string' || !hookId) {
+                    throw new Error('hookId empty or not a string [' + hookId + ']');
+                }
+
+                if (hooks.hasOwnProperty(hookId) === false) {
+                    throw new Error('no such hook [' + hookId + ']');
+                }
+
+                delete hooks[hookId];
+
+                return updateProjectHooks(projectId, hooks);
+            })
+            .then(function (projectData) {
+                return projectData.hooks;
             })
             .nodeify(callback);
     }
@@ -188,7 +383,13 @@ function MetadataStorage(mainLogger, gmeConfig) {
         deleteProject: deleteProject,
         transferProject: transferProject,
         updateProjectInfo: updateProjectInfo,
-        updateProjectHooks: updateProjectHooks
+
+        getProjectHooks: getProjectHooks,
+        getProjectHook: getProjectHook,
+        addProjectHook: addProjectHook,
+        updateProjectHooks: updateProjectHooks,
+        updateProjectHook: updateProjectHook,
+        removeProjectHook: removeProjectHook
     };
 }
 
