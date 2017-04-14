@@ -30,11 +30,9 @@ describe('metadatastorage', function () {
     });
 
     after(function (done) {
-        auth.unload()
-            .nodeify(done);
+        auth.unload(done);
     });
 
-    // _projects
     it('should add and get a project', function (done) {
         var projectName = 'newly_added_project',
             ownerName = 'someUser',
@@ -424,6 +422,7 @@ describe('metadatastorage', function () {
                 throw new Error('Should have failed:' + JSON.stringify(data));
             })
             .catch(function (err) {
+                console.log(err.stack);
                 expect(err.message).to.include('no such project');
             })
             .nodeify(done);
