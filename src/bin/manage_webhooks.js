@@ -118,14 +118,21 @@ function main(argv) {
         });
 
     program
-        .command('remove <projectName> <webhookId>')
-        .description('removes given webhook')
-        .action(function (projectName, webhookId, options) {
+        .command('add <projectName> <webhookId> <url>')
+        .description('adds a new webhook')
+        .option('-e, --events [string]',
+            'events it should be triggered by (comma separated with no spaces) default [].', list)
+        .option('-d, --description [string]', 'description of hook', 'No description given')
+        .action(function (projectName, webhookId, url, options) {
             getMetadataStorageAndProjectId(options.parent.mongoDatabaseUri, projectName, options.parent.owner)
                 .then(function (d) {
-                    return d.store.removeProjectHook(d.projectId, webhookId);
-            })
-            .catch(deferred.reject)
+                    return d.store.addProjectHook(d.projectId, webhookId, {
+                        url: url,
+                        events: options.events,
+                        description: options.description
+                    });
+                })
+                .catch(deferred.reject)
                 .finally(gmeAuth.unload);
         })
         .on('--help', function () {
@@ -135,11 +142,13 @@ function main(argv) {
         });
 
     program
-        .command('add <projectName> <webhookId> <url>')
+        .command('update <projectName> <webhookId>')
         .description('adds a new webhook')
+        .option('-u, --url [string]', 'url of webhook handler')
         .option('-e, --events [string]',
-            'events it should be triggered by (comma separated with no spaces) default ["all"].', list)
+            'events it should be triggered by (comma separated with no spaces).', list)
         .option('-d, --description [string]', 'description', 'No description given')
+
         .action(function (projectName, webhookId, url, options) {
             getMetadataStorageAndProjectId(options.parent.mongoDatabaseUri, projectName, options.parent.owner)
                 .then(function (d) {
@@ -148,6 +157,23 @@ function main(argv) {
                         events: options.events,
                         description: options.description
                     });
+                })
+                .catch(deferred.reject)
+                .finally(gmeAuth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node webhookmanager.js');
+        });
+
+    program
+        .command('remove <projectName> <webhookId>')
+        .description('removes given webhook')
+        .action(function (projectName, webhookId, options) {
+            getMetadataStorageAndProjectId(options.parent.mongoDatabaseUri, projectName, options.parent.owner)
+                .then(function (d) {
+                    return d.store.removeProjectHook(d.projectId, webhookId);
                 })
                 .catch(deferred.reject)
                 .finally(gmeAuth.unload);

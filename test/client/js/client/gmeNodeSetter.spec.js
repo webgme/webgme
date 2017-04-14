@@ -442,7 +442,7 @@ describe('gmeNodeSetter', function () {
         setNode.deleteNode(containerId);
     });
 
-    it.only('should copy a node many times with copyNodes', function () {
+    it('should copy a node many times with copyNodes', function () {
         var containerId = setNode.createNode({
                 parentId: '',
                 baseId: '/1'
@@ -457,8 +457,8 @@ describe('gmeNodeSetter', function () {
         }
         setNode.copyNodes(nodesToCopy, containerId);
         nodeIds = Object.keys(basicState.nodes);
-        console.log(containerId);
-        console.log(nodeIds);
+        // console.log(containerId);
+        // console.log(nodeIds);
         for (i = 0; i < nodeIds.length; i += 1) {
             if (nodeIds[i].indexOf(containerId + '/') === 0) {
                 numOfCopies += 1;
