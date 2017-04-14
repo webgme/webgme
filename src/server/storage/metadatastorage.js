@@ -62,7 +62,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
         return self.projectCollection.findOne({_id: projectId})
             .then(function (projectData) {
                 if (!projectData) {
-                    return Q.reject(new Error('no such project [' + projectId + ']'));
+                    throw new Error('no such project [' + projectId + ']');
                 }
 
                 projectData.hooks = projectData.hooks || {};
