@@ -1057,21 +1057,30 @@ describe('PROJECT REST API', function () {
                         agent.put(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/hooks/one')
                             .send(hookData)
                             .end(function (err, res) {
+
                                 expect(res.status).equal(200, err);
 
                                 agent.get(server.getUrl() + '/api/projects/' +
                                     projectName2APIPath(projectName) + '/hooks/one')
                                     .end(function (err, res) {
-                                        expect(res.status).equal(200, err);
-                                        expect(res.body.events).to.equal(hookData.events);
-                                        expect(res.body.url).to.equal(hookData.url);
+                                        try {
+                                            expect(res.status).equal(200, err);
+                                            expect(res.body.events).to.equal(hookData.events);
+                                            expect(res.body.url).to.equal(hookData.url);
+                                        } catch (e) {
+                                            return done(e);
+                                        }
 
                                         agent.get(server.getUrl() + '/api/projects/' +
                                             projectName2APIPath(projectName) + '/hooks')
                                             .end(function (err, res) {
-                                                expect(res.status).equal(200, err);
-                                                expect(res.body.one.events).to.equal(hookData.events);
-                                                expect(res.body.one.url).to.equal(hookData.url);
+                                                try {
+                                                    expect(res.status).equal(200, err);
+                                                    expect(res.body.one.events).to.equal(hookData.events);
+                                                    expect(res.body.one.url).to.equal(hookData.url);
+                                                } catch (e) {
+                                                    return done(e);
+                                                }
 
                                                 agent.delete(server.getUrl() + '/api/projects/' +
                                                     projectName2APIPath(projectName) + '/hooks/one')
@@ -1081,8 +1090,12 @@ describe('PROJECT REST API', function () {
                                                         agent.get(server.getUrl() + '/api/projects/' +
                                                             projectName2APIPath(projectName) + '/hooks')
                                                             .end(function (err, res) {
-                                                                expect(res.status).equal(200, err);
-                                                                expect(res.body).to.eql({});
+                                                                try {
+                                                                    expect(res.status).equal(200, err);
+                                                                    expect(res.body).to.eql({});
+                                                                } catch (e) {
+                                                                    return done(e);
+                                                                }
 
                                                                 done();
                                                             });
@@ -1184,7 +1197,7 @@ describe('PROJECT REST API', function () {
                     });
             });
 
-            it('should 404 on listing unknown webhook', function (done) {
+            it('should 404 on listing nonexisting webhook', function (done) {
                 agent.get(server.getUrl() + '/api/projects/' +
                     projectName2APIPath(projectName) + '/hooks/one')
                     .end(function (err, res) {
@@ -1194,7 +1207,17 @@ describe('PROJECT REST API', function () {
                     });
             });
 
-            it('should 404 on update unknown webhook', function (done) {
+            it('should 403 on listing nonexisting project webhook', function (done) {
+                agent.get(server.getUrl() + '/api/projects/' +
+                    projectName2APIPath('doesNotExist') + '/hooks/one')
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+
+                        done();
+                    });
+            });
+
+            it('should 404 on update non-existing webhook', function (done) {
                 agent.patch(server.getUrl() + '/api/projects/' +
                     projectName2APIPath(projectName) + '/hooks/one')
                     .send({})
@@ -1205,18 +1228,38 @@ describe('PROJECT REST API', function () {
                     });
             });
 
+            it('should 404 on delete non-existing webhook', function (done) {
+                agent.del(server.getUrl() + '/api/projects/' +
+                    projectName2APIPath(projectName) + '/hooks/one')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+
+                        done();
+                    });
+            });
+
+            it('should 403 on delete non-existing project webhook', function (done) {
+                agent.del(server.getUrl() + '/api/projects/' +
+                    projectName2APIPath('doesNotExist') + '/hooks/one')
+                    .end(function (err, res) {
+                        expect(res.status).equal(403, err);
+
+                        done();
+                    });
+            });
+
             //squash
             it('should squash commits', function (done) {
                 agent.get(server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches')
                     .end(function (err, res) {
-                        expect(res.body).to.contains.keys['master'];
+                        expect(res.body).to.contains.keys.master;
                         agent.put(server.getUrl() + '/api/projects/' +
                             projectName2APIPath(projectName) + '/squash')
                             .send({
                                 fromCommit: res.body.master,
                                 toCommitOrBranch: res.body.master
                             })
-                            .end(function (err, res) {
+                            .end(function (err) {
                                 expect(err).to.eql(null);
                                 done();
                             });
@@ -1689,8 +1732,8 @@ describe('PROJECT REST API', function () {
             safeStorage,
             gmeAuth,
             projectAuthParams,
-            pr2Id = testFixture.projectName2Id,
-            guestAccount = gmeConfig.authentication.guestAccount;
+            pr2Id = testFixture.projectName2Id;
+            //guestAccount = gmeConfig.authentication.guestAccount;
 
         before(function (done) {
             var gmeConfig = testFixture.getGmeConfig();

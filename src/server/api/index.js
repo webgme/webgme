@@ -1622,7 +1622,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             .then(function (projectAccess) {
 
                 if (projectAccess && projectAccess.read) {
-                    return metadataStorage.getProjectHook(projectId);
+                    return metadataStorage.getProjectHook(projectId, req.params.hookId);
                 }
 
                 res.status(403);
@@ -1650,7 +1650,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         authorizer.getAccessRights(userId, projectId, projectAuthParams)
             .then(function (projectAccess) {
                 if (projectAccess && projectAccess.write) {
-                    return metadataStorage.getProject(projectId, req.params.hookId, req.body);
+                    return metadataStorage.addProjectHook(projectId, req.params.hookId, req.body);
                 }
 
                 res.status(403);
