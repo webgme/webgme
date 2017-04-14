@@ -35,13 +35,17 @@ function main(argv) {
                 MongoURI.parse(mongoUri);
             } catch (e) {
                 authDeferred.reject(e);
+                gmeAuth = {
+                    unload: function () {
+                        return Q();
+                    }
+                };
+
                 return authDeferred.promise;
             }
 
             gmeConfig.mongo.uri = mongoUri;
         }
-
-        ownerId = ownerId || gmeConfig.authentication.guestAccount;
 
         gmeAuth = new GMEAuth(null, gmeConfig);
         gmeAuth.connect()
@@ -70,8 +74,10 @@ function main(argv) {
 
     program
         .version('2.12.0')
-        .option('-o, --owner [string]', 'owner of the project [by default, the guest account is the owner]')
-        .option('-m, --mongo-database-uri [string]', 'URI of the MongoDB [by default the one in gmeConfig]')
+        .option('-o, --owner [string]', 'owner of the project [by default, the guest account is the owner]',
+            gmeConfig.authentication.guestAccount)
+        .option('-m, --mongo-database-uri [string]', 'URI of the MongoDB [by default the one in gmeConfig]',
+            gmeConfig.mongo.uri)
         .on('--help', function () {
             console.log('Use this script to list, add, update or remove webhooks registered for a given project.');
             console.log();
