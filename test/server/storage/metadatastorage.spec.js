@@ -425,7 +425,10 @@ describe('metadatastorage', function () {
                 console.log(err.stack);
                 expect(err.message).to.include('no such project');
             })
-            .nodeify(done);
+            .nodeify(function (err) {
+                console.log('done is of type:', typeof done);
+                done(err);
+            });
     });
 
     it('should fail to get hook if it does not exist', function (done) {

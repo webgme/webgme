@@ -456,7 +456,6 @@ function Mongo(mainLogger, gmeConfig) {
                     deferred.resolve(new MongoProject(projectId, collection));
                 })
                 .catch(function (err) {
-                    console.log(err);
                     if (err.message.indexOf('does not exist') > -1) {
                         deferred.reject(new Error('Project does not exist ' + projectId));
                     } else {
