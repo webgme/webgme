@@ -15,15 +15,11 @@ describe('Webhook Manager', function () {
                 listeners[event].push(eventFn);
             }
 
-            function remove(eventFn) {
-                var events = Object.keys(listeners),
-                    i;
-                for (i = 0; i < events.length; i += 1) {
-                    if (listeners[events[i]].indexOf(eventFn) !== -1) {
-                        listeners[events[i]].splice(listeners[events[i]].indexOf(eventFn), 1);
-                        if (listeners[events[i]].length === 0) {
-                            delete listeners[events[i]];
-                        }
+            function remove(event, eventFn) {
+                if (listeners[event] && listeners[event].indexOf(eventFn) !== -1) {
+                    listeners[event].splice(listeners[event].indexOf(eventFn), 1);
+                    if (listeners[event].length === 0) {
+                        delete listeners[event];
                     }
                 }
             }

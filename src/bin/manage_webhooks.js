@@ -9,7 +9,6 @@
 
 var webgme = require('../../webgme'),
     path = require('path'),
-    fs = require('fs'),
     Q = require('q'),
     MongoURI = require('mongo-uri'),
     GMEAuth = require('../server/middleware/auth/gmeauth'),
@@ -23,7 +22,7 @@ function main(argv) {
         gmeAuth,
         args = Array.prototype.slice.call(argv);
 
-    if (args.length === 2) {
+    if (args.length === 2 || args.length === 3) {
         args.push('--help');
     }
 
@@ -51,10 +50,10 @@ function main(argv) {
                     throw new Error('projectName not provided!');
                 }
 
-                return {
+                authDeferred.resolve({
                     store: gmeAuth.metadataStorage,
                     projectId: ownerId + CONSTANTS.STORAGE.PROJECT_ID_SEP + projectName
-                };
+                });
             })
             .catch(authDeferred.reject);
 
@@ -78,7 +77,30 @@ function main(argv) {
             console.log();
             console.log('  Examples:');
             console.log();
-            console.log('    $ node webhookmanager.js');
+            console.log('    $ node manage_webhooks.js --help');
+            console.log('    $ node manage_webhooks.js listAll MyProject --owner guest');
+            console.log('    $ node manage_webhooks.js add MyProject MyHook http://localhost:8080 -e all');
+            console.log('    $ node manage_webhooks.js update --help');
+            deferred.resolve();
+        });
+
+    program
+        .command('listAll <projectName>')
+        .description('list all webhooks registered for given project')
+        .action(function (projectName, options) {
+            getMetadataStorageAndProjectId(options.parent.mongoDatabaseUri, projectName, options.parent.owner)
+                .then(function (d) {
+                    return d.store.getProjectHooks(d.projectId);
+                })
+                .then(deferred.resolve)
+                .catch(deferred.reject)
+                .finally(gmeAuth.unload);
+        })
+        .on('--help', function () {
+            console.log('  Examples:');
+            console.log();
+            console.log('    $ node manage_webhooks.js listAll MyProject --owner guest');
+
             deferred.resolve();
         });
 
@@ -90,31 +112,16 @@ function main(argv) {
                 .then(function (d) {
                     return d.store.getProjectHook(d.projectId, webhookId);
                 })
+                .then(deferred.resolve)
                 .catch(deferred.reject)
                 .finally(gmeAuth.unload);
         })
         .on('--help', function () {
             console.log('  Examples:');
             console.log();
-            console.log('    $ node webhookmanager.js');
-        });
+            console.log('    $ node manage_webhooks.js list MyProject MyHook --owner me');
 
-    program
-        .command('listAll <projectName>')
-        .description('list all webhooks registered for project')
-        .option('-v, --verbose', 'list all details', false)
-        .action(function (projectName, options) {
-            getMetadataStorageAndProjectId(options.parent.mongoDatabaseUri, projectName, options.parent.owner)
-                .then(function (d) {
-                    return d.store.getProjectHooks(d.projectId);
-                })
-                .catch(deferred.reject)
-                .finally(gmeAuth.unload);
-        })
-        .on('--help', function () {
-            console.log('  Examples:');
-            console.log();
-            console.log('    $ node webhookmanager.js');
+            deferred.resolve();
         });
 
     program
@@ -122,23 +129,28 @@ function main(argv) {
         .description('adds a new webhook')
         .option('-e, --events [string]',
             'events it should be triggered by (comma separated with no spaces) default [].', list)
-        .option('-d, --description [string]', 'description of hook', 'No description given')
+        .option('-d, --descriptor [string]', 'description of the hook', 'No description given')
         .action(function (projectName, webhookId, url, options) {
             getMetadataStorageAndProjectId(options.parent.mongoDatabaseUri, projectName, options.parent.owner)
                 .then(function (d) {
                     return d.store.addProjectHook(d.projectId, webhookId, {
                         url: url,
                         events: options.events,
-                        description: options.description
+                        description: options.descriptor
                     });
                 })
+                .then(deferred.resolve)
                 .catch(deferred.reject)
                 .finally(gmeAuth.unload);
         })
         .on('--help', function () {
             console.log('  Examples:');
             console.log();
-            console.log('    $ node webhookmanager.js');
+            console.log('    $ node manage_webhooks.js');
+            console.log('    $ node manage_webhooks.js add MyProject MyHook http://localhost:8080 -e all');
+            console.log('    $ node manage_webhooks.js add MyProject MyHook2 http://localhost:8081 -e COMMIT,TAG_CREATED');
+
+            deferred.resolve();
         });
 
     program
@@ -147,24 +159,35 @@ function main(argv) {
         .option('-u, --url [string]', 'url of webhook handler')
         .option('-e, --events [string]',
             'events it should be triggered by (comma separated with no spaces).', list)
-        .option('-d, --description [string]', 'description', 'No description given')
-
-        .action(function (projectName, webhookId, url, options) {
+        .option('-d, --descriptor [string]', 'description of the hook')
+        .option('-a, --deactivate [boolean]', 'deactivate the webhook')
+        .action(function (projectName, webhookId, options) {
             getMetadataStorageAndProjectId(options.parent.mongoDatabaseUri, projectName, options.parent.owner)
                 .then(function (d) {
-                    return d.store.addProjectHook(d.projectId, webhookId, {
-                        url: url,
-                        events: options.events,
-                        description: options.description
-                    });
+                    var updateData = {
+                        url: options.url,
+                        events: options.events === true ? [] : options.events,
+                        description: options.descriptor
+                    };
+
+                    if (options.deactivate) {
+                        updateData.active = false;
+                    }
+
+                    return d.store.updateProjectHook(d.projectId, webhookId, updateData);
                 })
+                .then(deferred.resolve)
                 .catch(deferred.reject)
                 .finally(gmeAuth.unload);
         })
         .on('--help', function () {
             console.log('  Examples:');
             console.log();
-            console.log('    $ node webhookmanager.js');
+            console.log('    $ node manage_webhooks.js update MyProject MyHook --url http://localhost:8080 -e COMMIT');
+            console.log('    $ node manage_webhooks.js update MyProject MyHook -d Hook Description');
+            console.log('    $ node manage_webhooks.js update MyProject MyHook --deactivate');
+
+            deferred.resolve();
         });
 
     program
@@ -175,13 +198,16 @@ function main(argv) {
                 .then(function (d) {
                     return d.store.removeProjectHook(d.projectId, webhookId);
                 })
+                .then(deferred.resolve)
                 .catch(deferred.reject)
                 .finally(gmeAuth.unload);
         })
         .on('--help', function () {
             console.log('  Examples:');
             console.log();
-            console.log('    $ node webhookmanager.js');
+            console.log('    $ node manage_webhooks.js remove MyProject MyHook');
+
+            deferred.resolve();
         });
 
     program.parse(args);
@@ -196,12 +222,10 @@ module.exports = {
 if (require.main === module) {
 
     main(process.argv)
-        .then(function () {
-            'use strict';
-            console.log('Done');
+        .then(function (res) {
+            console.log(JSON.stringify(res, null, 2));
         })
         .catch(function (err) {
-            'use strict';
-            console.error('ERROR : ' + err);
+            console.error(err.message);
         });
 }
