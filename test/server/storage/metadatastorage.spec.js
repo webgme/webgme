@@ -408,10 +408,10 @@ describe('metadatastorage', function () {
             })
             .then(function (data) {
                 rData = data;
-                return store.getProjectHook(projectId, 'myHook', hookData);
+                return store.getProjectHook(projectId, 'myHook');
             })
             .then(function (data) {
-                expect(data).to.deep.equal(data);
+                expect(data).to.deep.equal(rData);
             })
             .nodeify(done);
     });
@@ -422,13 +422,9 @@ describe('metadatastorage', function () {
                 throw new Error('Should have failed:' + JSON.stringify(data));
             })
             .catch(function (err) {
-                console.log(err.stack);
                 expect(err.message).to.include('no such project');
             })
-            .nodeify(function (err) {
-                console.log('done is of type:', typeof done);
-                done(err);
-            });
+            .nodeify(done);
     });
 
     it('should fail to get hook if it does not exist', function (done) {
