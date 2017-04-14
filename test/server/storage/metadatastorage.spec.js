@@ -77,6 +77,21 @@ describe('metadatastorage', function () {
             .nodeify(done);
     });
 
+    it('should fail to update info if project does not exist', function (done) {
+        var projectName = 'doesNotExist',
+            ownerName = 'some',
+            projId = testFixture.storageUtil.getProjectIdFromOwnerIdAndProjectName(ownerName, projectName);
+
+        store.updateProjectInfo(projId, {createdAt: 'justNow'})
+            .then(function (data) {
+                throw new Error('Should have failed:' + JSON.stringify(data));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('no such project');
+            })
+            .nodeify(done);
+    });
+
     it('should add a project and update info', function (done) {
         var projectName = 'project_with_info2',
             ownerName = 'someUser',
@@ -87,8 +102,10 @@ describe('metadatastorage', function () {
                 return store.updateProjectInfo(projectId, {createdAt: 'aBitLater'});
             })
             .then(function (data) {
-                expect(data.info).to.deep.equal({createdAt: 'aBitLater', modifiedAt: null, viewedAt: null,
-                viewer: null, modifier: null, creator: null, kind: null});
+                expect(data.info).to.deep.equal({
+                    createdAt: 'aBitLater', modifiedAt: null, viewedAt: null,
+                    viewer: null, modifier: null, creator: null, kind: null
+                });
             })
             .nodeify(done);
     });
@@ -103,8 +120,10 @@ describe('metadatastorage', function () {
                 return store.updateProjectInfo(projectId, {});
             })
             .then(function (data) {
-                expect(data.info).to.deep.equal({createdAt: 'justNow', modifiedAt: null, viewedAt: null,
-                    viewer: null, modifier: null, creator: null, kind: null});
+                expect(data.info).to.deep.equal({
+                    createdAt: 'justNow', modifiedAt: null, viewedAt: null,
+                    viewer: null, modifier: null, creator: null, kind: null
+                });
             })
             .nodeify(done);
     });
@@ -119,8 +138,10 @@ describe('metadatastorage', function () {
                 return store.updateProjectInfo(projectId, {aaa: 'should not persist'});
             })
             .then(function (data) {
-                expect(data.info).to.deep.equal({createdAt: 'justNow', modifiedAt: null, viewedAt: null,
-                    viewer: null, modifier: null, creator: null, kind: null});
+                expect(data.info).to.deep.equal({
+                    createdAt: 'justNow', modifiedAt: null, viewedAt: null,
+                    viewer: null, modifier: null, creator: null, kind: null
+                });
             })
             .nodeify(done);
     });
@@ -314,8 +335,7 @@ describe('metadatastorage', function () {
     it('should fail to add a hook with no url', function (done) {
         var projectName = 'project_with_hooks5',
             ownerName = 'someUser',
-            hookData = {
-            },
+            hookData = {},
             projectId;
 
         store.addProject(ownerName, projectName, {})
@@ -468,7 +488,7 @@ describe('metadatastorage', function () {
             .nodeify(done);
     });
 
-    it('should remove a hook if id not given', function (done) {
+    it('should fail to remove a hook if id not given', function (done) {
         var projectName = 'project_with_hooks12',
             ownerName = 'someUser',
             projectId;
@@ -487,7 +507,7 @@ describe('metadatastorage', function () {
             .nodeify(done);
     });
 
-    it('should remove a hook if it does not exist', function (done) {
+    it('should fail to remove a hook if it does not exist', function (done) {
         var projectName = 'project_with_hooks13',
             ownerName = 'someUser';
 
@@ -500,6 +520,139 @@ describe('metadatastorage', function () {
             })
             .catch(function (err) {
                 expect(err.message).to.include('no such hook');
+            })
+            .nodeify(done);
+    });
+
+    it('should add and update a hook', function (done) {
+        var projectName = 'project_with_hooks14',
+            ownerName = 'someUser',
+            hookData = {
+                url: 'http://my.org',
+                events: 'all'
+            },
+            projectId;
+
+        store.addProject(ownerName, projectName, {})
+            .then(function (projectId_) {
+                projectId = projectId_;
+                return store.addProjectHook(projectId, 'myHook', hookData);
+            })
+            .then(function (initialData) {
+                expect(initialData.active).to.equal(true);
+                expect(initialData.events).to.deep.equal('all');
+                expect(initialData.url).to.equal('http://my.org');
+
+                return store.updateProjectHook(projectId, 'myHook', {events: [], active: false, url: 'new'});
+            })
+            .then(function (updatedData) {
+                expect(updatedData.active).to.equal(false);
+                expect(updatedData.events).to.deep.equal([]);
+                expect(updatedData.url).to.equal('new');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to update a hook if it does not exist', function (done) {
+        var projectName = 'project_with_hooks15',
+            ownerName = 'someUser',
+            projectId;
+
+        store.addProject(ownerName, projectName, {})
+            .then(function (projectId_) {
+                projectId = projectId_;
+
+                return store.updateProjectHook(projectId, 'myHook', {events: [], active: false, url: 'new'});
+            })
+            .then(function (data) {
+                throw new Error('Should have failed:' + JSON.stringify(data));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('no such hook');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to update a hook if id is empty', function (done) {
+        var projectName = 'project_with_hooks16',
+            ownerName = 'someUser',
+            projectId;
+
+        store.addProject(ownerName, projectName, {})
+            .then(function (projectId_) {
+                projectId = projectId_;
+
+                return store.updateProjectHook(projectId, null, {events: [], active: false, url: 'new'});
+            })
+            .then(function (data) {
+                throw new Error('Should have failed:' + JSON.stringify(data));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('hookId empty or not a string');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to update a hook if given url not string', function (done) {
+        var projectName = 'project_with_hooks17',
+            ownerName = 'someUser',
+            hookData = {
+                url: 'http://my.org',
+                events: 'all'
+            },
+            projectId;
+
+        store.addProject(ownerName, projectName, {})
+            .then(function (projectId_) {
+                projectId = projectId_;
+                return store.addProjectHook(projectId, 'myHook', hookData);
+            })
+            .then(function () {
+                return store.updateProjectHook(projectId, 'myHook', {url: ['arr']});
+            })
+            .then(function (data) {
+                throw new Error('Should have failed:' + JSON.stringify(data));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('data.url not a string');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to update a hook if event is string and not all', function (done) {
+        var projectName = 'project_with_hooks18',
+            ownerName = 'someUser',
+            hookData = {
+                url: 'http://my.org',
+                events: 'all'
+            },
+            projectId;
+
+        store.addProject(ownerName, projectName, {})
+            .then(function (projectId_) {
+                projectId = projectId_;
+                return store.addProjectHook(projectId, 'myHook', hookData);
+            })
+            .then(function () {
+                return store.updateProjectHook(projectId, 'myHook', {events: 'invalidStr'});
+            })
+            .then(function (data) {
+                throw new Error('Should have failed:' + JSON.stringify(data));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('is not an array and not "all"');
+            })
+            .nodeify(done);
+    });
+
+    it('should fail to update project hooks if project does not exist', function (done) {
+
+        store.updateProjectHooks('does+notExist', {})
+            .then(function (data) {
+                throw new Error('Should have failed:' + JSON.stringify(data));
+            })
+            .catch(function (err) {
+                expect(err.message).to.include('no such project');
             })
             .nodeify(done);
     });

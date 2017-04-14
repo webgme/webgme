@@ -165,7 +165,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
 
         if (events instanceof Array === false) {
             if (events !== 'all') {
-                throw new Error('Event [' + events + '] is not array and not "all"');
+                throw new Error('Event [' + events + '] is not an array and not "all"');
             }
         } else {
             for (i = 0; i < events.length; i += 1) {
@@ -301,17 +301,13 @@ function MetadataStorage(mainLogger, gmeConfig) {
      * @returns {*}
      */
     function updateProjectHook(projectId, hookId, data, callback) {
-        return self.projectCollection.findOne({_id: projectId})
-            .then(function (projectData) {
-                if (!projectData) {
-                    throw new Error('no such project [' + projectId + ']');
-                }
-
+        return getProjectHooks(projectId)
+            .then(function (hooks) {
                 if (typeof hookId !== 'string' || !hookId) {
                     throw new Error('hookId empty or not a string [' + hookId + ']');
                 }
 
-                if (!projectData.hooks[hookId]) {
+                if (!hooks[hookId]) {
                     throw new Error('no such hook [' + hookId + ']');
                 }
 
@@ -320,24 +316,24 @@ function MetadataStorage(mainLogger, gmeConfig) {
                         throw new Error('data.url not a string [' + data.url + ']');
                     }
 
-                    projectData.hooks[hookId].url = data.url;
+                    hooks[hookId].url = data.url;
                 }
 
                 if (data.events) {
                     _ensureValidEvents(data.events);
 
-                    projectData.hooks[hookId].events = data.events;
+                    hooks[hookId].events = data.events;
                 }
 
                 if (data.active === false) {
-                    projectData.hooks[hookId].active = false;
+                    hooks[hookId].active = false;
                 }
 
-                projectData.hooks[hookId].description = data.description || projectData.hooks[hookId].description;
+                hooks[hookId].description = data.description || hooks[hookId].description;
 
-                projectData.hooks[hookId].updatedAt = (new Date()).toISOString();
+                hooks[hookId].updatedAt = (new Date()).toISOString();
 
-                return self.projectCollection.updateOne({_id: projectId}, projectData, {upsert: true});
+                return updateProjectHooks(projectId, hooks);
             })
             .then(function () {
                 return getProjectHook(projectId, hookId);
