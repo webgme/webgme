@@ -869,10 +869,14 @@ define([
                 })
                 .nodeify(callback);
         };
+
+        this.CONSTANTS = CONSTANTS;
     }
 
     EditorStorage.prototype = Object.create(StorageObjectLoaders.prototype);
     EditorStorage.prototype.constructor = EditorStorage;
+
+    EditorStorage.CONSTANTS = CONSTANTS;
 
     return EditorStorage;
 });

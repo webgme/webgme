@@ -1,3 +1,4 @@
+/*globals requireJS*/
 /*jshint node:true*/
 /**
  * TODO: This is work in progress...
@@ -10,20 +11,97 @@ var webgme = require('../../webgme'),
     path = require('path'),
     Q = require('q'),
     bodyParser = require('body-parser'),
-    PluginManager = require('../plugin/nodemanager'),
     superagent = require('superagent'),
     configDir = path.join(process.cwd(), 'config'),
     gmeConfig = require(configDir),
-    logger = webgme.Logger.create('gme:bin:connected-webhook-handler', gmeConfig.bin.log, false),
-    HOOK_ID = 'connectedHook';
 
-function Handler(options) {
+    CONSTANTS = requireJS('common/Constants'),
+    Storage = requireJS('common/storage/nodestorage'),
+    Core = requireJS('common/core/coreQ'),
+    logger = webgme.Logger.create('gme:bin:connected-webhook-handler', gmeConfig.bin.log, false),
+    HOOK_ID = 'connectedHook',
+    TOKEN_REFRESH_INTERVAL = 60000; // Refresh token every minute.
+
+function ConnectedHandler(options) {
     var app = new Express(),
         results = [],
         webgmeUrl = options.webgmeUrl || 'http://127.0.0.1:' + gmeConfig.server.port,
+        projects = {},
+        intervalId,
+        webgmeToken,
+        storage,
         server;
 
-    function getToken() {
+    function getConnectedStorage(callback) {
+        var deferred = Q.defer(),
+            storage = Storage.createStorage(webgmeUrl, webgmeToken, logger, gmeConfig);
+
+        if (storage) {
+            deferred.resolve(storage);
+        } else {
+            storage.open(function (networkState) {
+                if (networkState === CONSTANTS.STORAGE.CONNECTED) {
+                    deferred.resolve(storage);
+                } else {
+                    // FIXME: We can handle more events that just CONNECTED
+                    deferred.reject(new Error('Problems connecting to the webgme server, network state: ' +
+                        networkState));
+                }
+            });
+        }
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function handleHook(payload) {
+        var project,
+            commitHash,
+            core;
+
+        if (payload.eventType !== CONSTANTS.WEBHOOK_EVENTS.COMMIT || payload.data.userId !== options.userId) {
+            // We're only interested in events from our user..
+            logger.info('Skipping event [', payload.eventType, '] triggered by [', payload.data.userId, ']');
+            return;
+        }
+
+        commitHash = payload.data.commitHash;
+
+        getConnectedStorage()
+            .then(function () {
+                if (projects.hasOwnProperty(payload.projectId)) {
+                    return projects[payload.projectId];
+                } else {
+                    projects[payload.projectId] = Q.ninvoke(storage, 'openProject', payload.projectId)
+                        .then(function (res) {
+                            return res[0];
+                        });
+
+                    return projects[payload.projectId];
+                }
+            })
+            .then(function (project_) {
+                project = project_;
+
+                return project.getCommits(commitHash, 1);
+            })
+            .then(function (commitObject) {
+                core = new Core(project, {
+                    globConf: gmeConfig,
+                    logger: logger.fork('core')
+                });
+
+                return core.loadRoot(commitObject[0].root);
+            })
+            .then(function (rootNode) {
+                logger.info('Name of root node is [', core.getAttribute(rootNode, 'name'), '] at commit [',
+                commitHash.substring(0, 7), '] in project [', payload.projectName, ']');
+            })
+            .catch(function (err) {
+                logger.error(err);
+            });
+    }
+
+    function refreshToken() {
         var deferred = Q.defer();
 
         superagent.get(webgmeUrl + '/api/user/token')
@@ -35,6 +113,14 @@ function Handler(options) {
                 }
 
                 if (typeof res.body.webgmeToken === 'string') {
+                    webgmeToken = res.body.webgmeToken;
+                    logger.info('Obtained new token from webgme server.');
+                    logger.info(webgmeToken); //TODO: Remove this print out..
+
+                    if (storage) {
+                        storage.setToken(webgmeToken);
+                    }
+
                     deferred.resolve(res.body.webgmeToken);
                 } else {
                     deferred.reject(new Error(webgmeUrl + '/user/token did not provide webgmeToken.'));
@@ -55,7 +141,7 @@ function Handler(options) {
 
         app.post('/' + HOOK_ID, function (req, res) {
             var payload = req.body;
-            runPlugin(payload)
+            handleHook(payload)
                 .finally(function () {
                     logger.info('done');
                 });
@@ -63,8 +149,15 @@ function Handler(options) {
             res.sendStatus(200);
         });
 
-        server = app.listen(options.handlerPort);
-        logger.info('View results at:  http://127.0.0.1:' + options.handlerPort);
+        refreshToken()
+            .then(function () {
+                server = app.listen(options.handlerPort);
+                logger.info('Server listening at:  http://127.0.0.1:' + options.handlerPort);
+
+                intervalId = setInterval(refreshToken, TOKEN_REFRESH_INTERVAL);
+            })
+            .catch(deferred.reject);
+
 
         return deferred.promise.nodeify(callback);
     };
@@ -72,9 +165,19 @@ function Handler(options) {
     this.stop = function (callback) {
         var deferred = Q.defer();
 
+        clearInterval(intervalId);
         server.close();
 
-        deferred.resolve();
+        if (storage) {
+            storage.close()
+                .then(function () {
+                    storage = null;
+                    deferred.resolve();
+                })
+                .catch(deferred.reject);
+        } else {
+            deferred.resolve();
+        }
 
         return deferred.promise.nodeify(callback);
     };
@@ -121,13 +224,11 @@ if (require.main === module) {
 
     if (program.args.length < 3) {
         program.help();
-    } else if (gmeConfig.webhooks.enable !== true) {
-        logger.error('gmeConfig.webhooks.enable must be true in order to dispatch events from the webgme server!');
     } else {
         program.pluginId = program.args[0];
         program.userId = program.args[1];
         program.password = program.args[2];
-        handler = new Handler(program);
+        handler = new ConnectedHandler(program);
 
         handler.start(function(err) {
             if (err) {
