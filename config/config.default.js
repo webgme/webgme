@@ -9,6 +9,7 @@ var path = require('path'),
         addOn: {
             enable: false,
             monitorTimeout: 10000,
+            workerUrl: null,
             basePaths: [path.join(__dirname, '../src/addon/core')]
         },
 

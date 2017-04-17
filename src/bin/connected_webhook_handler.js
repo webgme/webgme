@@ -1,7 +1,6 @@
 /*globals requireJS*/
 /*jshint node:true*/
 /**
- * TODO: This is work in progress...
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';

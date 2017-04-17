@@ -11,6 +11,7 @@ var Child = require('child_process'),
     path = require('path'),
     CONSTANTS = require('./constants'),
     GUID = requireJS('common/util/guid'),
+    superagent = require('superagent'),
     SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js'),
     CONNECTED_WORKER_JS = path.join(__dirname, 'connectedworker.js');
 
@@ -350,13 +351,14 @@ function ServerWorkerManager(_parameters) {
             if (parameters.join === true) {
                 logger.info('socket joined room');
                 parameters.command = CONSTANTS.workerCommands.connectedWorkerStart;
-                self.connectedWorkerRequests.push({
-                    request: parameters,
-                    cb: callback
-                });
             } else {
                 parameters.command = CONSTANTS.workerCommands.connectedWorkerStop;
                 logger.info('socket left room');
+            }
+
+            if (gmeConfig.addOn.workerUrl) {
+                superagent.post(gmeConfig.addOn.workerUrl, parameters, callback);
+            } else {
                 self.connectedWorkerRequests.push({
                     request: parameters,
                     cb: callback
@@ -373,8 +375,12 @@ function ServerWorkerManager(_parameters) {
         }
         reserveWorkerIfNecessary(CONSTANTS.workerTypes.simple);
         if (gmeConfig.addOn.enable === true) {
-            logger.info('AddOns enabled will reserve a connectedWorker');
-            reserveWorker(CONSTANTS.workerTypes.connected);
+            if (gmeConfig.addOn.workerUrl) {
+                logger.info('AddOns enabled and workerUrl provided will post updates to', gmeConfig.addOn.workerUrl);
+            } else {
+                logger.info('AddOns enabled will reserve a connectedWorker');
+                reserveWorker(CONSTANTS.workerTypes.connected);
+            }
         }
     };
 

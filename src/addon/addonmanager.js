@@ -27,7 +27,6 @@ var Q = require('q'),
  */
 function AddOnManager(projectId, mainLogger, gmeConfig, options) {
     var self = this,
-        host = '127.0.0.1',
         logger = mainLogger.fork('AddOnManager:' + projectId),
         initDeferred,
         closeDeferred;
