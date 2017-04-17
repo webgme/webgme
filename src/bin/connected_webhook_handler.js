@@ -14,31 +14,41 @@ var webgme = require('../../webgme'),
     superagent = require('superagent'),
     configDir = path.join(process.cwd(), 'config'),
     gmeConfig = require(configDir),
+    fs = require('fs'),
 
     CONSTANTS = requireJS('common/Constants'),
     Storage = requireJS('common/storage/nodestorage'),
     Core = requireJS('common/core/coreQ'),
     logger = webgme.Logger.create('gme:bin:connected-webhook-handler', gmeConfig.bin.log, false),
-    HOOK_ID = 'connectedHook',
+    HOOK_ID = 'ConnStorage',
     TOKEN_REFRESH_INTERVAL = 60000; // Refresh token every minute.
 
 function ConnectedHandler(options) {
     var app = new Express(),
-        results = [],
         webgmeUrl = options.webgmeUrl || 'http://127.0.0.1:' + gmeConfig.server.port,
         projects = {},
+        certificate,
         intervalId,
         webgmeToken,
         storage,
         server;
 
+    options.port = options.port || (gmeConfig.server.port + 1);
+
+    if (options.certificate) {
+        // This is needed if the tls/ssl certificates are self signed.
+        certificate = fs.readFileSync(options.certificate, 'utf-8');
+        gmeConfig.socketIO.clientOptions.ca = certificate;
+    }
+
     function getConnectedStorage(callback) {
-        var deferred = Q.defer(),
-            storage = Storage.createStorage(webgmeUrl, webgmeToken, logger, gmeConfig);
+        var deferred = Q.defer();
 
         if (storage) {
             deferred.resolve(storage);
         } else {
+            logger.info('Establishing connection to webgme storage at', webgmeUrl);
+            storage = Storage.createStorage(webgmeUrl, webgmeToken, logger, gmeConfig);
             storage.open(function (networkState) {
                 if (networkState === CONSTANTS.STORAGE.CONNECTED) {
                     deferred.resolve(storage);
@@ -53,15 +63,36 @@ function ConnectedHandler(options) {
         return deferred.promise.nodeify(callback);
     }
 
+    /**
+     *
+     * @param {object} payload
+     *
+     * @example
+     * payload =
+     * {
+     *    event: 'COMMIT',
+     *    projectId: 'guest+MyProject',
+     *    owner: 'guest',
+     *    projectName: 'MyProject',
+     *    hookId: 'MyWebHook',
+     *    data: {
+     *       projectId: "demo+Templates",
+     *       commitHash: "#d8de3bdd38be13c43ea182058d397e9e28d4b4ef",
+     *       userId: "demo"
+     *       }
+     *    }
+     */
     function handleHook(payload) {
-        var project,
+        var defer = Q.defer(),
+            project,
             commitHash,
             core;
 
-        if (payload.eventType !== CONSTANTS.WEBHOOK_EVENTS.COMMIT || payload.data.userId !== options.userId) {
+        if (payload.event !== CONSTANTS.WEBHOOK_EVENTS.COMMIT || payload.data.userId !== options.userId) {
             // We're only interested in events from our user..
-            logger.info('Skipping event [', payload.eventType, '] triggered by [', payload.data.userId, ']');
-            return;
+            logger.info('Skipping event [', payload.event, '] triggered by [', payload.data.userId, ']');
+            defer.resolve();
+            return defer.promise;
         }
 
         commitHash = payload.data.commitHash;
@@ -93,57 +124,69 @@ function ConnectedHandler(options) {
                 return core.loadRoot(commitObject[0].root);
             })
             .then(function (rootNode) {
-                logger.info('Name of root node is [', core.getAttribute(rootNode, 'name'), '] at commit [',
-                commitHash.substring(0, 7), '] in project [', payload.projectName, ']');
+                logger.info('Name of root node is [', core.getAttribute(rootNode, 'name'), '] at [',
+                    payload.projectName + commitHash.substring(0, 7) + ']');
+
+                defer.resolve();
             })
             .catch(function (err) {
                 logger.error(err);
+                defer.reject(err);
             });
+
+        return defer.promise;
     }
 
     function refreshToken() {
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            req = superagent.get(webgmeUrl + '/api/user/token');
 
-        superagent.get(webgmeUrl + '/api/user/token')
-            .set('Authorization', 'Basic ' + new Buffer(options.userId + ':' + options.password).toString('base64'))
-            .end(function (err, res) {
-                if (err) {
-                    deferred.reject(err);
-                    return;
+        logger.info('Will request new token at', webgmeUrl + '/api/user/token');
+
+        if (!webgmeToken) {
+            // Only use credentials for the first request (password may change)..
+            req.set('Authorization', 'Basic ' + new Buffer(options.userId + ':' + options.password).toString('base64'));
+        } else {
+            req.set('Authorization', 'Bearer ' + webgmeToken);
+        }
+
+        if (certificate) {
+            req.ca(certificate);
+        }
+
+        req.end(function (err, res) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            if (typeof res.body.webgmeToken === 'string') {
+                webgmeToken = res.body.webgmeToken;
+                logger.info('Obtained new token from webgme server.');
+                //logger.info(webgmeToken);
+
+                if (storage) {
+                    storage.setToken(webgmeToken);
                 }
 
-                if (typeof res.body.webgmeToken === 'string') {
-                    webgmeToken = res.body.webgmeToken;
-                    logger.info('Obtained new token from webgme server.');
-                    logger.info(webgmeToken); //TODO: Remove this print out..
-
-                    if (storage) {
-                        storage.setToken(webgmeToken);
-                    }
-
-                    deferred.resolve(res.body.webgmeToken);
-                } else {
-                    deferred.reject(new Error(webgmeUrl + '/user/token did not provide webgmeToken.'));
-                }
-            });
+                deferred.resolve(res.body.webgmeToken);
+            } else {
+                deferred.reject(new Error(webgmeUrl + '/user/token did not provide webgmeToken.'));
+            }
+        });
 
         return deferred.promise;
     }
 
     this.start = function (callback) {
         var deferred = Q.defer();
-        
-        app.use(bodyParser.json());
 
-        app.get(['', '/', '/result', '/results'], function (req, res) {
-            res.json(results);
-        });
+        app.use(bodyParser.json());
 
         app.post('/' + HOOK_ID, function (req, res) {
             var payload = req.body;
             handleHook(payload)
                 .finally(function () {
-                    logger.info('done');
                 });
 
             res.sendStatus(200);
@@ -151,8 +194,8 @@ function ConnectedHandler(options) {
 
         refreshToken()
             .then(function () {
-                server = app.listen(options.handlerPort);
-                logger.info('Server listening at:  http://127.0.0.1:' + options.handlerPort);
+                server = app.listen(options.port);
+                logger.info('Server listening at:  http://127.0.0.1:' + options.port);
 
                 intervalId = setInterval(refreshToken, TOKEN_REFRESH_INTERVAL);
             })
@@ -190,47 +233,33 @@ if (require.main === module) {
 
     program
         .version('2.13.0')
-        .arguments('<pluginName> <userId> <password>')
+        .arguments('<userId> <password>')
         .description('Starts a webhook handler server that connects to the storage via the server.')
-        .option('-w, --webgmeUrl [string]', 'Url to the webgme server. If not given it will assume http://127.0.0.1' +
+        .option('-u, --webgmeUrl [string]', 'Url to the webgme server. If not given it will assume http://127.0.0.1' +
             ':%gmeConfig.server.port%')
-        .option('-h, --handlerPort [number]', 'Port the webhook-handler should listen at ' +
+        .option('-p, --port [number]', 'Port the webhook-handler should listen at ' +
             '[gmeConfig.server.port + 1]')
-        .option('-a, --activeNode [string]', 'ID/Path to active node.', '')
-        .option('-s, --activeSelection [string]', 'IDs/Paths of selected nodes (comma separated with no spaces).')
-        .option('-n, --namespace [string]', 'Namespace the plugin should run under.', '')
-        .option('-j, --pluginConfigPath [string]',
-            'Path to json file with plugin options that should be overwritten.', '')
+        .option('-c, --certificate [string]', 'Path to certificate file if webgme server is secure and ' +
+            'using self signed certificate.')
 
         .on('--help', function () {
-            var i,
-                env = process.env.NODE_ENV || 'default';
             console.log('  Examples:');
             console.log();
-            console.log('    $ node plugin_hook.js MinimalWorkingExample user wordpass');
-            console.log('    $ node plugin_hook.js MinimalWorkingExample user wordpass -p 8080');
-            console.log('    $ node plugin_hook.js MinimalWorkingExample user wordpass -p 8080 -w https://editor.webgme.org');
-            console.log('    $ node plugin_hook.js PluginGenerator user wordpass -j pluginConfig.json');
-            console.log('    $ node plugin_hook.js MinimalWorkingExample user wordpass -a /1/b');
-            console.log('    $ node plugin_hook.js MinimalWorkingExample user wordpass -s /1,/1/c,/d');
+            console.log('    $ node connected_webhook_handler.js user wordpass -p 8080');
+            console.log('    $ node plugin_hook.js user wordpass -p 8080 -w https://editor.webgme.org');
             console.log();
-            console.log('  Plugin paths using ' + configDir + path.sep + 'config.' + env + '.js :');
-            console.log();
-            for (i = 0; i < gmeConfig.plugin.basePaths.length; i += 1) {
-                console.log('    "' + gmeConfig.plugin.basePaths[i] + '"');
-            }
         })
         .parse(process.argv);
 
-    if (program.args.length < 3) {
+    if (program.args.length < 2) {
         program.help();
     } else {
-        program.pluginId = program.args[0];
-        program.userId = program.args[1];
-        program.password = program.args[2];
+        //program.pluginId = program.args[0];
+        program.userId = program.args[0];
+        program.password = program.args[1];
         handler = new ConnectedHandler(program);
 
-        handler.start(function(err) {
+        handler.start(function (err) {
             if (err) {
                 logger.error(err);
             } else {
