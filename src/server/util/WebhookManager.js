@@ -8,16 +8,17 @@
 'use strict';
 
 var HookMessenger = require('webgme-webhook-manager/src/hookMessenger'),
-    CONSTANTS = requireJS('common/storage/constants'),
+    CONSTANTS = requireJS('common/Constants'),
     fork = require('child_process').fork,
     Q = require('q');
 
 function MemoryManager(storage, mainLogger, gmeConfig) {
     var hookMessenger = new HookMessenger({
-        uri: gmeConfig.mongo.uri,
-        collection: '_projects',
-        logger: mainLogger.fork('hookMessenger')
-    });
+            uri: gmeConfig.mongo.uri,
+            collection: '_projects',
+            logger: mainLogger.fork('hookMessenger')
+        }),
+        eventHandlers = {};
 
     /**
      * Since the web-socket portion temporarily appends a socket to the eventData
@@ -44,32 +45,10 @@ function MemoryManager(storage, mainLogger, gmeConfig) {
         return cleanData;
     }
 
-    function projectDeleted(_s, data) {
-        hookMessenger.send(CONSTANTS.PROJECT_DELETED, ensureNoSocket(data));
-    }
-
-    function branchDeleted(_s, data) {
-        hookMessenger.send(CONSTANTS.BRANCH_DELETED, ensureNoSocket(data));
-    }
-
-    function branchCreated(_s, data) {
-        hookMessenger.send(CONSTANTS.BRANCH_CREATED, ensureNoSocket(data));
-    }
-
-    function branchUpdated(_s, data) {
-        hookMessenger.send(CONSTANTS.BRANCH_HASH_UPDATED, ensureNoSocket(data));
-    }
-
-    function tagCreated(_s, data) {
-        hookMessenger.send(CONSTANTS.TAG_CREATED, ensureNoSocket(data));
-    }
-
-    function tagDeleted(_s, data) {
-        hookMessenger.send(CONSTANTS.TAG_DELETED, ensureNoSocket(data));
-    }
-
-    function commit(_s, data) {
-        hookMessenger.send(CONSTANTS.COMMIT, ensureNoSocket(data));
+    function getEventHandler(eventType) {
+        return function (_s, data) {
+            hookMessenger.send(eventType, ensureNoSocket(data));
+        };
     }
 
     function start(callback) {
@@ -78,13 +57,12 @@ function MemoryManager(storage, mainLogger, gmeConfig) {
             if (err) {
                 deferred.reject(err);
             } else {
-                storage.addEventListener(CONSTANTS.PROJECT_DELETED, projectDeleted);
-                storage.addEventListener(CONSTANTS.BRANCH_DELETED, branchDeleted);
-                storage.addEventListener(CONSTANTS.BRANCH_CREATED, branchCreated);
-                storage.addEventListener(CONSTANTS.BRANCH_HASH_UPDATED, branchUpdated);
-                storage.addEventListener(CONSTANTS.TAG_CREATED, tagCreated);
-                storage.addEventListener(CONSTANTS.TAG_DELETED, tagDeleted);
-                storage.addEventListener(CONSTANTS.COMMIT, commit);
+                Object.keys(CONSTANTS.WEBHOOK_EVENTS).forEach(function (eventType) {
+                    var handler = getEventHandler(eventType);
+                    eventHandlers[eventType] = handler;
+                    storage.addEventListener(eventType, handler);
+                });
+
                 deferred.resolve();
             }
         });
@@ -94,13 +72,11 @@ function MemoryManager(storage, mainLogger, gmeConfig) {
 
     function stop(callback) {
         var deferred = Q.defer();
-        storage.removeEventListener(projectDeleted);
-        storage.removeEventListener(branchDeleted);
-        storage.removeEventListener(branchCreated);
-        storage.removeEventListener(branchUpdated);
-        storage.removeEventListener(tagCreated);
-        storage.removeEventListener(tagDeleted);
-        storage.removeEventListener(commit);
+
+        Object.keys(eventHandlers).forEach(function (eventType) {
+            storage.removeEventListener(eventType, eventHandlers[eventType]);
+        });
+
         hookMessenger.stop(function (err) {
             if (err) {
                 deferred.reject(err);
