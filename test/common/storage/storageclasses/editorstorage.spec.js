@@ -1006,9 +1006,7 @@ describe('storage storageclasses editorstorage', function () {
                 var deferred = Q.defer();
                 openingBranch = false;
 
-                storageOther = NodeStorage.createStorage(null,
-                    logger,
-                    gmeConfig);
+                storageOther = NodeStorage.createStorage(null, null, logger, gmeConfig);
                 storageOther.open(function (networkState) {
                     if (networkState === STORAGE_CONSTANTS.CONNECTED) {
                         deferred.resolve();

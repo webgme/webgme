@@ -40,10 +40,10 @@ function safeSend(msg) {
 function initialize(parameters) {
     if (initialized !== true) {
         initialized = true;
-        logger.debug('initializing');
         gmeConfig = parameters.gmeConfig;
         WEBGME.addToRequireJsPaths(gmeConfig);
         logger = Logger.create('gme:connectedworker:pid_' + process.pid, gmeConfig.server.log, true);
+        logger.debug('initializing');
         mt = new ManagerTracker(logger, gmeConfig);
         logger.info('initialized worker');
         safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialized});

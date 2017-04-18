@@ -7,7 +7,7 @@
 'use strict';
 
 var Q = require('q'),
-    AddOnManager = require('../../addon/addonmanager');
+    AddOnManager = require('./addonmanager');
 
 function ManagerTracker(mainLogger, gmeConfig, options) {
     var addOnManagers = {
@@ -18,7 +18,7 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
     function connectedWorkerStart(webgmeToken, projectId, branchName, callback) {
         var addOnManager;
 
-        logger.info('connectedWorkerStart', projectId, branchName);
+        logger.debug('connectedWorkerStart', projectId, branchName);
         if (!projectId || !branchName) {
             return Q.reject(new Error('Required parameters were not provided: ' + projectId + ', ' + branchName + '.'))
                 .nodeify(callback);
@@ -28,7 +28,7 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
 
         if (!addOnManager) {
             logger.debug('No previous addOns handled for project [' + projectId + ']');
-            addOnManager = new AddOnManager(projectId, logger, gmeConfig);
+            addOnManager = new AddOnManager(projectId, logger, gmeConfig, options);
             addOnManagers[projectId] = addOnManager;
             addOnManager.addEventListener('NO_MONITORS', function (/*addOnManager_*/) {
                 delete addOnManagers[projectId];
@@ -46,13 +46,12 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
                 return addOnManager.monitorBranch(webgmeToken, branchName);
             })
             .nodeify(callback);
-
     }
 
     function connectedWorkerStop(webgmeToken, projectId, branchName, callback) {
         var addOnManager;
 
-        logger.info('connectedWorkerStop', projectId, branchName);
+        logger.debug('connectedWorkerStop', projectId, branchName);
         if (!projectId || !branchName) {
             return Q.reject(new Error('Required parameters were not provided: ' + projectId + ', ' + branchName + '.'))
                 .nodeify(callback);
@@ -62,13 +61,14 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
 
         if (!addOnManager) {
             logger.debug('Request stop for non existing addOnManger', projectId, branchName);
-            return Q.resolve({connectionCount: -1});
+            return Q.resolve({connectionCount: -1}).nodeify(callback);
         }
 
         return addOnManager.unMonitorBranch(webgmeToken, branchName)
             .then(function (connectionCount) {
                 return {connectionCount: connectionCount};
-            });
+            })
+            .nodeify(callback);
     }
 
     this.connectedWorkerStart = connectedWorkerStart;

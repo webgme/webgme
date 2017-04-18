@@ -31,6 +31,8 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
         initDeferred,
         closeDeferred;
 
+    options = options || {};
+
     EventDispatcher.call(self);
 
     this.branchMonitors = {
