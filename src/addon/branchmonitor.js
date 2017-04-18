@@ -34,6 +34,8 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
         //{id: {string}, instance: {AddOnBase}}
     ];
 
+    this.webgmeToken = webgmeToken;
+
     // State
     this.commitHash = '';
     this.rootHash = '';
@@ -73,7 +75,7 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
             serverPort: gmeConfig.server.port,
             httpsecure: false, // N.B.: addons are running on the server only
             server: '127.0.0.1',
-            webgmeToken: webgmeToken,
+            webgmeToken: self.webgmeToken,
             logger: logger.fork('BlobClient')
         });
 
@@ -299,6 +301,16 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
         }
 
         return stopDeferred.promise.nodeify(callback);
+    };
+
+    this.setToken = function (token) {
+        self.webgmeToken = token;
+        logger.info('setting new token!');
+        self.runningAddOns.forEach(function (addOn) {
+            if (addOn.instance && addOn.instance.blobClient) {
+                addOn.instance.blobClient.setToken(token);
+            }
+        });
     };
 
     this.queryAddOn = function (addOnId, commitHash, queryParams, callback) {

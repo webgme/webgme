@@ -357,6 +357,7 @@ function ServerWorkerManager(_parameters) {
             }
 
             if (gmeConfig.addOn.workerUrl) {
+                logger.info('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
                 superagent.post(gmeConfig.addOn.workerUrl, parameters, callback);
             } else {
                 self.connectedWorkerRequests.push({

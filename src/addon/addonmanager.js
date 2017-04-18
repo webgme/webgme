@@ -28,10 +28,12 @@ var Q = require('q'),
 function AddOnManager(projectId, mainLogger, gmeConfig, options) {
     var self = this,
         logger = mainLogger.fork('AddOnManager:' + projectId),
+        webgmeUrl,
         initDeferred,
         closeDeferred;
 
     options = options || {};
+    webgmeUrl = options.webgmeUrl || 'http://127.0.0.1:' + gmeConfig.server.port;
 
     EventDispatcher.call(self);
 
@@ -49,6 +51,8 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
     this.storage = null;
     this.initRequested = false;
     this.closeRequested = false;
+
+    this.webgmeToken = null;
     this.renewingToken = false;
 
     this.inStoppedAndStarted = {};
@@ -80,8 +84,9 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
         if (self.initRequested === false) {
             initDeferred = Q.defer();
             self.initRequested = true;
+            self.webgmeToken = webgmeToken;
 
-            self.storage = Storage.createStorage(options.webgmeUrl, webgmeToken, logger, gmeConfig);
+            self.storage = Storage.createStorage(webgmeUrl, self.webgmeToken, logger, gmeConfig);
             self.storage.open(function (networkStatus) {
                 if (networkStatus === STORAGE_CONSTANTS.CONNECTED) {
                     self.storage.openProject(projectId, function (err, project, branches, rights) {
@@ -108,15 +113,14 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
                     if (!self.renewingToken) {
                         self.renewingToken = true;
                         superagent.get(webgmeUrl + '/api/user/token')
-                            .set('Authorization', 'Bearer ' + webgmeToken)
+                            .set('Authorization', 'Bearer ' + self.webgmeToken)
                             .end(function (err, res) {
                                 self.renewingToken = false;
                                 if (err) {
                                     logger.error(err);
+                                } else {
+                                    self.setToken(res.body.webgmeToken);
                                 }
-
-                                webgmeToken = res.body.webgmeToken;
-
                             });
                     }
                 } else {
@@ -136,7 +140,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
         return initDeferred.promise.nodeify(callback);
     };
 
-    this.monitorBranch = function (webgmeToken, branchName, callback) {
+    this.monitorBranch = function (branchName, callback) {
         var monitor = self.branchMonitors[branchName],
             deferred = Q.defer();
 
@@ -144,7 +148,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
             monitor = {
                 connectionCnt: initCnt,
                 stopTimeout: null,
-                instance: new BranchMonitor(webgmeToken, self.storage, self.project, branchName, logger, gmeConfig)
+                instance: new BranchMonitor(self.webgmeToken, self.storage, self.project, branchName, logger, gmeConfig)
             };
 
             self.branchMonitors[branchName] = monitor;
@@ -236,7 +240,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
         return deferred.promise.nodeify(callback);
     };
 
-    this.unMonitorBranch = function (webgmeToken, branchName, callback) {
+    this.unMonitorBranch = function (branchName, callback) {
         var deferred = Q.defer(),
             monitor = self.branchMonitors[branchName];
 
@@ -311,6 +315,17 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
         }
 
         return closeDeferred.promise.nodeify(callback);
+    };
+
+    this.setToken = function (token) {
+        self.webgmeToken = token;
+        logger.info('Setting new token!');
+        if (self.storage) {
+            self.storage.setToken(token);
+        }
+        Object.keys(self.branchMonitors).forEach(function (branchName) {
+            self.branchMonitors[branchName].instance.setToken(token);
+        });
     };
 }
 

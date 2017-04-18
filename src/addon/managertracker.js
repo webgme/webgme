@@ -43,12 +43,12 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
 
         return addOnManager.initialize(webgmeToken)
             .then(function () {
-                return addOnManager.monitorBranch(webgmeToken, branchName);
+                return addOnManager.monitorBranch(branchName);
             })
             .nodeify(callback);
     }
 
-    function connectedWorkerStop(webgmeToken, projectId, branchName, callback) {
+    function connectedWorkerStop(projectId, branchName, callback) {
         var addOnManager;
 
         logger.debug('connectedWorkerStop', projectId, branchName);
@@ -64,7 +64,7 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
             return Q.resolve({connectionCount: -1}).nodeify(callback);
         }
 
-        return addOnManager.unMonitorBranch(webgmeToken, branchName)
+        return addOnManager.unMonitorBranch(branchName)
             .then(function (connectionCount) {
                 return {connectionCount: connectionCount};
             })
@@ -75,10 +75,16 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
     this.connectedWorkerStop = connectedWorkerStop;
 
     this.close = function (callback) {
-        return Object.keys(addOnManagers).map(function (manager) {
-            return manager.close();
-        })
+        return Q.all(Object.keys(addOnManagers).map(function (projectId) {
+            return addOnManagers[projectId].close();
+        }))
             .nodeify(callback);
+    };
+
+    this.setToken = function (token) {
+        Object.keys(addOnManagers).forEach(function (projectId) {
+            addOnManagers[projectId].setToken(token);
+        });
     };
 }
 

@@ -92,36 +92,34 @@ process.on('message', function (parameters) {
                 }
             }
         );
-    //} else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerQuery) {
-    //    connectedWorkerQuery(parameters.addOnName, parameters, function (err, result) {
-    //        safeSend({
-    //            pid: process.pid,
-    //            type: CONSTANTS.msgTypes.query,
-    //            error: err ? err.message : null,
-    //            result: result
-    //        });
-    //    });
+        //} else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerQuery) {
+        //    connectedWorkerQuery(parameters.addOnName, parameters, function (err, result) {
+        //        safeSend({
+        //            pid: process.pid,
+        //            type: CONSTANTS.msgTypes.query,
+        //            error: err ? err.message : null,
+        //            result: result
+        //        });
+        //    });
     } else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerStop) {
-        mt.connectedWorkerStop(parameters.webgmeToken, parameters.projectId, parameters.branchName,
-            function (err, result) {
-                if (err) {
-                    safeSend({
-                        pid: process.pid,
-                        type: CONSTANTS.msgTypes.request,
-                        error: err.message,
-                        resid: parameters.resid
-                    });
-                } else {
-                    safeSend({
-                        pid: process.pid,
-                        type: CONSTANTS.msgTypes.request,
-                        error: null,
-                        resid: parameters.resid,
-                        result: result
-                    });
-                }
+        mt.connectedWorkerStop(parameters.projectId, parameters.branchName, function (err, result) {
+            if (err) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.request,
+                    error: err.message,
+                    resid: parameters.resid
+                });
+            } else {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.request,
+                    error: null,
+                    resid: parameters.resid,
+                    result: result
+                });
             }
-        );
+        });
     } else {
         safeSend({
             pid: process.pid,

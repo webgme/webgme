@@ -1,4 +1,3 @@
-/*globals requireJS*/
 /*jshint node:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
@@ -8,7 +7,7 @@
 var webgme = require('../../webgme'),
     Express = require('express'),
     path = require('path'),
-    ManagerTracker = require('../../addon/managertracker'),
+    ManagerTracker = require('../addon/managertracker'),
     WORKER_CONSTANTS = require('../server/worker/constants'),
     Q = require('q'),
     bodyParser = require('body-parser'),
@@ -16,32 +15,40 @@ var webgme = require('../../webgme'),
     configDir = path.join(process.cwd(), 'config'),
     gmeConfig = require(configDir),
     logger = webgme.Logger.create('gme:bin:addon-handler', gmeConfig.bin.log, false),
-    TOKEN_REFRESH_INTERVAL = 60000; // Refresh token every minute.
+    DEFAULT_TOKEN_REFRESH_INTERVAL = 60000; // Refresh token every minute.
+
+webgme.addToRequireJsPaths(gmeConfig);
 
 function AddOnHandler(options) {
     var app = new Express(),
         webgmeUrl = options.webgmeUrl || 'http://127.0.0.1:' + gmeConfig.server.port,
+        refreshInterval = options.tokenRefreshInterval || DEFAULT_TOKEN_REFRESH_INTERVAL,
+        webgmeToken,
         intervalId,
         mt,
         server;
 
     options.port = options.port || (gmeConfig.server.port + 1);
 
-    function refreshToken(webgmeToken) {
+    function refreshToken() {
         var deferred = Q.defer(),
-            req = superagent.get(webgmeUrl + '/api/user/token');
+            req;
 
-        logger.info('Will request new token at', webgmeUrl + '/api/user/token');
-
-        if (!webgmeToken) {
-            // Only use credentials for the first request (password may change)..
-            req.set('Authorization', 'Basic ' + new Buffer(options.userId + ':' + options.password).toString('base64'));
+        if (webgmeToken) {
+            logger.info('Token exists... ');
+            req = superagent.get(webgmeUrl + '/api/user/token')
+                .set('Authorization', 'Bearer ' + webgmeToken);
+        } else if (options.credentials) {
+            logger.info('Credentials were given.. ');
+            req = superagent.get(webgmeUrl + '/api/user/token')
+                .set('Authorization', 'Basic ' + new Buffer(options.credentials).toString('base64'));
         } else {
-            req.set('Authorization', 'Bearer ' + webgmeToken);
+            deferred.resolve();
+            return deferred.promise;
         }
 
-        req.get(webgmeUrl + '/api/user/token')
-            .end(function (err, res) {
+        logger.info('...will request new token at', webgmeUrl + '/api/user/token');
+        req.end(function (err, res) {
                 if (err) {
                     deferred.reject(err);
                     return;
@@ -50,13 +57,9 @@ function AddOnHandler(options) {
                 if (typeof res.body.webgmeToken === 'string') {
                     webgmeToken = res.body.webgmeToken;
                     logger.info('Obtained new token from webgme server.');
-                    //logger.info(webgmeToken);
+                    mt.setToken(webgmeToken);
 
-                    if (storage) {
-                        storage.setToken(webgmeToken);
-                    }
-
-                    deferred.resolve(res.body.webgmeToken);
+                    deferred.resolve();
                 } else {
                     deferred.reject(new Error(webgmeUrl + '/user/token did not provide webgmeToken.'));
                 }
@@ -76,25 +79,32 @@ function AddOnHandler(options) {
             var params = req.body;
 
             if (params.command === WORKER_CONSTANTS.workerCommands.connectedWorkerStart) {
-
+                mt.connectedWorkerStart(webgmeToken || params.webgmeToken, params.projectId, params.branchName);
             } else if (params.command === WORKER_CONSTANTS.workerCommands.connectedWorkerStop) {
-                mt.connectedWorkerStart()
+                mt.connectedWorkerStop(params.projectId, params.branchName);
             } else {
                 logger.error('Unknown command received');
+                res.sendStatus(404);
+                return;
             }
 
             res.sendStatus(200);
         });
+
+        webgmeToken = options.token;
 
         refreshToken()
             .then(function () {
                 server = app.listen(options.port);
                 logger.info('Server listening at:  http://127.0.0.1:' + options.port);
 
-                intervalId = setInterval(refreshToken, TOKEN_REFRESH_INTERVAL);
+                if (webgmeToken) {
+                    logger.info('Credentials and/or token provided, will refresh token every',
+                        refreshInterval, '[ms].');
+                    intervalId = setInterval(refreshToken, refreshInterval);
+                }
             })
             .catch(deferred.reject);
-
 
         return deferred.promise.nodeify(callback);
     };
@@ -105,16 +115,9 @@ function AddOnHandler(options) {
         clearInterval(intervalId);
         server.close();
 
-        if (storage) {
-            storage.close()
-                .then(function () {
-                    storage = null;
-                    deferred.resolve();
-                })
-                .catch(deferred.reject);
-        } else {
-            deferred.resolve();
-        }
+        mt.close()
+            .then(deferred.resolve)
+            .catch(deferred.reject);
 
         return deferred.promise.nodeify(callback);
     };
@@ -125,31 +128,41 @@ if (require.main === module) {
         program = new Command(),
         handler;
 
+    function resolveInterval(val) {
+        if (val) {
+            return parseInt(val, 10);
+        } else {
+            return DEFAULT_TOKEN_REFRESH_INTERVAL;
+        }
+    }
+
     program
         .version('2.13.0')
-        .description('Starts a webhook handler server that connects to the storage via the server.')
+        .description('Starts an add-on machine that handles addOns based on clients connecting to branches. ' +
+        'This script can be used for two purposes: 1) if multiple webgme back-ends are used they should not spawn ' +
+        'their own add-on workers, instead they should all be configured to post to this server ' +
+            '(config.addOn.workerUrl) 2) it enables all running add-ons to be authenticated as one predefined user.')
         .option('-u, --webgmeUrl [string]', 'Url to the webgme server. If not given it will assume http://127.0.0.1' +
             ':%gmeConfig.server.port%')
         .option('-p, --port [number]', 'Port the server should listen at [gmeConfig.server.port + 1]')
         .option('-o, --path [string]', 'Path the server should receive post requests at.', '')
         .option('-t, --token [string]', 'Token for specific addon user (has precedence over credentials).', '')
         .option('-c, --credentials [string]', 'Credentials for specific addon user in the form userId:password.')
+        .option('-i, --token-refresh-interval [string]', 'Interval in ms when the token should be refreshed.',
+            resolveInterval)
 
         .on('--help', function () {
             console.log('  Examples:');
             console.log();
             console.log('    $ node addon_handler.js -p 8080');
             console.log('    $ node addon_handler.js -o /add-on');
-            console.log('    $ node addon_handler.js -t ');
-            console.log('    $ node addon_handler.js -c addon:addonPass');
+            console.log('    $ node addon_handler.js -t %jwt%');
+            console.log('    $ node addon_handler.js -c addon:addonPassword');
+            console.log('    $ node addon_handler.js -c addon:addonPass -i 30000');
             console.log();
         })
         .parse(process.argv);
 
-
-    //program.pluginId = program.args[0];
-    program.userId = program.args[0];
-    program.password = program.args[1];
     handler = new AddOnHandler(program);
 
     handler.start(function (err) {
