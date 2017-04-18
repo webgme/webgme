@@ -12,11 +12,8 @@ var WEBGME = require(__dirname + '/../../../webgme'),
 
     CONSTANTS = require('./constants'),
     Logger = require('../logger'),
-    AddOnManager = require('../../addon/addonmanager'),
-
-    addOnManagers = {
-        //:projectId
-    },
+    ManagerTracker = require('../../addon/managertracker'),
+    mt,
     initialized = false,
     gmeConfig,
     logger;
@@ -43,103 +40,16 @@ function safeSend(msg) {
 function initialize(parameters) {
     if (initialized !== true) {
         initialized = true;
-
+        logger.debug('initializing');
         gmeConfig = parameters.gmeConfig;
         WEBGME.addToRequireJsPaths(gmeConfig);
-        logger = Logger.create('gme:server:worker:connectedworker:pid_' + process.pid, gmeConfig.server.log, true);
-        logger.debug('initializing');
+        logger = Logger.create('gme:connectedworker:pid_' + process.pid, gmeConfig.server.log, true);
+        mt = new ManagerTracker(logger, gmeConfig);
         logger.info('initialized worker');
         safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialized});
     } else {
         safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialized});
     }
-}
-
-//AddOn Functions
-function connectedWorkerStart(webgmeToken, projectId, branchName, callback) {
-    var addOnManager;
-
-    function finish(err) {
-        if (err) {
-            err = err instanceof Error ? err : new Error(err);
-            logger.error('connectedWorkerStart failed', err);
-            callback(err);
-        } else {
-            logger.info('connectedWorkerStart done [totalManagerCnt, branchMonitors]',
-                Object.keys(addOnManagers).length, Object.keys(addOnManager.branchMonitors).length);
-            callback(null);
-        }
-    }
-
-    logger.info('connectedWorkerStart', projectId, branchName);
-    if (!projectId || !branchName) {
-        finish(new Error('Required parameters were not provided', projectId, branchName));
-        return;
-    }
-
-    addOnManager = addOnManagers[projectId];
-
-    if (!addOnManager) {
-        logger.debug('No previous addOns handled for project [' + projectId + ']');
-        addOnManager = new AddOnManager(projectId, logger, gmeConfig);
-        addOnManagers[projectId] = addOnManager;
-        addOnManager.addEventListener('NO_MONITORS', function (/*addOnManager_*/) {
-            delete addOnManagers[projectId];
-            addOnManager.close()
-                .fail(function (err) {
-                    logger.error('Error closing addOnManger', err);
-                });
-        });
-    } else {
-        logger.debug('AddOns already being handled for project [' + projectId + ']');
-    }
-
-    addOnManager.initialize(webgmeToken)
-        .then(function () {
-            return addOnManager.monitorBranch(webgmeToken, branchName);
-        })
-        .then(function () {
-            finish();
-        })
-        .catch(finish);
-}
-
-function connectedWorkerStop(webgmeToken, projectId, branchName, callback) {
-    var addOnManager;
-
-    function finish(err, result) {
-        if (err) {
-            err = err instanceof Error ? err : new Error(err);
-            logger.error('connectedWorkerStop failed', err);
-            callback(err);
-        } else {
-            logger.info('connectedWorkerStop done [totalManagerCnt, branchMonitors, connectionCnt]',
-                Object.keys(addOnManagers).length,
-                addOnManager ? Object.keys(addOnManager.branchMonitors).length : 'n/a',
-                result.connectionCount);
-            callback(null, result);
-        }
-    }
-
-    logger.info('connectedWorkerStop', projectId, branchName);
-    if (!projectId || !branchName) {
-        finish(new Error('Required parameter was not provided'));
-        return;
-    }
-
-    addOnManager = addOnManagers[projectId];
-
-    if (!addOnManager) {
-        logger.debug('Request stop for non existing addOnManger', projectId, branchName);
-        finish(null, {connectionCount: -1});
-        return;
-    }
-
-    addOnManager.unMonitorBranch(webgmeToken, branchName)
-        .then(function (connectionCount) {
-            finish(null, {connectionCount: connectionCount});
-        })
-        .catch(finish);
 }
 
 //main message processing loop
@@ -163,7 +73,7 @@ process.on('message', function (parameters) {
     logger.debug('Incoming message:', {metadata: parameters});
 
     if (parameters.command === CONSTANTS.workerCommands.connectedWorkerStart) {
-        connectedWorkerStart(parameters.webgmeToken, parameters.projectId, parameters.branchName,
+        mt.connectedWorkerStart(parameters.webgmeToken, parameters.projectId, parameters.branchName,
             function (err) {
                 if (err) {
                     safeSend({
@@ -192,7 +102,7 @@ process.on('message', function (parameters) {
     //        });
     //    });
     } else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerStop) {
-        connectedWorkerStop(parameters.webgmeToken, parameters.projectId, parameters.branchName,
+        mt.connectedWorkerStop(parameters.webgmeToken, parameters.projectId, parameters.branchName,
             function (err, result) {
                 if (err) {
                     safeSend({

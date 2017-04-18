@@ -594,5 +594,9 @@ define([
         return bytes.toFixed(1) + ' ' + units[u];
     };
 
+    BlobClient.prototype.setToken = function (token) {
+        this.webgmeToken = token;
+    };
+
     return BlobClient;
 });
