@@ -30,7 +30,7 @@ define(['js/logger',
     var CrosscutController,
         DEFAULT_DECORATOR = 'ModelDecorator',
         WIDGET_NAME = 'DiagramDesigner';
-        //CONNECTION_DECORATOR = 'CircleDecorator';
+    //CONNECTION_DECORATOR = 'CircleDecorator';
 
     CrosscutController = function (options) {
         options = options || {};
@@ -961,6 +961,25 @@ define(['js/logger',
             NON_DELETABLE_POINTERS = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET, CONSTANTS.POINTER_BASE],
             lineDesc,
             canDeletePointer,
+            exclusiveMemberOfCrosscut = function (gmeObject) {
+                var setsInfo = gmeObject.isMemberOf(),
+                    setOwnerId,
+                    crosscutMemberships = [],
+                    i;
+
+                for (setOwnerId in setsInfo) {
+                    for (i = 0; i < setsInfo[setOwnerId].length; i += 1) {
+                        if (setsInfo[setOwnerId][i].indexOf(CrosscutConstants.CROSSCUT_NAME_PREFIX) === 0) {
+                            crosscutMemberships.push(setsInfo[setOwnerId][i]);
+                        }
+                    }
+                }
+
+                if (crosscutMemberships.length === 1 && crosscutMemberships[0] === memberListToRemoveFrom) {
+                    return true;
+                }
+                return false;
+            },
             logger = this.logger;
 
         client.startTransaction();
@@ -971,7 +990,8 @@ define(['js/logger',
             gmeID = this._ComponentID2GMEID[componentId];
 
             //#1: deleting an item --> deleting a member
-            //  #1/a: if deleting a connection whose hierarchical parent is the membershipContainer,
+            //  #1/a: if deleting a connection whose hierarchical parent is the membershipContainer and only occurs in
+            //          this crosscut (#896 issue resolution),
             //          delete the connection from the hierarchy too
             //#2:  deleting a line --> deleting a pointer
             //  #2/a: do not let the user delete an src/dst pointer??
@@ -982,9 +1002,12 @@ define(['js/logger',
                     ', memberListToRemoveFrom: ' + memberListToRemoveFrom);
                 //_client.removeMember(memberListContainerID, gmeID, memberListToRemoveFrom);
 
-                //check if this GME object is a connection and whether it's parent is the crosscut container
+                // check if this GME object is a connection and whether it's parent is the crosscut container and it is
+                // and exclusive member of this crosscut
                 gmeObj = client.getNode(gmeID);
-                if (GMEConcepts.isConnection(gmeID) && gmeObj.getParentId() === memberListContainerID) {
+                if (GMEConcepts.isConnection(gmeID) &&
+                    gmeObj.getParentId() === memberListContainerID &&
+                    exclusiveMemberOfCrosscut(gmeObj)) {
                     if (GMEConcepts.canDeleteNode(gmeID)) {
                         logger.debug('deleting connection from crosscut hierarchy too gmeID: ' + gmeID);
                         client.deleteNodes([gmeID]);

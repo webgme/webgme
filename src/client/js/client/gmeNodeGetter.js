@@ -196,6 +196,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.getSetNames(this._state.nodes[this._id].node);
     };
 
+    GMENode.prototype.isMemberOf = function () {
+        return this._state.core.isMemberOf(this._state.nodes[this._id].node);
+    };
+
     GMENode.prototype.getMemberAttributeNames = function (setName, memberId) {
         return this._state.core.getMemberAttributeNames(this._state.nodes[this._id].node, setName, memberId);
     };
