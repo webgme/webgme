@@ -123,8 +123,12 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
                                 }
                             });
                     }
+                } else if (networkStatus === STORAGE_CONSTANTS.DISCONNECTED) {
+                    logger.warn('Lost connection to storage, awaiting reconnect...');
+                } else if (networkStatus === STORAGE_CONSTANTS.RECONNECTED) {
+                    logger.info('Storage reconnected!');
                 } else {
-                    logger.error(new Error('Connection problems' + networkStatus));
+                    logger.error('Connection problems' + networkStatus);
                     self.storage.close(function (err) {
                         if (err) {
                             logger.error(err);
