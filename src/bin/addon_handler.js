@@ -74,9 +74,21 @@ function AddOnHandler(options) {
             var params = req.body;
 
             if (params.command === WORKER_CONSTANTS.workerCommands.connectedWorkerStart) {
-                mt.connectedWorkerStart(webgmeToken || params.webgmeToken, params.projectId, params.branchName);
+                mt.connectedWorkerStart(webgmeToken || params.webgmeToken, params.projectId, params.branchName)
+                    .then(function (info) {
+                        logger.info('connectedWorkerStart', params.projectId, params.branchName, JSON.stringify(info));
+                    })
+                    .catch(function (err) {
+                        logger.error(err);
+                    });
             } else if (params.command === WORKER_CONSTANTS.workerCommands.connectedWorkerStop) {
-                mt.connectedWorkerStop(params.projectId, params.branchName);
+                mt.connectedWorkerStop(params.projectId, params.branchName)
+                    .then(function (info) {
+                        logger.info('connectedWorkerStop', params.projectId, params.branchName, JSON.stringify(info));
+                    })
+                    .catch(function (err) {
+                        logger.error(err);
+                    });
             } else {
                 logger.error('Unknown command received');
                 res.sendStatus(404);
@@ -95,7 +107,8 @@ function AddOnHandler(options) {
                 }
 
                 server = app.listen(options.port);
-                logger.info('Server listening at:  http://127.0.0.1:' + options.port);
+                logger.info('Will connect to webgme server at', webgmeUrl);
+                logger.info('Server listening at:  http://127.0.0.1:' + options.port, '...');
 
                 if (webgmeToken) {
                     logger.info('Credentials and/or token provided, will refresh token every',
@@ -145,7 +158,8 @@ if (require.main === module) {
         .option('-o, --path [string]', 'Path the server should receive post requests at.', '')
         .option('-t, --token [string]', 'Token for specific addon user (has precedence over credentials).', '')
         .option('-c, --credentials [string]', 'Credentials for specific addon user in the form userId:password.')
-        .option('-i, --token-refresh-interval [string]', 'Interval in ms when the token should be refreshed.',
+        .option('-i, --token-refresh-interval [string]', 'Interval in ms when the token should be refreshed ' +
+            '(only applicable if token or credentials were given).',
             resolveInterval)
 
         .on('--help', function () {

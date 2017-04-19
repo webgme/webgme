@@ -45,6 +45,12 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
             .then(function () {
                 return addOnManager.monitorBranch(branchName);
             })
+            .then(function () {
+                return {
+                    managers: Object.keys(addOnManagers).length,
+                    branchMonitors: Object.keys(addOnManager.branchMonitors).length
+                };
+            })
             .nodeify(callback);
     }
 
