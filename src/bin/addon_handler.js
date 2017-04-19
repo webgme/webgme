@@ -6,25 +6,21 @@
 
 var webgme = require('../../webgme'),
     Express = require('express'),
-    path = require('path'),
     ManagerTracker = require('../addon/managertracker'),
     WORKER_CONSTANTS = require('../server/worker/constants'),
     Q = require('q'),
     bodyParser = require('body-parser'),
     superagent = require('superagent'),
-    configDir = path.join(process.cwd(), 'config'),
-    gmeConfig = require(configDir),
+    gmeConfig = webgme.getGmeConfig(),
     logger = webgme.Logger.create('gme:bin:addon-handler', gmeConfig.bin.log, false),
-    DEFAULT_TOKEN_REFRESH_INTERVAL = 60000; // Refresh token every minute.
-
-webgme.addToRequireJsPaths(gmeConfig);
+    DEFAULT_TOKEN_REFRESH_INTERVAL = 60000; // Refresh token every minute by default.
 
 function AddOnHandler(options) {
     var app = new Express(),
         webgmeUrl = options.webgmeUrl || 'http://127.0.0.1:' + gmeConfig.server.port,
-        refreshInterval = options.tokenRefreshInterval || DEFAULT_TOKEN_REFRESH_INTERVAL,
+        refreshInterval = options.tokenRefreshInterval,
         webgmeToken,
-        intervalId,
+        timeoutId,
         mt,
         server;
 
@@ -49,21 +45,20 @@ function AddOnHandler(options) {
 
         logger.info('...will request new token at', webgmeUrl + '/api/user/token');
         req.end(function (err, res) {
-                if (err) {
-                    deferred.reject(err);
-                    return;
-                }
+            if (err) {
+                deferred.reject(err);
+            } else if (typeof res.body.webgmeToken === 'string') {
+                webgmeToken = res.body.webgmeToken;
+                logger.info('Obtained new token from webgme server.');
+                mt.setToken(webgmeToken);
 
-                if (typeof res.body.webgmeToken === 'string') {
-                    webgmeToken = res.body.webgmeToken;
-                    logger.info('Obtained new token from webgme server.');
-                    mt.setToken(webgmeToken);
+                deferred.resolve();
+            } else {
+                deferred.reject(new Error(webgmeUrl + '/user/token did not provide webgmeToken.'));
+            }
 
-                    deferred.resolve();
-                } else {
-                    deferred.reject(new Error(webgmeUrl + '/user/token did not provide webgmeToken.'));
-                }
-            });
+            timeoutId = setTimeout(refreshToken, refreshInterval);
+        });
 
         return deferred.promise;
     }
@@ -94,17 +89,19 @@ function AddOnHandler(options) {
         webgmeToken = options.token;
 
         refreshToken()
-            .then(function () {
+            .finally(function (err) {
+                if (err) {
+                    logger.warn('Error at initial token refresh, will still proceed', err);
+                }
+
                 server = app.listen(options.port);
                 logger.info('Server listening at:  http://127.0.0.1:' + options.port);
 
                 if (webgmeToken) {
                     logger.info('Credentials and/or token provided, will refresh token every',
                         refreshInterval, '[ms].');
-                    intervalId = setInterval(refreshToken, refreshInterval);
                 }
-            })
-            .catch(deferred.reject);
+            });
 
         return deferred.promise.nodeify(callback);
     };
@@ -112,7 +109,7 @@ function AddOnHandler(options) {
     this.stop = function (callback) {
         var deferred = Q.defer();
 
-        clearInterval(intervalId);
+        clearTimeout(timeoutId);
         server.close();
 
         mt.close()
@@ -123,18 +120,18 @@ function AddOnHandler(options) {
     };
 }
 
+function resolveInterval(val) {
+    if (val) {
+        return parseInt(val, 10);
+    } else {
+        return DEFAULT_TOKEN_REFRESH_INTERVAL;
+    }
+}
+
 if (require.main === module) {
     var Command = require('commander').Command,
         program = new Command(),
         handler;
-
-    function resolveInterval(val) {
-        if (val) {
-            return parseInt(val, 10);
-        } else {
-            return DEFAULT_TOKEN_REFRESH_INTERVAL;
-        }
-    }
 
     program
         .version('2.13.0')
