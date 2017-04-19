@@ -18,7 +18,7 @@ var webgme = require('../../webgme'),
 function AddOnHandler(options) {
     var app = new Express(),
         webgmeUrl = options.webgmeUrl || 'http://127.0.0.1:' + gmeConfig.server.port,
-        refreshInterval = options.tokenRefreshInterval,
+        refreshInterval = options.tokenRefreshInterval || DEFAULT_TOKEN_REFRESH_INTERVAL,
         webgmeToken,
         timeoutId,
         mt,
@@ -158,9 +158,8 @@ if (require.main === module) {
         .option('-o, --path [string]', 'Path the server should receive post requests at.', '')
         .option('-t, --token [string]', 'Token for specific addon user (has precedence over credentials).', '')
         .option('-c, --credentials [string]', 'Credentials for specific addon user in the form userId:password.')
-        .option('-i, --token-refresh-interval [string]', 'Interval in ms when the token should be refreshed ' +
-            '(only applicable if token or credentials were given).',
-            resolveInterval)
+        .option('-i, --token-refresh-interval [integer]', 'Interval in ms when the token should be refreshed ' +
+            '(only applicable if token or credentials were given).', resolveInterval)
 
         .on('--help', function () {
             console.log('  Examples:');

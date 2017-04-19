@@ -23,18 +23,19 @@ function MemoryManager(storage, mainLogger, gmeConfig) {
     /**
      * Since the web-socket portion temporarily appends a socket to the eventData
      * (to know if it should broadcast or not) we need to ensure that we don't send that data here.
+     * Neither do we want to send webgmeToken if attached to the event data.
      *
      * @param {object} data - event data from storage.
-     * @returns {object} data if it does not have socket, otherwise a shallow copy without the socket.
+     * @returns {object} data if it does not have socket nor webgmeToken, otherwise a shallow copy without the socket.
      */
-    function ensureNoSocket(data) {
+    function ensureNoSocketOrToken(data) {
         var cleanData,
             key;
 
-        if (data.hasOwnProperty('socket')) {
+        if (data.hasOwnProperty('socket') || data.hasOwnProperty('webgmeToken')) {
             cleanData = {};
             for (key in data) {
-                if (key !== 'socket') {
+                if (key !== 'socket' && key !== 'webgmeToken') {
                     cleanData[key] = data[key];
                 }
             }
@@ -47,7 +48,7 @@ function MemoryManager(storage, mainLogger, gmeConfig) {
 
     function getEventHandler(eventType) {
         return function (_s, data) {
-            hookMessenger.send(eventType, ensureNoSocket(data));
+            hookMessenger.send(eventType, ensureNoSocketOrToken(data));
         };
     }
 

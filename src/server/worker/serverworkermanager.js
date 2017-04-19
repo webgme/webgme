@@ -328,9 +328,6 @@ function ServerWorkerManager(_parameters) {
         }
     }
 
-
-    // TODO: This should be an object based on projectIds or list of such.
-    // TODO: For now we just keep one dedicated worker for the addOns.
     this.connectedWorkerId = null;
     this.connectedWorkerRequests = [];
     this.connectedWorkerCallbacks = {
