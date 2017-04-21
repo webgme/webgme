@@ -34,6 +34,14 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
         //{id: {string}, instance: {AddOnBase}}
     ];
 
+    this.workingAddons = {
+        promise: {
+            then: function (cb) {
+                cb();
+            }
+        }
+    };
+
     this.webgmeToken = webgmeToken;
 
     // State
@@ -165,7 +173,8 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
     }
 
     function onUpdate(eventData, commitQueue, updateQueue, handlerCallback) {
-        var commitData = eventData.commitData;
+        var commitData = eventData.commitData,
+            deferred;
 
         if (eventData.local) {
             // This is when an addOn made changes and a commit was made below.
@@ -174,6 +183,8 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
             return;
         }
 
+        deferred = Q.defer();
+        self.workingAddons.promise = deferred.promise;
         // loadNewRoot will set self.commitHash/rootHash/rootNode
         loadNewRoot(commitData)
             .then(function () {
@@ -241,11 +252,14 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
                             }
                         });
                 }
+
                 handlerCallback(null, self.stopRequested === false);
+                deferred.resolve();
             })
             .catch(function (err) {
                 logger.error('Fatal error', err);
                 handlerCallback(err, false);
+                deferred.resolve();
             });
     }
 
@@ -289,15 +303,18 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
         if (self.stopRequested === false) {
             stopDeferred = Q.defer();
             self.stopRequested = true;
-
-            storage.closeBranch(project.projectId, branchName, function (err) {
-                self.branchIsOpen = false;
-                if (err) {
-                    stopDeferred.reject(err);
-                } else {
-                    stopDeferred.resolve();
-                }
-            });
+            // Make sure the running add-ons have finished
+            self.workingAddons.promise
+                .then(function () {
+                    storage.closeBranch(project.projectId, branchName, function (err) {
+                        self.branchIsOpen = false;
+                        if (err) {
+                            stopDeferred.reject(err);
+                        } else {
+                            stopDeferred.resolve();
+                        }
+                    });
+                });
         }
 
         return stopDeferred.promise.nodeify(callback);
