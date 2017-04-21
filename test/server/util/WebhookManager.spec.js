@@ -144,6 +144,8 @@ describe('Webhook Manager', function () {
                 CONSTANTS.TAG_CREATED,
                 CONSTANTS.TAG_DELETED,
                 CONSTANTS.COMMIT,
+                CONSTANTS.BRANCH_JOINED,
+                CONSTANTS.BRANCH_LEFT,
             ]);
 
             memory.stop();
@@ -302,6 +304,27 @@ describe('Webhook Manager', function () {
                     projectId: projectId,
                     anything: 'notReallyCantHaveSocket',
                     socket: 'something'
+                };
+
+            storage.send(CONSTANTS.PROJECT_DELETED, eventData);
+        });
+
+        it('should not forward webgmeToken', function (done) {
+            var hookListener = getHookListener(function (req) {
+                    expect(req.body.event).to.equal(CONSTANTS.PROJECT_DELETED);
+                    expect(req.body.data.projectId).to.eql(eventData.projectId);
+                    expect(req.body.data.anything).to.eql(eventData.anything);
+                    expect(typeof req.body.data.socket).to.eql('undefined');
+                    expect(typeof req.body.data.webgmeToken).to.eql('undefined');
+
+                    hookListener.close();
+                    done();
+                }),
+                eventData = {
+                    projectId: projectId,
+                    anything: 'notReallyCantHaveSocket',
+                    socket: 'something',
+                    webgmeToken: 'aToken'
                 };
 
             storage.send(CONSTANTS.PROJECT_DELETED, eventData);

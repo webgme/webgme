@@ -624,7 +624,7 @@ function openSocketIo(server, agent, userName, password, token) {
     if (server.getGmeConfig().authentication.enable === true) {
         loginPromise = logIn(server, agent, userName, password);
     } else {
-        loginPromise = new Q();
+        loginPromise = Q.resolve();
     }
 
     loginPromise
