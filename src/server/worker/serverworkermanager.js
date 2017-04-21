@@ -11,7 +11,7 @@ var Child = require('child_process'),
     path = require('path'),
     CONSTANTS = require('./constants'),
     GUID = requireJS('common/util/guid'),
-    superagent = require('superagent'),
+
     SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js'),
     CONNECTED_WORKER_JS = path.join(__dirname, 'connectedworker.js');
 
@@ -334,44 +334,12 @@ function ServerWorkerManager(_parameters) {
         //resid: callback
     };
 
-    /**
-     *
-     * @param {object} parameters
-     * @param {string} parameters.webgmeToken
-     * @param {string} parameters.projectId
-     * @param {string} parameters.branchName
-     * @param {boolean} parameters.join
-     * @param {function} callback
-     */
-    this.socketRoomChange = function (parameters, callback) {
-        if (gmeConfig.addOn.enable === true) {
-            if (parameters.join === true) {
-                logger.info('socket joined room');
-                parameters.command = CONSTANTS.workerCommands.connectedWorkerStart;
-            } else {
-                parameters.command = CONSTANTS.workerCommands.connectedWorkerStop;
-                logger.info('socket left room');
-            }
-
-            if (gmeConfig.addOn.workerUrl) {
-                logger.info('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
-                superagent.post(gmeConfig.addOn.workerUrl, parameters, callback);
-            } else {
-                self.connectedWorkerRequests.push({
-                    request: parameters,
-                    cb: callback
-                });
-            }
-        } else {
-            callback(null);
-        }
-    };
-
     this.start = function () {
         if (_managerId === null) {
             _managerId = setInterval(queueManager, 10);
         }
         reserveWorkerIfNecessary(CONSTANTS.workerTypes.simple);
+        // TODO: the addonEventPropagator should handle the connected worker.
         if (gmeConfig.addOn.enable === true) {
             if (gmeConfig.addOn.workerUrl) {
                 logger.info('AddOns enabled and workerUrl provided will post updates to', gmeConfig.addOn.workerUrl);

@@ -1,3 +1,4 @@
+/*globals requireJS*/
 /*jshint node:true*/
 /**
  * @author pmeijer / https://github.com/pmeijer
@@ -7,7 +8,7 @@
 var webgme = require('../../webgme'),
     Express = require('express'),
     ManagerTracker = require('../addon/managertracker'),
-    WORKER_CONSTANTS = require('../server/worker/constants'),
+    CONSTANTS = requireJS('common/Constants'),
     Q = require('q'),
     bodyParser = require('body-parser'),
     superagent = require('superagent'),
@@ -73,7 +74,8 @@ function AddOnHandler(options) {
         app.post(options.path, function (req, res) {
             var params = req.body;
 
-            if (params.command === WORKER_CONSTANTS.workerCommands.connectedWorkerStart) {
+            if (params.event === CONSTANTS.STORAGE.BRANCH_JOINED ||
+                params.event === CONSTANTS.STORAGE.BRANCH_HASH_UPDATED) {
                 mt.connectedWorkerStart(webgmeToken || params.webgmeToken, params.projectId, params.branchName)
                     .then(function (info) {
                         logger.info('connectedWorkerStart', params.projectId, params.branchName, JSON.stringify(info));
@@ -81,7 +83,7 @@ function AddOnHandler(options) {
                     .catch(function (err) {
                         logger.error(err);
                     });
-            } else if (params.command === WORKER_CONSTANTS.workerCommands.connectedWorkerStop) {
+            } else if (params.event === CONSTANTS.STORAGE.BRANCH_LEFT) {
                 mt.connectedWorkerStop(params.projectId, params.branchName)
                     .then(function (info) {
                         logger.info('connectedWorkerStop', params.projectId, params.branchName, JSON.stringify(info));

@@ -38,6 +38,7 @@ var path = require('path'),
     Logger = require('./logger'),
 
     ServerWorkerManager = require('./worker/serverworkermanager'),
+    AddOnEventPropagator = require('../addon/AddOnEventPropagator'),
 
     webgmeUtils = require('../utils'),
 
@@ -605,6 +606,10 @@ function StandAloneServer(gmeConfig) {
 
     if (gmeConfig.webhooks.enable) {
         routeComponents.push(new WebhookManager(__storage, logger, gmeConfig));
+    }
+
+    if (gmeConfig.addOn.enable) {
+        routeComponents.push(new AddOnEventPropagator(__storage, __workerManager, logger, gmeConfig));
     }
 
     middlewareOpts = {  //TODO: Pass this to every middleware They must not modify the options!
