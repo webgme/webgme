@@ -55,11 +55,16 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
     }
 
     function connectedWorkerStop(projectId, branchName, callback) {
-        if (addOnManagers[projectId]) {
-            return addOnManagers[projectId].unMonitorBranch(branchName);
+        if (!projectId || !branchName) {
+            return Q.reject(new Error('Required parameters were not provided: ' + projectId + ', ' + branchName + '.'))
+                .nodeify(callback);
+        } else if (addOnManagers[projectId]) {
+            return addOnManagers[projectId].unMonitorBranch(branchName)
+                .nodeify(callback);
         } else {
             logger.debug('Request stop for non existing addOnManger', projectId, branchName);
-            return Q.resolve().nodeify(callback);
+            return Q.resolve()
+                .nodeify(callback);
         }
     }
 

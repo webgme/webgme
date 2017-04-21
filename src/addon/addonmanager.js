@@ -209,7 +209,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
 
     this.unMonitorBranch = function (branchName, callback) {
         var deferred = Q.defer();
-
+        deferred.resolve({});
         return deferred.promise.nodeify(callback);
     };
 
