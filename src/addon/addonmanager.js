@@ -39,7 +39,6 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
 
     this.branchMonitors = {
         //branchName: {
-        // connectionCnt: {number},
         // instance: {BranchMonitor},
         // stopTimeout: {
         //     id: {number},
@@ -55,20 +54,16 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
     this.webgmeToken = null;
     this.renewingToken = false;
 
-    this.inStoppedAndStarted = {};
+    this.inStoppedAndStarted = 0;
 
     function removeMonitor(branchName) {
-        var remainingMonitors,
-            stoppedAndStart;
+        var remainingMonitors;
 
         delete self.branchMonitors[branchName];
         remainingMonitors = Object.keys(self.branchMonitors);
-        stoppedAndStart = Object.keys(self.inStoppedAndStarted);
 
-
-        logger.debug('Removing monitor [' + branchName + '] - remaining, stopAndStarted',
-            remainingMonitors, stoppedAndStart);
-        if (remainingMonitors.length === 0 && stoppedAndStart.length === 0) {
+        logger.debug('Removing monitor [' + branchName + '] - remaining', remainingMonitors);
+        if (remainingMonitors.length === 0 && self.inStoppedAndStarted === 0) {
             self.dispatchEvent('NO_MONITORS');
         }
     }
@@ -145,148 +140,75 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
     };
 
     this.monitorBranch = function (branchName, callback) {
-        var monitor = self.branchMonitors[branchName],
-            deferred = Q.defer();
+        var monitor = self.branchMonitors[branchName];
 
-        function startNewMonitor(initCnt) {
+        function startNewTimer() {
+            return setTimeout(function () {
+                var timedDeferred = monitor.stopTimeout.deferred;
+                monitor.stopTimeout = null;
+                monitor.instance.stop()
+                    .then(function () {
+                        removeMonitor(branchName);
+                        timedDeferred.resolve();
+                    })
+                    .catch(timedDeferred.reject);
+
+            }, gmeConfig.addOn.monitorTimeout);
+        }
+
+        function startNewMonitor() {
             monitor = {
-                connectionCnt: initCnt,
                 stopTimeout: null,
                 instance: new BranchMonitor(self.webgmeToken, self.storage, self.project, branchName, logger, gmeConfig)
             };
 
             self.branchMonitors[branchName] = monitor;
+
+            monitor.stopTimeout = {
+                deferred: Q.defer(),
+                id: startNewTimer(branchName)
+            };
+
             logger.debug('monitorBranch [' + branchName + '] - starting new monitor');
-            monitor.instance.start()
-                .then(deferred.resolve)
-                .catch(deferred.reject);
+            return monitor.instance.start();
         }
 
         if (monitor) {
-            monitor.connectionCnt += 1;
-            logger.debug('monitorBranch [' + branchName + '] - connection counter: ', monitor.connectionCnt);
-            if (monitor.connectionCnt === 1) {
-                // The client disconnected before the monitor itself connected.
-                // Register on start deferred and stop the monitor.
-                logger.debug('The client disconnected before the monitor itself trigger connect.');
-                monitor.instance.start()
-                    .then(function () {
-                        return monitor.instance.stop();
-                    })
-                    .then(function () {
-                        removeMonitor(branchName);
-                        deferred.resolve();
-                    })
-                    .catch(deferred.reject);
-            } else if (monitor.connectionCnt === 2) {
-                if (monitor.stopTimeout) {
-                    // The monitor is in stopping stage and
-                    // the timeout had not been triggered yet.
-                    clearTimeout(monitor.stopTimeout.id);
-                    logger.debug('monitorBranch [' + branchName + '] - setTimeout cleared');
-                    monitor.stopTimeout.deferred.resolve(monitor.connectionCnt);
-                    monitor.stopTimeout = null;
-                    monitor.instance.start()
-                        .then(deferred.resolve)
-                        .catch(deferred.reject);
-                } else if (monitor.instance.stopRequested === true) {
-                    // [Rare case]
-                    // The monitor is in stopping stage and the timeout has been triggered.
-                    // We cannot simply remove the monitor before it has closed the branch,
-                    // therefore we need to register on the stop.promise and start a new monitor
-                    // once it has resolved.
-                    //
-                    // (For bookkeeping of the addOnManagers it is not the same since they create a new storage.)
-                    self.inStoppedAndStarted[branchName] = true;
-                    logger.debug('monitorBranch [' + branchName + '] - inStoppedAndStarted!');
-                    monitor.instance.stop()
-                        .then(function () {
-                            delete self.inStoppedAndStarted[branchName];
-                            if (self.branchMonitors[branchName]) {
-                                logger.error('Monitor was not removed', self.branchMonitors[branchName]);
-                                deferred.reject(new Error('Monitor was not removed!'));
-                            } else {
-                                startNewMonitor(2);
-                                // Here we are expecting a unMonitorBranch from the old monitor's closeBranch.
-                                // Which will decrease the connectionCnt to 1 which will trigger the timeout.
-                                // The timeout will then be cleared by the new monitors' openBranch.
-                            }
-                        })
-                        .catch(deferred.reject);
-                } else {
-                    monitor.instance.start()
-                        .then(deferred.resolve)
-                        .catch(deferred.reject);
-                }
-            } else if (monitor.connectionCnt > 2) {
-                if (self.inStoppedAndStarted[branchName]) {
-                    monitor.instance.stop()
-                        .then(function () {
-                            var newMonitor = self.branchMonitors[branchName];
-                            newMonitor.connectionCnt += 1;
-                            return newMonitor.instance.start();
-                        })
-                        .then(deferred.resolve)
-                        .catch(deferred.reject);
-                } else {
-                    monitor.instance.start()
-                        .then(deferred.resolve)
-                        .catch(deferred.reject);
-                }
+            if (monitor.stopTimeout) {
+                // The monitor has been created and the stop hasn't been triggered,
+                // so clear the old timeout and set a new one.
+                clearTimeout(monitor.stopTimeout.id);
+                monitor.stopTimeout.id = startNewTimer(branchName);
+
+                return monitor.instance.start()
+                    .nodeify(callback);
             } else {
-                deferred.reject(new Error('monitorBranch - unexpected connection count ( 2 > ' +
-                    monitor.connectionCnt + ' )'));
+                // The timeout has been triggered, and the monitor is in stopping stage.
+                // We cannot simply remove the monitor before it has closed the branch,
+                // therefore we need to register on the stop.promise and start a new monitor
+                // (or use an earlier added one) once it has resolved.
+
+                // The counter ensures that this manager isn't destroyed.
+                self.inStoppedAndStarted += 1;
+                return monitor.instance.stop()
+                    .then(function () {
+                        self.inStoppedAndStarted -= 1;
+                        if (self.branchMonitors[branchName]) {
+                            return self.branchMonitors[branchName].instance.start();
+                        } else {
+                            return startNewMonitor();
+                        }
+                    })
+                    .nodeify(callback);
             }
         } else {
-            startNewMonitor(1);
+            return startNewMonitor()
+                .nodeify(callback);
         }
-
-        return deferred.promise.nodeify(callback);
     };
 
     this.unMonitorBranch = function (branchName, callback) {
-        var deferred = Q.defer(),
-            monitor = self.branchMonitors[branchName];
-
-        if (!monitor) {
-            logger.debug('No monitor [' + branchName + '] assuming this is the monitor itself disconnecting');
-            deferred.resolve(-1);
-        } else {
-            monitor.connectionCnt -= 1;
-            logger.debug('unMonitorBranch [' + branchName + '] - connection counter: ', monitor.connectionCnt);
-            if (monitor.connectionCnt === 1) {
-                // One connection is the monitor itself.
-                if (monitor.stopTimeout === null) {
-                    logger.debug('[' + branchName + '] setting timeout to close monitor [ms]',
-                        gmeConfig.addOn.monitorTimeout);
-                    monitor.stopTimeout = {
-                        deferred: deferred,
-                        id: setTimeout(function () {
-                            var timedDeferred = monitor.stopTimeout.deferred;
-                            monitor.stopTimeout = null;
-                            monitor.instance.stop()
-                                .then(function () {
-                                    removeMonitor(branchName);
-                                    timedDeferred.resolve(-1);
-                                })
-                                .catch(timedDeferred.reject);
-
-                        }, gmeConfig.addOn.monitorTimeout)
-                    };
-                } else {
-                    deferred.reject(new Error('unMonitorBranch [' + branchName + '] cnt 1 but timeout already set'));
-                }
-
-            } else if (monitor.connectionCnt > 1) {
-                deferred.resolve(monitor.connectionCnt);
-            } else if (monitor.connectionCnt === 0) {
-                // Monitor has not yet entered branch and/or triggered monitor start.
-                deferred.resolve(monitor.connectionCnt);
-            } else {
-                deferred.reject(new Error('unMonitorBranch [' + branchName + '] unexpected connection count' +
-                    '( 0 > ' + monitor.connectionCnt + ' )'));
-            }
-        }
+        var deferred = Q.defer();
 
         return deferred.promise.nodeify(callback);
     };
