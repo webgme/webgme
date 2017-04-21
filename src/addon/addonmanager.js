@@ -253,6 +253,20 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
             self.branchMonitors[branchName].instance.setToken(token);
         });
     };
+
+    this.getStatus = function () {
+        var status = {
+            initRequested: self.initRequested,
+            closeRequested: self.closeRequested,
+            renewingToken: self.renewingToken,
+            inStoppedAndStarted: self.inStoppedAndStarted,
+            branchMonitors: {}
+        };
+
+        Object.keys(self.branchMonitors).forEach(function (branchName) {
+            status.branchMonitors[branchName] = self.branchMonitors[branchName].getStatus();
+        });
+    };
 }
 
 

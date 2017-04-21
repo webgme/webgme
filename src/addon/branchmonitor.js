@@ -330,6 +330,19 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
         });
     };
 
+    this.getStatus = function () {
+        return {
+            startRequested: self.startRequested,
+            stopRequested: self.stopRequested,
+            branchIsOpen: self.branchIsOpen,
+            commitHash: self.commitHash,
+
+            runningAddOns: self.runningAddOns.map(function (a) {
+                return a.id;
+            }),
+        };
+    };
+
     this.queryAddOn = function (addOnId, commitHash, queryParams, callback) {
         var deferred = Q.defer();
         deferred.reject(new Error('queryAddOn not implemented yet!'));

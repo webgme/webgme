@@ -1,6 +1,8 @@
 /*globals*/
 /*jshint node:true*/
 /**
+ * This is keeps track of all addon-managers that create their own storages and in turn keeps track of the
+ * branch-monitors.
  * @author pmeijer / https://github.com/pmeijer
  */
 
@@ -76,6 +78,18 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
             return addOnManagers[projectId].close();
         }))
             .nodeify(callback);
+    };
+
+    this.getStatus = function () {
+        var status = {
+            projects: {
+
+            }
+        };
+
+        Object.keys(addOnManagers).forEach(function (projectId) {
+            status.projects[projectId] = addOnManagers.getStatus();
+        });
     };
 
     this.setToken = function (token) {

@@ -1,12 +1,15 @@
 /*globals requireJS*/
 /*jshint node:true*/
 /**
- * This
+ * This propagates the events from the storage to the addon handler.
+ * If url is provided it will post requests to that server, otherwise it will send
+ * messages to the connected worker.
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';
 
 var superagent = require('superagent'),
+    Q = require('q'),
     CONSTANTS = requireJS('common/Constants'),
     WORKER_CONSTANTS = require('../server/worker/constants');
 
@@ -77,14 +80,14 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
         storage.addEventListener(CONSTANTS.STORAGE.BRANCH_JOINED, branchJoined);
         storage.addEventListener(CONSTANTS.STORAGE.BRANCH_LEFT, branchLeft);
         storage.addEventListener(CONSTANTS.STORAGE.BRANCH_HASH_UPDATED, branchUpdated);
-        callback();
+        return Q.resolve().nodeify(callback);
     };
 
     this.stop = function (callback) {
         storage.removeEventListener(CONSTANTS.STORAGE.BRANCH_JOINED, branchJoined);
         storage.removeEventListener(CONSTANTS.STORAGE.BRANCH_LEFT, branchLeft);
         storage.removeEventListener(CONSTANTS.STORAGE.BRANCH_HASH_UPDATED, branchUpdated);
-        callback();
+        return Q.resolve().nodeify(callback);
     };
 }
 
