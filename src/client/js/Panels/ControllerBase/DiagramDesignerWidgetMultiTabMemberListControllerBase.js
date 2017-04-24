@@ -1604,15 +1604,14 @@ define(['js/logger',
             len,
             setID;
 
-        if (memberListContainerID &&
-            memberListSetsRegistryKey &&
-            memberListSetsRegistryKey !== '') {
-            memberListContainer = this._client.getNode(memberListContainerID);
-            memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
-            base = this._client.getNode(memberListContainer.getBaseId());
+        if (typeof memberListContainerID === 'string') {
+            memberListSetsRegistry = this.getMemberListSetsRegistry(memberListContainerID);
+
             if (memberListSetsRegistry === undefined &&
-                (base === null || base.getRegistry(memberListSetsRegistryKey) === undefined)) {
-                memberListSetsRegistry = [];
+                memberListSetsRegistryKey &&
+                memberListSetsRegistryKey !== '') {
+                memberListContainer = this._client.getNode(memberListContainerID);
+                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
             }
 
             if (this._tabIDMemberListID[tabID] && memberListSetsRegistry) {
@@ -1646,46 +1645,87 @@ define(['js/logger',
             urlTab = WebGMEGlobal.State.getActiveTab(),
             setID;
 
-        if (typeof memberListContainerID === 'string' &&
-            memberListSetsRegistryKey &&
-            memberListSetsRegistryKey !== '') {
-            memberListContainer = this._client.getNode(memberListContainerID);
-            memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
-            base = this._client.getNode(memberListContainer.getBaseId());
-            if (memberListSetsRegistry === undefined &&
-                (base === null || base.getRegistry(memberListSetsRegistryKey) === undefined)) {
-                memberListSetsRegistry = [];
+        if (typeof memberListContainerID === 'string') {
+            memberListSetsRegistry = this.getMemberListSetsRegistry(memberListContainerID);
+
+            if(memberListSetsRegistry === undefined &&
+                memberListSetsRegistryKey &&
+                memberListSetsRegistryKey !== ''){
+                memberListContainer = this._client.getNode(memberListContainerID);
+                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
             }
 
-            if (memberListSetsRegistry) {
-                this._tabIDMemberListID = {};
-                for (i = 0; i < newTabIDOrder.length; i += 1) {
-                    //i is the new order number
-                    //newTabIDOrder[i] is the tab identifier
-                    if (urlTab === newTabIDOrder[i]) {
-                        WebGMEGlobal.State.registerActiveTab(i);
-                    }
-                    setID = oldIDList[newTabIDOrder[i]];
-                    this._tabIDMemberListID[i] = setID;
-                    for (j = 0; j < memberListSetsRegistry.length; j += 1) {
-                        if (memberListSetsRegistry[j].SetID === setID) {
-                            memberListSetsRegistry[j].order = i;
-                            break;
-                        }
+        }
+
+        if (memberListSetsRegistry) {
+            this._tabIDMemberListID = {};
+            for (i = 0; i < newTabIDOrder.length; i += 1) {
+                //i is the new order number
+                //newTabIDOrder[i] is the tab identifier
+                if (urlTab === newTabIDOrder[i]) {
+                    WebGMEGlobal.State.registerActiveTab(i);
+                }
+                setID = oldIDList[newTabIDOrder[i]];
+                this._tabIDMemberListID[i] = setID;
+                for (j = 0; j < memberListSetsRegistry.length; j += 1) {
+                    if (memberListSetsRegistry[j].SetID === setID) {
+                        memberListSetsRegistry[j].order = i;
+                        break;
                     }
                 }
-
-                memberListSetsRegistry.sort(function (a, b) {
-                    if (a.order < b.order) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                });
-
-                this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
             }
+
+            memberListSetsRegistry.sort(function (a, b) {
+                if (a.order < b.order) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+
+            this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
         }
+
+        // if (typeof memberListContainerID === 'string' &&
+        //     memberListSetsRegistryKey &&
+        //     memberListSetsRegistryKey !== '') {
+        //     memberListContainer = this._client.getNode(memberListContainerID);
+        //     memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
+        //     base = this._client.getNode(memberListContainer.getBaseId());
+        //     if (memberListSetsRegistry === undefined &&
+        //         (base === null || base.getRegistry(memberListSetsRegistryKey) === undefined)) {
+        //         memberListSetsRegistry = [];
+        //     }
+        //
+        //     if (memberListSetsRegistry) {
+        //         this._tabIDMemberListID = {};
+        //         for (i = 0; i < newTabIDOrder.length; i += 1) {
+        //             //i is the new order number
+        //             //newTabIDOrder[i] is the tab identifier
+        //             if (urlTab === newTabIDOrder[i]) {
+        //                 WebGMEGlobal.State.registerActiveTab(i);
+        //             }
+        //             setID = oldIDList[newTabIDOrder[i]];
+        //             this._tabIDMemberListID[i] = setID;
+        //             for (j = 0; j < memberListSetsRegistry.length; j += 1) {
+        //                 if (memberListSetsRegistry[j].SetID === setID) {
+        //                     memberListSetsRegistry[j].order = i;
+        //                     break;
+        //                 }
+        //             }
+        //         }
+        //
+        //         memberListSetsRegistry.sort(function (a, b) {
+        //             if (a.order < b.order) {
+        //                 return -1;
+        //             } else {
+        //                 return 1;
+        //             }
+        //         });
+        //
+        //         this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
+        //     }
+        // }
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onTabDeleteClicked = function (tabID) {

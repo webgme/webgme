@@ -277,10 +277,10 @@ define(['js/logger',
 
         if (node) {
             baseObjectifiedSetsRegistry = this._getObjectifiedSetsRegistry(node.getBaseId());
-            registry = node.getRegistry(REGISTRY_KEYS.CROSSCUTS) || [];
+            registry = node.getOwnEditableRegistry(REGISTRY_KEYS.CROSSCUTS) || [];
             setNames = node.getSetNames();
             for (i = 0; i < registry.length; i += 1) {
-                if (setNames.indexOf(registry[i].SetID)) {
+                if (setNames.indexOf(registry[i].SetID) !== -1) {
                     selfObjectifiedSetsRegistry[registry[i].SetID] = registry[i];
                 }
             }
@@ -309,6 +309,7 @@ define(['js/logger',
                     delete objectifiedSetsRegistry[id];
                 }
             }
+            preIndex += 1;
         }
 
         return registry;
@@ -1572,15 +1573,15 @@ define(['js/logger',
 
     CrosscutController.prototype._updateCrosscutRegistry = function () {
         var containerNode = this._client.getNode(this._memberListContainerID),
-            regItem = containerNode.getOwnEditableRegistry(REGISTRY_KEYS.CROSSCUTS),
+            regItem = this.getMemberListSetsRegistry(this._memberListContainerID) || [],
             i, crosscutId = Number(this._activeCrosscutId),
             base;
 
-        base = this._client.getNode(containerNode.getBaseId());
-        if (regItem === undefined &&
-            (base === null || base.getRegistry(REGISTRY_KEYS.CROSSCUTS) === undefined)) {
-            regItem = [];
-        }
+        // base = this._client.getNode(containerNode.getBaseId());
+        // if (regItem === undefined &&
+        //     (base === null || base.getRegistry(REGISTRY_KEYS.CROSSCUTS) === undefined)) {
+        //     regItem = [];
+        // }
 
         if (regItem) {
             for (i = 0; i < regItem.length; i += 1) {
@@ -1601,8 +1602,7 @@ define(['js/logger',
         this._activeCrosscutId = tabId;
         this._initActiveTab = true;
 
-        var containerNode = this._client.getNode(this._memberListContainerID),
-            regItem = containerNode ? containerNode.getEditableRegistry(REGISTRY_KEYS.CROSSCUTS) : [],
+        var regItem = this.getMemberListSetsRegistry(this._memberListContainerID) || [],
             i, crosscutId = Number(this._activeCrosscutId),
             filter = [];
 
