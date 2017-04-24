@@ -120,6 +120,24 @@ process.on('message', function (parameters) {
                 });
             }
         });
+    } else if (parameters.command === CONSTANTS.workerCommands.connectedWorkerStatus) {
+        logger.info('CONSTANTS.workerCommands.connectedWorkerStatus', parameters);
+        try {
+            safeSend({
+                pid: process.pid,
+                type: CONSTANTS.msgTypes.request,
+                error: null,
+                resid: parameters.resid,
+                result: mt.getStatus(parameters)
+            });
+        } catch (err) {
+            safeSend({
+                pid: process.pid,
+                type: CONSTANTS.msgTypes.request,
+                error: err.message,
+                resid: parameters.resid
+            });
+        }
     } else {
         safeSend({
             pid: process.pid,

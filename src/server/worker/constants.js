@@ -44,6 +44,7 @@ module.exports = {
         // AddOn related
         connectedWorkerStart: 'connectedWorkerStart',
         connectedWorkerQuery: 'connectedWorkerQuery',
-        connectedWorkerStop: 'connectedworkerStop'
+        connectedWorkerStop: 'connectedworkerStop',
+        connectedWorkerStatus: 'connectedWorkerStatus'
     }
 };

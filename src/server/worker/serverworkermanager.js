@@ -324,6 +324,7 @@ function ServerWorkerManager(_parameters) {
             _workers[self.connectedWorkerId].state = CONSTANTS.workerStates.waiting;
             self.connectedWorkerCallbacks[guid] = connectedRequest.cb;
             connectedRequest.request.resid = guid;
+            logger.info('connectedRequest', connectedRequest);
             _workers[self.connectedWorkerId].childProcess.send(connectedRequest.request);
         }
     }

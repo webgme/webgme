@@ -60,6 +60,8 @@ define([
          */
         this.updateResult = null;
 
+        this.isWorking = false;
+
         this.logger.debug('ctor');
     }
 
@@ -133,9 +135,14 @@ define([
      * @private
      */
     AddOnBase.prototype._update = function (rootNode, commitObj, callback) {
+        var self = this;
         this.updateResult = new AddOnUpdateResult(commitObj);
+        this.isWorking = true;
 
-        this.update(rootNode, commitObj, callback);
+        this.update(rootNode, commitObj, function (err, result) {
+            self.isWorking = false;
+            callback(err, result);
+        });
     };
 
     /**
@@ -146,10 +153,15 @@ define([
      * @private
      */
     AddOnBase.prototype._initialize = function (rootNode, commitObj, callback) {
+        var self = this;
         this.initialized = true;
         this.updateResult = new AddOnUpdateResult(commitObj);
+        this.isWorking = true;
 
-        this.initialize(rootNode, commitObj, callback);
+        this.initialize(rootNode, commitObj,  function (err, result) {
+            self.isWorking = false;
+            callback(err, result);
+        });
     };
 
     /**
@@ -201,6 +213,17 @@ define([
      */
     AddOnBase.prototype.query = function (commitHash, queryParams, callback) {
         callback(new Error('The function is the main function of the addOn so it must be overwritten.'));
+    };
+
+    AddOnBase.prototype._getStatus = function () {
+        var status = this.getStatus();
+        status.isWorking = this.isWorking;
+
+        return status;
+    };
+
+    AddOnBase.prototype.getStatus = function () {
+        return {};
     };
 
     /**

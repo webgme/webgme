@@ -254,7 +254,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
         });
     };
 
-    this.getStatus = function () {
+    this.getStatus = function (opts) {
         var status = {
             initRequested: self.initRequested,
             closeRequested: self.closeRequested,
@@ -264,8 +264,10 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
         };
 
         Object.keys(self.branchMonitors).forEach(function (branchName) {
-            status.branchMonitors[branchName] = self.branchMonitors[branchName].getStatus();
+            status.branchMonitors[branchName] = self.branchMonitors[branchName].instance.getStatus();
         });
+
+        return status;
     };
 }
 

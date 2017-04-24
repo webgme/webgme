@@ -80,16 +80,14 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
             .nodeify(callback);
     };
 
-    this.getStatus = function () {
-        var status = {
-            projects: {
-
-            }
-        };
+    this.getStatus = function (opts) {
+        var status = {};
 
         Object.keys(addOnManagers).forEach(function (projectId) {
-            status.projects[projectId] = addOnManagers.getStatus();
+            status[projectId] = addOnManagers[projectId].getStatus(opts);
         });
+
+        return status;
     };
 
     this.setToken = function (token) {

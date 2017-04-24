@@ -1,9 +1,12 @@
 /*globals requireJS*/
 /*jshint node:true*/
 /**
- * This propagates the events from the storage to the addon handler.
- * If url is provided it will post requests to that server, otherwise it will send
- * messages to the connected worker.
+ * This propagates the events from the storage to the addon-handler process.
+ *
+ * The addon-handler can take two forms:
+ * - If url is provided it will post requests to a separate server see (bin/addon_handler.js)
+ * - Otherwise it will send messages to a connected worker.
+ *
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';
@@ -17,6 +20,7 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
 
     var connectedWorker = !gmeConfig.addOn.workerUrl,
         logger = mainLogger.fork('AddOnEventPropagator'),
+        statusUrl,
         COPY = function (obj) {
             return JSON.parse(JSON.stringify(obj));
         };
@@ -30,7 +34,9 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
             serverWorkerManager.connectedWorkerRequests.push({
                 request: data,
                 cb: function (err) {
-                    logger.error(err);
+                    if (err) {
+                        logger.error(err);
+                    }
                 }
             });
         } else {
@@ -48,7 +54,9 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
             serverWorkerManager.connectedWorkerRequests.push({
                 request: data,
                 cb: function (err) {
-                    logger.error(err);
+                    if (err) {
+                        logger.error(err);
+                    }
                 }
             });
         } else {
@@ -66,7 +74,9 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
             serverWorkerManager.connectedWorkerRequests.push({
                 request: data,
                 cb: function (err) {
-                    logger.error(err);
+                    if (err) {
+                        logger.error(err);
+                    }
                 }
             });
         } else {
@@ -88,6 +98,46 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
         storage.removeEventListener(CONSTANTS.STORAGE.BRANCH_LEFT, branchLeft);
         storage.removeEventListener(CONSTANTS.STORAGE.BRANCH_HASH_UPDATED, branchUpdated);
         return Q.resolve().nodeify(callback);
+    };
+
+    this.getStatus = function (opts, callback) {
+        var deferred = Q.defer();
+        opts = opts || opts;
+        if (connectedWorker) {
+            opts.command = WORKER_CONSTANTS.workerCommands.connectedWorkerStatus;
+            serverWorkerManager.connectedWorkerRequests.push({
+                request: opts,
+                cb: function (err, result) {
+                    if (err) {
+                        logger.error(err);
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve(result);
+                    }
+                }
+            });
+        } else {
+            if (!statusUrl) {
+                statusUrl = gmeConfig.addOn.workerUrl;
+                if (statusUrl[statusUrl.length - 1] === '/') {
+                    statusUrl = statusUrl.substring(0, statusUrl.length - 1);
+                }
+
+                statusUrl = statusUrl + '/status';
+                logger.info('statusUrl', statusUrl);
+            }
+
+            superagent.get(gmeConfig.addOn.workerUrl)
+                .end(function (err, res) {
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve(res.body);
+                    }
+                });
+        }
+
+        return deferred.promise.nodeify(callback);
     };
 }
 

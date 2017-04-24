@@ -338,7 +338,10 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
             commitHash: self.commitHash,
 
             runningAddOns: self.runningAddOns.map(function (a) {
-                return a.id;
+                return {
+                    id: a.id,
+                    status: a.instance._getStatus()
+                };
             }),
         };
     };

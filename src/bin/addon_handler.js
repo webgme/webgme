@@ -65,11 +65,26 @@ function AddOnHandler(options) {
     }
 
     this.start = function (callback) {
-        var deferred = Q.defer();
+        var deferred = Q.defer(),
+            statusUrl = options.path;
+
+        if (statusUrl[statusUrl.length - 1] === '/') {
+            statusUrl = statusUrl.substring(0, statusUrl.length - 1);
+        }
+
+        statusUrl = statusUrl + '/status';
 
         mt = new ManagerTracker(logger, gmeConfig, options);
 
         app.use(bodyParser.json());
+
+        app.get(statusUrl, function (req, res, next) {
+            try {
+                res.json(mt.getStatus({}));
+            } catch (err) {
+                next(err);
+            }
+        });
 
         app.post(options.path, function (req, res) {
             var params = req.body;
