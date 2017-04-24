@@ -501,6 +501,36 @@ define([
             return relations;
         }
 
+        function getPointerPathFromRec(node, source, name) {
+            var path, instanceRootPath, instanceRootBasePath, commonPathInfo;
+            if (node === null) {
+                return undefined;
+            }
+
+            path = innerCore.getPointerPathFrom(node, source, name);
+
+            if (path !== undefined) {
+                return path;
+            }
+
+            path = getPointerPathFromRec(self.getBase(node), source, name);
+
+            if (typeof path !== 'string') {
+                return path;
+            }
+
+            instanceRootPath = self.getPath(getInstanceRoot(node));
+            instanceRootBasePath = self.getPath(self.getBase(getInstanceRoot(node)));
+
+            commonPathInfo = self.getCommonPathPrefixData(instanceRootBasePath, path);
+
+            if (commonPathInfo.common === instanceRootBasePath) {
+                return instanceRootPath + commonPathInfo.second;
+            }
+
+            return path;
+        };
+
         //</editor-fold>
 
         //<editor-fold=Modified Methods>
@@ -1041,43 +1071,7 @@ define([
         this.getPointerPathFrom = function (node, source, name) {
             ASSERT(self.isValidNode(node) && typeof name === 'string');
 
-            var baseRoot,
-                base,
-                basePath,
-                targetPath;
-
-            targetPath = innerCore.getPointerPathFrom(node, source, name);
-            if (typeof targetPath === 'string' || targetPath === null) {
-                return targetPath;
-            }
-
-            base = node;
-            baseRoot = base;
-            basePath = self.getPath(base);
-            while (base) {
-                while (innerCore.getPointerPath(baseRoot, CONSTANTS.BASE_POINTER) === undefined) {
-                    basePath = self.getParentPath(basePath);
-                    baseRoot = self.getParent(baseRoot);
-                }
-                base = self.getBase(base);
-                baseRoot = self.getBase(baseRoot);
-                if (base && baseRoot) {
-                    targetPath = innerCore.getPointerPathFrom(base, source, name);
-                    if (targetPath === null) {
-                        return targetPath;
-                    }
-
-                    if (typeof targetPath === 'string') {
-                        if (self.isPathInSubTree(targetPath, self.getPath(baseRoot))) {
-                            return targetPath.replace(self.getPath(baseRoot), basePath);
-                        }
-
-                        return targetPath;
-                    }
-                }
-            }
-
-            return undefined;
+            return getPointerPathFromRec(node, source, name);
         };
 
         this.getPointerPath = function (node, name) {
