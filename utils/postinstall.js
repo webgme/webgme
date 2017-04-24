@@ -27,6 +27,9 @@ try {
 
 if (distFilesExists === false) {
     console.log('dist files did not exist, will call prepublish');
+
+    // TODO: Path to the template in the jsdoc.json does not match for npm > 3 when webgme
+    // TODO: is installed in another repo.
     try {
         fs.statSync(jsdocConfJson.opts.template);
         console.log('jsdoc template from default config exists');
