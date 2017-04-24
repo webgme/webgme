@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('set core', function () {
+describe.only('set core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -983,5 +983,65 @@ describe('set core', function () {
             done();
         });
 
+    });
+
+    it('should inherit relative members as relative even if direct is available at base', function (done) {
+        var setType = core.createNode({parent: root, relid: 'S'}),
+            setInstance = core.createNode({parent: root, base: setType, relid: 'I'}),
+            member1 = core.createNode({parent: setType, relid: 'C1'}),
+            member2 = core.createNode({parent: setType, relid: 'C2'});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member1);
+        core.setMemberAttribute(setType, 'set', core.getPath(member1), 'attri', 1);
+        core.addMember(setType, 'set', member2);
+        core.setMemberAttribute(setType, 'set', core.getPath(member2), 'attri', 2);
+        core.loadChildren(setInstance, function (err, children) {
+            var i;
+            expect(err).to.eql(null);
+
+            for (i = 0; i < children.length; i += 1) {
+                core.addMember(setType, 'set', children[i]);
+                core.setMemberAttribute(setType, 'set', core.getPath(children[i]), 'attri', 10 + i);
+            }
+
+            expect(core.getMemberPaths(setType, 'set')).to.have.members(['/S/C1', '/S/C2', '/I/C1', '/I/C2']);
+            expect(core.getMemberPaths(setInstance, 'set')).to.have.members(['/I/C1', '/I/C2']);
+            expect(core.getMemberAttribute(setInstance, 'set', '/I/C1', 'attri')).to.eql(1);
+            expect(core.getMemberAttribute(setInstance, 'set', '/I/C2', 'attri')).to.eql(2);
+
+            core.setMemberAttribute(setInstance, 'set', '/I/C1', 'attri', 100);
+            expect(core.getMemberAttribute(setInstance, 'set', '/I/C1', 'attri')).to.eql(100);
+            done();
+        });
+    });
+
+    it('should inherit relative members as well as static member if inheritance is clear', function (done) {
+        var setType = core.createNode({parent: root, relid: 'S'}),
+            setInstance = core.createNode({parent: root, base: setType, relid: 'I'}),
+            member1 = core.createNode({parent: setType, relid: 'C1'}),
+            member2 = core.createNode({parent: setType, relid: 'C2'});
+
+        core.createSet(setType, 'set');
+        core.addMember(setType, 'set', member1);
+        core.setMemberAttribute(setType, 'set', core.getPath(member1), 'attri', 1);
+        core.loadChildren(setInstance, function (err, children) {
+            var i;
+            expect(err).to.eql(null);
+
+            for (i = 0; i < children.length; i += 1) {
+                core.addMember(setType, 'set', children[i]);
+                core.setMemberAttribute(setType, 'set', core.getPath(children[i]), 'attri', 10 + i);
+            }
+
+            expect(core.getMemberPaths(setType, 'set')).to.have.members(['/S/C1', '/I/C1', '/I/C2']);
+            expect(core.getMemberPaths(setInstance, 'set')).to.have.members(['/I/C1', '/I/C2']);
+            expect(core.getMemberAttribute(setInstance, 'set', '/I/C1', 'attri')).to.eql(1);
+            expect(core.getMemberAttribute(setInstance, 'set', '/I/C2', 'attri')).to.be.at.least(10);
+
+            core.setMemberAttribute(setInstance, 'set', '/I/C2', 'attri', 100);
+            expect(core.getMemberAttribute(setInstance, 'set', '/I/C2', 'attri')).to.eql(100);
+            done();
+        });
     });
 });
