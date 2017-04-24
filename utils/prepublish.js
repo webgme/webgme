@@ -6,10 +6,11 @@
 
 'use strict';
 
-function prepublish() {
+function prepublish(jsdocConfigPath) {
     var raml2html = require('raml2html'),
         path = require('path'),
         fs = require('fs'),
+        childProcess = require('child_process'),
         configWithDefaultTemplates = raml2html.getDefaultConfig();
 
     console.log('Generating REST API docs ...');
@@ -25,40 +26,37 @@ function prepublish() {
     if (process.env.TEST_FOLDER) {
         console.warn('TEST_FOLDER environment variable is set, skipping distribution scripts.');
     } else {
-        var webgmeBuild = require('./build/webgme.classes/build_classes.js'),
-            webgmeDist = require('./build/dist/build.js');
+        // var webgmeBuild = require('./build/webgme.classes/build_classes.js'),
+        //     webgmeDist = require('./build/dist/build.js');
+        //
+        //
+        // console.log('Generating webgme.classes.build.js ...');
+        //
+        // webgmeBuild(function (err, data) {
+        //     if (err) {
+        //         console.error('Failed generating webgme.classes.build.js!', err);
+        //     } else {
+        //         //console.log(data);
+        //         console.log('Done with webgme.classes.build.js!');
+        //     }
+        // });
+        //
+        // console.log('Generating webgme.dist.build.js ...');
+        //
+        // webgmeDist(function (err, data) {
+        //     if (err) {
+        //         console.error('Failed generating webgme.dist.build.js!', err);
+        //     } else {
+        //         //console.log(data);
+        //         console.log('Done with webgme.dist.build.js!');
+        //     }
+        // });
 
-
-        console.log('Generating webgme.classes.build.js ...');
-
-        webgmeBuild(function (err, data) {
-            if (err) {
-                console.error('Failed generating webgme.classes.build.js!', err);
-            } else {
-                //console.log(data);
-                console.log('Done with webgme.classes.build.js!');
-            }
-        });
-
-        console.log('Generating webgme.dist.build.js ...');
-
-        webgmeDist(function (err, data) {
-            if (err) {
-                console.error('Failed generating webgme.dist.build.js!', err);
-            } else {
-                //console.log(data);
-                console.log('Done with webgme.dist.build.js!');
-            }
-        });
-
-        if (process.env.SKIP_JS_DOC) {
-            // TODO: This is a temporary fix since jsdoc doesn't provide a module to load.
-            // TODO: Path to the template in the jsdoc.json does not match for npm > 3 when webgme
-            // TODO: is installed in another repo. This does not apply when webgme is published on npm.
-            console.warn('SKIP_JS_DOC environment variable is set, skipping docs scripts.');
-        } else {
+        if (jsdocConfigPath !== false) {
             console.log('Generating webgme docs/source ...');
-            require('jsdoc/jsdoc');
+            childProcess.execFile(process.execPath, [
+                path.join(__dirname, './jsdoc_build.js'),
+                '-c', jsdocConfigPath || './jsdoc_conf.json']);
             console.log('Done with webgme docs/source!');
         }
     }
