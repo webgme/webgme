@@ -62,7 +62,18 @@ define(['js/logger',
             REGISTRY_KEYS.LINE_END_ARROW,
             REGISTRY_KEYS.LINE_WIDTH,
             REGISTRY_KEYS.LINE_LABEL_PLACEMENT,
+            REGISTRY_KEYS.LINE_LABEL_X_OFFSET,
+            REGISTRY_KEYS.LINE_LABEL_Y_OFFSET,
             REGISTRY_KEYS.REPLACEABLE
+        ],
+        LINE_REG_KEYS = [
+            REGISTRY_KEYS.LINE_STYLE,
+            REGISTRY_KEYS.LINE_START_ARROW,
+            REGISTRY_KEYS.LINE_END_ARROW,
+            REGISTRY_KEYS.LINE_WIDTH,
+            REGISTRY_KEYS.LINE_LABEL_PLACEMENT,
+            REGISTRY_KEYS.LINE_LABEL_X_OFFSET,
+            REGISTRY_KEYS.LINE_LABEL_Y_OFFSET,
         ],
         NON_INVALID_PTRS = [CONSTANTS.POINTER_BASE];
 
@@ -387,9 +398,7 @@ define(['js/logger',
 
             // If not only connections are selected, the connection related preferences are filtered out.
             if (onlyConnectionsSelected !== true && prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.' &&
-                (key === REGISTRY_KEYS.LINE_END_ARROW || key === REGISTRY_KEYS.LINE_START_ARROW ||
-                key === REGISTRY_KEYS.LINE_LABEL_PLACEMENT || key === REGISTRY_KEYS.LINE_STYLE ||
-                key === REGISTRY_KEYS.LINE_WIDTH)) {
+                LINE_REG_KEYS.indexOf(key) > -1) {
                 continue;
             }
 
@@ -520,6 +529,12 @@ define(['js/logger',
                         dst[repKey].widget = PROPERTY_GRID_WIDGETS.SVG_SELECT;
                         dst[repKey].items = LINE_SVG_DIRECTORY[REGISTRY_KEYS.LINE_LABEL_PLACEMENT];
                         dst[repKey].value = dst[repKey].value || CONSTANTS.LINE_STYLE.LABEL_PLACEMENTS.MIDDLE;
+                    } else if (key === REGISTRY_KEYS.LINE_LABEL_X_OFFSET || key === REGISTRY_KEYS.LINE_LABEL_Y_OFFSET) {
+                        repKey = LINE_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        dst[repKey].valueType = 'integer';
+                        delete dst[extKey];
+                        dst[repKey].value = dst[repKey].value || 0;
                     } else if (key === REGISTRY_KEYS.REPLACEABLE) {
                         dst[TEMPLATING_SUB_GROUP] = {
                             name: TEMPLATING_SUB_GROUP,

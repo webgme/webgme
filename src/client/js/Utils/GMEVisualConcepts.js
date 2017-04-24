@@ -86,6 +86,7 @@ define([
         if (obj) {
             _.extend(result, DEFAULT_LINE_STYLE);
 
+            // line label placement
             val = getValue(obj, REGISTRY_KEYS.LINE_LABEL_PLACEMENT);
 
             switch (val) {
@@ -98,6 +99,12 @@ define([
                 default:
                     result.name = displayFormat.resolve(obj);
             }
+
+            val = getValue(obj, REGISTRY_KEYS.LINE_LABEL_X_OFFSET);
+            result[REGISTRY_KEYS.LINE_LABEL_X_OFFSET] = typeof val === 'number' ? val : 0;
+
+            val = getValue(obj, REGISTRY_KEYS.LINE_LABEL_Y_OFFSET);
+            result[REGISTRY_KEYS.LINE_LABEL_Y_OFFSET] = typeof val === 'number' ? val : 0;
 
             //line width
             val = getValue(obj, REGISTRY_KEYS.LINE_WIDTH, 'int');

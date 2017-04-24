@@ -146,6 +146,9 @@ define([
         this.srcTextEdit = objDescriptor.srcTextEdit || false;
         this.dstTextEdit = objDescriptor.dstTextEdit || false;
 
+        this.lineLabelXOffset = typeof objDescriptor.lineLabelXOffset === 'number' ? objDescriptor.lineLabelXOffset : 0;
+        this.lineLabelYOffset = typeof objDescriptor.lineLabelYOffset === 'number' ? objDescriptor.lineLabelYOffset : 0;
+
         this.showConnectionAreas = typeof objDescriptor[DiagramDesignerWidgetConstants.LINE_SHOW_CONNECTION_AREAS] ===
         'boolean' ? objDescriptor[DiagramDesignerWidgetConstants.LINE_SHOW_CONNECTION_AREAS] : true;
 
@@ -574,7 +577,7 @@ define([
         }
 
         if (this.skinParts.pathShadow) {
-            strokeWidthAdjust = this.designerAttributes.width;;
+            strokeWidthAdjust = this.designerAttributes.width;
             shadowAdjust = this.designerAttributes.shadowArrowEndAdjust;
         } else if (this.skinParts.path) {
             strokeWidthAdjust = this.designerAttributes.width;
@@ -1743,8 +1746,8 @@ define([
 
             self.skinParts.name = self._textNameBase.clone();
             self.skinParts.name.css({
-                top: pathCenter.y - 2 + self.designerAttributes.width,
-                left: pathCenter.x,
+                top: pathCenter.y - 2 + self.designerAttributes.width + self.lineLabelYOffset,
+                left: pathCenter.x + self.lineLabelXOffset,
                 color: self.designerAttributes.color
             });
             self.skinParts.name.find('span').text(self.name);
@@ -1808,8 +1811,8 @@ define([
             }
 
             self.skinParts.srcText.css({
-                top: self._pathPoints[0].y + dy,
-                left: self._pathPoints[0].x + dx,
+                top: self._pathPoints[0].y + dy + self.lineLabelYOffset,
+                left: self._pathPoints[0].x + dx + self.lineLabelXOffset,
                 color: self.designerAttributes.color
             });
 
@@ -1868,8 +1871,8 @@ define([
             }
 
             self.skinParts.dstText.css({
-                top: self._pathPoints[len - 1].y + dy,
-                left: self._pathPoints[len - 1].x + dx,
+                top: self._pathPoints[len - 1].y + dy + self.lineLabelYOffset,
+                left: self._pathPoints[len - 1].x + dx + self.lineLabelXOffset,
                 color: self.designerAttributes.color
             });
 
