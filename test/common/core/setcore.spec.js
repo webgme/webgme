@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe.only('set core', function () {
+describe('set core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
