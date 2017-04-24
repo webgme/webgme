@@ -517,6 +517,12 @@ define(['js/logger',
         return undefined;
     };
 
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistry = function (nodeId) {
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistry is not ' +
+            'overridden, returning default value...');
+        return undefined;
+    };
+
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectedTabChanged = function (tabID) {
         if (this._tabIDMemberListID[tabID] && this._selectedMemberListID !== this._tabIDMemberListID[tabID]) {
             this._selectedMemberListID = this._tabIDMemberListID[tabID];
