@@ -25,7 +25,7 @@ try {
     }
 }
 
-if (true) {
+if (distFilesExists === false) {
     console.log('dist files did not exist, will call prepublish');
     try {
         fs.statSync(jsdocConfJson.opts.template);

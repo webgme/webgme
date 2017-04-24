@@ -324,7 +324,7 @@ function getComponentsJson(logger, callback) {
         result = requireUncached(filePath);
         deferred.resolve(result);
     } catch (e) {
-        logger.warn('Did not find component settings at', filePath, '(proceeding with fallbacks see issue #1335)');
+        logger.debug('Did not find component settings at', filePath, '(proceeding with fallbacks see issue #1335)');
         filePath = path.join(configDir, 'components.json');
 
         Q.nfcall(fs.readFile, filePath, 'utf8')

@@ -26,31 +26,30 @@ function prepublish(jsdocConfigPath) {
     if (process.env.TEST_FOLDER) {
         console.warn('TEST_FOLDER environment variable is set, skipping distribution scripts.');
     } else {
-        // var webgmeBuild = require('./build/webgme.classes/build_classes.js'),
-        //     webgmeDist = require('./build/dist/build.js');
-        //
-        //
-        // console.log('Generating webgme.classes.build.js ...');
-        //
-        // webgmeBuild(function (err, data) {
-        //     if (err) {
-        //         console.error('Failed generating webgme.classes.build.js!', err);
-        //     } else {
-        //         //console.log(data);
-        //         console.log('Done with webgme.classes.build.js!');
-        //     }
-        // });
-        //
-        // console.log('Generating webgme.dist.build.js ...');
-        //
-        // webgmeDist(function (err, data) {
-        //     if (err) {
-        //         console.error('Failed generating webgme.dist.build.js!', err);
-        //     } else {
-        //         //console.log(data);
-        //         console.log('Done with webgme.dist.build.js!');
-        //     }
-        // });
+        var webgmeBuild = require('./build/webgme.classes/build_classes.js'),
+            webgmeDist = require('./build/dist/build.js');
+
+        console.log('Generating webgme.classes.build.js ...');
+
+        webgmeBuild(function (err, data) {
+            if (err) {
+                console.error('Failed generating webgme.classes.build.js!', err);
+            } else {
+                //console.log(data);
+                console.log('Done with webgme.classes.build.js!');
+            }
+        });
+
+        console.log('Generating webgme.dist.build.js ...');
+
+        webgmeDist(function (err, data) {
+            if (err) {
+                console.error('Failed generating webgme.dist.build.js!', err);
+            } else {
+                //console.log(data);
+                console.log('Done with webgme.dist.build.js!');
+            }
+        });
 
         if (jsdocConfigPath !== false) {
             console.log('Generating webgme docs/source ...');
