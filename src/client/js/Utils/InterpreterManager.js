@@ -240,7 +240,7 @@ define([
 
     InterpreterManager.prototype.saveSettingsInUser = function (pluginMetadata, pluginConfig, callback) {
         var self = this,
-            componentId = this.getPluginComponentId(pluginMetadata.id);
+            componentId = this.getPluginComponentId(pluginMetadata);
 
         this.logger.debug('Saving plugin config in user', componentId, pluginConfig);
 
