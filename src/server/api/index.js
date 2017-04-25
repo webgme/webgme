@@ -41,6 +41,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         GUID = webgme.requirejs('common/util/guid'),
         STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
         CORE_CONSTANTS = webgme.requirejs('common/core/constants'),
+        workerManager = middlewareOpts.workerManager,
 
         versionedAPIPath = mountPath + '/v1',
         latestAPIPath = mountPath;
@@ -1373,6 +1374,27 @@ function createAPI(app, mountPath, middlewareOpts) {
                 next(err);
             });
     });
+
+    router.get('/projects/:ownerId/:projectName/branches/:branchId/export', ensureAuthenticated,
+        function (req, res, next) {
+            console.log('here we are');
+            var data = {
+                command: 'exportProjectToFile',
+                projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                branchName: req.params.branchId,
+                withAssests: true
+            };
+
+            Q.ninvoke(workerManager, 'request', data)
+                .then(function (result) {
+                    res.redirect(result.downloadUrl);
+                })
+                .catch(function (err) {
+                    next(err);
+                });
+        }
+    );
 
     router.patch('/projects/:ownerId/:projectName/branches/:branchId', function (req, res, next) {
         var userId = getUserId(req),
