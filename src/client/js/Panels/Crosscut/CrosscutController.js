@@ -230,13 +230,13 @@ define(['js/logger',
     CrosscutController.prototype.getOrderedMemberListInfo = function (/* memberListContainerObject */) {
         var result = [],
             memberListContainerID = this._memberListContainerID,
-            crosscutsRegistry = GMEConcepts.getCrosscuts(memberListContainerID),
+            crosscutsRegistry = this.getMemberListSetsRegistry(memberListContainerID),
             len = crosscutsRegistry.length;
 
         if (this._autoCreateCrosscut === true && len === 0 && this._tabsHasBeenRequested === false) {
             this._onTabAddClicked();
             memberListContainerID = this._memberListContainerID;
-            crosscutsRegistry = GMEConcepts.getCrosscuts(memberListContainerID);
+            crosscutsRegistry = this.getMemberListSetsRegistry(memberListContainerID);
             len = crosscutsRegistry.length;
         }
 
