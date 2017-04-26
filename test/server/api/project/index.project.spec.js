@@ -1293,6 +1293,97 @@ describe('PROJECT REST API', function () {
                         done();
                     });
             });
+
+            //export tests
+            it('should export project /projects/:ownerId/:projectId/commits/:commitHash/export',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
+                        importResult.commitHash.substring(1) + '/export';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.res.headers['content-disposition']).to.contains('filename');
+                            expect(res.res.headers['content-disposition']).to.contains('.webgmex');
+                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                            done();
+                        });
+                }
+            );
+
+            it('should export FCO /projects/:ownerId/:projectId/commits/:commitHash/export/1',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
+                        importResult.commitHash.substring(1) + '/export/1';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.res.headers['content-disposition']).to.contains('filename');
+                            expect(res.res.headers['content-disposition']).to.contains('.webgmexm');
+                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                            done();
+                        });
+                }
+            );
+
+            it('should export project /projects/:ownerId/:projectId/branches/master/export',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                        '/branches/master/export';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.res.headers['content-disposition']).to.contains('filename');
+                            expect(res.res.headers['content-disposition']).to.contains('.webgmex');
+                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                            done();
+                        });
+                }
+            );
+
+            it('should export FCO /projects/:ownerId/:projectId/branches/master/export/1',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                        '/branches/master/export/1';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.res.headers['content-disposition']).to.contains('filename');
+                            expect(res.res.headers['content-disposition']).to.contains('.webgmexm');
+                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                            done();
+                        });
+                }
+            );
+
+            it('should export project /projects/:ownerId/:projectId/tags/tag/export',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                        '/tags/tag/export';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.res.headers['content-disposition']).to.contains('filename');
+                            expect(res.res.headers['content-disposition']).to.contains('.webgmex');
+                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                            done();
+                        });
+                }
+            );
+
+            it('should export FCO /projects/:ownerId/:projectId/tags/tag/export/1',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) +
+                        '/tags/tag/export/1';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.res.headers['content-disposition']).to.contains('filename');
+                            expect(res.res.headers['content-disposition']).to.contains('.webgmexm');
+                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                            done();
+                        });
+                }
+            );
         });
     });
 
