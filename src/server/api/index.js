@@ -115,7 +115,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             })
             .catch(function (err) {
                 logger.error('Cannot handle export request', err);
-                res.sendStatus(404);
+                res.sendStatus(403);
             });
     }
 
@@ -175,7 +175,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             })
             .catch(function (err) {
                 logger.error('Cannot handle export request', err);
-                res.sendStatus(404);
+                res.sendStatus(403);
             });
     }
 

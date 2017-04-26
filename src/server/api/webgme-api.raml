@@ -1,4 +1,5 @@
 #%RAML 0.8
+baseUri: https://mocksvc.mulesoft.com/mocks/32d5cb4e-cc2a-459e-9b6b-29beee8bdb54
 title: WebGME
 version: 1.0
 
@@ -388,6 +389,25 @@ resourceTypes:
                 application/json:
                   example: !include webgme-api-commit-retrieve.json
             403:
+        /export:
+          get:
+            description: Retrieves the given state of the project as a webgmex file. Requires <b>read</b> access for project.
+            responses:
+              200:
+                body:
+                  application/octet-stream:
+              403:
+        /export/{nodePath}:
+          uriParameters:
+            nodePath:
+              example: 1aB/CdE2
+          get:
+            description: Retrieves the given state of a model - pointed by the path of its root node - as a webgmexm file. Requires <b>read</b> access for project.
+            responses:
+              200:
+                body:
+                  application/octet-stream:
+              403:
         /tree/{nodePath}:
           uriParameters:
             nodePath:
@@ -437,7 +457,25 @@ resourceTypes:
                   application/json:
                     example: !include webgme-api-commits-retrieve.json
               403:
-          
+        /export:
+          get:
+            description: Retrieves the given state of the project as a webgmex file. Requires <b>read</b> acces of project.
+            responses:
+              200:
+                body:
+                  application/octet-stream:
+              403:
+        /export/{nodePath}:
+          uriParameters:
+            nodePath:
+              example: a2B/b3C
+          get:
+            description: Retrieves the given state of a model - pointed by the path of its root - as a webgmexm file. Requires <b>read</b> access of project.
+            responses:
+              200:
+                body:
+                  application/octet-stream:
+              403:
         /tree/{nodePath}:
           uriParameters:
             nodePath:
@@ -466,6 +504,25 @@ resourceTypes:
             putDesc: Requires <b>write</b> access for project.
             patchDesc: Requires <b>delete</b> access for project.
             deleteDesc: Requires <b>delete</b> access for project.
+        /export:
+          get:
+            description: Retrieves the given state of the project as a webgmex file. Requires <b>read</b> access of project.
+            responses:
+              200:
+                body:
+                  application/octet-stream:
+              403:
+        /export/{nodePath}:
+          uriParameters:
+            nodePath:
+              example: 23BC/aD42
+          get:
+            description: Retrieves the given state of a model - pointed by its root path - as a webgmexm file. Requires <b>read</b> access of project.
+            responses:
+              200:
+                body:
+                  application/ocete-stream:
+              403:
     /hooks:
       description: Returns with the list of webHooks.
       type:
