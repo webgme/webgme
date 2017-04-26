@@ -137,7 +137,10 @@ function createAPI(app, mountPath, middlewareOpts) {
                 switch (selector) {
                     case 'branch':
                         workerParameters.branchName = req.params.branchId;
-                        return null;
+                        return safeStorage.getBranches({
+                            username: userId,
+                            projectId: projectId
+                        });
                     case 'tag':
                         return safeStorage.getTags({
                             username: userId,
@@ -150,9 +153,14 @@ function createAPI(app, mountPath, middlewareOpts) {
                         return null;
                 }
             })
-            .then(function (tags) {
-                if (tags && tags.hasOwnProperty(req.params.tagId)) {
-                    workerParameters.commitHash = tags[req.params.tagId];
+            .then(function (tagsOrBranches) {
+                if (tagsOrBranches) {
+                    if (workerParameters.branchName) {
+                        workerParameters.commitHash = tagsOrBranches[req.params.branchId];
+                        delete workerParameters.branchName;
+                    } else if (tagsOrBranches.hasOwnProperty(req.params.tagId)) {
+                        workerParameters.commitHash = tagsOrBranches[req.params.tagId];
+                    }
                 }
 
                 if (workerParameters.commitHash || workerParameters.branchName) {
