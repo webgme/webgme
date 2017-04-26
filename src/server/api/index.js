@@ -68,6 +68,109 @@ function createAPI(app, mountPath, middlewareOpts) {
         return deferred.promise.nodeify(callback);
     }
 
+    function exportProject(req, res, next, selector) {
+        var userId = getUserId(req),
+            projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                req.params.projectName),
+            workerParameters = {
+                command: middlewareOpts.workerManager.CONSTANTS.workerCommands.exportProjectToFile,
+                projectId: projectId,
+                withAssets: true
+            };
+
+        getNewJWToken(userId)
+            .then(function (token) {
+                workerParameters.webgmeToken = token;
+
+                switch (selector) {
+                    case 'branch':
+                        workerParameters.branchName = req.params.branchId;
+                        return null;
+                    case 'tag':
+                        return safeStorage.getTags({
+                            username: userId,
+                            projectId: projectId
+                        });
+                    case 'commit':
+                        workerParameters.commitHash = '#' + req.params.commitHash;
+                        return null;
+                    default:
+                        return null;
+                }
+            })
+            .then(function (tags) {
+                if (tags && tags.hasOwnProperty(req.params.tagId)) {
+                    workerParameters.commitHash = tags[req.params.tagId];
+                }
+
+                if (workerParameters.commitHash || workerParameters.branchName) {
+                    return Q.ninvoke(middlewareOpts.workerManager, 'request', workerParameters);
+                }
+
+                throw new Error('No valid project version (commitHash/tagId/branchName) was given.');
+            })
+            .then(function (result) {
+                res.redirect(result.downloadUrl);
+                return;
+            })
+            .catch(function (err) {
+                logger.error('Cannot handle export request', err);
+                res.sendStatus(404);
+            });
+    }
+
+    function exportModel(req, res, next, selector) {
+        var userId = getUserId(req),
+            projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                req.params.projectName),
+            workerParameters = {
+                command: middlewareOpts.workerManager.CONSTANTS.workerCommands.exportSelectionToFile,
+                projectId: projectId,
+                paths: ['/' + req.params[0]],
+                withAssets: true
+            };
+
+        getNewJWToken(userId)
+            .then(function (token) {
+                workerParameters.webgmeToken = token;
+
+                switch (selector) {
+                    case 'branch':
+                        workerParameters.branchName = req.params.branchId;
+                        return null;
+                    case 'tag':
+                        return safeStorage.getTags({
+                            username: userId,
+                            projectId: projectId
+                        });
+                    case 'commit':
+                        workerParameters.commitHash = '#' + req.params.commitHash;
+                        return null;
+                    default:
+                        return null;
+                }
+            })
+            .then(function (tags) {
+                if (tags && tags.hasOwnProperty(req.params.tagId)) {
+                    workerParameters.commitHash = tags[req.params.tagId];
+                }
+
+                if (workerParameters.commitHash || workerParameters.branchName) {
+                    return Q.ninvoke(middlewareOpts.workerManager, 'request', workerParameters);
+                }
+
+                throw new Error('No valid project version (commitHash/tagId/branchName) was given.');
+            })
+            .then(function (result) {
+                res.redirect(result.downloadUrl);
+                return;
+            })
+            .catch(function (err) {
+                logger.error('Cannot handle export request', err);
+                res.sendStatus(404);
+            });
+    }
+
     // ensure authenticated can be used only after this rule
     router.use('*', function (req, res, next) {
         // TODO: set all headers, check rate limit, etc.
@@ -1286,6 +1389,24 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    router.get('/projects/:ownerId/:projectName/commits/:commitHash/export', ensureAuthenticated,
+        function (req, res, next) {
+            console.log('arrived');
+            exportProject(req, res, next, 'commit');
+        }
+    );
+
+    router.get('/projects/:ownerId/:projectName/commits/:commitHash/export/*', ensureAuthenticated,
+        function (req, res, next) {
+            if (req.params[0] === undefined || req.params[0] === '') {
+                res.redirect('/projects/' + req.params.ownerId + '/' + req.params.projectName +
+                    '/commits/' + req.params.commitHash + '/export');
+            } else {
+                exportModel(req, res, next, 'commit');
+            }
+        }
+    );
+
     router.get('/projects/:ownerId/:projectName/commits/:commitHash/tree/*', ensureAuthenticated,
         function (req, res, next) {
             var userId = getUserId(req),
@@ -1377,22 +1498,18 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.get('/projects/:ownerId/:projectName/branches/:branchId/export', ensureAuthenticated,
         function (req, res, next) {
-            console.log('here we are');
-            var data = {
-                command: 'exportProjectToFile',
-                projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
-                    req.params.projectName),
-                branchName: req.params.branchId,
-                withAssests: true
-            };
+            exportProject(req, res, next, 'branch');
+        }
+    );
 
-            Q.ninvoke(workerManager, 'request', data)
-                .then(function (result) {
-                    res.redirect(result.downloadUrl);
-                })
-                .catch(function (err) {
-                    next(err);
-                });
+    router.get('/projects/:ownerId/:projectName/branches/:branchId/export/*', ensureAuthenticated,
+        function (req, res, next) {
+            if (req.params[0] === undefined || req.params[0] === '') {
+                res.redirect('/projects/' + req.params.ownerId + '/' + req.params.projectName +
+                    '/branches/' + req.params.branchId + '/export');
+            } else {
+                exportModel(req, res, next, 'branch');
+            }
         }
     );
 
@@ -1543,6 +1660,23 @@ function createAPI(app, mountPath, middlewareOpts) {
                 next(err);
             });
     });
+
+    router.get('/projects/:ownerId/:projectName/tags/:tagId/export', ensureAuthenticated,
+        function (req, res, next) {
+            exportProject(req, res, next, 'tag');
+        }
+    );
+
+    router.get('/projects/:ownerId/:projectName/tags/:tagId/export/*', ensureAuthenticated,
+        function (req, res, next) {
+            if (req.params[0] === undefined || req.params[0] === '') {
+                res.redirect('/projects/' + req.params.ownerId + '/' + req.params.projectName +
+                    '/tags/' + req.params.tagId + '/export');
+            } else {
+                exportModel(req, res, next, 'tag');
+            }
+        }
+    );
 
     router.put('/projects/:ownerId/:projectName/tags/:tagId', function (req, res, next) {
         var userId = getUserId(req),
