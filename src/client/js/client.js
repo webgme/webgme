@@ -2137,6 +2137,12 @@ define([
 
         //generic notification
         this.notifyUser = function (notification) {
+            if (typeof notification === 'string') {
+                notification = {
+                    message: notification
+                };
+            }
+
             notification.severity = notification.severity || 'info';
 
             if (notification.message) {

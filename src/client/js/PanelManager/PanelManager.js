@@ -35,9 +35,9 @@ define(['js/logger', 'js/Constants'], function (Logger, CONSTANTS) {
                     invoker: this
                 });
             }
-        }
 
-        WebGMEGlobal.KeyboardManager.captureFocus();
+            WebGMEGlobal.KeyboardManager.captureFocus();
+        }
     };
 
     PanelManager.prototype.getActivePanel = function () {
