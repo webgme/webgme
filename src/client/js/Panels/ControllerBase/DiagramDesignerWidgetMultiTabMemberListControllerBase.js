@@ -517,7 +517,7 @@ define(['js/logger',
         return undefined;
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistry = function (nodeId) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistry = function (/*nodeId*/) {
         this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistry is not ' +
             'overridden, returning default value...');
         return undefined;
@@ -1600,7 +1600,6 @@ define(['js/logger',
             memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
             memberListSetsRegistry,
             i,
-            base,
             len,
             setID;
 
@@ -1640,7 +1639,6 @@ define(['js/logger',
             memberListSetsRegistry,
             i,
             j,
-            base,
             oldIDList = this._tabIDMemberListID,
             urlTab = WebGMEGlobal.State.getActiveTab(),
             setID;
@@ -1743,7 +1741,6 @@ define(['js/logger',
             memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
             memberListSetsRegistry,
             i,
-            base,
             newSetID,
             newSetNamePrefixDesc,
             newSetDesc;

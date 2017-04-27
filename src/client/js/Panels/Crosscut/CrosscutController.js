@@ -266,54 +266,8 @@ define(['js/logger',
     CrosscutController.prototype.getMemberListSetsRegistryKey = function () {
         return REGISTRY_KEYS.CROSSCUTS;
     };
-
-    CrosscutController.prototype._getObjectifiedSetsRegistry = function (nodeId) {
-        var node = this._client.getNode(nodeId),
-            setNames,
-            baseObjectifiedSetsRegistry,
-            selfObjectifiedSetsRegistry = {},
-            registry,
-            i;
-
-        if (node) {
-            baseObjectifiedSetsRegistry = this._getObjectifiedSetsRegistry(node.getBaseId());
-            registry = node.getOwnEditableRegistry(REGISTRY_KEYS.CROSSCUTS) || [];
-            setNames = node.getSetNames();
-            for (i = 0; i < registry.length; i += 1) {
-                if (setNames.indexOf(registry[i].SetID) !== -1) {
-                    selfObjectifiedSetsRegistry[registry[i].SetID] = registry[i];
-                }
-            }
-
-            for (i in selfObjectifiedSetsRegistry) {
-                baseObjectifiedSetsRegistry[i] = selfObjectifiedSetsRegistry[i];
-            }
-
-            selfObjectifiedSetsRegistry = baseObjectifiedSetsRegistry;
-        }
-
-        return selfObjectifiedSetsRegistry;
-    };
-
-    CrosscutController.prototype.getMemberListSetsRegistry = function (nodeId) {
-        var objectifiedSetsRegistry = this._getObjectifiedSetsRegistry(nodeId),
-            id,
-            preIndex = 0,
-            registry = [];
-
-        while (Object.keys(objectifiedSetsRegistry).length > 0) {
-            for (id in objectifiedSetsRegistry) {
-                if (objectifiedSetsRegistry[id].order === preIndex) {
-                    objectifiedSetsRegistry[id].order = registry.length;
-                    registry.push(objectifiedSetsRegistry[id]);
-                    delete objectifiedSetsRegistry[id];
-                }
-            }
-            preIndex += 1;
-        }
-
-        return registry;
-    };
+    
+    CrosscutController.prototype.getMemberListSetsRegistry = GMEConcepts.getCrosscuts;
 
     CrosscutController.prototype.getNewSetNamePrefixDesc = function () {
         return {
