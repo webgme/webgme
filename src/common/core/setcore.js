@@ -44,6 +44,14 @@ define([
             return setsInfo && setsInfo[setName];
         }
 
+        function getRelativeMemberPath(ownerPath, memberPath) {
+            if (self.isPathInSubTree(memberPath, ownerPath)) {
+                return self.getCommonPathPrefixData(ownerPath, memberPath).second;
+            }
+
+            return null;
+        }
+
         function getOwnMemberRelId(node, setName, memberPath) {
             var setInfo,
                 keys,
@@ -66,14 +74,23 @@ define([
         }
 
         function getMemberRelId(node, setName, memberPath) {
-            var relid = null;
+            var relid = null,
+                relativeMemberPath = null;
 
             do {
+                if (relativeMemberPath !== null) {
+                    relid = getOwnMemberRelId(node, setName, self.getPath(node) + relativeMemberPath);
+                    if (relid) {
+                        return relid;
+                    }
+                }
                 relid = getOwnMemberRelId(node, setName, memberPath);
                 if (relid) {
                     return relid;
                 }
 
+                typeof memberPath === 'string' ?
+                    relativeMemberPath = getRelativeMemberPath(self.getPath(node), memberPath) : null;
                 node = self.getBase(node);
             } while (node);
 
@@ -218,7 +235,7 @@ define([
 
             if (setInfo) {
                 if (typeof memberPath === 'string') {
-                    relid = getMemberRelId(node, setName, memberPath);
+                    relid = getOwnMemberRelId(node, setName, memberPath);
                     propertyCollectionInfo = relid && setInfo[relid] && setInfo[relid][propertyCollectionName];
                 } else {
                     propertyCollectionInfo = setInfo[propertyCollectionName];
@@ -237,10 +254,21 @@ define([
         function collectPropertyNames(node, propertyCollectionName, setName, memberPath) {
             var names = [],
                 keys,
+                relativeMemberPath = null,
                 i;
 
             do {
-                keys = collectOwnPropertyNames(node, propertyCollectionName, setName, memberPath);
+                if (relativeMemberPath !== null) {
+                    keys = collectOwnPropertyNames(node, propertyCollectionName, setName,
+                        self.getPath(node) + relativeMemberPath);
+                    if (keys.length === 0) {
+                        keys = collectOwnPropertyNames(node, propertyCollectionName, setName, memberPath);
+                    } else {
+                        memberPath = self.getPath(node) + relativeMemberPath;
+                    }
+                } else {
+                    keys = collectOwnPropertyNames(node, propertyCollectionName, setName, memberPath);
+                }
 
                 for (i = 0; i < keys.length; i += 1) {
                     if (names.indexOf(keys[i]) === -1) {
@@ -248,6 +276,8 @@ define([
                     }
                 }
 
+                relativeMemberPath = typeof memberPath === 'string' ?
+                    getRelativeMemberPath(self.getPath(node), memberPath) : null;
                 node = self.getBase(node);
             } while (node);
 
@@ -261,14 +291,27 @@ define([
         }
 
         function getPropertyValue(node, propertyCollectionName, propertyName, setName, memberPath) {
-            var value;
+            var value,
+                relativeMemberPath = null;
 
             do {
-                value = getOwnPropertyValue(node, propertyCollectionName, propertyName, setName, memberPath);
+                if (relativeMemberPath !== null) {
+                    value = getOwnPropertyValue(node, propertyCollectionName, propertyName, setName,
+                        self.getPath(node) + relativeMemberPath);
+                    if (value === undefined) {
+                        value = getOwnPropertyValue(node, propertyCollectionName, propertyName, setName, memberPath);
+                    } else {
+                        memberPath = self.getPath(node) + relativeMemberPath;
+                    }
+                } else {
+                    value = getOwnPropertyValue(node, propertyCollectionName, propertyName, setName, memberPath);
+                }
                 if (value !== undefined) {
                     return value;
                 }
 
+                relativeMemberPath = typeof memberPath === 'string' ?
+                    getRelativeMemberPath(self.getPath(node), memberPath) : null;
                 node = self.getBase(node);
             } while (node);
 

@@ -517,6 +517,12 @@ define(['js/logger',
         return undefined;
     };
 
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.getMemberListSetsRegistry = function (/*nodeId*/) {
+        this.logger.warn('DiagramDesignerWidgetMultiTabMemberListControllerBase.getMemberListSetsRegistry is not ' +
+            'overridden, returning default value...');
+        return undefined;
+    };
+
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectedTabChanged = function (tabID) {
         if (this._tabIDMemberListID[tabID] && this._selectedMemberListID !== this._tabIDMemberListID[tabID]) {
             this._selectedMemberListID = this._tabIDMemberListID[tabID];
@@ -1594,19 +1600,17 @@ define(['js/logger',
             memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
             memberListSetsRegistry,
             i,
-            base,
             len,
             setID;
 
-        if (memberListContainerID &&
-            memberListSetsRegistryKey &&
-            memberListSetsRegistryKey !== '') {
-            memberListContainer = this._client.getNode(memberListContainerID);
-            memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
-            base = this._client.getNode(memberListContainer.getBaseId());
+        if (typeof memberListContainerID === 'string') {
+            memberListSetsRegistry = this.getMemberListSetsRegistry(memberListContainerID);
+
             if (memberListSetsRegistry === undefined &&
-                (base === null || base.getRegistry(memberListSetsRegistryKey) === undefined)) {
-                memberListSetsRegistry = [];
+                memberListSetsRegistryKey &&
+                memberListSetsRegistryKey !== '') {
+                memberListContainer = this._client.getNode(memberListContainerID);
+                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
             }
 
             if (this._tabIDMemberListID[tabID] && memberListSetsRegistry) {
@@ -1635,50 +1639,49 @@ define(['js/logger',
             memberListSetsRegistry,
             i,
             j,
-            base,
             oldIDList = this._tabIDMemberListID,
             urlTab = WebGMEGlobal.State.getActiveTab(),
             setID;
 
-        if (typeof memberListContainerID === 'string' &&
-            memberListSetsRegistryKey &&
-            memberListSetsRegistryKey !== '') {
-            memberListContainer = this._client.getNode(memberListContainerID);
-            memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
-            base = this._client.getNode(memberListContainer.getBaseId());
+        if (typeof memberListContainerID === 'string') {
+            memberListSetsRegistry = this.getMemberListSetsRegistry(memberListContainerID);
+
             if (memberListSetsRegistry === undefined &&
-                (base === null || base.getRegistry(memberListSetsRegistryKey) === undefined)) {
-                memberListSetsRegistry = [];
+                memberListSetsRegistryKey &&
+                memberListSetsRegistryKey !== '') {
+                memberListContainer = this._client.getNode(memberListContainerID);
+                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
             }
 
-            if (memberListSetsRegistry) {
-                this._tabIDMemberListID = {};
-                for (i = 0; i < newTabIDOrder.length; i += 1) {
-                    //i is the new order number
-                    //newTabIDOrder[i] is the tab identifier
-                    if (urlTab === newTabIDOrder[i]) {
-                        WebGMEGlobal.State.registerActiveTab(i);
-                    }
-                    setID = oldIDList[newTabIDOrder[i]];
-                    this._tabIDMemberListID[i] = setID;
-                    for (j = 0; j < memberListSetsRegistry.length; j += 1) {
-                        if (memberListSetsRegistry[j].SetID === setID) {
-                            memberListSetsRegistry[j].order = i;
-                            break;
-                        }
+        }
+
+        if (memberListSetsRegistry) {
+            this._tabIDMemberListID = {};
+            for (i = 0; i < newTabIDOrder.length; i += 1) {
+                //i is the new order number
+                //newTabIDOrder[i] is the tab identifier
+                if (urlTab === newTabIDOrder[i]) {
+                    WebGMEGlobal.State.registerActiveTab(i);
+                }
+                setID = oldIDList[newTabIDOrder[i]];
+                this._tabIDMemberListID[i] = setID;
+                for (j = 0; j < memberListSetsRegistry.length; j += 1) {
+                    if (memberListSetsRegistry[j].SetID === setID) {
+                        memberListSetsRegistry[j].order = i;
+                        break;
                     }
                 }
-
-                memberListSetsRegistry.sort(function (a, b) {
-                    if (a.order < b.order) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                });
-
-                this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
             }
+
+            memberListSetsRegistry.sort(function (a, b) {
+                if (a.order < b.order) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+
+            this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
         }
     };
 
@@ -1688,7 +1691,6 @@ define(['js/logger',
             memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
             memberListSetsRegistry,
             i,
-            base,
             setID;
 
         if (typeof memberListContainerID === 'string') {
@@ -1696,42 +1698,36 @@ define(['js/logger',
 
             this._client.startTransaction();
 
-            if (memberListSetsRegistryKey) {
+            memberListSetsRegistry = this.getMemberListSetsRegistry(memberListContainerID);
+
+            if (memberListSetsRegistry === undefined && typeof memberListSetsRegistryKey === 'string') {
                 memberListContainer = this._client.getNode(memberListContainerID);
-                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
-                base = this._client.getNode(memberListContainer.getBaseId());
-                if (memberListSetsRegistry === undefined &&
-                    (base === null || base.getRegistry(memberListSetsRegistryKey) === undefined)) {
-                    memberListSetsRegistry = [];
-                }
+                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey) || [];
+            }
 
-                if (memberListSetsRegistry) {
-                    i = memberListSetsRegistry.length;
-                    while (i--) {
-                        if (memberListSetsRegistry[i].SetID === setID) {
-                            memberListSetsRegistry.splice(i, 1);
-                            break;
-                        }
-                    }
-
-                    //order remaining and reset order number
-                    memberListSetsRegistry.sort(function (a, b) {
-                        if (a.order < b.order) {
-                            return -1;
-                        } else {
-                            return 1;
-                        }
-                    });
-
-                    i = memberListSetsRegistry.length;
-                    while (i--) {
-                        memberListSetsRegistry[i].order = i;
-                    }
-
-                    this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
+            i = memberListSetsRegistry.length;
+            while (i--) {
+                if (memberListSetsRegistry[i].SetID === setID) {
+                    memberListSetsRegistry.splice(i, 1);
+                    break;
                 }
             }
 
+            //order remaining and reset order number
+            memberListSetsRegistry.sort(function (a, b) {
+                if (a.order < b.order) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+
+            i = memberListSetsRegistry.length;
+            while (i--) {
+                memberListSetsRegistry[i].order = i;
+            }
+
+            this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
             //finally delete the sheet's SET
             this._client.deleteSet(memberListContainerID, setID);
 
@@ -1745,67 +1741,61 @@ define(['js/logger',
             memberListSetsRegistryKey = this.getMemberListSetsRegistryKey(),
             memberListSetsRegistry,
             i,
-            base,
             newSetID,
             newSetNamePrefixDesc,
             newSetDesc;
 
-        if (this._canAddTab() &&
-            memberListSetsRegistryKey &&
-            memberListSetsRegistryKey !== '') {
-            memberListContainer = this._client.getNode(memberListContainerID);
-            memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
-            base = this._client.getNode(memberListContainer.getBaseId());
-            if (memberListSetsRegistry === undefined &&
-                (base === null || base.getRegistry(memberListSetsRegistryKey) === undefined)) {
-                memberListSetsRegistry = [];
+        if (this._canAddTab()) {
+            memberListSetsRegistry = this.getMemberListSetsRegistry(memberListContainerID);
+            if(memberListSetsRegistry === undefined &&
+                memberListSetsRegistryKey &&
+                memberListSetsRegistryKey !== ''){
+                memberListContainer = this._client.getNode(memberListContainerID);
+                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey) || [];
             }
 
-            if (memberListSetsRegistry) {
-                //reset set's order
-                memberListSetsRegistry.sort(function (a, b) {
-                    if (a.order < b.order) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                });
-
-                i = memberListSetsRegistry.length;
-                while (i--) {
-                    memberListSetsRegistry[i].order = i;
+            memberListSetsRegistry.sort(function (a, b) {
+                if (a.order < b.order) {
+                    return -1;
+                } else {
+                    return 1;
                 }
+            });
 
-                //create new Set's descriptor
-                //create new aspect set in  meta container node
-                newSetNamePrefixDesc = this.getNewSetNamePrefixDesc();
-
-                newSetID = newSetNamePrefixDesc.SetID + generateGuid();
-
-                newSetDesc = {
-                    SetID: newSetID,
-                    order: memberListSetsRegistry.length,
-                    title: newSetNamePrefixDesc.Title + memberListSetsRegistry.length
-                };
-
-                memberListSetsRegistry.push(newSetDesc);
-
-                //start transaction
-                this._client.startTransaction();
-
-                this._client.createSet(memberListContainerID, newSetID);
-
-                this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
-
-                //force switching to the new sheet if this is not the first sheet
-                //if this is the first, it will be activated by default
-                if (memberListSetsRegistry.length !== 1) {
-                    this._selectedMemberListID = newSetID;
-                }
-
-                //finish transaction
-                this._client.completeTransaction();
+            i = memberListSetsRegistry.length;
+            while (i--) {
+                memberListSetsRegistry[i].order = i;
             }
+
+            //create new Set's descriptor
+            //create new aspect set in  meta container node
+            newSetNamePrefixDesc = this.getNewSetNamePrefixDesc();
+
+            newSetID = newSetNamePrefixDesc.SetID + generateGuid();
+
+            newSetDesc = {
+                SetID: newSetID,
+                order: memberListSetsRegistry.length,
+                title: newSetNamePrefixDesc.Title + memberListSetsRegistry.length
+            };
+
+            memberListSetsRegistry.push(newSetDesc);
+
+            //start transaction
+            this._client.startTransaction();
+
+            this._client.createSet(memberListContainerID, newSetID);
+
+            this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
+
+            //force switching to the new sheet if this is not the first sheet
+            //if this is the first, it will be activated by default
+            if (memberListSetsRegistry.length !== 1) {
+                this._selectedMemberListID = newSetID;
+            }
+
+            //finish transaction
+            this._client.completeTransaction();
         }
     };
 

@@ -211,6 +211,7 @@ describe('coretype', function () {
             }, core.loadCollection(childrenDictionary['B'], 'ref'));
         }, core.loadChildren(instance));
     });
+
     it('check pointer', function (done) {
         TASYNC.call(function (children) {
             var base, instance, i;
@@ -1353,8 +1354,9 @@ describe('coretype', function () {
         var root = core.createNode({}),
             base = core.createNode({parent: root, relid: 'base'}),
             container = core.createNode({parent: root, base: base, relid: 'template'}),
-            child = core.createNode({parent: container, base: base, relid: 'child'}),
-            instance = core.createNode({parent: root, base: container, relid: 'instance'});
+            child = core.createNode({parent: container, base: base, relid: 'child'});
+
+        core.createNode({parent: root, base: container, relid: 'instance'}); //instance
 
         expect(core.getInstancePaths(root)).to.have.length(0);
         expect(core.getInstancePaths(base)).to.have.members(['/template', '/template/child']);
@@ -1367,9 +1369,11 @@ describe('coretype', function () {
         var root = core.createNode({}),
             base = core.createNode({parent: root, relid: 'base'}),
             container = core.createNode({parent: root, base: base, relid: 'template'}),
-            child = core.createNode({parent: container, base: base, relid: 'child'}),
-            instance = core.createNode({parent: root, base: container, relid: 'instance'}),
             neededChecks = 2;
+
+
+        core.createNode({parent: container, base: base, relid: 'child'}); // child
+        core.createNode({parent: root, base: container, relid: 'instance'}), // instance
 
         core.persist(root);
         TASYNC.call(function (newRoot) {
@@ -1397,8 +1401,9 @@ describe('coretype', function () {
     });
 
     it('should remove atr and reg field of an instance during persist', function (done) {
-        var ancestor = core.createNode({parent: root, relid: 'theAncestor'}),
-            node = core.createNode({parent: root, base: ancestor, relid: 'theNode'});
+        var ancestor = core.createNode({parent: root, relid: 'theAncestor'});
+
+        core.createNode({parent: root, base: ancestor, relid: 'theNode'}); // node
 
         core.persist(root);
         TASYNC.call(function (newRoot) {
@@ -1449,11 +1454,12 @@ describe('coretype', function () {
             baseB = core.createNode({parent: root, relid: 'B'}),
             containerOne = core.createNode({parent: root, base: baseA, relid: 'C1'}),
             childOne = core.createNode({parent: containerOne, base: baseB, relid: '1'}),
-            childTwo = core.createNode({parent: containerOne, base: baseB, relid: '2'}),
             instanceOne = core.createNode({parent: root, base: containerOne, relid: 'I1'}),
             containerTwo = core.createNode({parent: root, base: baseA, relid: 'C2'}),
             instanceTwo = core.createNode({parent: root, base: containerTwo, relid: 'I2'}),
             copiedNodes;
+
+        core.createNode({parent: containerOne, base: baseB, relid: '2'}); // childTwo
 
         core.setPointer(childOne, 'ref', instanceTwo);
         copiedNodes = core.copyNodes([instanceOne, instanceTwo], root);

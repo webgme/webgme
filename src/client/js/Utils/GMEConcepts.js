@@ -694,15 +694,52 @@ define(['jquery',
         return result;
     }
 
-    function getCrosscuts(objID) {
-        var obj = client.getNode(objID),
-            crosscuts = [];
+    function _getObjectifiedCrosscutRegistry(nodeId){
+        var node = client.getNode(nodeId),
+            setNames,
+            baseObjectifiedSetsRegistry,
+            selfObjectifiedSetsRegistry = {},
+            registry,
+            i;
 
-        if (obj) {
-            crosscuts = obj.getRegistry(REGISTRY_KEYS.CROSSCUTS) || [];
+        if (node) {
+            baseObjectifiedSetsRegistry = _getObjectifiedCrosscutRegistry(node.getBaseId());
+            registry = node.getOwnEditableRegistry(REGISTRY_KEYS.CROSSCUTS) || [];
+            setNames = node.getSetNames();
+            for (i = 0; i < registry.length; i += 1) {
+                if (setNames.indexOf(registry[i].SetID) !== -1) {
+                    selfObjectifiedSetsRegistry[registry[i].SetID] = registry[i];
+                }
+            }
+
+            for (i in selfObjectifiedSetsRegistry) {
+                baseObjectifiedSetsRegistry[i] = selfObjectifiedSetsRegistry[i];
+            }
+
+            selfObjectifiedSetsRegistry = baseObjectifiedSetsRegistry;
         }
 
-        return crosscuts;
+        return selfObjectifiedSetsRegistry;
+    }
+
+    function getCrosscuts(nodeId) {
+        var objectifiedSetsRegistry = _getObjectifiedCrosscutRegistry(nodeId),
+            id,
+            preIndex = 0,
+            registry = [];
+
+        while (Object.keys(objectifiedSetsRegistry).length > 0) {
+            for (id in objectifiedSetsRegistry) {
+                if (objectifiedSetsRegistry[id].order === preIndex) {
+                    objectifiedSetsRegistry[id].order = registry.length;
+                    registry.push(objectifiedSetsRegistry[id]);
+                    delete objectifiedSetsRegistry[id];
+                }
+            }
+            preIndex += 1;
+        }
+
+        return registry;
     }
 
     function getSets(objID) {
