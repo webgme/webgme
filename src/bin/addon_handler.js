@@ -12,14 +12,26 @@ var webgme = require('../../webgme'),
     Q = require('q'),
     bodyParser = require('body-parser'),
     superagent = require('superagent'),
-    gmeConfig = webgme.getGmeConfig(),
-    logger = webgme.Logger.create('gme:bin:addon-handler', gmeConfig.bin.log, false),
     DEFAULT_TOKEN_REFRESH_INTERVAL = 60000; // Refresh token every minute by default.
 
+/**
+ *
+ * @param {object} options
+ * @param {string} [options.webgmeUrl]
+ * @param {number} [options.port]
+ * @param {string} [options.path]
+ * @param {string} [options.token]
+ * @param {string} [options.credentials]
+ * @param {number} [options.tokenRefreshInterval]
+ * @param {object} [options.gmeConfig]
+ * @constructor
+ */
 function AddOnHandler(options) {
     var app = new Express(),
-        webgmeUrl = options.webgmeUrl || 'http://127.0.0.1:' + gmeConfig.server.port,
         refreshInterval = options.tokenRefreshInterval || DEFAULT_TOKEN_REFRESH_INTERVAL,
+        gmeConfig = options.gmeConfig || webgme.getGmeConfig(),
+        logger = webgme.Logger.create('gme:bin:addon-handler', gmeConfig.bin.log, false),
+        webgmeUrl = options.webgmeUrl || 'http://127.0.0.1:' + gmeConfig.server.port,
         webgmeToken,
         timeoutId,
         mt,
@@ -140,11 +152,18 @@ function AddOnHandler(options) {
         var deferred = Q.defer();
 
         clearTimeout(timeoutId);
-        server.close();
+        if (server) {
+            server.close();
+        }
 
-        mt.close()
-            .then(deferred.resolve)
-            .catch(deferred.reject);
+        if (mt) {
+            mt.close()
+                .then(deferred.resolve)
+                .catch(deferred.reject);
+        } else {
+            deferred.resolve();
+        }
+
 
         return deferred.promise.nodeify(callback);
     };
@@ -158,6 +177,8 @@ function resolveInterval(val) {
     }
 }
 
+module.exports = AddOnHandler;
+
 if (require.main === module) {
     var Command = require('commander').Command,
         program = new Command(),
@@ -166,8 +187,8 @@ if (require.main === module) {
     program
         .version('2.13.0')
         .description('Starts an add-on machine that handles addOns based on clients connecting to branches. ' +
-        'This script can be used for two purposes: 1) if multiple webgme back-ends are used they should not spawn ' +
-        'their own add-on workers, instead they should all be configured to post to this server ' +
+            'This script can be used for two purposes: 1) if multiple webgme back-ends are used they should not spawn ' +
+            'their own add-on workers, instead they should all be configured to post to this server ' +
             '(config.addOn.workerUrl) 2) it enables all running add-ons to be authenticated as one predefined user.')
         .option('-u, --webgmeUrl [string]', 'Url to the webgme server. If not given it will assume http://127.0.0.1' +
             ':%gmeConfig.server.port%')
@@ -194,9 +215,9 @@ if (require.main === module) {
 
     handler.start(function (err) {
         if (err) {
-            logger.error(err);
+            console.error(err);
         } else {
-            logger.info('Server running');
+            console.info('Server running');
         }
     });
 
@@ -206,7 +227,7 @@ if (require.main === module) {
                 process.exit(0);
             })
             .catch(function (err) {
-                logger.error(err);
+                console.error(err);
                 process.exit(1);
             });
     });
