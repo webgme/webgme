@@ -449,6 +449,24 @@ describe('PROJECT REST API', function () {
             });
 
             // Getting raw data nodes via commit
+            it('should return rootNode for project /projects/:ownerId/:projectId/commits/:commitHash/tree',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
+                        importResult.commitHash.substring(1) + '/tree';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body).to.have.property('1');
+                            expect(res.body).to.have.property('_id');
+                            expect(res.body).to.have.property('_meta');
+                            expect(res.body).to.have.property('atr');
+                            expect(res.body).to.have.property('ovr');
+
+                            done();
+                        });
+                }
+            );
+
             it('should return rootNode for project /projects/:ownerId/:projectId/commits/:commitHash/tree/',
                 function (done) {
                     var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/commits/' +
@@ -575,6 +593,24 @@ describe('PROJECT REST API', function () {
             );
 
             // Getting raw data nodes via branch
+            it('should return rootNode for project /projects/:ownerId/:projectId/branches/:branchId/tree',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/' +
+                        'master/tree';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body).to.have.property('1');
+                            expect(res.body).to.have.property('_id');
+                            expect(res.body).to.have.property('_meta');
+                            expect(res.body).to.have.property('atr');
+                            expect(res.body).to.have.property('ovr');
+
+                            done();
+                        });
+                }
+            );
+
             it('should return rootNode for project /projects/:ownerId/:projectId/branches/:branchId/tree/',
                 function (done) {
                     var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/branches/' +
@@ -663,6 +699,73 @@ describe('PROJECT REST API', function () {
                             expect(res.status).equal(404, err);
 
                             done();
+                        });
+                }
+            );
+
+            // Getting raw data nodes via tag
+            it('should return rootNode for project /projects/:ownerId/:projectId/tags/:tagId/tree',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags/' +
+                        'tag/tree';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            try {
+                                expect(res.status).equal(200, err);
+                                expect(res.body).to.have.property('1');
+                                expect(res.body).to.have.property('_id');
+                                expect(res.body).to.have.property('_meta');
+                                expect(res.body).to.have.property('atr');
+                                expect(res.body).to.have.property('ovr');
+
+                                done();
+                            } catch (e) {
+                                return done(e);
+                            }
+                        });
+                }
+            );
+
+            it('should return rootNode for project /projects/:ownerId/:projectId/tags/:tagId/tree/',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags/' +
+                        'tag/tree/';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            try {
+                                expect(res.status).equal(200, err);
+                                expect(res.body).to.have.property('1');
+                                expect(res.body).to.have.property('_id');
+                                expect(res.body).to.have.property('_meta');
+                                expect(res.body).to.have.property('atr');
+                                expect(res.body).to.have.property('ovr');
+
+                                done();
+                            } catch (e) {
+                                return done(e);
+                            }
+                        });
+                }
+            );
+
+            it('should return fcoNode for project /projects/:ownerId/:projectId/tags/:tagId/tree/1',
+                function (done) {
+                    var url = server.getUrl() + '/api/projects/' + projectName2APIPath(projectName) + '/tags/' +
+                        'tag/tree/1';
+                    agent.get(url)
+                        .end(function (err, res) {
+                            try {
+                                expect(res.status).equal(200, err);
+                                expect(res.body).to.not.have.property('1');
+                                expect(res.body).to.have.property('_id');
+                                expect(res.body).to.have.property('_meta');
+                                expect(res.body).to.have.property('atr');
+                                expect(res.body).to.have.property('ovr');
+
+                                done();
+                            } catch (e) {
+                                return done(e);
+                            }
                         });
                 }
             );
@@ -1301,11 +1404,15 @@ describe('PROJECT REST API', function () {
                         importResult.commitHash.substring(1) + '/export';
                     agent.get(url)
                         .end(function (err, res) {
-                            expect(res.status).equal(200, err);
-                            expect(res.res.headers['content-disposition']).to.contains('filename');
-                            expect(res.res.headers['content-disposition']).to.contains('.webgmex');
-                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
-                            done();
+                            try {
+                                expect(res.status).equal(200, err);
+                                expect(res.res.headers['content-disposition']).to.contains('filename');
+                                expect(res.res.headers['content-disposition']).to.contains('.webgmex');
+                                expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                                done();
+                            } catch (e) {
+                                return done(e);
+                            }
                         });
                 }
             );
@@ -1316,11 +1423,15 @@ describe('PROJECT REST API', function () {
                         importResult.commitHash.substring(1) + '/export/1';
                     agent.get(url)
                         .end(function (err, res) {
-                            expect(res.status).equal(200, err);
-                            expect(res.res.headers['content-disposition']).to.contains('filename');
-                            expect(res.res.headers['content-disposition']).to.contains('.webgmexm');
-                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
-                            done();
+                            try {
+                                expect(res.status).equal(200, err);
+                                expect(res.res.headers['content-disposition']).to.contains('filename');
+                                expect(res.res.headers['content-disposition']).to.contains('.webgmexm');
+                                expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                                done();
+                            } catch (e) {
+                                return done(e);
+                            }
                         });
                 }
             );
@@ -1331,11 +1442,15 @@ describe('PROJECT REST API', function () {
                         '/branches/master/export';
                     agent.get(url)
                         .end(function (err, res) {
-                            expect(res.status).equal(200, err);
-                            expect(res.res.headers['content-disposition']).to.contains('filename');
-                            expect(res.res.headers['content-disposition']).to.contains('.webgmex');
-                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
-                            done();
+                            try {
+                                expect(res.status).equal(200, err);
+                                expect(res.res.headers['content-disposition']).to.contains('filename');
+                                expect(res.res.headers['content-disposition']).to.contains('.webgmex');
+                                expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                                done();
+                            } catch (e) {
+                                return done(e);
+                            }
                         });
                 }
             );
@@ -1346,11 +1461,15 @@ describe('PROJECT REST API', function () {
                         '/branches/master/export/1';
                     agent.get(url)
                         .end(function (err, res) {
-                            expect(res.status).equal(200, err);
-                            expect(res.res.headers['content-disposition']).to.contains('filename');
-                            expect(res.res.headers['content-disposition']).to.contains('.webgmexm');
-                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
-                            done();
+                            try {
+                                expect(res.status).equal(200, err);
+                                expect(res.res.headers['content-disposition']).to.contains('filename');
+                                expect(res.res.headers['content-disposition']).to.contains('.webgmex');
+                                expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                                done();
+                            } catch (e) {
+                                return done(e);
+                            }
                         });
                 }
             );
@@ -1361,11 +1480,15 @@ describe('PROJECT REST API', function () {
                         '/tags/tag/export';
                     agent.get(url)
                         .end(function (err, res) {
-                            expect(res.status).equal(200, err);
-                            expect(res.res.headers['content-disposition']).to.contains('filename');
-                            expect(res.res.headers['content-disposition']).to.contains('.webgmex');
-                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
-                            done();
+                            try {
+                                expect(res.status).equal(200, err);
+                                expect(res.res.headers['content-disposition']).to.contains('filename');
+                                expect(res.res.headers['content-disposition']).to.contains('.webgmex');
+                                expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                                done();
+                            } catch (e) {
+                                return done(e);
+                            }
                         });
                 }
             );
@@ -1376,11 +1499,15 @@ describe('PROJECT REST API', function () {
                         '/tags/tag/export/1';
                     agent.get(url)
                         .end(function (err, res) {
-                            expect(res.status).equal(200, err);
-                            expect(res.res.headers['content-disposition']).to.contains('filename');
-                            expect(res.res.headers['content-disposition']).to.contains('.webgmexm');
-                            expect(res.res.headers['content-type']).to.eql('application/octet-stream');
-                            done();
+                            try {
+                                expect(res.status).equal(200, err);
+                                expect(res.res.headers['content-disposition']).to.contains('filename');
+                                expect(res.res.headers['content-disposition']).to.contains('.webgmexm');
+                                expect(res.res.headers['content-type']).to.eql('application/octet-stream');
+                                done();
+                            } catch (e) {
+                                return done(e);
+                            }
                         });
                 }
             );

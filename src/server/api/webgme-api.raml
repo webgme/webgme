@@ -1,5 +1,4 @@
 #%RAML 0.8
-baseUri: https://mocksvc.mulesoft.com/mocks/32d5cb4e-cc2a-459e-9b6b-29beee8bdb54
 title: WebGME
 version: 1.0
 
@@ -523,6 +522,12 @@ resourceTypes:
                 body:
                   application/ocete-stream:
               403:
+        /tree/{nodePath}:
+          uriParameters:
+            nodePath:
+              example: 1563412505/5585498754
+          type:
+            project-tree:
     /hooks:
       description: Returns with the list of webHooks.
       type:

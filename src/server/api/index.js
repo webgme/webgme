@@ -68,46 +68,23 @@ function createAPI(app, mountPath, middlewareOpts) {
         return deferred.promise.nodeify(callback);
     }
 
-    function exportProject(req, res, next, selector) {
+    function exportProject(req, res, next) {
         var userId = getUserId(req),
             projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                 req.params.projectName),
             workerParameters = {
                 command: middlewareOpts.workerManager.CONSTANTS.workerCommands.exportProjectToFile,
                 projectId: projectId,
+                branchName: req.params.branchId || null,
+                commitHash: req.params.commitHash ? StorageUtil.getHashTaggedHash(req.params.commitHash) : null,
+                tagName: req.params.tagId || null,
                 withAssets: true
             };
 
         getNewJWToken(userId)
             .then(function (token) {
                 workerParameters.webgmeToken = token;
-
-                switch (selector) {
-                    case 'branch':
-                        workerParameters.branchName = req.params.branchId;
-                        return null;
-                    case 'tag':
-                        return safeStorage.getTags({
-                            username: userId,
-                            projectId: projectId
-                        });
-                    case 'commit':
-                        workerParameters.commitHash = '#' + req.params.commitHash;
-                        return null;
-                    default:
-                        return null;
-                }
-            })
-            .then(function (tags) {
-                if (tags && tags.hasOwnProperty(req.params.tagId)) {
-                    workerParameters.commitHash = tags[req.params.tagId];
-                }
-
-                if (workerParameters.commitHash || workerParameters.branchName) {
-                    return Q.ninvoke(middlewareOpts.workerManager, 'request', workerParameters);
-                }
-
-                throw new Error('No valid project version (commitHash/tagId/branchName) was given.');
+                return Q.ninvoke(middlewareOpts.workerManager, 'request', workerParameters);
             })
             .then(function (result) {
                 res.redirect(result.downloadUrl);
@@ -115,17 +92,20 @@ function createAPI(app, mountPath, middlewareOpts) {
             })
             .catch(function (err) {
                 logger.error('Cannot handle export request', err);
-                res.sendStatus(403);
+                res.status(403).send('Cannot process request: ' + err);
             });
     }
 
-    function exportModel(req, res, next, selector) {
+    function exportModel(req, res, next) {
         var userId = getUserId(req),
             projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                 req.params.projectName),
             workerParameters = {
                 command: middlewareOpts.workerManager.CONSTANTS.workerCommands.exportSelectionToFile,
                 projectId: projectId,
+                branchName: req.params.branchId || null,
+                commitHash: req.params.commitHash ? StorageUtil.getHashTaggedHash(req.params.commitHash) : null,
+                tagName: req.params.tagId || null,
                 paths: ['/' + req.params[0]],
                 withAssets: true
             };
@@ -134,40 +114,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             .then(function (token) {
                 workerParameters.webgmeToken = token;
 
-                switch (selector) {
-                    case 'branch':
-                        workerParameters.branchName = req.params.branchId;
-                        return safeStorage.getBranches({
-                            username: userId,
-                            projectId: projectId
-                        });
-                    case 'tag':
-                        return safeStorage.getTags({
-                            username: userId,
-                            projectId: projectId
-                        });
-                    case 'commit':
-                        workerParameters.commitHash = '#' + req.params.commitHash;
-                        return null;
-                    default:
-                        return null;
-                }
-            })
-            .then(function (tagsOrBranches) {
-                if (tagsOrBranches) {
-                    if (workerParameters.branchName) {
-                        workerParameters.commitHash = tagsOrBranches[req.params.branchId];
-                        delete workerParameters.branchName;
-                    } else if (tagsOrBranches.hasOwnProperty(req.params.tagId)) {
-                        workerParameters.commitHash = tagsOrBranches[req.params.tagId];
-                    }
-                }
-
-                if (workerParameters.commitHash || workerParameters.branchName) {
-                    return Q.ninvoke(middlewareOpts.workerManager, 'request', workerParameters);
-                }
-
-                throw new Error('No valid project version (commitHash/tagId/branchName) was given.');
+                return Q.ninvoke(middlewareOpts.workerManager, 'request', workerParameters);
             })
             .then(function (result) {
                 res.redirect(result.downloadUrl);
@@ -175,7 +122,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             })
             .catch(function (err) {
                 logger.error('Cannot handle export request', err);
-                res.sendStatus(403);
+                res.status(403).send('Cannot process request: ' + err);
             });
     }
 
@@ -1397,32 +1344,27 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/projects/:ownerId/:projectName/commits/:commitHash/export', ensureAuthenticated,
-        function (req, res, next) {
-            console.log('arrived');
-            exportProject(req, res, next, 'commit');
-        }
-    );
-
-    router.get('/projects/:ownerId/:projectName/commits/:commitHash/export/*', ensureAuthenticated,
+    router.get(['/projects/:ownerId/:projectName/commits/:commitHash/export',
+            '/projects/:ownerId/:projectName/commits/:commitHash/export/*'], ensureAuthenticated,
         function (req, res, next) {
             if (req.params[0] === undefined || req.params[0] === '') {
-                res.redirect('/projects/' + req.params.ownerId + '/' + req.params.projectName +
-                    '/commits/' + req.params.commitHash + '/export');
+                exportProject(req, res, next);
             } else {
-                exportModel(req, res, next, 'commit');
+                exportModel(req, res, next);
             }
         }
     );
 
-    router.get('/projects/:ownerId/:projectName/commits/:commitHash/tree/*', ensureAuthenticated,
+    router.get(['/projects/:ownerId/:projectName/commits/:commitHash/tree',
+            '/projects/:ownerId/:projectName/commits/:commitHash/tree/*'], ensureAuthenticated,
         function (req, res, next) {
             var userId = getUserId(req),
                 projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                     req.params.projectName),
                 commitHash = StorageUtil.getHashTaggedHash(req.params.commitHash);
 
-            loadNodePathByCommitHash(userId, projectId, commitHash, '/' + req.params[0])
+            loadNodePathByCommitHash(userId, projectId, commitHash,
+                '/' + (req.params[0] === undefined ? '' : req.params[0]))
                 .then(function (nodeObj) {
                     res.json(nodeObj);
                 })
@@ -1504,19 +1446,13 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/projects/:ownerId/:projectName/branches/:branchId/export', ensureAuthenticated,
-        function (req, res, next) {
-            exportProject(req, res, next, 'branch');
-        }
-    );
-
-    router.get('/projects/:ownerId/:projectName/branches/:branchId/export/*', ensureAuthenticated,
+    router.get(['/projects/:ownerId/:projectName/branches/:branchId/export',
+            '/projects/:ownerId/:projectName/branches/:branchId/export/*'], ensureAuthenticated,
         function (req, res, next) {
             if (req.params[0] === undefined || req.params[0] === '') {
-                res.redirect('/projects/' + req.params.ownerId + '/' + req.params.projectName +
-                    '/branches/' + req.params.branchId + '/export');
+                exportProject(req, res, next);
             } else {
-                exportModel(req, res, next, 'branch');
+                exportModel(req, res, next);
             }
         }
     );
@@ -1602,7 +1538,8 @@ function createAPI(app, mountPath, middlewareOpts) {
         }
     );
 
-    router.get('/projects/:ownerId/:projectName/branches/:branchId/tree/*', ensureAuthenticated,
+    router.get(['/projects/:ownerId/:projectName/branches/:branchId/tree',
+            '/projects/:ownerId/:projectName/branches/:branchId/tree/*'], ensureAuthenticated,
         function (req, res, next) {
             var userId = getUserId(req),
                 projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
@@ -1618,7 +1555,8 @@ function createAPI(app, mountPath, middlewareOpts) {
                     if (!branchHash) {
                         throw new Error('Branch does not exist ' + req.params.branchId);
                     }
-                    return loadNodePathByCommitHash(userId, projectId, branchHash, '/' + req.params[0]);
+                    return loadNodePathByCommitHash(userId, projectId, branchHash,
+                        '/' + (req.params[0] === undefined ? '' : req.params[0]));
                 })
                 .then(function (dataObj) {
                     res.json(dataObj);
@@ -1669,20 +1607,45 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/projects/:ownerId/:projectName/tags/:tagId/export', ensureAuthenticated,
+    router.get(['/projects/:ownerId/:projectName/tags/:tagId/export',
+            '/projects/:ownerId/:projectName/tags/:tagId/export/*'], ensureAuthenticated,
         function (req, res, next) {
-            exportProject(req, res, next, 'tag');
+            if (req.params[0] === undefined || req.params[0] === '') {
+                exportProject(req, res, next);
+            } else {
+                exportModel(req, res, next);
+            }
         }
     );
 
-    router.get('/projects/:ownerId/:projectName/tags/:tagId/export/*', ensureAuthenticated,
+    router.get(['/projects/:ownerId/:projectName/tags/:tagId/tree',
+            '/projects/:ownerId/:projectName/tags/:tagId/tree/*'], ensureAuthenticated,
         function (req, res, next) {
-            if (req.params[0] === undefined || req.params[0] === '') {
-                res.redirect('/projects/' + req.params.ownerId + '/' + req.params.projectName +
-                    '/tags/' + req.params.tagId + '/export');
-            } else {
-                exportModel(req, res, next, 'tag');
-            }
+            var userId = getUserId(req),
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                data = {
+                    username: userId,
+                    projectId: projectId
+                };
+
+            safeStorage.getTags(data)
+                .then(function (tags) {
+                    if (tags.hasOwnProperty(req.params.tagId) !== true) {
+                        throw new Error('Tag does not exist ' + req.params.tagId);
+                    }
+                    return loadNodePathByCommitHash(userId, projectId, tags[req.params.tagId],
+                        '/' + (req.params[0] === undefined ? '' : req.params[0]));
+                })
+                .then(function (dataObj) {
+                    res.json(dataObj);
+                })
+                .catch(function (err) {
+                    if (err.message.indexOf('not exist') > -1 || err.message.indexOf('Not authorized to read') > -1) {
+                        err.status = 404;
+                    }
+                    next(err);
+                });
         }
     );
 
