@@ -48,47 +48,55 @@ function WorkerRequests(mainLogger, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
-    function _getCoreAndRootNode(storage, projectId, commitHash, branchName, callback) {
-        var deferred = Q.defer();
+    function _getCoreAndRootNode(storage, projectId, commitHash, branchName, tagName, callback) {
+        var deferred = Q.defer(),
+            internalPromise,
+            context = {};
 
         storage.openProject(projectId, function (err, project, branches) {
             if (err) {
-                deferred.reject(err);
+                deferred.reject(new Error('Cannot open project: ' + err));
                 return;
             }
 
-            if (branchName) {
+            internalPromise = Q(null);
+            context.project = project;
+            if (typeof tagName === 'string') {
+                internalPromise = project.getTags();
+            } else if (typeof branchName === 'string') {
                 if (branches.hasOwnProperty(branchName) === false) {
                     deferred.reject(new Error('Branch did not exist [' + branchName + ']'));
                     return;
                 }
                 commitHash = branches[branchName];
             }
-
-            project.loadObject(commitHash, function (err, commitObject) {
-                if (err) {
-                    deferred.reject(new Error(err));
-                    return;
-                }
-
-                var core = new Core(project, {
-                    globConf: gmeConfig,
-                    logger: logger.fork('core')
-                });
-
-                core.loadRoot(commitObject.root, function (err, rootNode) {
-                    if (err) {
-                        deferred.reject(new Error(err));
-                        return;
+            internalPromise
+                .then(function (tags) {
+                    if (tags) {
+                        if (tags.hasOwnProperty(tagName) === false) {
+                            deferred.reject(new Error('Tag did not exist [' + tagName + ']'));
+                            return;
+                        }
+                        commitHash = tags[tagName];
                     }
-                    deferred.resolve({
-                        project: project,
-                        core: core,
-                        rootNode: rootNode,
-                        commitObject: commitObject
+                    return Q.ninvoke(context.project, 'loadObject', commitHash);
+                })
+                .then(function (commitObject) {
+                    context.commitObject = commitObject;
+
+                    context.core = new Core(project, {
+                        globConf: gmeConfig,
+                        logger: logger.fork('core')
                     });
-                });
-            });
+
+                    return context.core.loadRoot(commitObject.root);
+                })
+                .then(function (rootNode) {
+                    context.rootNode = rootNode;
+
+                    deferred.resolve(context);
+                })
+                .catch(deferred.reject);
         });
 
         return deferred.promise.nodeify(callback);
@@ -576,7 +584,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                return _getCoreAndRootNode(storage, projectId, parameters.commitHash);
+                return _getCoreAndRootNode(storage, projectId, parameters.commitHash, null);
             })
             .then(function (res) {
                 var constraintChecker,
@@ -657,6 +665,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                     branchName: parameters.branchName,
                     commitHash: parameters.commitHash,
                     rootHash: parameters.rootHash,
+                    tagName: parameters.tagName,
                     kind: parameters.kind
                 });
             })
@@ -720,7 +729,8 @@ function WorkerRequests(mainLogger, gmeConfig) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash, null);
+                return _getCoreAndRootNode(storage,
+                    parameters.projectId, parameters.commitHash, parameters.branchName, parameters.tagName);
             })
             .then(function (context_) {
                 var promises = [],
@@ -895,7 +905,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 if (parameters.hasOwnProperty('parentPath') === false) {
                     throw new Error('No parentPath given');
                 }
-                return _getCoreAndRootNode(storage, parameters.projectId, null, parameters.branchName);
+                return _getCoreAndRootNode(storage, parameters.projectId, null, parameters.branchName, null);
             })
             .then(function (context_) {
                 context = context_;
@@ -1025,7 +1035,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                return _getCoreAndRootNode(storage, parameters.projectId, null, parameters.branchName);
+                return _getCoreAndRootNode(storage, parameters.projectId, null, parameters.branchName, null);
             })
             .then(function (context_) {
                 var deferred = Q.defer();
@@ -1160,7 +1170,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                return _getCoreAndRootNode(storage, projectId, null, parameters.branchName);
+                return _getCoreAndRootNode(storage, projectId, null, parameters.branchName, null);
             })
             .then(function (context_) {
                 var deferred = Q.defer(),
@@ -1291,7 +1301,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash, parameters.branchName);
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash, parameters.branchName, parameters.tagName);
             })
             .then(function (context_) {
                 context = context_;

@@ -35,7 +35,7 @@ define([
                 })
                 .catch(deferred.reject);
         } else if (parameters.tagName) {
-            Q.ninvoke(project, 'getAllTags')
+            Q.ninvoke(project, 'getTags')
                 .then(function (tags) {
                     if (tags[parameters.tagName]) {
                         parameters.commitHash = tags[parameters.tagName];
