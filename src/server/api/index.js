@@ -2079,28 +2079,6 @@ function createAPI(app, mountPath, middlewareOpts) {
         res.send(result);
     });
 
-    router.get('/addOns/status', ensureAuthenticated, function (req, res, next) {
-        var userId = getUserId(req);
-
-        if (gmeConfig.addOn.enable) {
-            gmeAuth.getUser(userId)
-                .then(function (userData) {
-                    if (gmeConfig.authentication.enable && !userData.siteAdmin) {
-                        res.status(403);
-                        throw new Error('site admin role is required for this operation');
-                    }
-
-                    return middlewareOpts.addOnEventPropagator.getStatus({});
-                })
-                .then(function (status) {
-                    res.json(status);
-                })
-                .catch(next);
-        } else {
-            res.sendStatus(404);
-        }
-    });
-
     //router.get('/addOns/:addOnId/queryParams', ensureAuthenticated, function (req, res) {});
     //router.get('/addOns/:addOnId/queryParamsStructure', ensureAuthenticated, function (req, res) {});
     //router.post('/addOns/:addOnId/query', ensureAuthenticated, function (req, res) {});
