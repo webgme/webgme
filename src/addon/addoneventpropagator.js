@@ -41,7 +41,11 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
             });
         } else {
             logger.info('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
-            superagent.post(gmeConfig.addOn.workerUrl, data);
+            superagent.post(gmeConfig.addOn.workerUrl, data, function (err) {
+                if (err) {
+                    logger.error(err);
+                }
+            });
         }
     }
 
@@ -61,7 +65,11 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
             });
         } else {
             logger.info('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
-            superagent.post(gmeConfig.addOn.workerUrl, data);
+            superagent.post(gmeConfig.addOn.workerUrl, data, function (err) {
+                if (err) {
+                    logger.error(err);
+                }
+            });
         }
     }
 

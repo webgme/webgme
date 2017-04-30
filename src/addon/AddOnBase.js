@@ -60,7 +60,7 @@ define([
          */
         this.updateResult = null;
 
-        this.isWorking = false;
+        this.currentlyWorking = false;
 
         this.logger.debug('ctor');
     }
@@ -137,10 +137,10 @@ define([
     AddOnBase.prototype._update = function (rootNode, commitObj, callback) {
         var self = this;
         this.updateResult = new AddOnUpdateResult(commitObj);
-        this.isWorking = true;
+        this.currentlyWorking = true;
 
         this.update(rootNode, commitObj, function (err, result) {
-            self.isWorking = false;
+            self.currentlyWorking = false;
             callback(err, result);
         });
     };
@@ -156,10 +156,10 @@ define([
         var self = this;
         this.initialized = true;
         this.updateResult = new AddOnUpdateResult(commitObj);
-        this.isWorking = true;
+        this.currentlyWorking = true;
 
         this.initialize(rootNode, commitObj,  function (err, result) {
-            self.isWorking = false;
+            self.currentlyWorking = false;
             callback(err, result);
         });
     };
@@ -217,7 +217,7 @@ define([
 
     AddOnBase.prototype._getStatus = function () {
         var status = this.getStatus();
-        status.isWorking = this.isWorking;
+        status.currentlyWorking = this.currentlyWorking;
 
         return status;
     };

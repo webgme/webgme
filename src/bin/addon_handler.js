@@ -38,6 +38,7 @@ function AddOnHandler(options) {
         server;
 
     options.port = options.port || (gmeConfig.server.port + 1);
+    options.path = options.path || '';
 
     function refreshToken() {
         var deferred = Q.defer(),
@@ -86,6 +87,8 @@ function AddOnHandler(options) {
 
         statusUrl = statusUrl + '/status';
 
+        logger.debug('statusUrl', statusUrl);
+
         mt = new ManagerTracker(logger, gmeConfig, options);
 
         app.use(bodyParser.json());
@@ -98,7 +101,7 @@ function AddOnHandler(options) {
             }
         });
 
-        app.post(options.path, function (req, res) {
+        app.post(options.path, function (req, res, next) {
             var params = req.body;
 
             if (params.event === CONSTANTS.STORAGE.BRANCH_JOINED ||
@@ -106,25 +109,26 @@ function AddOnHandler(options) {
                 mt.connectedWorkerStart(webgmeToken || params.webgmeToken, params.projectId, params.branchName)
                     .then(function (info) {
                         logger.info('connectedWorkerStart', params.projectId, params.branchName, JSON.stringify(info));
+                        res.sendStatus(200);
                     })
                     .catch(function (err) {
                         logger.error(err);
+                        next(err);
                     });
             } else if (params.event === CONSTANTS.STORAGE.BRANCH_LEFT) {
                 mt.connectedWorkerStop(params.projectId, params.branchName)
                     .then(function (info) {
                         logger.info('connectedWorkerStop', params.projectId, params.branchName, JSON.stringify(info));
+                        res.sendStatus(200);
                     })
                     .catch(function (err) {
                         logger.error(err);
+                        next(err);
                     });
             } else {
                 logger.error('Unknown command received');
                 res.sendStatus(404);
-                return;
             }
-
-            res.sendStatus(200);
         });
 
         webgmeToken = options.token;
@@ -143,6 +147,8 @@ function AddOnHandler(options) {
                     logger.info('Credentials and/or token provided, will refresh token every',
                         refreshInterval, '[ms].');
                 }
+
+                deferred.resolve();
             });
 
         return deferred.promise.nodeify(callback);

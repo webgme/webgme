@@ -40,6 +40,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
     this.branchMonitors = {
         //branchName: {
         // instance: {BranchMonitor},
+        // lastActivity: Date.now(),
         // stopTimeout: {
         //     id: {number},
         //     deferred: {Promise}
@@ -158,6 +159,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
 
         function startNewMonitor() {
             monitor = {
+                lastActivity: Date.now(),
                 stopTimeout: null,
                 instance: new BranchMonitor(self.webgmeToken, self.storage, self.project, branchName, logger, gmeConfig)
             };
@@ -179,6 +181,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
                 // so clear the old timeout and set a new one.
                 clearTimeout(monitor.stopTimeout.id);
                 monitor.stopTimeout.id = startNewTimer(branchName);
+                monitor.lastActivity = Date.now();
 
                 return monitor.instance.start()
                     .nodeify(callback);
@@ -265,6 +268,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
 
         Object.keys(self.branchMonitors).forEach(function (branchName) {
             status.branchMonitors[branchName] = self.branchMonitors[branchName].instance.getStatus();
+            status.branchMonitors[branchName].lastActivity = self.branchMonitors[branchName].lastActivity;
         });
 
         return status;
