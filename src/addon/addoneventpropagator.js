@@ -35,7 +35,7 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
                 request: data,
                 cb: function (err) {
                     if (err) {
-                        logger.error(err);
+                        logger.error('branchJoined', err);
                     }
                 }
             });
@@ -43,35 +43,35 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
             logger.info('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
             superagent.post(gmeConfig.addOn.workerUrl, data, function (err) {
                 if (err) {
-                    logger.error(err);
+                    logger.error('branchJoined', err);
                 }
             });
         }
     }
 
-    function branchLeft(_s, data) {
-        data = COPY(data);
-        data.event = CONSTANTS.STORAGE.BRANCH_LEFT;
-
-        if (connectedWorker) {
-            data.command = WORKER_CONSTANTS.workerCommands.connectedWorkerStop;
-            serverWorkerManager.connectedWorkerRequests.push({
-                request: data,
-                cb: function (err) {
-                    if (err) {
-                        logger.error(err);
-                    }
-                }
-            });
-        } else {
-            logger.info('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
-            superagent.post(gmeConfig.addOn.workerUrl, data, function (err) {
-                if (err) {
-                    logger.error(err);
-                }
-            });
-        }
-    }
+    //function branchLeft(_s, data) {
+    //    data = COPY(data);
+    //    data.event = CONSTANTS.STORAGE.BRANCH_LEFT;
+    //
+    //    if (connectedWorker) {
+    //        data.command = WORKER_CONSTANTS.workerCommands.connectedWorkerStop;
+    //        serverWorkerManager.connectedWorkerRequests.push({
+    //            request: data,
+    //            cb: function (err) {
+    //                if (err) {
+    //                    logger.error(err);
+    //                }
+    //            }
+    //        });
+    //    } else {
+    //        logger.info('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
+    //        superagent.post(gmeConfig.addOn.workerUrl, data, function (err) {
+    //            if (err) {
+    //                logger.error(err);
+    //            }
+    //        });
+    //    }
+    //}
 
     function branchUpdated(_s, data) {
         data = COPY(data);
@@ -83,27 +83,31 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
                 request: data,
                 cb: function (err) {
                     if (err) {
-                        logger.error(err);
+                        logger.error('branchUpdated', err);
                     }
                 }
             });
         } else {
             logger.info('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
-            superagent.post(gmeConfig.addOn.workerUrl, data);
+            superagent.post(gmeConfig.addOn.workerUrl, data, function (err) {
+                if (err) {
+                    logger.error('branchUpdated', err);
+                }
+            });
         }
     }
 
 
     this.start = function (callback) {
         storage.addEventListener(CONSTANTS.STORAGE.BRANCH_JOINED, branchJoined);
-        storage.addEventListener(CONSTANTS.STORAGE.BRANCH_LEFT, branchLeft);
+        //storage.addEventListener(CONSTANTS.STORAGE.BRANCH_LEFT, branchLeft);
         storage.addEventListener(CONSTANTS.STORAGE.BRANCH_HASH_UPDATED, branchUpdated);
         return Q.resolve().nodeify(callback);
     };
 
     this.stop = function (callback) {
         storage.removeEventListener(CONSTANTS.STORAGE.BRANCH_JOINED, branchJoined);
-        storage.removeEventListener(CONSTANTS.STORAGE.BRANCH_LEFT, branchLeft);
+        //storage.removeEventListener(CONSTANTS.STORAGE.BRANCH_LEFT, branchLeft);
         storage.removeEventListener(CONSTANTS.STORAGE.BRANCH_HASH_UPDATED, branchUpdated);
         return Q.resolve().nodeify(callback);
     };

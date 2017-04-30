@@ -6,7 +6,7 @@
 
 var testFixture = require('../_globals');
 
-describe.only('addon_handler bin', function () {
+describe('addon_handler bin', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -73,8 +73,6 @@ describe.only('addon_handler bin', function () {
                     gmeConfig);
 
                 connStorage.open(function (networkState) {
-                    console.log(networkState);
-
                     if (networkState === project.CONSTANTS.CONNECTED) {
                         done();
                     } else {
@@ -158,14 +156,12 @@ describe.only('addon_handler bin', function () {
                 return deferred.reject(err);
             }
 
-            console.log('project opened')
+            result.project = connProject;
 
             connStorage.openBranch(project.projectId, branchName, hashHandler, statusHandler, function (err) {
                 if (err) {
                     return deferred.reject(err);
                 }
-
-                console.log('branch opened')
 
                 result.core = new testFixture.Core(connProject, {
                     globConf: gmeConfig,
@@ -233,7 +229,7 @@ describe.only('addon_handler bin', function () {
                                 expect(status[projectId].branchMonitors.b1.runningAddOns[0].id)
                                     .to.equal('NotificationAddOn');
                                 done();
-                            } else if (delay > 200) {
+                            } else if (delay > 250) {
                                 throw new Error('AddOn did not get started in time ' + JSON.stringify(status));
                             } else {
                                 console.log('No status, new delay', delay + 50);
@@ -243,9 +239,69 @@ describe.only('addon_handler bin', function () {
                         .catch(done);
                 }
 
-                checkStatus(100);
+                checkStatus(150);
 
 
+            })
+            .catch(done);
+    });
+
+    it('committing to branch should start addon', function (done) {
+        var rootHash,
+            commitHash,
+            tBeforeCommit,
+            b;
+
+        prepBranch('b2', 'NotificationAddOn')
+            .then(function (res) {
+                rootHash = res.rootHash;
+                commitHash = res.commitHash;
+                return openBranch('b2', rootHash); // This will log an error in AddOnEventPropagator
+            })
+            .then(function (res) {
+                b = res;
+                addOnHandler = new AddOnHandler({});
+
+                return addOnHandler.start();
+            })
+            .then(function () {
+                return getAddOnStatus();
+            })
+            .then(function (status) {
+                expect(status).to.deep.equal({});
+                b.core.setAttribute(b.rootNode, 'name', 'newRootNode');
+
+                tBeforeCommit = Date.now();
+
+                var persisted = b.core.persist(b.rootNode);
+
+                return b.project.makeCommit('b2', [commitHash], persisted.rootHash, persisted.objects, 'change');
+            })
+            .then(function (res) {
+                function checkStatus(delay) {
+
+                    getAddOnStatus(delay)
+                        .then(function (status) {
+                            if (status[projectId] && status[projectId].branchMonitors.b2
+                                && status[projectId].branchMonitors.b2.runningAddOns.length === 1) {
+                                expect(status[projectId].branchMonitors.b2.runningAddOns[0].id)
+                                    .to.equal('NotificationAddOn');
+
+                                expect(status[projectId].branchMonitors.b2.lastActivity > tBeforeCommit)
+                                    .to.equal(true);
+
+                                done();
+                            } else if (delay > 250) {
+                                throw new Error('AddOn did not get started in time ' + JSON.stringify(status));
+                            } else {
+                                console.log('No status, new delay', delay + 50);
+                                checkStatus(delay + 50);
+                            }
+                        })
+                        .catch(done);
+                }
+
+                checkStatus(150);
             })
             .catch(done);
     });

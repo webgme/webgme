@@ -115,16 +115,16 @@ function AddOnHandler(options) {
                         logger.error(err);
                         next(err);
                     });
-            } else if (params.event === CONSTANTS.STORAGE.BRANCH_LEFT) {
-                mt.connectedWorkerStop(params.projectId, params.branchName)
-                    .then(function (info) {
-                        logger.info('connectedWorkerStop', params.projectId, params.branchName, JSON.stringify(info));
-                        res.sendStatus(200);
-                    })
-                    .catch(function (err) {
-                        logger.error(err);
-                        next(err);
-                    });
+            //} else if (params.event === CONSTANTS.STORAGE.BRANCH_LEFT) {
+            //    mt.connectedWorkerStop(params.projectId, params.branchName)
+            //        .then(function (info) {
+            //            logger.info('connectedWorkerStop', params.projectId, params.branchName, JSON.stringify(info));
+            //            res.sendStatus(200);
+            //        })
+            //        .catch(function (err) {
+            //            logger.error(err);
+            //            next(err);
+            //        });
             } else {
                 logger.error('Unknown command received');
                 res.sendStatus(404);
