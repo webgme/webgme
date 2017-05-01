@@ -75,6 +75,8 @@ define([
                                 if (self.serverVersion === info.serverVersion) {
                                     networkHandler(null, CONSTANTS.RECONNECTED);
                                 } else {
+                                    logger.error('Got reconnected to different webgme version (old !== new)',
+                                        self.serverVersion, '!==', info.serverVersion);
                                     networkHandler(null, CONSTANTS.INCOMPATIBLE_CONNECTION);
                                 }
                             }

@@ -322,7 +322,7 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
 
     this.setToken = function (token) {
         self.webgmeToken = token;
-        logger.info('setting new token!');
+        logger.debug('Setting new token');
         self.runningAddOns.forEach(function (addOn) {
             if (addOn.instance && addOn.instance.blobClient) {
                 addOn.instance.blobClient.setToken(token);

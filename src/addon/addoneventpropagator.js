@@ -40,7 +40,7 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
                 }
             });
         } else {
-            logger.info('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
+            logger.debug('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
             superagent.post(gmeConfig.addOn.workerUrl, data, function (err) {
                 if (err) {
                     logger.error('branchJoined', err);
@@ -88,7 +88,7 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
                 }
             });
         } else {
-            logger.info('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
+            logger.debug('Posting to add-on server at url', gmeConfig.addOn.workerUrl);
             superagent.post(gmeConfig.addOn.workerUrl, data, function (err) {
                 if (err) {
                     logger.error('branchUpdated', err);
@@ -136,7 +136,7 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
                 }
 
                 statusUrl = statusUrl + '/status';
-                logger.info('statusUrl', statusUrl);
+                logger.debug('statusUrl', statusUrl);
             }
 
             superagent.get(gmeConfig.addOn.workerUrl)

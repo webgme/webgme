@@ -105,6 +105,28 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
                         self.initialized = true;
                         initDeferred.resolve();
                     });
+
+                    self.storage.webSocket.addEventListener(STORAGE_CONSTANTS.NOTIFICATION,
+                        function (emitter, eventData) {
+                            logger.debug('received notification', eventData);
+                            if (eventData.type === STORAGE_CONSTANTS.BRANCH_ROOM_SOCKETS) {
+                                // If a new socket joined our branch -> emit to the branch room letting
+                                // any newly connected users know that we are in this branch too.
+                                self.storage.sendNotification({
+                                    state: null, // No client state in the addOns
+                                    type: STORAGE_CONSTANTS.CLIENT_STATE_NOTIFICATION,
+                                    projectId: projectId,
+                                    branchName: eventData.branchName
+                                }, function (err) {
+                                    if (err) {
+                                        logger.error('Sending state notification failed', err);
+                                    }
+                                });
+                            } else {
+                                logger.debug('Unused notification', eventData.type);
+                            }
+                        }
+                    );
                 } else if (networkStatus === STORAGE_CONSTANTS.JWT_ABOUT_TO_EXPIRE) {
                     if (!self.renewingToken) {
                         self.renewingToken = true;
@@ -248,7 +270,7 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
 
     this.setToken = function (token) {
         self.webgmeToken = token;
-        logger.info('Setting new token!');
+        logger.debug('Setting new token..');
         if (self.storage) {
             self.storage.setToken(token);
         }

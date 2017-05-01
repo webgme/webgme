@@ -785,7 +785,7 @@ define([
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
                     storage.webSocket.addEventListener(CONSTANTS.STORAGE.NOTIFICATION,
                         function (emitter, eventData) {
-                            logger.info('recieved notification', eventData);
+                            logger.debug('received notification', eventData);
                             if (eventData.type === CONSTANTS.STORAGE.BRANCH_ROOM_SOCKETS) {
                                 self.dispatchConnectedUsersChanged(eventData);
                                 // If a new socket joined our branch -> emit to the branch room letting
