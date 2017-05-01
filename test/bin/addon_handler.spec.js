@@ -82,11 +82,12 @@ describe('addon_handler bin', function () {
         connStorage.close(function (/*err*/) {
             socket.disconnect();
 
-            addOnHandler.stop()
-                .then(function () {
-                    done();
-                })
-                .catch(done);
+            if (addOnHandler) {
+                addOnHandler.stop(done);
+            } else {
+                done();
+            }
+
         });
     });
 
@@ -208,10 +209,11 @@ describe('addon_handler bin', function () {
 
 
         it('opening branch should start addon', function (done) {
-            var rootHash,
+            var branchName = 'b1',
+                rootHash,
                 commitHash;
 
-            prepBranch('b1', 'NotificationAddOn')
+            prepBranch(branchName, 'NotificationAddOn')
                 .then(function (res) {
                     rootHash = res.rootHash;
                     commitHash = res.commitHash;
@@ -224,7 +226,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('b1', rootHash);
+                    return openBranch(branchName, rootHash);
                 })
                 .then(function () {
 
@@ -232,9 +234,9 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay, true)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.b1 &&
-                                    status[projectId].branchMonitors.b1.runningAddOns.length === 1) {
-                                    expect(status[projectId].branchMonitors.b1.runningAddOns[0].id)
+                                if (status[projectId] && status[projectId].branchMonitors[branchName] &&
+                                    status[projectId].branchMonitors[branchName].runningAddOns.length === 1) {
+                                    expect(status[projectId].branchMonitors[branchName].runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
                                     done();
                                 } else if (delay > 250) {
@@ -248,23 +250,22 @@ describe('addon_handler bin', function () {
                     }
 
                     checkStatus(150);
-
-
                 })
                 .catch(done);
         });
 
         it('committing to branch should start addon', function (done) {
-            var rootHash,
+            var branchName = 'b2',
+                rootHash,
                 commitHash,
                 tBeforeCommit,
                 b;
 
-            prepBranch('b2', 'NotificationAddOn')
+            prepBranch(branchName, 'NotificationAddOn')
                 .then(function (res) {
                     rootHash = res.rootHash;
                     commitHash = res.commitHash;
-                    return openBranch('b2', rootHash); // This will log an error in AddOnEventPropagator
+                    return openBranch(branchName, rootHash); // This will log an error in AddOnEventPropagator
                 })
                 .then(function (res) {
                     b = res;
@@ -290,12 +291,12 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.b2 &&
-                                    status[projectId].branchMonitors.b2.runningAddOns.length === 1) {
-                                    expect(status[projectId].branchMonitors.b2.runningAddOns[0].id)
+                                if (status[projectId] && status[projectId].branchMonitors[branchName] &&
+                                    status[projectId].branchMonitors[branchName].runningAddOns.length === 1) {
+                                    expect(status[projectId].branchMonitors[branchName].runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
 
-                                    expect(status[projectId].branchMonitors.b2.lastActivity > tBeforeCommit)
+                                    expect(status[projectId].branchMonitors[branchName].lastActivity > tBeforeCommit)
                                         .to.equal(true);
 
                                     done();
@@ -316,11 +317,12 @@ describe('addon_handler bin', function () {
 
 
         it('commit with change of usedAddOns should switch running add-on', function (done) {
-            var rootHash,
+            var branchName = 'b3',
+                rootHash,
                 commitHash,
                 b;
 
-            prepBranch('b3', 'NotificationAddOn')
+            prepBranch(branchName, 'NotificationAddOn')
                 .then(function (res) {
                     rootHash = res.rootHash;
                     commitHash = res.commitHash;
@@ -333,7 +335,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('b3', rootHash);
+                    return openBranch(branchName, rootHash);
                 })
                 .then(function (res) {
                     b = res;
@@ -344,9 +346,9 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.b3 &&
-                                    status[projectId].branchMonitors.b3.runningAddOns.length === 1) {
-                                    expect(status[projectId].branchMonitors.b3.runningAddOns[0].id)
+                                if (status[projectId] && status[projectId].branchMonitors[branchName] &&
+                                    status[projectId].branchMonitors[branchName].runningAddOns.length === 1) {
+                                    expect(status[projectId].branchMonitors[branchName].runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
 
                                     deferred.resolve();
@@ -369,26 +371,28 @@ describe('addon_handler bin', function () {
 
                     var persisted = b.core.persist(b.rootNode);
 
-                    return b.project.makeCommit('b3', [commitHash], persisted.rootHash, persisted.objects, 'change2');
+                    return b.project.makeCommit(branchName, [commitHash], persisted.rootHash, persisted.objects,
+                        branchName);
                 })
                 .then(function () {
                     return getAddOnStatus(150);
                 })
                 .then(function (status) {
-                    expect(!!(status[projectId] && status[projectId].branchMonitors.b3)).to.equal(true);
-                    expect(status[projectId].branchMonitors.b3.runningAddOns.length).to.equal(1);
-                    expect(status[projectId].branchMonitors.b3.runningAddOns[0].id).to.equal('TestAddOn');
+                    expect(!!(status[projectId] && status[projectId].branchMonitors[branchName])).to.equal(true);
+                    expect(status[projectId].branchMonitors[branchName].runningAddOns.length).to.equal(1);
+                    expect(status[projectId].branchMonitors[branchName].runningAddOns[0].id).to.equal('TestAddOn');
                     done();
                 })
                 .catch(done);
         });
 
         it('commit with change of usedAddOns should add to running add-ons', function (done) {
-            var rootHash,
+            var branchName = 'b4',
+                rootHash,
                 commitHash,
                 b;
 
-            prepBranch('b4', 'NotificationAddOn')
+            prepBranch(branchName, 'NotificationAddOn')
                 .then(function (res) {
                     rootHash = res.rootHash;
                     commitHash = res.commitHash;
@@ -401,7 +405,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('b4', rootHash);
+                    return openBranch(branchName, rootHash);
                 })
                 .then(function (res) {
                     b = res;
@@ -412,10 +416,10 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.b4 &&
-                                    status[projectId].branchMonitors.b4.runningAddOns.length === 1) {
+                                if (status[projectId] && status[projectId].branchMonitors[branchName] &&
+                                    status[projectId].branchMonitors[branchName].runningAddOns.length === 1) {
 
-                                    expect(status[projectId].branchMonitors.b4.runningAddOns[0].id)
+                                    expect(status[projectId].branchMonitors[branchName].runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
 
                                     deferred.resolve();
@@ -438,14 +442,15 @@ describe('addon_handler bin', function () {
 
                     var persisted = b.core.persist(b.rootNode);
 
-                    return b.project.makeCommit('b4', [commitHash], persisted.rootHash, persisted.objects, 'change3');
+                    return b.project.makeCommit(branchName, [commitHash], persisted.rootHash, persisted.objects,
+                        branchName);
                 })
                 .then(function () {
                     return getAddOnStatus(150);
                 })
                 .then(function (status) {
-                    expect(!!(status[projectId] && status[projectId].branchMonitors.b4)).to.equal(true);
-                    expect(status[projectId].branchMonitors.b4.runningAddOns.length).to.equal(2);
+                    expect(!!(status[projectId] && status[projectId].branchMonitors[branchName])).to.equal(true);
+                    expect(status[projectId].branchMonitors[branchName].runningAddOns.length).to.equal(2);
                     done();
                 })
                 .catch(done);
@@ -469,10 +474,11 @@ describe('addon_handler bin', function () {
 
 
         it('opening branch should start addon when no auth info passed in handler', function (done) {
-            var rootHash,
+            var branchName = 'bb1',
+                rootHash,
                 commitHash;
 
-            prepBranch('bb1', 'NotificationAddOn')
+            prepBranch(branchName, 'NotificationAddOn')
                 .then(function (res) {
                     rootHash = res.rootHash;
                     commitHash = res.commitHash;
@@ -485,7 +491,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('bb1', rootHash);
+                    return openBranch(branchName, rootHash);
                 })
                 .then(function () {
 
@@ -493,9 +499,9 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.bb1 &&
-                                    status[projectId].branchMonitors.bb1.runningAddOns.length === 1) {
-                                    expect(status[projectId].branchMonitors.bb1.runningAddOns[0].id)
+                                if (status[projectId] && status[projectId].branchMonitors[branchName] &&
+                                    status[projectId].branchMonitors[branchName].runningAddOns.length === 1) {
+                                    expect(status[projectId].branchMonitors[branchName].runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
                                     done();
                                 } else if (delay > 250) {
@@ -516,10 +522,11 @@ describe('addon_handler bin', function () {
         });
 
         it('opening branch should start addon add use passed credentials', function (done) {
-            var rootHash,
+            var branchName = 'bb2',
+                rootHash,
                 commitHash;
 
-            prepBranch('bb2', 'NotificationAddOn')
+            prepBranch(branchName, 'NotificationAddOn')
                 .then(function (res) {
                     rootHash = res.rootHash;
                     commitHash = res.commitHash;
@@ -534,7 +541,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('bb2', rootHash);
+                    return openBranch(branchName, rootHash);
                 })
                 .then(function () {
 
@@ -542,9 +549,9 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.bb2 &&
-                                    status[projectId].branchMonitors.bb2.runningAddOns.length === 1) {
-                                    expect(status[projectId].branchMonitors.bb2.runningAddOns[0].id)
+                                if (status[projectId] && status[projectId].branchMonitors[branchName] &&
+                                    status[projectId].branchMonitors[branchName].runningAddOns.length === 1) {
+                                    expect(status[projectId].branchMonitors[branchName].runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
                                     done();
                                 } else if (delay > 250) {
@@ -563,10 +570,11 @@ describe('addon_handler bin', function () {
         });
 
         it('opening branch should start addon add renew token for user', function (done) {
-            var rootHash,
+            var branchName = 'bb3',
+                rootHash,
                 commitHash;
 
-            prepBranch('bb3', 'NotificationAddOn')
+            prepBranch(branchName, 'NotificationAddOn')
                 .then(function (res) {
                     rootHash = res.rootHash;
                     commitHash = res.commitHash;
@@ -582,7 +590,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('bb3', rootHash);
+                    return openBranch(branchName, rootHash);
                 })
                 .then(function () {
 
@@ -590,9 +598,9 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.bb3 &&
-                                    status[projectId].branchMonitors.bb3.runningAddOns.length === 1) {
-                                    expect(status[projectId].branchMonitors.bb3.runningAddOns[0].id)
+                                if (status[projectId] && status[projectId].branchMonitors[branchName] &&
+                                    status[projectId].branchMonitors[branchName].runningAddOns.length === 1) {
+                                    expect(status[projectId].branchMonitors[branchName].runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
                                     done();
                                 } else if (delay > 250) {
@@ -611,4 +619,120 @@ describe('addon_handler bin', function () {
         });
     });
 
+    // This is here in order to reuse the helper functions
+    describe('addon worker process', function () {
+        before(function (done) {
+            gmeConfig = testFixture.getGmeConfig();
+            gmeConfig.addOn.enable = true;
+            gmeConfig.addOn.workerUrl = null;
+            gmeConfig.authentication.enable = false;
+
+            server = testFixture.WebGME.standaloneServer(gmeConfig);
+            server.start(done);
+        });
+
+        after(function (done) {
+            server.stop(done);
+        });
+
+
+        it('opening branch should start addon', function (done) {
+            var branchName = 'bbb1',
+                rootHash,
+                commitHash;
+
+            addOnHandler = null;
+
+            prepBranch(branchName, 'NotificationAddOn')
+                .then(function (res) {
+                    rootHash = res.rootHash;
+                    commitHash = res.commitHash;
+
+                    return getAddOnStatus(0, true);
+                })
+                .then(function (status) {
+                    expect(status).to.deep.equal({});
+                    return openBranch(branchName, rootHash);
+                })
+                .then(function () {
+
+                    function checkStatus(delay) {
+
+                        getAddOnStatus(delay, true)
+                            .then(function (status) {
+                                if (status[projectId] && status[projectId].branchMonitors[branchName] &&
+                                    status[projectId].branchMonitors[branchName].runningAddOns.length === 1) {
+                                    expect(status[projectId].branchMonitors[branchName].runningAddOns[0].id)
+                                        .to.equal('NotificationAddOn');
+                                    done();
+                                } else if (delay > 250) {
+                                    throw new Error('AddOn did not get started in time ' + JSON.stringify(status));
+                                } else {
+                                    console.log('No status, new delay', delay + 50);
+                                    checkStatus(delay + 50);
+                                }
+                            })
+                            .catch(done);
+                    }
+
+                    checkStatus(150);
+
+
+                })
+                .catch(done);
+        });
+
+        it('committing to branch should start addon', function (done) {
+            var branchName = 'bbb2',
+                rootHash,
+                commitHash,
+                tBeforeCommit;
+
+            addOnHandler = null;
+
+            prepBranch(branchName, 'NotificationAddOn')
+                .then(function (res) {
+                    rootHash = res.rootHash;
+                    commitHash = res.commitHash;
+                    return openBranch(branchName, rootHash); // This will log an error in AddOnEventPropagator
+                })
+                .then(function (b) {
+                    b.core.setAttribute(b.rootNode, 'name', 'newRootNode');
+
+                    tBeforeCommit = Date.now();
+
+                    var persisted = b.core.persist(b.rootNode);
+
+                    return b.project.makeCommit(branchName, [commitHash], persisted.rootHash, persisted.objects,
+                        branchName);
+                })
+                .then(function (/*res*/) {
+                    function checkStatus(delay) {
+
+                        getAddOnStatus(delay, true)
+                            .then(function (status) {
+                                if (status[projectId] && status[projectId].branchMonitors[branchName] &&
+                                    status[projectId].branchMonitors[branchName].runningAddOns.length === 1) {
+                                    expect(status[projectId].branchMonitors[branchName].runningAddOns[0].id)
+                                        .to.equal('NotificationAddOn');
+
+                                    expect(status[projectId].branchMonitors[branchName].lastActivity > tBeforeCommit)
+                                        .to.equal(true);
+
+                                    done();
+                                } else if (delay > 250) {
+                                    throw new Error('AddOn did not get started in time ' + JSON.stringify(status));
+                                } else {
+                                    console.log('No status, new delay', delay + 50);
+                                    checkStatus(delay + 50);
+                                }
+                            })
+                            .catch(done);
+                    }
+
+                    checkStatus(150);
+                })
+                .catch(done);
+        });
+    });
 });
