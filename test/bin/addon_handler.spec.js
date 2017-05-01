@@ -79,7 +79,7 @@ describe('addon_handler bin', function () {
     });
 
     afterEach(function (done) {
-        connStorage.close(function (err) {
+        connStorage.close(function (/*err*/) {
             socket.disconnect();
 
             addOnHandler.stop()
@@ -166,15 +166,15 @@ describe('addon_handler bin', function () {
                         deferred.resolve(result);
                     })
                     .catch(deferred.reject);
-            })
+            });
         });
 
         return deferred.promise;
     }
 
-    function getAddOnStatus(delay) {
+    function getAddOnStatus(delay, fromWebGMEServer) {
         var deferred = Q.defer(),
-            statusUrl = gmeConfig.addOn.workerUrl + '/status';
+            statusUrl = fromWebGMEServer ? server.getUrl() + '/api/addOnStatus' : gmeConfig.addOn.workerUrl + '/status';
 
         setTimeout(function () {
             superagent
@@ -224,16 +224,16 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('b1', rootHash)
+                    return openBranch('b1', rootHash);
                 })
                 .then(function () {
 
                     function checkStatus(delay) {
 
-                        getAddOnStatus(delay)
+                        getAddOnStatus(delay, true)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.b1
-                                    && status[projectId].branchMonitors.b1.runningAddOns.length === 1) {
+                                if (status[projectId] && status[projectId].branchMonitors.b1 &&
+                                    status[projectId].branchMonitors.b1.runningAddOns.length === 1) {
                                     expect(status[projectId].branchMonitors.b1.runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
                                     done();
@@ -285,13 +285,13 @@ describe('addon_handler bin', function () {
 
                     return b.project.makeCommit('b2', [commitHash], persisted.rootHash, persisted.objects, 'change');
                 })
-                .then(function (res) {
+                .then(function (/*res*/) {
                     function checkStatus(delay) {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.b2
-                                    && status[projectId].branchMonitors.b2.runningAddOns.length === 1) {
+                                if (status[projectId] && status[projectId].branchMonitors.b2 &&
+                                    status[projectId].branchMonitors.b2.runningAddOns.length === 1) {
                                     expect(status[projectId].branchMonitors.b2.runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
 
@@ -333,7 +333,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('b3', rootHash)
+                    return openBranch('b3', rootHash);
                 })
                 .then(function (res) {
                     b = res;
@@ -344,8 +344,8 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.b3
-                                    && status[projectId].branchMonitors.b3.runningAddOns.length === 1) {
+                                if (status[projectId] && status[projectId].branchMonitors.b3 &&
+                                    status[projectId].branchMonitors.b3.runningAddOns.length === 1) {
                                     expect(status[projectId].branchMonitors.b3.runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
 
@@ -401,7 +401,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('b4', rootHash)
+                    return openBranch('b4', rootHash);
                 })
                 .then(function (res) {
                     b = res;
@@ -412,8 +412,8 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.b4
-                                    && status[projectId].branchMonitors.b4.runningAddOns.length === 1) {
+                                if (status[projectId] && status[projectId].branchMonitors.b4 &&
+                                    status[projectId].branchMonitors.b4.runningAddOns.length === 1) {
 
                                     expect(status[projectId].branchMonitors.b4.runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
@@ -485,7 +485,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('bb1', rootHash)
+                    return openBranch('bb1', rootHash);
                 })
                 .then(function () {
 
@@ -493,8 +493,8 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.bb1
-                                    && status[projectId].branchMonitors.bb1.runningAddOns.length === 1) {
+                                if (status[projectId] && status[projectId].branchMonitors.bb1 &&
+                                    status[projectId].branchMonitors.bb1.runningAddOns.length === 1) {
                                     expect(status[projectId].branchMonitors.bb1.runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
                                     done();
@@ -534,7 +534,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('bb2', rootHash)
+                    return openBranch('bb2', rootHash);
                 })
                 .then(function () {
 
@@ -542,8 +542,8 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.bb2
-                                    && status[projectId].branchMonitors.bb2.runningAddOns.length === 1) {
+                                if (status[projectId] && status[projectId].branchMonitors.bb2 &&
+                                    status[projectId].branchMonitors.bb2.runningAddOns.length === 1) {
                                     expect(status[projectId].branchMonitors.bb2.runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
                                     done();
@@ -582,7 +582,7 @@ describe('addon_handler bin', function () {
                 })
                 .then(function (status) {
                     expect(status).to.deep.equal({});
-                    return openBranch('bb3', rootHash)
+                    return openBranch('bb3', rootHash);
                 })
                 .then(function () {
 
@@ -590,8 +590,8 @@ describe('addon_handler bin', function () {
 
                         getAddOnStatus(delay)
                             .then(function (status) {
-                                if (status[projectId] && status[projectId].branchMonitors.bb3
-                                    && status[projectId].branchMonitors.bb3.runningAddOns.length === 1) {
+                                if (status[projectId] && status[projectId].branchMonitors.bb3 &&
+                                    status[projectId].branchMonitors.bb3.runningAddOns.length === 1) {
                                     expect(status[projectId].branchMonitors.bb3.runningAddOns[0].id)
                                         .to.equal('NotificationAddOn');
                                     done();

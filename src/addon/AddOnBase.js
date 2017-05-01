@@ -61,6 +61,7 @@ define([
         this.updateResult = null;
 
         this.currentlyWorking = false;
+        this.lifespan = 0;
 
         this.logger.debug('ctor');
     }
@@ -138,6 +139,7 @@ define([
         var self = this;
         this.updateResult = new AddOnUpdateResult(commitObj);
         this.currentlyWorking = true;
+        this.lifespan += 1;
 
         this.update(rootNode, commitObj, function (err, result) {
             self.currentlyWorking = false;
@@ -218,6 +220,7 @@ define([
     AddOnBase.prototype._getStatus = function () {
         var status = this.getStatus();
         status.currentlyWorking = this.currentlyWorking;
+        status.lifespan = this.lifespan;
 
         return status;
     };

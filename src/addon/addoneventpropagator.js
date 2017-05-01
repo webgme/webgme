@@ -139,7 +139,7 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
                 logger.debug('statusUrl', statusUrl);
             }
 
-            superagent.get(gmeConfig.addOn.workerUrl)
+            superagent.get(statusUrl)
                 .end(function (err, res) {
                     if (err) {
                         deferred.reject(err);

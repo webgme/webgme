@@ -154,7 +154,16 @@ safeSend({pid: process.pid, type: CONSTANTS.msgTypes.initialize});
 process.on('SIGINT', function () {
     if (logger) {
         logger.debug('stopping child process');
-        process.exit(0);
+        mt.close()
+            .finally(function (err) {
+                if (err) {
+                    logger.error('Error closing manager-tracker', err);
+                    process.exit(1);
+                } else {
+                    logger.info('Connected worker terminated successfully');
+                    process.exit(0);
+                }
+            });
     } else {
         //console.error('child was killed without initialization');
         process.exit(1);
