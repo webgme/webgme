@@ -43,8 +43,8 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.addOn.workerUrl = null`
  - If given the webgme server will not spawn a child process for running add-ons and instead post the events to the url.
  Use (../src/bin/addon_handler.js)[addon_handler.js] for a machine handling such requests.
-- `config.addOn.monitorTimeout = 10000`
- - In milliseconds, the waiting time before add-ons (or the monitoring of such) is stopped after the last client leaves a branch.
+- `config.addOn.monitorTimeout = 120000`
+ - In milliseconds, the waiting time before add-ons are stopped after no activity (new clients joined or hash updates) in the branch.
 - `config.addOn.basePaths = ['./src/addon/core']`
  - Array of paths to custom add-ons. If you have an add-on at `C:/SomeAddOns/MyAddOn/MyAddOn.js` the path to append would be `C:/SomeAddOns` or a relative path (from the current working directory). N.B. this will also expose any other add-on in that directory, e.g. `C:/SomeAddOns/MyOtherAddOn/MyOtherAddOn.js`.
 
