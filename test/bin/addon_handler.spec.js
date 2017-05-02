@@ -6,7 +6,7 @@
 
 var testFixture = require('../_globals');
 
-describe('addon_handler bin', function () {
+describe.only('addon_handler bin', function () {
     'use strict';
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -78,22 +78,27 @@ describe('addon_handler bin', function () {
             .catch(done);
     });
 
-    afterEach(function (done) {
+    afterEach('outer afterEach', function (done) {
+        console.log('outer afterEach');
         connStorage.close(function (/*err*/) {
             socket.disconnect();
 
             if (addOnHandler) {
                 addOnHandler.stop(done);
             } else {
+                console.log('outer afterEach done!');
+
                 done();
             }
 
         });
     });
 
-    after(function (done) {
+    after('outer after', function (done) {
+        console.log('outer after');
         storage.closeDatabase()
             .finally(function () {
+                console.log('outer after done!');
                 gmeAuth.unload(done);
             });
     });
@@ -631,8 +636,15 @@ describe('addon_handler bin', function () {
             server.start(done);
         });
 
-        after(function (done) {
-            server.stop(done);
+        after('worker process', function (done) {
+            try {
+                server.stop(function (err) {
+                    console.log('worker process after done!');
+                    done(err);
+                });
+            } catch (e) {
+                done(e);
+            }
         });
 
 
