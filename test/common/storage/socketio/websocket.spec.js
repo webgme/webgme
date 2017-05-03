@@ -124,7 +124,7 @@ describe('storage socketio websocket', function () {
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
                 socket = result.socket;
-                storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
+                storage = NodeStorage.createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -548,7 +548,7 @@ describe('storage socketio websocket', function () {
 
         openSocketIo(server, agent2, guestAccount, guestAccount)
             .then(function (result) {
-                storage2 = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
+                storage2 = NodeStorage.createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -601,7 +601,7 @@ describe('storage socketio websocket', function () {
     it('should disconnect', function (done) {
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
-                storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
+                storage = NodeStorage.createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -622,7 +622,7 @@ describe('storage socketio websocket', function () {
     it('should connect and reconnect', function (done) {
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
-                storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
+                storage = NodeStorage.createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -652,7 +652,7 @@ describe('storage socketio websocket', function () {
 
         openSocketIo(server, agent, guestAccount, guestAccount)
             .then(function (result) {
-                storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
+                storage = NodeStorage.createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfigMod);

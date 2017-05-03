@@ -8,12 +8,11 @@
 'use strict';
 
 var webgme = require('../../webgme'),
-    path = require('path'),
     Q = require('q'),
     MongoURI = require('mongo-uri'),
     GMEAuth = require('../server/middleware/auth/gmeauth'),
-    CONSTANTS = webgme.requirejs('common/Constants'),
-    gmeConfig = require(path.join(process.cwd(), 'config'));
+    gmeConfig = webgme.getGmeConfig(),
+    CONSTANTS = webgme.requirejs('common/Constants');
 
 function main(argv) {
     var Command = require('commander').Command,

@@ -72,7 +72,7 @@ define([
     NotificationAddOn.prototype.update = function (rootNode, commitObj, callback) {
         var reminder;
 
-        this.logger.info('NotificationAddOn in update at commitHash', commitObj._id);
+        this.logger.debug('NotificationAddOn in update at commitHash', commitObj._id);
         this.cnt += 1;
 
         reminder = this.cnt % 4;
@@ -97,7 +97,7 @@ define([
      * @param {function(Error, AddOnUpdateResult)} callback
      */
     NotificationAddOn.prototype.initialize = function (rootNode, commitObj, callback) {
-        this.logger.info('NotificationAddOn got initialized at commitHash', commitObj._id);
+        this.logger.debug('NotificationAddOn got initialized at commitHash', commitObj._id);
 
         this.update(rootNode, commitObj, callback);
     };

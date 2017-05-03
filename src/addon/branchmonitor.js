@@ -18,6 +18,8 @@ var Q = require('q'),
  * @param {string} branchName
  * @param {object} gmeConfig
  * @param {object} mainLogger
+ * @param {object} [options]
+ * @param {object} [options.webgmeUrl]
  * @constructor
  * @ignore
  */
@@ -31,6 +33,16 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
     this.runningAddOns = [
         //{id: {string}, instance: {AddOnBase}}
     ];
+
+    this.workingAddons = {
+        promise: {
+            then: function (cb) {
+                cb();
+            }
+        }
+    };
+
+    this.webgmeToken = webgmeToken;
 
     // State
     this.commitHash = '';
@@ -71,7 +83,7 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
             serverPort: gmeConfig.server.port,
             httpsecure: false, // N.B.: addons are running on the server only
             server: '127.0.0.1',
-            webgmeToken: webgmeToken,
+            webgmeToken: self.webgmeToken,
             logger: logger.fork('BlobClient')
         });
 
@@ -161,7 +173,8 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
     }
 
     function onUpdate(eventData, commitQueue, updateQueue, handlerCallback) {
-        var commitData = eventData.commitData;
+        var commitData = eventData.commitData,
+            deferred;
 
         if (eventData.local) {
             // This is when an addOn made changes and a commit was made below.
@@ -170,6 +183,8 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
             return;
         }
 
+        deferred = Q.defer();
+        self.workingAddons.promise = deferred.promise;
         // loadNewRoot will set self.commitHash/rootHash/rootNode
         loadNewRoot(commitData)
             .then(function () {
@@ -237,11 +252,14 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
                             }
                         });
                 }
+
                 handlerCallback(null, self.stopRequested === false);
+                deferred.resolve();
             })
             .catch(function (err) {
                 logger.error('Fatal error', err);
                 handlerCallback(err, false);
+                deferred.resolve();
             });
     }
 
@@ -285,18 +303,47 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
         if (self.stopRequested === false) {
             stopDeferred = Q.defer();
             self.stopRequested = true;
-
-            storage.closeBranch(project.projectId, branchName, function (err) {
-                self.branchIsOpen = false;
-                if (err) {
-                    stopDeferred.reject(err);
-                } else {
-                    stopDeferred.resolve();
-                }
-            });
+            // Make sure the running add-ons have finished
+            self.workingAddons.promise
+                .then(function () {
+                    storage.closeBranch(project.projectId, branchName, function (err) {
+                        self.branchIsOpen = false;
+                        if (err) {
+                            stopDeferred.reject(err);
+                        } else {
+                            stopDeferred.resolve();
+                        }
+                    });
+                });
         }
 
         return stopDeferred.promise.nodeify(callback);
+    };
+
+    this.setToken = function (token) {
+        self.webgmeToken = token;
+        logger.debug('Setting new token');
+        self.runningAddOns.forEach(function (addOn) {
+            if (addOn.instance && addOn.instance.blobClient) {
+                addOn.instance.blobClient.setToken(token);
+            }
+        });
+    };
+
+    this.getStatus = function () {
+        return {
+            startRequested: self.startRequested,
+            stopRequested: self.stopRequested,
+            branchIsOpen: self.branchIsOpen,
+            commitHash: self.commitHash,
+
+            runningAddOns: self.runningAddOns.map(function (a) {
+                return {
+                    id: a.id,
+                    status: a.instance._getStatus()
+                };
+            }),
+        };
     };
 
     this.queryAddOn = function (addOnId, commitHash, queryParams, callback) {

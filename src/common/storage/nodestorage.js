@@ -12,12 +12,16 @@ define([
 ], function (EditorStorage, NodeIoClient, WebSocket) {
     'use strict';
 
-    function createStorage(host, token, logger, gmeConfig) {
-        var ioClient = new NodeIoClient(host, token, logger, gmeConfig),
-            webSocket = new WebSocket(ioClient, logger, gmeConfig),
-            storage = new EditorStorage(webSocket, logger, gmeConfig);
+    function createStorage(hostUrl, token, logger, gmeConfig) {
+        var ioClient,
+            webSocket;
 
-        return storage;
+        hostUrl = hostUrl || 'http://127.0.0.1:' + gmeConfig.server.port;
+
+        ioClient = new NodeIoClient(hostUrl, token, logger, gmeConfig);
+        webSocket = new WebSocket(ioClient, logger, gmeConfig);
+
+        return new EditorStorage(webSocket, logger, gmeConfig);
     }
 
     return {

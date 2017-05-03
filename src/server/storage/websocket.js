@@ -81,6 +81,8 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
 
     function getEmitter(data) {
         var emitter;
+        delete data.webgmeToken;
+
         if (data.socket) {
             logger.debug('socket provided - will broadcast from ', data.socket.id);
             emitter = data.socket.broadcast;
@@ -96,15 +98,13 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     function joinBranchRoom(socket, token, projectId, branchName) {
         var deferred = Q.defer(),
             roomName = projectId + CONSTANTS.ROOM_DIVIDER + branchName,
-            eventData = {
+            userId = socket.userId,
+            notificationData = {
                 projectId: projectId,
                 branchName: branchName,
-                userId: socket.userId,
+                userId: userId,
                 socketId: socket.id,
-                join: true,
-                // These won't work with multiple servers
-                currNbrOfSockets: 0,
-                prevNbrOfSockets: 0
+                join: true
             };
 
         if (socket.rooms.hasOwnProperty(roomName) === true) {
@@ -114,22 +114,22 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
         } else {
             Q.ninvoke(socket, 'join', roomName)
                 .then(function () {
-                    var workManagerParams = {
+                    var eventData = {
                         projectId: projectId,
                         branchName: branchName,
-                        webgmeToken: token,
-                        join: true
+                        userId: userId,
+                        webgmeToken: token
                     };
-                    logger.debug('socket joined room', socket.id, eventData.userId, roomName);
-                    eventData.currNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
-                    eventData.prevNbrOfSockets = eventData.currNbrOfSockets - 1;
-                    eventData.type = CONSTANTS.BRANCH_ROOM_SOCKETS;
 
-                    socket.broadcast.to(roomName).emit(CONSTANTS.NOTIFICATION, eventData);
+                    logger.debug('socket joined room', socket.id, notificationData.userId, roomName);
 
-                    return Q.ninvoke(workerManager, 'socketRoomChange', workManagerParams);
+                    notificationData.type = CONSTANTS.BRANCH_ROOM_SOCKETS;
+
+                    socket.broadcast.to(roomName).emit(CONSTANTS.NOTIFICATION, notificationData);
+
+                    storage.dispatchEvent(CONSTANTS.BRANCH_JOINED, eventData);
+                    deferred.resolve();
                 })
-                .then(deferred.resolve)
                 .catch(function (err) {
                     deferred.reject(err instanceof Error ? err : new Error(err));
                 });
@@ -141,14 +141,12 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     function leaveBranchRoom(socket, projectId, branchName/*, disconnected*/) {
         var deferred = Q.defer(),
             roomName = projectId + CONSTANTS.ROOM_DIVIDER + branchName,
-            eventData = {
+            userId = socket.userId,
+            notificationData = {
                 projectId: projectId,
                 branchName: branchName,
-                userId: socket.userId,
-                socketId: socket.id,
-                // These won't work with multiple servers
-                currNbrOfSockets: 0,
-                prevNbrOfSockets: 0
+                userId: userId,
+                socketId: socket.id
             };
 
         if (socket.rooms.hasOwnProperty(roomName) === false) {
@@ -156,24 +154,21 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             logger.debug('socket already left room', socket.id, roomName);
             deferred.resolve();
         } else {
-            eventData.prevNbrOfSockets = Object.keys(webSocket.sockets.adapter.rooms[roomName]).length;
-            eventData.currNbrOfSockets = eventData.prevNbrOfSockets - 1;
-            eventData.type = CONSTANTS.BRANCH_ROOM_SOCKETS;
-            socket.broadcast.to(roomName).emit(CONSTANTS.NOTIFICATION, eventData);
+            notificationData.type = CONSTANTS.BRANCH_ROOM_SOCKETS;
+            socket.broadcast.to(roomName).emit(CONSTANTS.NOTIFICATION, notificationData);
             Q.ninvoke(socket, 'leave', roomName)
                 .then(function () {
-                    var workManagerParams = {
+                    var eventData = {
                         projectId: projectId,
                         branchName: branchName,
-                        webgmeToken: null,
-                        join: false
+                        userId: userId
                     };
 
-                    logger.debug('socket left room', socket.id, eventData.userId, roomName);
+                    logger.debug('socket left room', socket.id, notificationData.userId, roomName);
 
-                    return Q.ninvoke(workerManager, 'socketRoomChange', workManagerParams);
+                    storage.dispatchEvent(CONSTANTS.BRANCH_LEFT, eventData);
+                    deferred.resolve();
                 })
-                .then(deferred.resolve)
                 .catch(function (err) {
                     deferred.reject(err instanceof Error ? err : new Error(err));
                 });

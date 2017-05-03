@@ -140,7 +140,7 @@ describe('storage storageclasses editorstorage', function () {
             .then(function (result) {
                 socket = result.socket;
                 webgmeToken = result.webgmeToken;
-                storage = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
+                storage = NodeStorage.createStorage(null,
                     result.webgmeToken,
                     logger,
                     gmeConfig);
@@ -894,7 +894,7 @@ describe('storage storageclasses editorstorage', function () {
 
                 openingBranch = false;
 
-                storageOther = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
+                storageOther = NodeStorage.createStorage(null,
                     webgmeToken,
                     logger,
                     gmeConfigOther);
@@ -1006,10 +1006,7 @@ describe('storage storageclasses editorstorage', function () {
                 var deferred = Q.defer();
                 openingBranch = false;
 
-                storageOther = NodeStorage.createStorage('127.0.0.1', /*server.getUrl()*/
-                    webgmeToken,
-                    logger,
-                    gmeConfig);
+                storageOther = NodeStorage.createStorage(null, null, logger, gmeConfig);
                 storageOther.open(function (networkState) {
                     if (networkState === STORAGE_CONSTANTS.CONNECTED) {
                         deferred.resolve();

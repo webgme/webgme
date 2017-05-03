@@ -22,6 +22,7 @@ define([
         self.socket = null;
         self.userId = null;
         self.serverVersion = null;
+        self.ioClient = ioClient;
 
         logger.debug('ctor');
         EventDispatcher.call(this);
@@ -74,6 +75,8 @@ define([
                                 if (self.serverVersion === info.serverVersion) {
                                     networkHandler(null, CONSTANTS.RECONNECTED);
                                 } else {
+                                    logger.error('Got reconnected to different webgme version (old !== new)',
+                                        self.serverVersion, '!==', info.serverVersion);
                                     networkHandler(null, CONSTANTS.INCOMPATIBLE_CONNECTION);
                                 }
                             }

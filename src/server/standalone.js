@@ -38,6 +38,7 @@ var path = require('path'),
     Logger = require('./logger'),
 
     ServerWorkerManager = require('./worker/serverworkermanager'),
+    AddOnEventPropagator = require('../addon/addoneventpropagator'),
 
     webgmeUtils = require('../utils'),
 
@@ -556,6 +557,7 @@ function StandAloneServer(gmeConfig) {
         __app = null,
         __workerManager,
         __httpServer = null,
+        __addOnEventPropagator = null,
         __baseDir = requireJS.s.contexts._.config.baseUrl,// TODO: this is ugly
         __clientBaseDir = path.resolve(gmeConfig.client.appDir),
         __requestCounter = 0,
@@ -607,6 +609,11 @@ function StandAloneServer(gmeConfig) {
         routeComponents.push(new WebhookManager(__storage, logger, gmeConfig));
     }
 
+    if (gmeConfig.addOn.enable) {
+        __addOnEventPropagator = new AddOnEventPropagator(__storage, __workerManager, logger, gmeConfig);
+        routeComponents.push(__addOnEventPropagator);
+    }
+
     middlewareOpts = {  //TODO: Pass this to every middleware They must not modify the options!
         gmeConfig: gmeConfig,
         logger: logger,
@@ -614,7 +621,8 @@ function StandAloneServer(gmeConfig) {
         getUserId: getUserId,
         gmeAuth: __gmeAuth,
         safeStorage: __storage,
-        workerManager: __workerManager
+        workerManager: __workerManager,
+        addOnEventPropagator: __addOnEventPropagator
     };
 
     //__app.configure(function () {

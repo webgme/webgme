@@ -38,6 +38,10 @@ define(['common/util/url'], function (URL) {
                 return cookies[gmeConfig.authentication.jwt.cookieId];
             }
         };
+
+        this.setToken = function (newToken) {
+            document.cookie = gmeConfig.authentication.jwt.cookieId + '=' + newToken;
+        };
     }
 
     return IoClient;

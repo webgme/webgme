@@ -11,6 +11,7 @@ var Child = require('child_process'),
     path = require('path'),
     CONSTANTS = require('./constants'),
     GUID = requireJS('common/util/guid'),
+
     SIMPLE_WORKER_JS = path.join(__dirname, 'simpleworker.js'),
     CONNECTED_WORKER_JS = path.join(__dirname, 'connectedworker.js');
 
@@ -323,48 +324,15 @@ function ServerWorkerManager(_parameters) {
             _workers[self.connectedWorkerId].state = CONSTANTS.workerStates.waiting;
             self.connectedWorkerCallbacks[guid] = connectedRequest.cb;
             connectedRequest.request.resid = guid;
+            logger.debug('connectedRequest', connectedRequest);
             _workers[self.connectedWorkerId].childProcess.send(connectedRequest.request);
         }
     }
 
-
-    // TODO: This should be an object based on projectIds or list of such.
-    // TODO: For now we just keep one dedicated worker for the addOns.
     this.connectedWorkerId = null;
     this.connectedWorkerRequests = [];
     this.connectedWorkerCallbacks = {
         //resid: callback
-    };
-
-    /**
-     *
-     * @param {object} parameters
-     * @param {string} parameters.webgmeToken
-     * @param {string} parameters.projectId
-     * @param {string} parameters.branchName
-     * @param {boolean} parameters.join
-     * @param {function} callback
-     */
-    this.socketRoomChange = function (parameters, callback) {
-        if (gmeConfig.addOn.enable === true) {
-            if (parameters.join === true) {
-                logger.info('socket joined room');
-                parameters.command = CONSTANTS.workerCommands.connectedWorkerStart;
-                self.connectedWorkerRequests.push({
-                    request: parameters,
-                    cb: callback
-                });
-            } else {
-                parameters.command = CONSTANTS.workerCommands.connectedWorkerStop;
-                logger.info('socket left room');
-                self.connectedWorkerRequests.push({
-                    request: parameters,
-                    cb: callback
-                });
-            }
-        } else {
-            callback(null);
-        }
     };
 
     this.start = function () {
@@ -372,9 +340,14 @@ function ServerWorkerManager(_parameters) {
             _managerId = setInterval(queueManager, 10);
         }
         reserveWorkerIfNecessary(CONSTANTS.workerTypes.simple);
+        // TODO: the addonEventPropagator should handle the connected worker.
         if (gmeConfig.addOn.enable === true) {
-            logger.info('AddOns enabled will reserve a connectedWorker');
-            reserveWorker(CONSTANTS.workerTypes.connected);
+            if (gmeConfig.addOn.workerUrl) {
+                logger.info('AddOns enabled and workerUrl provided will post updates to', gmeConfig.addOn.workerUrl);
+            } else {
+                logger.info('AddOns enabled will reserve a connectedWorker');
+                reserveWorker(CONSTANTS.workerTypes.connected);
+            }
         }
     };
 

@@ -120,6 +120,9 @@ define([], function () {
 
         BRANCH_UPDATED: 'BRANCH_UPDATED',
 
+        BRANCH_JOINED: 'BRANCH_JOINED',
+        BRANCH_LEFT: 'BRANCH_LEFT',
+
         NOTIFICATION: 'NOTIFICATION',
         // Types of notifications
         BRANCH_ROOM_SOCKETS: 'BRANCH_ROOM_SOCKETS',

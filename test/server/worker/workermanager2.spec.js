@@ -16,9 +16,10 @@ describe('ServerWorkerManager - ConnectedWorkers', function () {
         agent = testFixture.superagent.agent(),
         guestAccount = gmeConfig.authentication.guestAccount,
         storage,
-        webGMESessionId,
+        webgmeToken,
         server,
         ServerWorkerManager = require('../../../src/server/worker/serverworkermanager'),
+        CONSTANTS = require('../../../src/server/worker/constants'),
         workerManagerParameters = {
             globConf: gmeConfig,
             logger: logger
@@ -29,7 +30,7 @@ describe('ServerWorkerManager - ConnectedWorkers', function () {
 
     gmeConfig.server.maxWorkers = 3;
     gmeConfig.addOn.enable = true;
-    gmeConfig.addOn.monitorTimeout = 10;
+    gmeConfig.addOn.monitorTimeout = 1000;
 
     before(function (done) {
         //adding some project to the database
@@ -57,7 +58,7 @@ describe('ServerWorkerManager - ConnectedWorkers', function () {
                 return testFixture.openSocketIo(server, agent, guestAccount, guestAccount);
             })
             .then(function (result) {
-                webGMESessionId = result.webGMESessionId;
+                webgmeToken = result.webgmeToken;
             })
             .nodeify(done);
     });
@@ -79,10 +80,11 @@ describe('ServerWorkerManager - ConnectedWorkers', function () {
         var swm,
             getParams = function (join) {
                 return {
-                    webGMESessionId: webGMESessionId,
+                    webgmeToken: webgmeToken,
                     projectId: projectId,
                     branchName: 'master',
-                    join: join
+                    command: join ? CONSTANTS.workerCommands.connectedWorkerStart :
+                        CONSTANTS.workerCommands.connectedWorkerStop
                 };
             };
 
@@ -100,43 +102,18 @@ describe('ServerWorkerManager - ConnectedWorkers', function () {
         });
 
         it('should clear swm.connectedWorkerId after after stop', function (done) {
-            swm.socketRoomChange(getParams(false), function (err, result) {
-                expect(err).to.equal(null);
-                expect(swm.connectedWorkerId).to.not.equal(null);
-                expect(result.connectionCount).to.equal(-1);
-
-                swm.stop(function (err) {
-                    expect(err).to.equal(null);
-                    expect(swm.connectedWorkerId).to.equal(null);
-                    done();
-                });
-            });
-        });
-
-        it('should return connectionCount -1 after join and leave', function (done) {
-            swm.socketRoomChange(getParams(true), function (err) {
-                expect(err).to.equal(null);
-                expect(swm.connectedWorkerId).to.not.equal(null);
-
-            });
-            swm.socketRoomChange(getParams(false), function (err, result) {
-                expect(err).to.equal(null);
-                expect(swm.connectedWorkerId).to.not.equal(null);
-                expect(result.connectionCount).to.equal(-1);
-                done();
-            });
-        });
-
-        it('should return connectionCount 0 after join then leave', function (done) {
-            swm.socketRoomChange(getParams(true), function (err) {
-                expect(err).to.equal(null);
-                expect(swm.connectedWorkerId).to.not.equal(null);
-                swm.socketRoomChange(getParams(false), function (err, result) {
+            swm.connectedWorkerRequests.push({
+                request: getParams(false),
+                cb: function (err) {
                     expect(err).to.equal(null);
                     expect(swm.connectedWorkerId).to.not.equal(null);
-                    expect(result.connectionCount).to.equal(0);
-                    done();
-                });
+
+                    swm.stop(function (err) {
+                        expect(err).to.equal(null);
+                        expect(swm.connectedWorkerId).to.equal(null);
+                        done();
+                    });
+                }
             });
         });
     });

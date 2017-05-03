@@ -597,20 +597,14 @@ define([
             }
         }
 
-        function renewTokenCookie(callback) {
-            callback = callback || function (err /*, res*/) {
-                    state.renewingToken = false;
-                    if (err) {
-                        logger.error('Failed to renew token cookie', err);
-                    } else {
-                        logger.debug('Token cookie renewed');
-                    }
-                };
-
+        function getNewToken(callback) {
             if (state.renewingToken === false) {
                 state.renewingToken = true;
                 (new superagent.Request('GET', 'api/user/token'))
-                    .end(callback);
+                    .end(function (err, res) {
+                        state.renewingToken = false;
+                        callback(err, res.body.webgmeToken);
+                    });
             } else {
                 logger.debug('Awaiting token renewal..');
             }
@@ -791,7 +785,7 @@ define([
                     self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
                     storage.webSocket.addEventListener(CONSTANTS.STORAGE.NOTIFICATION,
                         function (emitter, eventData) {
-                            logger.info('recieved notification', eventData);
+                            logger.debug('received notification', eventData);
                             if (eventData.type === CONSTANTS.STORAGE.BRANCH_ROOM_SOCKETS) {
                                 self.dispatchConnectedUsersChanged(eventData);
                                 // If a new socket joined our branch -> emit to the branch room letting
@@ -829,7 +823,14 @@ define([
                     });
                 } else if (connectionState === CONSTANTS.STORAGE.JWT_ABOUT_TO_EXPIRE) {
                     logger.warn('Token about is about to expire');
-                    renewTokenCookie();
+                    getNewToken(function (err, newToken) {
+                        if (err) {
+                            logger.error('Failed to renew token', err);
+                            // Token will probably expire soon
+                        } else {
+                            storage.setToken(newToken);
+                        }
+                    });
                 } else if (connectionState === CONSTANTS.STORAGE.JWT_EXPIRED) {
                     self.disconnectFromDatabase(function (err) {
                         if (err) {

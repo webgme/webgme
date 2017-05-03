@@ -17,7 +17,7 @@ describe('Connected worker', function () {
         expect = testFixture.expect,
         agent = testFixture.superagent.agent(),
         openSocketIo = testFixture.openSocketIo,
-        webGMESessionId,
+        webgmeToken,
         CONSTANTS = require('./../../../src/server/worker/constants'),
         server,
 
@@ -35,9 +35,8 @@ describe('Connected worker', function () {
 
     before(function (done) {
         // We're not going through the server to start the connected-workers.
-        // Disableing should save some resources..
         gmeConfig.addOn.enable = false;
-        gmeConfig.addOn.monitorTimeout = 10;
+        gmeConfig.addOn.monitorTimeout = 10000;
 
         server = WebGME.standaloneServer(gmeConfig);
 
@@ -91,7 +90,7 @@ describe('Connected worker', function () {
                 return openSocketIo(server, agent, guestAccount, guestAccount);
             })
             .then(function (result) {
-                webGMESessionId = result.webGMESessionId;
+                webgmeToken = result.webgmeToken;
             })
             .nodeify(done);
     });
@@ -241,11 +240,11 @@ describe('Connected worker', function () {
     });
 
     // Common behaviour
-    it('should be able to start-start-stop connectedWorker', function (done) {
+    it('should be able to start connectedWorker', function (done) {
         var worker = getConnectedWorker(),
             params = {
                 command: CONSTANTS.workerCommands.connectedWorkerStart,
-                webGMESessionId: webGMESessionId,
+                webgmeToken: webgmeToken,
                 projectId: ir1.project.projectId,
                 branchName: 'master'
             };
@@ -271,7 +270,7 @@ describe('Connected worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStop,
-                    webGMESessionId: webGMESessionId,
+                    webgmeToken: webgmeToken,
                     projectId: ir1.project.projectId,
                     branchName: 'master'
                 });
@@ -279,17 +278,16 @@ describe('Connected worker', function () {
             .then(function (msg) {
                 expect(msg.error).equal(null);
                 expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.result.connectionCount).equal(-1);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
     });
 
-    it('should be able to start-start-stop connectedWorker and start UpdateModelAddOn', function (done) {
+    it('should be able to start connectedWorker and start UpdateModelAddOn', function (done) {
         var worker = getConnectedWorker(),
             params = {
                 command: CONSTANTS.workerCommands.connectedWorkerStart,
-                webGMESessionId: webGMESessionId,
+                webgmeToken: webgmeToken,
                 projectId: ir2.project.projectId,
                 branchName: 'b1'
             };
@@ -345,7 +343,6 @@ describe('Connected worker', function () {
             .then(function (msg) {
                 expect(msg.error).equal(null);
                 expect(msg.type).equal(CONSTANTS.msgTypes.request);
-                expect(msg.result.connectionCount).equal(-1);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
@@ -361,14 +358,13 @@ describe('Connected worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStop,
-                    webGMESessionId: webGMESessionId,
+                    webgmeToken: webgmeToken,
                     projectId: ir1.project.projectId,
                     branchName: 'master'
                 });
             })
             .then(function (msg) {
                 expect(msg.error).to.equal(null);
-                expect(msg.result.connectionCount).to.equal(-1);
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);
@@ -385,7 +381,7 @@ describe('Connected worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStart,
-                    webGMESessionId: webGMESessionId,
+                    webgmeToken: webgmeToken,
                     projectId: ir1.project.projectId
                 });
             })
@@ -411,7 +407,7 @@ describe('Connected worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStart,
-                    webGMESessionId: webGMESessionId,
+                    webgmeToken: webgmeToken,
                     branchName: 'master'
                 });
             })
@@ -437,7 +433,7 @@ describe('Connected worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStop,
-                    webGMESessionId: webGMESessionId,
+                    webgmeToken: webgmeToken,
                     projectId: ir1.project.projectId
                 });
             })
@@ -463,7 +459,7 @@ describe('Connected worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStop,
-                    webGMESessionId: webGMESessionId,
+                    webgmeToken: webgmeToken,
                     branchName: 'master'
                 });
             })
@@ -539,7 +535,7 @@ describe('Connected worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStart,
-                    webGMESessionId: webGMESessionId,
+                    webgmeToken: webgmeToken,
                     projectId: 'DoesNotExist',
                     branchName: 'master'
                 });
@@ -566,7 +562,7 @@ describe('Connected worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.connectedWorkerStart,
-                    webGMESessionId: webGMESessionId,
+                    webgmeToken: webgmeToken,
                     projectId: ir1.project.projectId,
                     branchName: 'branchDoesNotExist'
                 });

@@ -151,21 +151,6 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
             });
         });
 
-        it('should not start monitoring addOns on socketRoomChange join since it is disabled', function (done) {
-            var parameters = {
-                projectId: projectId,
-                webGMESessionId: webGMESessionId,
-                branchName: 'master',
-                join: true
-            };
-
-            swm.socketRoomChange(parameters, function (err) {
-                expect(err).to.equal(null);
-                expect(swm.connectedWorkerRequests.length).to.equal(0);
-                done();
-            });
-        });
-
         it('should fail to proxy query to an unknown id', function (done) {
             swm.query('no id', {}, function (err/*, result*/) {
                 expect(err).not.to.equal(null);

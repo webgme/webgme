@@ -286,7 +286,8 @@ Storage.prototype.makeCommit = function (data, callback) {
                                                 branchName: data.branchName,
                                                 newHash: newHash,
                                                 oldHash: oldHash,
-                                                userId: data.username
+                                                userId: data.username,
+                                                webgmeToken: data.webgmeToken
                                             };
 
                                         if (data.hasOwnProperty('socket')) {
@@ -636,7 +637,8 @@ Storage.prototype.setBranchHash = function (data, callback) {
             branchName: data.branchName,
             newHash: data.newHash,
             oldHash: data.oldHash,
-            userId: data.username
+            userId: data.username,
+            webgmeToken: data.webgmeToken
         },
         fullEventData = {
             projectId: data.projectId,
