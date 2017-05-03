@@ -56,41 +56,6 @@ describe('addon_handler bin', function () {
             .catch(done);
     });
 
-    beforeEach(function (done) {
-        agent = superagent.agent();
-        testFixture.openSocketIo(server, agent, 'guest', 'guest')
-            .then(function (result) {
-                socket = result.socket;
-                webgmeToken = result.webgmeToken;
-                connStorage = NodeStorage.createStorage(null,
-                    result.webgmeToken,
-                    logger,
-                    gmeConfig);
-
-                connStorage.open(function (networkState) {
-                    if (networkState === project.CONSTANTS.CONNECTED) {
-                        done();
-                    } else {
-                        throw new Error('Unexpected network state: ' + networkState);
-                    }
-                });
-            })
-            .catch(done);
-    });
-
-    afterEach('outer afterEach', function (done) {
-        connStorage.close(function (/*err*/) {
-            socket.disconnect();
-
-            if (addOnHandler) {
-                addOnHandler.stop(done);
-            } else {
-                done();
-            }
-
-        });
-    });
-
     after('outer after', function (done) {
         storage.closeDatabase()
             .finally(function () {
@@ -201,6 +166,35 @@ describe('addon_handler bin', function () {
 
             server = testFixture.WebGME.standaloneServer(gmeConfig);
             server.start(done);
+        });
+
+        beforeEach(function (done) {
+            agent = superagent.agent();
+            testFixture.openSocketIo(server, agent, 'guest', 'guest')
+                .then(function (result) {
+                    socket = result.socket;
+                    webgmeToken = result.webgmeToken;
+                    connStorage = NodeStorage.createStorage(null,
+                        result.webgmeToken,
+                        logger,
+                        gmeConfig);
+
+                    connStorage.open(function (networkState) {
+                        if (networkState === project.CONSTANTS.CONNECTED) {
+                            done();
+                        } else {
+                            throw new Error('Unexpected network state: ' + networkState);
+                        }
+                    });
+                })
+                .catch(done);
+        });
+
+        afterEach(function (done) {
+            connStorage.close(function (/*err*/) {
+                socket.disconnect();
+                addOnHandler.stop(done);
+            });
         });
 
         after(function (done) {
@@ -468,6 +462,35 @@ describe('addon_handler bin', function () {
             server.start(done);
         });
 
+        beforeEach(function (done) {
+            agent = superagent.agent();
+            testFixture.openSocketIo(server, agent, 'guest', 'guest')
+                .then(function (result) {
+                    socket = result.socket;
+                    webgmeToken = result.webgmeToken;
+                    connStorage = NodeStorage.createStorage(null,
+                        result.webgmeToken,
+                        logger,
+                        gmeConfig);
+
+                    connStorage.open(function (networkState) {
+                        if (networkState === project.CONSTANTS.CONNECTED) {
+                            done();
+                        } else {
+                            throw new Error('Unexpected network state: ' + networkState);
+                        }
+                    });
+                })
+                .catch(done);
+        });
+
+        afterEach(function (done) {
+            connStorage.close(function (/*err*/) {
+                socket.disconnect();
+                addOnHandler.stop(done);
+            });
+        });
+
         after(function (done) {
             server.stop(done);
         });
@@ -621,26 +644,46 @@ describe('addon_handler bin', function () {
 
     // This is here in order to reuse the helper functions
     describe('addon worker process', function () {
-        before(function (done) {
+        beforeEach(function (done) {
             gmeConfig = testFixture.getGmeConfig();
             gmeConfig.addOn.enable = true;
             gmeConfig.addOn.workerUrl = null;
             gmeConfig.authentication.enable = false;
 
             server = testFixture.WebGME.standaloneServer(gmeConfig);
-            server.start(done);
+            server.start(function (err) {
+                if (err) {
+                    return done(err);
+                }
+
+                agent = superagent.agent();
+                testFixture.openSocketIo(server, agent, 'guest', 'guest')
+                    .then(function (result) {
+                        socket = result.socket;
+                        webgmeToken = result.webgmeToken;
+                        connStorage = NodeStorage.createStorage(null,
+                            result.webgmeToken,
+                            logger,
+                            gmeConfig);
+
+                        connStorage.open(function (networkState) {
+                            if (networkState === project.CONSTANTS.CONNECTED) {
+                                done();
+                            } else {
+                                throw new Error('Unexpected network state: ' + networkState);
+                            }
+                        });
+                    })
+                    .catch(done);
+            });
         });
 
-        after('worker process', function (done) {
-            try {
-                server.stop(function (err) {
-                    done(err);
-                });
-            } catch (e) {
-                done(e);
-            }
+        afterEach(function (done) {
+            connStorage.close(function (/*err*/) {
+                socket.disconnect();
+                server.stop(done);
+            });
         });
-
 
         it('opening branch should start addon', function (done) {
             var branchName = 'bbb1',
