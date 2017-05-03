@@ -391,6 +391,8 @@ define([
     };
 
     GraphVizWidget.prototype.destroy = function () {
+        this.__svg.remove();
+        this.__svg = undefined;
     };
 
     GraphVizWidget.prototype.onActivate = function () {

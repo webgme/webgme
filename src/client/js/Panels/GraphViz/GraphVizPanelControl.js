@@ -37,6 +37,8 @@ define(['js/logger',
         this._initWidgetEventHandlers();
 
         this._logger.debug('Created');
+
+        this._timeoutId = null;
     };
 
     GraphVizControl.prototype._initWidgetEventHandlers = function () {
@@ -105,7 +107,9 @@ define(['js/logger',
 
         this._nodes = {};
 
-        if ((this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID) && desc) {
+        clearTimeout(this._timeoutId);
+
+        if (typeof this._currentNodeId === 'string' && desc) {
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = {children: 0};
@@ -126,7 +130,7 @@ define(['js/logger',
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
 
-            setTimeout(function () {
+            this._timeoutId = setTimeout(function () {
                 self._selfPatterns[nodeId] = {children: 1};
                 self._client.updateTerritory(self._territoryId, self._selfPatterns);
             }, 1000);
@@ -227,7 +231,13 @@ define(['js/logger',
     };
 
     GraphVizControl.prototype.destroy = function () {
+        clearTimeout(this._timeoutId);
+        if (this._territoryId) {
+            this._client.removeUI(this._territoryId);
+        }
+
         this._detachClientEventListeners();
+        this._removeToolbarItems();
     };
 
     GraphVizControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
@@ -302,19 +312,6 @@ define(['js/logger',
         this._toolbarItems = [];
 
         this._toolbarItems.push(toolBar.addSeparator());
-
-        /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
-        // this.$btnModelHierarchyUp = toolBar.addButton({
-        //     title: 'Go to parent',
-        //     icon: 'glyphicon glyphicon-circle-arrow-up',
-        //     clickFn: function (/*data*/) {
-        //         WebGMEGlobal.State.registerActiveObject(self._currentNodeParentId);
-        //     }
-        // });
-        // this._toolbarItems.push(this.$btnModelHierarchyUp);
-        // this.$btnModelHierarchyUp.hide();
-        /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
-
         /************** MODEL / CONNECTION filter *******************/
 
         this.$cbShowConnection = toolBar.addCheckBox({
@@ -328,7 +325,6 @@ define(['js/logger',
 
         this._toolbarItems.push(this.$cbShowConnection);
         /************** END OF - MODEL / CONNECTION filter *******************/
-
 
         this._toolbarInitialized = true;
     };

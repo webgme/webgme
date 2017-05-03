@@ -1773,6 +1773,8 @@ define(['js/logger',
                 this._toolbarItems[i].destroy();
             }
         }
+
+        this._toolbarItems = [];
     };
 
     MetaEditorControl.prototype._initializeToolbar = function () {
