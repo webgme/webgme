@@ -276,7 +276,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
 
                             if (typeof jsonProject.kind !== 'string') {
                                 jsonProject.kind = name;
-                                logger.info('Seed did not define a kind, the seed-name [' + name + '] will be used ' +
+                                logger.debug('Seed did not define a kind, the seed-name [' + name + '] will be used ' +
                                     'as kind for new project.');
                             }
 
