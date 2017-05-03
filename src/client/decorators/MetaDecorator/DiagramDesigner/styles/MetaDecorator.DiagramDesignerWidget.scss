@@ -154,6 +154,19 @@ $abstract-class-name-color: #AAAAAA;
     margin-left: -8px;
     left: 50%;
 
+    &:hover {
+      height: 24px;
+      width: 24px;
+      margin-left: -12px;
+      z-index: 12;
+      &.top {
+        top: -16px;
+      }
+      &.bottom {
+        bottom: -16px;
+      }
+    }
+
     &.top {
       top: -10px;
     }
