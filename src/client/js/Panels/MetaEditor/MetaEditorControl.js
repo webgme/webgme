@@ -176,9 +176,9 @@ define(['js/logger',
     //might not be the best approach
     MetaEditorControl.prototype.destroy = function () {
         this._detachClientEventListeners();
+        this._removeToolbarItems();
         this._client.removeUI(this._territoryId);
         this._client.removeUI(this._metaAspectMembersTerritoryId);
-        this.diagramDesigner.clear();
     };
 
     /**********************************************************/

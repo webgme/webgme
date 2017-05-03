@@ -87,8 +87,7 @@ define(['css!./styles/MetaInconsistencyResultWidget.css'], function () {
     };
 
     MetaInconsistencyResultWidget.prototype.destroy = function () {
-        this._el.find('dd.path-link').off('click');
-
+        this._onLinkClickHandler = null;
         this._el.empty();
     };
 

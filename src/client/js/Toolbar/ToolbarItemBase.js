@@ -33,7 +33,6 @@ define([], function () {
     ToolbarItemBase.prototype.destroy = function () {
         if (this.el) {
             this.el.remove();
-            this.el.empty();
             this.el = undefined;
         }
     };
