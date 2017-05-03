@@ -183,11 +183,18 @@ define([
                 }
                 logger.debug('inside closeAndDelete branchCnt', branchCnt);
                 if (branchCnt === 0) {
-                    webSocket.closeProject({projectId: projectId}, function (err) {
-                        logger.debug('project closed on server.');
+                    if (self.connected) {
+                        webSocket.closeProject({projectId: projectId}, function (err) {
+                            logger.debug('project closed on server.');
+                            delete projects[projectId];
+                            callback(err || error);
+                        });
+                    } else {
+                        logger.debug('Disconnected while closing project.. skipping webSocket request to server.');
                         delete projects[projectId];
-                        callback(err || error);
-                    });
+                        callback(error);
+                    }
+
                 }
             }
 
@@ -310,11 +317,16 @@ define([
                 branch._remoteUpdateHandler);
 
             branch.cleanUp();
-
-            webSocket.closeBranch({projectId: projectId, branchName: branchName}, function (err) {
+            if (self.connected) {
+                webSocket.closeBranch({projectId: projectId, branchName: branchName}, function (err) {
+                    delete project.branches[branchName];
+                    callback(err);
+                });
+            } else {
+                logger.debug('Disconnected while closing branch.. skipping webSocket request to server.');
                 delete project.branches[branchName];
-                callback(err);
-            });
+                callback(null);
+            }
         };
 
         this.forkBranch = function (projectId, branchName, forkName, commitHash, callback) {
