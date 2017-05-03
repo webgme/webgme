@@ -17,7 +17,7 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
         },
         logger = mainLogger.fork('ManagerTracker');
 
-    function connectedWorkerStart(webgmeToken, projectId, branchName, callback) {
+    this.connectedWorkerStart = function (webgmeToken, projectId, branchName, callback) {
         var addOnManager;
 
         logger.debug('connectedWorkerStart', projectId, branchName);
@@ -54,9 +54,9 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
                 };
             })
             .nodeify(callback);
-    }
+    };
 
-    function connectedWorkerStop(projectId, branchName, callback) {
+    this.connectedWorkerStop = function (projectId, branchName, callback) {
         if (!projectId || !branchName) {
             return Q.reject(new Error('Required parameters were not provided: ' + projectId + ', ' + branchName + '.'))
                 .nodeify(callback);
@@ -68,10 +68,7 @@ function ManagerTracker(mainLogger, gmeConfig, options) {
             return Q.resolve()
                 .nodeify(callback);
         }
-    }
-
-    this.connectedWorkerStart = connectedWorkerStart;
-    this.connectedWorkerStop = connectedWorkerStop;
+    };
 
     this.close = function (callback) {
         return Q.all(Object.keys(addOnManagers).map(function (projectId) {
