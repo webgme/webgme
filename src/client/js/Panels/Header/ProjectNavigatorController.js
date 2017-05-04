@@ -20,7 +20,8 @@ define([
     'common/storage/util',
     'js/Utils/Exporters',
     'q',
-    'js/Utils/ComponentSettings'
+    'js/Utils/ComponentSettings',
+    'css!./styles/ProjectNavigatorController.css'
 ], function (Logger,
              CONSTANTS,
              ng,
@@ -255,6 +256,8 @@ define([
             self.logger.debug(CONSTANTS.CLIENT.BRANCH_CHANGED, branchId);
             self.selectBranch({projectId: self.gmeClient.getActiveProjectId(), branchId: branchId});
         });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this.activeObjectChanged, this);
 
         angular.element(self.$window).on('keydown', function (e) {
 
@@ -932,7 +935,7 @@ define([
             currentProject.isSelected = false;
         }
 
-        if (currentBranch) {
+        if (currentBranch && currentBranch.id.indexOf('#') === -1) {
             currentBranch.isSelected = false;
             currentBranch.deleteBranchItem.disabled = false;
             currentBranch.mergeBranchItem.disabled = false;
@@ -964,7 +967,7 @@ define([
                     currentProject.isSelected = true;
                 }
 
-                if (currentBranch) {
+                if (currentBranch && currentBranch.id.indexOf('#') === -1) {
                     currentBranch.isSelected = true;
                     currentBranch.deleteBranchItem.disabled = true;
                     currentBranch.mergeBranchItem.disabled = true;
@@ -1007,7 +1010,7 @@ define([
                 // we will get a project open event
                 return;
             }
-
+            var commitHash = self.gmeClient.getActiveCommitHash();
             if (branchId || branchId === '') {
 
                 if (self.projects[projectId].branches.hasOwnProperty(branchId) === false) {
@@ -1044,6 +1047,36 @@ define([
                     return;
                 }
 
+            } else if (commitHash) {
+                // add commit element
+                self.$scope.navigator.items[self.navIdBranch] = {
+                    id: commitHash,
+                    label: commitHash.substring(0, 7),
+                    itemClass: self.config.branchMenuClass,
+                    menu: [
+                        {
+                            items: [
+                                {
+                                    id: 'exportCommit',
+                                    label: 'Export project',
+                                    iconClass: 'glyphicon glyphicon-export',
+                                    action: function () {
+                                        exporters.exportProject(self.gmeClient, self.logger, {
+                                            projectId: data.projectId,
+                                            commitHash: data.commitHash
+                                        }, true);
+                                    },
+                                    actionData: {
+                                        projectId: projectId,
+                                        commitHash: commitHash
+                                    }
+                                }
+                            ]
+
+                        }
+                    ]
+                };
+
             } else {
                 // remove branch element
                 self.$scope.navigator.items.splice(self.navIdBranch, 1);
@@ -1070,6 +1103,56 @@ define([
         } else {
             this.logger.warn('project or branch is not in the list yet: ', projectId, branchId, branchInfo);
         }
+    };
+
+    ProjectNavigatorController.prototype.activeObjectChanged = function (_s, nodeId) {
+        var items = [],
+            node;
+
+        if (typeof nodeId !== 'string' || !this.gmeClient.getNode(nodeId)) {
+            this.$scope.navigator.items.length = this.navIdBranch + 1;
+            return;
+        }
+
+        function onHeaderClick(data) {
+            WebGMEGlobal.State.registerActiveObject(data.id);
+        }
+
+        // Trim previous items.
+        this.$scope.navigator.items.length = this.navIdBranch + 1;
+        node = this.gmeClient.getNode(nodeId);
+        while (node) {
+            items.unshift({
+                id: node.getId(),
+                label: node.getAttribute('name'),
+                isSelected: false,
+                itemClass: this.config.nodeMenuClass,
+                action: onHeaderClick,
+                actionData: {
+                    id: node.getId()
+                },
+                // menu: [
+                //     {
+                //         items: [
+                //             {
+                //                 id: 'something',
+                //                 label: 'Do something ...',
+                //                 iconClass: 'glyphicon glyphicon-plus',
+                //                 action: function () {},
+                //                 actionData: {
+                //                 }
+                //             }
+                //         ]
+                //     }
+                // ]
+            });
+
+            node = this.gmeClient.getNode(node.getParentId());
+        }
+
+        this.$scope.navigator.items = this.$scope.navigator.items.concat(items);
+
+        this.update();
     };
 
     ProjectNavigatorController.prototype.mapToArray = function (hashMap, orderBy) {
@@ -1175,7 +1258,8 @@ define([
             rootMenuClass: 'gme-root',
             rootDisplayName: 'GME',
             projectMenuClass: '',
-            branchMenuClass: ''
+            branchMenuClass: '',
+            nodeMenuClass: 'node-breadcrumb-item'
         };
     };
 

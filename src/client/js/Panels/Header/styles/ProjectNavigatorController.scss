@@ -1,0 +1,31 @@
+.project-navigator-controller {
+  .project-navigator {
+    li.node-breadcrumb-item {
+      color: darkgrey;
+      max-width: 10em;
+      .label-container {
+        padding: 0;
+        span.item-label {
+          display: inline-block;
+          line-height: 100%;
+          margin-left: 0.6em;
+          font-size: 80%;
+          max-width: 10em;
+          text-align: center;
+          overflow-x: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+
+    li.node-breadcrumb-item + li {
+      margin: 0;
+      font-size: 90%;
+      color: darkgrey;
+      i:before {
+        content: "/"
+      }
+    }
+  }
+}
