@@ -4,7 +4,10 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-
+/*
+ * CoreInternalError should be thrown if some internal ASSERTION fails, it triggers some fault inside the core
+ * and should typically be checked by the developer team, not the one who uses it.
+ */
 define([], function () {
     'use strict';
     function CoreInternalError() {

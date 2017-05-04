@@ -4,7 +4,9 @@
 /**
  * @author kecso / https://github.com/kecso
  */
-
+/*
+ * CoreIllegalArgumentError hsould be thrown if the type of the input parameters is not what it should be.
+ */
 define([], function () {
     'use strict';
     function CoreIllegalArgumentError() {
