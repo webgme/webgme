@@ -687,7 +687,8 @@ function StandAloneServer(gmeConfig) {
                     webgmeVersion: nmpPackageJson.version,
                     url: url,
                     imageUrl: imageUrl,
-                    projectId: projectId ? projectId.replace('+', '/') : 'WebGME'
+                    projectId: projectId ? projectId.replace('+', '/') : 'WebGME',
+                    favicon: gmeConfig.client.faviconPath
                 }));
             }
         });
