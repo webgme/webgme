@@ -107,6 +107,10 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 
 - `config.client.appDir = './src/client'`
  - Directory from where to serve the static files for the webapp. This should only be modified if you are using a custom UI.
+- `config.client.faviconPath = 'img/favicon.ico'`
+ - Path to favicon (e.g. put an ico file in your app's root dir and set this to `/extlib/favicon.ico`).
+- `config.client.pageTitle = null`
+ - Custom title for app, if not given the default title will be the name/id of the open project (or WebGME).
 - `config.client.log.level = 'debug'`
  - When [debug](https://github.com/visionmedia/debug) is activated in the browser (type `localStorage.debug = gme*` in the console and refresh the page) messages below this level will not be printed.
 - `config.client.defaultConnectionRouter = 'basic3'`
