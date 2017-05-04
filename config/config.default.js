@@ -75,6 +75,7 @@ var path = require('path'),
         client: {
             appDir: path.join(__dirname, '../src/client'),
             faviconPath: 'img/favicon.ico',
+            pageTitle: null,
             log: {
                 level: 'debug'
             },

@@ -135,6 +135,7 @@ function validateConfig(configOrFileName) {
     assertObject('config.client', config.client);
     assertString('config.client.appDir', config.client.appDir);
     assertString('config.client.faviconPath', config.client.faviconPath);
+    assertString('config.client.pageTitle', config.client.pageTitle, true);
     assertObject('config.client.log', config.client.log);
     assertString('config.client.log.level', config.client.log.level);
     warnDeprecated('config.client.defaultContext', config.client.defaultContext,

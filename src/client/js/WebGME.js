@@ -50,7 +50,6 @@ define([
 
         var componentId = 'GenericUIWebGMEStart',
             defaultConfig = {
-                pageTitle: 'WebGME',
                 disableProjectsDialog: false,
                 initialContext: {
                     project: null,
@@ -137,8 +136,6 @@ define([
                 WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad || config.layout,
                     {suppressHistoryUpdate: true});
 
-                document.title = config.pageTitle;
-
                 WebGMEHistory.initialize();
 
                 GMEConcepts.initialize(client);
@@ -164,9 +161,11 @@ define([
                         layout,
                         nodePath;
 
-                    document.title = WebGMEGlobal.gmeConfig.authentication.enable ?
-                        StorageUtil.getProjectDisplayedNameFromProjectId(projectId) :
-                        StorageUtil.getProjectNameFromProjectId(projectId);
+                    if (typeof gmeConfig.client.pageTitle !== 'string') {
+                        document.title = WebGMEGlobal.gmeConfig.authentication.enable ?
+                            StorageUtil.getProjectDisplayedNameFromProjectId(projectId) :
+                            StorageUtil.getProjectNameFromProjectId(projectId);
+                    }
 
                     layoutManager.setPanelReadOnly(client.isProjectReadOnly());
                     WebGMEGlobal.State.registerActiveProjectName(projectId);

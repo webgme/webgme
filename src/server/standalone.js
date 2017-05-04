@@ -688,7 +688,8 @@ function StandAloneServer(gmeConfig) {
                     url: url,
                     imageUrl: imageUrl,
                     projectId: projectId ? projectId.replace('+', '/') : 'WebGME',
-                    favicon: gmeConfig.client.faviconPath
+                    favicon: gmeConfig.client.faviconPath,
+                    pageTitle: typeof gmeConfig.client.pageTitle === 'string' ? gmeConfig.client.pageTitle : 'WebGME'
                 }));
             }
         });
