@@ -1138,6 +1138,7 @@ define([
                 actionData: {
                     id: node.getId()
                 },
+                itemClass: this.config.nodeItemClass
                 // menu: [
                 //     {
                 //         items: [
@@ -1159,7 +1160,6 @@ define([
 
         for (i = 0; i < items.length; i += 1) {
             if (i < maxItems) {
-                items[i].itemClass = this.config.nodeMenuClass;
                 this.$scope.navigator.items.push(items[i]);
             } else if (i === maxItems) {
                 maxItemsItem = {
@@ -1289,7 +1289,7 @@ define([
             rootDisplayName: 'GME',
             projectMenuClass: '',
             branchMenuClass: '',
-            nodeMenuClass: 'node-breadcrumb-item'
+            nodeItemClass: ''
         };
     };
 
