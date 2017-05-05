@@ -133,18 +133,19 @@ define(['js/logger'], function (Logger) {
             i;
 
         if (sourceConnectionPoints.length > 0 && targetConnectionPoints.length > 0) {
+            closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints,
+                segmentPoints);
 
-            if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
-                //connection's source and destination is the same object/port
-                sourceCoordinates = sourceConnectionPoints[0];
-                targetCoordinates = targetConnectionPoints.length > 1 ?
-                    targetConnectionPoints[1] : targetConnectionPoints[0];
-            } else {
-                closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints,
-                    segmentPoints);
-                sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
-                targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
+            if (srcObjId === dstObjId && srcSubCompId === dstSubCompId &&
+                closestConnPoints[0] === closestConnPoints[1]) {
+                // Same source and destination point - try to scoot it over..
+                if (closestConnPoints[0] === closestConnPoints[1]) {
+                    closestConnPoints[1] = (closestConnPoints[0] + 1) % sourceConnectionPoints.length;
+                }
             }
+
+            sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
+            targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
 
             //source point
             connectionPathPoints.push(sourceCoordinates);
@@ -201,7 +202,7 @@ define(['js/logger'], function (Logger) {
             for (i = 0; i < srcConnectionPoints.length; i += 1) {
                 for (j = 0; j < tgtConnectionPoints.length; j += 1) {
                     dx = {
-                        src: Math.abs(srcConnectionPoints[i].x - segmentPoints[0][1]),
+                        src: Math.abs(srcConnectionPoints[i].x - segmentPoints[0][0]),
                         tgt: Math.abs(tgtConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])
                     };
 
