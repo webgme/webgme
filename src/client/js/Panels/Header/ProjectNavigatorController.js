@@ -1078,9 +1078,8 @@ define([
                                         commitHash: commitHash
                                     }
                                 }
-                            ]
+                            ]                        }
 
-                        }
                     ]
                 };
 
@@ -1139,20 +1138,20 @@ define([
                 actionData: {
                     id: node.getId()
                 },
-                menu: [
-                    {
-                        items: [
-                            {
-                                id: 'something',
-                                label: 'Do something ...',
-                                iconClass: 'glyphicon glyphicon-plus',
-                                action: function () {},
-                                actionData: {
-                                }
-                            }
-                        ]
-                    }
-                ]
+                // menu: [
+                //     {
+                //         items: [
+                //             {
+                //                 id: 'something',
+                //                 label: 'Do something ...',
+                //                 iconClass: 'glyphicon glyphicon-plus',
+                //                 action: function () {},
+                //                 actionData: {
+                //                 }
+                //             }
+                //         ]
+                //     }
+                // ]
             });
 
             node = this.gmeClient.getNode(node.getParentId());
