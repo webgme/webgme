@@ -13,8 +13,9 @@ define([
     'common/regexp',
     'common/core/constants',
     'common/storage/constants',
-    'common/core/convertData'
-], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS, STORAGE_CONSTANTS, convertData) {
+    'common/core/convertData',
+    'common/core/CoreIllegalArgumentError'
+], function (ASSERT, GENKEY, TASYNC, RANDOM, REGEXP, CONSTANTS, STORAGE_CONSTANTS, convertData, IllegalArgumentError) {
 
     'use strict';
 
@@ -33,10 +34,21 @@ define([
             mutateCount = 0,
             self = this;
 
-        storage.loadObject = TASYNC.wrap(storage.loadObject);
+        this.loadObject = TASYNC.wrap(function (hash, callback) {
+            storage.loadObject(hash, function (err, resultObject) {
+                if (err) {
+                    callback(err, null);
+                    return;
+                }
+                if (resultObject && resultObject.type === STORAGE_CONSTANTS.COMMIT_TYPE) {
+                    err = new IllegalArgumentError('Cannot load commit object [' + hash + '] as a root node.');
+                    resultObject = null;
+                }
+                callback(err, resultObject);
+            });
+        });
 
         this.loadPaths = TASYNC.wrap(storage.loadPaths);
-        this.loadObject = storage.loadObject;
         this.insertObject = storage.insertObject;
         this.logger = logger;
 
@@ -868,8 +880,7 @@ define([
 
         this.loadRoot = function (hash) {
             ASSERT(REGEXP.DB_HASH.test(hash));
-
-            return TASYNC.call(__loadRoot2, storage.loadObject(hash));
+            return TASYNC.call(__loadRoot2, self.loadObject(hash));
         };
 
         this.loadChild = function (node, relid) {
@@ -882,7 +893,7 @@ define([
             } else if (REGEXP.DB_HASH.test(node.data)) {
                 // TODO: this is a hack, we should avoid loading it multiple
                 // times
-                return TASYNC.call(__loadChild2, node, storage.loadObject(node.data));
+                return TASYNC.call(__loadChild2, node, self.loadObject(node.data));
             } else {
                 return null;
             }

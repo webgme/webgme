@@ -17,6 +17,7 @@ describe('CoreTree', function () {
         projectName = 'CoreTreeTest',
         projectId = testFixture.projectName2Id(projectName),
         project,
+        TASYNC = testFixture.requirejs('common/core/tasync'),
         CoreTree = requirejs('common/core/coretree'),
 
         logger = testFixture.logger.fork('coretree.spec'),
@@ -37,7 +38,7 @@ describe('CoreTree', function () {
                 return storage.createProject({projectName: projectName});
             })
             .then(function (dbProject) {
-                project = new testFixture.Project(dbProject, storage, logger, gmeConfig);
+                project = dbProject;
                 coreTree = new CoreTree(project, {
                     globConf: gmeConfig,
                     logger: testFixture.logger.fork('CoreTree:core')
@@ -329,7 +330,8 @@ describe('CoreTree', function () {
 
             expect(persisted.rootHash).not.to.equal(undefined);
             expect(Object.keys(persisted.objects)).to.have.length(1);
-            expect(persisted.objects[persisted.rootHash]).not.to.have.keys(['oldData', 'newData', 'oldHash', 'nesHash']);
+            expect(persisted.objects[persisted.rootHash])
+                .not.to.have.keys(['oldData', 'newData', 'oldHash', 'nesHash']);
             expect(root.initial).not.to.equal(null);
             expect(root.initial).not.to.equal(undefined);
         });
@@ -400,15 +402,48 @@ describe('CoreTree', function () {
             persisted = core.persist(root);
 
             expect(Object.keys(persisted.objects)).to.have.length(1);
-            expect(persisted.objects[persisted.rootHash]).not.to.have.keys(['oldData', 'newData', 'oldHash', 'nesHash']);
+            expect(persisted.objects[persisted.rootHash])
+                .not.to.have.keys(['oldData', 'newData', 'oldHash', 'nesHash']);
 
             core.setProperty(root, 'prop', 'changed');
 
             persisted = core.persist(root);
 
             expect(Object.keys(persisted.objects)).to.have.length(1);
-            expect(persisted.objects[persisted.rootHash]).not.to.have.keys(['oldData', 'newData', 'oldHash', 'nesHash']);
+            expect(persisted.objects[persisted.rootHash])
+                .not.to.have.keys(['oldData', 'newData', 'oldHash', 'nesHash']);
 
+        });
+
+        it('should throw special error if commitHash is passed to loadRoot', function (done) {
+            var core = coreTree,
+                root,
+                rootHash,
+                persisted,
+                threw = false;
+
+            root = core.createRoot();
+            persisted = core.persist(root);
+            project.makeCommit(
+                null,
+                [],
+                persisted.rootHash, persisted.objects, 'starting commit', function (err, commitobj) {
+                    expect(err).to.eql(null);
+                    TASYNC.call(function (/*root*/) {
+                        if (!threw) {
+                            done(new Error('should throw with commit hash'));
+                        }
+                    }, TASYNC.trycatch(function () {
+                        return core.loadRoot(commitobj.hash);
+                    }, function (err) {
+                        threw = true;
+                        if (err.message.indexOf('Cannot load commit object') === -1) {
+                            done(new Error('Wrong error was thrown'));
+                        }
+                        done();
+                    }));
+
+                });
         });
     });
 
