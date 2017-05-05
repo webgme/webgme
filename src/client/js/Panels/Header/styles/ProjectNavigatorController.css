@@ -1,21 +1,4 @@
-.project-navigator-controller .project-navigator li.node-breadcrumb-item {
-  color: darkgrey;
-  max-width: 10em; }
-  .project-navigator-controller .project-navigator li.node-breadcrumb-item .label-container {
-    padding: 0; }
-    .project-navigator-controller .project-navigator li.node-breadcrumb-item .label-container span.item-label {
-      display: inline-block;
-      line-height: 100%;
-      margin-left: 0.6em;
-      font-size: 80%;
-      max-width: 10em;
-      text-align: center;
-      overflow-x: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis; }
-.project-navigator-controller .project-navigator li.node-breadcrumb-item + li {
-  margin: 0;
-  font-size: 90%;
-  color: darkgrey; }
-  .project-navigator-controller .project-navigator li.node-breadcrumb-item + li i:before {
-    content: "/"; }
+.project-navigator-controller .project-navigator ul.dropdown-navigator .hierarchical-menu .menu-contents li a {
+  max-width: 250px;
+  overflow-x: hidden;
+  text-overflow: ellipsis; }

@@ -257,7 +257,13 @@ define([
             self.selectBranch({projectId: self.gmeClient.getActiveProjectId(), branchId: branchId});
         });
 
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this.activeObjectChanged, this);
+        self.gmeClient.addEventListener(CONSTANTS.CLIENT.NEW_COMMIT_STATE, function (/*client, data*/) {
+            self.updateNodeBreadcrumbs(WebGMEGlobal.State.getActiveObject());
+        });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (_s, nodeId) {
+            self.updateNodeBreadcrumbs(nodeId);
+        });
 
         angular.element(self.$window).on('keydown', function (e) {
 
@@ -289,13 +295,14 @@ define([
 
                 if (self.$scope.navigator &&
                     self.$scope.navigator.items &&
-                    self.$scope.navigator.items[self.navIdBranch]) {
+                    self.$scope.navigator.items[self.navIdBranch] &&
+                    self.$scope.navigator.items[self.navIdBranch].id.indexOf('#') !== 0) {
+
                     if (parameters) {
                         self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = false;
                     } else {
                         self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = true;
                     }
-
                 }
 
             });
@@ -306,15 +313,15 @@ define([
 
                 if (self.$scope.navigator &&
                     self.$scope.navigator.items &&
-                    self.$scope.navigator.items[self.navIdBranch]) {
+                    self.$scope.navigator.items[self.navIdBranch] &&
+                    self.$scope.navigator.items[self.navIdBranch].id.indexOf('#') !== 0) {
+
                     if (parameters) {
                         self.$scope.navigator.items[self.navIdBranch].redoLastUndoItem.disabled = false;
                     } else {
                         self.$scope.navigator.items[self.navIdBranch].redoLastUndoItem.disabled = true;
                     }
-
                 }
-
             });
         });
     };
@@ -935,7 +942,7 @@ define([
             currentProject.isSelected = false;
         }
 
-        if (currentBranch && currentBranch.id.indexOf('#') === -1) {
+        if (currentBranch && currentBranch.id.indexOf('#') !== 0) {
             currentBranch.isSelected = false;
             currentBranch.deleteBranchItem.disabled = false;
             currentBranch.mergeBranchItem.disabled = false;
@@ -967,7 +974,7 @@ define([
                     currentProject.isSelected = true;
                 }
 
-                if (currentBranch && currentBranch.id.indexOf('#') === -1) {
+                if (currentBranch && currentBranch.id.indexOf('#') !== 0) {
                     currentBranch.isSelected = true;
                     currentBranch.deleteBranchItem.disabled = true;
                     currentBranch.mergeBranchItem.disabled = true;
@@ -1105,8 +1112,11 @@ define([
         }
     };
 
-    ProjectNavigatorController.prototype.activeObjectChanged = function (_s, nodeId) {
+    ProjectNavigatorController.prototype.updateNodeBreadcrumbs = function (nodeId) {
         var items = [],
+            maxItems = 0,
+            maxItemsItem,
+            i,
             node;
 
         if (typeof nodeId !== 'string' || !this.gmeClient.getNode(nodeId)) {
@@ -1125,32 +1135,53 @@ define([
             items.unshift({
                 id: node.getId(),
                 label: node.getAttribute('name'),
-                isSelected: false,
-                itemClass: this.config.nodeMenuClass,
                 action: onHeaderClick,
                 actionData: {
                     id: node.getId()
                 },
-                // menu: [
-                //     {
-                //         items: [
-                //             {
-                //                 id: 'something',
-                //                 label: 'Do something ...',
-                //                 iconClass: 'glyphicon glyphicon-plus',
-                //                 action: function () {},
-                //                 actionData: {
-                //                 }
-                //             }
-                //         ]
-                //     }
-                // ]
+                menu: [
+                    {
+                        items: [
+                            {
+                                id: 'something',
+                                label: 'Do something ...',
+                                iconClass: 'glyphicon glyphicon-plus',
+                                action: function () {},
+                                actionData: {
+                                }
+                            }
+                        ]
+                    }
+                ]
             });
 
             node = this.gmeClient.getNode(node.getParentId());
         }
 
-        this.$scope.navigator.items = this.$scope.navigator.items.concat(items);
+        for (i = 0; i < items.length; i += 1) {
+            if (i < maxItems) {
+                items[i].itemClass = this.config.nodeMenuClass;
+                this.$scope.navigator.items.push(items[i]);
+            } else if (i === maxItems) {
+                maxItemsItem = {
+                    id: '...',
+                    label: '...',
+                    menu: [{ items: []}]
+                };
+
+                this.$scope.navigator.items.push(maxItemsItem);
+
+                //items[i].iconClass = 'glyphicon glyphicon-circle-arrow-up';
+                maxItemsItem.menu[0].items.push(items[i]);
+            } else if (i === items.length - 1) {
+                items[i].isSelected = true;
+                //items[i].iconClass = 'glyphicon glyphicon-ok-sign';
+                maxItemsItem.menu[0].items.push(items[i]);
+            } else {
+                //items[i].iconClass = 'glyphicon glyphicon-circle-arrow-up';
+                maxItemsItem.menu[0].items.push(items[i]);
+            }
+        }
 
         this.update();
     };
