@@ -20,7 +20,8 @@ define([
     'common/storage/util',
     'js/Utils/Exporters',
     'q',
-    'js/Utils/ComponentSettings'
+    'js/Utils/ComponentSettings',
+    'css!./styles/ProjectNavigatorController.css'
 ], function (Logger,
              CONSTANTS,
              ng,
@@ -256,6 +257,14 @@ define([
             self.selectBranch({projectId: self.gmeClient.getActiveProjectId(), branchId: branchId});
         });
 
+        self.gmeClient.addEventListener(CONSTANTS.CLIENT.NEW_COMMIT_STATE, function (/*client, data*/) {
+            self.updateNodeBreadcrumbs(WebGMEGlobal.State.getActiveObject());
+        });
+
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (_s, nodeId) {
+            self.updateNodeBreadcrumbs(nodeId);
+        });
+
         angular.element(self.$window).on('keydown', function (e) {
 
             if ((e.metaKey || e.ctrlKey)) {
@@ -286,13 +295,14 @@ define([
 
                 if (self.$scope.navigator &&
                     self.$scope.navigator.items &&
-                    self.$scope.navigator.items[self.navIdBranch]) {
+                    self.$scope.navigator.items[self.navIdBranch] &&
+                    self.$scope.navigator.items[self.navIdBranch].id.indexOf('#') !== 0) {
+
                     if (parameters) {
                         self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = false;
                     } else {
                         self.$scope.navigator.items[self.navIdBranch].undoLastCommitItem.disabled = true;
                     }
-
                 }
 
             });
@@ -303,15 +313,15 @@ define([
 
                 if (self.$scope.navigator &&
                     self.$scope.navigator.items &&
-                    self.$scope.navigator.items[self.navIdBranch]) {
+                    self.$scope.navigator.items[self.navIdBranch] &&
+                    self.$scope.navigator.items[self.navIdBranch].id.indexOf('#') !== 0) {
+
                     if (parameters) {
                         self.$scope.navigator.items[self.navIdBranch].redoLastUndoItem.disabled = false;
                     } else {
                         self.$scope.navigator.items[self.navIdBranch].redoLastUndoItem.disabled = true;
                     }
-
                 }
-
             });
         });
     };
@@ -932,7 +942,7 @@ define([
             currentProject.isSelected = false;
         }
 
-        if (currentBranch) {
+        if (currentBranch && currentBranch.id.indexOf('#') !== 0) {
             currentBranch.isSelected = false;
             currentBranch.deleteBranchItem.disabled = false;
             currentBranch.mergeBranchItem.disabled = false;
@@ -964,7 +974,7 @@ define([
                     currentProject.isSelected = true;
                 }
 
-                if (currentBranch) {
+                if (currentBranch && currentBranch.id.indexOf('#') !== 0) {
                     currentBranch.isSelected = true;
                     currentBranch.deleteBranchItem.disabled = true;
                     currentBranch.mergeBranchItem.disabled = true;
@@ -1007,7 +1017,7 @@ define([
                 // we will get a project open event
                 return;
             }
-
+            var commitHash = self.gmeClient.getActiveCommitHash();
             if (branchId || branchId === '') {
 
                 if (self.projects[projectId].branches.hasOwnProperty(branchId) === false) {
@@ -1044,6 +1054,35 @@ define([
                     return;
                 }
 
+            } else if (commitHash) {
+                // add commit element
+                self.$scope.navigator.items[self.navIdBranch] = {
+                    id: commitHash,
+                    label: commitHash.substring(0, 7),
+                    itemClass: self.config.branchMenuClass,
+                    menu: [
+                        {
+                            items: [
+                                {
+                                    id: 'exportCommit',
+                                    label: 'Export commit',
+                                    iconClass: 'glyphicon glyphicon-export',
+                                    action: function () {
+                                        exporters.exportProject(self.gmeClient, self.logger, {
+                                            projectId: data.projectId,
+                                            commitHash: data.commitHash
+                                        }, true);
+                                    },
+                                    actionData: {
+                                        projectId: projectId,
+                                        commitHash: commitHash
+                                    }
+                                }
+                            ]                        }
+
+                    ]
+                };
+
             } else {
                 // remove branch element
                 self.$scope.navigator.items.splice(self.navIdBranch, 1);
@@ -1070,6 +1109,103 @@ define([
         } else {
             this.logger.warn('project or branch is not in the list yet: ', projectId, branchId, branchInfo);
         }
+    };
+
+    ProjectNavigatorController.prototype.updateNodeBreadcrumbs = function (nodeId) {
+        var self = this,
+            items = [],
+            maxItems = 0,
+            rootNode,
+            maxItemsItem,
+            i,
+            node;
+
+        function setRootNode() {
+            var projectId = self.gmeClient.getActiveProjectId(),
+                projectKind = self.gmeClient.getActiveProjectKind();
+
+            if (projectId && self.config.byProjectId.rootNode.hasOwnProperty(projectId)) {
+                rootNode = self.config.byProjectId.rootNode[projectId];
+            } else if (projectKind && self.config.byProjectKind.rootNode.hasOwnProperty(projectKind)) {
+                rootNode = self.config.byProjectKind.rootNode[projectKind];
+            } else {
+                rootNode = self.config.rootNode;
+            }
+        }
+
+        if (typeof nodeId !== 'string' || !this.gmeClient.getNode(nodeId)) {
+            this.$scope.navigator.items.length = this.navIdBranch + 1;
+            return;
+        }
+
+        function onHeaderClick(data) {
+            WebGMEGlobal.State.registerActiveObject(data.id);
+        }
+
+        setRootNode();
+
+        // Trim previous items.
+        this.$scope.navigator.items.length = this.navIdBranch + 1;
+        node = this.gmeClient.getNode(nodeId);
+        while (node) {
+            nodeId = node.getId();
+
+            items.unshift({
+                id: nodeId,
+                label: node.getAttribute('name'),
+                action: onHeaderClick,
+                actionData: {
+                    id: nodeId
+                },
+                itemClass: this.config.nodeItemClass,
+                // menu: [
+                //     {
+                //         items: [
+                //             {
+                //                 id: 'something',
+                //                 label: 'Do something ...',
+                //                 iconClass: 'glyphicon glyphicon-plus',
+                //                 action: function () {},
+                //                 actionData: {
+                //                 }
+                //             }
+                //         ]
+                //     }
+                // ]
+            });
+
+            if (nodeId === rootNode) {
+                break;
+            }
+
+            node = this.gmeClient.getNode(node.getParentId());
+        }
+
+        for (i = 0; i < items.length; i += 1) {
+            if (i < maxItems) {
+                this.$scope.navigator.items.push(items[i]);
+            } else if (i === maxItems) {
+                maxItemsItem = {
+                    id: '...',
+                    label: '...',
+                    menu: [{ items: []}]
+                };
+
+                this.$scope.navigator.items.push(maxItemsItem);
+
+                //items[i].iconClass = 'glyphicon glyphicon-circle-arrow-up';
+                maxItemsItem.menu[0].items.push(items[i]);
+            } else if (i === items.length - 1) {
+                items[i].isSelected = true;
+                //items[i].iconClass = 'glyphicon glyphicon-ok-sign';
+                maxItemsItem.menu[0].items.push(items[i]);
+            } else {
+                //items[i].iconClass = 'glyphicon glyphicon-circle-arrow-up';
+                maxItemsItem.menu[0].items.push(items[i]);
+            }
+        }
+
+        this.update();
     };
 
     ProjectNavigatorController.prototype.mapToArray = function (hashMap, orderBy) {
@@ -1175,7 +1311,15 @@ define([
             rootMenuClass: 'gme-root',
             rootDisplayName: 'GME',
             projectMenuClass: '',
-            branchMenuClass: ''
+            branchMenuClass: '',
+            nodeItemClass: '',
+            rootNode: '',
+            byProjectKind: {
+                rootNode: {}
+            },
+            byProjectId: {
+                rootNode: {}
+            },
         };
     };
 

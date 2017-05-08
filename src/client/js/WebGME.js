@@ -58,10 +58,6 @@ define([
                 },
                 nodeAtOpen: '',
                 layout: 'DefaultLayout',
-                byProjectName: {
-                    nodeAtOpen: {},
-                    layout: {}
-                },
                 byProjectId: {
                     nodeAtOpen: {},
                     layout: {}
@@ -156,8 +152,7 @@ define([
                 });
 
                 client.addEventListener(client.CONSTANTS.PROJECT_OPENED, function (_client, projectId) {
-                    var projectName,
-                        projectKind,
+                    var projectKind,
                         layout,
                         nodePath;
 
@@ -171,13 +166,10 @@ define([
                     WebGMEGlobal.State.registerActiveProjectName(projectId);
 
                     if (initialProject === false) {
-                        projectName = client.getActiveProjectName();
                         projectKind = client.getActiveProjectKind();
 
                         if (config.byProjectId.nodeAtOpen.hasOwnProperty(projectId)) {
                             nodePath = config.byProjectId.nodeAtOpen[projectId];
-                        } else if (config.byProjectName.nodeAtOpen.hasOwnProperty(projectName)) {
-                            nodePath = config.byProjectName.nodeAtOpen[projectName];
                         } else if (projectKind && config.byProjectKind.nodeAtOpen.hasOwnProperty([projectKind])) {
                             nodePath = config.byProjectKind.nodeAtOpen[projectKind];
                         } else {
@@ -186,8 +178,6 @@ define([
 
                         if (config.byProjectId.layout.hasOwnProperty(projectId)) {
                             layout = config.byProjectId.layout[projectId];
-                        } else if (config.byProjectName.layout.hasOwnProperty(projectName)) {
-                            layout = config.byProjectName.layout[projectName];
                         } else if (projectKind && config.byProjectKind.layout.hasOwnProperty([projectKind])) {
                             layout = config.byProjectKind.layout[projectKind];
                         } else {

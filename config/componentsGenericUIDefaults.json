@@ -4,7 +4,15 @@
     "rootMenuClass": "gme-root",
     "rootDisplayName": "GME",
     "projectMenuClass": "",
-    "branchMenuClass": ""
+    "branchMenuClass": "",
+    "nodeItemClass": "",
+    "rootNode": "",
+    "byProjectKind": {
+      "rootNode": {}
+    },
+    "byProjectId": {
+      "rootNode": {}
+    }
   },
   "GenericUIWebGMEStart": {
     "pageTitle": "WebGME",
@@ -17,10 +25,6 @@
     "nodeAtOpen": "",
     "layout": "DefaultLayout",
     "byProjectKind": {
-      "nodeAtOpen": {},
-      "layout": {}
-    },
-    "byProjectName": {
       "nodeAtOpen": {},
       "layout": {}
     },
@@ -43,9 +47,6 @@
     "byProjectKind": {
       "treeRoot": {}
     },
-    "byProjectName": {
-      "treeRoot": {}
-    },
     "byProjectId": {
       "treeRoot": {}
     }
@@ -53,9 +54,6 @@
   "GenericUIModelEditorControl": {
     "topNode": "",
     "byProjectKind": {
-      "topNode": {}
-    },
-    "byProjectName": {
       "topNode": {}
     },
     "byProjectId": {

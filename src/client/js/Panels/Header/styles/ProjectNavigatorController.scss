@@ -1,0 +1,18 @@
+.project-navigator-controller {
+  .project-navigator {
+
+    ul.dropdown-navigator {
+      .hierarchical-menu {
+        .menu-contents {
+          li {
+            a {
+              max-width: 250px;
+              overflow-x: hidden;
+              text-overflow: ellipsis;
+            }
+          }
+        }
+      }
+    }
+  }
+}

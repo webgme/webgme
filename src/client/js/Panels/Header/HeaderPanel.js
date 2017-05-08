@@ -1,4 +1,4 @@
-/*globals define, WebGMEGlobal, angular, _, console, $*/
+/*globals define, WebGMEGlobal, angular, _, $*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -101,8 +101,9 @@ define([
 
         //project title
         projectTitleEl = $(
-            '<div style="display: inline;" data-ng-controller="ProjectNavigatorController">' +
-            '<dropdown-navigator style="display: inline-block;" navigator="navigator"></dropdown-navigator></div>',
+            '<div style="display: inline;" data-ng-controller="ProjectNavigatorController" class="project-navigator-controller">' +
+            '<dropdown-navigator style="display: inline-block;" navigator="navigator" class="project-navigator">' +
+            '</dropdown-navigator></div>',
             {class: 'inline'}
         );
         //new ProjectTitleWidget(projectTitleEl, this._client);
