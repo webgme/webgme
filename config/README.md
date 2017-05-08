@@ -41,8 +41,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.addOn.enable = false`
  - If true enables add-ons.
 - `config.addOn.workerUrl = null`
- - If given the webgme server will not spawn a child process for running add-ons and instead post the events to the url.
- Use (../src/bin/addon_handler.js)[addon_handler.js] for a machine handling such requests.
+ - If given the webgme server will not spawn a child process for running add-ons and instead post the related events to the url. Use [addon_handler.js](../src/bin/addon_handler.js) for a machine handling such requests.
 - `config.addOn.monitorTimeout = 120000`
  - In milliseconds, the waiting time before add-ons are stopped after no activity (new clients joined or hash updates) in the branch.
 - `config.addOn.basePaths = ['./src/addon/core']`
