@@ -66,11 +66,13 @@ define([
             LINE_ARROWS: {
                 NONE: 'none',
                 DIAMOND: 'diamond',
+                OPEN_DIAMOND: 'opendiamond',
                 BLOCK: 'block',
                 CLASSIC: 'classic',
                 OPEN: 'open',
                 OVAL: 'oval',
                 DIAMOND2: 'diamond2',
+                OPEN_DIAMOND2: 'opendiamond2',
                 INHERITANCE: 'inheritance'
             },
             LINE_SHOW_CONNECTION_AREAS: 'LINE_SHOW_CONNECTION_AREAS'

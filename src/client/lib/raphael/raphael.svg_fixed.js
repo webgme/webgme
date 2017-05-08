@@ -28,9 +28,11 @@ window.Raphael && window.Raphael.svg && function(R) {
             block: [{'path': "M5,0 0,2.5 5,5z" }],
             classic: [{'path': "M5,0 0,2.5 5,5 3.5,3 3.5,2z" }],
             diamond: [{'path': "M2.5,0 5,2.5 2.5,5 0,2.5z" }],
+            opendiamond: [{'path': "M2.5,0.2 4.8,2.5 2.5,4.8 0.2,2.5z" }],
             open: [{'path': "M4.5,0.5 0.5,2.5 3.5,2.5 0.5,2.5 4.5,4.5" }],
             oval: [{'path': "M2.5,0A2.5,2.5,0,0,1,2.5,5 2.5,2.5,0,0,1,2.5,0z" }],
             diamond2: [{'path': "M2.5,1 5,2.5 2.5,4 0,2.5z" }],
+            opendiamond2: [{'path': "M2.5,1 5,2.5 2.5,4 0,2.5z" }],
             inheritance:[{'path': "M5,0 0,2.5 5,5z"  },
                 {'path': "M4.7,0.4 0.5,2.5 4.7,4.6 z",
                     'attr': {'fill':"#FFFFFF"}}]
@@ -170,9 +172,11 @@ window.Raphael && window.Raphael.svg && function(R) {
                     case "classic":
                     case "oval":
                     case "diamond":
+                    case "opendiamond":
                     case "open":
                     case "none":
                     case "diamond2":
+                    case "opendiamond2":
                     case "inheritance":
                         type = values[i];
                         break;
@@ -195,6 +199,12 @@ window.Raphael && window.Raphael.svg && function(R) {
                 refX = dx = w / 2;
                 attr = {
                     fill: "none",
+                    stroke: attrs.stroke
+                };
+            } else if (type == "opendiamond" || type == "opendiamond2") {
+                refX = dx = w / 2;
+                attr = {
+                    fill: "#ffffff",
                     stroke: attrs.stroke
                 };
             } else {
