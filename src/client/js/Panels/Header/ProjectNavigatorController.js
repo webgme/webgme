@@ -1112,11 +1112,26 @@ define([
     };
 
     ProjectNavigatorController.prototype.updateNodeBreadcrumbs = function (nodeId) {
-        var items = [],
+        var self = this,
+            items = [],
             maxItems = 0,
+            rootNode,
             maxItemsItem,
             i,
             node;
+
+        function setRootNode() {
+            var projectId = self.gmeClient.getActiveProjectId(),
+                projectKind = self.gmeClient.getActiveProjectKind();
+
+            if (projectId && self.config.byProjectId.rootNode.hasOwnProperty(projectId)) {
+                rootNode = self.config.byProjectId.rootNode[projectId];
+            } else if (projectKind && self.config.byProjectKind.rootNode.hasOwnProperty(projectKind)) {
+                rootNode = self.config.byProjectKind.rootNode[projectKind];
+            } else {
+                rootNode = self.config.rootNode;
+            }
+        }
 
         if (typeof nodeId !== 'string' || !this.gmeClient.getNode(nodeId)) {
             this.$scope.navigator.items.length = this.navIdBranch + 1;
@@ -1127,18 +1142,22 @@ define([
             WebGMEGlobal.State.registerActiveObject(data.id);
         }
 
+        setRootNode();
+
         // Trim previous items.
         this.$scope.navigator.items.length = this.navIdBranch + 1;
         node = this.gmeClient.getNode(nodeId);
         while (node) {
+            nodeId = node.getId();
+
             items.unshift({
-                id: node.getId(),
+                id: nodeId,
                 label: node.getAttribute('name'),
                 action: onHeaderClick,
                 actionData: {
-                    id: node.getId()
+                    id: nodeId
                 },
-                itemClass: this.config.nodeItemClass
+                itemClass: this.config.nodeItemClass,
                 // menu: [
                 //     {
                 //         items: [
@@ -1154,6 +1173,10 @@ define([
                 //     }
                 // ]
             });
+
+            if (nodeId === rootNode) {
+                break;
+            }
 
             node = this.gmeClient.getNode(node.getParentId());
         }
@@ -1289,7 +1312,14 @@ define([
             rootDisplayName: 'GME',
             projectMenuClass: '',
             branchMenuClass: '',
-            nodeItemClass: ''
+            nodeItemClass: '',
+            rootNode: '',
+            byProjectKind: {
+                rootNode: {}
+            },
+            byProjectId: {
+                rootNode: {}
+            },
         };
     };
 

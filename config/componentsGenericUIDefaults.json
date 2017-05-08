@@ -4,7 +4,15 @@
     "rootMenuClass": "gme-root",
     "rootDisplayName": "GME",
     "projectMenuClass": "",
-    "branchMenuClass": ""
+    "branchMenuClass": "",
+    "nodeItemClass": "",
+    "rootNode": "",
+    "byProjectKind": {
+      "rootNode": {}
+    },
+    "byProjectId": {
+      "rootNode": {}
+    }
   },
   "GenericUIWebGMEStart": {
     "pageTitle": "WebGME",
@@ -53,9 +61,6 @@
   "GenericUIModelEditorControl": {
     "topNode": "",
     "byProjectKind": {
-      "topNode": {}
-    },
-    "byProjectName": {
       "topNode": {}
     },
     "byProjectId": {

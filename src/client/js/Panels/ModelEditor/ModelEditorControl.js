@@ -1033,16 +1033,12 @@ define(['js/logger',
 
     ModelEditorControl.prototype._updateTopNode = function () {
         var projectId = this._client.getActiveProjectId(),
-            projectName,
             projectKind;
 
         if (projectId) {
-            projectName = this._client.getActiveProjectName();
             projectKind = this._client.getActiveProjectKind();
             if (this._config.byProjectId.topNode.hasOwnProperty(projectId)) {
                 this._topNode = this._config.byProjectId.topNode[projectId];
-            } else if (this._config.byProjectName.topNode.hasOwnProperty(projectName)) {
-                this._topNode = this._config.byProjectName.topNode[projectName];
             } else if (projectKind && this._config.byProjectKind.topNode.hasOwnProperty(projectKind)) {
                 this._topNode = this._config.byProjectKind.topNode[projectKind];
             } else {
@@ -1230,9 +1226,6 @@ define(['js/logger',
         return {
             topNode: '',
             byProjectKind: {
-                topNode: {}
-            },
-            byProjectName: {
                 topNode: {}
             },
             byProjectId: {
