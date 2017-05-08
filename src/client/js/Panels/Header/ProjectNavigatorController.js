@@ -1065,7 +1065,7 @@ define([
                             items: [
                                 {
                                     id: 'exportCommit',
-                                    label: 'Export project',
+                                    label: 'Export commit',
                                     iconClass: 'glyphicon glyphicon-export',
                                     action: function () {
                                         exporters.exportProject(self.gmeClient, self.logger, {
