@@ -1,5 +1,47 @@
 # Change Log
 
+## [v2.13.0](https://github.com/webgme/webgme/tree/v2.13.0) (2017-05-08)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.12.1...v2.13.0)
+
+**Implemented enhancements:**
+
+- Notifications panel doesn't have a maximum width, so it can display outside the bounds of the window and can't be deleted. [\#1375](https://github.com/webgme/webgme/issues/1375)
+- Small feature request: Add un-filled composition arrow head [\#1368](https://github.com/webgme/webgme/issues/1368)
+- core.loadRoot should check the provided hash and returned data object. [\#1306](https://github.com/webgme/webgme/issues/1306)
+- Crosscut inheritance is not working as it should [\#1266](https://github.com/webgme/webgme/issues/1266)
+- Customizable favicon and title [\#1143](https://github.com/webgme/webgme/issues/1143)
+- When deleting connectors from a crosscut the object is deleted \(not just removed\) [\#896](https://github.com/webgme/webgme/issues/896)
+- Closes \#1368 Add unfilled diamond arrow heads. [\#1396](https://github.com/webgme/webgme/pull/1396) ([pmeijer](https://github.com/pmeijer))
+- Show breadcrumbs \(node names\) menu after branch in project-navigator [\#1395](https://github.com/webgme/webgme/pull/1395) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1306 core.loadRoot should check the provided hash and returned data object. [\#1391](https://github.com/webgme/webgme/pull/1391) ([kecso](https://github.com/kecso))
+- Update to new webgme-icon and allow custom favicon and title. [\#1390](https://github.com/webgme/webgme/pull/1390) ([pmeijer](https://github.com/pmeijer))
+- Make sure panels do not leak any memory [\#1389](https://github.com/webgme/webgme/pull/1389) ([pmeijer](https://github.com/pmeijer))
+- Increase size of connectors at hover [\#1388](https://github.com/webgme/webgme/pull/1388) ([pmeijer](https://github.com/pmeijer))
+- Generated tests should use try-catch in callbacks to avoid timeouts. [\#1387](https://github.com/webgme/webgme/pull/1387) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1375 Add max width of 80vw for notifications drop down. [\#1386](https://github.com/webgme/webgme/pull/1386) ([pmeijer](https://github.com/pmeijer))
+- Allow external add-on handling across multiple servers [\#1385](https://github.com/webgme/webgme/pull/1385) ([pmeijer](https://github.com/pmeijer))
+- Support user defined offsets for labels on connections in diagram-designer. [\#1383](https://github.com/webgme/webgme/pull/1383) ([pmeijer](https://github.com/pmeijer))
+- Resolves \#1381 Expose project export on REST API [\#1382](https://github.com/webgme/webgme/pull/1382) ([kecso](https://github.com/kecso))
+- Crosscut fixes [\#1378](https://github.com/webgme/webgme/pull/1378) ([kecso](https://github.com/kecso))
+- Fix jsdoc generation in postinstall  [\#1377](https://github.com/webgme/webgme/pull/1377) ([pmeijer](https://github.com/pmeijer))
+- Index appcache manifest and try to avoid browser from caching index.html [\#1373](https://github.com/webgme/webgme/pull/1373) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Save settings in plugin config throws an error [\#1379](https://github.com/webgme/webgme/issues/1379)
+- Fixes prior to v2.13.0 release [\#1398](https://github.com/webgme/webgme/pull/1398) ([pmeijer](https://github.com/pmeijer))
+- For basic routing fix bug in connection-point selection and improve selection for loops [\#1394](https://github.com/webgme/webgme/pull/1394) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1379 exception in plugin dialog when saving settings [\#1380](https://github.com/webgme/webgme/pull/1380) ([pmeijer](https://github.com/pmeijer))
+- Crosscut fixes [\#1378](https://github.com/webgme/webgme/pull/1378) ([kecso](https://github.com/kecso))
+
+**Closed issues:**
+
+- Expose project export on REST API [\#1381](https://github.com/webgme/webgme/issues/1381)
+
+**Merged pull requests:**
+
+- Add bin script for webhooks [\#1376](https://github.com/webgme/webgme/pull/1376) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.12.1](https://github.com/webgme/webgme/tree/v2.12.1) (2017-04-11)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.12.0...v2.12.1)
 
@@ -15,6 +57,7 @@
 
 - Allow the user to choose whether to split vertically or horizontally when using the "split view" [\#1361](https://github.com/webgme/webgme/issues/1361)
 - Have the "go to parent" button be more conveniently placed [\#1360](https://github.com/webgme/webgme/issues/1360)
+- Decorator background colors not printed in css. [\#1053](https://github.com/webgme/webgme/issues/1053)
 - SVG Decorator items do not align correctly [\#862](https://github.com/webgme/webgme/issues/862)
 - The selected object did not get brought to the front [\#745](https://github.com/webgme/webgme/issues/745)
 - Minor UI fixes before merge [\#1369](https://github.com/webgme/webgme/pull/1369) ([pmeijer](https://github.com/pmeijer))
@@ -81,6 +124,7 @@
 
 - Uncaught exception in meta rules validation. [\#1337](https://github.com/webgme/webgme/issues/1337)
 - Deletion of the last Cross Cut tab leaves the members on the canvas. [\#1331](https://github.com/webgme/webgme/issues/1331)
+- AR crashes if a connection has a connection [\#687](https://github.com/webgme/webgme/issues/687)
 - Enable connections to be drawn from connections when selected. [\#1340](https://github.com/webgme/webgme/pull/1340) ([pmeijer](https://github.com/pmeijer))
 - Closes \#1337 Core traverse should not invoke visit on null nodes. [\#1339](https://github.com/webgme/webgme/pull/1339) ([pmeijer](https://github.com/pmeijer))
 - Remove global state in core diff for async method and add tests cases. [\#1338](https://github.com/webgme/webgme/pull/1338) ([pmeijer](https://github.com/pmeijer))
