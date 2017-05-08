@@ -1067,7 +1067,7 @@ define([
                                     id: 'exportCommit',
                                     label: 'Export commit',
                                     iconClass: 'glyphicon glyphicon-export',
-                                    action: function () {
+                                    action: function (data) {
                                         exporters.exportProject(self.gmeClient, self.logger, {
                                             projectId: data.projectId,
                                             commitHash: data.commitHash
@@ -1078,7 +1078,8 @@ define([
                                         commitHash: commitHash
                                     }
                                 }
-                            ]                        }
+                            ]
+                        }
 
                     ]
                 };
@@ -1188,7 +1189,7 @@ define([
                 maxItemsItem = {
                     id: '...',
                     label: '...',
-                    menu: [{ items: []}]
+                    menu: [{items: []}]
                 };
 
                 this.$scope.navigator.items.push(maxItemsItem);
