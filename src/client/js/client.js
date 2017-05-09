@@ -1178,6 +1178,12 @@ define([
         };
 
         this.selectCommit = function (commitHash, callback) {
+            self.selectCommitFilteredEvents(commitHash, null, callback);
+        };
+
+        this.selectCommitFilteredEvents = function (commitHash, changedNodes, callback) {
+            var prevBranchName;
+
             logger.debug('selectCommit', commitHash);
             if (self.isConnected() === false) {
                 callback(new Error('There is no open database connection!'));
@@ -1187,7 +1193,6 @@ define([
                 callback(new Error('selectCommit invoked without open project'));
                 return;
             }
-            var prevBranchName;
 
             function openCommit(err) {
                 if (err) {
@@ -1202,7 +1207,7 @@ define([
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
                         self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
-                        loading(commitObj.root, commitHash, null, function (err, aborted) {
+                        loading(commitObj.root, commitHash, changedNodes, function (err, aborted) {
                             if (err) {
                                 logger.error('loading returned error', commitObj.root, err);
                                 logState('error', 'selectCommit loading');
