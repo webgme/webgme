@@ -1178,10 +1178,10 @@ define([
         };
 
         this.selectCommit = function (commitHash, callback) {
-            self.selectCommitFilteredEvents(commitHash, null, callback);
+            self._selectCommitFilteredEvents(commitHash, null, callback);
         };
 
-        this.selectCommitFilteredEvents = function (commitHash, changedNodes, callback) {
+        this._selectCommitFilteredEvents = function (commitHash, changedNodes, callback) {
             var prevBranchName;
 
             logger.debug('selectCommit', commitHash);
