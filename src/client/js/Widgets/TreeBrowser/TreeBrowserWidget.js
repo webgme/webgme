@@ -97,7 +97,7 @@ define(['js/logger',
             autoScroll: true,
             escapeTitles: true,
             //focusOnSelect: true,
-            imagePath: '/',
+            imagePath: '',
             debugLevel: 0,
             quicksearch: true,
             lazyLoad: function (event, data) {

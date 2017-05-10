@@ -5,7 +5,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS) {
+define(['js/RegistryKeys', 'js/Constants', 'js/Utils/svg'], function (REGISTRY_KEYS, CONSTANTS, svgUtil) {
     'use strict';
 
     function ObjectBrowserControlBase(client, treeBrowser, logger) {
@@ -115,6 +115,10 @@ define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS)
             }
         }
 
+        if (node.getAttribute('name') === 'FCO') {
+            console.log(svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON));
+            return svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
+        }
         return iconName ? '/assets/DecoratorSVG/' + iconName : null;
     };
 
