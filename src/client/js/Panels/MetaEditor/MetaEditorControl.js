@@ -313,11 +313,11 @@ define(['js/logger',
         metaInconsistencies = this._config.autoCheckMetaConsistency ? this._client.checkMetaConsistency() : [];
 
         for (i = 0; i < metaInconsistencies.length; i += 1) {
-            this._client.dispatchEvent(this._client.CONSTANTS.NOTIFICATION, metaInconsistencies[i]);
+            this._client.notifyUser(metaInconsistencies[i]);
         }
 
         if (metaInconsistencies.length > 0) {
-            this._client.dispatchEvent(this._client.CONSTANTS.NOTIFICATION, {
+            this._client.notifyUser({
                 severity: 'error',
                 message: 'Click the check-mark furthest to the right in the MetaEditor\'s header toolbar for more details.'
             });
@@ -533,8 +533,8 @@ define(['js/logger',
 
             //INHERITANCE
             if (this._nodeMetaInheritance[gmeID] && !_.isEmpty(this._nodeMetaInheritance[gmeID])) {
-                this._removeConnection(this._nodeMetaInheritance[gmeID],
-                    gmeID,
+                this._removeConnection(gmeID,
+                    this._nodeMetaInheritance[gmeID],
                     MetaRelations.META_RELATIONS.INHERITANCE);
             }
 
@@ -569,14 +569,16 @@ define(['js/logger',
             len = aConns.src.length;
             while (len--) {
                 connectionID = aConns.src[len];
-                //save the connection to the waiting list, since the destination is still there
-                this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId,
-                    this._connectionListByID[connectionID].GMEDstId,
-                    this._connectionListByID[connectionID].type,
-                    this._connectionListByID[connectionID].connTexts);
-                this._removeConnection(this._connectionListByID[connectionID].GMESrcId,
-                    this._connectionListByID[connectionID].GMEDstId,
-                    this._connectionListByID[connectionID].type);
+                if (this._connectionListByID[connectionID]) {
+                    //save the connection to the waiting list, since the destination is still there
+                    this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId,
+                        this._connectionListByID[connectionID].GMEDstId,
+                        this._connectionListByID[connectionID].type,
+                        this._connectionListByID[connectionID].connTexts);
+                    this._removeConnection(this._connectionListByID[connectionID].GMESrcId,
+                        this._connectionListByID[connectionID].GMEDstId,
+                        this._connectionListByID[connectionID].type);
+                }
             }
 
             len = aConns.dst.length;
@@ -1404,8 +1406,7 @@ define(['js/logger',
 
     MetaEditorControl.prototype._createMixinRelationship = function (objectId, newMixinId) {
         var newBaseNode = this._client.getNode(newMixinId),
-            objectNode = this._client.getNode(objectId),
-            objectBase;
+            objectNode = this._client.getNode(objectId);
 
         if (newBaseNode && objectNode) {
             this._client.addMixin(objectId, newMixinId);
@@ -1417,13 +1418,12 @@ define(['js/logger',
 
     MetaEditorControl.prototype._deleteMixinRelationship = function (objectId, mixinToRemoveId) {
         var newBaseNode = this._client.getNode(mixinToRemoveId),
-            objectNode = this._client.getNode(objectId),
-            objectBase;
+            objectNode = this._client.getNode(objectId);
 
         if (newBaseNode && objectNode) {
             this._client.delMixin(objectId, mixinToRemoveId);
         } else {
-            this.logger.error('cannot remove [' + newMixinId + '] mixin from [' + objectId +
+            this.logger.error('cannot remove [' + mixinToRemoveId + '] mixin from [' + objectId +
                 '] because not all node are loaded');
         }
     };
@@ -1842,7 +1842,7 @@ define(['js/logger',
                 var results = self._client.checkMetaConsistency();
                 self.diagramDesigner.showMetaConsistencyResults(results);
                 if (results.length === 0) {
-                    self._client.dispatchEvent(self._client.CONSTANTS.NOTIFICATION, {
+                    self._client.notifyUser({
                         severity: 'success',
                         message: 'No inconsistencies found in meta-model.'
                     });
