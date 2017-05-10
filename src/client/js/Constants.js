@@ -91,7 +91,6 @@ define([
         STATE_ACTIVE_PROJECT_NAME: 'activeProjectName',
         STATE_ACTIVE_COMMIT: 'activeCommit',
         STATE_ACTIVE_BRANCH_NAME: 'activeBranchName',
-        STATE_ACTIVE_CROSSCUT: 'activeCrosscut',
         STATE_ACTIVE_TAB: 'activeTab',
 
         STATE_LAYOUT: 'layout',
