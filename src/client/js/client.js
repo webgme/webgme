@@ -1119,7 +1119,7 @@ define([
         }
 
         /**
-         *
+         * Opens the given branch and closes any open branch (even though the same branch is opened)
          * @param {string} branchName - name of branch to open.
          * @param {function} [branchStatusHandler=getDefaultCommitHandler()] - Handles returned statuses after commits.
          * @param callback
@@ -1141,14 +1141,7 @@ define([
                     ' addBranchStatusHandler on the branch object instead (getProjectObject().branches[branchName]).');
             }
 
-            function openBranch(err) {
-                if (err) {
-                    logger.error('Problems closing existing branch', err);
-                    callback(err);
-                    return;
-                }
-
-                state.branchName = branchName;
+            function openBranch() {
                 logger.debug('openBranch, calling storage openBranch', state.project.projectId, branchName);
                 storage.openBranch(state.project.projectId, branchName,
                     getHashUpdateHandler(), getBranchStatusHandler(),
@@ -1162,6 +1155,7 @@ define([
 
                         state.viewer = false;
                         state.branchName = branchName;
+                        self.dispatchEvent(CONSTANTS.BRANCH_OPENED, branchName);
                         self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
                         logState('info', 'openBranch');
                         callback(null);
@@ -1171,9 +1165,18 @@ define([
 
             if (prevBranchName !== null) {
                 logger.debug('Branch was open, closing it first', prevBranchName);
-                storage.closeBranch(state.project.projectId, prevBranchName, openBranch);
+                storage.closeBranch(state.project.projectId, prevBranchName, function (err) {
+                    if (err) {
+                        logger.error('Problems closing existing branch', err);
+                        callback(err);
+                        return;
+                    }
+
+                    state.branchName = null;
+                    self.dispatchEvent(CONSTANTS.BRANCH_CLOSED, prevBranchName);
+                });
             } else {
-                openBranch(null);
+                openBranch();
             }
         };
 
@@ -1194,13 +1197,7 @@ define([
                 return;
             }
 
-            function openCommit(err) {
-                if (err) {
-                    logger.error('Problems closing existing branch', err);
-                    callback(err);
-                    return;
-                }
-
+            function openCommit() {
                 state.viewer = true;
 
                 state.project.loadObject(commitHash, function (err, commitObj) {
@@ -1233,10 +1230,19 @@ define([
             if (state.branchName !== null) {
                 logger.debug('Branch was open, closing it first', state.branchName);
                 prevBranchName = state.branchName;
-                state.branchName = null;
-                storage.closeBranch(state.project.projectId, prevBranchName, openCommit);
+
+                storage.closeBranch(state.project.projectId, prevBranchName, function (err) {
+                    if (err) {
+                        logger.error('Problems closing existing branch', err);
+                        callback(err);
+                        return;
+                    }
+
+                    state.branchName = null;
+                    self.dispatchEvent(CONSTANTS.BRANCH_CLOSED, prevBranchName);
+                });
             } else {
-                openCommit(null);
+                openCommit();
             }
         };
 
