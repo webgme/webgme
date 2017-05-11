@@ -1174,6 +1174,7 @@ define([
 
                     state.branchName = null;
                     self.dispatchEvent(CONSTANTS.BRANCH_CLOSED, prevBranchName);
+                    openBranch();
                 });
             } else {
                 openBranch();
@@ -1240,6 +1241,7 @@ define([
 
                     state.branchName = null;
                     self.dispatchEvent(CONSTANTS.BRANCH_CLOSED, prevBranchName);
+                    openCommit();
                 });
             } else {
                 openCommit();

@@ -115,6 +115,7 @@ describe('branch status', function () {
 
     it('should go from SYNC to AHEAD_SYNC to SYNC when making changes.', function (done) {
         var branchName = 'sync_aheadSync_sync',
+            eventHandler,
             prevStatus;
 
         currentBranchName = branchName;
@@ -123,7 +124,7 @@ describe('branch status', function () {
             client.removeEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
         }
 
-        function eventHandler(__client, eventData) {
+        eventHandler = function eventHandler(__client, eventData) {
             if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
                 expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
                 prevStatus = eventData.status;
@@ -136,18 +137,22 @@ describe('branch status', function () {
                 removeHandler();
                 done(new Error('Unexpected BranchStatus ' + eventData.status));
             }
-        }
+        };
 
         createSelectBranch(branchName, function (err) {
-            expect(err).to.equal(null);
-
-            prevStatus = client.getBranchStatus();
-            expect(prevStatus).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
-
-            client.addEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
-
             var loaded = false,
                 userGuid;
+
+            try {
+                expect(err).to.equal(null);
+
+                prevStatus = client.getBranchStatus();
+                expect(prevStatus).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
+
+                client.addEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
+            } catch (e) {
+                return done(e);
+            }
 
             function nodeEventHandler(events) {
                 if (loaded) {

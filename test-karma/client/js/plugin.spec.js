@@ -167,50 +167,69 @@ describe('Plugin', function () {
                 },
                 pluginConfig: {}
             },
-            prevStatus;
+            prevStatus,
+            eventHandler,
+            removeHandler = function () {
+                client.removeEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
+            };
 
         currentBranchName = 'MinimalWorkingExample1';
 
-        function removeHandler() {
-            client.removeEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
-        }
-
-        function eventHandler(__client, eventData) {
-            if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
-                expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
-                prevStatus = eventData.status;
-            } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
-                expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
+        eventHandler = function (__client, eventData) {
+            try {
+                if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
+                    expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
+                    prevStatus = eventData.status;
+                } else if (prevStatus === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
+                    expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
+                    removeHandler();
+                    currentBranchHash = client.getActiveCommitHash();
+                    //done();
+                } else {
+                    throw new Error('Unexpected BranchStatus ' + eventData.status);
+                }
+            } catch (e) {
                 removeHandler();
-                currentBranchHash = client.getActiveCommitHash();
-                //done();
-            } else {
-                removeHandler();
-                done(new Error('Unexpected BranchStatus ' + eventData.status));
+                done(e);
             }
-        }
+        };
 
         createSelectBranch(currentBranchName, function (err) {
-            expect(err).to.equal(null);
-
-            prevStatus = client.getBranchStatus();
-            expect(prevStatus).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
-            client.addEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
-
-            context.managerConfig.commit = client.getActiveCommitHash();
-            client.runBrowserPlugin(pluginId, context, function (err, pluginResult) {
+            try {
                 expect(err).to.equal(null);
-                expect(pluginResult).not.to.equal(null);
-                expect(pluginResult.success).to.equal(true, 'MinimalWorkingExample did not succeed');
-                expect(pluginResult.commits.length).to.equal(2);
-                expect(pluginResult.commits[0].branchName).to.equal('MinimalWorkingExample1');
-                expect(pluginResult.commits[0].status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
-                expect(pluginResult.commits[1].branchName).to.include('MinimalWorkingExample1');
-                expect(pluginResult.commits[1].status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
-                client.getBranches(projectId, function (err, branches) {
+
+                prevStatus = client.getBranchStatus();
+                expect(prevStatus).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
+                client.addEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
+
+                context.managerConfig.commit = client.getActiveCommitHash();
+            } catch (e) {
+                done(e);
+                return;
+            }
+
+            client.runBrowserPlugin(pluginId, context, function (err, pluginResult) {
+                try {
                     expect(err).to.equal(null);
-                    expect(Object.keys(branches).length).to.equal(2);
-                    done();
+                    expect(pluginResult).not.to.equal(null);
+                    expect(pluginResult.success).to.equal(true, 'MinimalWorkingExample did not succeed');
+                    expect(pluginResult.commits.length).to.equal(2);
+                    expect(pluginResult.commits[0].branchName).to.equal('MinimalWorkingExample1');
+                    expect(pluginResult.commits[0].status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
+                    expect(pluginResult.commits[1].branchName).to.include('MinimalWorkingExample1');
+                    expect(pluginResult.commits[1].status).to.equal(client.CONSTANTS.STORAGE.SYNCED);
+                } catch (e) {
+                    return done(e);
+                }
+
+                client.getBranches(projectId, function (err, branches) {
+                    try {
+                        expect(err).to.equal(null);
+                        expect(Object.keys(branches).length).to.equal(2);
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
                 });
             });
         });
@@ -251,6 +270,7 @@ describe('Plugin', function () {
                     }, 50);
                 }
             }
+
             context.managerConfig.commit = client.getActiveCommitHash();
             userGuid = client.addUI({}, nodeEventHandler);
             client.updateTerritory(userGuid, {'': {children: 0}});

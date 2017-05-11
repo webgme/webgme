@@ -763,17 +763,58 @@ describe('GME client', function () {
 
         it('should select a given commit', function (done) {
             client.selectProject(projectId, null, function (err) {
+                var cnt = 0;
                 expect(err).to.equal(null);
+
+                function branchClosed(_c, branch) {
+                    try {
+                        expect(branch).to.equal('master');
+                        cnt += 1;
+                    } catch (e) {
+                        done(e);
+                    }
+                }
+
+                function branchOpened(_c, branch) {
+                    try {
+                        expect(branch).to.equal('master');
+                        cnt += 1;
+                    } catch (e) {
+                        done(e);
+                    }
+                }
+
+                client.addEventListener(client.CONSTANTS.BRANCH_CLOSED, branchOpened);
+                client.addEventListener(client.CONSTANTS.BRANCH_OPENED, branchClosed);
 
                 client.selectBranch('master', null, function (err) {
                     var commitHash = client.getActiveCommitHash();
-                    expect(err).to.equal(null);
-                    expect(commitHash).to.contain('#');
-                    expect(client.getActiveCommitHash()).to.have.length(41);
-                    client.selectCommit(commitHash, function (err) {
-                        expect(err).to.equal(null);
+                    client.removeEventListener(client.CONSTANTS.BRANCH_CLOSED, branchOpened);
+                    client.removeEventListener(client.CONSTANTS.BRANCH_OPENED, branchClosed);
 
-                        done();
+                    try {
+                        expect(err).to.equal(null);
+                        expect(cnt).to.equal(2);
+                        expect(commitHash).to.contain('#');
+                        expect(client.getActiveCommitHash()).to.have.length(41);
+                    } catch (e) {
+                        return done(e);
+                    }
+
+                    client.addEventListener(client.CONSTANTS.BRANCH_CLOSED, branchOpened);
+                    client.addEventListener(client.CONSTANTS.BRANCH_OPENED, branchClosed);
+                    client.selectCommit(commitHash, function (err) {
+                        client.removeEventListener(client.CONSTANTS.BRANCH_CLOSED, branchOpened);
+                        client.removeEventListener(client.CONSTANTS.BRANCH_OPENED, branchClosed);
+
+                        try {
+                            expect(err).to.equal(null);
+                            expect(cnt).to.equal(3);
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+
                     });
                 });
             });
