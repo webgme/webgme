@@ -107,19 +107,17 @@ define(['js/RegistryKeys', 'js/Constants', 'js/Utils/svg'], function (REGISTRY_K
 
         if (node) {
             if (expanded) {
-                iconName = node.getRegistry(REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) ||
-                    node.getRegistry(REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
+                iconName = svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) ||
+                    svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
             } else {
-                iconName = node.getRegistry(REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON) ||
-                    node.getRegistry(REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON);
+                iconName = svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON) ||
+                    svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON);
             }
         }
 
-        if (node.getAttribute('name') === 'FCO') {
-            console.log(svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON));
-            return svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
-        }
-        return iconName ? '/assets/DecoratorSVG/' + iconName : null;
+
+        console.log(iconName);
+        return iconName;
     };
 
     ObjectBrowserControlBase.prototype.getMetaInfo = function (nodeObj) {

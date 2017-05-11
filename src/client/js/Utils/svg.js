@@ -2,46 +2,169 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/ejs'], function (ejs) {
+define(['common/util/ejs', 'q'], function (ejs, Q) {
     'use strict';
 
-    var def = '<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ --><g><title>background</title><rect fill="#fff" id="canvas_background" height="22" width="22" y="-1" x="-1"/><g display="none" overflow="visible" y="0" x="0" height="100%" width="100%" id="canvasGrid"><rect fill="url(#gridpattern)" stroke-width="0" y="0" x="0" height="100%" width="100%"/></g></g><g><title>Layer 1</title><ellipse ry="49" rx="43.5" id="svg_1" cy="104" cx="119" stroke-width="1.5" stroke="#000" fill="#fff"/><text xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="24" id="svg_2" y="260" x="309.5" stroke-width="0" stroke="#000" fill="#000000">Hello World</text> <text font-weight="bold" xml:space="preserve" text-anchor="start" font-family="\'Courier New\', Courier, monospace" font-size="12" id="svg_3" y="13" x="4" stroke-width="0" stroke="#000" fill="#000000"><%=getAttribute("name")%></text></g></svg>';
-
-    var SVG_CACHE = {};
+    var SVG_CACHE = {},
+        CONNECTION_AREA_CLASS = 'connection-area',
+        DATA_ANGLE = 'angle',
+        DATA_ANGLE1 = 'angle1',
+        DATA_ANGLE2 = 'angle2',
+        CONN_AREA_DEFAULTS = {};
 
     function isSvg(text) {
         return $(text).is('svg');
     }
 
+    function buildConnecitonAreas(svgContent) {
+        var svgElement = svgContent.el,
+            connAreas = svgElement.find('.' + CONNECTION_AREA_CLASS),
+            len = connAreas.length,
+            line,
+            connA,
+            lineData,
+            dx,
+            dy,
+            alpha,
+            svgWidth,
+            viewBox,
+            ratio = 1,
+            customConnectionAreas = svgContent.customConnectionAreas;
+
+        if (len > 0) {
+            svgWidth = parseInt(svgElement.attr('width'), 10);
+            viewBox = svgElement[0].getAttribute('viewBox');
+            if (viewBox) {
+                var vb0 = parseInt(viewBox.split(' ')[0], 10);
+                var vb1 = parseInt(viewBox.split(' ')[2], 10);
+                ratio = svgWidth / (vb1 - vb0);
+            }
+
+            while (len--) {
+                line = $(connAreas[len]);
+                connA = {
+                    id: line.attr('id'),
+                    x1: parseInt(line.attr('x1'), 10) * ratio,
+                    y1: parseInt(line.attr('y1'), 10) * ratio,
+                    x2: parseInt(line.attr('x2'), 10) * ratio,
+                    y2: parseInt(line.attr('y2'), 10) * ratio
+                };
+
+                //try to figure out meta info from the embedded SVG
+                lineData = line.data();
+
+                _.extend(connA, CONN_AREA_DEFAULTS);
+                _.extend(connA, lineData);
+
+                if (!lineData.hasOwnProperty(DATA_ANGLE) && !(lineData.hasOwnProperty(DATA_ANGLE1) &&
+                    lineData.hasOwnProperty(DATA_ANGLE2))) {
+
+                    dx = connA.x2 - connA.x1;
+                    dy = connA.y2 - connA.y1;
+                    if (dx !== 0 && dy !== 0) {
+                        alpha = Math.atan(dy / dx) * (180 / Math.PI);
+                        if (dx > 0) {
+                            alpha = 270 + alpha;
+                        } else if (dx < 0) {
+                            alpha = 90 + alpha;
+                        }
+                    } else if (dx === 0 && dy !== 0) {
+                        //conn area is vertical
+                        alpha = dy > 0 ? 0 : 180;
+                    } else if (dx !== 0 && dy === 0) {
+                        //conn area is horizontal
+                        alpha = dx > 0 ? 270 : 90;
+                    }
+
+                    connA.angle1 = alpha;
+                    connA.angle2 = alpha;
+                }
+
+                customConnectionAreas.push(connA);
+
+                //finally remove the placeholder from the SVG
+                line.remove();
+            }
+        }
+    }
+
+    function getSvgFilecontent(svgFilePath) {
+        var deferred = Q.defer();
+
+        if (SVG_CACHE[svgFilePath]) {
+            deferred.resolve(SVG_CACHE[svgFilePath]);
+        } else {
+            // get the svg from the server in SYNC mode, may take some time
+            $.ajax(svgFilePath, {async: false})
+                .done(function (data) {
+                    // downloaded successfully
+                    // cache the content if valid
+                    var svgElements = $(data).find('svg');
+                    if (svgElements.length > 0) {
+                        SVG_CACHE[svgFilePath] = $(data).find('svg').first().prop('outerHTML');
+                        deferred.resolve(SVG_CACHE[svgFilePath]);
+                    } else {
+                        deferred.resolve(null);
+                    }
+                })
+                .fail(function () {
+                    deferred.resolve(null);
+                });
+        }
+
+        return deferred.promise;
+    }
+
     function uri(clientNodeObj, registryId) {
-        var data = clientNodeObj.getEditableAttribute(registryId);
+        var data = clientNodeObj.getEditableRegistry(registryId);
 
         if (typeof data === 'string') {
             if (isSvg(data)) {
+                data = $(data).find('svg').first().prop('outerHTML');
                 data = ejs.render(data, clientNodeObj);
-                data = $(data).find('svg').first().html();
-                return "data:image/svg+xml;base64," + window.btoa(data);
+                data = 'data:image/svg+xml;base64,' + window.btoa(data);
             } else {
-                return '/assets/DecoratorSVG/' + data;
+                data = '/assets/DecoratorSVG/' + data;
             }
+
+            return data;
+
         }
 
         return null;
     }
 
     function content(clientNodeObj, registryId) {
-        var data = clientNodeObj.getEditableAttribute(registryId);
+        var data = clientNodeObj.getEditableRegistry(registryId),
+            contentObj = {el: null, customConnectionAreas: []},
+            deferred = Q.defer();
 
         if (typeof data === 'string') {
             if (isSvg(data)) {
+                data = $(data).find('svg').first().prop('outerHTML');
                 data = ejs.render(data, clientNodeObj);
-                return $(data).find('svg').first().html();
+
+                contentObj.el = $(data);
+                buildConnecitonAreas(contentObj);
+                deferred.resolve(contentObj);
             } else {
-                return '/assets/DecoratorSVG/' + data;
+                getSvgFilecontent('/assets/DecoratorSVG/' + data)
+                    .then(function (data_) {
+                        data = data_;
+                        data = ejs.render(data, clientNodeObj);
+
+                        contentObj.el = $(data);
+                        buildConnecitonAreas(contentObj);
+                        deferred.resolve(contentObj);
+                    })
+                    .catch(deferred.reject);
             }
+
+        } else {
+            deferred.resolve(null);
         }
 
-        return null;
+        return deferred.promise;
     }
 
     return {

@@ -13,7 +13,9 @@ define([
     'js/Decorators/DecoratorWithPortsAndPointerHelpers.Base',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./default.svg',
-    'common/regexp'
+    'common/regexp',
+    'js/Utils/svg',
+    'q'
 ], function (CONSTANTS,
              nodePropertyNames,
              REGISTRY_KEYS,
@@ -21,7 +23,9 @@ define([
              DecoratorWithPortsAndPointerHelpers,
              DiagramDesignerWidgetConstants,
              DefaultSvgTemplate,
-             REGEXP) {
+             REGEXP,
+             svgUtil,
+             Q) {
 
     'use strict';
 
@@ -97,12 +101,20 @@ define([
     };
 
     SVGDecoratorCore.prototype._update = function () {
-        this._updateSVGFile();
-        this._updateColors();
-        this._updateName();
-        this._updateAbstract();
-        this._updatePorts();//Will be overridden by ports class if extended
-        this._updateIsReplaceable();
+        var self = this;
+        // this._updateSVGFile();
+        this._updateSVGContent()
+            .then(function () {
+                self._updateColors();
+                self._updateName();
+                self._updateAbstract();
+                self._updatePorts();//Will be overridden by ports class if extended
+                self._updateIsReplaceable();
+            })
+            .catch(function (err) {
+                self._logger.error('Cannot get SVG content:', err);
+            });
+
     };
 
     SVGDecoratorCore.prototype._updateColors = function () {
@@ -232,38 +244,46 @@ define([
         }
     };
 
-    SVGDecoratorCore.prototype._updateSVGContent = function (svg) {
-        var svgIcon;
-        //set new content
-        this.$svgContent.empty();
-        this.$svgContent.removeClass();
-        this.$svgContent.addClass('svg-content');
-        if (svg) {
-            this.$svgContent.addClass(svg.replace(REGEXP.INVALID_CSS_CHARS, '__'));
-        }
+    SVGDecoratorCore.prototype._updateSVGContent = function () {
+        var self = this,
+            client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            deferred = Q.defer();
 
-        //remove existing connectors (if any)
-        this.$el.find('> .' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).remove();
+        if (nodeObj) {
+            //set new content
+            this.$svgContent.empty();
+            this.$svgContent.removeClass();
+            this.$svgContent.addClass('svg-content');
 
-        this._defaultSVGUsed = false;
+            //remove existing connectors (if any)
+            this.$el.find('> .' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).remove();
 
-        if (svg && this.svgCache[svg]) {
-            svgIcon = this.svgCache[svg].el.clone();
+            svgUtil.getSvgContent(nodeObj, REGISTRY_KEYS.SVG_ICON)
+                .then(function (svgContent) {
+                    if (svgContent) {
+                        self.$svgElement = svgContent.el;
+                        self._customConnectionAreas = svgContent.customConnectionAreas;
+
+                    } else {
+                        delete self._customConnectionAreas;
+                        self.$svgElement = defaultSVG.clone();
+
+                    }
+                    self._generateConnectors();
+                    self.$svgContent.append(self.$svgElement);
+                    deferred.reolve();
+                })
+                .catch(deferred.resolve);
         } else {
-            svgIcon = defaultSVG.clone();
-            if (svg !== '') {
-                $(svgIcon.find('text')).html('!!! ' + (svg || 'No svgIcon selected') + ' !!!');
-            } else {
-                this._defaultSVGUsed = true;
-            }
-
+            delete this._customConnectionAreas;
+            this.$svgElement = defaultSVG.clone();
+            this._generateConnectors();
+            this.$svgContent.append(this.$svgElement);
+            deferred.resolve();
         }
 
-        this.$svgElement = svgIcon;
-        this._getCustomConnectionAreas(svg);
-        this._generateConnectors();
-
-        this.$svgContent.append(svgIcon);
+        return deferred.promise;
     };
 
     SVGDecoratorCore.prototype._getCustomDataFromSvg = function (svgFile) {
