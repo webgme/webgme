@@ -146,11 +146,11 @@ define(['js/PanelBase/PanelBase',
                 if ($.contains(navBarInner[0], container[0])) {
                     self._widgets.push(new Widget(container, self._client));
                 } else {
-                    self._logger.error('FooterPanel destroyed before widget loaded.');
+                    self.logger.error('FooterPanel destroyed before widget loaded.');
                 }
             },
             function (err) {
-                self._logger.error(err);
+                self.logger.error(err);
             }
         );
     };
