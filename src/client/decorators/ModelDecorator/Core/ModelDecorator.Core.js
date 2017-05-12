@@ -1,4 +1,4 @@
-/*globals define, _, $*/
+/*globals define, _, $, WebGMEGlobal*/
 /*jshint browser: true*/
 
 /**
@@ -14,7 +14,7 @@ define([
     './ModelDecorator.Constants',
     'js/Decorators/DecoratorWithPortsAndPointerHelpers.Base',
     'js/Utils/DisplayFormat',
-    'js/Utils/GMEConcepts',
+    'js/Utils/GMEConcepts'
 ], function (CONSTANTS,
              nodePropertyNames,
              REGISTRY_KEYS,
@@ -199,7 +199,7 @@ define([
             portInstance = new Port(portId, {
                 title: portTitle,
                 decorator: this,
-                svg: portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)
+                svg: WebGMEGlobal.SvgManager.getSvgUri(portNode, REGISTRY_KEYS.PORT_SVG_ICON)
             });
 
         this._addPortToContainer(portNode, portInstance);
@@ -429,17 +429,14 @@ define([
     ModelDecoratorCore.prototype._updateSVG = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            svgFile = '',
-            svgURL,
+            svgURL = null,
             self = this;
 
         if (nodeObj) {
-            svgFile = nodeObj.getRegistry(REGISTRY_KEYS.SVG_ICON);
+            svgURL = WebGMEGlobal.SvgManager.getSvgUri(nodeObj,REGISTRY_KEYS.SVG_ICON);
         }
 
-        if (svgFile) {
-            // get the svg from the server in SYNC mode, may take some time
-            svgURL = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + svgFile;
+        if (svgURL) {
             if (!this.skinParts.$imgSVG) {
                 this.skinParts.$imgSVG = EMBEDDED_SVG_IMG_BASE.clone();
                 this.$el.append(this.skinParts.$imgSVG);

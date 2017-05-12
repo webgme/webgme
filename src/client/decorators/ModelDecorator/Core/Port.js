@@ -107,7 +107,7 @@ define([
 
     Port.prototype._updateIcon = function () {
         if (this.icon) {
-            this.$portIcon.attr('src', CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + this.icon);
+            this.$portIcon.attr('src', this.icon);
             this.$portIcon.show();
             this.$el.addClass(PORT_TITLE_WRAPPER_WITH_ICON_CLASS);
         } else {

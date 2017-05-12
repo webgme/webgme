@@ -23,6 +23,7 @@ define([
         'js/Dialogs/Projects/ProjectsDialog',
         'js/Utils/InterpreterManager',
         'js/Utils/ComponentSettings',
+        'Js/Utils/SvgManager',
         'common/storage/util',
         'q',
         'jquery'
@@ -43,6 +44,7 @@ define([
                  ProjectsDialog,
                  InterpreterManager,
                  ComponentSettings,
+                 SvgManager,
                  StorageUtil,
                  Q) {
 
@@ -110,6 +112,7 @@ define([
                 WebGMEGlobal.Client = client;
 
                 WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
+                WebGMEGlobal.SvgManager = SvgManager;
 
                 Object.defineProperty(WebGMEGlobal, 'State', {
                         value: StateManager.initialize(),

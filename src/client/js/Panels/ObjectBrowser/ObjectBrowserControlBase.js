@@ -5,7 +5,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['js/RegistryKeys', 'js/Constants', 'js/Utils/svg'], function (REGISTRY_KEYS, CONSTANTS, svgUtil) {
+define(['js/RegistryKeys', 'js/Constants'], function (REGISTRY_KEYS, CONSTANTS) {
     'use strict';
 
     function ObjectBrowserControlBase(client, treeBrowser, logger) {
@@ -107,16 +107,14 @@ define(['js/RegistryKeys', 'js/Constants', 'js/Utils/svg'], function (REGISTRY_K
 
         if (node) {
             if (expanded) {
-                iconName = svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) ||
-                    svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
+                iconName = WebGMEGlobal.SvgManager.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) ||
+                    WebGMEGlobal.SvgManager.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
             } else {
-                iconName = svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON) ||
-                    svgUtil.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON);
+                iconName = WebGMEGlobal.SvgManager.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON) ||
+                    WebGMEGlobal.SvgManager.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON);
             }
         }
 
-
-        console.log(iconName);
         return iconName;
     };
 

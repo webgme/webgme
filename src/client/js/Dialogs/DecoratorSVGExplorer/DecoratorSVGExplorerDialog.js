@@ -27,6 +27,7 @@ define(['js/Constants',
         TAB_GROUP_PREFIX = 'tab-group-',
         DEFAULT_TAB_GROUP = 'Default';
 
+    DecoratorSVGIconList.unshift('');
 
     DecoratorSVGExplorerDialog = function () {
     };

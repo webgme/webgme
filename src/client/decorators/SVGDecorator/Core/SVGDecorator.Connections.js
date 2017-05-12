@@ -25,29 +25,8 @@ define([], function () {
         CONN_AREA_DEFAULTS = attr;
     };
 
-    SVGDecoratorConnections.prototype._getCustomConnectionAreas = function (svgFile) {
-        var connAreas = this.svgCache[svgFile] ? this.svgCache[svgFile].customConnectionAreas : null,
-            len = connAreas ? connAreas.length : 0,
-            connA;
-
-        delete this._customConnectionAreas;
-
-        if (len > 0) {
-            this._customConnectionAreas = [];
-
-            while (len--) {
-                connA = {};
-
-                _.extend(connA, connAreas[len]);
-
-                this._customConnectionAreas.push(connA);
-            }
-        }
-    };
-
-    SVGDecoratorConnections.prototype._discoverCustomConnectionAreas = function (svgFile) {
-        var svgElement = this.svgCache[svgFile].el,
-            connAreas = svgElement.find('.' + CONNECTION_AREA_CLASS),
+    SVGDecoratorConnections.prototype._discoverCustomConnectionAreas = function (svgElement) {
+        var connAreas = svgElement.find('.' + CONNECTION_AREA_CLASS),
             len = connAreas.length,
             line,
             connA,
@@ -58,7 +37,7 @@ define([], function () {
             svgWidth,
             viewBox,
             ratio = 1,
-            customConnectionAreas;
+            customConnectionAreas = [];
 
         if (len > 0) {
             svgWidth = parseInt(svgElement.attr('width'), 10);
@@ -69,8 +48,6 @@ define([], function () {
                 ratio = svgWidth / (vb1 - vb0);
             }
 
-            this.svgCache[svgFile].customConnectionAreas = [];
-            customConnectionAreas = this.svgCache[svgFile].customConnectionAreas;
 
             while (len--) {
                 line = $(connAreas[len]);
@@ -118,6 +95,8 @@ define([], function () {
                 line.remove();
             }
         }
+
+        this._customConnectionAreas = customConnectionAreas;
     };
 
     return SVGDecoratorConnections;

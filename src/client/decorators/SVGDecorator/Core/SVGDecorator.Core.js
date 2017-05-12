@@ -13,9 +13,7 @@ define([
     'js/Decorators/DecoratorWithPortsAndPointerHelpers.Base',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./default.svg',
-    'common/regexp',
-    'js/Utils/svg',
-    'q'
+    'common/regexp'
 ], function (CONSTANTS,
              nodePropertyNames,
              REGISTRY_KEYS,
@@ -23,9 +21,7 @@ define([
              DecoratorWithPortsAndPointerHelpers,
              DiagramDesignerWidgetConstants,
              DefaultSvgTemplate,
-             REGEXP,
-             svgUtil,
-             Q) {
+             REGEXP) {
 
     'use strict';
 
@@ -101,19 +97,12 @@ define([
     };
 
     SVGDecoratorCore.prototype._update = function () {
-        var self = this;
-        // this._updateSVGFile();
-        this._updateSVGContent()
-            .then(function () {
-                self._updateColors();
-                self._updateName();
-                self._updateAbstract();
-                self._updatePorts();//Will be overridden by ports class if extended
-                self._updateIsReplaceable();
-            })
-            .catch(function (err) {
-                self._logger.error('Cannot get SVG content:', err);
-            });
+        this._updateSVGContent();
+        this._updateColors();
+        this._updateName();
+        this._updateAbstract();
+        this._updatePorts();//Will be overridden by ports class if extended
+        this._updateIsReplaceable();
 
     };
 
@@ -245,10 +234,9 @@ define([
     };
 
     SVGDecoratorCore.prototype._updateSVGContent = function () {
-        var self = this,
-            client = this._control._client,
+        var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            deferred = Q.defer();
+            svgContent;
 
         if (nodeObj) {
             //set new content
@@ -259,31 +247,23 @@ define([
             //remove existing connectors (if any)
             this.$el.find('> .' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).remove();
 
-            svgUtil.getSvgContent(nodeObj, REGISTRY_KEYS.SVG_ICON)
-                .then(function (svgContent) {
-                    if (svgContent) {
-                        self.$svgElement = svgContent.el;
-                        self._customConnectionAreas = svgContent.customConnectionAreas;
+            svgContent = WebGMEGlobal.SvgManager.getSvgContent(nodeObj, REGISTRY_KEYS.SVG_ICON);
+            if (svgContent) {
+                this.$svgElement = svgContent;
+                this._discoverCustomConnectionAreas(this.$svgElement);
 
-                    } else {
-                        delete self._customConnectionAreas;
-                        self.$svgElement = defaultSVG.clone();
+            } else {
+                delete this._customConnectionAreas;
+                this.$svgElement = defaultSVG.clone();
 
-                    }
-                    self._generateConnectors();
-                    self.$svgContent.append(self.$svgElement);
-                    deferred.reolve();
-                })
-                .catch(deferred.resolve);
+            }
         } else {
             delete this._customConnectionAreas;
             this.$svgElement = defaultSVG.clone();
-            this._generateConnectors();
-            this.$svgContent.append(this.$svgElement);
-            deferred.resolve();
         }
 
-        return deferred.promise;
+        this._generateConnectors();
+        this.$svgContent.append(this.$svgElement);
     };
 
     SVGDecoratorCore.prototype._getCustomDataFromSvg = function (svgFile) {
@@ -343,11 +323,7 @@ define([
         //If no connections in model, does nothing
     };
 
-    SVGDecoratorCore.prototype._getCustomConnectionAreas = function () {
-        //If no connections in model, does nothing
-    };
-
-    //Overridden in SVGDecorator.Connection.js 
+    //Overridden in SVGDecorator.Connection.js
     SVGDecoratorCore.prototype._generateConnectors = function () {
         //If no connections in model, does nothing
     };
