@@ -277,8 +277,19 @@ define(['js/logger',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.onActivate = function () {
+        var tabId;
+
         this._attachClientEventListeners();
         this._displayToolbarItems();
+
+        if (this._tabIDMemberListID && this._selectedMemberListID) {
+            for (tabId in this._tabIDMemberListID) {
+                if (this._tabIDMemberListID[tabId] === this._selectedMemberListID) {
+                    WebGMEGlobal.State.registerActiveTab(tabId, {invoker: this});
+                    break;
+                }
+            }
+        }
 
         //setting the active object to the container
         if (typeof this._memberListContainerID === 'string') {
