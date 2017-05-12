@@ -17,7 +17,9 @@ define(['js/Constants',
     'use strict';
 
     var DecoratorSVGExplorerDialog,
-        IMG_BASE = $('<div class="image-container"><img src=""/><div class="desc">description</div></div>'),
+        IMG_BASE = $('<div class="image-container"><img src=""/><div class="desc">description</div>' +
+            '<div class="btn-holder"></div></div>'),
+        IMG_BTN_BASE = $('<div class="btn btn-xs glyphicon"></div>'),
         GROUP_TXT = '<li class="tab"><a href="#" data-toggle="tab">__GROUP_NAME__</a></li>',
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         DecoratorSVGIconList = JSON.parse(decoratorSVGList),

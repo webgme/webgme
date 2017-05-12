@@ -37,7 +37,20 @@ $desc-margin: 3px;
       }
     }
   }
+  .svg-editor {
+    height: 100%;
+    width: 100%;
 
+    .svg-editing-code-mirror {
+      width: 50%;
+      height: 100%;
+    }
+
+    .svg-display {
+      width: 50%;
+      height: 100%;
+    }
+  }
   .image-container {
     margin: $item-margin;
     padding: 5px;
@@ -79,9 +92,23 @@ $desc-margin: 3px;
       text-overflow: ellipsis;
     }
 
+    div.btn-holder {
+      display: none;
+      position: relative;
+      float: right;
+    }
+
+    div.btn {
+      display: block;
+    }
+
     &:hover {
       border-color: #ababab;
       background-color: #efefef;
+    }
+
+    &:hover > div.btn-holder {
+      display: block;
     }
 
     &.selected {
