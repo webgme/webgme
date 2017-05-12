@@ -1716,8 +1716,10 @@ define(['js/logger',
         }
     };
 
-    MetaEditorControl.prototype._stateActiveTabChanged = function (model, tabId) {
-        this._onSelectedTabChanged(tabId);
+    MetaEditorControl.prototype._stateActiveTabChanged = function (model, tabId, opts) {
+        if (opts.invoker !== this) {
+            this._onSelectedTabChanged(tabId);
+        }
     };
 
     MetaEditorControl.prototype._attachClientEventListeners = function () {
@@ -1733,7 +1735,7 @@ define(['js/logger',
 
     MetaEditorControl.prototype.onActivate = function () {
         if (this._selectedSheetID) {
-            WebGMEGlobal.State.registerActiveTab(this._selectedSheetID);
+            WebGMEGlobal.State.registerActiveTab(this._selectedSheetID, {invoker: this});
         }
 
         if (this.currentNodeInfo && typeof this.currentNodeInfo.id === 'string') {

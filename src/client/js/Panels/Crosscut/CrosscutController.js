@@ -1526,10 +1526,9 @@ define(['js/logger',
     };
 
     CrosscutController.prototype._updateCrosscutRegistry = function () {
-        var containerNode = this._client.getNode(this._memberListContainerID),
-            regItem = this.getMemberListSetsRegistry(this._memberListContainerID) || [],
-            i, crosscutId = Number(this._activeCrosscutId),
-            base;
+        var regItem = this.getMemberListSetsRegistry(this._memberListContainerID) || [],
+            crosscutId = Number(this._activeCrosscutId),
+            i;
 
         // base = this._client.getNode(containerNode.getBaseId());
         // if (regItem === undefined &&
