@@ -544,8 +544,10 @@ define(['js/logger',
             this.logger.debug('_selectedMemberListID changed to : ' + this._selectedMemberListID);
 
             this._initializeSelectedMemberList();
-            WebGMEGlobal.State.registerActiveTab(tabID, {invoker: this});
         }
+
+        // Always register the tab to the state (needed if state triggers a tab that does not exist for this object)
+        WebGMEGlobal.State.registerActiveTab(tabID, {invoker: this});
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._getDragParams = function (selectedElements,
