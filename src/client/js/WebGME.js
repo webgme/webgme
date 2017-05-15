@@ -275,9 +275,12 @@ define([
                             return Q.nfcall(client.selectCommit, initialThingsToDo.commitToLoad);
                         }
 
-                        if (initialThingsToDo.branchToLoad &&
-                            branches[initialThingsToDo.branchToLoad]) {
-                            return Q.nfcall(client.selectBranch, initialThingsToDo.branchToLoad, null);
+                        if (initialThingsToDo.branchToLoad && branches[initialThingsToDo.branchToLoad]) {
+                            if (initialThingsToDo.branchToLoad !== client.getActiveBranchName()) {
+                                return Q.nfcall(client.selectBranch, initialThingsToDo.branchToLoad, null);
+                            } else {
+                                logger.info('branch was already open', initialThingsToDo.branchToLoad);
+                            }
                         }
                     })
                     .then(function () {
@@ -447,9 +450,12 @@ define([
                             return Q.nfcall(client.selectCommit, initialThingsToDo.commitToLoad);
                         }
 
-                        if (initialThingsToDo.branchToLoad &&
-                            branches[initialThingsToDo.branchToLoad]) {
-                            return Q.nfcall(client.selectBranch, initialThingsToDo.branchToLoad, null);
+                        if (initialThingsToDo.branchToLoad && branches[initialThingsToDo.branchToLoad]) {
+                            if (initialThingsToDo.branchToLoad !== client.getActiveBranchName()) {
+                                return Q.nfcall(client.selectBranch, initialThingsToDo.branchToLoad, null);
+                            } else {
+                                logger.info('branch was already open', initialThingsToDo.branchToLoad);
+                            }
                         }
                     })
                     .then(function () {

@@ -801,7 +801,7 @@ define(['js/logger',
             this._selectedSheetID = tabID.toString();
             this.logger.debug('selectedAspectChanged: ' + this._selectedMetaAspectSet);
 
-            WebGMEGlobal.State.registerActiveTab(tabID);
+            WebGMEGlobal.State.registerActiveTab(tabID, {invoker: this});
             this._initializeSelectedSheet();
             this.diagramDesigner.selectTab(this._selectedSheetID);
         }
@@ -928,16 +928,16 @@ define(['js/logger',
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
+            urlTab = WebGMEGlobal.State.getActiveTab(),
             i,
             j,
-            urlTab = WebGMEGlobal.State.getActiveTab(),
             setID;
 
         for (i = 0; i < newTabIDOrder.length; i += 1) {
             //i is the new order number
             //newTabIDOrder[i] is the sheet identifier
-            if (urlTab === newTabIDOrder[i]) {
-                WebGMEGlobal.State.registerActiveTab(i);
+            if (urlTab.toString() === newTabIDOrder[i]) {
+                WebGMEGlobal.State.registerActiveTab(i, {invoker: this});
             }
             setID = this._sheets[newTabIDOrder[i]];
             for (j = 0; j < metaAspectSheetsRegistry.length; j += 1) {

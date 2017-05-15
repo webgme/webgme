@@ -31,18 +31,28 @@ describe('branch status', function () {
             client = new Client(gmeConfig);
             projectId = gmeConfig.authentication.guestAccount + client.CONSTANTS.STORAGE.PROJECT_ID_SEP +
                     projectName;
+
             client.connectToDatabase(function (err) {
-                expect(err).to.equal(null);
+                if (err) {
+                    return done(err);
+                }
+
                 client.selectProject(projectId, null, function (err) {
-                    expect(err).to.equal(null);
+                    if (err) {
+                        return done(err);
+                    }
 
                     storage = Storage.getStorage(logger, gmeConfig, true);
                     storage.open(function (status) {
                         logger.debug('storage is open');
-                        expect(status).to.equal(client.CONSTANTS.STORAGE.CONNECTED);
+                        if (status !== client.CONSTANTS.STORAGE.CONNECTED) {
+                            return done('Unexpected storage status ' + status);
+                        }
 
                         storage.openProject(projectId, function (err, project_, branches) {
-                            expect(err).to.equal(null);
+                            if (err) {
+                                return done(err);
+                            }
 
                             project = project_;
                             core = new Core(project, {
@@ -115,6 +125,7 @@ describe('branch status', function () {
 
     it('should go from SYNC to AHEAD_SYNC to SYNC when making changes.', function (done) {
         var branchName = 'sync_aheadSync_sync',
+            eventHandler,
             prevStatus;
 
         currentBranchName = branchName;
@@ -123,7 +134,7 @@ describe('branch status', function () {
             client.removeEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
         }
 
-        function eventHandler(__client, eventData) {
+        eventHandler = function eventHandler(__client, eventData) {
             if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
                 expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC);
                 prevStatus = eventData.status;
@@ -136,18 +147,22 @@ describe('branch status', function () {
                 removeHandler();
                 done(new Error('Unexpected BranchStatus ' + eventData.status));
             }
-        }
+        };
 
         createSelectBranch(branchName, function (err) {
-            expect(err).to.equal(null);
-
-            prevStatus = client.getBranchStatus();
-            expect(prevStatus).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
-
-            client.addEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
-
             var loaded = false,
                 userGuid;
+
+            try {
+                expect(err).to.equal(null);
+
+                prevStatus = client.getBranchStatus();
+                expect(prevStatus).to.equal(client.CONSTANTS.BRANCH_STATUS.SYNC);
+
+                client.addEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
+            } catch (e) {
+                return done(e);
+            }
 
             function nodeEventHandler(events) {
                 if (loaded) {
@@ -218,6 +233,7 @@ describe('branch status', function () {
         function (done) {
             var branchName = 'sync_aheadSync_aheadNotSync',
                 currentHash,
+                eventHandler,
                 prevStatus;
 
             currentBranchName = branchName;
@@ -226,7 +242,7 @@ describe('branch status', function () {
                 client.removeEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
             }
 
-            function eventHandler(__client, eventData) {
+            eventHandler = function eventHandler(__client, eventData) {
                 if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
                     // 1) Here it starts pulling the external changes..
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.PULLING);
@@ -245,7 +261,7 @@ describe('branch status', function () {
                     removeHandler();
                     done(new Error('Unexpected BranchStatus ' + eventData.status));
                 }
-            }
+            };
 
             createSelectBranch(branchName, function (err) {
                 expect(err).to.equal(null);
@@ -295,6 +311,7 @@ describe('branch status', function () {
         function (done) {
             var branchName = 'sync_aheadSync_aheadNotSync_aheadNotSync',
                 currentHash,
+                eventHandler,
                 prevStatus;
 
             currentBranchName = branchName;
@@ -303,7 +320,7 @@ describe('branch status', function () {
                 client.removeEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
             }
 
-            function eventHandler(__client, eventData) {
+            eventHandler = function eventHandler(__client, eventData) {
                 if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
                     prevStatus = eventData.status;
                     expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.PULLING);

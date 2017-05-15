@@ -732,7 +732,8 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'setChildMeta(' + path + ', ' + childPath + ',' + min || -1 + ',' + max || -1 + ')');
+                saveRoot(msg || 'setChildMeta(' + path + ',' + childPath + ',' +
+                    (min || -1) + ',' + (max || -1) + ')');
             }
         }
 

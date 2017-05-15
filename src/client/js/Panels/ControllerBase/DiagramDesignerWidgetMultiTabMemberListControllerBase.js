@@ -237,8 +237,11 @@ define(['js/logger',
         }
     };
 
-    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveTabChanged = function (model, tabId) {
-        if (this._tabIDMemberListID && this._selectedMemberListID !== this._tabIDMemberListID[tabId]) {
+    DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._stateActiveTabChanged = function (model, tabId, opts) {
+        if (this._tabIDMemberListID &&
+            this._selectedMemberListID !== this._tabIDMemberListID[tabId] &&
+            opts.invoker !== this) {
+
             this._widget.selectTab(tabId + '');
         }
     };
@@ -274,8 +277,19 @@ define(['js/logger',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype.onActivate = function () {
+        var tabId;
+
         this._attachClientEventListeners();
         this._displayToolbarItems();
+
+        if (this._tabIDMemberListID && this._selectedMemberListID) {
+            for (tabId in this._tabIDMemberListID) {
+                if (this._tabIDMemberListID[tabId] === this._selectedMemberListID) {
+                    WebGMEGlobal.State.registerActiveTab(tabId, {invoker: this});
+                    break;
+                }
+            }
+        }
 
         //setting the active object to the container
         if (typeof this._memberListContainerID === 'string') {
@@ -530,8 +544,10 @@ define(['js/logger',
             this.logger.debug('_selectedMemberListID changed to : ' + this._selectedMemberListID);
 
             this._initializeSelectedMemberList();
-            WebGMEGlobal.State.registerActiveTab(tabID);
         }
+
+        // Always register the tab to the state (needed if state triggers a tab that does not exist for this object)
+        WebGMEGlobal.State.registerActiveTab(tabID, {invoker: this});
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._getDragParams = function (selectedElements,
@@ -1660,8 +1676,8 @@ define(['js/logger',
             for (i = 0; i < newTabIDOrder.length; i += 1) {
                 //i is the new order number
                 //newTabIDOrder[i] is the tab identifier
-                if (urlTab === newTabIDOrder[i]) {
-                    WebGMEGlobal.State.registerActiveTab(i);
+                if (urlTab.toString() === newTabIDOrder[i]) {
+                    WebGMEGlobal.State.registerActiveTab(i, {invoker: this});
                 }
                 setID = oldIDList[newTabIDOrder[i]];
                 this._tabIDMemberListID[i] = setID;
@@ -1747,9 +1763,9 @@ define(['js/logger',
 
         if (this._canAddTab()) {
             memberListSetsRegistry = this.getMemberListSetsRegistry(memberListContainerID);
-            if(memberListSetsRegistry === undefined &&
+            if (memberListSetsRegistry === undefined &&
                 memberListSetsRegistryKey &&
-                memberListSetsRegistryKey !== ''){
+                memberListSetsRegistryKey !== '') {
                 memberListContainer = this._client.getNode(memberListContainerID);
                 memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey) || [];
             }
@@ -1794,6 +1810,7 @@ define(['js/logger',
                 this._selectedMemberListID = newSetID;
             }
 
+            WebGMEGlobal.State.registerActiveTab(memberListSetsRegistry.length - 1, {invoker: this});
             //finish transaction
             this._client.completeTransaction();
         }
