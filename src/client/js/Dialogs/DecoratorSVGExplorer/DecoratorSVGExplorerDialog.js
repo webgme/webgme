@@ -7,10 +7,15 @@
  */
 
 define(['js/Constants',
+    'codemirror/lib/codemirror',
     'text!assets/decoratorSVGList.json',
     'text!./templates/DecoratorSVGExplorerDialog.html',
-    'css!./styles/DecoratorSVGExplorerDialog.css'
+    'codemirror/mode/htmlmixed/htmlmixed',
+    'css!./styles/DecoratorSVGExplorerDialog.css',
+    'css!codemirror/lib/codemirror.css',
+    'css!codemirror/theme/monokai.css'
 ], function (CONSTANTS,
+             CodeMirror,
              decoratorSVGList,
              DecoratorSVGExplorerDialogTemplate) {
 
@@ -30,6 +35,7 @@ define(['js/Constants',
         DEFAULT_TAB_GROUP = 'Default';
 
     DecoratorSVGIconList.unshift('');
+    DecoratorSVGIconList.unshift('');
 
     DecoratorSVGExplorerDialog = function () {
     };
@@ -43,6 +49,8 @@ define(['js/Constants',
         this._groups = {};
         this._groupNames = null;
 
+        this._old = oldValue;
+        this._clientNode = WebGMEGlobal.Client.getNode(WebGMEGlobal.State.getActiveSelection()[0]);
         this._initDialog();
 
         this._dialog.on('hidden.bs.modal', function () {
@@ -52,18 +60,18 @@ define(['js/Constants',
         });
 
         this._dialog.on('hide.bs.modal', function () {
-            if (self._fnCallback && (self.result || self.result === '')) {
+            if (self._fnCallback) {
                 self._fnCallback(self.result);
             }
         });
 
         this._dialog.modal('show');
 
-        if (oldValue) {
-
-            $originalSelected = self._modalBody.find('[' + DATA_FILENAME + '="' + oldValue + '"]');
-            this._setSelected(oldValue, $originalSelected);
-        }
+        // if (oldValue) {
+        //
+        //     $originalSelected = self._modalBody.find('[' + DATA_FILENAME + '="' + oldValue + '"]');
+        //     this._setSelected(oldValue, $originalSelected);
+        // }
     };
 
     DecoratorSVGExplorerDialog.prototype.registerResult = function () {
@@ -75,6 +83,8 @@ define(['js/Constants',
             len = DecoratorSVGIconList.length,
             i,
             svg,
+            btnSelect,
+            btnEdit,
             namePieces,
             imgName,
             tabGroupEl,
@@ -82,9 +92,33 @@ define(['js/Constants',
 
         this._dialog = $(DecoratorSVGExplorerDialogTemplate);
         this._modalBody = this._dialog.find('.modal-body');
-        this._btnSelect = this._dialog.find('.btn-select');
+        this._editor = this._dialog.find('.svg-editor');
+        this._btnUse = this._dialog.find('.btn-select');
+        this._btnCancel = this._dialog.find('.btn-cancel');
+        this._codemirrorEl = this._editor.find('.svg-editing-code-mirror');
         this._txtFind = this._dialog.find('#txtFilter');
         this._groupTabList = this._dialog.find('ul.nav-tabs');
+
+        this._btnCancel.on('click', function () {
+            self._editor.hide();
+            self._filter('');
+        });
+
+        this._codemirror = CodeMirror(this._codemirrorEl[0], {
+            readOnly: false,
+            lineNumbers: true,
+            matchBrackets: true,
+            lint: false,
+            theme: 'monokai',
+            mode: 'htmlmixed',
+            autofocus: true,
+            dragDrop: false,
+            gutters: ["CodeMirror-linenumbers"]
+        });
+
+        this._editor.hide();
+        this._btnUse.hide();
+        this._btnCancel.hide();
 
         for (i = 0; i < len; i += 1) {
             svg = DecoratorSVGIconList[i];
@@ -92,10 +126,50 @@ define(['js/Constants',
             namePieces = svg.split('/');
             imgName = namePieces[namePieces.length - 1];
 
-            if (i === 0 && svg === '') {
+            btnSelect = IMG_BTN_BASE.clone();
+            btnSelect.addClass('glyphicon-ok');
+            btnSelect.attr('title', 'Select item to use');
+            btnSelect.data('filename', svg);
+
+            btnEdit = IMG_BTN_BASE.clone();
+            btnEdit.addClass('glyphicon-pencil');
+            btnEdit.attr('title', 'Edit to use as embedded svg');
+            btnEdit.data('filename', svg);
+            btnEdit.on('click', function (event) {
+                // self._setSelected($(event.currentTarget).data('filename'));
+                self._filter('$@$impossible$@$');
+                self._editor.show();
+                self._btnCancel.show();
+                self._btnUse.show();
+                self._codemirror.setValue(WebGMEGlobal.SvgManager.getRawSvgContent(self._old));
+                self._codemirror.refresh();
+                self._codemirror.focus();
+            });
+
+            divImg.find('.btn-holder').append(btnSelect);
+            divImg.find('.btn-holder').append(btnEdit);
+
+            if (i === 0) {
                 divImg.find('img').remove();
                 divImg.find('.desc').text('-- NONE --');
                 divImg.find('.desc').attr('title', '-- NONE --');
+                btnSelect.on('click', function () {
+                    self.result = null;
+                    self._dialog.modal('hide');
+                });
+            } else if (i === 1) {
+                if (WebGMEGlobal.SvgManager.isSvg()) {
+                    divImg.find('img').attr('src', WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true));
+                } else {
+                    divImg.find('img').attr('src', SVG_DIR + self._old);
+                }
+
+                divImg.find('.desc').text('-- CURRENT --');
+                divImg.find('.desc').attr('title', '-- CURRENT --');
+                btnSelect.on('click', function () {
+                    self.result = self._old;
+                    self._dialog.modal('hide');
+                });
             } else {
                 // Trim the .svg part
                 imgName = imgName.substring(0, imgName.length - '.svg'.length);
@@ -103,6 +177,10 @@ define(['js/Constants',
                 divImg.find('img').attr('title', svg);
                 divImg.find('.desc').text(imgName);
                 divImg.find('.desc').attr('title', svg);
+                btnSelect.on('click', function (event) {
+                    self.result = $(event.currentTarget).data('filename');
+                    self._dialog.modal('hide');
+                });
             }
 
             divImg.data(DATA_FILENAME, svg);
@@ -151,22 +229,22 @@ define(['js/Constants',
             this._groupTabList.append(tabGroupEl);
         }
 
-        this._modalBody.on('mousedown', 'div.image-container', function () {
-            var $el = $(this);
+        // this._modalBody.on('mousedown', 'div.image-container', function () {
+        //     var $el = $(this);
+        //
+        //     self._modalBody.find('div.image-container.selected').removeClass('selected');
+        //     self._setSelected($el.data(DATA_FILENAME), $el);
+        // });
 
-            self._modalBody.find('div.image-container.selected').removeClass('selected');
-            self._setSelected($el.data(DATA_FILENAME), $el);
-        });
+        // this._modalBody.on('dblclick', 'div.image-container', function () {
+        //     self.registerResult();
+        //     self._dialog.modal('hide');
+        // });
 
-        this._modalBody.on('dblclick', 'div.image-container', function () {
-            self.registerResult();
-            self._dialog.modal('hide');
-        });
-
-        this._btnSelect.on('click', function () {
-            self.registerResult();
-            self._dialog.modal('hide');
-        });
+        // this._btnSelect.on('click', function () {
+        //     self.registerResult();
+        //     self._dialog.modal('hide');
+        // });
 
         this._txtFind.on('keyup', function () {
             self._filter($(this).val());
@@ -202,10 +280,10 @@ define(['js/Constants',
 
         if (fileName || fileName === '') {
             this._selectedSVG = fileName;
-            this._btnSelect.disable(false);
+            // this._btnSelect.disable(false);
         } else {
             this._selectedSVG = undefined;
-            this._btnSelect.disable(true);
+            // this._btnSelect.disable(true);
         }
     };
 

@@ -65,7 +65,35 @@ define(['common/util/ejs'], function (ejs) {
                 data = getSvgFileContent('/assets/DecoratorSVG/' + data);
             }
 
-            data = ejs.render(data, clientNodeObj);
+            try {
+                data = ejs.render(data, clientNodeObj);
+            } catch (e) {
+
+            }
+            return $(data);
+        }
+
+        return null;
+    }
+
+    function raw(data, clientNodeObj, doRender) {
+
+        if (typeof data === 'string' && data.length > 0) {
+            if (isSvg(data)) {
+                data = $(data).find('svg').first().prop('outerHTML');
+            } else {
+                data = getSvgFileContent('/assets/DecoratorSVG/' + data);
+            }
+
+            if (doRender === true) {
+                try {
+                    data = ejs.render(data, clientNodeObj);
+                } catch (e) {
+
+                }
+                data = 'data:image/svg+xml;base64,' + window.btoa(data);
+            }
+
             return $(data);
         }
 
@@ -74,6 +102,8 @@ define(['common/util/ejs'], function (ejs) {
 
     return {
         getSvgUri: uri,
-        getSvgContent: content
+        getSvgContent: content,
+        getRawSvgContent: raw,
+        isSvg: isSvg
     };
 });

@@ -480,6 +480,14 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.readOnlyProject || this._state.viewer || this.isLibraryRoot() || this.isLibraryElement();
     };
 
+    // GetNode from another node...
+    GMENode.prototype.getNode = function (id) {
+        if (this._state.nodes[id]) {
+            return GMENode(id, this._logger, this._state, this._storeNode);
+        }
+        return null;
+    };
+
     //getNode
     function getNode(_id, logger, state, storeNode) {
         if (state.nodes[_id]) {
