@@ -42,13 +42,12 @@ $desc-margin: 3px;
     width: 100%;
 
     .svg-editing-code-mirror {
-      width: 50%;
       height: 100%;
     }
 
     .svg-display {
-      width: 50%;
       height: 100%;
+      overflow: scroll;
     }
   }
   .image-container {
@@ -98,20 +97,22 @@ $desc-margin: 3px;
       float: right;
     }
 
-    div.btn {
+    div.action-btn {
       display: block;
-    }
-
-    &:hover {
-      border-color: #ababab;
-      background-color: #efefef;
+      &:hover {
+        border-color: #52a8ec;
+        background-color: #dbeafc;
+        -webkit-box-shadow: 0 0 2px 0 #1276d4 !important;
+        -moz-box-shadow: 0 0 2px 0 #1276d4 !important;
+        box-shadow: 0 0 2px 0 #1276d4 !important;
+      }
     }
 
     &:hover > div.btn-holder {
       display: block;
     }
 
-    &.selected {
+    &:hover {
       border-color: #52a8ec;
       background-color: #dbeafc;
       -webkit-box-shadow: 0 0 15px 0 #1276d4 !important;

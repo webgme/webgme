@@ -21,11 +21,10 @@
   height: 100%;
   width: 100%; }
   .decorator-svg-dialog .svg-editor .svg-editing-code-mirror {
-    width: 50%;
     height: 100%; }
   .decorator-svg-dialog .svg-editor .svg-display {
-    width: 50%;
-    height: 100%; }
+    height: 100%;
+    overflow: scroll; }
 .decorator-svg-dialog .image-container {
   margin: 3px;
   padding: 5px;
@@ -62,14 +61,17 @@
     display: none;
     position: relative;
     float: right; }
-  .decorator-svg-dialog .image-container div.btn {
+  .decorator-svg-dialog .image-container div.action-btn {
     display: block; }
-  .decorator-svg-dialog .image-container:hover {
-    border-color: #ababab;
-    background-color: #efefef; }
+    .decorator-svg-dialog .image-container div.action-btn:hover {
+      border-color: #52a8ec;
+      background-color: #dbeafc;
+      -webkit-box-shadow: 0 0 2px 0 #1276d4 !important;
+      -moz-box-shadow: 0 0 2px 0 #1276d4 !important;
+      box-shadow: 0 0 2px 0 #1276d4 !important; }
   .decorator-svg-dialog .image-container:hover > div.btn-holder {
     display: block; }
-  .decorator-svg-dialog .image-container.selected {
+  .decorator-svg-dialog .image-container:hover {
     border-color: #52a8ec;
     background-color: #dbeafc;
     -webkit-box-shadow: 0 0 15px 0 #1276d4 !important;

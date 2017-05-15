@@ -1,9 +1,10 @@
-/*globals define, $*/
+/*globals define, $, WebGMEGlobal*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
  * @author pmeijer / https://github.com/pmeijer
+ * @author kecso / https://github.com/kecso
  */
 
 define(['js/Constants',
@@ -22,9 +23,9 @@ define(['js/Constants',
     'use strict';
 
     var DecoratorSVGExplorerDialog,
-        IMG_BASE = $('<div class="image-container"><img src=""/><div class="desc">description</div>' +
-            '<div class="btn-holder"></div></div>'),
-        IMG_BTN_BASE = $('<div class="btn btn-xs glyphicon"></div>'),
+        IMG_BASE = $('<div class="image-container"><img height=45px witdh=75px src=""/>' +
+            '<div class="desc">description</div><div class="btn-holder"></div></div>'),
+        IMG_BTN_BASE = $('<div class="action-btn btn btn-xs glyphicon"></div>'),
         GROUP_TXT = '<li class="tab"><a href="#" data-toggle="tab">__GROUP_NAME__</a></li>',
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         DecoratorSVGIconList = JSON.parse(decoratorSVGList),
@@ -34,15 +35,14 @@ define(['js/Constants',
         TAB_GROUP_PREFIX = 'tab-group-',
         DEFAULT_TAB_GROUP = 'Default';
 
-    DecoratorSVGIconList.unshift('');
+    DecoratorSVGIconList.unshift('__current__');
     DecoratorSVGIconList.unshift('');
 
     DecoratorSVGExplorerDialog = function () {
     };
 
     DecoratorSVGExplorerDialog.prototype.show = function (fnCallback, oldValue) {
-        var self = this,
-            $originalSelected;
+        var self = this;
 
         this._fnCallback = fnCallback;
 
@@ -66,12 +66,6 @@ define(['js/Constants',
         });
 
         this._dialog.modal('show');
-
-        // if (oldValue) {
-        //
-        //     $originalSelected = self._modalBody.find('[' + DATA_FILENAME + '="' + oldValue + '"]');
-        //     this._setSelected(oldValue, $originalSelected);
-        // }
     };
 
     DecoratorSVGExplorerDialog.prototype.registerResult = function () {
@@ -88,7 +82,37 @@ define(['js/Constants',
             namePieces,
             imgName,
             tabGroupEl,
-            divImg;
+            divImg,
+            setLiveSvg = function () {
+                var svgText = self._codemirror.getValue(),
+                    svg;
+                if (WebGMEGlobal.SvgManager.isSvg(svgText)) {
+                    svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
+                    self._editor.find('.svg-display').empty().append(svg);
+                }
+            },
+            editBtnFn = function (event) {
+                var filename = $(event.currentTarget).data('filename');
+
+                self._filter('$@$impossible$@$');
+                self._editor.show();
+                self._btnCancel.show();
+                self._btnUse.show();
+
+                if (filename === '__current__') {
+                    self._codemirror.setValue(
+                        WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, false) || ''
+                    );
+                } else {
+                    self._codemirror.setValue(
+                        WebGMEGlobal.SvgManager.getRawSvgContent(filename, self._clientNode, false) || ''
+                    );
+                }
+
+                setLiveSvg();
+                self._codemirror.refresh();
+                self._codemirror.focus();
+            };
 
         this._dialog = $(DecoratorSVGExplorerDialogTemplate);
         this._modalBody = this._dialog.find('.modal-body');
@@ -101,7 +125,14 @@ define(['js/Constants',
 
         this._btnCancel.on('click', function () {
             self._editor.hide();
+            self._btnCancel.hide();
+            self._btnUse.hide();
             self._filter('');
+        });
+
+        this._btnUse.on('click', function () {
+            self.result = self._codemirror.getValue();
+            self._dialog.modal('hide');
         });
 
         this._codemirror = CodeMirror(this._codemirrorEl[0], {
@@ -113,7 +144,11 @@ define(['js/Constants',
             mode: 'htmlmixed',
             autofocus: true,
             dragDrop: false,
-            gutters: ["CodeMirror-linenumbers"]
+            gutters: ['CodeMirror-linenumbers']
+        });
+
+        this._codemirror.on('change', function () {
+            setLiveSvg();
         });
 
         this._editor.hide();
@@ -127,39 +162,35 @@ define(['js/Constants',
             imgName = namePieces[namePieces.length - 1];
 
             btnSelect = IMG_BTN_BASE.clone();
-            btnSelect.addClass('glyphicon-ok');
             btnSelect.attr('title', 'Select item to use');
             btnSelect.data('filename', svg);
 
             btnEdit = IMG_BTN_BASE.clone();
-            btnEdit.addClass('glyphicon-pencil');
             btnEdit.attr('title', 'Edit to use as embedded svg');
             btnEdit.data('filename', svg);
-            btnEdit.on('click', function (event) {
-                // self._setSelected($(event.currentTarget).data('filename'));
-                self._filter('$@$impossible$@$');
-                self._editor.show();
-                self._btnCancel.show();
-                self._btnUse.show();
-                self._codemirror.setValue(WebGMEGlobal.SvgManager.getRawSvgContent(self._old));
-                self._codemirror.refresh();
-                self._codemirror.focus();
-            });
+            btnEdit.on('click', editBtnFn);
 
             divImg.find('.btn-holder').append(btnSelect);
             divImg.find('.btn-holder').append(btnEdit);
 
             if (i === 0) {
+                btnSelect.addClass('glyphicon-remove');
+                btnEdit.addClass('glyphicon-plus');
+                btnSelect.attr('title', 'Clear related SVG registry');
                 divImg.find('img').remove();
                 divImg.find('.desc').text('-- NONE --');
                 divImg.find('.desc').attr('title', '-- NONE --');
                 btnSelect.on('click', function () {
-                    self.result = null;
+                    self.result = undefined;
                     self._dialog.modal('hide');
                 });
+                btnEdit.attr('title', 'Create an embedded SVG');
             } else if (i === 1) {
-                if (WebGMEGlobal.SvgManager.isSvg()) {
-                    divImg.find('img').attr('src', WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true));
+                btnSelect.addClass('glyphicon-ok');
+                btnEdit.addClass('glyphicon-pencil');
+                if (WebGMEGlobal.SvgManager.isSvg(self._old)) {
+                    divImg.find('img').attr('src',
+                        WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
                 } else {
                     divImg.find('img').attr('src', SVG_DIR + self._old);
                 }
@@ -171,6 +202,8 @@ define(['js/Constants',
                     self._dialog.modal('hide');
                 });
             } else {
+                btnSelect.addClass('glyphicon-ok');
+                btnEdit.addClass('glyphicon-pencil');
                 // Trim the .svg part
                 imgName = imgName.substring(0, imgName.length - '.svg'.length);
                 divImg.find('img').attr('src', SVG_DIR + svg);

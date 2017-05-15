@@ -41,7 +41,9 @@ define(['common/util/ejs'], function (ejs) {
 
         if (typeof data === 'string' && data.length > 0) {
             if (isSvg(data)) {
-                data = $(data).find('svg').first().prop('outerHTML');
+                if ($(data)[0].tagName !== 'svg') {
+                    data = $(data).find('svg').first().prop('outerHTML');
+                }
                 data = ejs.render(data, clientNodeObj);
                 data = 'data:image/svg+xml;base64,' + window.btoa(data);
             } else {
@@ -60,7 +62,9 @@ define(['common/util/ejs'], function (ejs) {
 
         if (typeof data === 'string' && data.length > 0) {
             if (isSvg(data)) {
-                data = $(data).find('svg').first().prop('outerHTML');
+                if ($(data)[0].tagName !== 'svg') {
+                    data = $(data).find('svg').first().prop('outerHTML');
+                }
             } else {
                 data = getSvgFileContent('/assets/DecoratorSVG/' + data);
             }
@@ -76,11 +80,13 @@ define(['common/util/ejs'], function (ejs) {
         return null;
     }
 
-    function raw(data, clientNodeObj, doRender) {
+    function raw(data, clientNodeObj, doRender, doUri) {
 
         if (typeof data === 'string' && data.length > 0) {
             if (isSvg(data)) {
-                data = $(data).find('svg').first().prop('outerHTML');
+                if ($(data)[0].tagName !== 'svg') {
+                    data = $(data).find('svg').first().prop('outerHTML');
+                }
             } else {
                 data = getSvgFileContent('/assets/DecoratorSVG/' + data);
             }
@@ -91,10 +97,14 @@ define(['common/util/ejs'], function (ejs) {
                 } catch (e) {
 
                 }
-                data = 'data:image/svg+xml;base64,' + window.btoa(data);
+                if (doUri === true) {
+                    data = 'data:image/svg+xml;base64,' + window.btoa(data);
+                } else {
+                    data = $(data);
+                }
             }
 
-            return $(data);
+            return data;
         }
 
         return null;
