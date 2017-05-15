@@ -1,14 +1,25 @@
 # Change Log
 
+## [v2.13.1](https://github.com/webgme/webgme/tree/v2.13.1) (2017-05-15)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.13.0...v2.13.1)
+
+**Implemented enhancements:**
+
+- Client enhancements and fixes [\#1401](https://github.com/webgme/webgme/pull/1401) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Fixes bug with duplicate inheritance connection after undo/redo [\#1400](https://github.com/webgme/webgme/pull/1400) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.13.0](https://github.com/webgme/webgme/tree/v2.13.0) (2017-05-08)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.12.1...v2.13.0)
 
 **Implemented enhancements:**
 
+- Crosscut inheritance is not working as it should [\#1266](https://github.com/webgme/webgme/issues/1266)
 - Notifications panel doesn't have a maximum width, so it can display outside the bounds of the window and can't be deleted. [\#1375](https://github.com/webgme/webgme/issues/1375)
 - Small feature request: Add un-filled composition arrow head [\#1368](https://github.com/webgme/webgme/issues/1368)
 - core.loadRoot should check the provided hash and returned data object. [\#1306](https://github.com/webgme/webgme/issues/1306)
-- Crosscut inheritance is not working as it should [\#1266](https://github.com/webgme/webgme/issues/1266)
 - Customizable favicon and title [\#1143](https://github.com/webgme/webgme/issues/1143)
 - When deleting connectors from a crosscut the object is deleted \(not just removed\) [\#896](https://github.com/webgme/webgme/issues/896)
 - Closes \#1368 Add unfilled diamond arrow heads. [\#1396](https://github.com/webgme/webgme/pull/1396) ([pmeijer](https://github.com/pmeijer))
