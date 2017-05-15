@@ -136,7 +136,7 @@ module.exports = function (config) {
             {pattern: 'src/common/**/*.js', included: false},
             {pattern: 'src/client/js/*.js', included: false},
             {pattern: 'src/client/js/**/*.js', included: false},
-            {pattern: 'src/client/bower_components/visionmedia-debug/dist/debug.js', included: false},
+            {pattern: 'src/client/lib/debug/debug.js', included: false},
             {pattern: 'src/client/lib/jquery/*.js', included: false},
             {pattern: 'src/client/lib/require/**/*.js', included: false},
             {pattern: 'src/client/lib/superagent/*.js', included: false},

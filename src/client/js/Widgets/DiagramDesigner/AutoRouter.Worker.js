@@ -29,7 +29,7 @@ var startWorker = function() {
             assert: '../../../../common/util/assert',
             js: '../..',
             underscore: '../../../bower_components/underscore/underscore-min',
-            debug: '../../../bower_components/visionmedia-debug/dist/debug',
+            debug: '../../../lib/debug/debug',
             AutoRouterActionApplier: '../../../lib/autorouter/action-applier.min' // create a map file for debugging
         },
         shim: {

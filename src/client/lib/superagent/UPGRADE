@@ -1,6 +1,5 @@
-https://github.com/visionmedia/superagent/issues/587#issuecomment-89029589
+Bump the npm version and install
 
-Download and put the file here, when you upgrade the npm version.
-Browser and server side library versions should be in sync.
+npm install -g browserify
 
-Update the content of superagent.js with the matching version `npm ls superagent`
+browserify -r superagent -o src/client/lib/superagent/superagent.js -s superagent

@@ -1,0 +1,5 @@
+Bump the npm version and install
+
+npm install -g browserify
+
+browserify -r debug -o src/client/lib/debug/debug.js -s debug
