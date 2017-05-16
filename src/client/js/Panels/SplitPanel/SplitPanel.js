@@ -666,7 +666,9 @@ define([
         this._readOnly = isReadOnly;
 
         Object.keys(this._panels).forEach(function (panelId) {
-            self._panels[panelId].instance.onReadOnlyChanged(isReadOnly);
+            if (self._panels[panelId].instance) {
+                self._panels[panelId].instance.onReadOnlyChanged(isReadOnly);
+            }
         });
     };
 
