@@ -351,7 +351,7 @@ define([
             req.agent(this.keepaliveAgent);
         }
 
-        if (req.pipe) {
+        if (typeof window === 'undefined') {
             // running on node
             var Writable = require('stream').Writable;
             var BuffersWritable = function (options) {
