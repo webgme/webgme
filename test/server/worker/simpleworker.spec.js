@@ -951,7 +951,7 @@ describe('Simple worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.executePlugin,
                     name: 'ConfigurationArtifact',
-                    socketId: '/#' + socket.id,
+                    socketId: socket.id,
                     webGMESessionId: webGMESessionId,
                     context: pluginContext
                 });
