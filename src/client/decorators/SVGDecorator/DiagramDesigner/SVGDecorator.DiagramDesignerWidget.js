@@ -209,7 +209,7 @@ define([
             //subcomponent
             var portTop = this.ports[id].top,
                 isLeft = this.ports[id].isLeft,
-                x = this._portContainerXShift + (isLeft ? 1 : this.svgWidth - 1),
+                x = xShift + (isLeft ? 1 : this.svgWidth - 1),
                 angle = isLeft ? 180 : 0;
 
             result.push({

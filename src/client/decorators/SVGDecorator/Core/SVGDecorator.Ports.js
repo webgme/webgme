@@ -24,9 +24,8 @@ define([
 
     _.extend(SVGDecoratorPorts.prototype, DecoratorWithPortsBase.prototype);
 
-    SVGDecoratorPorts.prototype._initializePortVariables = function (/*params*/) {
-        this._PORT_HEIGHT = PORT_HEIGHT;
-    };
+
+    SVGDecoratorPorts.prototype._PORT_HEIGHT = PORT_HEIGHT;
 
     SVGDecoratorPorts.prototype._updatePorts = function () {
         var svg = this.$svgElement,

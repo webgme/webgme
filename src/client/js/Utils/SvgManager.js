@@ -30,6 +30,23 @@ define(['common/util/ejs'], function (ejs) {
                         SVG_CACHE[svgFilePath] = $(data).find('svg').first().prop('outerHTML');
                         content = SVG_CACHE[svgFilePath];
                     }
+                })
+                .fail(function (resp, status/*, err*/) {
+                    var data = resp.responseText || "";
+
+                    if (status === 'parsererror') {
+                        if ($(data)[0].tagName === 'svg') {
+                            SVG_CACHE[svgFilePath] = data;
+                            content = SVG_CACHE[svgFilePath];
+                        } else {
+                            var svgElements = $(resp.responseText).find('svg');
+                            if (svgElements.length > 0) {
+                                SVG_CACHE[svgFilePath] = $(data).find('svg').first().prop('outerHTML');
+                                content = SVG_CACHE[svgFilePath];
+                            }
+                        }
+
+                    }
                 });
         }
 
@@ -44,12 +61,14 @@ define(['common/util/ejs'], function (ejs) {
                 if ($(data)[0].tagName !== 'svg') {
                     data = $(data).find('svg').first().prop('outerHTML');
                 }
-                data = ejs.render(data, clientNodeObj);
-                data = 'data:image/svg+xml;base64,' + window.btoa(data);
+                // data = ejs.render(data, clientNodeObj);
+                // data = 'data:image/svg+xml;base64,' + window.btoa(data);
             } else {
-                data = '/assets/DecoratorSVG/' + data;
+                data = getSvgFileContent('/assets/DecoratorSVG/' + data);
             }
 
+            data = ejs.render(data, clientNodeObj);
+            data = 'data:image/svg+xml;base64,' + window.btoa(data);
             return data;
 
         }
@@ -95,9 +114,9 @@ define(['common/util/ejs'], function (ejs) {
                 try {
                     data = ejs.render(data, clientNodeObj);
                 } catch (e) {
-
                 }
                 if (doUri === true) {
+                    data = $(data).
                     data = 'data:image/svg+xml;base64,' + window.btoa(data);
                 } else {
                     data = $(data);

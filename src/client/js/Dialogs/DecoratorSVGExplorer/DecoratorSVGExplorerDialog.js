@@ -51,6 +51,7 @@ define(['js/Constants',
 
         this._old = oldValue;
         this._clientNode = WebGMEGlobal.Client.getNode(WebGMEGlobal.State.getActiveSelection()[0]);
+        this.result = oldValue;
         this._initDialog();
 
         this._dialog.on('hidden.bs.modal', function () {
@@ -188,13 +189,14 @@ define(['js/Constants',
             } else if (i === 1) {
                 btnSelect.addClass('glyphicon-ok');
                 btnEdit.addClass('glyphicon-pencil');
-                if (WebGMEGlobal.SvgManager.isSvg(self._old)) {
-                    divImg.find('img').attr('src',
-                        WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
-                } else {
-                    divImg.find('img').attr('src', SVG_DIR + self._old);
-                }
-
+                // if (WebGMEGlobal.SvgManager.isSvg(self._old)) {
+                //     divImg.find('img').attr('src',
+                //         WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
+                // } else {
+                //     divImg.find('img').attr('src', SVG_DIR + self._old);
+                // }
+                divImg.find('img').attr('src',
+                    WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
                 divImg.find('.desc').text('-- CURRENT --');
                 divImg.find('.desc').attr('title', '-- CURRENT --');
                 btnSelect.on('click', function () {
@@ -207,6 +209,8 @@ define(['js/Constants',
                 // Trim the .svg part
                 imgName = imgName.substring(0, imgName.length - '.svg'.length);
                 divImg.find('img').attr('src', SVG_DIR + svg);
+                // divImg.find('img').attr('src',
+                //     WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
                 divImg.find('img').attr('title', svg);
                 divImg.find('.desc').text(imgName);
                 divImg.find('.desc').attr('title', svg);

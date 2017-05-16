@@ -73,6 +73,10 @@ define([
                 }
             }
         }
+
+        if (params.connectors === true) {
+            this._displayConnectors = true;
+        }
     };
 
     /**** Override from *.WidgetDecoratorBase ****/

@@ -483,7 +483,7 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
     // GetNode from another node...
     GMENode.prototype.getNode = function (id) {
         if (this._state.nodes[id]) {
-            return GMENode(id, this._logger, this._state, this._storeNode);
+            return new GMENode(id, this._logger, this._state, this._storeNode);
         }
         return null;
     };
