@@ -180,18 +180,21 @@ describe('standalone http server with authentication turned on', function () {
                     .finally(function () {
                         socket.disconnect();
                     });
-            }).then(function () {
-            return authorizer.getAccessRights('user', projectId, projectAuthParams);
-        }).then(function (authorized) {
-            authorized.should.deep.equal({read: true, write: true, delete: true});
-        }).nodeify(function (err) {
-            if (!err) {
-                done(new Error('should have failed'));
-                return;
-            }
-            ('' + err).should.contain('Not authorized to read project');
-            done();
-        });
+            })
+            .then(function () {
+                return authorizer.getAccessRights('user', projectId, projectAuthParams);
+            })
+            .then(function (authorized) {
+                authorized.should.deep.equal({read: true, write: true, delete: true});
+            })
+            .nodeify(function (err) {
+                if (!err) {
+                    done(new Error('should have failed'));
+                    return;
+                }
+                ('' + err).should.contain('Not authorized to read project');
+                done();
+            });
     });
 
 
@@ -234,11 +237,14 @@ describe('standalone http server with authentication turned on', function () {
                     .finally(function () {
                         socket.disconnect();
                     });
-            }).then(function () {
-            return authorizer.getAccessRights('user', projectId, projectAuthParams);
-        }).then(function (authorized) {
-            authorized.should.deep.equal({read: true, write: true, delete: true});
-        }).nodeify(done);
+            })
+            .then(function () {
+                return authorizer.getAccessRights('user', projectId, projectAuthParams);
+            })
+            .then(function (authorized) {
+                authorized.should.deep.equal({read: true, write: true, delete: true});
+            })
+            .nodeify(done);
     });
 
 

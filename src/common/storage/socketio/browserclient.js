@@ -27,7 +27,7 @@ define(['common/util/url'], function (URL) {
                     socket;
 
                 logger.debug('Connecting to "' + hostAddress + '" with options', gmeConfig.socketIO.clientOptions);
-                socket = io.connect(hostAddress, gmeConfig.socketIO.clientOptions);
+                socket = io(hostAddress, gmeConfig.socketIO.clientOptions);
                 callback(null, socket);
             });
         };

@@ -25,7 +25,7 @@ define(['socket.io-client'], function (io) {
                 logger.debug('webgmeToken was defined adding it as an extra header in the cookie..');
             }
 
-            callback(null, io.connect(hostUrl, socketIoOptions));
+            callback(null, io(hostUrl, socketIoOptions));
         };
 
         this.getToken = function () {

@@ -648,7 +648,7 @@ function openSocketIo(server, agent, userName, password, token) {
                 };
             }
 
-            socket = io.connect(serverBaseUrl, options);
+            socket = io(serverBaseUrl, options);
 
             socket.on('error', function (err) {
                 exports.logger.error(err);

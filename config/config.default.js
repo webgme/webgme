@@ -181,9 +181,8 @@ var path = require('path'),
         socketIO: {
             clientOptions: {
                 reconnection: true,
-                'connect timeout': 10,
-                'reconnection delay': 1,
-                'force new connection': true
+                reconnectionDelay: 500,
+                forceNew: true
             },
             serverOptions: {
                 //transports: ['websocket', 'polling']
