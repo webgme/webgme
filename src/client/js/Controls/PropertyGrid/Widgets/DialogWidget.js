@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
+define(['js/Controls/PropertyGrid/Widgets/WidgetBase', 'clipboard'], function (WidgetBase, Clipboard) {
 
     'use strict';
 
@@ -19,6 +19,14 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
         this.__label = LABEL_BASE.clone();
         this.el.append(this.__label);
+
+        this.__clipboard = propertyDesc.clipboard;
+
+        if (this.__clipboard === true) {
+            new Clipboard(this.__label[0]);
+            this.__label.attr('title', 'Copy to clipboard');
+            this.__label.css('cursor', 'copy');
+        }
 
         if (propertyDesc.dialog) {
             this.__btnDialogOpen = BTN_DIALOG_OPEN_BASE.clone();
@@ -46,8 +54,17 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
     DialogWidget.prototype.constructor = DialogWidget;
 
     DialogWidget.prototype.updateDisplay = function () {
-        this.__label.text(this.propertyValue);
-        this.__label.attr('title', this.propertyValue);
+        if (this.useDisplayedValue(this.propertyValue)) {
+            this.__label.text(this.displayedValue || this.propertyValue);
+        } else {
+            this.__label.text(this.propertyValue);
+        }
+
+        if (this.__clipboard === true) {
+            this.__label.attr('data-clipboard-text', this.propertyValue);
+        } else {
+            this.__label.attr('title', this.propertyValue);
+        }
         return WidgetBase.prototype.updateDisplay.call(this);
     };
 

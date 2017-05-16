@@ -21,6 +21,12 @@ define(['jquery'], function () {
         this.propertyText = propertyDesc.text;
         this.valueItems = propertyDesc.valueItems;
         this.valueType = propertyDesc.valueType || typeof propertyDesc.value;
+        this.displayedValue = propertyDesc.displayedValue;
+
+        this.useDisplayedValue = propertyDesc.useDisplayedValue ||
+            function () {
+                return false;
+            };
 
         this._isReadOnly = false;
         this._alwaysReadOnly = propertyDesc.alwaysReadOnly;
@@ -49,9 +55,11 @@ define(['jquery'], function () {
             if (newValue !== _oldValue) {
                 this.propertyValue = newValue;
                 if (this.__onChange) {
-                    this.__onChange.call(this, { id: this.propertyID,
+                    this.__onChange.call(this, {
+                        id: this.propertyID,
                         oldValue: _oldValue,
-                        newValue: newValue });
+                        newValue: newValue
+                    });
                 }
                 this.updateDisplay();
             }
@@ -63,9 +71,11 @@ define(['jquery'], function () {
     WidgetBase.prototype.fireFinishChange = function () {
         if (this.originalValue !== this.propertyValue) {
             if (this.__onFinishChange) {
-                this.__onFinishChange.call(this, { id: this.propertyID,
+                this.__onFinishChange.call(this, {
+                    id: this.propertyID,
                     oldValue: this.originalValue,
-                    newValue: this.propertyValue });
+                    newValue: this.propertyValue
+                });
             }
             this.originalValue = this.propertyValue;
         }

@@ -374,7 +374,6 @@ define(['js/logger',
                 }
             }
 
-
             if (onlyRootSelected) {
                 // If only the root is selected...
                 if (prefix === CONSTANTS.PROPERTY_GROUP_PREFERENCES + '.' &&
@@ -482,6 +481,11 @@ define(['js/logger',
                         dst[repKey].widget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
                         dst[repKey].dialog = DecoratorSVGExplorerDialog;
                         dst[repKey].value = typeof dst[repKey].value !== 'string' ? '' : dst[repKey].value;
+                        if (WebGMEGlobal.SvgManager.isSvg(dst[repKey].value)) {
+                            dst[repKey].displayedValue = '_inmodel svg_';
+                            dst[repKey].useDisplayedValue = WebGMEGlobal.SvgManager.isSvg;
+                        }
+                        dst[repKey].clipboard = true;
                     } else if (key === REGISTRY_KEYS.COLOR || key === REGISTRY_KEYS.BORDER_COLOR ||
                         key === REGISTRY_KEYS.TEXT_COLOR) {
                         dst[COLOR_SUB_GROUP] = {
