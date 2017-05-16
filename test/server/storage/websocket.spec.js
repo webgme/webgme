@@ -312,9 +312,9 @@ describe('WebSocket', function () {
         });
 
         it('should fail to getConnectionInfo with malformed token', function (done) {
-            openSocketIo('malformed_token')
+            openSocketIo()
                 .then(function (socket) {
-                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: webgmeToken});
+                    return Q.ninvoke(socket, 'emit', 'getConnectionInfo', {webgmeToken: 'malformed_token'});
                 })
                 .then(function () {
                     throw new Error('should have failed to getConnectionInfo');
@@ -582,7 +582,7 @@ describe('WebSocket', function () {
                         webgmeToken: emitter.webgmeToken,
                         projectId: projectEmitNotification,
                         branchName: 'master',
-                        originalSocketId: '/#' + receiver.socket.id,
+                        originalSocketId: receiver.socket.id,
                         notification: {
                             message: 'hej'
                         }
@@ -667,7 +667,7 @@ describe('WebSocket', function () {
                         webgmeToken: emitter.webgmeToken,
                         projectId: projectEmitNotification,
                         branchName: 'master',
-                        originalSocketId: '/#' + receiver.socket.id,
+                        originalSocketId: receiver.socket.id,
                         notification: {
                             message: 'hej',
                             toBranch: true
@@ -1628,10 +1628,10 @@ describe('WebSocket', function () {
     describe('with invalid token and user', function () {
         var addFailSimpleCallTestCase = function (functionName) {
                 it('should fail to execute \'' + functionName + '\' with invalid token', function (done) {
-                    openSocketIo('invalid_token')
+                    openSocketIo()
                         .then(function (socket) {
 
-                            return Q.ninvoke(socket, 'emit', functionName, {});
+                            return Q.ninvoke(socket, 'emit', functionName, {webgmeToken: 'invalid_token'});
                         })
                         .then(function () {
                             done(new Error('missing error handling'));
@@ -1699,10 +1699,10 @@ describe('WebSocket', function () {
         }
 
         it('should fail to call simpleQuery', function (done) {
-            openSocketIo('invalid_token')
+            openSocketIo()
                 .then(function (socket) {
 
-                    return Q.ninvoke(socket, 'emit', 'simpleQuery', 'someWorkerId', {});
+                    return Q.ninvoke(socket, 'emit', 'simpleQuery', 'someWorkerId', {webgmeToken: 'invalid_token'});
                 })
                 .then(function () {
                     done(new Error('missing error handling'));
