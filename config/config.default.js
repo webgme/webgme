@@ -108,15 +108,9 @@ var path = require('path'),
         mongo: {
             uri: 'mongodb://127.0.0.1:27017/multi',
             options: {
-                db: {
-                    w: 1,
-                    native_parser: true // jshint ignore: line
-                },
-                server: {
-                    auto_reconnect: true, // jshint ignore: line
-                    socketOptions: {keepAlive: 1}
-                    //poolSize: 5 // default pool size is 5
-                }
+                w: 1,
+                autoReconnect: true,
+                keepAlive: 1
             }
         },
 
@@ -187,9 +181,8 @@ var path = require('path'),
         socketIO: {
             clientOptions: {
                 reconnection: true,
-                'connect timeout': 10,
-                'reconnection delay': 1,
-                'force new connection': true
+                reconnectionDelay: 500,
+                forceNew: true
             },
             serverOptions: {
                 //transports: ['websocket', 'polling']

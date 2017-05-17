@@ -172,12 +172,16 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
                 projectId: projectId,
                 commitHash: ir.commitHash
             }, function (err, result) {
-                expect(err).to.equal(null);
+                try {
+                    expect(err).to.equal(null);
+                    expect(typeof result).to.equal('object');
+                    expect(result).to.have.property('hash');
+                    expect(typeof result.hash).to.equal('string');
+                    next();
+                } catch (e) {
+                    next(e);
+                }
 
-                expect(typeof result).to.equal('object');
-                expect(result).to.have.property('hash');
-                expect(typeof result.hash).to.equal('string');
-                next();
             });
         }
 
@@ -198,10 +202,12 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
         it('should handle multiple requests', function (done) {
             var needed = 3,
                 i,
-                requestHandled = function () {
+                error,
+                requestHandled = function (err) {
                     needed -= 1;
+                    error = error || err;
                     if (needed === 0) {
-                        done();
+                        done(error);
                     }
                 };
 
@@ -214,10 +220,12 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
             this.timeout(5000);
             var needed = gmeConfig.server.maxWorkers + 1,
                 i,
-                requestHandled = function () {
+                error,
+                requestHandled = function (err) {
                     needed -= 1;
+                    error = error || err;
                     if (needed === 0) {
-                        done();
+                        done(error);
                     }
                 };
 

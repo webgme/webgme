@@ -96,7 +96,7 @@ require.config({
         //node_modules
         jszip: 'bower_components/jszip/dist/jszip',
         superagent: 'lib/superagent/superagent',
-        debug: 'bower_components/visionmedia-debug/dist/debug',
+        debug: 'lib/debug/debug',
         q: 'bower_components/q/q',
 
         //codemirror: 'bower_components/codemirror/',

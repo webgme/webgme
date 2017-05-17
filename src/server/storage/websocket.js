@@ -41,8 +41,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
     }
 
     function getUserIdFromToken(socket, token, callback) {
+        var deferred = Q.defer();
+
         if (gmeConfig.authentication.enable === true) {
-            return gmeAuth.verifyJWToken(token)
+            gmeAuth.verifyJWToken(token)
                 .then(function (result) {
                     // Check if token is about to expire
                     if (result.renew === true) {
@@ -53,21 +55,22 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                         });
                     }
 
-                    return result.content.userId;
+                    deferred.resolve(result.content.userId);
                 })
                 .catch(function (err) {
                     if (err.name === 'TokenExpiredError') {
                         logger.debug('JWT_EXPIRED for socket', socket.id);
                         socket.emit(CONSTANTS.JWT_EXPIRED, {});
-                        throw new Error('TokenExpired');
+                        deferred.reject(new Error('TokenExpired'));
                     } else {
-                        throw err;
+                        deferred.reject(err);
                     }
-                })
-                .nodeify(callback);
+                });
         } else {
-            return Q(gmeConfig.authentication.guestAccount);
+            deferred.resolve(gmeConfig.authentication.guestAccount);
         }
+
+        return deferred.promise.nodeify(callback);
     }
 
     function projectAccess(socket, token, projectId, callback) {
@@ -279,9 +282,10 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     .then(function (userId) {
                         info.userId = userId;
                         callback(null, info);
-                    }).catch(function (err) {
-                    callback(err.message);
-                });
+                    })
+                    .catch(function (err) {
+                        callback(err.message);
+                    });
             });
 
             // watcher functions

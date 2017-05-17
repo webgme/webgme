@@ -7,7 +7,6 @@
 'use strict';
 
 var Child = require('child_process'),
-    process = require('process'),
     path = require('path'),
     CONSTANTS = require('./constants'),
     GUID = requireJS('common/util/guid'),
