@@ -1,0 +1,32 @@
+<%
+var height,
+    attributes = (getAttributeNames() || []).sort(),
+    name = getAttribute('name') || '_n_a_',
+    nameSize = Math.trunc(100 / (name.length * 0.716)),
+    fillColor = getRegistry('color') || '#e6ffcc',
+    strokeColor = 'black',
+    textColor = getRegistry('textColor') || 'black',
+    metaTypeNode = getNode(getMetaTypeId()),
+    type,
+    metaTypeName = metaTypeNode === null ? '<< none >>' : '<< ' + metaTypeNode.getAttribute('name') + ' >>',
+    metaSize = Math.trunc(90 / (metaTypeName.length * 0.716)),
+    offset = 48,
+    i;
+
+    nameSize = nameSize > 15 ? 15 : nameSize;
+    metaSize = metaSize > 10 ? 10 : metaSize;
+    height = 45 + (attributes.length*10);
+%>
+<svg xmlns="http://www.w3.org/2000/svg" width="130" height="<%=1.3*height%>" viewbox="0 0 100 <%=height%>">
+    <rect x="2" y="2" style="stroke-width: 2px;" stroke="<%=strokeColor%>" fill="<%=fillColor%>" width="96" height="<%=height-4%>"/>
+    <text fill="<%=textColor%>" y="15" x="50" text-anchor="middle" font-size="<%=nameSize%>" font-family="monospace"><%= name %></text>
+    <text fill="<%=textColor%>" y="30" x="50" text-anchor="middle" font-size="<%=metaSize%>" font-family="monospace"><%= metaTypeName %></text>
+    <rect x="2.5" y="35" style="stroke-width: 1px;" stroke="<%=strokeColor%>" fill="<%=fillColor%>" width="95" height="4"/>
+    <%
+        for(i = 0; i < attributes.length; i += 1){
+            type = (getAttributeMeta(attributes[i]) || {}).type || 'string';
+            %><text style="font-size: 6px" fill="<%=textColor%>" y="<%=offset%>" x="50" textLength="85" lengthAdjust="spacingAndGlyphs" text-anchor="middle"><%= type + ' : ' + attributes[i] + ' = ' + getAttribute(attributes[i]) %></text><%
+            offset+=10;
+        }
+    %>
+</svg>

@@ -10,7 +10,14 @@ define(['common/util/ejs'], function (ejs) {
 
     var SVG_CACHE = {};
 
+    //TODO we try our best to remove the ejs portions without actual rendering, but that might not help...
     function isSvg(text) {
+        text = text.split('<%');
+        for (var i = 0; i < text.length; i += 1) {
+            text[i] = text[i].replace(/^(.|\n)*%>/g, '');
+        }
+        text = text.join('');
+
         return $(text).is('svg');
     }
 
@@ -32,20 +39,12 @@ define(['common/util/ejs'], function (ejs) {
                     }
                 })
                 .fail(function (resp, status/*, err*/) {
-                    var data = resp.responseText || "";
+                    var data = resp.responseText;
 
-                    if (status === 'parsererror') {
-                        if ($(data)[0].tagName === 'svg') {
-                            SVG_CACHE[svgFilePath] = data;
-                            content = SVG_CACHE[svgFilePath];
-                        } else {
-                            var svgElements = $(resp.responseText).find('svg');
-                            if (svgElements.length > 0) {
-                                SVG_CACHE[svgFilePath] = $(data).find('svg').first().prop('outerHTML');
-                                content = SVG_CACHE[svgFilePath];
-                            }
-                        }
-
+                    // if the file contains a text we just save as it is cause it is most likely a template
+                    if (status === 'parsererror' && typeof data === 'string') {
+                        SVG_CACHE[svgFilePath] = data;
+                        content = SVG_CACHE[svgFilePath];
                     }
                 });
         }
@@ -57,17 +56,20 @@ define(['common/util/ejs'], function (ejs) {
         var data = clientNodeObj.getEditableRegistry(registryId);
 
         if (typeof data === 'string' && data.length > 0) {
-            if (isSvg(data)) {
-                if ($(data)[0].tagName !== 'svg') {
-                    data = $(data).find('svg').first().prop('outerHTML');
-                }
-                // data = ejs.render(data, clientNodeObj);
-                // data = 'data:image/svg+xml;base64,' + window.btoa(data);
-            } else {
+            if (isSvg(data) === false) {
                 data = getSvgFileContent('/assets/DecoratorSVG/' + data);
             }
 
-            data = ejs.render(data, clientNodeObj);
+            try {
+                data = ejs.render(data, clientNodeObj);
+            } catch (e) {
+                return null;
+            }
+
+            if ($(data)[0].tagName !== 'svg') {
+                data = $(data).find('svg').first().prop('outerHTML');
+            }
+
             data = 'data:image/svg+xml;base64,' + window.btoa(data);
             return data;
 
@@ -80,19 +82,20 @@ define(['common/util/ejs'], function (ejs) {
         var data = clientNodeObj.getEditableRegistry(registryId);
 
         if (typeof data === 'string' && data.length > 0) {
-            if (isSvg(data)) {
-                if ($(data)[0].tagName !== 'svg') {
-                    data = $(data).find('svg').first().prop('outerHTML');
-                }
-            } else {
+            if (isSvg(data) === false) {
                 data = getSvgFileContent('/assets/DecoratorSVG/' + data);
             }
 
             try {
                 data = ejs.render(data, clientNodeObj);
             } catch (e) {
-
+                return null;
             }
+
+            if ($(data)[0].tagName !== 'svg') {
+                data = $(data).find('svg').first().prop('outerHTML');
+            }
+
             return $(data);
         }
 
@@ -103,9 +106,6 @@ define(['common/util/ejs'], function (ejs) {
 
         if (typeof data === 'string' && data.length > 0) {
             if (isSvg(data)) {
-                if ($(data)[0].tagName !== 'svg') {
-                    data = $(data).find('svg').first().prop('outerHTML');
-                }
             } else {
                 data = getSvgFileContent('/assets/DecoratorSVG/' + data);
             }
@@ -114,10 +114,15 @@ define(['common/util/ejs'], function (ejs) {
                 try {
                     data = ejs.render(data, clientNodeObj);
                 } catch (e) {
+                    return null;
                 }
+
+                if ($(data)[0].tagName !== 'svg') {
+                    data = $(data).find('svg').first().prop('outerHTML');
+                }
+
                 if (doUri === true) {
-                    data = $(data).
-                    data = 'data:image/svg+xml;base64,' + window.btoa(data);
+                    data = $(data).data = 'data:image/svg+xml;base64,' + window.btoa(data);
                 } else {
                     data = $(data);
                 }
@@ -129,10 +134,21 @@ define(['common/util/ejs'], function (ejs) {
         return null;
     }
 
+    function test(templateString, clientNodeObj) {
+        try {
+            ejs.render(templateString, clientNodeObj);
+        } catch (e) {
+            return e;
+        }
+
+        return null;
+    }
+
     return {
         getSvgUri: uri,
         getSvgContent: content,
         getRawSvgContent: raw,
-        isSvg: isSvg
+        isSvg: isSvg,
+        test: test
     };
 });

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="160px" height="100px"
+     viewBox="0 0  400 200" preserveAspectRatio="none">
+    <rect x="5" y="5" style="stroke-width: 5px;" stroke="<%= getRegistry('borderColor') || 'black'%>" width="390" height="190" fill="<%= getRegistry('color') || 'white'%>"/>
+    <text fill="<%= getRegistry('textColor') || 'black'%>" x="200" y="50"
+          style="font-family: Arial; font-size: 40px; text-anchor: middle" stroke="#000000"><%=
+        getAttribute('name')
+    %></text>
+<%
+        var childrenIds = getChildrenIds(),
+        child, i, xOffset=300, yOffset=30,
+        nameText,
+        maxChildren = childrenIds.length > 6 ? 6 : childrenIds.length;
+
+        for(i=0; i<maxChildren; i+=1){
+            xOffset = xOffset > 200 ? 100 : 300;
+            yOffset += xOffset === 100 ? 50 : 0;
+            child = getNode(childrenIds[i]);
+            if(child){%>
+    <text fill="black" x="<%=xOffset%>" y="<%=yOffset%>"
+          style="font-family: Arial; font-size: 30px; text-anchor: middle"><%=
+        child.getAttribute('name')
+    %></text>
+<%
+            }
+        }
+%>
+</svg>
