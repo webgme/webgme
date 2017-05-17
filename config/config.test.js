@@ -42,4 +42,6 @@ config.server.log = {
     }]
 };
 
+config.socketIO.clientOptions.reconnectionDelay = 1;
+
 module.exports = config;
