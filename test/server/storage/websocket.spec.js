@@ -582,7 +582,7 @@ describe('WebSocket', function () {
                         webgmeToken: emitter.webgmeToken,
                         projectId: projectEmitNotification,
                         branchName: 'master',
-                        originalSocketId: receiver.socket.id,
+                        originalSocketId: '/#' + receiver.socket.id, // This will change in socket.io >= 2
                         notification: {
                             message: 'hej'
                         }
@@ -667,7 +667,7 @@ describe('WebSocket', function () {
                         webgmeToken: emitter.webgmeToken,
                         projectId: projectEmitNotification,
                         branchName: 'master',
-                        originalSocketId: receiver.socket.id,
+                        originalSocketId: '/#' + receiver.socket.id, // This will change in socket.io >= 2
                         notification: {
                             message: 'hej',
                             toBranch: true
