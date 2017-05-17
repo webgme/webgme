@@ -86,11 +86,25 @@ define(['js/Constants',
             divImg,
             setLiveSvg = function () {
                 var svgText = self._codemirror.getValue(),
+                    testResult,
                     svg;
-                if (WebGMEGlobal.SvgManager.isSvg(svgText)) {
+
+                testResult = WebGMEGlobal.SvgManager.test(svgText, self._clientNode);
+                if (testResult === null) {
                     svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
                     self._editor.find('.svg-display').empty().append(svg);
+                } else {
+                    self._editor.find('.svg-display').empty().innerHtml(testResult.message);
                 }
+                // if (WebGMEGlobal.SvgManager.isSvg(svgText)) {
+                //     testResult = WebGMEGlobal.SvgManager.test(svgText, self._clientNode);
+                //     if (testResult === null) {
+                //         svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
+                //         self._editor.find('.svg-display').empty().append(svg);
+                //     } else {
+                //         self._editor.find('.svg-display').empty().innerHtml(testResult.message);
+                //     }
+                // }
             },
             editBtnFn = function (event) {
                 var filename = $(event.currentTarget).data('filename');
@@ -208,9 +222,9 @@ define(['js/Constants',
                 btnEdit.addClass('glyphicon-pencil');
                 // Trim the .svg part
                 imgName = imgName.substring(0, imgName.length - '.svg'.length);
-                divImg.find('img').attr('src', SVG_DIR + svg);
-                // divImg.find('img').attr('src',
-                //     WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
+                // divImg.find('img').attr('src', SVG_DIR + svg);
+                divImg.find('img').attr('src',
+                    WebGMEGlobal.SvgManager.getRawSvgContent(svg, self._clientNode, true, true));
                 divImg.find('img').attr('title', svg);
                 divImg.find('.desc').text(imgName);
                 divImg.find('.desc').attr('title', svg);
