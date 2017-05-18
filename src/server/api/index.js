@@ -35,13 +35,11 @@ function createAPI(app, mountPath, middlewareOpts) {
         gmeConfig = middlewareOpts.gmeConfig,
         getUserId = middlewareOpts.getUserId,
         webgme = require('../../../webgme'),
-        merge = webgme.requirejs('common/core/users/merge'),
         StorageUtil = webgme.requirejs('common/storage/util'),
         webgmeUtils = require('../../utils'),
         GUID = webgme.requirejs('common/util/guid'),
         STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
         CORE_CONSTANTS = webgme.requirejs('common/core/constants'),
-        workerManager = middlewareOpts.workerManager,
 
         versionedAPIPath = mountPath + '/v1',
         latestAPIPath = mountPath;
@@ -1381,30 +1379,25 @@ function createAPI(app, mountPath, middlewareOpts) {
         ensureAuthenticated,
         function (req, res, next) {
             var userId = getUserId(req),
-                loggerCompare = logger.fork('compare'),
-                data = {
-                    username: userId,
-                    projectId: StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
-                        req.params.projectName)
+                projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
+                    req.params.projectName),
+                workerParameters = {
+                    command: middlewareOpts.workerManager.CONSTANTS.workerCommands.diff,
+                    projectId: projectId,
+                    branchOrCommitA: req.params.branchOrCommitA,
+                    branchOrCommitB: req.params.branchOrCommitB,
                 };
 
-            safeStorage.openProject(data)
-                .then(function (project) {
-
-                    return merge.diff({
-                        project: project,
-                        branchOrCommitA: req.params.branchOrCommitA,
-                        branchOrCommitB: req.params.branchOrCommitB,
-                        logger: loggerCompare,
-                        gmeConfig: gmeConfig
-
-                    });
-
+            getNewJWToken(userId)
+                .then(function (token) {
+                    workerParameters.webgmeToken = token;
+                    return Q.ninvoke(middlewareOpts.workerManager, 'request', workerParameters);
                 })
-                .then(function (diff) {
-                    res.json(diff);
+                .then(function (result) {
+                    res.json(result);
                 })
                 .catch(function (err) {
+                    err = err instanceof Error ? err : new Error(err);
                     next(err);
                 });
         });

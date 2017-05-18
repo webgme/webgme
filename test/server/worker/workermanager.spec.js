@@ -16,7 +16,6 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
         agent = testFixture.superagent.agent(),
         guestAccount = gmeConfig.authentication.guestAccount,
         storage,
-        webGMESessionId,
         server,
         ir,
         workerConstants = require('../../../src/server/worker/constants'),
@@ -56,9 +55,6 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
             })
             .then(function (/*result*/) {
                 return testFixture.openSocketIo(server, agent, guestAccount, guestAccount);
-            })
-            .then(function (result) {
-                webGMESessionId = result.webGMESessionId;
             })
             .nodeify(done);
     });

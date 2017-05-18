@@ -279,12 +279,14 @@ define([
     }
 
     /**
-     * @param {object} storageObject
+     * @param {ProjectInterface} project - project connected to storage
      * @param {object} options - contains logging information
+     * @param {object} options.logger - gmeLogger
+     * @param {object} options.globConf - gmeConfig
      * @alias Core
      * @constructor
      */
-    function Core(storage, options) {
+    function Core(project, options) {
         var core,
             coreLayers = [];
         coreLayers.push(CoreRel);
@@ -312,7 +314,7 @@ define([
 
         core = coreLayers.reduce(function (inner, Class) {
             return new Class(inner, options);
-        }, new CoreTree(storage, options));
+        }, new CoreTree(project, options));
 
         isValidNode = core.isValidNode;
         isValidPath = core.isValidPath;

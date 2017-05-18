@@ -29,6 +29,7 @@ module.exports = {
         // Requests
         executePlugin: 'executePlugin',
         seedProject: 'seedProject',
+        diff: 'diff',
         autoMerge: 'autoMerge',
         resolve: 'resolve',
         checkConstraints: 'checkConstraints',

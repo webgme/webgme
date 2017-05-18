@@ -94,6 +94,18 @@ process.on('message', function (parameters) {
                     result: result
                 });
             });
+    } else if (parameters.command === CONSTANTS.workerCommands.diff) {
+        wr.diff(parameters.webgmeToken, parameters.projectId,
+            parameters.branchOrCommitA,
+            parameters.branchOrCommitB,
+            function (err, result) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.result,
+                    error: err ? err.message : null,
+                    result: result
+                });
+            });
     } else if (parameters.command === CONSTANTS.workerCommands.autoMerge) {
         wr.autoMerge(parameters.webgmeToken, parameters.projectId, parameters.mine, parameters.theirs,
             function (err, result) {
