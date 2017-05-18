@@ -452,13 +452,10 @@ define(['js/logger',
         if (this._splitPanel.getNumberOfPanels() > 1) {
 
             this._splitPanel.deleteAllPanels();
-
-            if (force) {
-                activePanel = WebGMEGlobal.PanelManager.getActivePanel();
-                WebGMEGlobal.PanelManager.setActivePanel(null);
-                WebGMEGlobal.PanelManager.setActivePanel(activePanel);
-                //WebGMEGlobal.State.registerActiveObject(this._activeNodeID);
-            }
+            activePanel = WebGMEGlobal.PanelManager.getActivePanel();
+            WebGMEGlobal.PanelManager.setActivePanel(null);
+            WebGMEGlobal.PanelManager.setActivePanel(activePanel);
+            //WebGMEGlobal.State.registerActiveObject(this._activeNodeID);
         } else if (!force) {
             this._client.notifyUser({
                 message: 'There are no split panels..',

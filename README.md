@@ -20,6 +20,7 @@ WebGME provides a variety of extension points for you to customize your applicat
  - [NodeJS](https://nodejs.org/) (version >= 4, CI tests are performed on versions 4.x, 6.x and LTS is recommended).
  - [MongoDB](https://www.mongodb.com/) (version >= 2.6).
  - [Git](https://git-scm.com) (must be available in PATH).
+ - [Redis](https://redis.io/) Note that this is only needed if you intend on running [multiple webgme nodes](https://github.com/webgme/webgme/wiki/Multiple-Nodes) behind a reverse proxy.
 
 #### Browser
 We aim to support all the major modern browsers. However we recommend using Chrome for two reasons: manual testing is mostly done using chrome and all performance profiling is done against the [V8 JavaScript Engine](https://en.wikipedia.org/wiki/V8_(JavaScript_engine)).
