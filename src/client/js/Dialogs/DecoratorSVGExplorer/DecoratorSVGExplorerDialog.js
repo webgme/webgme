@@ -94,7 +94,7 @@ define(['js/Constants',
                     svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
                     self._editor.find('.svg-display').empty().append(svg);
                 } else {
-                    self._editor.find('.svg-display').empty().innerHtml(testResult.message);
+                    self._editor.find('.svg-display').empty().html('<textarea style="height: 150px; width: 100%;">'+testResult.message+'</textarea>');
                 }
                 // if (WebGMEGlobal.SvgManager.isSvg(svgText)) {
                 //     testResult = WebGMEGlobal.SvgManager.test(svgText, self._clientNode);
