@@ -5,10 +5,11 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/ejs'], function (ejs) {
+define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
     'use strict';
 
-    var SVG_CACHE = {};
+    var SVG_CACHE = {},
+        BASEDIR = '/' + CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER;
 
     //TODO we try our best to remove the ejs portions without actual rendering, but that might not help...
     function isSvg(text) {
@@ -57,7 +58,7 @@ define(['common/util/ejs'], function (ejs) {
 
         if (typeof data === 'string' && data.length > 0) {
             if (isSvg(data) === false) {
-                data = getSvgFileContent('/assets/DecoratorSVG/' + data);
+                data = getSvgFileContent(BASEDIR + data);
             }
 
             try {
@@ -83,7 +84,7 @@ define(['common/util/ejs'], function (ejs) {
 
         if (typeof data === 'string' && data.length > 0) {
             if (isSvg(data) === false) {
-                data = getSvgFileContent('/assets/DecoratorSVG/' + data);
+                data = getSvgFileContent(BASEDIR + data);
             }
 
             try {
@@ -107,7 +108,7 @@ define(['common/util/ejs'], function (ejs) {
         if (typeof data === 'string' && data.length > 0) {
             if (isSvg(data)) {
             } else {
-                data = getSvgFileContent('/assets/DecoratorSVG/' + data);
+                data = getSvgFileContent(BASEDIR + data);
             }
 
             if (doRender === true) {

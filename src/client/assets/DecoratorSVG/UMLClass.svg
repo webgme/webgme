@@ -35,7 +35,7 @@ var height,
     height = 45 + (attributes.length*10);
     attrSize = width > 200 ? 8 : 6;
 %>
-<svg xmlns="http://www.w3.org/2000/svg" width="<%=1.3*width%>" height="<%=1.3*height%>" viewbox="0 0 <%=width%> <%=height%>">
+<svg data-hidename="true" xmlns="http://www.w3.org/2000/svg" width="<%=1.3*width%>" height="<%=1.3*height%>" viewbox="0 0 <%=width%> <%=height%>">
     <rect x="2" y="2" style="stroke-width: 2px;" stroke="<%=strokeColor%>" fill="<%=fillColor%>" width="<%=width-4%>" height="<%=height-4%>"/>
     <text fill="<%=textColor%>" y="15" x="<%=0.5*width%>" text-anchor="middle" font-size="14" font-weight="bold" font-family="monospace"><%=name%></text>
     <text fill="<%=textColor%>" y="30" x="<%=0.5*width%>" text-anchor="middle" font-size="12" font-family="monospace"><%=metaTypeName%></text>

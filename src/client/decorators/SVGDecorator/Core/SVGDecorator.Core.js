@@ -163,6 +163,12 @@ define([
 
         this.$name.text(this.formattedName);
         this.$name.attr('title', this.formattedName);
+
+        if(this.$svgElement.data('hidename') === true){
+            this.$name.hide();
+        } else {
+            this.$name.show();
+        }
     };
 
     /***** UPDATE THE ABSTRACTNESS OF THE NODE *****/
