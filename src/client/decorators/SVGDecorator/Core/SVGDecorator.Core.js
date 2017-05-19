@@ -257,7 +257,7 @@ define([
             //remove existing connectors (if any)
             this.$el.find('> .' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).remove();
 
-            svgContent = WebGMEGlobal.SvgManager.getSvgContent(nodeObj, REGISTRY_KEYS.SVG_ICON);
+            svgContent = WebGMEGlobal.SvgManager.getSvgElement(nodeObj, REGISTRY_KEYS.SVG_ICON);
             if (svgContent) {
                 this.$svgElement = svgContent;
                 this._discoverCustomConnectionAreas(this.$svgElement);

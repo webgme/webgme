@@ -12,6 +12,11 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
         BASEDIR = '/' + CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER;
 
     //TODO we try our best to remove the ejs portions without actual rendering, but that might not help...
+    /**
+     * The function checks if the input string is a potential svg string or svg template string (and not a simple path)
+     * @param {string} text - the string to check
+     * @return {boolean} Returns if the checked text can be used as an svg string or template
+     */
     function isSvg(text) {
         text = text.split('<%');
         for (var i = 0; i < text.length; i += 1) {
@@ -53,7 +58,14 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
         return content;
     }
 
-    function uri(clientNodeObj, registryId) {
+    /**
+     * The function retrieves the pointed svg asset as a base64 image source so it can be used as scr of an img tag
+     * @param {GMENode} clientNodeObj - The target node where we will gather the asset
+     * @param {string} registryId - The name of the registry entry that holds the svg asset which
+     * can be either an svg template string or a path of the svg file
+     * @return {string} The generated string should be used as the src attribute of an img tag without any modification
+     */
+    function getSvgUri(clientNodeObj, registryId) {
         var data = clientNodeObj.getEditableRegistry(registryId);
 
         if (typeof data === 'string' && data.length > 0) {
@@ -79,7 +91,13 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
         return null;
     }
 
-    function content(clientNodeObj, registryId) {
+    /**
+     * The function retrieves a sting that represents the svg asset pointed by the parameters
+     * @param {GMENode} clientNodeObj - The target node where we will look for the asset.
+     * @param {string} registryId - The name of the registry that contains the asset.
+     * @return {string|null} The rendered or downloaded svg string which can be used to create elements
+     */
+    function getSvgContent(clientNodeObj, registryId) {
         var data = clientNodeObj.getEditableRegistry(registryId);
 
         if (typeof data === 'string' && data.length > 0) {
@@ -97,13 +115,38 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
                 data = $(data).find('svg').first().prop('outerHTML');
             }
 
-            return $(data);
+            return data;
         }
 
         return null;
     }
 
-    function raw(data, clientNodeObj, doRender, doUri) {
+    /**
+     * The function creates an svg element pointed by the parameters
+     * @param {GMENode} clientNodeObj - The target client node object.
+     * @param {string} registryId - The name of the registry that holds the asset
+     * @return {object|null} The generated DOM element or null if no svg was found
+     */
+    function getSvgElement(clientNodeObj, registryId) {
+        var html = getSvgContent(clientNodeObj, registryId);
+        if (html === null) {
+            return html;
+        }
+
+        return $(html);
+    }
+
+    /**
+     * The function is able to retrieve the unrendered or rendered svg asset
+     * @param {string} data - The svg string or svg template string
+     * @param {GMENode} clientNodeObj - The target client node to use for rendering
+     * @param {boolean} doRender - If true the data will be rendered as an ejs template
+     * @param {boolean} doUri - If true, the rendered result will be translated into base64 string to use as
+     * src in img tags
+     * @return {string|object|null} If null returned, than either the rendering was faulty or the input
+     * data is not an svg.
+     */
+    function getRawSvgContent(data, clientNodeObj, doRender, doUri) {
 
         if (typeof data === 'string' && data.length > 0) {
             if (isSvg(data)) {
@@ -135,7 +178,13 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
         return null;
     }
 
-    function test(templateString, clientNodeObj) {
+    /**
+     * The function can check if the ejs template do generate an svg.
+     * @param {string} templateString - The string to test.
+     * @param {GMENode} clientNodeObj - The target node object
+     * @return {error|null} Returns the ejs error if something goes wrong or null otherwise.
+     */
+    function testSvgTemplate(templateString, clientNodeObj) {
         try {
             ejs.render(templateString, clientNodeObj);
         } catch (e) {
@@ -146,10 +195,11 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
     }
 
     return {
-        getSvgUri: uri,
-        getSvgContent: content,
-        getRawSvgContent: raw,
+        getSvgUri: getSvgUri,
+        getSvgContent: getSvgContent,
+        getSvgElement: getSvgElement,
+        getRawSvgContent: getRawSvgContent,
         isSvg: isSvg,
-        test: test
+        testSvgTemplate: testSvgTemplate
     };
 });

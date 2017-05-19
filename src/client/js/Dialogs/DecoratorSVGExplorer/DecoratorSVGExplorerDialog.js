@@ -89,7 +89,7 @@ define(['js/Constants',
                     testResult,
                     svg;
 
-                testResult = WebGMEGlobal.SvgManager.test(svgText, self._clientNode);
+                testResult = WebGMEGlobal.SvgManager.testSvgTemplate(svgText, self._clientNode);
                 if (testResult === null) {
                     svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
                     svg.addClass('displayed-svg');
