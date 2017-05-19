@@ -921,7 +921,6 @@ describe('PROJECT REST API', function () {
                         '/compare/doesnt_exist...master')
                         .end(function (err, res) {
                             expect(res.status).equal(500, err);
-                            // expecting empty diff
                             done();
                         });
                 });

@@ -19,7 +19,6 @@ describe('Simple worker', function () {
         expect,
         agent,
         openSocketIo = testFixture.openSocketIo,
-        webGMESessionId,
         CONSTRAINT_TYPES,
         CONSTANTS,
         server,
@@ -214,7 +213,6 @@ describe('Simple worker', function () {
                 return openSocketIo(server, agent, guestAccount, guestAccount);
             })
             .then(function (result) {
-                webGMESessionId = result.webGMESessionId;
                 socket = result.socket;
             })
             .nodeify(done);
@@ -379,7 +377,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.seedProject,
                     projectName: projectName,
                     ownerId: gmeConfig.authentication.guestAccount,
-                    webGMESessionId: webGMESessionId,
                     type: 'db',
                     seedName: baseProjectContext.id,
                 });
@@ -422,7 +419,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.seedProject,
                     projectName: projectName,
                     ownerId: gmeConfig.authentication.guestAccount,
-                    webGMESessionId: webGMESessionId,
                     type: 'db',
                     seedName: baseProjectContext.id,
                     seedCommit: baseProjectContext.commitHash,
@@ -468,7 +464,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.seedProject,
                     projectName: projectName,
                     ownerId: gmeConfig.authentication.guestAccount,
-                    webGMESessionId: webGMESessionId,
                     type: 'db',
                     seedName: baseProjectContext.id,
                     seedCommit: baseProjectContext.commitHash,
@@ -513,7 +508,6 @@ describe('Simple worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.seedProject,
                     projectName: projectName,
-                    webGMESessionId: webGMESessionId,
                     ownerId: gmeConfig.authentication.guestAccount,
                     type: 'db',
                     seedName: 'invalidProjectId',
@@ -542,7 +536,6 @@ describe('Simple worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.seedProject,
                     projectName: projectName,
-                    webGMESessionId: webGMESessionId,
                     ownerId: gmeConfig.authentication.guestAccount,
                     type: 'db',
                     seedName: baseProjectContext.id,
@@ -574,7 +567,6 @@ describe('Simple worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.seedProject,
                     projectName: projectName,
-                    webGMESessionId: webGMESessionId,
                     ownerId: gmeConfig.authentication.guestAccount,
                     type: 'db',
                     seedName: baseProjectContext.id,
@@ -604,7 +596,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.seedProject,
-                    webGMESessionId: webGMESessionId,
                     projectName: projectName,
                     ownerId: gmeConfig.authentication.guestAccount,
                     type: 'file',
@@ -657,7 +648,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.seedProject,
-                    webGMESessionId: webGMESessionId,
                     projectName: projectName,
                     ownerId: gmeConfigMod.authentication.guestAccount,
                     type: 'file',
@@ -702,7 +692,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.seedProject,
-                    webGMESessionId: webGMESessionId,
                     projectName: projectName,
                     ownerId: gmeConfig.authentication.guestAccount,
                     type: 'file',
@@ -734,7 +723,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.seedProject,
-                    webGMESessionId: webGMESessionId,
                     projectName: projectName,
                     ownerId: gmeConfig.authentication.guestAccount,
                     type: 'file',
@@ -762,7 +750,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.seedProject,
-                    webGMESessionId: webGMESessionId,
                     ownerId: gmeConfig.authentication.guestAccount,
                     type: 'file',
                     seedName: 'UnknownSeed',
@@ -789,7 +776,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.seedProject,
-                    webGMESessionId: webGMESessionId,
                     ownerId: gmeConfig.authentication.guestAccount,
                     type: 'unknownType',
                     projectName: 'someProject',
@@ -829,7 +815,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.executePlugin,
                     name: 'MinimalWorkingExample',
                     userId: 'myUser',
-                    webGMESessionId: webGMESessionId,
                     context: pluginContext
                 });
             })
@@ -867,7 +852,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.executePlugin,
                     name: 'MinimalWorkingExample',
                     userId: 'myUser',
-                    webGMESessionId: webGMESessionId,
                     context: pluginContext
                 });
             })
@@ -903,7 +887,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.executePlugin,
                     name: 'MinimalWorkingExample',
                     userId: 'myUser',
-                    webGMESessionId: webGMESessionId,
                     context: pluginContext
                 });
             })
@@ -952,7 +935,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.executePlugin,
                     name: 'ConfigurationArtifact',
                     socketId: socket.id,
-                    webGMESessionId: webGMESessionId,
                     context: pluginContext
                 });
             })
@@ -992,7 +974,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.executePlugin,
                     name: 'ConfigurationArtifact',
                     socketId: 'nonExistingSocket',
-                    webGMESessionId: webGMESessionId,
                     context: pluginContext
                 });
             })
@@ -1033,7 +1014,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.executePlugin,
                     name: 'MinimalWorkingExample',
                     userId: 'myUser',
-                    webGMESessionId: 'mySession',
                     context: pluginContext
                 });
             })
@@ -1072,7 +1052,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.executePlugin,
                     name: 'MinimalWorkingExample',
                     userId: 'myUser',
-                    webGMESessionId: webGMESessionId,
                     context: pluginContext
                 });
             })
@@ -1109,7 +1088,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.executePlugin,
                     name: 'NonExistentPlugin',
                     userId: 'myUser',
-                    webGMESessionId: webGMESessionId,
                     context: pluginContext
                 });
             })
@@ -1137,7 +1115,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.executePlugin,
                     name: 'MinimalWorkingExample',
                     userId: 'myUser',
-                    webGMESessionId: webGMESessionId,
                     context: 'no context'
                 });
             })
@@ -1154,6 +1131,37 @@ describe('Simple worker', function () {
     });
 
     // merge
+    it('should return diff for same branch', function (done) {
+        var worker = getSimpleWorker(),
+            projectName = 'WorkerProject',
+            projectId = testFixture.projectName2Id(projectName),
+            context = baseProjectContext;
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.diff,
+                    projectId: projectId,
+                    branchOrCommitA: context.commitHash,
+                    branchOrCommitB: context.commitHash
+                });
+            })
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.result);
+                expect(msg.error).equal(null);
+                expect(msg.resid).not.equal(null);
+                expect(msg.result).to.deep.equal({});
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+
+    });
+
     it('should merge automatically an empty change into the master branch', function (done) {
         var worker = getSimpleWorker(),
             projectName = 'WorkerProject',
@@ -1169,7 +1177,6 @@ describe('Simple worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.autoMerge,
                     projectId: projectId,
-                    webGMESessionId: webGMESessionId,
                     mine: context.commitHash,
                     theirs: context.commitHash
                 });
@@ -1198,9 +1205,38 @@ describe('Simple worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.autoMerge,
                     projectId: 'invalidProjectId',
-                    webGMESessionId: webGMESessionId,
                     mine: context.commitHash,
                     theirs: context.commitHash
+                });
+            })
+            .then(function () {
+                done(new Error('missing error handling'));
+            })
+            .catch(function (err) {
+                expect(err.message).to.contain('invalidProjectId');
+
+                done();
+            })
+            .finally(restoreProcessFunctions)
+            .done();
+
+    });
+
+    it('should fail to diff if project id is invalid', function (done) {
+        var worker = getSimpleWorker(),
+            context = baseProjectContext;
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.diff,
+                    projectId: 'invalidProjectId',
+                    branchOrCommitA: context.commitHash,
+                    branchOrCommitB: context.commitHash
                 });
             })
             .then(function () {
@@ -1231,7 +1267,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.resolve,
                     projectId: projectId,
                     userId: gmeConfig.authentication.guestAccount,
-                    webGMESessionId: webGMESessionId,
                     partial: {
                         projectId: baseProjectContext.id,
                         baseCommitHash: baseProjectContext.commitHash,
@@ -1268,7 +1303,6 @@ describe('Simple worker', function () {
                     command: CONSTANTS.workerCommands.resolve,
                     projectId: 'invalidProjectId',
                     userId: gmeConfig.authentication.guestAccount,
-                    webGMESessionId: webGMESessionId,
                     partial: {
                         projectId: 'invalidProjectId',
                         baseCommitHash: baseProjectContext.commitHash,
@@ -1356,8 +1390,7 @@ describe('Simple worker', function () {
                 projectId: constraintProjectImportResult.project.projectId,
                 commitHash: constraintProjectImportResult.commitHash,
                 nodePaths: ['/1'],
-                includeChildren: false,
-                webGMESessionId: webGMESessionId
+                includeChildren: false
             },
             worker = getSimpleWorker();
 
@@ -1390,8 +1423,7 @@ describe('Simple worker', function () {
                 projectId: constraintProjectImportResult2.project.projectId,
                 commitHash: constraintProjectImportResult2.commitHash,
                 nodePaths: ['/1'],
-                includeChildren: false,
-                webGMESessionId: webGMESessionId
+                includeChildren: false
             },
             worker = getSimpleWorker();
 
@@ -1427,7 +1459,6 @@ describe('Simple worker', function () {
                 commitHash: constraintProjectImportResult.commitHash,
                 nodePaths: ['/1', '/343492672', '/2046278624'], // No constraint, passes, fails.
                 includeChildren: true,
-                webGMESessionId: webGMESessionId,
                 checkType: CONSTRAINT_TYPES.CUSTOM
             },
             modifiedConfig = testFixture.getGmeConfig(),
@@ -1468,7 +1499,6 @@ describe('Simple worker', function () {
                 commitHash: constraintProjectImportResult.commitHash,
                 nodePaths: ['/343492672', '/902005954', '/132634291'], // passes, error, exception
                 includeChildren: true,
-                webGMESessionId: webGMESessionId,
                 checkType: CONSTRAINT_TYPES.CUSTOM
             },
             modifiedConfig = testFixture.getGmeConfig(),
@@ -1509,7 +1539,6 @@ describe('Simple worker', function () {
                 commitHash: constraintProjectImportResult.commitHash,
                 nodePaths: ['/1'],
                 includeChildren: false,
-                webGMESessionId: webGMESessionId,
                 checkType: CONSTRAINT_TYPES.CUSTOM
             },
             worker = getSimpleWorker();
@@ -1538,8 +1567,7 @@ describe('Simple worker', function () {
                 command: CONSTANTS.workerCommands.checkConstraints,
                 commitHash: constraintProjectImportResult.commitHash,
                 nodePaths: ['/1'],
-                includeChildren: false,
-                webGMESessionId: webGMESessionId
+                includeChildren: false
             },
             worker = getSimpleWorker();
 
@@ -1568,8 +1596,7 @@ describe('Simple worker', function () {
                 projectId: constraintProjectImportResult.project.projectId,
                 commitHash: constraintProjectImportResult.commitHash,
                 nodePaths: ['/1', '/11'],
-                includeChildren: false,
-                webGMESessionId: webGMESessionId
+                includeChildren: false
             },
             worker = getSimpleWorker();
 
@@ -1603,7 +1630,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportProjectToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: baseProjectContext.id,
                     branchName: 'master'
                 });
@@ -1631,7 +1657,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportProjectToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: baseProjectContext.id,
                     rootHash: baseProjectContext.rootHash
                 });
@@ -1659,7 +1684,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportProjectToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: baseProjectContext.id,
                     commitHash: baseProjectContext.commitHash
                 });
@@ -1687,7 +1711,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportProjectToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: baseProjectContext.id,
                     branchName: 'doesNotExist'
                 });
@@ -1712,7 +1735,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportProjectToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: baseProjectContext.id,
                     rootHash: 'wrong hash'
                 });
@@ -1737,7 +1759,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportProjectToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: baseProjectContext.id,
                     commitHash: 'wrong hash'
                 });
@@ -1762,7 +1783,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportProjectToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: 'badProjectId',
                     commit: baseProjectContext.commitHash
                 });
@@ -1794,7 +1814,7 @@ describe('Simple worker', function () {
                 done(new Error('missing error handling'));
             })
             .catch(function (err) {
-                expect(err.message).to.include('Invalid argument');
+                expect(err.message).to.include('No valid input was given');
 
                 done();
             })
@@ -1821,7 +1841,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.importProjectFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectName: projectName,
                     branchName: 'master',
                     blobHash: blobHash
@@ -1866,7 +1885,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.importProjectFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectName: projectName,
                     branchName: 'master',
                     blobHash: blobHash,
@@ -1912,7 +1930,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.importProjectFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectName: projectName,
                     branchName: 'master',
                     blobHash: blobHash
@@ -1957,7 +1974,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.importProjectFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectName: projectName,
                     branchName: 'master',
                     blobHash: blobHash
@@ -1991,7 +2007,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.importProjectFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectName: projectName,
                     branchName: 'master',
                     blobHash: blobHash
@@ -2025,7 +2040,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib1',
                     branchName: libraryProjectContext.branch,
@@ -2054,7 +2068,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib2',
                     branchName: libraryProjectContext.branch,
@@ -2092,7 +2105,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     branchName: libraryProjectContext.branch,
                     blobHash: blobHash
@@ -2121,7 +2133,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib3',
                     branchName: libraryProjectContext.branch
@@ -2148,7 +2159,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib4',
                     branchName: libraryProjectContext.branch,
@@ -2178,7 +2188,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib4',
                     branchName: libraryProjectContext.branch,
@@ -2215,7 +2224,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib5',
                     branchName: libraryProjectContext.branch,
@@ -2241,7 +2249,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.updateLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib5',
                     branchName: libraryProjectContext.branch,
@@ -2276,7 +2283,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib6',
                     branchName: libraryProjectContext.branch,
@@ -2302,7 +2308,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.updateLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib6',
                     branchName: libraryProjectContext.branch,
@@ -2334,7 +2339,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib7',
                     branchName: libraryProjectContext.branch,
@@ -2363,7 +2367,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.updateLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib7',
                     branchName: libraryProjectContext.branch
@@ -2397,7 +2400,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib8',
                     branchName: libraryProjectContext.branch,
@@ -2423,7 +2425,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.updateLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib8',
                     branchName: libraryProjectContext.branch
@@ -2456,7 +2457,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.addLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib9',
                     branchName: libraryProjectContext.branch,
@@ -2482,7 +2482,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.updateLibrary,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     libraryName: 'Lib9',
                     branchName: libraryProjectContext.branch,
@@ -2519,7 +2518,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.updateProjectFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     commitHash: libraryProjectContext.commitHash,
                     blobHash: blobHash
@@ -2555,7 +2553,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.updateProjectFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     branchName: 'master',
                     blobHash: blobHash
@@ -2592,7 +2589,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.updateProjectFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     branchName: 'nonexistent',
                     blobHash: blobHash
@@ -2619,7 +2615,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.updateProjectFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: projectId,
                     branchName: 'master',
                     blobHash: 'nonexistent'
@@ -2651,7 +2646,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportSelectionToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     commitHash: modelProjectContext.commitHash,
                     paths: ['/F']
@@ -2682,7 +2676,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportSelectionToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     commitHash: modelProjectContext.commitHash,
                     paths: ['/F/5']
@@ -2713,7 +2706,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportSelectionToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     commitHash: modelProjectContext.commitHash,
                     paths: []
@@ -2740,7 +2732,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportSelectionToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     commitHash: modelProjectContext.commitHash,
                     paths: ['/doesNotExist']
@@ -2767,7 +2758,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportSelectionToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     commitHash: modelProjectContext.commitHash,
                     paths: ['/F/0']
@@ -2794,7 +2784,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.exportSelectionToFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     commitHash: modelProjectContext.commitHash,
                     paths: ['/F/5', '/F/0']
@@ -2832,7 +2821,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.importSelectionFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     branchName: 'b1',
                     blobHash: blobHash,
@@ -2870,7 +2858,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.importSelectionFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     branchName: 'b2',
                     blobHash: blobHash,
@@ -2904,7 +2891,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.importSelectionFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     branchName: 'b3',
                     blobHash: blobHash
@@ -2937,7 +2923,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.importSelectionFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     branchName: 'b4',
                     blobHash: blobHash,
@@ -2966,7 +2951,6 @@ describe('Simple worker', function () {
 
                 return worker.send({
                     command: CONSTANTS.workerCommands.importSelectionFromFile,
-                    webGMESessionId: webGMESessionId,
                     projectId: modelProjectContext.id,
                     branchName: 'b5',
                     blobHash: blobHash,

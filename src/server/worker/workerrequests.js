@@ -32,13 +32,34 @@ var Core = requireJS('common/core/coreQ'),
 function WorkerRequests(mainLogger, gmeConfig) {
     var logger = mainLogger.fork('WorkerFunctions');
 
-    function getConnectedStorage(webgmeToken, callback) {
+    function getConnectedStorage(webgmeToken, projectId, callback) {
         var deferred = Q.defer(),
             storage = Storage.createStorage(null, webgmeToken, logger, gmeConfig);
 
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
-                deferred.resolve(storage);
+                if (typeof projectId === 'string') {
+                    storage.openProject(projectId, function (err, project, branches, access) {
+                        if (err) {
+                            storage.close(function (err2) {
+                                if (err2) {
+                                    logger.error(err2);
+                                }
+
+                                deferred.reject(err);
+                            });
+                        } else {
+                            deferred.resolve({
+                                storage: storage,
+                                project: project,
+                                branches: branches,
+                                access: access
+                            });
+                        }
+                    });
+                } else {
+                    deferred.resolve(storage);
+                }
             } else {
                 deferred.reject(new Error('Problems connecting to the webgme server, network state: ' + networkState));
             }
@@ -145,9 +166,14 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 } else {
                     logger.debug('plugin [' + pluginName + '] completed');
                 }
-                storage.close(function (closeErr) {
-                    callback(err || closeErr, result.serialize());
-                });
+
+                if (storage) {
+                    storage.close(function (closeErr) {
+                        callback(err || closeErr, result);
+                    });
+                } else {
+                    callback(err, result);
+                }
             };
 
         if (gmeConfig.plugin.allowServerExecution === false) {
@@ -166,35 +192,31 @@ function WorkerRequests(mainLogger, gmeConfig) {
         logger.debug('executePlugin', pluginName, socketId);
 
         logger.debug('executePlugin context', {metadata: context});
-        getConnectedStorage(webgmeToken)
-            .then(function (storage_) {
-                storage = storage_;
-                storage.openProject(context.managerConfig.project, function (err, project, branches, access) {
-                    var pluginContext;
-                    if (err) {
-                        finish(err);
-                        return;
-                    }
+        getConnectedStorage(webgmeToken, context.managerConfig.project)
+            .then(function (res) {
+                storage = res.storage;
+                var pluginContext = JSON.parse(JSON.stringify(context.managerConfig));
 
-                    logger.debug('Opened project, got branches:', context.managerConfig.project, branches);
+                pluginContext.project = res.project;
+                if (typeof context.managerConfig.project !== 'string') {
+                    throw new Error('Invalid argument, data.projectId is not a string.');
+                }
 
-                    pluginContext = JSON.parse(JSON.stringify(context.managerConfig));
-                    pluginContext.project = project;
+                logger.debug('Opened project, got branches:', context.managerConfig.project, res.branches);
 
-                    if (typeof socketId === 'string') {
-                        logger.debug('socketId provided for plugin execution - notifications available.');
-                        pluginManager.notificationHandlers = [function (data, callback) {
-                            data.originalSocketId = socketId;
-                            storage.sendNotification(data, callback);
-                        }];
-                    } else {
-                        logger.warn('No socketId provided for plugin execution - notifications NOT available.');
-                    }
+                if (typeof socketId === 'string') {
+                    logger.debug('socketId provided for plugin execution - notifications available.');
+                    pluginManager.notificationHandlers = [function (data, callback) {
+                        data.originalSocketId = socketId;
+                        storage.sendNotification(data, callback);
+                    }];
+                } else {
+                    logger.warn('No socketId provided for plugin execution - notifications NOT available.');
+                }
 
-                    pluginManager.projectAccess = access;
+                pluginManager.projectAccess = res.access;
 
-                    pluginManager.executePlugin(pluginName, context.pluginConfig, pluginContext, finish);
-                });
+                pluginManager.executePlugin(pluginName, context.pluginConfig, pluginContext, finish);
             })
             .catch(finish);
     }
@@ -435,6 +457,51 @@ function WorkerRequests(mainLogger, gmeConfig) {
      *
      * @param {string} webgmeToken
      * @param {string} projectId
+     * @param {string} branchOrCommitA - CommitHash or branchName.
+     * @param {string} branchOrCommitB - CommitHash or branchName.
+     * @param {function} callback
+     */
+    function diff(webgmeToken, projectId, branchOrCommitA, branchOrCommitB, callback) {
+        var storage,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('diff [' + projectId + '] failed with error', err);
+                } else {
+                    logger.debug('diff [' + projectId + '] completed');
+                }
+
+                if (storage) {
+                    storage.close(function (closeErr) {
+                        callback(err || closeErr, result);
+                    });
+                } else {
+                    callback(err, result);
+                }
+            };
+
+        logger.debug('diff ' + projectId + ' ' + branchOrCommitA + ' -> ' + branchOrCommitB);
+
+        getConnectedStorage(webgmeToken, projectId)
+            .then(function (res) {
+                var loggerCompare = logger.fork('compare');
+                storage = res.storage;
+
+                return merger.diff({
+                    project: res.project,
+                    branchOrCommitA: branchOrCommitA,
+                    branchOrCommitB: branchOrCommitB,
+                    logger: loggerCompare,
+                    gmeConfig: gmeConfig
+                });
+            })
+            .nodeify(finish);
+    }
+
+    /**
+     *
+     * @param {string} webgmeToken
+     * @param {string} projectId
      * @param {string} mine - CommitHash or branchName merge into 'theirs'.
      * @param {string} theirs - CommitHash or branchName that 'mine' will be merged into.
      * @param {function} callback
@@ -448,47 +515,45 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 } else {
                     logger.debug('autoMerge [' + projectId + '] completed');
                 }
-                storage.close(function (closeErr) {
-                    callback(err || closeErr, result);
-                });
+
+                if (storage) {
+                    storage.close(function (closeErr) {
+                        callback(err || closeErr, result);
+                    });
+                } else {
+                    callback(err, result);
+                }
             };
 
         logger.debug('autoMerge ' + projectId + ' ' + mine + ' -> ' + theirs);
 
-        getConnectedStorage(webgmeToken)
-            .then(function (storage_) {
-                storage = storage_;
+        getConnectedStorage(webgmeToken, projectId)
+            .then(function (res) {
+                var mergeLogger = logger.fork('merge');
+                storage = res.storage;
 
-                storage.openProject(projectId, function (err, project /*, branches*/) {
-                    var mergeLogger = logger.fork('merge');
-                    if (err) {
-                        finish(err);
-                        return;
-                    }
+                function mergeTillSyncOrConflict(currentMine) {
+                    return merger.merge({
+                        project: res.project,
+                        gmeConfig: gmeConfig,
+                        logger: mergeLogger,
+                        myBranchOrCommit: currentMine,
+                        theirBranchOrCommit: theirs,
+                        auto: true
+                    })
+                        .then(function (result) {
+                            if (result.conflict && result.conflict.items.length > 0) {
+                                return result;
+                            } else if (result.targetBranchName && !result.updatedBranch) {
+                                return mergeTillSyncOrConflict(result.finalCommitHash);
+                            } else {
+                                return result;
+                            }
+                        });
+                }
 
-                    function mergeTillSyncOrConflict(currentMine) {
-                        return merger.merge({
-                            project: project,
-                            gmeConfig: gmeConfig,
-                            logger: mergeLogger,
-                            myBranchOrCommit: currentMine,
-                            theirBranchOrCommit: theirs,
-                            auto: true
-                        })
-                            .then(function (result) {
-                                if (result.conflict && result.conflict.items.length > 0) {
-                                    return result;
-                                } else if (result.targetBranchName && !result.updatedBranch) {
-                                    return mergeTillSyncOrConflict(result.finalCommitHash);
-                                } else {
-                                    return result;
-                                }
-                            });
-                    }
-
-                    mergeTillSyncOrConflict(mine)
-                        .nodeify(finish);
-                });
+                mergeTillSyncOrConflict(mine)
+                    .nodeify(finish);
             })
             .catch(finish);
     }
@@ -508,30 +573,29 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 } else {
                     logger.debug('resolve [' + partial.projectId + '] completed');
                 }
-                storage.close(function (closeErr) {
-                    callback(err || closeErr, result);
-                });
+
+                if (storage) {
+                    storage.close(function (closeErr) {
+                        callback(err || closeErr, result);
+                    });
+                } else {
+                    callback(err, result);
+                }
             };
 
         logger.debug('resolve ' + partial.projectId + ' ' + partial.baseCommitHash + ' -> ' + partial.branchName);
 
-        getConnectedStorage(webgmeToken)
-            .then(function (storage_) {
-                storage = storage_;
-                storage.openProject(partial.projectId, function (err, project /*, branches*/) {
-                    if (err) {
-                        finish(err);
-                        return;
-                    }
+        getConnectedStorage(webgmeToken, partial.projectId)
+            .then(function (res) {
+                storage = res.storage;
 
-                    merger.resolve({
-                        project: project,
-                        gmeConfig: gmeConfig,
-                        logger: logger.fork('merge'),
-                        partial: partial
-                    })
-                        .nodeify(finish);
-                });
+                merger.resolve({
+                    project: res.project,
+                    gmeConfig: gmeConfig,
+                    logger: logger.fork('merge'),
+                    partial: partial
+                })
+                    .nodeify(finish);
             })
             .catch(finish);
     }
@@ -638,29 +702,23 @@ function WorkerRequests(mainLogger, gmeConfig) {
                 } else {
                     logger.debug('exportProjectToFile completed');
                 }
-                storage.close(function (closeErr) {
-                    callback(err || closeErr, result);
-                });
+
+                if (storage) {
+                    storage.close(function (closeErr) {
+                        callback(err || closeErr, result);
+                    });
+                } else {
+                    callback(err, result);
+                }
             };
 
         logger.debug('exportProjectToFile', {metadata: parameters});
 
-        getConnectedStorage(webgmeToken)
-            .then(function (storage_) {
-                var deferred = Q.defer();
-                storage = storage_;
-                storage.openProject(parameters.projectId, function (err, project/*, branches, access*/) {
-                    if (err) {
-                        deferred.reject(err);
-                    } else {
-                        deferred.resolve(project);
-                    }
-                });
+        getConnectedStorage(webgmeToken, parameters.projectId)
+            .then(function (res) {
+                storage = res.storage;
 
-                return deferred.promise;
-            })
-            .then(function (project) {
-                return storageUtils.getProjectJson(project, {
+                return storageUtils.getProjectJson(res.project, {
                     branchName: parameters.branchName,
                     commitHash: parameters.commitHash,
                     rootHash: parameters.rootHash,
@@ -1324,6 +1382,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     return {
         executePlugin: executePlugin,
         seedProject: seedProject,
+        diff: diff,
         autoMerge: autoMerge,
         resolve: resolve,
         checkConstraints: checkConstraints,
