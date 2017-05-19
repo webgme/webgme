@@ -18,7 +18,6 @@ define([
         SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         DEFAULT_SVG_PORT_ICON = 'Port.svg';
 
-
     SVGPort = function (params) {
         this._id = params.id;
         this._logger = params.logger;
@@ -77,19 +76,18 @@ define([
 
         this.$title.text(formattedPortTitle);
         this.$title.attr('title', formattedPortTitle);
+        this.$icon.attr('title', formattedPortTitle);
     };
 
     SVGPort.prototype._updateIcon = function () {
         var portNode = this._client.getNode(this._id),
-            portIconUrl = portNode.getRegistry(RegistryKeys.PORT_SVG_ICON);
+            portIconURI = WebGMEGlobal.SvgManager.getSvgUri(portNode, RegistryKeys.PORT_SVG_ICON);
 
-        if (!portIconUrl || portIconUrl === '') {
-            portIconUrl = SVG_DIR + DEFAULT_SVG_PORT_ICON;
-        } else {
-            portIconUrl = SVG_DIR + portIconUrl;
+        if (portIconURI === null) {
+            portIconURI = SVG_DIR + DEFAULT_SVG_PORT_ICON;
         }
 
-        this.$imgIcon.attr('src', portIconUrl);
+        this.$imgIcon.attr('src', portIconURI);
     };
 
     SVGPort.prototype.updateOrientation = function (isLeft) {
@@ -110,7 +108,6 @@ define([
     SVGPort.prototype.hideConnectors = function () {
         this.$connector.hide();
     };
-
 
     return SVGPort;
 });

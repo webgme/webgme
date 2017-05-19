@@ -30,12 +30,12 @@
     top: 0;
     font-size: 10px; }
     .svg-decorator .ports.ports-l {
-      left: 0px; }
+      left: 0; }
     .svg-decorator .ports.ports-r {
-      left: 100px; }
+      right: 0; }
     .svg-decorator .ports .port {
       position: absolute;
-      height: 13px;
+      width: 10px;
       line-height: 13px; }
       .svg-decorator .ports .port .title {
         position: absolute;
@@ -44,8 +44,7 @@
       .svg-decorator .ports .port .icon {
         position: absolute; }
         .svg-decorator .ports .port .icon img {
-          width: 13px;
-          height: 13px; }
+          width: 10px; }
       .svg-decorator .ports .port .connector {
         margin-left: 0;
         margin-top: 0; }

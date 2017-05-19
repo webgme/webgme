@@ -11,7 +11,7 @@ define(['js/Constants',
     'codemirror/lib/codemirror',
     'text!assets/decoratorSVGList.json',
     'text!./templates/DecoratorSVGExplorerDialog.html',
-    'codemirror/mode/htmlmixed/htmlmixed',
+    'codemirror/mode/htmlembedded/htmlembedded',
     'css!./styles/DecoratorSVGExplorerDialog.css',
     'css!codemirror/lib/codemirror.css',
     'css!codemirror/theme/monokai.css'
@@ -23,7 +23,7 @@ define(['js/Constants',
     'use strict';
 
     var DecoratorSVGExplorerDialog,
-        IMG_BASE = $('<div class="image-container"><img height=45px width=75px src=""/>' +
+        IMG_BASE = $('<div class="image-container"><img width=60px src=""/>' +
             '<div class="desc">description</div><div class="btn-holder"></div></div>'),
         IMG_BTN_BASE = $('<div class="action-btn btn btn-xs glyphicon"></div>'),
         GROUP_TXT = '<li class="tab"><a href="#" data-toggle="tab">__GROUP_NAME__</a></li>',
@@ -92,10 +92,11 @@ define(['js/Constants',
                 testResult = WebGMEGlobal.SvgManager.test(svgText, self._clientNode);
                 if (testResult === null) {
                     svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
+                    svg.addClass('displayed-svg');
                     self._editor.find('.svg-display').empty().append(svg);
                 } else {
                     self._editor.find('.svg-display').empty()
-                        .html('<textarea style="height: 150px; width: 100%;">' + testResult.message + '</textarea>');
+                        .html(testResult.message);
                 }
             },
             removeBtnFn = function () {
@@ -116,7 +117,11 @@ define(['js/Constants',
                 self._filter('$@$impossible$@$');
                 self._editor.show();
                 self._btnCancel.show();
-                self._btnUse.show();
+                self._btnSave.show();
+                self._txtFind.hide();
+                self._groupTabList.hide();
+                self._modalBody.addClass('fixed-modal-body');
+                self._modalBody.removeClass('modal-body');
 
                 if (filename === '__current__') {
                     self._codemirror.setValue(
@@ -136,7 +141,7 @@ define(['js/Constants',
         this._dialog = $(DecoratorSVGExplorerDialogTemplate);
         this._modalBody = this._dialog.find('.modal-body');
         this._editor = this._dialog.find('.svg-editor');
-        this._btnUse = this._dialog.find('.btn-select');
+        this._btnSave = this._dialog.find('.btn-select');
         this._btnCancel = this._dialog.find('.btn-cancel');
         this._codemirrorEl = this._editor.find('.svg-editing-code-mirror');
         this._txtFind = this._dialog.find('#txtFilter');
@@ -145,11 +150,15 @@ define(['js/Constants',
         this._btnCancel.on('click', function () {
             self._editor.hide();
             self._btnCancel.hide();
-            self._btnUse.hide();
+            self._btnSave.hide();
             self._filter('');
+            self._txtFind.show();
+            self._groupTabList.show();
+            self._modalBody.removeClass('fixed-modal-body');
+            self._modalBody.addClass('modal-body');
         });
 
-        this._btnUse.on('click', function () {
+        this._btnSave.on('click', function () {
             self.result = self._codemirror.getValue();
             self._dialog.modal('hide');
         });
@@ -161,7 +170,7 @@ define(['js/Constants',
             matchBrackets: true,
             lint: false,
             theme: 'monokai',
-            mode: 'htmlmixed',
+            mode: 'htmlembedded',
             autofocus: true,
             dragDrop: false,
             gutters: ['CodeMirror-linenumbers']
@@ -173,7 +182,7 @@ define(['js/Constants',
         });
 
         this._editor.hide();
-        this._btnUse.hide();
+        this._btnSave.hide();
         this._btnCancel.hide();
 
         for (i = 0; i < len; i += 1) {

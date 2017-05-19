@@ -3,6 +3,9 @@
  * 
  * Author: Robert Kereskenyi
  */
+.decorator-svg-dialog .fixed-modal-body {
+  overflow: hidden;
+  height: 75vh; }
 .decorator-svg-dialog .modal-header .header-icon {
   font-size: 30px;
   margin-right: 1ex;
@@ -22,9 +25,22 @@
   width: 100%; }
   .decorator-svg-dialog .svg-editor .svg-editing-code-mirror {
     height: 100%; }
+    .decorator-svg-dialog .svg-editor .svg-editing-code-mirror .CodeMirror {
+      border: 1px solid #eee;
+      height: 100%; }
   .decorator-svg-dialog .svg-editor .svg-display {
     height: 100%;
-    overflow: scroll; }
+    overflow: auto;
+    background-color: #424242;
+    border-right: 15px solid white; }
+    .decorator-svg-dialog .svg-editor .svg-display .displayed-svg {
+      margin: auto;
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0; }
 .decorator-svg-dialog .image-container {
   margin: 3px;
   padding: 5px;

@@ -12,6 +12,11 @@ $desc-line-height: 20px;
 $desc-margin: 3px;
 
 .decorator-svg-dialog {
+  .fixed-modal-body {
+    overflow: hidden;
+    height: 75vh;
+
+  }
   .modal-header {
     .header-icon {
       font-size: 30px;
@@ -43,11 +48,26 @@ $desc-margin: 3px;
 
     .svg-editing-code-mirror {
       height: 100%;
+      .CodeMirror {
+        border: 1px solid #eee;
+        height: 100%;
+      }
     }
 
     .svg-display {
       height: 100%;
-      overflow: scroll;
+      overflow: auto;
+      background-color: #424242;
+      border-right: 15px solid white;
+      .displayed-svg {
+        margin: auto;
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+      }
     }
   }
   .image-container {

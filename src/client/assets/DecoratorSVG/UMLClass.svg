@@ -33,9 +33,9 @@ var height,
 
     width = width < 120 ? 120 : width;
     height = 45 + (attributes.length*10);
-    attrSize = width > 200 ? 8 : 6;
+    attrSize = width > 200 ? 10 : 7;
 %>
-<svg data-hidename="true" xmlns="http://www.w3.org/2000/svg" width="<%=1.3*width%>" height="<%=1.3*height%>" viewbox="0 0 <%=width%> <%=height%>">
+<svg data-hidename="true" xmlns="http://www.w3.org/2000/svg" width="<%=width%>" height="<%=height%>">
     <rect x="2" y="2" style="stroke-width: 2px;" stroke="<%=strokeColor%>" fill="<%=fillColor%>" width="<%=width-4%>" height="<%=height-4%>"/>
     <text fill="<%=textColor%>" y="15" x="<%=0.5*width%>" text-anchor="middle" font-size="14" font-weight="bold" font-family="monospace"><%=name%></text>
     <text fill="<%=textColor%>" y="30" x="<%=0.5*width%>" text-anchor="middle" font-size="12" font-family="monospace"><%=metaTypeName%></text>
@@ -43,9 +43,9 @@ var height,
     <%
         for(i = 0; i < attributes.length; i += 1){
             type = (getAttributeMeta(attributes[i]) || {}).type || 'string';%>
-    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.30%>" text-anchor="end"><%= TYPES[type] %></text>
-    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.60%>" text-anchor="end"><%= padding(attributes[i],8) + ' = ' %></text>
-    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.60 + 5%>" text-anchor="start"><%= padding(getAttribute(attributes[i]),12) %></text>
+    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.32%>" text-anchor="end"><%= TYPES[type] %></text>
+    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.64%>" text-anchor="end"><%= padding(attributes[i],8) + ' = ' %></text>
+    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.64 + 2%>" text-anchor="start"><%= padding(getAttribute(attributes[i]),10) %></text>
     <%
             offset+=10;
         }
