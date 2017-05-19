@@ -23,7 +23,7 @@ define(['js/Constants',
     'use strict';
 
     var DecoratorSVGExplorerDialog,
-        IMG_BASE = $('<div class="image-container"><img width=60px src=""/>' +
+        IMG_BASE = $('<div class="image-container"><img src=""/>' +
             '<div class="desc">description</div><div class="btn-holder"></div></div>'),
         IMG_BTN_BASE = $('<div class="action-btn btn btn-xs glyphicon"></div>'),
         GROUP_TXT = '<li class="tab"><a href="#" data-toggle="tab">__GROUP_NAME__</a></li>',
@@ -192,21 +192,25 @@ define(['js/Constants',
             imgName = namePieces[namePieces.length - 1];
 
             btnSelect = IMG_BTN_BASE.clone();
-            btnSelect.attr('title', 'Select item to use');
+
+            btnSelect.attr('title', 'Select');
             btnSelect.data('filename', svg);
 
             btnEdit = IMG_BTN_BASE.clone();
-            btnEdit.attr('title', 'Edit to use as embedded svg');
+            btnEdit.attr('title', 'Edit as embedded svg');
             btnEdit.data('filename', svg);
             btnEdit.on('click', editBtnFn);
+
+            btnEdit.addClass('glyphicon-pencil');
+            btnEdit.addClass('btn-primary');
 
             divImg.find('.btn-holder').append(btnSelect);
             divImg.find('.btn-holder').append(btnEdit);
 
             if (i === 0) {
                 btnSelect.addClass('glyphicon-remove');
-                btnEdit.addClass('glyphicon-plus');
-                btnSelect.attr('title', 'Clear related SVG registry');
+                btnSelect.addClass('btn-danger');
+                btnSelect.attr('title', 'Clear stored SVG registry');
                 divImg.find('img').remove();
                 divImg.find('.desc').text('-- NONE --');
                 divImg.find('.desc').attr('title', '-- NONE --');
@@ -214,7 +218,7 @@ define(['js/Constants',
                 btnEdit.attr('title', 'Create an embedded SVG');
             } else if (i === 1) {
                 btnSelect.addClass('glyphicon-ok');
-                btnEdit.addClass('glyphicon-pencil');
+                btnSelect.hide();
                 divImg.find('img').attr('src',
                     WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
                 divImg.find('.desc').text('-- CURRENT --');
@@ -222,7 +226,7 @@ define(['js/Constants',
                 btnSelect.on('click', cancelBtnFn);
             } else {
                 btnSelect.addClass('glyphicon-ok');
-                btnEdit.addClass('glyphicon-pencil');
+                btnSelect.addClass('btn-success');
                 // Trim the .svg part
                 imgName = imgName.substring(0, imgName.length - '.svg'.length);
                 divImg.find('img').attr('src',
