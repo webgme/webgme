@@ -75,8 +75,8 @@ define([
             formattedPortTitle = displayFormat.resolve(portNode);
 
         this.$title.text(formattedPortTitle);
-        this.$title.attr('title', formattedPortTitle);
-        this.$icon.attr('title', formattedPortTitle);
+        //this.$title.attr('title', formattedPortTitle);
+        this.$el.attr('title', formattedPortTitle);
     };
 
     SVGPort.prototype._updateIcon = function () {

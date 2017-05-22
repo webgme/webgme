@@ -44,7 +44,8 @@
       .svg-decorator .ports .port .icon {
         position: absolute; }
         .svg-decorator .ports .port .icon img {
-          width: 10px; }
+          width: 5px;
+          height: 11px; }
       .svg-decorator .ports .port .connector {
         margin-left: 0;
         margin-top: 0; }
@@ -72,6 +73,16 @@
     stroke-width: 1px; }
     .designer-item .svg-decorator .svg-content svg .connector:hover {
       stroke: rgba(82, 168, 236, 0.8); }
+.designer-item .svg-decorator .ports.ports-l .port .connector {
+  top: 2px; }
+  .designer-item .svg-decorator .ports.ports-l .port .connector:hover {
+    margin-left: -9px;
+    margin-top: -6px; }
+.designer-item .svg-decorator .ports.ports-r .port .connector {
+  top: 2px; }
+  .designer-item .svg-decorator .ports.ports-r .port .connector:hover {
+    margin-left: -1px;
+    margin-top: -6px; }
 .designer-item .svg-decorator .connector {
   background-color: #FEFEFE;
   height: 10px;

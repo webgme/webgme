@@ -32,10 +32,10 @@ height = 45 + (attributes.length * 10);
 attrSize = 10;
 %>
 <svg data-hidename="true" xmlns="http://www.w3.org/2000/svg" width="<%=width%>" height="<%=height%>">
-    <rect x="2" y="2" style="stroke-width: 2px;" stroke="<%=strokeColor%>" fill="<%=fillColor%>" width="<%=width-4%>" height="<%=height-4%>"/>
+    <rect x="0" y="0" stroke-width="2" stroke="<%=strokeColor%>" fill="<%=fillColor%>" width="<%=width%>" height="<%=height%>"/>
     <text fill="<%=textColor%>" y="15" x="<%=0.5*width%>" text-anchor="middle" font-size="14" font-weight="bold" font-family="monospace"><%=name%></text>
     <text fill="<%=textColor%>" y="30" x="<%=0.5*width%>" text-anchor="middle" font-size="12" font-family="monospace"><%=metaTypeName%></text>
-    <rect x="2.5" y="35" style="stroke-width: 1px;" stroke="<%=strokeColor%>" fill="<%=fillColor%>" width="<%=width-5%>" height="4"/>
+    <line x1="0" y1="35" y2="35" x2="<%=width%>" stroke-width="2" stroke="<%=strokeColor%>"/>
     <%
     for(i = 0; i < attributes.length; i += 1) {
     type = (getAttributeMeta(attributes[i]) || {}).type || 'string';

@@ -44,7 +44,8 @@
       .part .svg-decorator .ports .port .icon {
         position: absolute; }
         .part .svg-decorator .ports .port .icon img {
-          width: 10px; }
+          width: 5px;
+          height: 11px; }
       .part .svg-decorator .ports .port .connector {
         margin-left: 0;
         margin-top: 0; }
