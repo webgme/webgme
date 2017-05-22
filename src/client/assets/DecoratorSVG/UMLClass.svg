@@ -1,39 +1,35 @@
 <%
-var height,
-    padding = function(text,length){
-        var pad='', i;
-
-        if(text.length > length){
-            return text.substr(0,(length-3))+'...';
+        var height,
+        crop = function(text, length){
+        if (text.length > length) {
+        return text.substr(0, (length -3)) + '..';
         }
-        for(i=0;i<length - text.length;i+=1){
-            pad+=' ';
-        }
-        return pad+text;
-    },
-    TYPES = {
-        boolean: 'BOOLEAN :',
-        string: ' STRING :',
-        integer: 'INTEGER :',
-        float: '  FLOAT :',
-        asset: '  ASSET :'
-    },
-    attributes = (getAttributeNames() || []).sort(),
-    name = getAttribute('name') || '_n_a_',
-    width = name.length*10 + 20,
-    fillColor = getRegistry('color') || '#e6ffcc',
-    strokeColor = 'black',
-    textColor = getRegistry('textColor') || 'black',
-    metaTypeNode = getNode(getMetaTypeId()),
-    type,
-    attrSize = 8,
-    metaTypeName = metaTypeNode === null ? '<< none >>' : '<< ' + metaTypeNode.getAttribute('name') + ' >>',
-    offset = 48,
-    i;
 
-    width = width < 120 ? 120 : width;
-    height = 45 + (attributes.length*10);
-    attrSize = width > 200 ? 10 : 7;
+        return text;
+        },
+        TYPES = {
+        boolean: 'BOOL:',
+        string:  'STR :',
+        integer: 'INT :',
+        float:   'FLOAT:',
+        asset:   'ASSET:'
+        },
+        attributes = (getAttributeNames() || []).sort(),
+        name = getAttribute('name') || '_n_a_',
+        width = name.length * 10 + 20,
+        fillColor = getRegistry('color') || '#e6ffcc',
+        strokeColor = 'black',
+        textColor = getRegistry('textColor') || 'black',
+        metaTypeNode = getNode(getMetaTypeId()),
+        type,
+        attrSize = 8,
+        metaTypeName = metaTypeNode === null ? '<< none >>' : '<< ' + metaTypeNode.getAttribute('name') + ' >>',
+offset = 48,
+i;
+
+width = width < 200 ? 200 : width;
+height = 45 + (attributes.length * 10);
+attrSize = 10;
 %>
 <svg data-hidename="true" xmlns="http://www.w3.org/2000/svg" width="<%=width%>" height="<%=height%>">
     <rect x="2" y="2" style="stroke-width: 2px;" stroke="<%=strokeColor%>" fill="<%=fillColor%>" width="<%=width-4%>" height="<%=height-4%>"/>
@@ -41,13 +37,17 @@ var height,
     <text fill="<%=textColor%>" y="30" x="<%=0.5*width%>" text-anchor="middle" font-size="12" font-family="monospace"><%=metaTypeName%></text>
     <rect x="2.5" y="35" style="stroke-width: 1px;" stroke="<%=strokeColor%>" fill="<%=fillColor%>" width="<%=width-5%>" height="4"/>
     <%
-        for(i = 0; i < attributes.length; i += 1){
-            type = (getAttributeMeta(attributes[i]) || {}).type || 'string';%>
-    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.32%>" text-anchor="end"><%= TYPES[type] %></text>
-    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.64%>" text-anchor="end"><%= padding(attributes[i],8) + ' = ' %></text>
-    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.64 + 2%>" text-anchor="start"><%= padding(getAttribute(attributes[i]),10) %></text>
+    for(i = 0; i < attributes.length; i += 1) {
+    type = (getAttributeMeta(attributes[i]) || {}).type || 'string';
+    %>
+    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.05 %>" text-anchor="start">
+        <title><%=attributes[i]%></title>
+        <%= TYPES[type] + crop(attributes[i], 17)%></text>
+    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.7 + 2%>" text-anchor="start">
+        <title><%=getAttribute(attributes[i])%></title>
+        <%= crop(getAttribute(attributes[i]), 10) %></text>
     <%
-            offset+=10;
-        }
+    offset+=10;
+    }
     %>
 </svg>
