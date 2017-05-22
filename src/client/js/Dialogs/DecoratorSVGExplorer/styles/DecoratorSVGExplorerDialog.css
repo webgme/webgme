@@ -79,7 +79,8 @@
     position: relative;
     float: right; }
   .decorator-svg-dialog .image-container div.action-btn {
-    display: block; }
+    display: block;
+    margin-top: 1px; }
   .decorator-svg-dialog .image-container:hover > div.btn-holder {
     display: block; }
   .decorator-svg-dialog .image-container:hover {

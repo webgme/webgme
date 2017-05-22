@@ -23,7 +23,7 @@ define([
         'js/Dialogs/Projects/ProjectsDialog',
         'js/Utils/InterpreterManager',
         'js/Utils/ComponentSettings',
-        'Js/Utils/SvgManager',
+        'js/Utils/SvgManager',
         'common/storage/util',
         'q',
         'jquery'

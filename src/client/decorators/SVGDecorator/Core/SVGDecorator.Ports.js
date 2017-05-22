@@ -57,8 +57,6 @@ define([
         this._updatePortPositions();
 
         // This should be the last step
-        console.log(svg.data('hideporttitle'), svg.data('hidename'));
-
         if (svg.data('hideporttitle') === true) {
             this.showPortTitle(false);
         } else {

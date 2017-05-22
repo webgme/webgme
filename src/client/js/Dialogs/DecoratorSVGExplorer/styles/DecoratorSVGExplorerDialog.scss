@@ -120,13 +120,7 @@ $desc-margin: 3px;
 
     div.action-btn {
       display: block;
-      //&:hover {
-      //  border-color: #52a8ec;
-      //  background-color: #dbeafc;
-      //  -webkit-box-shadow: 0 0 2px 0 #1276d4 !important;
-      //  -moz-box-shadow: 0 0 2px 0 #1276d4 !important;
-      //  box-shadow: 0 0 2px 0 #1276d4 !important;
-      //}
+      margin-top: 1px;
     }
 
     &:hover > div.btn-holder {

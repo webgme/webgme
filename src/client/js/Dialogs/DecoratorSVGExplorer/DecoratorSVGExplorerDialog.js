@@ -35,7 +35,6 @@ define(['js/Constants',
         DEFAULT_TAB_GROUP = 'Default';
 
     DecoratorSVGIconList.unshift('__current__');
-    DecoratorSVGIconList.unshift('');
 
     DecoratorSVGExplorerDialog = function () {
     };
@@ -91,9 +90,13 @@ define(['js/Constants',
 
                 testResult = WebGMEGlobal.SvgManager.testSvgTemplate(svgText, self._clientNode);
                 if (testResult === null) {
-                    svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
-                    svg.addClass('displayed-svg');
-                    self._editor.find('.svg-display').empty().append(svg);
+                    try {
+                        svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
+                        svg.addClass('displayed-svg');
+                        self._editor.find('.svg-display').empty().append(svg);
+                    } catch (err) {
+                        self._editor.find('.svg-display').empty();
+                    }
                 } else {
                     self._editor.find('.svg-display').empty()
                         .html(testResult.message);
@@ -125,7 +128,7 @@ define(['js/Constants',
 
                 if (filename === '__current__') {
                     self._codemirror.setValue(
-                        WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, false) || ''
+                        WebGMEGlobal.SvgManager.getRawSvgContent(self._old || '<svg>\n</svg>', self._clientNode, false) || ''
                     );
                 } else {
                     self._codemirror.setValue(
@@ -210,20 +213,18 @@ define(['js/Constants',
             if (i === 0) {
                 btnSelect.addClass('glyphicon-remove');
                 btnSelect.addClass('btn-danger');
-                btnSelect.attr('title', 'Clear stored SVG registry');
-                divImg.find('img').remove();
-                divImg.find('.desc').text('-- NONE --');
-                divImg.find('.desc').attr('title', '-- NONE --');
-                btnSelect.on('click', removeBtnFn);
-                btnEdit.attr('title', 'Create an embedded SVG');
-            } else if (i === 1) {
-                btnSelect.addClass('glyphicon-ok');
-                btnSelect.hide();
+
+                if (this._old === '' || this._old === undefined) {
+                    btnSelect.disable(true);
+                    btnSelect.attr('title', 'SVG registry already empty');
+                } else {
+                    btnSelect.attr('title', 'Clear stored SVG registry');
+                }
                 divImg.find('img').attr('src',
                     WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
                 divImg.find('.desc').text('-- CURRENT --');
                 divImg.find('.desc').attr('title', '-- CURRENT --');
-                btnSelect.on('click', cancelBtnFn);
+                btnSelect.on('click', removeBtnFn);
             } else {
                 btnSelect.addClass('glyphicon-ok');
                 btnSelect.addClass('btn-success');
