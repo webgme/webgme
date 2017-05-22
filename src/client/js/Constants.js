@@ -1,24 +1,23 @@
-/*globals define, _*/
+/*globals define*/
 /*jshint browser: true*/
 /**
- * STRING CONSTANT DEFINITIONS USED IN CLIENT JAVASCRIPT (INHERITS ALL THE CONSTANST FROM COMMON/CONSTANST.JS)
+ * Browser side constants - inherits all constants from common/Constants.js
  *
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
 define([
-    'underscore',
     'common/Constants',
     'js/client/constants'
-], function (underscore, COMMON_CONSTANTS, CLIENT_CONSTANTS) {
+], function (COMMON_CONSTANTS, CLIENT_CONSTANTS) {
 
     'use strict';
 
-    //define client-only string constants
-    var clientConstants = {};
+    var CONSTANTS = {},
+        key;
 
-    //copy over all the constanst form common/constants.js
-    _.extend(clientConstants, COMMON_CONSTANTS, {
+    // Define client-only string constants.
+    CONSTANTS = {
         /*
          * DOM element ID to use for all-over-the-screen-draggable-parent
          */
@@ -110,9 +109,14 @@ define([
         // This is assigned by the VisualizerPanel onto the visualizer instance on the fly and is set to
         // the id defined in Visualizers.json.
         VISUALIZER_PANEL_IDENTIFIER: 'VISUALIZER_PANEL_IDENTIFIER'
-    });
+    };
 
-    clientConstants.CLIENT = CLIENT_CONSTANTS;
+    // Copy over all the constants form common/constants.js.
+    for (key in COMMON_CONSTANTS) {
+        CONSTANTS[key] = COMMON_CONSTANTS[key];
+    }
 
-    return clientConstants;
+    CONSTANTS.CLIENT = CLIENT_CONSTANTS;
+
+    return CONSTANTS;
 });

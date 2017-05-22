@@ -1602,27 +1602,6 @@ describe('WebSocket', function () {
                 .nodeify(done);
         });
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // AddOn related tests
-
-        it('should fail to query addOn without proper workerId', function (done) {
-            openSocketIo()
-                .then(function (socket) {
-                    var data = {
-                        anything: 'anyValuie'
-                    };
-
-                    return Q.ninvoke(socket, 'emit', 'simpleQuery', 'noWorkerId', data);
-                })
-                .then(function () {
-                    done(new Error('missing error handling'));
-                })
-                .catch(function (err) {
-                    expect(err).to.include('wrong request');
-                    done();
-                })
-                .done();
-        });
     });
 
     describe('with invalid token and user', function () {
@@ -1697,22 +1676,6 @@ describe('WebSocket', function () {
         for (i = 0; i < simpleFunctions.length; i++) {
             addFailSimpleCallTestCase(simpleFunctions[i]);
         }
-
-        it('should fail to call simpleQuery', function (done) {
-            openSocketIo()
-                .then(function (socket) {
-
-                    return Q.ninvoke(socket, 'emit', 'simpleQuery', 'someWorkerId', {webgmeToken: 'invalid_token'});
-                })
-                .then(function () {
-                    done(new Error('missing error handling'));
-                })
-                .catch(function (err) {
-                    expect(err).to.include('jwt malformed');
-                    done();
-                })
-                .done();
-        });
     });
 
     describe('makeCommit and auto-merge', function () {

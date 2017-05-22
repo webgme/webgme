@@ -21,7 +21,7 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
         workerConstants = require('../../../src/server/worker/constants'),
         ServerWorkerManager = require('../../../src/server/worker/serverworkermanager'),
         workerManagerParameters = {
-            globConf: gmeConfig,
+            gmeConfig: gmeConfig,
             logger: logger
         },
         projectName = 'SWMProject',
@@ -85,38 +85,45 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
         });
 
         it('should handle multiple stop gracefully', function (done) {
-            swm.start();
-            swm.stop(function (err) {
-                expect(err).to.equal(null);
-                swm.stop(function (err) {
-                    expect(err).to.equal(null);
-                    done();
-                });
-            });
+            swm.start()
+                .then(function () {
+                    return swm.stop();
+                })
+                .then(function () {
+                    return swm.stop();
+                })
+                .nodeify(done);
         });
 
         it('should handle multiple start gracefully', function (done) {
-            swm.start();
-            swm.start();
-            swm.start();
-            swm.start();
-            swm.stop(function (err) {
-                expect(err).to.equal(null);
-                done();
-            });
+            swm.start()
+                .then(function () {
+                    return swm.start();
+                })
+                .then(function () {
+                    return swm.start();
+                })
+                .then(function () {
+                    return swm.start();
+                })
+                .then(function () {
+                    return swm.stop();
+                })
+                .nodeify(done);
         });
 
         it('should handle start stop start stop', function (done) {
-            swm.start();
-            swm.stop(function (err) {
-                expect(err).to.equal(null);
-
-                swm.start();
-                swm.stop(function (err) {
-                    expect(err).to.equal(null);
-                    done();
-                });
-            });
+            swm.start()
+                .then(function () {
+                    return swm.stop();
+                })
+                .then(function () {
+                    return swm.start();
+                })
+                .then(function () {
+                    return swm.stop();
+                })
+                .nodeify(done);
         });
     });
 
@@ -125,15 +132,15 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
         var swm,
             ownGmeConfig = JSON.parse(JSON.stringify(gmeConfig)),
             managerParameters = {
-                globConf: ownGmeConfig,
+                gmeConfig: ownGmeConfig,
                 logger: logger,
             };
 
         ownGmeConfig.addOn.enable = false;
 
-        before(function () {
+        before(function (done) {
             swm = new ServerWorkerManager(managerParameters);
-            swm.start();
+            swm.start(done);
         });
 
         after(function (done) {
@@ -147,15 +154,6 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
             });
         });
 
-        it('should fail to proxy query to an unknown id', function (done) {
-            swm.query('no id', {}, function (err/*, result*/) {
-                expect(err).not.to.equal(null);
-
-                expect(err).to.contain('identification');
-
-                done();
-            });
-        });
     });
 
     describe('simple request-result handling', function () {
@@ -183,8 +181,7 @@ describe('ServerWorkerManager - SimpleWorkers', function () {
 
         before(function (done) {
             swm = new ServerWorkerManager(workerManagerParameters);
-            swm.start();
-            setTimeout(done, 100);
+            swm.start(done);
         });
 
         after(function (done) {

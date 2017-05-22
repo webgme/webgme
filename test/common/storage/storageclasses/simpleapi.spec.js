@@ -437,15 +437,15 @@ describe('storage storageclasses simpleapi', function () {
             .nodeify(done);
     });
 
-    it('should fail to execute simpleQuery without addOn configured', function (done) {
-        Q.ninvoke(storage, 'simpleQuery', 'someWorkerId', {})
-            .then(function () {
-                done(new Error('missing error handling'));
-            })
-            .catch(function (err) {
-                expect(err.message).to.include('wrong request');
-                done();
-            })
-            .done();
-    });
+    // it('should fail to execute simpleQuery without addOn configured', function (done) {
+    //     Q.ninvoke(storage, 'simpleQuery', 'someWorkerId', {})
+    //         .then(function () {
+    //             done(new Error('missing error handling'));
+    //         })
+    //         .catch(function (err) {
+    //             expect(err.message).to.include('wrong request');
+    //             done();
+    //         })
+    //         .done();
+    // });
 });

@@ -585,17 +585,17 @@ describe('storage socketio websocket', function () {
     // TODO: makeCommit
     // TODO: loadObjects
 
-    it('should fail to execute simpleQuery without addOn configured', function (done) {
-        Q.nfcall(webSocket.simpleQuery, 'someWorkerId', {})
-            .then(function () {
-                done(new Error('missing error handling'));
-            })
-            .catch(function (err) {
-                expect(err.message).to.include('wrong request');
-                done();
-            })
-            .done();
-    });
+    // it('should fail to execute simpleQuery without addOn configured', function (done) {
+    //     Q.nfcall(webSocket.simpleQuery, 'someWorkerId', {})
+    //         .then(function () {
+    //             done(new Error('missing error handling'));
+    //         })
+    //         .catch(function (err) {
+    //             expect(err.message).to.include('wrong request');
+    //             done();
+    //         })
+    //         .done();
+    // });
 
 
     it('should disconnect', function (done) {

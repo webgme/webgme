@@ -913,14 +913,15 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
                     })
                     .then(function (newToken) {
                         data.webgmeToken = newToken;
-                        workerManager.request(data, callback); //FIXME: Q ninvoke!
+                        workerManager.request(data, function (err, result) {
+                            if (err) {
+                                callback(err.message, result);
+                            } else {
+                                callback(null, result);
+                            }
+                        });
                     })
                     .catch(function (err) {
-                        if (typeof err === 'string') {
-                            //FIXME: server-worker manager should return errors.
-                            callback(err);
-                            return;
-                        }
                         if (gmeConfig.debug) {
                             callback(err.stack);
                         } else {
@@ -930,31 +931,7 @@ function WebSocket(storage, mainLogger, gmeConfig, gmeAuth, workerManager) {
             });
 
             socket.on('simpleQuery', function (workerId, data, callback) {
-                getUserIdFromToken(socket, data.webgmeToken)
-                    .then(function (userId) {
-                        data.userId = userId;
-                        data.socketId = socket.id;
-
-                        if (gmeConfig.authentication.enable === true) {
-                            return gmeAuth.regenerateJWToken(data.webgmeToken);
-                        }
-                    })
-                    .then(function (newToken) {
-                        data.webgmeToken = newToken;
-                        workerManager.query(workerId, data, callback); //FIXME: Q ninvoke!
-                    })
-                    .catch(function (err) {
-                        if (typeof err === 'string') {
-                            //FIXME: server-worker manager should return errors.
-                            callback(err);
-                            return;
-                        }
-                        if (gmeConfig.debug) {
-                            callback(err.stack);
-                        } else {
-                            callback(err.message);
-                        }
-                    });
+                callback('simpleQuery is not implemented!');
             });
 
             socket.on('notification', function (data, callback) {

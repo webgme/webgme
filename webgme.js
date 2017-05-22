@@ -34,28 +34,6 @@ requirejs.config({
 
 function addToRequireJsPaths(gmeConfig) {
 
-    function addAssetFromBasePath(basepaths, componentName) {
-        var componentNames = webgmeUtils.getComponentNames(basepaths);
-        return addFromBasePath(basepaths, componentName, componentNames);
-    }
-
-    function addDirsFromBasePath(basepaths, componentName) {
-        var componentNames = [],
-            files,
-            filePath;
-
-        for (var i = basepaths.length; i--;) {
-            files = fs.readdirSync(basepaths[i]);
-            for (var j = files.length; j--;) {
-                filePath = path.join(basepaths[i], files[j]);
-                if (fs.statSync(filePath).isDirectory()) {
-                    componentNames.push(files[j]);
-                }
-            }
-        }
-        return addFromBasePath(basepaths, componentName, componentNames);
-    }
-
     function addFromBasePath(basepaths, componentName, componentNames) {
         //type = 'plugin'
         var componentPaths,
@@ -91,6 +69,28 @@ function addToRequireJsPaths(gmeConfig) {
         requirejs.config({
             paths: componentPaths
         });
+    }
+
+    function addAssetFromBasePath(basepaths, componentName) {
+        var componentNames = webgmeUtils.getComponentNames(basepaths);
+        return addFromBasePath(basepaths, componentName, componentNames);
+    }
+
+    function addDirsFromBasePath(basepaths, componentName) {
+        var componentNames = [],
+            files,
+            filePath;
+
+        for (var i = basepaths.length; i--;) {
+            files = fs.readdirSync(basepaths[i]);
+            for (var j = files.length; j--;) {
+                filePath = path.join(basepaths[i], files[j]);
+                if (fs.statSync(filePath).isDirectory()) {
+                    componentNames.push(files[j]);
+                }
+            }
+        }
+        return addFromBasePath(basepaths, componentName, componentNames);
     }
 
     function addFromRequireJsPath(requireJsPaths) {

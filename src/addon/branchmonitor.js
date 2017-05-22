@@ -1,12 +1,14 @@
 /*globals requireJS*/
 /*jshint node:true*/
 /**
+ * Monitors given branch and starts/stops/runs the registered add-ons.
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';
 
 var Q = require('q'),
     BlobClientClass = requireJS('blob/BlobClient'),
+    url = require('url'),
     Core = requireJS('common/core/coreQ');
 
 /**
@@ -23,12 +25,14 @@ var Q = require('q'),
  * @constructor
  * @ignore
  */
-function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gmeConfig) {
+function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gmeConfig, options) {
     var self = this,
         logger = mainLogger.fork('BranchMonitor:' + branchName),
         core = new Core(project, {globConf: gmeConfig, logger: logger.fork('core')}),
         startDeferred,
         stopDeferred;
+
+    options = options || {};
 
     this.runningAddOns = [
         //{id: {string}, instance: {AddOnBase}}
@@ -79,13 +83,24 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
     }
 
     function getConfiguration() {
-        var blobClient = new BlobClientClass({
-            serverPort: gmeConfig.server.port,
-            httpsecure: false, // N.B.: addons are running on the server only
-            server: '127.0.0.1',
-            webgmeToken: self.webgmeToken,
-            logger: logger.fork('BlobClient')
-        });
+        var params = {
+                serverPort: gmeConfig.server.port,
+                httpsecure: false, // N.B.: addons are running on the server only
+                server: '127.0.0.1',
+                webgmeToken: self.webgmeToken,
+                logger: logger.fork('BlobClient')
+            },
+            urlObj,
+            blobClient;
+
+        if (options.webgmeUrl) {
+            urlObj = url.parse(options.webgmeUrl);
+            params.serverPort = urlObj.port;
+            params.httpsecure = urlObj.protocol === 'https';
+            params.server = urlObj.hostname;
+        }
+
+        blobClient = new BlobClientClass();
 
         return {
             core: core,
@@ -324,8 +339,8 @@ function BranchMonitor(webgmeToken, storage, project, branchName, mainLogger, gm
         self.webgmeToken = token;
         logger.debug('Setting new token');
         self.runningAddOns.forEach(function (addOn) {
-            if (addOn.instance && addOn.instance.blobClient) {
-                addOn.instance.blobClient.setToken(token);
+            if (addOn.instance) {
+                addOn.instance.setToken(token);
             }
         });
     };

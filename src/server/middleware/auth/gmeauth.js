@@ -39,7 +39,7 @@ function GMEAuth(session, gmeConfig) {
         collection,
         projectCollection,
         metadataStorage = new MetadataStorage(logger, gmeConfig),
-        TokenGenerator = new require(gmeConfig.authentication.jwt.tokenGenerator),
+        TokenGenerator = require(gmeConfig.authentication.jwt.tokenGenerator),
         tokenGenerator = new TokenGenerator(logger, gmeConfig, jwt),
         Authorizer = require(gmeConfig.authentication.authorizer.path),
         authorizer = new Authorizer(logger, gmeConfig),

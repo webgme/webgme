@@ -29,12 +29,12 @@ var Core = requireJS('common/core/coreQ'),
  * @param {GmeConfig} gmeConfig
  * @constructor
  */
-function WorkerRequests(mainLogger, gmeConfig) {
+function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
     var logger = mainLogger.fork('WorkerFunctions');
 
     function getConnectedStorage(webgmeToken, projectId, callback) {
         var deferred = Q.defer(),
-            storage = Storage.createStorage(null, webgmeToken, logger, gmeConfig);
+            storage = Storage.createStorage(webgmeUrl, webgmeToken, logger, gmeConfig);
 
         storage.open(function (networkState) {
             if (networkState === STORAGE_CONSTANTS.CONNECTED) {
@@ -152,7 +152,7 @@ function WorkerRequests(mainLogger, gmeConfig) {
     function executePlugin(webgmeToken, socketId, pluginName, context, callback) {
         var storage,
             errResult,
-            pluginManager = new PluginNodeManager(webgmeToken, null, logger, gmeConfig),
+            pluginManager = new PluginNodeManager(webgmeToken, null, logger, gmeConfig, webgmeUrl),
             finish = function (err, result) {
                 if (err) {
                     err = err instanceof Error ? err : new Error(err);

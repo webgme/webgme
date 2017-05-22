@@ -230,6 +230,17 @@ define([
     };
 
     /**
+     * Overwrite this (make sure to still update the blob-clients token) if you have
+     * 
+     * @param token
+     */
+    AddOnBase.prototype.setToken = function (token) {
+        if (this.blobClient) {
+            this.blobClient.setToken(token);
+        }
+    };
+
+    /**
      * Returns the default values of the Query Parameters.
      *
      * @returns {object}

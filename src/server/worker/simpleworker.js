@@ -208,7 +208,7 @@ process.on('message', function (parameters) {
         safeSend({
             pid: process.pid,
             type: CONSTANTS.msgTypes.result,
-            error: 'unknown command',
+            error: 'unknown command [' + parameters.command + ']',
             resid: null
         });
     }

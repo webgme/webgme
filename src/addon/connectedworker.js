@@ -8,11 +8,10 @@
 
 'use strict';
 
-var WEBGME = require(__dirname + '/../../../webgme'),
-
-    CONSTANTS = require('./constants'),
-    Logger = require('../logger'),
-    ManagerTracker = require('../../addon/managertracker'),
+var WEBGME = require(__dirname + '/../../webgme'),
+    CONSTANTS = require('../server/worker/constants'),
+    Logger = require('../server/logger'),
+    ManagerTracker = require('./managertracker'),
     mt,
     initialized = false,
     gmeConfig,
