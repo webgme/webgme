@@ -32,7 +32,8 @@
     height: 100%;
     overflow: auto;
     background-color: #424242;
-    border-right: 15px solid white; }
+    border-right: 15px solid white;
+    color: whitesmoke; }
     .decorator-svg-dialog .svg-editor .svg-display .displayed-svg {
       margin: auto;
       display: block;

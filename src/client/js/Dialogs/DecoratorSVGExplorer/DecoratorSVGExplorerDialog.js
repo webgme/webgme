@@ -84,22 +84,30 @@ define(['js/Constants',
             tabGroupEl,
             divImg,
             setLiveSvg = function () {
-                var svgText = self._codemirror.getValue(),
+                var svgText = self._codemirror.getValue() || '',
                     testResult,
                     svg;
 
-                testResult = WebGMEGlobal.SvgManager.testSvgTemplate(svgText, self._clientNode);
-                if (testResult === null) {
+
+                if (svgText.indexOf('<svg') >= 0 && svgText.indexOf('</svg>') > 0) {
+                    testResult = WebGMEGlobal.SvgManager.testSvgTemplate(svgText, self._clientNode);
                     try {
-                        svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
-                        svg.addClass('displayed-svg');
-                        self._editor.find('.svg-display').empty().append(svg);
+                        if (testResult === null) {
+                            svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
+                            svg.addClass('displayed-svg');
+
+                            self._editor.find('.svg-display').empty().append(svg);
+                        } else {
+                            self._editor.find('.svg-display').empty()
+                                .html(testResult.message);
+                        }
                     } catch (err) {
-                        self._editor.find('.svg-display').empty();
+                        self._editor.find('.svg-display').empty()
+                            .html('Something went wrong..');
                     }
                 } else {
                     self._editor.find('.svg-display').empty()
-                        .html(testResult.message);
+                        .html('Looks like no svg element is defined..');
                 }
             },
             removeBtnFn = function () {
@@ -128,7 +136,9 @@ define(['js/Constants',
 
                 if (filename === '__current__') {
                     self._codemirror.setValue(
-                        WebGMEGlobal.SvgManager.getRawSvgContent(self._old || '<svg>\n</svg>', self._clientNode, false) || ''
+                        WebGMEGlobal.SvgManager.getRawSvgContent(self._old ||
+                            '<svg width="32px" height="32px">\n</svg>',
+                            self._clientNode, false) || ''
                     );
                 } else {
                     self._codemirror.setValue(
