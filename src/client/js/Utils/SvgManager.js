@@ -18,6 +18,8 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
      * @return {boolean} Returns if the checked text can be used as an svg string or template
      */
     function isSvg(text) {
+        var result = false;
+
         text = text || '';
         text = text.split('<%');
         for (var i = 0; i < text.length; i += 1) {
@@ -25,7 +27,13 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
         }
         text = text.join('');
 
-        return $(text).is('svg');
+        try {
+            result = $(text).is('svg');
+        } catch (e) {
+            result = false;
+        }
+
+        return result;
     }
 
     function getSvgFileContent(svgFilePath) {
