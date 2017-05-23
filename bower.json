@@ -38,7 +38,7 @@
     "moment": "moment#2.18.1",
     "jszip": "Stuk/jszip#2.5.0",
     "angular-bootstrap": "angular-bootstrap#0.11.0",
-    "jquery.csszoom": "jquery.csszoom@1.0.0",
+    "jquery.csszoom": "rkereskenyi/jquery.csszoom#1.0.0",
     "jquery": "jquery#2.2.3",
     "jquery-ui": "jquery-ui#1.12.0",
     "bootstrap-multiselect": "bootstrap-multiselect#0.9.13",
