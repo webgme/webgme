@@ -109,10 +109,12 @@ define([
         // Add this first panel container ..
         this._activePanelId = '' + this._panelIdCounter;
         panelContainer.data(PANEL_ID_DATA_KEY, this._activePanelId);
+
         this.$el.append(panelContainer);
         this._panels[this._activePanelId] = {
             panelContainer: panelContainer,
             instance: null,
+            eventHandler: self._attachActivateHandler(panelContainer),
             splitters: {
                 top: null,
                 right: null,
@@ -124,18 +126,6 @@ define([
 
         // the panel instance is still null at this point.
         WebGMEGlobal.PanelManager.setActivePanel(null);
-
-        // We register one mousedown/up events in case ui elements in the visualizer
-        // prevents bubbling one of these.
-        // (Setting the same panel as active will only trigger one setActive in the PanelManager)
-        this.$el.on('mousedown mouseup', '.' + PANEL_CONTAINER_CLASS, function (/*event*/) {
-            var el = $(this),
-                panelId = el.data(PANEL_ID_DATA_KEY);
-
-            self.setActivePanel(panelId);
-
-            //#1151 event.stopPropagation();
-        });
 
         this.$el.on('mousedown', '.' + SPLITTER_CLASS, function (event) {
             var el = $(this),
@@ -178,6 +168,7 @@ define([
 
     SplitPanel.prototype.addPanel = function (vertical) {
         var panelContainer = $('<div/>', {class: PANEL_CONTAINER_CLASS}),
+            self = this,
             activePanelPos,
             newPanelId,
             splitterId,
@@ -187,10 +178,12 @@ define([
 
         newPanelId = '' + this._panelIdCounter;
         panelContainer.data(PANEL_ID_DATA_KEY, newPanelId);
+
         this.$el.append(panelContainer);
         this._panels[newPanelId] = {
             panelContainer: panelContainer,
             instance: null,
+            eventHandler: self._attachActivateHandler(panelContainer),
             splitters: {
                 // Initially set splitters to same as panel splitting from.
                 top: this._panels[this._activePanelId].splitters.top,
@@ -282,7 +275,10 @@ define([
         ASSERT(removedSplitterId, 'Panel did not have a currentSplitter');
 
         splitter = this._splitters[removedSplitterId];
+
+        this._removeActivateHandler(activePanel.panelContainer, activePanel.eventHandler);
         activePanel.panelContainer.remove();
+
         delete this._panels[this._activePanelId];
 
         splitter.el.remove();
@@ -351,6 +347,8 @@ define([
                 this._panels[panelIds[i]].splitters.right = null;
                 this._panels[panelIds[i]].currentSplitter = null;
             } else {
+                this._removeActivateHandler(this._panels[panelIds[i]].panelContainer,
+                    this._panels[panelIds[i]].eventHandler);
                 this._panels[panelIds[i]].instance.destroy();
                 this._panels[panelIds[i]].panelContainer.remove();
                 delete this._panels[panelIds[i]];
@@ -805,6 +803,33 @@ define([
         this._splitterResizePos = undefined;
 
         this._updateUI();
+    };
+
+    // Attaching/Detaching events handler for setting the active panel.
+    // It is important to use event capturing (instead of bubbling) since the panel container is the top-most
+    // element and it is crucial that it gets the mousedown event before any of the panel's child-elements.
+    // If using bubbling - the panel's child-elements might prevent the event propagation which cannot be controlled
+    // from this scope (and could even be part of libraries used in the panel).
+    // N.B. JQuery does not support event capturing..
+    SplitPanel.prototype._attachActivateHandler = function (panelContainer) {
+        var self = this,
+            handler = function (/*event*/) {
+                var el = $(this),
+                    panelId = el.data(PANEL_ID_DATA_KEY);
+
+                self.setActivePanel(panelId);
+            };
+
+
+        panelContainer.get(0).addEventListener('mousedown', handler, true);
+
+        return handler;
+    };
+
+    SplitPanel.prototype._removeActivateHandler = function (panelContainer, handler) {
+        panelContainer.get(0).removeEventListener('mousedown', handler, true);
+
+        return handler;
     };
 
     return SplitPanel;
