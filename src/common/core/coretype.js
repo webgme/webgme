@@ -854,6 +854,7 @@ define([
                 basePath,
                 nodePath,
                 node,
+                tempParent, tempSrc,
                 i, j, k;
 
             // This collects 1 and 3
@@ -932,9 +933,17 @@ define([
                         old2NewPath[relationsToPreserve[i].targetBase]
                     );
 
-                    oldTarget = self.overlayInquiry(parent, source, relationsToPreserve[i].name);
-                    if (oldTarget !== null && typeof oldTarget.value === 'string') {
-                        self.overlayRemove(parent, source, relationsToPreserve[i].name, oldTarget.value);
+                    tempParent = parent;
+                    tempSrc = source;
+                    while (tempParent !== null) {
+                        oldTarget = self.overlayInquiry(tempParent, tempSrc, relationsToPreserve[i].name);
+                        if (oldTarget !== null && typeof oldTarget.value === 'string') {
+                            self.overlayRemove(tempParent, tempSrc, relationsToPreserve[i].name, oldTarget.value);
+                            tempParent = null;
+                        } else {
+                            tempSrc = CONSTANTS.PATH_SEP + self.getRelid(tempParent) + tempSrc;
+                            tempParent = self.getParent(tempParent);
+                        }
                     }
                     self.overlayInsert(parent, source, relationsToPreserve[i].name, target);
                 }
