@@ -14,7 +14,6 @@ describe('User manager command line interface (CLI)', function () {
         spawn = testFixture.childProcess.spawn,
         mongodb = testFixture.mongodb,
         Q = testFixture.Q,
-        __should = testFixture.should,
         userManager = require('../../src/bin/usermanager'),
         GMEAuth = testFixture.GMEAuth,
         filename = require('path').normalize('src/bin/usermanager.js'),
@@ -162,7 +161,7 @@ describe('User manager command line interface (CLI)', function () {
         });
 
         it('should have a main', function () {
-            userManager.should.have.property('main');
+            expect(userManager).to.have.property('main');
         });
 
         // Test if help is printed for all commands.
@@ -369,14 +368,28 @@ describe('User manager command line interface (CLI)', function () {
                 });
         });
 
-        it('should change user password', function (done) {
+        it('should change user password without overwriting user', function (done) {
+            var initUserData;
+
             suppressLogAndExit();
 
-            userManager.main(['node', filename, '--db', mongoUri, 'useradd', 'user', 'user@example.com', 'plaintext'])
+            auth.addUser('passwd_user', 'em@il', 'wordpass', true, {})
                 .then(function () {
-                    return userManager.main(['node', filename, '--db', mongoUri, 'passwd', 'user', 'plaintext2']);
+                    return auth.authorizeByUserId('passwd_user', 'dummyProject', null, {read:true, write: true, delete:true});
                 })
                 .then(function () {
+                    return auth.getUser('passwd_user');
+                })
+                .then(function (data) {
+                    expect(data.projects.hasOwnProperty('dummyProject')).to.equal(true);
+                    initUserData = data;
+                    return userManager.main(['node', filename, '--db', mongoUri, 'passwd', 'passwd_user', 'wordpass2']);
+                })
+                .then(function () {
+                    return auth.getUser('passwd_user');
+                })
+                .then(function (data) {
+                    expect(data).to.deep.equal(initUserData);
                     restoreLogAndExit();
                     done();
                 })
