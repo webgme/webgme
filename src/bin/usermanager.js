@@ -127,17 +127,9 @@ main = function (argv) {
         .description('updates the user')
         .action(function (username, password, options) {
             setupGMEAuth(options.parent.db, function (/*err*/) {
-
                 // TODO: we may need to use a module like 'prompt' to get user password
                 if (username && password) {
-                    auth.getUser(username)
-                        .then(function (userObject) {
-                            return auth.addUser(username,
-                                userObject.email,
-                                password,
-                                userObject.canCreate,
-                                {overwrite: true});
-                        })
+                    auth.updateUser(username, {password: password})
                         .then(mainDeferred.resolve)
                         .catch(mainDeferred.reject)
                         .finally(auth.unload);
