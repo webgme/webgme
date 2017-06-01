@@ -55,7 +55,7 @@ define([
             },
 
             getActiveSelection: function () {
-                return this.get(CONSTANTS.STATE_ACTIVE_SELECTION);
+                return this.get(CONSTANTS.STATE_ACTIVE_SELECTION) || [];
             },
 
             /**

@@ -5,7 +5,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS) {
+define(['js/RegistryKeys', 'js/Constants'], function (REGISTRY_KEYS, CONSTANTS) {
     'use strict';
 
     function ObjectBrowserControlBase(client, treeBrowser, logger) {
@@ -107,15 +107,15 @@ define(['js/RegistryKeys', 'js/Constants',], function (REGISTRY_KEYS, CONSTANTS)
 
         if (node) {
             if (expanded) {
-                iconName = node.getRegistry(REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) ||
-                    node.getRegistry(REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
+                iconName = WebGMEGlobal.SvgManager.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON) ||
+                    WebGMEGlobal.SvgManager.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON);
             } else {
-                iconName = node.getRegistry(REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON) ||
-                    node.getRegistry(REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON);
+                iconName = WebGMEGlobal.SvgManager.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_COLLAPSED_ICON) ||
+                    WebGMEGlobal.SvgManager.getSvgUri(node, REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON);
             }
         }
 
-        return iconName ? '/assets/DecoratorSVG/' + iconName : null;
+        return iconName;
     };
 
     ObjectBrowserControlBase.prototype.getMetaInfo = function (nodeObj) {

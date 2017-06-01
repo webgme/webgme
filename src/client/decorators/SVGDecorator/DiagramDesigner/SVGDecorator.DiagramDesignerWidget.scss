@@ -34,6 +34,32 @@
       }
     }
 
+    .ports {
+      &.ports-l {
+        .port {
+          .connector {
+            top: 2px;
+            &:hover {
+              margin-left: -9px;
+              margin-top: -6px;
+            }
+          }
+        }
+      }
+
+      &.ports-r {
+        .port {
+          .connector {
+            top: 2px;
+            &:hover {
+              margin-left: -1px;
+              margin-top: -6px;
+            }
+          }
+        }
+      }
+    }
+
     .connector {
       @include connector_basics;
 

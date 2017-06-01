@@ -84,7 +84,7 @@ define([
 
         var xShift = (this.svgContainerWidth - this.svgWidth) / 2;
 
-        this._fixPortContainerPosition(xShift);
+        // this._fixPortContainerPosition(xShift);
     };
 
     /**** Override from PartBrowserWidgetDecoratorBase ****/

@@ -12,6 +12,11 @@ $desc-line-height: 20px;
 $desc-margin: 3px;
 
 .decorator-svg-dialog {
+  .fixed-modal-body {
+    overflow: hidden;
+    height: 75vh;
+
+  }
   .modal-header {
     .header-icon {
       font-size: 30px;
@@ -37,7 +42,35 @@ $desc-margin: 3px;
       }
     }
   }
+  .svg-editor {
+    height: 100%;
+    width: 100%;
 
+    .svg-editing-code-mirror {
+      height: 100%;
+      .CodeMirror {
+        border: 1px solid #eee;
+        height: 100%;
+      }
+    }
+
+    .svg-display {
+      height: 100%;
+      overflow: auto;
+      background-color: #424242;
+      border-right: 15px solid white;
+      color: whitesmoke;
+      .displayed-svg {
+        margin: auto;
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+      }
+    }
+  }
   .image-container {
     margin: $item-margin;
     padding: 5px;
@@ -47,7 +80,6 @@ $desc-margin: 3px;
     float: left;
     text-align: center;
     position: relative;
-    cursor: pointer;
 
     &.not-in-tab-group {
       display: none;
@@ -61,8 +93,10 @@ $desc-margin: 3px;
       display: inline;
       margin: 0;
       padding: $img-margin;
-      max-width: 100%;
-      max-height: $item-height - 2 * $img-margin - 2 * $desc-margin - 2 * $desc-line-height;
+      max-height: 75px;
+      min-height: 30px;
+      max-width: 75px;
+      min-width: 30px;
     }
 
     div.desc {
@@ -79,17 +113,27 @@ $desc-margin: 3px;
       text-overflow: ellipsis;
     }
 
-    &:hover {
-      border-color: #ababab;
-      background-color: #efefef;
+    div.btn-holder {
+      display: none;
+      position: relative;
+      float: right;
     }
 
-    &.selected {
-      border-color: #52a8ec;
-      background-color: #dbeafc;
-      -webkit-box-shadow: 0 0 15px 0 #1276d4 !important;
-      -moz-box-shadow: 0 0 15px 0 #1276d4 !important;
-      box-shadow: 0 0 15px 0 #1276d4 !important;
+    div.action-btn {
+      display: block;
+      margin-top: 1px;
+    }
+
+    &:hover > div.btn-holder {
+      display: block;
+    }
+
+    &:hover {
+      border-color: #54baff;
+      background-color: #eaf4ff;
+      -webkit-box-shadow: 0 0 15px 0 #1297ff !important;
+      -moz-box-shadow: 0 0 15px 0 #1297ff !important;
+      box-shadow: 0 0 15px 0 #1297ff !important;
     }
   }
 }

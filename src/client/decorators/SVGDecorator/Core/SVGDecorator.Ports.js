@@ -15,7 +15,8 @@ define([
     'use strict';
 
     var SVGDecoratorPorts,
-        PORT_HEIGHT = 13,   //must be same as SVGDecorator.scss 's $port-height
+        PORT_HEIGHT = 13,   //must be same as SVGDecorator.scss 's $port-height actually used more like width
+        PORT_WIDTH = 5,
         DEFAULT_SVG_DEFAULT_HEIGHT = 50;
 
     SVGDecoratorPorts = function () {
@@ -24,9 +25,7 @@ define([
 
     _.extend(SVGDecoratorPorts.prototype, DecoratorWithPortsBase.prototype);
 
-    SVGDecoratorPorts.prototype._initializePortVariables = function (/*params*/) {
-        this._PORT_HEIGHT = PORT_HEIGHT;
-    };
+    SVGDecoratorPorts.prototype._PORT_HEIGHT = PORT_HEIGHT;
 
     SVGDecoratorPorts.prototype._updatePorts = function () {
         var svg = this.$svgElement,
@@ -57,6 +56,13 @@ define([
         }
 
         this._updatePortPositions();
+
+        // This should be the last step
+        if (svg.data('hideporttitle') === true) {
+            this.showPortTitle(false);
+        } else {
+            this.showPortTitle(true);
+        }
     };
 
     SVGDecoratorPorts.prototype._fixPortContainerPosition = function (xShift) {
@@ -64,7 +70,6 @@ define([
         this.$leftPorts.css('transform', 'translateX(' + xShift + 'px)');
         this.$rightPorts.css('transform', 'translateX(' + xShift + 'px)');
     };
-
 
     SVGDecoratorPorts.prototype.renderPort = function (portId) {
         return new SVGPort({
@@ -122,10 +127,10 @@ define([
         this.$leftPorts.css('height', leftPorts.length * PORT_HEIGHT);
         this.$leftPorts.find('.port > .title').css('left', TITLE_PADDING);
         this.$leftPorts.find('.port > .title').css('width', this._portContainerWidth - TITLE_PADDING);
-        this.$leftPorts.find('.port > .icon').css('left', -PORT_HEIGHT);
+        this.$leftPorts.find('.port > .icon').css('left', - PORT_WIDTH);
 
         this.$leftPorts.find('.port > .' +
-        DiagramDesignerWidgetConstants.CONNECTOR_CLASS).css('left', -PORT_HEIGHT + 1);
+            DiagramDesignerWidgetConstants.CONNECTOR_CLASS).css('left', -9);
 
         for (i = 0; i < rightPorts.length; i += 1) {
             portInstance = ports[rightPorts[i]];
@@ -134,12 +139,11 @@ define([
             portInstance.updateTop(PORT_TOP_PADDING + i * PORT_HEIGHT);
         }
         this.$rightPorts.css('height', rightPorts.length * PORT_HEIGHT);
-        this.$rightPorts.find('.port > .title').css('right', -this._portContainerWidth + TITLE_PADDING);
         this.$rightPorts.find('.port > .title').css('width', this._portContainerWidth - TITLE_PADDING);
         this.$rightPorts.find('.port > .icon').css('left', this._portContainerWidth);
 
         this.$rightPorts.find('.port > .' +
-        DiagramDesignerWidgetConstants.CONNECTOR_CLASS).css('left', this._portContainerWidth);
+            DiagramDesignerWidgetConstants.CONNECTOR_CLASS).css('left', this._portContainerWidth - 1);
 
         //store if we have ports on the left/right
         this._leftPorts = leftPorts.length > 0;
@@ -176,7 +180,6 @@ define([
         }
     };
 
-
     SVGDecoratorPorts.prototype._updatePort = function (portId) {
         var isPort = this.isPort(portId);
 
@@ -196,6 +199,16 @@ define([
         }
 
         this._updatePortPositions();
+    };
+
+    SVGDecoratorPorts.prototype.showPortTitle = function (show) {
+        if (show === true) {
+            this.$rightPorts.find('.port > .title').show();
+            this.$leftPorts.find('.port > .title').show();
+        } else {
+            this.$rightPorts.find('.port > .title').hide();
+            this.$leftPorts.find('.port > .title').hide();
+        }
     };
 
     return SVGDecoratorPorts;

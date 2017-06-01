@@ -14,6 +14,7 @@ $selected-border: none;
 $svg-name-height: 16px;
 $abstract-class-name-color: #AAAAAA;
 $port-height: 13px;
+$port-width: 10px;
 
 @mixin svg_decorator_core {
   .svg-decorator {
@@ -55,16 +56,16 @@ $port-height: 13px;
       font-size: 10px;
 
       &.ports-l {
-        left: 0px;
+        left: 0;
       }
 
       &.ports-r {
-        left: 100px;
+        right: 0;
       }
 
       .port {
         position: absolute;
-        height: $port-height;
+        width: $port-width;
         line-height: $port-height;
 
         .title {
@@ -77,8 +78,8 @@ $port-height: 13px;
           position: absolute;
 
           img {
-            width: $port-height;
-            height: $port-height;
+            width: 5px;
+            height: 11px;
           }
         }
 

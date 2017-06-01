@@ -1,0 +1,53 @@
+<%
+        var height,
+        crop = function(text, length){
+        if (text.length > length) {
+        return text.substr(0, (length -3)) + '..';
+        }
+
+        return text;
+        },
+        TYPES = {
+        boolean: 'BOOL:',
+        string:  'STR :',
+        integer: 'INT :',
+        float:   'FLOAT:',
+        asset:   'ASSET:'
+        },
+        attributes = (getAttributeNames() || []).sort(),
+        name = getAttribute('name') || '_n_a_',
+        width = name.length * 10 + 20,
+        fillColor = getRegistry('color') || '#e6ffcc',
+        strokeColor = 'black',
+        textColor = getRegistry('textColor') || 'black',
+        metaTypeNode = getNode(getMetaTypeId()),
+        type,
+        attrSize = 8,
+        metaTypeName = metaTypeNode === null ? '<< none >>' : '<< ' + metaTypeNode.getAttribute('name') + ' >>',
+offset = 48,
+i;
+
+width = width < 200 ? 200 : width;
+height = 45 + (attributes.length * 10);
+attrSize = 10;
+%>
+<svg data-hidename="true" xmlns="http://www.w3.org/2000/svg" width="<%=width%>" height="<%=height%>">
+    <rect x="0" y="0" stroke-width="2" stroke="<%=strokeColor%>" fill="<%=fillColor%>" width="<%=width%>" height="<%=height%>"/>
+    <text fill="<%=textColor%>" y="15" x="<%=0.5*width%>" text-anchor="middle" font-size="14" font-weight="bold" font-family="monospace"><%=name%></text>
+    <text fill="<%=textColor%>" y="30" x="<%=0.5*width%>" text-anchor="middle" font-size="12" font-family="monospace"><%=metaTypeName%></text>
+    <line x1="0" y1="35" y2="35" x2="<%=width%>" stroke-width="2" stroke="<%=strokeColor%>"/>
+    <%
+    for(i = 0; i < attributes.length; i += 1) {
+    type = (getAttributeMeta(attributes[i]) || {}).type || 'string';
+    %>
+    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.05 %>" text-anchor="start">
+        <title><%=attributes[i]%></title>
+        <%= TYPES[type] + crop(attributes[i], 17)%></text>
+    <text font-size="<%=attrSize%>" font-family="monospace" fill="<%=textColor%>" y="<%=offset%>" x="<%=width*0.7 + 2%>" text-anchor="start">
+        <title><%=getAttribute(attributes[i])%></title>
+        <%= crop(getAttribute(attributes[i]), 10) %></text>
+    <%
+    offset+=10;
+    }
+    %>
+</svg>
