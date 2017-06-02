@@ -332,28 +332,25 @@ define(['js/logger',
                 createChildFn = function (key/*, options*/) {
                     self._createChild(nodeId, key);
                 },
-                keys,
+                validChildrenMetaNames = Object.keys(validChildren),
                 i;
 
             if (!nodeObj) {
                 return;
             }
 
-            if (single && validChildren['has.children'] === true && !nodeObj.isReadOnly()) {
+            if (single && validChildrenMetaNames.length > 0 && !nodeObj.isReadOnly()) {
                 menuItems.create = { // The "create" menu item
                     name: 'Create child',
                     icon: 'add',
                     items: {}
                 };
 
-                delete validChildren['has.children'];
-
-                keys = Object.keys(validChildren);
-                keys.sort();
+                validChildrenMetaNames.sort();
                 //iterate through each possible item and att it to the list
-                for (i = 0; i < keys.length; i += 1) {
-                    menuItems.create.items[validChildren[keys[i]]] = {
-                        name: keys[i],
+                for (i = 0; i < validChildrenMetaNames.length; i += 1) {
+                    menuItems.create.items[validChildren[validChildrenMetaNames[i]]] = {
+                        name: validChildrenMetaNames[i],
                         callback: createChildFn
                     };
                 }
@@ -891,44 +888,6 @@ define(['js/logger',
         return 'GenericUITreeBrowserControl';
     };
 
-    TreeBrowserControl.prototype._getValidChildrenTypes = function (nodeId) {
-        var types = {},
-            node = this._client.getNode(nodeId),
-            validChildrenInfo = {},
-            keys,
-            id,
-            reference,
-            nameArray,
-            title,
-            validNode,
-            i;
-
-        if (node) {
-            validChildrenInfo = node.getValidChildrenTypesDetailed();
-        }
-
-        keys = Object.keys(validChildrenInfo || {});
-
-        for (id in validChildrenInfo) {
-            types['has.children'] = true;
-            validNode = this._client.getNode(id);
-            if (validNode) {
-                nameArray = validNode.getFullyQualifiedName().split('.');
-                title = nameArray.pop();
-                reference = types;
-                for (i = 0; i < nameArray.length; i += 1) {
-                    reference[nameArray[i]] = reference[nameArray[i]] || {};
-                    reference = reference[nameArray[i]];
-                }
-                reference[title] = reference[title] || {};
-                reference[title]['own.id'] = id;
-                reference[title]['own.title'] = title;
-            }
-        }
-
-        return types;
-    };
-
     TreeBrowserControl.prototype._getValidChildrenTypesFlattened = function (nodeId) {
         var types = {},
             node = this._client.getNode(nodeId),
@@ -945,9 +904,9 @@ define(['js/logger',
         keys = Object.keys(validChildrenInfo || {});
 
         for (id in validChildrenInfo) {
-            types['has.children'] = true;
             validNode = this._client.getNode(id);
-            if (validNode) {
+            // #1418 Make sure we do not create an instance in a base.
+            if (validNode && validNode.isInstanceOf(node) === false) {
                 title = validNode.getFullyQualifiedName();
                 types[title] = id;
             }
