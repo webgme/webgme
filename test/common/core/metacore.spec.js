@@ -16,7 +16,6 @@ describe('meta core', function () {
         __should = testFixture.should,
         expect = testFixture.expect,
         projectId = testFixture.projectName2Id(projectName),
-        project,
         core,
         root,
         base,
@@ -129,7 +128,11 @@ describe('meta core', function () {
     });
 
     it('check instance when no base relation exists should return false', function () {
-        core.isInstanceOf(attrNode, setNode).should.be.true;
+        core.isInstanceOf(attrNode, setNode).should.be.false;
+    });
+
+    it('check instance when reverse holds should return false', function () {
+        core.isInstanceOf(base, attrNode).should.be.false;
     });
 
     it('checking attribute values', function () {
