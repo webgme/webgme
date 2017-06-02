@@ -906,7 +906,7 @@ define(['js/logger',
         for (id in validChildrenInfo) {
             validNode = this._client.getNode(id);
             // #1418 Make sure we do not create an instance in a base.
-            if (validNode && validNode.isInstanceOf(node) === false) {
+            if (validNode && validNode.isInstanceOf(nodeId) === false) {
                 title = validNode.getFullyQualifiedName();
                 types[title] = id;
             }
