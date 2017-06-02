@@ -3,6 +3,7 @@
 /**
  * @author kecso / https://github.com/kecso
  */
+'use strict';
 
 var testFixture = require('../../_globals.js');
 
@@ -80,8 +81,7 @@ describe('mixin core', function () {
         it('should be able to add and remove elements of Meta to the mixins', function () {
             var root = rootNode, //saving just for sure
                 FCO = core.getAllMetaNodes(root)['/1'],
-                mixin = core.createNode({parent: root, base: FCO}),
-                i;
+                mixin = core.createNode({parent: root, base: FCO});
 
             core.addMember(root, 'MetaAspectSet', mixin);
             core.addMixin(FCO, core.getPath(mixin));
@@ -672,6 +672,28 @@ describe('mixin core', function () {
             expect(core.isValidChildOf(element,container)).to.equal(true);
             expect(core.isValidChildOf(subElement,container)).to.equal(true);
             expect(core.isValidTargetOf(mixed,connection,'ptr')).to.equal(true);
+        });
+
+        it('should include constraint names from mixins', function () {
+            core.setConstraint(M4, 'm4Constraint', {});
+            expect(core.getConstraintNames(A)).to.deep.equal(core.getConstraintNames(M4));
+            core.delConstraint(M4, 'm4Constraint');
+        });
+
+        it('should include constraints from mixins', function () {
+            core.setConstraint(M4, 'm4Constraint', {});
+
+            var mNames = core.getOwnConstraintNames(M4),
+                aNames = core.getOwnConstraintNames(A);
+
+            expect(mNames.length > 0).to.equal(true);
+            expect(aNames.length < mNames.length).to.equal(true);
+
+            mNames.forEach(function (name) {
+                expect(core.getConstraint(A, name)).to.deep.equal(core.getConstraint(M4, name));
+            });
+
+            core.delConstraint(M4, 'm4Constraint');
         });
     });
 });
