@@ -12,9 +12,7 @@ define(['js/Constants',
     'text!assets/decoratorSVGList.json',
     'text!./templates/DecoratorSVGExplorerDialog.html',
     'codemirror/mode/htmlembedded/htmlembedded',
-    'css!./styles/DecoratorSVGExplorerDialog.css',
-    'css!codemirror/lib/codemirror.css',
-    'css!codemirror/theme/monokai.css'
+    'css!./styles/DecoratorSVGExplorerDialog.css'
 ], function (CONSTANTS,
              CodeMirror,
              decoratorSVGList,
