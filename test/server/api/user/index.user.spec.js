@@ -1830,6 +1830,70 @@ describe('USER REST API', function () {
             });
         });
 
+        describe('auth enabled, allowGuests false, allowUserRegistration="./testRegisterEndPoint"', function () {
+            var server,
+                agent;
+
+            before(function (done) {
+                var gmeConfig = testFixture.getGmeConfig();
+                gmeConfig.authentication.enable = true;
+                gmeConfig.authentication.allowGuests = false;
+                gmeConfig.authentication.allowUserRegistration =
+                    testFixture.path.join(__dirname, 'testRegisterEndPoint');
+
+                server = WebGME.standaloneServer(gmeConfig);
+                server.start(done);
+            });
+
+            after(function (done) {
+                server.stop(done);
+            });
+
+            beforeEach(function () {
+                agent = superagent.agent();
+            });
+
+            it('should add user when posting /api/v1/register and user starts with an "a"', function (done) {
+                var newUser = {
+                    userId: 'a_new_user_starts_with_a',
+                    email: 'em@il',
+                    password: 'pass'
+                };
+
+                agent.post(server.getUrl() + '/api/v1/register')
+                    .send(newUser)
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+
+                        agent.get(server.getUrl() + '/api/v1/user')
+                            .set('Authorization', 'Basic ' + new Buffer('a_new_user_starts_with_a:pass').toString('base64'))
+                            .end(function (err, res) {
+                                expect(res.status).equal(200, err);
+                                expect(res.body._id).to.equal('a_new_user_starts_with_a');
+                                done();
+                            });
+                    });
+            });
+
+            it('should 400 when posting /api/v1/register if user does NOT starts with an "a"', function (done) {
+                var newUser = {
+                    userId: 'not_starting_with_a_new_user',
+                    email: 'em@il',
+                    password: 'pass'
+                };
+
+                agent.post(server.getUrl() + '/api/v1/register')
+                    .send(newUser)
+                    .end(function (err, res) {
+                        if (res.status === 400) {
+                            done();
+                        } else {
+                            done(new Error('Did not 400, instead ' + res.status));
+                        }
+                    });
+            });
+        });
+
         describe('auth disabled, allowGuests true', function () {
             var server,
                 agent;

@@ -3,11 +3,11 @@
  * @author lattmann / https://github.com/lattmann
  * @author pmeijer / https://github.com/pmeijer
  */
+'use strict';
 
 var configFileName;
 
 function warnDeprecated(name, value, hint) {
-    'use strict';
     if (typeof value !== 'undefined') {
         if (hint) {
             console.warn('WARNING! Deprecated configuration key', name + '.', hint);
@@ -18,7 +18,6 @@ function warnDeprecated(name, value, hint) {
 }
 
 function throwTypeMiss(name, value, typeStr) {
-    'use strict';
     var msg;
     if (configFileName) {
         msg = 'In ' + configFileName;
@@ -30,7 +29,6 @@ function throwTypeMiss(name, value, typeStr) {
 }
 
 function assertTypeOf(name, value, type, orFalsy) {
-    'use strict';
     if (orFalsy && !value) {
         return;
     }
@@ -40,34 +38,28 @@ function assertTypeOf(name, value, type, orFalsy) {
 }
 
 function assertObject(name, value, orFalsy) {
-    'use strict';
     assertTypeOf(name, value, 'object', orFalsy);
 }
 
 function assertString(name, value, orFalsy) {
-    'use strict';
     assertTypeOf(name, value, 'string', orFalsy);
 }
 
 function assertNumber(name, value, orFalsy) {
-    'use strict';
     assertTypeOf(name, value, 'number', orFalsy);
 }
 
 function assertBoolean(name, value, orFalsy) {
-    'use strict';
     assertTypeOf(name, value, 'boolean', orFalsy);
 }
 
 function assertArray(name, value) {
-    'use strict';
     if (value instanceof Array === false) {
         throwTypeMiss(name, value, 'array');
     }
 }
 
 function assertEnum(name, value) {
-    'use strict';
     var validValues = Array.prototype.slice.call(arguments).splice(2),
         msg;
 
@@ -82,9 +74,16 @@ function assertEnum(name, value) {
     }
 }
 
+function assertBooleanOrString(name, value, orFalsy) {
+    try {
+        assertTypeOf(name, value, 'boolean', orFalsy);
+    } catch (e) {
+        assertTypeOf(name, value, 'string', orFalsy);
+    }
+}
+
 // We will fail as early as possible
 function validateConfig(configOrFileName) {
-    'use strict';
     var config,
         errMsg,
         key,
@@ -110,6 +109,9 @@ function validateConfig(configOrFileName) {
     assertObject('config.authentication', config.authentication);
     assertBoolean('config.authentication.enable', config.authentication.enable);
     assertBoolean('config.authentication.allowGuests', config.authentication.allowGuests);
+    assertBooleanOrString('config.authentication.allowUserRegistration', config.authentication.allowUserRegistration);
+    assertBoolean('config.authentication.registeredUsersCanCreate', config.authentication.registeredUsersCanCreate);
+    assertBoolean('config.authentication.inferredUsersCanCreate', config.authentication.inferredUsersCanCreate);
     assertString('config.authentication.guestAccount', config.authentication.guestAccount);
     assertString('config.authentication.logOutUrl', config.authentication.logOutUrl);
     assertNumber('config.authentication.salts', config.authentication.salts);
