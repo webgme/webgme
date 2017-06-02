@@ -56,9 +56,9 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.authentication.guestAccount = 'guest'`
  - User account which non-authenticated connections will access the storage.
 - `config.authentication.allowUserRegistration = true`
- - Allows user-creation via the REST api without being an authenticated site admin.
+ - Allows user-creation via the REST api without being an authenticated site admin. Provide a path to a module if you want to add your own custom registration path (see [default register end-point](https://github.com/webgme/webgme/blob/master/src/server/api/defaultRegisterEndPoint.js) for structure).
 - `config.authentication.registeredUsersCanCreate = true`
- - Set this option to `false` if user registration is `true` and registered users should not be able to create projects (site-admins can edit the `canCreate` property post-hoc for existing users).
+ - Use this option if user registration is set to `true` and you want to control if registered users should be able to create projects directly after registered (site-admins can edit the `canCreate` property post-hoc for existing users).
 - `config.authentication.inferredUsersCanCreate = false`
  - Users authenticated by externally generated tokens are automatically put in the database at their first login. By default these users cannot create new projects unless this option is set to `true`.
 - `config.authentication.logInUrl = '/profile/login'`
