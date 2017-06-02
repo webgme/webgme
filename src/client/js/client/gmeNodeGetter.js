@@ -431,6 +431,16 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         }
     };
 
+    GMENode.prototype.isInstanceOf = function (basePath) {
+        var baseNode = _getNode(this._state.nodes, basePath);
+
+        if (baseNode) {
+            return this._state.core.isInstanceOf(this._state.nodes[this._id].node, baseNode);
+        } else {
+            return false;
+        }
+    };
+
     GMENode.prototype.isValidChildOf = function (parentPath) {
         var parentNode = _getNode(this._state.nodes, parentPath);
 

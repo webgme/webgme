@@ -114,10 +114,22 @@ describe('meta core', function () {
         core.isTypeOf(attrNode, setNode).should.be.false;
     });
 
-    it('check instances', function () {
+    it('check instances deprecated should still work', function () {
         core.isInstanceOf(attrNode, 'base').should.be.true;
         core.isInstanceOf(setNode, 'set').should.be.false;
         core.isInstanceOf(base, 'unknown').should.be.false;
+    });
+
+    it('check instance of it self should return true', function () {
+        core.isInstanceOf(attrNode, attrNode).should.be.true;
+    });
+
+    it('check instance of a base should return true', function () {
+        core.isInstanceOf(attrNode, base).should.be.true;
+    });
+
+    it('check instance when no base relation exists should return false', function () {
+        core.isInstanceOf(attrNode, setNode).should.be.true;
     });
 
     it('checking attribute values', function () {

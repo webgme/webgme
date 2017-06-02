@@ -1526,13 +1526,6 @@ declare namespace GmeClasses {
          */
         isFullyOverriddenMember(node: Core.Node, setName: GmeCommon.Name, memberPath: GmeCommon.Path): boolean;
         /**
-         * Checks if there is a node with the given name in the nodes inheritance chain (excluding itself).
-         * @param node the node in question.
-         * @param name the name of the class node.
-         * @return  true if it finds an ancestor with the given name attribute.
-         */
-        isInstanceOf(node: Core.Node, name: GmeCommon.Name): boolean;
-        /**
          * Returns true if the node in question is a library element.
          * @param node the node in question.
          * @return true if your node is a library element, false otherwise.
@@ -1560,7 +1553,16 @@ declare namespace GmeClasses {
          */
         isMetaNode(node: Core.Node): boolean;
         /**
-         * Checks if the given typeNode is really a base of the node.
+         * Checks if the node is an instance of base.
+         * @param node the node in question.
+         * @param type a candidate base node.
+         * @return true if the base is on the inheritance chain of node.
+         * A node is considered to be an instance of itself here.
+         */
+        isInstanceOf(node: Core.Node, base: Core.Node): boolean;
+        /**
+         * Checks if the given node in any way inherits from the typeNode. In addition to checking if the node
+         * "isInstanceOf" of typeNode, this methods also takes mixins into account.
          * @param node the node in question.
          * @param type a candidate base node.
          * @return true if the type is in the inheritance chain of the node or false otherwise. 

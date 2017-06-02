@@ -674,8 +674,8 @@ define([
             return null;
         };
 
-        this.isInstanceOf = function (node, name) {
-            //TODO this is name based query - doesn't check the node's own name
+        this.isInstanceOfDeprecated = function (node, name) {
+            console.warn('Passing a name to isInstanceOf of is deprecated and will eventually be removed!');
             node = self.getBase(node);
             while (node) {
                 if (self.getAttribute(node, 'name') === name) {
