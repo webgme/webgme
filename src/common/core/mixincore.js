@@ -367,6 +367,16 @@ define([
             return getValidNames(node, innerCore.getConstraintNames, {});
         };
 
+        this.getConstraint = function (node, name) {
+            var constraintOwner = getFirstMatchingRuleHolder(node, name, innerCore.getOwnConstraintNames, {});
+
+            if (constraintOwner) {
+                return innerCore.getConstraint(constraintOwner, name);
+            } else {
+                return null;
+            }
+        };
+
         this.getJsonMeta = function (node) {
             var meta = {children: {}, attributes: {}, pointers: {}, aspects: {}, constraints: {}},
                 nullRule = {items: [], minItems: [], maxItems: []},
