@@ -22,12 +22,13 @@ function prepublish(jsdocConfigPath) {
             console.log('Done with REST API docs!');
         }, function (err) {
             console.error('Failed generating REST API docs!', err);
+            process.exit(1);
         });
 
         console.log('Installing bower components...');
         bower.commands.install(undefined, undefined, {cwd: process.cwd()})
             .on('end', function (/*installed*/) {
-                console.log('Done!');
+                console.log('Done with bower components!');
                 if (process.env.TEST_FOLDER) {
                     console.warn('TEST_FOLDER environment variable is set, skipping distribution scripts.');
                 } else {
@@ -38,16 +39,18 @@ function prepublish(jsdocConfigPath) {
                     webgmeBuild(function (err/*, data*/) {
                         if (err) {
                             console.error('Failed generating webgme.classes.build.js!', err);
+                            process.exit(1);
                         } else {
                             //console.log(data);
-                            console.log('Done!');
+                            console.log('Done with webgme.classes.build.js!');
                             console.log('Generating webgme.dist.build.js ...');
                             webgmeDist(function (err/*, data*/) {
                                 if (err) {
                                     console.error('Failed generating webgme.dist.build.js!', err);
+                                    process.exit(1);
                                 } else {
                                     //console.log(data);
-                                    console.log('Done!');
+                                    console.log('Done with webgme.dist.build.js!');
                                 }
                             });
                         }
@@ -56,6 +59,7 @@ function prepublish(jsdocConfigPath) {
             })
             .on('error', function (err) {
                 console.error(err);
+                process.exit(1);
             });
 
     if (jsdocConfigPath !== false) {
@@ -63,7 +67,7 @@ function prepublish(jsdocConfigPath) {
         childProcess.execFile(process.execPath, [
             path.join(__dirname, './jsdoc_build.js'),
             '-c', jsdocConfigPath || './jsdoc_conf.json']);
-        console.log('Done!');
+        console.log('Done with source code documentation!');
     }
 }
 

@@ -1224,6 +1224,7 @@ define([
             }
         };
 
+        // FIXME: Do we really need both of these??
         this.getBaseRoot = function (node) {
             ASSERT(self.isValidNode(node));
             while (node.base !== null) {
@@ -1308,6 +1309,18 @@ define([
                 // We do not process relids for e.g. _sets and _meta.
                 processNewRelidLength(node, relid.length + 1);
             }
+        };
+
+        this.isInstanceOf = function (node, base) {
+            do {
+                if (node === base) {
+                    return true;
+                }
+
+                node = node.base;
+            } while (node);
+
+            return false;
         };
 
         this.getInstancePaths = function (node) {

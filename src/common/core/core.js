@@ -417,12 +417,11 @@ define([
         };
 
         /**
-         * Returns the calculated database id of the data of the node.
+         * Returns the calculated hash and database id of the data for the node.
          * @param {module:Core~Node} node - the node in question.
          *
-         * @return {module:Core~ObjectHash} Returns the so called Hash value of the data of the given node. If the string is empty,
-         * then it means that the node was mutated but not yet saved to the database, so it do not have a hash
-         * temporarily.
+         * @return {module:Core~ObjectHash} Returns the hash value of the data for the given node.
+         * An empty string is returned when the node was mutated and not persisted.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
@@ -2280,21 +2279,23 @@ define([
         };
 
         /**
-         * Checks if the given typeNode is really a base of the node.
+         * Checks if the given node in any way inherits from the typeNode. In addition to checking if the node
+         * "isInstanceOf" of typeNode, this methods also takes mixins into account.
          * @param {module:Core~Node} node - the node in question.
-         * @param {module:Core~Node} type - the type node we want to check.
+         * @param {module:Core~Node} typeNode - the type node we want to check.
          *
-         * @return {bool} The function returns true if the type is in the inheritance chain of the node or false
-         * otherwise. Every node is type of itself.
+         * @return {bool} The function returns true if the typeNode is a base node, or a mixin of any of the
+         * base nodes, of the node.
+         * Every node is considered to be a type of itself.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isTypeOf = function (node, type) {
+        this.isTypeOf = function (node, typeNode) {
             ensureNode(node, 'node');
-            ensureNode(type, 'type');
+            ensureNode(typeNode, 'typeNode');
 
-            return core.isTypeOf(node, type);
+            return core.isTypeOf(node, typeNode);
         };
 
         /**
@@ -2954,20 +2955,25 @@ define([
         };
 
         /**
-         * Checks if there is a node with the given name in the nodes inheritance chain (excluding itself).
+         * Checks if the node is an instance of base.
          * @param {module:Core~Node} node - the node in question.
-         * @param {string} name - the name of the base node.
+         * @param {module:Core~Node} base - a potential base of the node
          *
-         * @return {bool} The function returns true if it finds an ancestor with the given name attribute.
+         * @return {bool} Returns true if the base is on the inheritance chain of node.
+         * A node is considered to be an instance of itself here.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isInstanceOf = function (node, name) {
+        this.isInstanceOf = function (node, base) {
             ensureNode(node, 'node');
-            ensureType(name, 'name', 'string');
+            if (typeof base === 'string') {
+                return core.isInstanceOfDeprecated(node, base);
+            }
 
-            return core.isInstanceOf(node, name);
+            ensureNode(base, 'base');
+
+            return core.isInstanceOf(node, base);
         };
 
         /**
