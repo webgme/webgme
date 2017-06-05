@@ -1,4 +1,4 @@
-/*globals define, $, _*/
+/*globals define, $, _, WebGMEGlobal*/
 /*jshint browser: true*/
 
 /**
@@ -12,16 +12,14 @@ define([
     'js/Utils/DisplayFormat',
     'js/Decorators/DecoratorWithPortsAndPointerHelpers.Base',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'text!./default.svg',
-    'common/regexp'
+    'text!./default.svg'
 ], function (CONSTANTS,
              nodePropertyNames,
              REGISTRY_KEYS,
              displayFormat,
              DecoratorWithPortsAndPointerHelpers,
              DiagramDesignerWidgetConstants,
-             DefaultSvgTemplate,
-             REGEXP) {
+             DefaultSvgTemplate) {
 
     'use strict';
 
