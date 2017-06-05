@@ -3,7 +3,7 @@
   "version": "2.14.0",
   "description": "Web-based Generic Modeling Environment",
   "engines": {
-    "node": ">=0.12.0"
+    "node": ">=4.0.0"
   },
   "homepage": "http://github.com/webgme/webgme",
   "keywords": [
