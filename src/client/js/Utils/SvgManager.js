@@ -5,7 +5,11 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
+define([
+    'common/util/ejs',
+    'js/Constants',
+    'text!assets/decoratorSVGList.json'
+], function (ejs, CONSTANTS, DecoratorSVGIconList) {
     'use strict';
 
     var SVG_CACHE = {},
@@ -19,6 +23,10 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
      */
     function isSvg(text) {
         var result = false;
+
+        if (DecoratorSVGIconList.indexOf(text) > -1) {
+            return false;
+        }
 
         text = text || '';
         text = text.split('<%');
@@ -45,22 +53,19 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
             // get the svg from the server in SYNC mode, may take some time
             $.ajax(svgFilePath, {async: false})
                 .done(function (data) {
-                    // downloaded successfully
-                    // cache the content if valid
-                    var svgElements = $(data).find('svg');
-                    if (svgElements.length > 0) {
-                        SVG_CACHE[svgFilePath] = $(data).find('svg').first().prop('outerHTML');
-                        content = SVG_CACHE[svgFilePath];
-                    }
-                })
-                .fail(function (resp, status/*, err*/) {
-                    var data = resp.responseText;
-
-                    // if the file contains a text we just save as it is cause it is most likely a template
-                    if (status === 'parsererror' && typeof data === 'string') {
+                    if (svgFilePath.indexOf('.ejs') === svgFilePath.length - '.ejs'.length) {
                         SVG_CACHE[svgFilePath] = data;
                         content = SVG_CACHE[svgFilePath];
+                    } else if (svgFilePath.indexOf('.svg') === svgFilePath.length - '.svg'.length) {
+                        var svgElements = $(data).find('svg');
+                        if (svgElements.length > 0) {
+                            SVG_CACHE[svgFilePath] = $(data).find('svg').first().prop('outerHTML');
+                            content = SVG_CACHE[svgFilePath];
+                        }
                     }
+                })
+                .fail(function (/*resp, status, err*/) {
+
                 });
         }
 
@@ -68,7 +73,8 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
     }
 
     /**
-     * The function retrieves the pointed svg asset as a base64 image source so it can be used as scr of an img tag
+     * Returns the uri for embedding the svg inside an img element. If the stored registry is an embedded
+     * svg or ejs, the content will be rendered and a data link generated.
      * @param {GMENode} clientNodeObj - The target node where we will gather the asset
      * @param {string} registryId - The name of the registry entry that holds the svg asset which
      * can be either an svg template string or a path of the svg file
@@ -78,23 +84,24 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
         var data = clientNodeObj.getEditableRegistry(registryId);
 
         if (typeof data === 'string' && data.length > 0) {
-            if (isSvg(data) === false) {
-                data = getSvgFileContent(BASEDIR + data);
-            }
 
-            try {
-                data = ejs.render(data, clientNodeObj);
-            } catch (e) {
+            if (isSvg(data) === true) {
+                try {
+                    data = ejs.render(data, clientNodeObj);
+
+                    if ($(data)[0].tagName !== 'svg') {
+                        data = $(data).find('svg').first().prop('outerHTML');
+                    }
+
+                    return 'data:image/svg+xml;base64,' + window.btoa(data);
+                } catch (e) {
+                    return null;
+                }
+            } else if (DecoratorSVGIconList.indexOf(data) > -1) {
+                return BASEDIR + data;
+            } else {
                 return null;
             }
-
-            if ($(data)[0].tagName !== 'svg') {
-                data = $(data).find('svg').first().prop('outerHTML');
-            }
-
-            data = 'data:image/svg+xml;base64,' + window.btoa(data);
-            return data;
-
         }
 
         return null;
@@ -110,21 +117,22 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
         var data = clientNodeObj.getEditableRegistry(registryId);
 
         if (typeof data === 'string' && data.length > 0) {
-            if (isSvg(data) === false) {
-                data = getSvgFileContent(BASEDIR + data);
-            }
+            if (isSvg(data)) {
+                try {
+                    data = ejs.render(data, clientNodeObj);
+                    if ($(data)[0].tagName !== 'svg') {
+                        data = $(data).find('svg').first().prop('outerHTML');
+                    }
 
-            try {
-                data = ejs.render(data, clientNodeObj);
-            } catch (e) {
+                    return data;
+                } catch (e) {
+                    return null;
+                }
+            } else if (data.indexOf('.svg') === data.length - '.svg'.length) {
+                return getSvgFileContent(BASEDIR + data);
+            } else {
                 return null;
             }
-
-            if ($(data)[0].tagName !== 'svg') {
-                data = $(data).find('svg').first().prop('outerHTML');
-            }
-
-            return data;
         }
 
         return null;
@@ -139,7 +147,7 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
     function getSvgElement(clientNodeObj, registryId) {
         var html = getSvgContent(clientNodeObj, registryId);
         if (html === null) {
-            return html;
+            return null;
         }
 
         return $(html);
@@ -194,8 +202,13 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
      * @return {error|null} Returns the ejs error if something goes wrong or null otherwise.
      */
     function testSvgTemplate(templateString, clientNodeObj) {
+        var svgContent;
+
         try {
-            ejs.render(templateString, clientNodeObj);
+            svgContent = ejs.render(templateString, clientNodeObj);
+            if ($(svgContent).is('svg') === false) {
+                throw new Error('Rendered template is not a proper svg.');
+            }
         } catch (e) {
             return e;
         }
@@ -207,6 +220,8 @@ define(['common/util/ejs', 'js/Constants'], function (ejs, CONSTANTS) {
         getSvgUri: getSvgUri,
         getSvgContent: getSvgContent,
         getSvgElement: getSvgElement,
+
+        //
         getRawSvgContent: getRawSvgContent,
         isSvg: isSvg,
         testSvgTemplate: testSvgTemplate

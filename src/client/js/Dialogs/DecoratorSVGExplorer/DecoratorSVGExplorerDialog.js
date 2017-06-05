@@ -74,11 +74,13 @@ define(['js/Constants',
         var self = this,
             len = DecoratorSVGIconList.length,
             i,
-            svg,
+            svgPath,
             btnSelect,
             btnEdit,
             namePieces,
             imgName,
+            imgNamePieces,
+            fExtension,
             tabGroupEl,
             divImg,
             setLiveSvg = function () {
@@ -109,6 +111,9 @@ define(['js/Constants',
                 }
             },
             removeBtnFn = function () {
+                if ($(this).hasClass('disabled')) {
+                    return;
+                }
                 self.result = undefined;
                 self._dialog.modal('hide');
             },
@@ -117,11 +122,19 @@ define(['js/Constants',
                 self._dialog.modal('hide');
             },
             selectBtnFn = function (event) {
+                if ($(this).hasClass('disabled')) {
+                    return;
+                }
                 self.result = $(event.currentTarget).data('filename');
                 self._dialog.modal('hide');
             },
             editBtnFn = function (event) {
+                if ($(this).hasClass('disabled')) {
+                    return;
+                }
+
                 var filename = $(event.currentTarget).data('filename');
+
 
                 self._filter('$@$impossible$@$');
                 self._editor.show();
@@ -197,19 +210,21 @@ define(['js/Constants',
         this._btnCancel.hide();
 
         for (i = 0; i < len; i += 1) {
-            svg = DecoratorSVGIconList[i];
+            svgPath = DecoratorSVGIconList[i];
             divImg = IMG_BASE.clone();
-            namePieces = svg.split('/');
+            namePieces = svgPath.split('/');
             imgName = namePieces[namePieces.length - 1];
+            imgNamePieces = imgName.split('.');
+            fExtension = imgNamePieces[imgNamePieces.length - 1].toLowerCase();
 
             btnSelect = IMG_BTN_BASE.clone();
 
             btnSelect.attr('title', 'Select');
-            btnSelect.data('filename', svg);
+            btnSelect.data('filename', svgPath);
 
             btnEdit = IMG_BTN_BASE.clone();
             btnEdit.attr('title', 'Edit as embedded svg');
-            btnEdit.data('filename', svg);
+            btnEdit.data('filename', svgPath);
             btnEdit.on('click', editBtnFn);
 
             btnEdit.addClass('glyphicon-pencil');
@@ -227,27 +242,44 @@ define(['js/Constants',
                     btnSelect.attr('title', 'SVG registry already empty');
                 } else {
                     btnSelect.attr('title', 'Clear stored SVG registry');
+                    if (WebGMEGlobal.SvgManager.isSvg(this._old)) {
+                        divImg.find('img').attr('src',
+                            WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
+                    } else {
+                        divImg.find('img').attr('src', '/' + CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + this._old);
+                        btnEdit.disable(true);
+                    }
                 }
-                divImg.find('img').attr('src',
-                    WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
+
+
                 divImg.find('.desc').text('-- CURRENT --');
                 divImg.find('.desc').attr('title', '-- CURRENT --');
                 btnSelect.on('click', removeBtnFn);
             } else {
                 btnSelect.addClass('glyphicon-ok');
                 btnSelect.addClass('btn-success');
-                // Trim the .svg part
-                imgName = imgName.substring(0, imgName.length - '.svg'.length);
-                divImg.find('img').attr('src',
-                    WebGMEGlobal.SvgManager.getRawSvgContent(svg, self._clientNode, true, true));
-                divImg.find('img').attr('title', svg);
+
+                if (fExtension === 'svg') {
+                    imgName = imgName.substring(0, imgName.length - '.svg'.length);
+                    divImg.find('img').attr('src', '/' + CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + svgPath);
+                } else if (fExtension === 'ejs') {
+                    divImg.find('img').attr('src',
+                        WebGMEGlobal.SvgManager.getRawSvgContent(svgPath, self._clientNode, true, true));
+                    btnSelect.disable(true);
+                } else {
+                    // If there is a png or something else stored, we do not let it crash..
+                    divImg.find('img').attr('src', '/' + CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + svgPath);
+                    btnEdit.disable(true);
+                }
+
+                divImg.find('img').attr('title', svgPath);
                 divImg.find('.desc').text(imgName);
-                divImg.find('.desc').attr('title', svg);
+                divImg.find('.desc').attr('title', svgPath);
                 btnSelect.on('click', selectBtnFn);
             }
 
-            divImg.data(DATA_FILENAME, svg);
-            divImg.attr(DATA_FILENAME, svg);
+            divImg.data(DATA_FILENAME, svgPath);
+            divImg.attr(DATA_FILENAME, svgPath);
 
             divImg.attr(DATA_SVG, imgName.toLowerCase());
             divImg.data(DATA_SVG, imgName.toLowerCase());
