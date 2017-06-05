@@ -1,5 +1,43 @@
 # Change Log
 
+## [v2.14.0](https://github.com/webgme/webgme/tree/v2.14.0) (2017-06-05)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.13.1...v2.14.0)
+
+**Implemented enhancements:**
+
+- npm install failing on Node 7.5.0 [\#1397](https://github.com/webgme/webgme/issues/1397)
+- FIX \#1408 make sure to handle non svgs where applicable. [\#1424](https://github.com/webgme/webgme/pull/1424) ([pmeijer](https://github.com/pmeijer))
+- Server Worker Manager is a replaceable module [\#1423](https://github.com/webgme/webgme/pull/1423) ([pmeijer](https://github.com/pmeijer))
+- Split panel uses event capturing instead of event bubbling [\#1420](https://github.com/webgme/webgme/pull/1420) ([pmeijer](https://github.com/pmeijer))
+- Do not call bower install from postinstall [\#1417](https://github.com/webgme/webgme/pull/1417) ([pmeijer](https://github.com/pmeijer))
+- Update bower.json to resolve paths to Github instead of through bower.io [\#1410](https://github.com/webgme/webgme/pull/1410) ([ghemingway](https://github.com/ghemingway))
+- No core instances in the server process [\#1409](https://github.com/webgme/webgme/pull/1409) ([pmeijer](https://github.com/pmeijer))
+- Ejs based and inmodel SVG [\#1408](https://github.com/webgme/webgme/pull/1408) ([kecso](https://github.com/kecso))
+- Add example of a webhook that can connect securely and authenticated to webgme storage. [\#1405](https://github.com/webgme/webgme/pull/1405) ([pmeijer](https://github.com/pmeijer))
+- Npm packages and bower updates [\#1404](https://github.com/webgme/webgme/pull/1404) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Invalid options from tree browser create child results in assert error. [\#1418](https://github.com/webgme/webgme/issues/1418)
+- Updating user password from cli overwrites the user [\#1414](https://github.com/webgme/webgme/issues/1414)
+- Constraints do not propagate properly through mixins and cause the constraint evaluator to crash [\#1413](https://github.com/webgme/webgme/issues/1413)
+- Exit split mode does not activate the remaining panel. [\#1406](https://github.com/webgme/webgme/issues/1406)
+- Exception in Split Panel setReadOnly [\#1402](https://github.com/webgme/webgme/issues/1402)
+- Fixes \#1413 getting constraints should take mixins into account [\#1422](https://github.com/webgme/webgme/pull/1422) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1418 exception in tree browser and introduces isInstanceOf on client API [\#1421](https://github.com/webgme/webgme/pull/1421) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1414 User overwritten when setting password from cli. [\#1416](https://github.com/webgme/webgme/pull/1416) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1411 Uncaught exception at copy nodes [\#1412](https://github.com/webgme/webgme/pull/1412) ([kecso](https://github.com/kecso))
+- Ensure remaining panel is activated after exit split mode [\#1407](https://github.com/webgme/webgme/pull/1407) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1402 Make sure panel is instantiated before setting readOnly [\#1403](https://github.com/webgme/webgme/pull/1403) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Uncaught exception at copy nodes [\#1411](https://github.com/webgme/webgme/issues/1411)
+
+**Merged pull requests:**
+
+- Enable custom register end-point from config. [\#1419](https://github.com/webgme/webgme/pull/1419) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.13.1](https://github.com/webgme/webgme/tree/v2.13.1) (2017-05-15)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.13.0...v2.13.1)
 
