@@ -9,7 +9,7 @@ define([
     'common/storage/browserstorage',
     'common/EventDispatcher',
     'common/core/coreQ',
-    'js/client/constants',
+    'js/Constants',
     'common/util/assert',
     'common/core/tasync',
     'common/util/guid',
@@ -98,7 +98,7 @@ define([
         blobClient = new BlobClient({logger: logger.fork('BlobClient')});
         EventDispatcher.call(this);
 
-        this.CONSTANTS = CONSTANTS;
+        this.CONSTANTS = CONSTANTS.CLIENT;
 
         // Internal functions
         function COPY(object) {
@@ -713,7 +713,7 @@ define([
 
         function printCoreError(error) {
             logger.error('Faulty core usage raised an error', error);
-            self.dispatchEvent(CONSTANTS.NOTIFICATION, {
+            self.dispatchEvent(CONSTANTS.CLIENT.NOTIFICATION, {
                 type: 'CORE',
                 severity: 'error',
                 message: error.message
@@ -766,7 +766,7 @@ define([
                 state.msg = '';
 
                 cleanUsersTerritories();
-                self.dispatchEvent(CONSTANTS.PROJECT_CLOSED, projectId);
+                self.dispatchEvent(CONSTANTS.CLIENT.PROJECT_CLOSED, projectId);
 
                 callback(null);
             });
@@ -782,7 +782,7 @@ define([
                 state.connection = connectionState;
                 if (connectionState === CONSTANTS.STORAGE.CONNECTED) {
                     //N.B. this event will only be triggered once.
-                    self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                    self.dispatchEvent(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, connectionState);
                     storage.webSocket.addEventListener(CONSTANTS.STORAGE.NOTIFICATION,
                         function (emitter, eventData) {
                             logger.debug('received notification', eventData);
@@ -809,17 +809,17 @@ define([
                     callback(null);
                 } else if (connectionState === CONSTANTS.STORAGE.DISCONNECTED) {
                     if (state.connection !== CONSTANTS.STORAGE.INCOMPATIBLE_CONNECTION) {
-                        self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                        self.dispatchEvent(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, connectionState);
                     }
                 } else if (connectionState === CONSTANTS.STORAGE.RECONNECTED) {
-                    self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                    self.dispatchEvent(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, connectionState);
                 } else if (connectionState === CONSTANTS.STORAGE.INCOMPATIBLE_CONNECTION) {
                     self.disconnectFromDatabase(function (err) {
                         if (err) {
                             logger.error(err);
                         }
 
-                        self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, connectionState);
+                        self.dispatchEvent(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, connectionState);
                     });
                 } else if (connectionState === CONSTANTS.STORAGE.JWT_ABOUT_TO_EXPIRE) {
                     logger.warn('Token about is about to expire');
@@ -837,7 +837,7 @@ define([
                             logger.error(err);
                         }
 
-                        self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.JWT_EXPIRED);
+                        self.dispatchEvent(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.JWT_EXPIRED);
                     });
                 } else {
                     logger.error(new Error('Connection failed error ' + connectionState));
@@ -846,7 +846,7 @@ define([
                             logger.error(err);
                         }
 
-                        self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.CONNECTION_ERROR);
+                        self.dispatchEvent(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, CONSTANTS.STORAGE.CONNECTION_ERROR);
                         callback(new Error('Connection failed! ' + connectionState));
                     });
                 }
@@ -920,7 +920,7 @@ define([
 
                     logState('info', 'projectOpened');
                     logger.debug('projectOpened, branches: ', branches);
-                    self.dispatchEvent(CONSTANTS.PROJECT_OPENED, projectId);
+                    self.dispatchEvent(CONSTANTS.CLIENT.PROJECT_OPENED, projectId);
 
                     if (branches.hasOwnProperty(branchToOpen) === false) {
                         if (branchName) {
@@ -1067,7 +1067,7 @@ define([
                 logger.debug('branchStatus changed', branchStatus, commitQueue, updateQueue);
                 logState('debug', 'branchStatus');
                 state.branchStatus = branchStatus;
-                self.dispatchEvent(CONSTANTS.BRANCH_STATUS_CHANGED, {
+                self.dispatchEvent(CONSTANTS.CLIENT.BRANCH_STATUS_CHANGED, {
                         status: branchStatus,
                         commitQueue: commitQueue,
                         updateQueue: updateQueue
@@ -1092,9 +1092,9 @@ define([
 
                 //undo-redo
                 addModification(commitData.commitObject, clearUndoRedo);
-                self.dispatchEvent(CONSTANTS.UNDO_AVAILABLE, canUndo());
-                self.dispatchEvent(CONSTANTS.REDO_AVAILABLE, canRedo());
-                self.dispatchEvent(CONSTANTS.NEW_COMMIT_STATE, {
+                self.dispatchEvent(CONSTANTS.CLIENT.UNDO_AVAILABLE, canUndo());
+                self.dispatchEvent(CONSTANTS.CLIENT.REDO_AVAILABLE, canRedo());
+                self.dispatchEvent(CONSTANTS.CLIENT.NEW_COMMIT_STATE, {
                     data: data,
                     uiState: typeof self.uiStateGetter === 'function' ? self.uiStateGetter() : null
                 });
@@ -1148,15 +1148,15 @@ define([
                     function (err /*, latestCommit*/) {
                         if (err) {
                             logger.error('storage.openBranch returned with error', err);
-                            self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
+                            self.dispatchEvent(CONSTANTS.CLIENT.BRANCH_CHANGED, null);
                             callback(err);
                             return;
                         }
 
                         state.viewer = false;
                         state.branchName = branchName;
-                        self.dispatchEvent(CONSTANTS.BRANCH_OPENED, branchName);
-                        self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, branchName);
+                        self.dispatchEvent(CONSTANTS.CLIENT.BRANCH_OPENED, branchName);
+                        self.dispatchEvent(CONSTANTS.CLIENT.BRANCH_CHANGED, branchName);
                         logState('info', 'openBranch');
                         callback(null);
                     }
@@ -1173,7 +1173,7 @@ define([
                     }
 
                     state.branchName = null;
-                    self.dispatchEvent(CONSTANTS.BRANCH_CLOSED, prevBranchName);
+                    self.dispatchEvent(CONSTANTS.CLIENT.BRANCH_CLOSED, prevBranchName);
                     openBranch();
                 });
             } else {
@@ -1204,7 +1204,7 @@ define([
                 state.project.loadObject(commitHash, function (err, commitObj) {
                     if (!err && commitObj) {
                         logState('info', 'selectCommit loaded commit');
-                        self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
+                        self.dispatchEvent(CONSTANTS.CLIENT.BRANCH_CHANGED, null);
                         loading(commitObj.root, commitHash, changedNodes, function (err, aborted) {
                             if (err) {
                                 logger.error('loading returned error', commitObj.root, err);
@@ -1216,7 +1216,7 @@ define([
                             } else {
                                 logger.debug('loading complete for selectCommit rootHash', commitObj.root);
                                 logState('info', 'selectCommit loading');
-                                self.dispatchEvent(CONSTANTS.BRANCH_CHANGED, null);
+                                self.dispatchEvent(CONSTANTS.CLIENT.BRANCH_CHANGED, null);
                                 callback(null);
                             }
                         });
@@ -1240,7 +1240,7 @@ define([
                     }
 
                     state.branchName = null;
-                    self.dispatchEvent(CONSTANTS.BRANCH_CLOSED, prevBranchName);
+                    self.dispatchEvent(CONSTANTS.CLIENT.BRANCH_CLOSED, prevBranchName);
                     openCommit();
                 });
             } else {
@@ -1870,7 +1870,7 @@ define([
 
         this.importProjectFromFile = function (projectName, branchName, blobHash, ownerId, url, callback) {
             var parameters = {
-                command: 'importProjectFromFile',
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.IMPORT_PROJECT_FROM_FILE,
                 projectName: projectName,
                 blobHash: blobHash,
                 branchName: branchName,
@@ -1890,7 +1890,7 @@ define([
 
         this.updateProjectFromFile = function (projectId, branchName, blobHash, callback) {
             var parameters = {
-                command: 'updateProjectFromFile',
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.UPDATE_PROJECT_FROM_FILE,
                 blobHash: blobHash,
                 projectId: projectId,
                 branchName: branchName
@@ -1915,7 +1915,7 @@ define([
          */
         this.checkMetaRules = function (nodePaths, includeChildren, callback) {
             var parameters = {
-                command: 'checkConstraints',
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.CHECK_CONSTRAINTS,
                 checkType: 'META', //TODO this should come from a constant
                 includeChildren: includeChildren,
                 nodePaths: nodePaths,
@@ -1929,7 +1929,7 @@ define([
                 }
 
                 if (result) {
-                    self.dispatchEvent(CONSTANTS.META_RULES_RESULT, result);
+                    self.dispatchEvent(CONSTANTS.CLIENT.META_RULES_RESULT, result);
                 } else {
                     self.notifyUser({
                         severity: 'error',
@@ -1951,7 +1951,7 @@ define([
          */
         this.checkCustomConstraints = function (nodePaths, includeChildren, callback) {
             var parameters = {
-                command: 'checkConstraints',
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.CHECK_CONSTRAINTS,
                 checkType: 'CUSTOM', //TODO this should come from a constant
                 includeChildren: includeChildren,
                 nodePaths: nodePaths,
@@ -1965,7 +1965,7 @@ define([
                 }
 
                 if (result) {
-                    self.dispatchEvent(CONSTANTS.CONSTRAINT_RESULT, result);
+                    self.dispatchEvent(CONSTANTS.CLIENT.CONSTRAINT_RESULT, result);
                 } else {
                     self.notifyUser({
                         severity: 'error',
@@ -1982,7 +1982,7 @@ define([
         //seed
         this.seedProject = function (parameters, callback) {
             logger.debug('seeding project', parameters);
-            parameters.command = 'seedProject';
+            parameters.command = CONSTANTS.SERVER_WORKER_REQUESTS.SEED_PROJECT;
             storage.simpleRequest(parameters, function (err, result) {
                 if (err) {
                     logger.error(err);
@@ -1998,8 +1998,8 @@ define([
             };
 
             logger.debug('addOn notification', data);
-            self.dispatchEvent(self.CONSTANTS.NOTIFICATION, notification);
-            self.dispatchEvent(self.CONSTANTS.ADD_ON_NOTIFICATION, data);
+            self.dispatchEvent(CONSTANTS.CLIENT.NOTIFICATION, notification);
+            self.dispatchEvent(CONSTANTS.CLIENT.ADD_ON_NOTIFICATION, data);
         };
 
         // Constraints
@@ -2019,13 +2019,14 @@ define([
 
         //automerge
         this.autoMerge = function (projectId, mine, theirs, callback) {
-            var command = {
-                command: 'autoMerge',
+            var parameters = {
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.AUTO_MERGE,
                 projectId: projectId,
                 mine: mine,
                 theirs: theirs
             };
-            storage.simpleRequest(command, function (err, result) {
+
+            storage.simpleRequest(parameters, function (err, result) {
                 if (err) {
                     logger.error('autoMerge failed with error', err);
                     callback(err);
@@ -2037,9 +2038,10 @@ define([
 
         this.resolve = function (mergeResult, callback) {
             var command = {
-                command: 'resolve',
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.RESOLVE,
                 partial: mergeResult
             };
+
             storage.simpleRequest(command, function (err, result) {
                 if (err) {
                     logger.error('resolve failed with error', err);
@@ -2052,15 +2054,17 @@ define([
 
         //package save
         this.exportProjectToFile = function (projectId, branchName, commitHash, withAssets, callback) {
-            var command = {};
-            command.command = 'exportProjectToFile';
-            command.projectId = projectId;
-            command.branchName = branchName;
-            command.commitHash = commitHash;
-            command.withAssets = withAssets;
-            logger.debug('exportProjectToFile, command', command);
-            if (command.projectId && (command.branchName || commitHash)) {
-                storage.simpleRequest(command, function (err, result) {
+            var parameters = {
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.EXPORT_PROJECT_TO_FILE,
+                projectId: projectId,
+                branchName: branchName,
+                commitHash: commitHash,
+                withAssets: withAssets
+            };
+
+            logger.debug('exportProjectToFile, parameters', parameters);
+            if (parameters.projectId && (parameters.branchName || commitHash)) {
+                storage.simpleRequest(parameters, function (err, result) {
                     if (err && !result) {
                         logger.error('exportProjectToFile failed with error', err);
                         callback(err);
@@ -2074,16 +2078,17 @@ define([
         };
 
         this.exportSelectionToFile = function (projectId, commitHash, selectedIds, withAssets, callback) {
-            var command = {};
-            command.command = 'exportSelectionToFile';
-            command.projectId = projectId;
-            command.commitHash = commitHash;
-            command.withAssets = withAssets;
-            command.paths = selectedIds;
+            var parameters = {
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.EXPORT_SELECTION_TO_FILE,
+                projectId: projectId,
+                commitHash: commitHash,
+                withAssets: withAssets,
+                paths: selectedIds
+            };
 
-            logger.debug('exportSelectionToFile, command', command);
-            if (command.projectId && commitHash && selectedIds && selectedIds.length > 0) {
-                storage.simpleRequest(command, function (err, result) {
+            logger.debug('exportSelectionToFile, parameters', parameters);
+            if (parameters.projectId && commitHash && selectedIds && selectedIds.length > 0) {
+                storage.simpleRequest(parameters, function (err, result) {
                     if (err && !result) {
                         logger.error('exportSelectionToFile failed with error', err);
                         callback(err);
@@ -2098,7 +2103,7 @@ define([
 
         this.importSelectionFromFile = function (projectId, branchName, parentId, blobHash, callback) {
             var parameters = {
-                command: 'importSelectionFromFile',
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.IMPORT_SELECTION_FROM_FILE,
                 projectId: projectId,
                 blobHash: blobHash,
                 parentPath: parentId,
@@ -2142,7 +2147,7 @@ define([
         };
 
         this.dispatchConnectedUsersChanged = function (eventData) {
-            self.dispatchEvent(CONSTANTS.CONNECTED_USERS_CHANGED, eventData);
+            self.dispatchEvent(CONSTANTS.CLIENT.CONNECTED_USERS_CHANGED, eventData);
         };
 
         this.registerUIStateGetter = function (uiStateGetter) {
@@ -2161,7 +2166,7 @@ define([
 
             if (notification.message) {
                 logger.debug('generic notification', notification);
-                self.dispatchEvent(self.CONSTANTS.NOTIFICATION, notification);
+                self.dispatchEvent(CONSTANTS.CLIENT.NOTIFICATION, notification);
             } else {
                 logger.debug('cannot set empty notification');
             }
@@ -2187,7 +2192,7 @@ define([
 
             if (errorType === 'CoreIllegalOperationError') {
                 // Do not propagate these errors (for now)
-                self.dispatchEvent(self.CONSTANTS.NOTIFICATION, {
+                self.dispatchEvent(CONSTANTS.CLIENT.NOTIFICATION, {
                     severity: 'error',
                     message: evt.error.message
                 });
@@ -2195,7 +2200,7 @@ define([
                 return true;
             }
 
-            self.dispatchEvent(CONSTANTS.NETWORK_STATUS_CHANGED, CONSTANTS.UNCAUGHT_EXCEPTION);
+            self.dispatchEvent(CONSTANTS.CLIENT.NETWORK_STATUS_CHANGED, CONSTANTS.CLIENT.UNCAUGHT_EXCEPTION);
         });
     }
 

@@ -37,7 +37,6 @@ var path = require('path'),
     GMEAUTH = require('./middleware/auth/gmeauth'),
     Logger = require('./logger'),
 
-    ServerWorkerManager = require('./worker/serverworkermanager'),
     AddOnEventPropagator = require('../addon/addoneventpropagator'),
 
     webgmeUtils = require('../utils'),
@@ -200,7 +199,7 @@ function StandAloneServer(gmeConfig) {
             .then(function (db) {
                 var promises = [];
 
-                __workerManager.start();
+                promises.push(Q.ninvoke(__workerManager, 'start'));
                 promises.push(__storage.openDatabase());
 
                 if (__executorServer) {
@@ -211,7 +210,6 @@ function StandAloneServer(gmeConfig) {
             })
             .then(function () {
                 var promises = [];
-
                 __webSocket.start(__httpServer);
 
                 promises.push(apiReady);
@@ -555,6 +553,7 @@ function StandAloneServer(gmeConfig) {
         __gmeAuth = null,
         apiReady,
         __app = null,
+        WorkerManager = require(gmeConfig.server.workerManager.path),
         __workerManager,
         __httpServer = null,
         __addOnEventPropagator = null,
@@ -577,9 +576,8 @@ function StandAloneServer(gmeConfig) {
     //__sessionStore = new SSTORE(logger, gmeConfig);
 
     logger.debug('initializing server worker manager');
-    __workerManager = new ServerWorkerManager({
-        //sessionToUser: __sessionStore.getSessionUser,
-        globConf: gmeConfig,
+    __workerManager = new WorkerManager({
+        gmeConfig: gmeConfig,
         logger: logger
     });
 
@@ -610,7 +608,7 @@ function StandAloneServer(gmeConfig) {
     }
 
     if (gmeConfig.addOn.enable) {
-        __addOnEventPropagator = new AddOnEventPropagator(__storage, __workerManager, logger, gmeConfig);
+        __addOnEventPropagator = new AddOnEventPropagator(__storage, logger, gmeConfig);
         routeComponents.push(__addOnEventPropagator);
     }
 

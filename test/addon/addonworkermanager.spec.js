@@ -1,15 +1,14 @@
 /*jshint node:true, mocha:true*/
 /**
- * This file tests the ServerWorkerManager w.r.t. connected-workers.
  * @author pmeijer / https://github.com/pmeijer
  */
 
-var testFixture = require('../../_globals.js');
+var testFixture = require('../_globals.js');
 
-describe('ServerWorkerManager - ConnectedWorkers', function () {
+describe('AddOnWorkerManager', function () {
     'use strict';
 
-    var logger = testFixture.logger.fork('ConnectedWorkerHandling.spec'),
+    var logger = testFixture.logger.fork('AddOnWorkerManager'),
         expect = testFixture.expect,
         Q = testFixture.Q,
         gmeConfig = testFixture.getGmeConfig(),
@@ -18,13 +17,13 @@ describe('ServerWorkerManager - ConnectedWorkers', function () {
         storage,
         webgmeToken,
         server,
-        ServerWorkerManager = require('../../../src/server/worker/serverworkermanager'),
-        CONSTANTS = require('../../../src/server/worker/constants'),
+        AddOnWorkerManager = require('../../src/addon/addonworkermanager'),
+        CONSTANTS = require('../../src/server/worker/constants'),
         workerManagerParameters = {
-            globConf: gmeConfig,
+            gmeConfig: gmeConfig,
             logger: logger
         },
-        projectName = 'SWMProject2',
+        projectName = 'AddOnWorkerManager',
         projectId = testFixture.projectName2Id(projectName),
         gmeAuth;
 
@@ -34,6 +33,7 @@ describe('ServerWorkerManager - ConnectedWorkers', function () {
 
     before(function (done) {
         //adding some project to the database
+        this.timeout(10000);
         server = testFixture.WebGME.standaloneServer(gmeConfig);
 
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
@@ -77,7 +77,7 @@ describe('ServerWorkerManager - ConnectedWorkers', function () {
     });
 
     describe('connected worker handling', function () {
-        var swm,
+        var awm,
             getParams = function (join) {
                 return {
                     webgmeToken: webgmeToken,
@@ -89,29 +89,36 @@ describe('ServerWorkerManager - ConnectedWorkers', function () {
             };
 
         before(function () {
-            swm = new ServerWorkerManager(workerManagerParameters);
+            awm = new AddOnWorkerManager(workerManagerParameters);
         });
 
         beforeEach(function (done) {
-            swm.start();
-            done();
+            awm.start(done);
         });
 
         afterEach(function (done) {
-            swm.stop(done);
+            awm.stop(done);
         });
 
-        it('should clear swm.connectedWorkerId after after stop', function (done) {
-            swm.connectedWorkerRequests.push({
+        it('should clear awm.connectedWorkerId after after stop', function (done) {
+            awm.connectedWorkerRequests.push({
                 request: getParams(false),
                 cb: function (err) {
-                    expect(err).to.equal(null);
-                    expect(swm.connectedWorkerId).to.not.equal(null);
-
-                    swm.stop(function (err) {
+                    try {
                         expect(err).to.equal(null);
-                        expect(swm.connectedWorkerId).to.equal(null);
-                        done();
+                        expect(awm.connectedWorkerId).to.not.equal(null);
+                    } catch (e) {
+                        return done(e);
+                    }
+
+                    awm.stop(function (err) {
+                        try {
+                            expect(err).to.equal(null);
+                            expect(awm.connectedWorkerId).to.equal(null);
+                            done();
+                        } catch (e) {
+                            return done(e);
+                        }
                     });
                 }
             });

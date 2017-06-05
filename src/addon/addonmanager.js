@@ -1,6 +1,7 @@
 /*globals requireJS*/
 /*jshint node:true*/
 /**
+ * 
  * @author pmeijer / https://github.com/pmeijer
  */
 'use strict';
@@ -183,7 +184,14 @@ function AddOnManager(projectId, mainLogger, gmeConfig, options) {
             monitor = {
                 lastActivity: Date.now(),
                 stopTimeout: null,
-                instance: new BranchMonitor(self.webgmeToken, self.storage, self.project, branchName, logger, gmeConfig)
+                instance: new BranchMonitor(
+                    self.webgmeToken,
+                    self.storage,
+                    self.project,
+                    branchName,
+                    logger,
+                    gmeConfig,
+                    options)
             };
 
             self.branchMonitors[branchName] = monitor;

@@ -64,6 +64,23 @@ define(['common/core/constants', 'common/storage/constants'], function (CORE, ST
             PROJECT_DELETED: STORAGE.PROJECT_DELETED,
             BRANCH_JOINED: STORAGE.BRANCH_JOINED,
             BRANCH_LEFT: STORAGE.BRANCH_LEFT
+        },
+
+        SERVER_WORKER_REQUESTS: {
+            EXECUTE_PLUGIN: 'executePlugin',
+            SEED_PROJECT: 'seedProject',
+            DIFF: 'diff',
+            AUTO_MERGE: 'autoMerge',
+            RESOLVE: 'resolve',
+            CHECK_CONSTRAINTS: 'checkConstraints',
+
+            IMPORT_PROJECT_FROM_FILE: 'importProjectFromFile',
+            EXPORT_PROJECT_TO_FILE: 'exportProjectToFile',
+            ADD_LIBRARY: 'addLibrary',
+            UPDATE_LIBRARY: 'updateLibrary',
+            EXPORT_SELECTION_TO_FILE: 'exportSelectionToFile',
+            IMPORT_SELECTION_FROM_FILE: 'importSelectionFromFile',
+            UPDATE_PROJECT_FROM_FILE: 'updateProjectFromFile'
         }
     };
 });

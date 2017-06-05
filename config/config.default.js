@@ -141,6 +141,10 @@ var path = require('path'),
             port: 8888,
             handle: null,
             timeout: -1,
+            workerManager: {
+                path: path.join(__dirname, '../src/server/worker/serverworkermanager'),
+                options: {}
+            },
             maxWorkers: 10,
             log: {
                 //patterns: ['gme:server:*', '-gme:server:standalone*'],

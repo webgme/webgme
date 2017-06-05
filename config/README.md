@@ -45,7 +45,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.addOn.monitorTimeout = 120000`
  - In milliseconds, the waiting time before add-ons are stopped after no activity (new clients joined or hash updates) in the branch.
 - `config.addOn.basePaths = ['./src/addon/core']`
- - Array of paths to custom add-ons. If you have an add-on at `C:/SomeAddOns/MyAddOn/MyAddOn.js` the path to append would be `C:/SomeAddOns` or a relative path (from the current working directory). N.B. this will also expose any other add-on in that directory, e.g. `C:/SomeAddOns/MyOtherAddOn/MyOtherAddOn.js`.
+ - Note, this is handled by [webgme-cli](https://github.com/webgme/webgme-cli). Array of paths to custom add-ons. If you have an add-on at `C:/SomeAddOns/MyAddOn/MyAddOn.js` the path to append would be `C:/SomeAddOns` or a relative path (from the current working directory). N.B. this will also expose any other add-on in that directory, e.g. `C:/SomeAddOns/MyOtherAddOn/MyOtherAddOn.js`.
 
 ##### authentication
 
@@ -154,11 +154,11 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 
 ##### plugin
 - `config.plugin.allowBrowserExecution = true`
- - If true will enable execution of plugins on the server.
+ - If true will enable execution of plugins in the browser.
 - `config.plugin.allowServerExecution = false`
  - If true will enable execution of plugins on the server.
 - `config.plugin.basePaths = ['./src/plugin/coreplugins']`
- - Same as for `config.addOns.basePath' [TODO: link to AddOns] but for plugins instead.
+ - Note, this is handled by [webgme-cli](https://github.com/webgme/webgme-cli).
 - `config.plugin.displayAll = false`
  - If true there is no need to register plugins on the root-node of project - all will be available from the drop-down.
 - `config.plugin.serverResultTimeout = 60000`
@@ -193,7 +193,11 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.server.timeout = -1`
  - If greater than -1 will set the [timeout property of the http-server](https://nodejs.org/api/http.html#http_server_timeout). (This can be used to enable large, > 1Gb, file uploads.)
 - `config.server.maxWorkers = 10`
- - Maximum number of child process spawned for workers.
+ - Maximum number of child processes spawned by the default worker manager.
+- `config.server.workerManager.path = 'src/server/worker/serverworkermanager'`
+ - Path to module (implementing `src/server/worker/WorkerManagerBase`) handling worker requests.
+- `config.server.workerManager.options = {}`
+ - Options for non-default workerManager (valid fields depend on type of worker-manager). 
 - `config.server.log = see config`
  - Transports and options for the server (winston) logger.
 - `config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']`

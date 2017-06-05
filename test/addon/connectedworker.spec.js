@@ -4,7 +4,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-var testFixture = require('../../_globals.js');
+var testFixture = require('../_globals.js');
 
 
 describe('Connected worker', function () {
@@ -18,7 +18,7 @@ describe('Connected worker', function () {
         agent = testFixture.superagent.agent(),
         openSocketIo = testFixture.openSocketIo,
         webgmeToken,
-        CONSTANTS = require('./../../../src/server/worker/constants'),
+        CONSTANTS = require('./../../src/server/worker/constants'),
         server,
 
         gmeAuth,
@@ -168,7 +168,7 @@ describe('Connected worker', function () {
 
         unloadConnectedWorker();
 
-        require('./../../../src/server/worker/connectedworker');
+        require('./../../src/addon/connectedworker');
 
         worker = {
             send: function () {

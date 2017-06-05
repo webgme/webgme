@@ -230,6 +230,18 @@ define([
     };
 
     /**
+     * Overwrite this if you are sending requests to the webgme server.
+     * Make sure to still update the blob-clients token.
+     * 
+     * @param token
+     */
+    AddOnBase.prototype.setToken = function (token) {
+        if (this.blobClient) {
+            this.blobClient.setToken(token);
+        }
+    };
+
+    /**
      * Returns the default values of the Query Parameters.
      *
      * @returns {object}

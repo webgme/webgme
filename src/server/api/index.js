@@ -38,9 +38,12 @@ function createAPI(app, mountPath, middlewareOpts) {
         StorageUtil = webgme.requirejs('common/storage/util'),
         webgmeUtils = require('../../utils'),
         GUID = webgme.requirejs('common/util/guid'),
-        STORAGE_CONSTANTS = webgme.requirejs('common/storage/constants'),
-        CORE_CONSTANTS = webgme.requirejs('common/core/constants'),
+
+        CONSTANTS = webgme.requirejs('common/Constants'),
+        STORAGE_CONSTANTS = CONSTANTS.STORAGE,
+        CORE_CONSTANTS = CONSTANTS.CORE,
         versionedAPIPath = mountPath + '/v1',
+
         latestAPIPath = mountPath,
         registerEndPoint = typeof gmeConfig.authentication.allowUserRegistration === 'string' ?
             require(gmeConfig.authentication.allowUserRegistration)(middlewareOpts) :
@@ -73,7 +76,8 @@ function createAPI(app, mountPath, middlewareOpts) {
             projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                 req.params.projectName),
             workerParameters = {
-                command: middlewareOpts.workerManager.CONSTANTS.workerCommands.exportProjectToFile,
+
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.EXPORT_PROJECT_TO_FILE,
                 projectId: projectId,
                 branchName: req.params.branchId || null,
                 commitHash: req.params.commitHash ? StorageUtil.getHashTaggedHash(req.params.commitHash) : null,
@@ -101,7 +105,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                 req.params.projectName),
             workerParameters = {
-                command: middlewareOpts.workerManager.CONSTANTS.workerCommands.exportSelectionToFile,
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.EXPORT_SELECTION_TO_FILE,
                 projectId: projectId,
                 branchName: req.params.branchId || null,
                 commitHash: req.params.commitHash ? StorageUtil.getHashTaggedHash(req.params.commitHash) : null,
@@ -514,6 +518,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.put('/users', function (req, res, next) {
+
         //"userId: "newUser"
         //"email": "user@example.com",
         //"password": "pass",
@@ -1344,7 +1349,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                     req.params.projectName),
                 workerParameters = {
-                    command: middlewareOpts.workerManager.CONSTANTS.workerCommands.diff,
+                    command: CONSTANTS.SERVER_WORKER_REQUESTS.DIFF,
                     projectId: projectId,
                     branchOrCommitA: req.params.branchOrCommitA,
                     branchOrCommitB: req.params.branchOrCommitB,
@@ -1359,7 +1364,6 @@ function createAPI(app, mountPath, middlewareOpts) {
                     res.json(result);
                 })
                 .catch(function (err) {
-                    err = err instanceof Error ? err : new Error(err);
                     next(err);
                 });
         });
@@ -1971,7 +1975,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 pluginConfig: req.body.pluginConfig
             },
             workerParameters = {
-                command: middlewareOpts.workerManager.CONSTANTS.workerCommands.executePlugin,
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.EXECUTE_PLUGIN,
                 name: req.params.pluginId,
                 context: pluginContext
             };
@@ -1983,7 +1987,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 middlewareOpts.workerManager.request(workerParameters, function (err, result) {
                     if (err) {
                         runningPlugins[resultId].status = PLUGIN_CONSTANTS.ERROR;
-                        runningPlugins[resultId].err = err;
+                        runningPlugins[resultId].err = err.message;
                     } else {
                         runningPlugins[resultId].status = PLUGIN_CONSTANTS.FINISHED;
                     }

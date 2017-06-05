@@ -14,12 +14,14 @@
 var superagent = require('superagent'),
     Q = require('q'),
     CONSTANTS = requireJS('common/Constants'),
+    AddOnWorkerManager = require('./addonworkermanager'),
     WORKER_CONSTANTS = require('../server/worker/constants');
 
-function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfig) {
+function AddOnEventPropagator(storage, mainLogger, gmeConfig) {
 
     var logger = mainLogger.fork('AddOnEventPropagator'),
         statusUrl,
+        addOnWorkerManager,
         COPY = function (obj) {
             return JSON.parse(JSON.stringify(obj));
         };
@@ -35,7 +37,7 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
         } else {
             data.command = WORKER_CONSTANTS.workerCommands.connectedWorkerStart;
             logger.debug('Sending command to connectedWorker', {metadata: data});
-            serverWorkerManager.connectedWorkerRequests.push({
+            addOnWorkerManager.connectedWorkerRequests.push({
                 request: data,
                 cb: function (err) {
                     if (err) {
@@ -59,9 +61,23 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
     }
 
     this.start = function (callback) {
-        storage.addEventListener(CONSTANTS.STORAGE.BRANCH_JOINED, branchJoined);
-        storage.addEventListener(CONSTANTS.STORAGE.BRANCH_HASH_UPDATED, branchUpdated);
-        return Q.resolve().nodeify(callback);
+        if (gmeConfig.addOn.workerUrl) {
+            storage.addEventListener(CONSTANTS.STORAGE.BRANCH_JOINED, branchJoined);
+            storage.addEventListener(CONSTANTS.STORAGE.BRANCH_HASH_UPDATED, branchUpdated);
+            return Q.resolve().nodeify(callback);
+        } else {
+            addOnWorkerManager = new AddOnWorkerManager({
+                gmeConfig: gmeConfig,
+                logger: logger
+            });
+
+            return addOnWorkerManager.start()
+                .then(function () {
+                    storage.addEventListener(CONSTANTS.STORAGE.BRANCH_JOINED, branchJoined);
+                    storage.addEventListener(CONSTANTS.STORAGE.BRANCH_HASH_UPDATED, branchUpdated);
+                })
+                .nodeify(callback);
+        }
     };
 
     this.stop = function (callback) {
@@ -94,7 +110,7 @@ function AddOnEventPropagator(storage, serverWorkerManager, mainLogger, gmeConfi
                 });
         } else {
             opts.command = WORKER_CONSTANTS.workerCommands.connectedWorkerStatus;
-            serverWorkerManager.connectedWorkerRequests.push({
+            addOnWorkerManager.connectedWorkerRequests.push({
                 request: opts,
                 cb: function (err, result) {
                     if (err) {
