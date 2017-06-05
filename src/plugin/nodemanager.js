@@ -12,7 +12,7 @@ var url = require('url'),
 function PluginNodeManager(webgmeToken, project, mainLogger, gmeConfig, webgmeUrl) {
     var params = {
             serverPort: gmeConfig.server.port,
-            httpsecure: false, // N.B.: addons are running on the server only
+            httpsecure: false,
             server: '127.0.0.1',
             webgmeToken: webgmeToken,
             logger: mainLogger.fork('BlobClient')

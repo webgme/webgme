@@ -230,7 +230,8 @@ define([
     };
 
     /**
-     * Overwrite this (make sure to still update the blob-clients token) if you have
+     * Overwrite this if you are sending requests to the webgme server.
+     * Make sure to still update the blob-clients token.
      * 
      * @param token
      */

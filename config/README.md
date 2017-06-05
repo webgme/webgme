@@ -193,7 +193,11 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.server.timeout = -1`
  - If greater than -1 will set the [timeout property of the http-server](https://nodejs.org/api/http.html#http_server_timeout). (This can be used to enable large, > 1Gb, file uploads.)
 - `config.server.maxWorkers = 10`
- - Maximum number of child process spawned for workers.
+ - Maximum number of child processes spawned by the default worker manager.
+- `config.server.workerManager.path = 'src/server/worker/serverworkermanager'`
+ - Path to module (implementing `src/server/worker/WorkerManagerBase`) handling worker requests.
+- `config.server.workerManager.options = {}`
+ - Options for non-default workerManager (valid fields depend on type of worker-manager). 
 - `config.server.log = see config`
  - Transports and options for the server (winston) logger.
 - `config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']`

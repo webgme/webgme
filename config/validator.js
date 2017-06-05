@@ -206,6 +206,9 @@ function validateConfig(configOrFileName) {
     assertNumber('config.server.port', config.server.port);
     assertNumber('config.server.timeout', config.server.timeout);
     assertObject('config.server.handle', config.server.handle);
+    assertObject('config.server.workerManager', config.server.workerManager);
+    assertString('config.server.workerManager.path', config.server.workerManager.path);
+    assertObject('config.server.workerManager.options', config.server.workerManager.options);
     assertNumber('config.server.maxWorkers', config.server.maxWorkers);
     warnDeprecated('config.server.sessionStore', config.server.sessionStore,
         'JWTokens are used for authentication, see config.authentication.jwt');
