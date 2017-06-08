@@ -10,7 +10,6 @@ describe('BlobServer', function () {
 
     var agent = testFixture.superagent.agent(),
         should = testFixture.should,
-        expect = testFixture.expect,
         rimraf = testFixture.rimraf,
         BlobClient = testFixture.BlobClient,
         Artifact = testFixture.requirejs('blob/Artifact'),
@@ -81,6 +80,27 @@ describe('BlobServer', function () {
 
     it('should return 404 at /rest/blob/metadata/non-existing-hash', function (done) {
         agent.get(serverBaseUrl + '/rest/blob/metadata/non-existing-hash').end(function (err, res) {
+            try {
+                should.equal(res.status, 404, err);
+                done();
+            } catch (e) {
+                done(e);
+            }
+        });
+    });
+
+    it('should return 404 at /rest/blob/metadata/%very long hash%', function (done) {
+        // This is what caused the server to crash at #1425
+        var longHash = '[',
+            i;
+        for (i = 0; i < 30; i += 1) {
+            longHash += '003471abc9d72d86c712657b2e1e129980ae77a3,';
+        }
+
+        longHash += ']';
+
+
+        agent.get(serverBaseUrl + '/rest/blob/metadata/' + longHash).end(function (err, res) {
             try {
                 should.equal(res.status, 404, err);
                 done();
