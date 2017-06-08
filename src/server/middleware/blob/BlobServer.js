@@ -51,20 +51,25 @@ function createExpressBlob(options) {
     }); */
 
     __app.get('/metadata', ensureAuthenticated, function (req, res) {
-        blobBackend.listAllMetadata(req.query.all, function (err, metadata) {
-            if (err) {
-                logger.error(err);
-                res.status(err.statusCode || 500);
-                res.send(err.message || err);
-            } else {
-                res.status(200);
-                res.setHeader('Content-type', 'application/json');
-                res.end(JSON.stringify(metadata, null, 4));
-            }
-        });
+        if (options.gmeConfig.debug) {
+            blobBackend.listAllMetadata(req.query.all, function (err, metadata) {
+                if (err) {
+                    logger.error(err);
+                    res.status(err.statusCode || 500);
+                    res.send(err.message || err);
+                } else {
+                    res.status(200);
+                    res.setHeader('Content-type', 'application/json');
+                    res.end(JSON.stringify(metadata, null, 4));
+                }
+            });
+        } else {
+            res.status(404);
+            res.send('Listing metadata only possible in debug mode.');
+        }
     });
 
-    __app.get('/metadata/:metadataHash', ensureAuthenticated, function (req, res) {
+    __app.get('/metadata/:metadataHash([0-9a-f]{40,40})', ensureAuthenticated, function (req, res) {
         blobBackend.getMetadata(req.params.metadataHash, function (err, hash, metadata) {
             if (err) {
                 logger.error(err);

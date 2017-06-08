@@ -458,6 +458,82 @@ describe('BlobClient', function () {
                 });
             });
         });
+
+
+        it('getMetadata should 404 when metadataHash does not exist', function (done) {
+            var bc = new BlobClient(bcParam),
+                faultyHash = '0214c7b2d364f26020f870ed9b193f59f007070a';
+
+            bc.getMetadata(faultyHash)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.status).to.equal(404);
+                })
+                .nodeify(done);
+        });
+
+        it('getMetadata should 404 when metadataHash not valid hash', function (done) {
+            var bc = new BlobClient(bcParam),
+                faultyHash = '883';
+
+            bc.getMetadata(faultyHash)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.status).to.equal(404);
+                })
+                .nodeify(done);
+        });
+
+        it('getMetadata should 404 when metadataHash not valid hash (array)', function (done) {
+            var bc = new BlobClient(bcParam),
+                faultyHash = ['882', '42'];
+
+            bc.getMetadata(faultyHash)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.status).to.equal(404);
+                })
+                .nodeify(done);
+        });
+
+        it('getMetadata should 404 when metadataHash does not exist', function (done) {
+            var bc = new BlobClient(bcParam),
+                faultyHash = '0214c7b2d364f26020f870ed9b193f59f007070a';
+
+            bc.getMetadata(faultyHash)
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.status).to.equal(404);
+                })
+                .nodeify(done);
+        });
+
+        it('getMetadata should 404 when metadataHash not valid hash (array of existing hashes)', function (done) {
+            var bc = new BlobClient(bcParam);
+
+            bc.putFiles({
+                'a.txt': 'text in a',
+                'b.txt': 'text in b',
+            }).then(function (hashes) {
+
+                return bc.getMetadata([hashes['a.txt'], hashes['b.txt']]);
+            })
+                .then(function () {
+                    throw new Error('Should have failed!');
+                })
+                .catch(function (err) {
+                    expect(err.status).to.equal(404);
+                })
+                .nodeify(done);
+        });
     });
 
     describe('[https]', function () {
