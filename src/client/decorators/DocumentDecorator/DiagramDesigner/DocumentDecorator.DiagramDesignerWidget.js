@@ -9,6 +9,7 @@
 define([
     'epiceditor',
     'js/Constants',
+    'js/Utils/ComponentSettings',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     '../Core/DocumentDecorator.Core',
@@ -17,6 +18,7 @@ define([
     'css!./DocumentDecorator.DiagramDesignerWidget.css'
 ], function (marked,
              CONSTANTS,
+             ComponentSettings,
              nodePropertyNames,
              DiagramDesignerWidgetDecoratorBase,
              DocumentDecoratorCore,
@@ -36,6 +38,9 @@ define([
         DiagramDesignerWidgetDecoratorBase.apply(this, [opts]);
         DocumentDecoratorCore.apply(this, [opts]);
 
+        this._config = DocumentDecorator.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this._config, DocumentDecorator.getComponentId());
+
         this.name = '';
 
         this._skinParts = {};
@@ -43,17 +48,28 @@ define([
         this.$doc = this.$el.find('.doc').first();
 
         // Use default marked options
-        marked.setOptions({
-            gfm: true,
-            tables: true,
-            breaks: false,
-            pedantic: false,
-            sanitize: true,
-            smartLists: true,
-            smartypants: false
-        });
+        marked.setOptions(this._config.parserOptions);
 
         this.logger.debug('DocumentDecorator ctor');
+    };
+
+    DocumentDecorator.getDefaultConfig = function () {
+        return {
+            parserOptions: {
+                // See https://github.com/chjj/marked
+                gfm: true,
+                tables: true,
+                breaks: false,
+                pedantic: false,
+                sanitize: true, // Set to false if you want to enable html.
+                smartLists: true,
+                smartypants: false
+            }
+        };
+    };
+
+    DocumentDecorator.getComponentId = function () {
+        return 'GenericUIDocumentDecorator';
     };
 
     _.extend(DocumentDecorator.prototype, DiagramDesignerWidgetDecoratorBase.prototype);
@@ -131,10 +147,10 @@ define([
 
     DocumentDecorator.prototype.update = function () {
         var client = this._control._client,
-            self = this,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             newName = '',
-            newDoc = '';
+            newDoc = '',
+            renderedEl;
 
         if (nodeObj) {
             newName = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
@@ -146,12 +162,21 @@ define([
                 this.$doc.append('Editor is disabled because attribute "documentation" is not found in Meta-Model');
                 this._skinParts.$EditorBtn.addClass('not-activated');
             } else {
-                if (self.hostDesignerItem.canvas.getIsReadOnlyMode() === false) {
-                    self._skinParts.$EditorBtn.removeClass('not-activated');
+                if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === false) {
+                    this._skinParts.$EditorBtn.removeClass('not-activated');
                 } else {
-                    self._skinParts.$EditorBtn.addClass('not-activated');
+                    this._skinParts.$EditorBtn.addClass('not-activated');
                 }
-                this.$doc.append($(marked(newDoc)));
+
+                try {
+                    renderedEl = $(marked(newDoc));
+                    this.$doc.append(renderedEl);
+                } catch (e) {
+                    this.logger.error('Markdown parsing failed html', e);
+                    this.logger.error('Stored text:', newDoc);
+                    this.$doc.empty();
+                    this.$doc.append('Stored markdown is invalid!');
+                }
             }
 
             if (this.name !== newName) {
@@ -256,10 +281,12 @@ define([
         editorDialog.initialize(documentation,
             function (text) {
                 try {
-                    client.setAttribute(self._metaInfo[CONSTANTS.GME_ID], 'documentation', text);
                     self.$doc.empty();
                     self.$doc.append($(marked(text)));
+                    client.setAttribute(self._metaInfo[CONSTANTS.GME_ID], 'documentation', text);
                 } catch (e) {
+                    self.$doc.empty();
+                    self.$doc.append('Markdown parsing failed');
                     self.logger.error('Saving META failed... Either not JSON object or something else went wrong...');
                 }
             }
