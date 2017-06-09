@@ -1,4 +1,4 @@
-/*globals define, $*/
+/*globals define*/
 /*jshint browser: true*/
 
 /**

@@ -62,7 +62,8 @@ define([
                     }
                 }
                 return ret;
-            }
+            },
+            grid: [self._zoomRatio * self.gridSize, self._zoomRatio * self.gridSize]
         });
     };
 

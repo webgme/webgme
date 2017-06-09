@@ -2,7 +2,8 @@
 .diagram-designer {
   outline: none; }
   .diagram-designer .items {
-    position: absolute; }
+    position: absolute;
+    background-image: url("../../../../img/grid.svg"); }
     .diagram-designer .items .designer-item,
     .diagram-designer .items .designer-connection {
       cursor: pointer; }
