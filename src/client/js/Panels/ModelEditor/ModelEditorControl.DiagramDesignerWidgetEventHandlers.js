@@ -748,12 +748,15 @@ define(['js/logger',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._saveReposition = function (items, dragPositions,
                                                                                                dropPosition) {
-        var gmeID,
-            oldPos,
-            i,
-            modelID = this.currentNodeInfo.id,
+        var modelID = this.currentNodeInfo.id,
             selectedAspect = this._selectedAspect,
-            client = this._client;
+            client = this._client,
+            gmeID,
+            oldPos,
+            x,
+            y,
+            i;
+
 
         client.startTransaction();
         i = items.length;
@@ -763,24 +766,18 @@ define(['js/logger',
             if (!oldPos) {
                 oldPos = {x: 0, y: 0};
             }
+            x = Math.round(dropPosition.x + oldPos.x);
+            y = Math.round(dropPosition.y + oldPos.y);
+
+            x = x > 0 ? x : 0;
+            y = y > 0 ? y : 0;
+
             //aspect specific coordinate
             if (selectedAspect === CONSTANTS.ASPECT_ALL) {
-                client.setRegistry(gmeID,
-                    REGISTRY_KEYS.POSITION,
-                    {
-                        x: dropPosition.x + oldPos.x,
-                        y: dropPosition.y + oldPos.y
-                    });
+                client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, {x: x, y: y});
             } else {
                 client.addMember(modelID, gmeID, selectedAspect);
-                client.setMemberRegistry(modelID,
-                    gmeID,
-                    selectedAspect,
-                    REGISTRY_KEYS.POSITION,
-                    {
-                        x: dropPosition.x + oldPos.x,
-                        y: dropPosition.y + oldPos.y
-                    });
+                client.setMemberRegistry(modelID, gmeID, selectedAspect, REGISTRY_KEYS.POSITION, {x: x, y: y});
             }
         }
 

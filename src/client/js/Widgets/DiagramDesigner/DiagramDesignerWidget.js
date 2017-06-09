@@ -253,7 +253,7 @@ define([
 
         /*********** END OF --- CONNECTION DRAWING COMPONENT *************/
 
-            //initiate Highlight Manager
+        //initiate Highlight Manager
         this.highlightManager = new HighlightManager({diagramDesigner: this});
         this.highlightManager.initialize(this.skinParts.$itemsContainer);
         this.highlightManager.onHighlight = function (idList) {
@@ -414,8 +414,12 @@ define([
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
-            class: 'items'
+            class: 'items',
+            css: {
+                'background-size': this.gridSize + 'px,' + this.gridSize + 'px'
+            }
         });
+
         this.skinParts.$diagramDesignerWidgetBody.append(this.skinParts.$itemsContainer);
 
         //jshint newcap:false
@@ -550,7 +554,24 @@ define([
         offset.top += paddingTop;
 
         this._offset = offset;
+    };
 
+    DiagramDesignerWidget.prototype._updateDraggableItems = function () {
+        // Scale the draggable for each designer item
+        var designerItem,
+            i;
+
+        for (i = 0; i < this.itemIds.length; i += 1) {
+            designerItem = this.items[this.itemIds[i]];
+            if (designerItem) {
+                this._destroyDraggable(designerItem);
+                this._makeDraggable(designerItem);
+            }
+        }
+    };
+
+    DiagramDesignerWidget.prototype._toggleGrid = function () {
+        this.skinParts.$itemsContainer.toggleClass('')
     };
 
     DiagramDesignerWidget.prototype.getAdjustedMousePos = function (e) {
@@ -712,7 +733,7 @@ define([
         //http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/ --- BROWSER ARE SMART
 
         /***************** FIRST HANDLE THE DESIGNER ITEMS *****************/
-            //add all the inserted items, they are still on a document Fragment
+        //add all the inserted items, they are still on a document Fragment
         this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
         this._documentFragment = document.createDocumentFragment();
 
@@ -765,14 +786,14 @@ define([
 
         /***************** THEN HANDLE THE CONNECTIONS *****************/
 
-            //get all the connections that needs to be updated
-            // - inserted connections
-            // - updated connections
-            // - connections that are affected because of
-            //      - endpoint appearance
-            //      - endpoint remove
-            //      - endpoint updated
-            //TODO: fix this, but right now we call refresh on all of the connections
+        //get all the connections that needs to be updated
+        // - inserted connections
+        // - updated connections
+        // - connections that are affected because of
+        //      - endpoint appearance
+        //      - endpoint remove
+        //      - endpoint updated
+        //TODO: fix this, but right now we call refresh on all of the connections
         affectedItems = this._insertedDesignerItemIDs.concat(this._updatedDesignerItemIDs,
             this._deletedDesignerItemIDs);
 
@@ -849,8 +870,8 @@ define([
             posYDelta = pY % this.gridSize;
 
             if ((posXDelta !== 0) || (posYDelta !== 0)) {
-                pX += (posXDelta < Math.floor(this.gridSize / 2) + 1 ? -1 * posXDelta : this.gridSize - posXDelta);
-                pY += (posYDelta < Math.floor(this.gridSize / 2) + 1 ? -1 * posYDelta : this.gridSize - posYDelta);
+                pX += (posXDelta < Math.floor(this.gridSize / 2) ? -1 * posXDelta : this.gridSize - posXDelta);
+                pY += (posYDelta < Math.floor(this.gridSize / 2) ? -1 * posYDelta : this.gridSize - posYDelta);
             }
         }
 
@@ -1528,7 +1549,7 @@ define([
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
-        //additional code pieces for DiagramDesignerWidget
+    //additional code pieces for DiagramDesignerWidget
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetOperatingModes.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDesignerItems.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetConnections.prototype);
@@ -1547,7 +1568,7 @@ define([
 
     DiagramDesignerWidget.getDefaultConfig = function () {
         return {
-           zoomValues: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 3.5, 4.0]
+            zoomValues: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 3.5, 4.0]
         };
     };
 

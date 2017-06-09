@@ -2,8 +2,9 @@
 .diagram-designer {
   outline: none; }
   .diagram-designer .items {
-    position: absolute;
-    background-image: url("../../../../img/grid.svg"); }
+    position: absolute; }
+    .diagram-designer .items.grid-mode {
+      background-image: url("../../../../img/grid.svg"); }
     .diagram-designer .items .designer-item,
     .diagram-designer .items .designer-connection {
       cursor: pointer; }
@@ -41,7 +42,7 @@
           top: -13px;
           right: -13px; }
         .diagram-designer .items .selection-outline .s-btn.rotate.bottom {
-          left: 50%;
+          left: calc(50% + 3px);
           margin-left: -13px;
           bottom: -13px; }
         .diagram-designer .items .selection-outline .s-btn.contextmenu {
@@ -52,7 +53,7 @@
           left: -13px; }
         .diagram-designer .items .selection-outline .s-btn.move {
           top: -13px;
-          left: -13px;
+          left: calc(50% + 3px);
           margin-left: -13px; }
         .diagram-designer .items .selection-outline .s-btn.open {
           top: -13px;

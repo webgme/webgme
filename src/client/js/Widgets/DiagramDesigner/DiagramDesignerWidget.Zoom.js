@@ -25,6 +25,7 @@ define(['js/Widgets/ZoomWidget/ZoomWidget'], function (ZoomWidget) {
                 onZoom: function (zoomLevel) {
                     self._zoomRatio = zoomLevel;
                     self._resizeItemContainer();
+                    self._updateDraggableItems();
                 }
             });
 
