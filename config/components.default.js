@@ -3,6 +3,9 @@
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
-var components = require('./components.json');
+
+// You need to add require-uncached as node-module if you wanna use the same approach.
+var requireUncached = require('require-uncached'),
+    components = requireUncached('./components.json');
 
 module.exports = components;
