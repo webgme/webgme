@@ -148,7 +148,7 @@ define(['js/Constants',
                 if (filename === '__current__') {
                     self._codemirror.setValue(
                         WebGMEGlobal.SvgManager.getRawSvgContent(self._old ||
-                            '<svg width="32px" height="32px">\n</svg>',
+                            '<svg width="60px" height="90px">\n</svg>',
                             self._clientNode, false) || ''
                     );
                 } else {
