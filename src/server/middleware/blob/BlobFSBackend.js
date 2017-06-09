@@ -126,11 +126,16 @@ BlobFSBackend.prototype.getObject = function (hash, writeStream, bucket, callbac
         readStream;
 
     fs.lstat(filename, function (err, stat) {
-        if ((err && err.code === 'ENOENT') || !stat.isFile()) {
+        if (err) {
+            if (err.code !== 'ENOENT') {
+                return callback(new BlobError('getObject error: ' + err.code || 'unknown'), 500);
+            } else {
+                return callback(new BlobError('Requested object does not exist: ' + hash, 404));
+            }
+        } else if (stat.isFile() === false) {
             return callback(new BlobError('Requested object does not exist: ' + hash, 404));
-        } else if (err) {
-            return callback('getObject error: ' + err.code || 'unknown');
         }
+
         readStream = fs.createReadStream(filename);
 
         writeStream.on('finish', function () {
