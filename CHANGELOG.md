@@ -1,5 +1,16 @@
 # Change Log
 
+## [v2.14.1](https://github.com/webgme/webgme/tree/v2.14.1) (2017-06-13)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.14.0...v2.14.1)
+
+**Implemented enhancements:**
+
+- Document Decorator extract marked options to component settings. [\#1426](https://github.com/webgme/webgme/pull/1426) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Fixes blob server crash [\#1425](https://github.com/webgme/webgme/pull/1425) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.14.0](https://github.com/webgme/webgme/tree/v2.14.0) (2017-06-05)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.13.1...v2.14.0)
 
@@ -21,6 +32,7 @@
 - Invalid options from tree browser create child results in assert error. [\#1418](https://github.com/webgme/webgme/issues/1418)
 - Updating user password from cli overwrites the user [\#1414](https://github.com/webgme/webgme/issues/1414)
 - Constraints do not propagate properly through mixins and cause the constraint evaluator to crash [\#1413](https://github.com/webgme/webgme/issues/1413)
+- Uncaught exception at copy nodes [\#1411](https://github.com/webgme/webgme/issues/1411)
 - Exit split mode does not activate the remaining panel. [\#1406](https://github.com/webgme/webgme/issues/1406)
 - Exception in Split Panel setReadOnly [\#1402](https://github.com/webgme/webgme/issues/1402)
 - Fixes \#1413 getting constraints should take mixins into account [\#1422](https://github.com/webgme/webgme/pull/1422) ([pmeijer](https://github.com/pmeijer))
@@ -29,10 +41,6 @@
 - Fixes \#1411 Uncaught exception at copy nodes [\#1412](https://github.com/webgme/webgme/pull/1412) ([kecso](https://github.com/kecso))
 - Ensure remaining panel is activated after exit split mode [\#1407](https://github.com/webgme/webgme/pull/1407) ([pmeijer](https://github.com/pmeijer))
 - Closes \#1402 Make sure panel is instantiated before setting readOnly [\#1403](https://github.com/webgme/webgme/pull/1403) ([pmeijer](https://github.com/pmeijer))
-
-**Closed issues:**
-
-- Uncaught exception at copy nodes [\#1411](https://github.com/webgme/webgme/issues/1411)
 
 **Merged pull requests:**
 
