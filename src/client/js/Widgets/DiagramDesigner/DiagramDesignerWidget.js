@@ -100,6 +100,8 @@ define([
         _.extend(params, defaultParams, par);
 
         params.zoomValues = params.zoomValues || config.zoomValues;
+        params.enableGrid = params.hasOwnProperty('enableGrid') ? params.enableGrid : config.enableGrid;
+        params.displayGrid = params.hasOwnProperty('displayGrid') ? params.displayGrid : config.displayGrid;
 
         this.gmeConfig = WebGMEGlobal.gmeConfig;
         //create logger instance with specified name
@@ -115,6 +117,13 @@ define([
 
         //grid size for item positioning granularity
         this.gridSize = params.gridSize;
+
+        // Enable toggling of grid.
+        this._enableGrid = params.enableGrid;
+
+        if (this._enableGrid) {
+            this._displayGrid = params.displayGrid;
+        }
 
         //if the widget has to support drop feature at all
         this._droppable = params.droppable;
@@ -404,6 +413,10 @@ define([
         //add own class
         this.$el.addClass(WIDGET_CLASS);
 
+        this.$el.css({
+            'padding': this._tabsEnabled ? '30px 2px 4px 4px' : '4px 2px 4px 4px'
+        });
+
         this._attachScrollHandler(this.$el);
 
         //DESIGNER CANVAS HEADER
@@ -570,8 +583,23 @@ define([
         }
     };
 
-    DiagramDesignerWidget.prototype._toggleGrid = function () {
-        this.skinParts.$itemsContainer.toggleClass('')
+    DiagramDesignerWidget.prototype._toggleGrid = function (updateSettings) {
+        var self = this;
+        this._displayGrid = !this._displayGrid;
+
+        this.skinParts.$itemsContainer.toggleClass('display-grid');
+
+        if (updateSettings) {
+            ComponentSettings.updateComponentSettings(DiagramDesignerWidget.getComponentId(), {
+                displayGrid: this._displayGrid
+            }, function (err, res) {
+                if (err) {
+                    self.logger.error(err);
+                } else {
+                    self.logger.debug('New settings stored in user', res);
+                }
+            });
+        }
     };
 
     DiagramDesignerWidget.prototype.getAdjustedMousePos = function (e) {
@@ -858,11 +886,11 @@ define([
             posYDelta;
 
         if (pX < this.gridSize) {
-            pX = this.gridSize;
+            pX = 0;
         }
 
         if (pY < this.gridSize) {
-            pY = this.gridSize;
+            pY = 0;
         }
 
         if (this.gridSize > 1) {
@@ -1568,6 +1596,8 @@ define([
 
     DiagramDesignerWidget.getDefaultConfig = function () {
         return {
+            enableGrid: true,
+            displayGrid: false,
             zoomValues: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5, 3.0, 3.5, 4.0]
         };
     };

@@ -60,6 +60,21 @@ define([
                 }
             });
 
+            if (this._enableGrid) {
+                this.toolbarItems.btnToggleGrid = toolbar.addButton({
+                    title: 'Toggle Grid',
+                    icon: 'fa fa-hashtag',
+                    clickFn: function () {
+                        self._toggleGrid(true);
+                    }
+                });
+
+                if (this._displayGrid) {
+                    this._displayGrid = false;
+                    self._toggleGrid();
+                }
+            }
+
             if (DEBUG === true) {
                 //progress text in toolbar for debug only
                 this.toolbarItems.progressText = toolbar.addLabel();

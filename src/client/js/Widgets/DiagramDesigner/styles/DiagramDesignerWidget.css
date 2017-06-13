@@ -3,7 +3,7 @@
   outline: none; }
   .diagram-designer .items {
     position: absolute; }
-    .diagram-designer .items.grid-mode {
+    .diagram-designer .items.display-grid {
       background-image: url("../../../../img/grid.svg"); }
     .diagram-designer .items .designer-item,
     .diagram-designer .items .designer-connection {
