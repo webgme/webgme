@@ -51,6 +51,7 @@
     "jQuery-contextMenu": "swisnl/jQuery-contextMenu#2.2.4",
     "raven-js": "getsentry/raven-js#3.15.0",
     "clipboard": "zenorocha/clipboard.js#1.6.1",
-    "jquery.fancytree": "mar10/fancytree#2.18.0"
+    "jquery.fancytree": "mar10/fancytree#2.18.0",
+    "font-awesome": "FortAwesome/Font-Awesome#4.7.0"
   }
 }
