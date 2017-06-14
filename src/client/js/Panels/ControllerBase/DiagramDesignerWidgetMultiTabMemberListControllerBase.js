@@ -615,8 +615,9 @@ define(['js/logger',
                         accept = true;
                         for (i = 0; i < gmeIDList.length; i += 1) {
                             if (gmeIDList[i] === this._memberListContainerID) {
-                                accept = false;
-                                break;
+                                // TODO: Is this really OK??
+                                //accept = false;
+                                //break;
                             } else if (this._memberListMembers[this._selectedMemberListID]
                                     .indexOf(gmeIDList[i]) !== -1) {
 
