@@ -277,7 +277,7 @@ define([
                 portTitle = displayFormat.resolve(portNode);
                 this.ports[portId].update({
                     title: portTitle,
-                    svg: portNode.getRegistry(REGISTRY_KEYS.PORT_SVG_ICON)
+                    svg: WebGMEGlobal.SvgManager.getSvgUri(portNode, REGISTRY_KEYS.PORT_SVG_ICON)
                 });
                 this._updatePortPosition(portId);
             } else {
@@ -433,7 +433,7 @@ define([
             self = this;
 
         if (nodeObj) {
-            svgURL = WebGMEGlobal.SvgManager.getSvgUri(nodeObj,REGISTRY_KEYS.SVG_ICON);
+            svgURL = WebGMEGlobal.SvgManager.getSvgUri(nodeObj, REGISTRY_KEYS.SVG_ICON);
         }
 
         if (svgURL) {
