@@ -1,4 +1,4 @@
-/*globals define, _, DEBUG, $*/
+/*globals define, _, DEBUG, $, WebGMEGlobal*/
 /*jshint browser: true*/
 
 /**
@@ -93,17 +93,15 @@ define([
     DocumentDecoratorPartBrowserWidget.prototype._updateSVG = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            svgFile = '',
             svgURL,
             self = this;
 
         if (nodeObj) {
-            svgFile = nodeObj.getRegistry(REGISTRY_KEYS.SVG_ICON);
+            svgURL = WebGMEGlobal.SvgManager.getSvgUri(nodeObj, REGISTRY_KEYS.SVG_ICON);
         }
 
-        if (svgFile) {
+        if (svgURL) {
             // get the svg from the server in SYNC mode, may take some time
-            svgURL = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + svgFile;
             if (!this.skinParts.$imgSVG) {
                 this.skinParts.$imgSVG = EMBEDDED_SVG_IMG_BASE.clone();
                 this.$el.append(this.skinParts.$imgSVG);

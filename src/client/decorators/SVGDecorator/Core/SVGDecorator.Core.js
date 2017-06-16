@@ -25,7 +25,6 @@ define([
 
     var SVGDecoratorCore,
         ABSTRACT_CLASS = 'abstract',
-        SVG_DIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER,
         FILL_COLOR_CLASS = 'fill-color',
         BORDER_COLOR_CLASS = 'border-color',
         TEXT_COLOR_CLASS = 'text-color';
@@ -186,61 +185,6 @@ define([
     };
 
     /***** UPDATE THE SVG ICON OF THE NODE *****/
-    SVGDecoratorCore.prototype._updateSVGFile = function () {
-        var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            svgFile = '',
-            svgURL,
-            self = this,
-            logger = this.logger;
-
-        if (nodeObj) {
-            svgFile = nodeObj.getRegistry(REGISTRY_KEYS.SVG_ICON);
-        }
-
-        if (svgFile) {
-            if (this._SVGFile !== svgFile) {
-                if (this.svgCache[svgFile]) {
-                    this._updateSVGContent(svgFile);
-                } else {
-                    // get the svg from the server in SYNC mode, may take some time
-                    svgURL = SVG_DIR + svgFile;
-                    $.ajax(svgURL, {async: false})
-                        .done(function (data) {
-                            // downloaded successfully
-                            // cache the content if valid
-                            var svgElements = $(data).find('svg');
-                            if (svgElements.length > 0) {
-                                self.svgCache[svgFile] = {
-                                    el: svgElements.first(),
-                                    customConnectionAreas: undefined
-                                };
-                                self._discoverCustomConnectionAreas(svgFile);
-                                self._getCustomDataFromSvg(svgFile);
-                                self.processCustomSvgData();
-                                self._updateSVGContent(svgFile);
-                            } else {
-                                self._updateSVGContent(undefined);
-                            }
-                        })
-                        .fail(function () {
-                            // download failed for this type
-                            logger.error('Failed to download SVG file: ' + svgFile);
-                            self._updateSVGContent(svgFile);
-                        });
-                }
-                this._SVGFile = svgFile;
-            }
-        } else {
-            if (svgFile !== '') {
-                logger.error('Invalid SVG file: "' + svgFile + '"');
-                this._updateSVGContent(undefined);
-            } else {
-                this._updateSVGContent('');
-            }
-        }
-    };
-
     SVGDecoratorCore.prototype._updateSVGContent = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
@@ -272,41 +216,6 @@ define([
 
         this._generateConnectors();
         this.$svgContent.append(this.$svgElement);
-    };
-
-    SVGDecoratorCore.prototype._getCustomDataFromSvg = function (svgFile) {
-        //Remove custom data from svg and store it appropriately
-        if (this.customData) {
-            var i = this.customData.length,
-                customDataName,
-                svgElement = this.svgCache[svgFile].el,
-                k;
-
-            while (i--) {
-                customDataName = this.customData[i];
-                this[customDataName] = svgElement.find('.' + customDataName);
-                k = this[customDataName].length;
-                while (k--) {
-                    this[customDataName][k].remove();
-                }
-            }
-        }
-    };
-
-    SVGDecoratorCore.prototype.processCustomSvgData = function () {
-        //OVERRIDE
-    };
-
-    SVGDecoratorCore.prototype.getSVGCustomData = function (dataName) {
-        var result = null;
-        if (this.customData && this.customData.indexOf(dataName) !== -1) {
-            if (this[dataName] instanceof Array) {
-                result = this[dataName].slice();
-            } else if (this[dataName] instanceof Object) {
-                result = _.extend({}, this[dataName]);
-            }
-        }
-        return result;
     };
 
     /***** FUNCTIONS TO OVERRIDE *****/
