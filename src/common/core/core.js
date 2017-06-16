@@ -1074,7 +1074,7 @@ define([
         };
 
         /**
-         * Removes the pointer from the node.
+         * Removes the pointer from the node. (Aliased deletePointer.)
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the pointer in question.
          *
@@ -1082,12 +1082,24 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.deletePointer = this.delPointer = function (node, name) {
+        this.delPointer = function (node, name) {
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
 
             return core.deletePointer(node, name);
         };
+
+        /**
+         * Removes the pointer from the node. (Aliased delPointer.)
+         * @function
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of the pointer in question.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.deletePointer = this.delPointer;
 
         /**
          * Sets the target of the pointer of the node.
@@ -1394,7 +1406,7 @@ define([
         };
 
         /**
-         * Removes a set from the node.
+         * Removes a set from the node. (Aliased deleteSet.)
          * @param {module:Core~Node} node - the owner of the set.
          * @param {string} name - the name of the set.
          *
@@ -1402,12 +1414,24 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.deleteSet = this.delSet = function (node, name) {
+        this.delSet = function (node, name) {
             ensureNode(node, 'node');
             ensureRelationName(name, 'name');
 
             return core.deleteSet(node, name);
         };
+
+        /**
+         * Removes a set from the node. (Aliased delSet.)
+         * @function
+         * @param {module:Core~Node} node - the owner of the set.
+         * @param {string} name - the name of the set.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.deleteSet = this.delSet;
 
         /**
          * Return the names of the attribute entries for the set.
@@ -2938,7 +2962,8 @@ define([
         };
 
         /**
-         * Searches for the closest META node of the node in question.
+         * Returns the meta-node of the node in question, that is the first base node that is part of the meta.
+         * (Aliased getBaseType).
          * @param {module:Core~Node} node - the node in question
          *
          * @return {module:Core~Node | null} Returns the first node (including itself) among the inheritance chain
@@ -2948,11 +2973,26 @@ define([
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.getBaseType = this.getMetaType = function (node) {
+        this.getMetaType = function (node) {
             ensureNode(node, 'node');
 
             return core.getBaseType(node);
         };
+
+        /**
+         * Returns the meta-node of the node in question, that is the first base node that is part of the meta.
+         * (Aliased getMetaType).
+         * @function
+         * @param {module:Core~Node} node - the node in question
+         *
+         * @return {module:Core~Node | null} Returns the first node (including itself) among the inheritance chain
+         * that is a META node. It returns null if it does not find such node (ideally the only node with this result
+         * is the ROOT).
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getBaseType = this.getMetaType;
 
         /**
          * Checks if the node is an instance of base.
