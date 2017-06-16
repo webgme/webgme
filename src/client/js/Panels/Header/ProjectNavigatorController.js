@@ -1188,7 +1188,7 @@ define([
             } else if (i === maxItems) {
                 maxItemsItem = {
                     id: '...',
-                    label: '...',
+                    label: items.length === 1 ? items[i].label : '...',
                     menu: [{items: []}]
                 };
 
@@ -1198,6 +1198,10 @@ define([
                 maxItemsItem.menu[0].items.push(items[i]);
             } else if (i === items.length - 1) {
                 items[i].isSelected = true;
+                if (maxItems === 0) {
+                    // If there is only one item allowed - use the name of the activeNode
+                    maxItemsItem.label = items[i].label;
+                }
                 //items[i].iconClass = 'glyphicon glyphicon-ok-sign';
                 maxItemsItem.menu[0].items.push(items[i]);
             } else {
