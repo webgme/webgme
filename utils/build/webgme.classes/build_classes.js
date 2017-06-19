@@ -7,8 +7,8 @@
 
 var requirejs = require('requirejs'),
     fs = require('fs'),
-    requireJsPath = (fs.existsSync('./node_modules') && fs.readdirSync('./node_modules').indexOf('requirejs') === -1) ?
-        '../../requirejs/require' : '../node_modules/requirejs/require',
+    requireJsPath = (fs.existsSync('./node_modules') && fs.readdirSync('./node_modules').indexOf('requirejs') !== -1) ?
+        '../node_modules/requirejs/require' : '../../requirejs/require',
     config = {
         name: 'webgme.classes',
         out: './dist/webgme.classes.build.js',
