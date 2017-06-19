@@ -6,8 +6,8 @@
 'use strict';
 
 var requirejs = require('requirejs'),
-    FS = require('fs'),
-    path = FS.readdirSync('./node_modules').indexOf('requirejs') === -1 ?
+    fs = require('fs'),
+    requireJsPath = (fs.existsSync('./node_modules') && fs.readdirSync('./node_modules').indexOf('requirejs') === -1) ?
         '../../requirejs/require' : '../node_modules/requirejs/require',
     config = {
         name: 'webgme.classes',
@@ -34,7 +34,7 @@ var requirejs = require('requirejs'),
             startFile: './utils/build/webgme.classes/start.frag',
             endFile: './utils/build/webgme.classes/end.frag'
         },
-        include: [path]
+        include: [requireJsPath]
     };
 
 function doBuild(callback) {
