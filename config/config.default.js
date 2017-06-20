@@ -238,7 +238,10 @@ var path = require('path'),
 
         webhooks: {
             enable: false,
-            manager: 'memory' // memory, redis
+            manager: 'memory', // memory, redis
+            defaults: {
+                //myHook: {url: 'http://127.0.0.1:9000/MyWebHook', events: 'all'}
+            }
         }
     };
 
