@@ -411,25 +411,23 @@ function MetadataStorage(mainLogger /*, gmeConfig*/) {
             .nodeify(callback);
     }
 
-    return {
-        start: start,
-        stop: stop,
+    self.start = start;
+    self.stop = stop;
 
-        getProjects: getProjects,
-        getProject: getProject,
-        addProject: addProject,
-        deleteProject: deleteProject,
-        transferProject: transferProject,
-        duplicateProject: duplicateProject,
-        updateProjectInfo: updateProjectInfo,
+    self.getProjects = getProjects;
+    self.getProject = getProject;
+    self.addProject = addProject;
+    self.deleteProject = deleteProject;
+    self.transferProject = transferProject;
+    self.duplicateProject = duplicateProject;
+    self.updateProjectInfo = updateProjectInfo;
 
-        getProjectHooks: getProjectHooks,
-        getProjectHook: getProjectHook,
-        addProjectHook: addProjectHook,
-        updateProjectHooks: updateProjectHooks,
-        updateProjectHook: updateProjectHook,
-        removeProjectHook: removeProjectHook
-    };
+    self.getProjectHooks = getProjectHooks;
+    self.getProjectHook = getProjectHook;
+    self.addProjectHook = addProjectHook;
+    self.updateProjectHooks = updateProjectHooks;
+    self.updateProjectHook = updateProjectHook;
+    self.removeProjectHook = removeProjectHook;
 }
 
 module.exports = MetadataStorage;

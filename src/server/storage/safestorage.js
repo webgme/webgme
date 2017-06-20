@@ -482,7 +482,7 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
                     throw new Error('Not authorized to create project for [' + data.ownerId + ']');
                 }
 
-                return self.metadataStorage.duplicateProject(data.ownerId, data.projectName, info);
+                return self.metadataStorage.duplicateProject(data.projectId, data.ownerId, data.projectName, info);
             })
             .then(function (newProjectId) {
                 data.newProjectId = newProjectId;
