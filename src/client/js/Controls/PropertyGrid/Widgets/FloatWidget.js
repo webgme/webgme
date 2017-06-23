@@ -19,7 +19,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
         this._input = INPUT_BASE.clone();
 
-        this._input.val(propertyDesc.value);
+        this._input.val(this.propertyValue);
 
         this.min = null;
         if (typeof propertyDesc.minValue === 'number') {
@@ -39,7 +39,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
         this._input.prop('title', this._helpMessage);
 
-        this._input.on('change', function (/* e */) {
+        this._input.on('keyup change', function (/* e */) {
             self._onChange();
         });
 
@@ -102,6 +102,10 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         this._input.off('blur');
         this._input.off('keydown');
         WidgetBase.prototype.destroy.call(this);
+    };
+
+    FloatWidget.prototype.focus = function () {
+        this._input.focus();
     };
 
     return FloatWidget;

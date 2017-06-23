@@ -33,9 +33,12 @@ define(['js/logger',
         this.__onFinishChange = null;
         this.__onReset = null;
 
+        this._pendingChange = null;
+
         this._gui = new PropertyGridPart({el: this.$el});
         this._gui.onChange(function (args) {
             self._logger.debug('onChange: ' + JSON.stringify(args));
+            self._pendingChange = args;
             if (self.__onChange) {
                 self.__onChange.call(self, args);
             }
@@ -43,6 +46,7 @@ define(['js/logger',
 
         this._gui.onFinishChange(function (args) {
             self._logger.debug('onFinishChange: ' + JSON.stringify(args));
+            self._pendingChange = null;
             if (self.__onFinishChange) {
                 self.__onFinishChange.call(self, args);
             }
@@ -115,6 +119,12 @@ define(['js/logger',
             if (propDesc.isFolder === true) {
                 this._folders[propDesc.name] = guiObj.addFolder(propDesc.name, propDesc.text);
             } else {
+                if (this._pendingChange && this._pendingChange.id === propDesc.id) {
+                    propDesc.originalValue = propDesc.value;
+                    propDesc.value = this._pendingChange.newValue;
+                    propDesc.focusWidget = true;
+                    this._pendingChange = null;
+                }
                 this._widgets[propDesc.id] = guiObj.add(propDesc);
             }
         }
