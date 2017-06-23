@@ -24,8 +24,8 @@ define([
 
         WidgetBase.call(this, propertyDesc);
 
-        activeSelection = WebGMEGlobal.State.getActiveSelection();
-        activeNode = WebGMEGlobal.State.getActiveObject();
+        activeSelection = propertyDesc.activeSelection || WebGMEGlobal.State.getActiveSelection();
+        activeNode = propertyDesc.activeObject || WebGMEGlobal.State.getActiveObject();
         if (activeSelection && activeSelection.length > 0) {
             if (activeSelection.length === 1) {
                 this._gmeNodeId = activeSelection[0];

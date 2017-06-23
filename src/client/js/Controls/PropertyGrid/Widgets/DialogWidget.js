@@ -39,11 +39,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase', 'clipboard'], function (W
                 e.stopPropagation();
                 e.preventDefault();
 
-                dialog.show(function (newValue) {
-                        self.setValue(newValue);
-                        self.fireFinishChange();
-                    },
-                    self.getValue());
+                dialog.show(propertyDesc);
             });
         }
 

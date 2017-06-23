@@ -7,13 +7,16 @@
  * @author kecso / https://github.com/kecso
  */
 
-define(['js/Constants',
+define([
+    'js/Constants',
+    'js/RegistryKeys',
     'codemirror/lib/codemirror',
     'text!assets/decoratorSVGList.json',
     'text!./templates/DecoratorSVGExplorerDialog.html',
     'codemirror/mode/htmlembedded/htmlembedded',
     'css!./styles/DecoratorSVGExplorerDialog.css'
 ], function (CONSTANTS,
+             REGISTRY_KEYS,
              CodeMirror,
              decoratorSVGList,
              DecoratorSVGExplorerDialogTemplate) {
@@ -37,18 +40,37 @@ define(['js/Constants',
     DecoratorSVGExplorerDialog = function () {
     };
 
-    DecoratorSVGExplorerDialog.prototype.show = function (fnCallback, oldValue) {
-        var self = this;
-
-        this._fnCallback = fnCallback;
+    /**
+     *
+     * @param {object} desc
+     * @param {string} desc.value
+     * @param {string} [desc.name=REGISTRY_KEYS.SVG_ICON] - registry name at which to store the new value
+     * @param {object} [desc.client=WebGMEGlobal.Client]
+     * @param {string} [desc.activeObject=WebGMEGlobal.State.getActiveObject()]
+     * @param {string[]} [desc.activeSelection=WebGMEGlobal.State.getActiveSelection()]
+     */
+    DecoratorSVGExplorerDialog.prototype.show = function (desc) {
+        var self = this,
+            activeObject;
 
         this._groups = {};
         this._groupNames = null;
 
-        this._old = oldValue;
-        this._clientNode = WebGMEGlobal.Client.getNode(WebGMEGlobal.State.getActiveSelection()[0] ||
-            WebGMEGlobal.State.getActiveObject());
-        this.result = oldValue;
+        this._registryName = desc.name || REGISTRY_KEYS.SVG_ICON;
+
+        this._old = desc.value;
+        this._client = desc.client || WebGMEGlobal.Client;
+
+        activeObject = desc.activeObject || WebGMEGlobal.State.getActiveObject();
+        this._activeSelection = desc.activeSelection || WebGMEGlobal.State.getActiveSelection();
+
+        if (!this._activeSelection || this._activeSelection.length === 0) {
+            this._activeSelection = [activeObject];
+        }
+
+        this._clientNode = this._client.getNode(this._activeSelection[0]);
+
+        this.result = desc.value;
         this._initDialog();
 
         this._dialog.on('hidden.bs.modal', function () {
@@ -58,8 +80,23 @@ define(['js/Constants',
         });
 
         this._dialog.on('hide.bs.modal', function () {
-            if (self._fnCallback) {
-                self._fnCallback(self.result);
+            var msg;
+            if (self.result !== self._old) {
+                if (typeof self.result === 'string' && self.result !== self.oldValue) {
+                    // We don't want to flood the commit message..
+                    msg = 'SVG registry "' + self._registryName + '" updated for node(s): [';
+
+                    self._client.startTransaction('');
+                    self._activeSelection.forEach(function (id) {
+                        self._client.setRegistry(id, self._registryName, self.result, '');
+                        msg += '"' + id + '", ';
+                    });
+
+                    msg = msg.substring(0, msg.length - 2);
+                    msg += ']';
+
+                    self._client.completeTransaction(msg);
+                }
             }
         });
 
