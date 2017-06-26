@@ -125,6 +125,7 @@ describe('jsonPatcher', function () {
             projectId = testFixture.projectName2Id(projectName),
             core,
             root,
+            base,
             parent,
             gmeAuth;
 
@@ -158,8 +159,9 @@ describe('jsonPatcher', function () {
                         logger: testFixture.logger.fork('meta-core:core')
                     });
 
-                    root = core.createNode();
-                    parent = core.createNode({parent: root});
+                    root = core.createNode({relid: 'rootRelid'});
+                    parent = core.createNode({parent: root, relid: 'parentRelid'});
+                    base = core.createNode({parent: root, relid: 'baseRelid'});
                 })
                 .nodeify(done);
         });
@@ -570,7 +572,7 @@ describe('jsonPatcher', function () {
                 expect(changedNodes).to.deep.equal(getChangedNodesObj([pathM], [path]));
             });
 
-            it('del member should put node in update and member in partial' + suffix, function () {
+            it('del member should put node in update and member in partial (other members) ' + suffix, function () {
                 var node = core.createNode({parent: isRoot ? root : parent}),
                     member = core.createNode({parent: isRoot ? root : parent}),
                     member2 = core.createNode({parent: isRoot ? root : parent}),
@@ -589,9 +591,9 @@ describe('jsonPatcher', function () {
                 expect(changedNodes).to.deep.equal(getChangedNodesObj([pathM], [path]));
             });
 
-            it('del member should put node in update and member in partial 2' + suffix, function () {
-                var node = core.createNode({parent: isRoot ? root : parent}),
-                    member = core.createNode({parent: isRoot ? root : parent}),
+            it('del member should put node in update and member in partial (only member)' + suffix, function () {
+                var node = core.createNode({parent: isRoot ? root : parent, relid: 'setRelid'}),
+                    member = core.createNode({parent: isRoot ? root : parent, base: base, relid: 'memberRelid'}),
                     path = core.getPath(node),
                     pathM = core.getPath(member),
                     changedNodes;
@@ -604,6 +606,42 @@ describe('jsonPatcher', function () {
                 changedNodes = persistAndGetPatchData();
 
                 expect(changedNodes).to.deep.equal(getChangedNodesObj([pathM], [path]));
+            });
+
+            it('#1438 deleting a member node should put node in update (only member)' + suffix, function () {
+                var node = core.createNode({parent: isRoot ? root : parent, relid: 'setRelid'}),
+                    member = core.createNode({parent: isRoot ? root : parent, base: base, relid: 'memberRelid'}),
+                    path = core.getPath(node),
+                    pathM = core.getPath(member),
+                    changedNodes;
+
+                core.addMember(node, 'set', member);
+                core.persist(root);
+
+                core.deleteNode(member);
+
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([core.getPath(base)], [path], [], [pathM]));
+            });
+
+            it('#1438 deleting a member node should put node in update (other members)' + suffix, function () {
+                var node = core.createNode({parent: isRoot ? root : parent, relid: 'setRelid'}),
+                    member = core.createNode({parent: isRoot ? root : parent, base: base, relid: 'memberRelid'}),
+                    member2 = core.createNode({parent: isRoot ? root : parent}),
+                    path = core.getPath(node),
+                    pathM = core.getPath(member),
+                    changedNodes;
+
+                core.addMember(node, 'set', member2);
+                core.addMember(node, 'set', member);
+                core.persist(root);
+
+                core.deleteNode(member);
+
+                changedNodes = persistAndGetPatchData();
+
+                expect(changedNodes).to.deep.equal(getChangedNodesObj([core.getPath(base)], [path], [], [pathM]));
             });
 
             // TODO: At some point we might have to consider changing this behavior.
