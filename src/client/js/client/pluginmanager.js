@@ -30,7 +30,7 @@ define([
         var self = this,
             logger = mainLogger.fork('PluginManager');
 
-        this.getCurrentPluginContext = function (pluginId, activeNodeId) {
+        this.getCurrentPluginContext = function (pluginId, activeNodeId, activeSelectionIds) {
             var activeNode,
                 validPlugins,
                 context =  {
@@ -52,6 +52,10 @@ define([
                 context.managerConfig.activeSelection = WebGMEGlobal.State.getActiveSelection();
                 context.managerConfig.activeNode = activeNodeId;
                 /* jshint +W117 */
+            }
+
+            if (activeSelectionIds) {
+                context.managerConfig.activeSelection = activeSelectionIds;
             }
 
             // Given the active-node we infer the namespace (user may still select another one).
@@ -77,7 +81,7 @@ define([
          * @param {string} pluginId - id of plugin.
          * @param {object} context
          * @param {object} context.managerConfig - where the plugin should execute.
-         * @param {Project} context.managerConfig.project - project (e.g. client.getProjectObject()).
+         * @param {ProjectInterface} context.managerConfig.project - project (e.g. client.getProjectObject()).
          * @param {string} [context.managerConfig.activeNode=''] - path to activeNode.
          * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
          * @param {string} context.managerConfig.commitHash - commit hash to start the plugin from.
@@ -107,7 +111,7 @@ define([
          * @param {string} pluginId - id of plugin.
          * @param {object} context
          * @param {object} context.managerConfig - where the plugin should execute.
-         * @param {Project|string} context.managerConfig.project - id of project.
+         * @param {ProjectInterface|string} context.managerConfig.project - project or id of project.
          * @param {string} [context.managerConfig.activeNode=''] - path to activeNode.
          * @param {string} [context.managerConfig.activeSelection=[]] - paths to selected nodes.
          * @param {string} context.managerConfig.commitHash - commit hash to start the plugin from.
