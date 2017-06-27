@@ -575,7 +575,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         //"password": "pass",
         //"canCreate": null,
         //"siteAdmin": false,
-        //"disabled": false, // Only applicable if true.
+        //"disabled": false, // Only applicable if false -> will re-enable user
         //"data": {}
         ensureSameUserOrSiteAdmin(req, res)
             .then(function (userData) {
@@ -584,7 +584,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                     throw new Error('setting siteAdmin property requires site admin role');
                 }
 
-                if (req.body.disabled === true) {
+                if (req.body.hasOwnProperty('disabled') && req.body.disabled === false) {
                     if (userData.siteAdmin === true) {
                         return gmeAuth.reEnableUser(req.params.username);
                     } else {
@@ -927,11 +927,11 @@ function createAPI(app, mountPath, middlewareOpts) {
         var userId = getUserId(req);
         // body params
         //"info": {}
-        //"disabled": false, // Only applicable if true.
+        //"disabled": false, // Only applicable if false -> will re-enable org
 
         gmeAuth.ensureOrgOrSiteAdmin(userId)
             .then(function (userData) {
-                if (req.body.disabled === true) {
+                if (req.body.hasOwnProperty('disabled') && req.body.disabled === false) {
                     if (userData.siteAdmin === true) {
                         return gmeAuth.reEnableOrganization(req.params.orgId);
                     } else {
