@@ -176,12 +176,11 @@ function createAPI(app, mountPath, middlewareOpts) {
                 return next(new Error('site admin role is required for this operation'));
             }
 
-            // we may need to check if this user can create other ones.
             gmeAuth.addUser(receivedData.userId,
                 receivedData.email,
                 receivedData.password,
                 receivedData.canCreate === 'true' || receivedData.canCreate === true,
-                {overwrite: false},
+                {overwrite: receivedData.overwrite},
                 function (err/*, updateData*/) {
                     if (err) {
                         res.status(400);
@@ -501,20 +500,34 @@ function createAPI(app, mountPath, middlewareOpts) {
             .catch(next);
     });
 
-    router.get('/users', function (req, res) {
+    router.get('/users', ensureAuthenticated, function (req, res, next) {
+        var deferred = Q.defer(),
+            userId = getUserId(req),
+            query;
 
-        gmeAuth.listUsers(null, function (err, data) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
+        if (req.query.includeDisabled) {
+            gmeAuth.getUser(userId)
+                .then(function (userData) {
+                    if (userData.siteAdmin) {
+                        query = {disabled: undefined};
+                    }
 
-            res.json(data);
-        });
+                    deferred.resolve();
+                })
+                .catch(deferred.reject);
+        } else {
+            deferred.resolve();
+        }
+
+        deferred.promise
+            .then(function () {
+                return gmeAuth.listUsers(query);
+            })
+            .then(function (data) {
+                res.json(data);
+            })
+            .catch(next);
+
     });
 
     router.put('/users', function (req, res, next) {
@@ -527,7 +540,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         putUser(req.body, req, res, next);
     });
 
-    router.get('/users/:username', function (req, res) {
+    router.get('/users/:username', ensureAuthenticated, function (req, res) {
 
         gmeAuth.getUser(req.params.username, function (err, data) {
             if (err || !data) {
@@ -549,7 +562,8 @@ function createAPI(app, mountPath, middlewareOpts) {
             email: req.body.email,
             password: req.body.password,
             canCreate: req.body.canCreate || false,
-            data: req.body.data || {}
+            data: req.body.data || {},
+            overwrite: req.body.overwrite
         };
 
         putUser(receivedData, req, res, next);
@@ -561,6 +575,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         //"password": "pass",
         //"canCreate": null,
         //"siteAdmin": false,
+        //"disabled": false, // Only applicable if true.
         //"data": {}
         ensureSameUserOrSiteAdmin(req, res)
             .then(function (userData) {
@@ -569,7 +584,16 @@ function createAPI(app, mountPath, middlewareOpts) {
                     throw new Error('setting siteAdmin property requires site admin role');
                 }
 
-                return gmeAuth.updateUser(req.params.username, req.body);
+                if (req.body.disabled === true) {
+                    if (userData.siteAdmin === true) {
+                        return gmeAuth.reEnableUser(req.params.username);
+                    } else {
+                        res.status(403);
+                        throw new Error('re-enabling users requires site admin role');
+                    }
+                } else {
+                    return gmeAuth.updateUser(req.params.username, req.body);
+                }
             })
             .then(function (userData) {
                 res.json(userData);
@@ -586,8 +610,9 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.delete('/users/:username', function (req, res, next) {
         ensureSameUserOrSiteAdmin(req, res)
-            .then(function () {
-                return gmeAuth.deleteUser(req.params.username);
+            .then(function (userData) {
+                var force = req.query.force && userData.siteAdmin === true;
+                return gmeAuth.deleteUser(req.params.username, force);
             })
             .then(function () {
                 res.sendStatus(204);
@@ -601,7 +626,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/users/:username/data', function (req, res) {
+    router.get('/users/:username/data', ensureAuthenticated, function (req, res) {
         // TODO: Should data be hidden from other (non-siteAdmin) users?
         gmeAuth.getUser(req.params.username, function (err, userData) {
             if (err) {
@@ -668,7 +693,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/users/:username/settings', function (req, res) {
+    router.get('/users/:username/settings', ensureAuthenticated, function (req, res) {
         // TODO: Should settings be hidden from other (non-siteAdmin) users?
         gmeAuth.getUser(req.params.username, function (err, userData) {
             if (err) {
@@ -735,7 +760,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/users/:username/settings/:componentId', function (req, res) {
+    router.get('/users/:username/settings/:componentId', ensureAuthenticated, function (req, res) {
         // TODO: Should settings be hidden from other (non-siteAdmin) users?
         gmeAuth.getUser(req.params.username, function (err, userData) {
             if (err) {
@@ -804,7 +829,6 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     //ORGANIZATIONS
     function ensureOrgOrSiteAdmin(req, res) {
-        //TODO: Could this be handled like ensureAuthenticated?
         var userId = getUserId(req),
             userData;
 
@@ -818,17 +842,38 @@ function createAPI(app, mountPath, middlewareOpts) {
                     res.status(403);
                     throw new Error('site admin role or organization admin is required for this operation');
                 }
+
+                return userData;
             });
     }
 
-    router.get('/orgs', function (req, res, next) {
-        gmeAuth.listOrganizations(null)
+    router.get('/orgs', ensureAuthenticated, function (req, res, next) {
+        var deferred = Q.defer(),
+            userId = getUserId(req),
+            query;
+
+        if (req.query.includeDisabled) {
+            gmeAuth.getUser(userId)
+                .then(function (userData) {
+                    if (userData.siteAdmin) {
+                        query = {disabled: undefined};
+                    }
+
+                    deferred.resolve();
+                })
+                .catch(deferred.reject);
+        } else {
+            deferred.resolve();
+        }
+
+        deferred.promise
+            .then(function () {
+                return gmeAuth.listOrganizations(query);
+            })
             .then(function (data) {
                 res.json(data);
             })
-            .catch(function (err) {
-                next(err);
-            });
+            .catch(next);
     });
 
     router.put('/orgs/:orgId', function (req, res, next) {
@@ -865,7 +910,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/orgs/:orgId', function (req, res, next) {
+    router.get('/orgs/:orgId', ensureAuthenticated, function (req, res, next) {
         gmeAuth.getOrganization(req.params.orgId)
             .then(function (data) {
                 res.json(data);
@@ -878,10 +923,44 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
+    router.patch('/orgs/:orgId', function (req, res, next) {
+        var userId = getUserId(req);
+        // body params
+        //"info": {}
+        //"disabled": false, // Only applicable if true.
+
+        gmeAuth.ensureOrgOrSiteAdmin(userId)
+            .then(function (userData) {
+                if (req.body.disabled === true) {
+                    if (userData.siteAdmin === true) {
+                        return gmeAuth.reEnableOrganization(req.params.orgId);
+                    } else {
+                        res.status(403);
+                        throw new Error('re-enabling organizations requires site admin role');
+                    }
+                } else {
+                    return gmeAuth.updateOrganizationInfo(req.params.orgId, req.body.info);
+                }
+            })
+            .then(function (orgData) {
+                res.json(orgData);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such organization [' + req.params.orgId) === 0) {
+                    //TODO: why is this 400 and not 404?
+                    res.status(400);
+                }
+
+                next(err);
+            });
+    });
+
     router.delete('/orgs/:orgId', function (req, res, next) {
         ensureOrgOrSiteAdmin(req, res)
-            .then(function () {
-                return gmeAuth.removeOrganizationByOrgId(req.params.orgId);
+            .then(function (userData) {
+                var force = req.query.force && userData.siteAdmin === true;
+
+                return gmeAuth.removeOrganizationByOrgId(req.params.orgId, force);
             })
             .then(function () {
                 res.sendStatus(204);

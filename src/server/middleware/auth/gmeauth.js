@@ -43,7 +43,7 @@ function GMEAuth(session, gmeConfig) {
         tokenGenerator = new TokenGenerator(logger, gmeConfig, jwt),
         Authorizer = require(gmeConfig.authentication.authorizer.path),
         authorizer = new Authorizer(logger, gmeConfig),
-        // JWT Keys
+    // JWT Keys
         PUBLIC_KEY;
 
     EventDispatcher.call(this);
@@ -158,7 +158,7 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param callback
+     * @param {function} [callback]
      * @returns {*}
      */
     function connect(callback) {
@@ -207,7 +207,7 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param callback
+     * @param {function} [callback]
      * @returns {*}
      */
     function unload(callback) {
@@ -299,9 +299,19 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    function _resolveQuery(query, extraQuery) {
+        Object.keys(extraQuery || {}).forEach(function (key) {
+            if (typeof extraQuery[key] === 'undefined') {
+                delete query[key];
+            } else {
+                query[key] = extraQuery[key];
+            }
+        });
+    }
+
     /**
      *
-     * @param userId {string}
+     * @param {string} userId
      * @param {object] [query]
      * @param {function} [callback]
      * @returns {*}
@@ -314,9 +324,7 @@ function GMEAuth(session, gmeConfig) {
             query = null;
         }
 
-        Object.keys(query || {}).forEach(function (key) {
-            query_[key] = query[key];
-        });
+        _resolveQuery(query_, query);
 
         return collection.findOne(query_)
             .then(function (userData) {
@@ -335,9 +343,9 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param userId {string}
-     * @param force {boolean} - removes the user from the db completely
-     * @param callback
+     * @param {string} userId
+     * @param {boolean} force - removes the user from the db completely
+     * @param {function} [callback]
      * @returns {*}
      */
     function deleteUser(userId, force, callback) {
@@ -510,16 +518,14 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param query
-     * @param callback
+     * @param {object} [query]
+     * @param {function} [callback]
      * @returns {*}
      */
     function listUsers(query, callback) {
         var query_ = {type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}};
 
-        Object.keys(query || {}).forEach(function (key) {
-            query_[key] = query[key];
-        });
+        _resolveQuery(query_, query);
 
         return collection.find(query_)
             .then(function (users) {
@@ -539,12 +545,12 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param userId
-     * @param email
-     * @param password
-     * @param canCreate
-     * @param options
-     * @param callback
+     * @param {string} userId
+     * @param {string} email
+     * @param {string} password
+     * @param {boolean} [canCreate=false]
+     * @param {object} options
+     * @param {function} [callback]
      * @returns {*}
      */
     function addUser(userId, email, password, canCreate, options, callback) {
@@ -612,10 +618,26 @@ function GMEAuth(session, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
+    function reEnableUser(userId, callback) {
+        return collection.updateOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {
+            $set: {disabled: false}
+        })
+            .then(function (result) {
+                if (result.modifiedCount === 0) {
+                    return Q.reject(new Error('no such user [' + userId + ']'));
+                }
+
+                self.dispatchEvent(CONSTANTS.USER_ADDED, {userId: userId});
+
+                return getUser(userId);
+            })
+            .nodeify(callback);
+    }
+
     /**
      *
-     * @param orgId
-     * @param callback
+     * @param {string} orgId
+     * @param {function} [callback]
      * @returns {*}
      */
     function addOrganization(orgId, info, callback) {
@@ -641,9 +663,52 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    function reEnableOrganization(orgId, callback) {
+        return collection.updateOne({_id: orgId, type: CONSTANTS.ORGANIZATION}, {
+            $set: {disabled: false}
+        })
+            .then(function (result) {
+                if (result.modifiedCount === 0) {
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
+                }
+
+                self.dispatchEvent(CONSTANTS.ORGANIZATION_CREATED, {orgId: orgId});
+
+                return getOrganization(orgId);
+            })
+            .nodeify(callback);
+    }
+
     /**
      *
-     * @param orgId
+     * @param {string} orgId
+     * @param {object] info
+     * @param {function} [callback]
+     * @returns {*}
+     */
+    function updateOrganizationInfo(orgId, info, callback) {
+
+        if (!UTIL.isTrueObject(info)) {
+            throw new Error('supplied userData.data is not an object [' + info + ']');
+        }
+
+        return collection.updateOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
+            {
+                $set: {info: info}
+            })
+            .then(function (res) {
+                if (res.modifiedCount === 0) {
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
+                }
+
+                return getOrganization(orgId);
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param {string} orgId
      * @param {object] [query]
      * @param {function} [callback]
      * @returns {*}
@@ -656,9 +721,7 @@ function GMEAuth(session, gmeConfig) {
             query = null;
         }
 
-        Object.keys(query || {}).forEach(function (key) {
-            query_[key] = query[key];
-        });
+        _resolveQuery(query_, query);
 
         return collection.findOne()
             .then(function (org) {
@@ -682,16 +745,14 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param query
-     * @param callback
+     * @param {object} [query]
+     * @param {function} [callback]
      * @returns {*}
      */
     function listOrganizations(query, callback) {
         var query_ = {type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}};
 
-        Object.keys(query || {}).forEach(function (key) {
-            query_[key] = query[key];
-        });
+        _resolveQuery(query_, query);
 
         return collection.find(query_)
             .then(function (orgs) {
@@ -719,9 +780,9 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param orgId
-     * @param force - delete organization from db.
-     * @param callback
+     * @param {string} orgId
+     * @param {boolean} [force=false] - delete organization from db.
+     * @param {function} [callback]
      * @returns {*}
      */
     function removeOrganizationByOrgId(orgId, force, callback) {
@@ -756,8 +817,8 @@ function GMEAuth(session, gmeConfig) {
     /**
      *
      * @param userId
-     * @param orgId
-     * @param callback
+     * @param {string} orgId
+     * @param {function} [callback]
      * @returns {*}
      */
     function addUserToOrganization(userId, orgId, callback) {
@@ -783,7 +844,7 @@ function GMEAuth(session, gmeConfig) {
      *
      * @param userId
      * @param orgId
-     * @param callback
+     * @param {function} [callback]
      * @returns {*}
      */
     function removeUserFromOrganization(userId, orgId, callback) {
@@ -805,7 +866,7 @@ function GMEAuth(session, gmeConfig) {
      * @param {string} userId
      * @param {string} orgId
      * @param {boolean} makeAdmin
-     * @param callback
+     * @param {function} [callback]
      * @returns {*}
      */
     function setAdminForUserInOrganization(userId, orgId, makeAdmin, callback) {
@@ -864,11 +925,14 @@ function GMEAuth(session, gmeConfig) {
     this.updateUserSettings = updateUserSettings;
     this.updateUserComponentSettings = updateUserComponentSettings;
     this.deleteUser = deleteUser;
+    this.reEnableUser = reEnableUser;
 
     this.listOrganizations = listOrganizations;
     this.getOrganization = getOrganization;
     this.addOrganization = addOrganization;
+    this.updateOrganizationInfo = updateOrganizationInfo;
     this.deleteOrganization = this.removeOrganizationByOrgId = removeOrganizationByOrgId;
+    this.reEnableOrganization = reEnableOrganization;
 
     this.getAdminsInOrganization = getAdminsInOrganization;
     this.addUserToOrganization = addUserToOrganization;
