@@ -302,11 +302,23 @@ function GMEAuth(session, gmeConfig) {
     /**
      *
      * @param userId {string}
-     * @param callback
+     * @param {object] [query]
+     * @param {function} [callback]
      * @returns {*}
      */
-    function getUser(userId, callback) {
-        return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}})
+    function getUser(userId, query, callback) {
+        var query_ = {_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}};
+
+        if (typeof query === 'function') {
+            callback = query;
+            query = null;
+        }
+
+        Object.keys(query || {}).forEach(function (key) {
+            query_[key] = query[key];
+        });
+
+        return collection.findOne(query_)
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject(new Error('no such user [' + userId + ']'));
@@ -503,8 +515,13 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function listUsers(query, callback) {
-        // FIXME: query can paginate, or filter users
-        return collection.find({type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}})
+        var query_ = {type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}};
+
+        Object.keys(query || {}).forEach(function (key) {
+            query_[key] = query[key];
+        });
+
+        return collection.find(query_)
             .then(function (users) {
                 return Q.ninvoke(users, 'toArray');
             })
@@ -565,6 +582,10 @@ function GMEAuth(session, gmeConfig) {
             }
         }
 
+        if (typeof options.disabled === 'boolean') {
+            data.disabled = options.disabled;
+        }
+
         if (rejected === false) {
             Q.ninvoke(bcrypt, 'hash', password, gmeConfig.authentication.salts)
                 .then(function (hash) {
@@ -623,11 +644,23 @@ function GMEAuth(session, gmeConfig) {
     /**
      *
      * @param orgId
-     * @param callback
+     * @param {object] [query]
+     * @param {function} [callback]
      * @returns {*}
      */
-    function getOrganization(orgId, callback) {
-        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}})
+    function getOrganization(orgId, query, callback) {
+        var query_ = {_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}};
+
+        if (typeof query === 'function') {
+            callback = query;
+            query = null;
+        }
+
+        Object.keys(query || {}).forEach(function (key) {
+            query_[key] = query[key];
+        });
+
+        return collection.findOne()
             .then(function (org) {
                 if (!org) {
                     return Q.reject(new Error('no such organization [' + orgId + ']'));
@@ -654,7 +687,13 @@ function GMEAuth(session, gmeConfig) {
      * @returns {*}
      */
     function listOrganizations(query, callback) {
-        return collection.find({type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}})
+        var query_ = {type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}};
+
+        Object.keys(query || {}).forEach(function (key) {
+            query_[key] = query[key];
+        });
+
+        return collection.find(query_)
             .then(function (orgs) {
                 return Q.ninvoke(orgs, 'toArray');
             })
