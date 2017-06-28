@@ -924,30 +924,37 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.patch('/orgs/:orgId', function (req, res, next) {
-        var userId = getUserId(req);
         // body params
         //"info": {}
         //"disabled": false, // Only applicable if false -> will re-enable org
+        function updateOrg() {
+            var userId;
+            if (req.body.hasOwnProperty('disabled') && req.body.disabled === false) {
+                userId = getUserId(req);
+                gmeAuth.getUser(userId)
+                    .then(function (userData) {
+                        if (userData.siteAdmin === true) {
+                            return gmeAuth.reEnableOrganization(req.params.orgId);
+                        } else {
+                            res.status(403);
+                            throw new Error('re-enabling organizations requires site admin role');
+                        }
+                    });
+            } else {
+                return ensureOrgOrSiteAdmin(req)
+                    .then(function () {
+                        return gmeAuth.updateOrganizationInfo(req.params.orgId, req.body.info);
+                    });
+            }
+        }
 
-        gmeAuth.ensureOrgOrSiteAdmin(userId)
-            .then(function (userData) {
-                if (req.body.hasOwnProperty('disabled') && req.body.disabled === false) {
-                    if (userData.siteAdmin === true) {
-                        return gmeAuth.reEnableOrganization(req.params.orgId);
-                    } else {
-                        res.status(403);
-                        throw new Error('re-enabling organizations requires site admin role');
-                    }
-                } else {
-                    return gmeAuth.updateOrganizationInfo(req.params.orgId, req.body.info);
-                }
-            })
+        updateOrg()
             .then(function (orgData) {
                 res.json(orgData);
             })
             .catch(function (err) {
-                if (err.message.indexOf('no such organization [' + req.params.orgId) === 0) {
-                    //TODO: why is this 400 and not 404?
+                if (err.message.indexOf('no such organization [' + req.params.orgId) === 0 ||
+                    err.message.indexOf('info is not an object') > -1) {
                     res.status(400);
                 }
 
@@ -2234,6 +2241,10 @@ function createAPI(app, mountPath, middlewareOpts) {
 
         if (errorMessage.hasOwnProperty(res.statusCode)) {
             message = errorMessage[res.statusCode];
+        }
+
+        if (res.statusCode === 500) {
+            logger.error(err);
         }
 
         res.json({

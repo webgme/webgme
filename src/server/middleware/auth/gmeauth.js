@@ -689,7 +689,7 @@ function GMEAuth(session, gmeConfig) {
     function updateOrganizationInfo(orgId, info, callback) {
 
         if (!UTIL.isTrueObject(info)) {
-            throw new Error('supplied userData.data is not an object [' + info + ']');
+            throw new Error('supplied info is not an object [' + info + ']');
         }
 
         return collection.updateOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
