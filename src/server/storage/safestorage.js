@@ -283,11 +283,32 @@ SafeStorage.prototype.createProject = function (data, callback) {
             })
             .then(function (projectId) {
                 data.projectId = projectId;
+
                 return self.authorizer.setAccessRights(data.ownerId, projectId, {
                     read: true,
                     write: true,
                     delete: true
                 }, projectAuthParams);
+            })
+            .then(function () {
+                // Add the default projectHooks
+                var hookIds = Object.keys(self.gmeConfig.webhooks.defaults),
+                    cnt = hookIds.length;
+
+                function addHooks() {
+                    if (cnt === 0) {
+                        return;
+                    } else {
+                        cnt -= 1;
+                        return self.metadataStorage.addProjectHook(data.projectId,
+                            hookIds[cnt], self.gmeConfig.webhooks.defaults[hookIds[cnt]])
+                            .then(function () {
+                                return addHooks();
+                            });
+                    }
+                }
+
+                return addHooks();
             })
             .then(function () {
                 return Storage.prototype.createProject.call(self, data);
@@ -461,8 +482,7 @@ SafeStorage.prototype.duplicateProject = function (data, callback) {
                     throw new Error('Not authorized to create project for [' + data.ownerId + ']');
                 }
 
-                // TODO: Should webhooks be copied over too?
-                return self.metadataStorage.addProject(data.ownerId, data.projectName, info);
+                return self.metadataStorage.duplicateProject(data.projectId, data.ownerId, data.projectName, info);
             })
             .then(function (newProjectId) {
                 data.newProjectId = newProjectId;

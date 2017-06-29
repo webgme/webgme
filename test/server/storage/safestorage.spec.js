@@ -418,6 +418,59 @@ describe('SafeStorage', function () {
         });
     });
 
+    describe('Default webhooks', function () {
+        var safeStorage,
+            projectName = 'seedForHook';
+
+        before(function (done) {
+            var configWithDefaults = JSON.parse(JSON.stringify(gmeConfig));
+            configWithDefaults.webhooks.defaults = {
+                'myHook1': {
+                    url: 'localhost:9001',
+                    events: 'all'
+                },
+                'myHook2': {
+                    url: 'localhost:9002',
+                    events: 'all'
+                }
+            };
+
+            safeStorage = testFixture.getMemoryStorage(logger, configWithDefaults, gmeAuth);
+            safeStorage.openDatabase()
+                .then(function () {
+                    return testFixture.importProject(safeStorage, {
+                        projectSeed: 'seeds/EmptyProject.webgmex',
+                        projectName: projectName,
+                        gmeConfig: configWithDefaults,
+                        logger: logger
+                    });
+                })
+                .nodeify(done);
+        });
+
+        after(function (done) {
+            safeStorage.closeDatabase(done);
+        });
+
+        it('should create project and add default webhooks', function (done) {
+            var projectName = 'CreatedWithDefaults',
+                data = {
+                    projectName: projectName
+                };
+
+            safeStorage.createProject(data)
+                .then(function (project) {
+                    return safeStorage.metadataStorage.getProjectHooks(project.projectId);
+                })
+                .then(function (hooks) {
+                    expect(Object.keys(hooks).length).to.equal(2);
+                    expect(hooks.myHook1.url).to.equal('localhost:9001');
+                    expect(hooks.myHook2.url).to.equal('localhost:9002');
+                })
+                .nodeify(done);
+        });
+    });
+
     describe('getCommits', function () {
         var safeStorage,
             projectId,
@@ -1961,6 +2014,45 @@ describe('SafeStorage', function () {
                 .nodeify(done);
         });
 
+        it('duplicate project should have same hooks a source', function (done) {
+            var projectName = 'hooksAtDuplicate',
+                username = inOrgCanCreateAdmin,
+                data = {
+                    projectName: projectName,
+                    username: username
+                },
+                projectId;
+
+            safeStorage.createProject(data)
+                .then(function (project) {
+                    projectId = project.projectId;
+                    data.projectId = projectId;
+                    data.info = true;
+
+                    return safeStorage.metadataStorage.addProjectHook(projectId, 'dupHook',
+                        {
+                            url: 'localhost',
+                            events: 'all'
+                        }
+                    );
+                })
+                .then(function () {
+                    return safeStorage.duplicateProject({
+                        projectId: projectId,
+                        projectName: 'aDuplicateHooks',
+                        username: username
+                    });
+                })
+                .then(function (project) {
+                    return safeStorage.metadataStorage.getProjectHook(project.projectId, 'dupHook');
+                })
+                .then(function (hook) {
+                    expect(hook.url).to.equal('localhost');
+                    expect(hook.events).to.equal('all');
+                })
+                .nodeify(done);
+        });
+
         it('transferred project should have same kind a source', function (done) {
             var projectName = 'aKindOfTransferredProject',
                 username = inOrgCanCreateAdmin,
@@ -1992,6 +2084,45 @@ describe('SafeStorage', function () {
                 .then(function (projects) {
                     expect(projects.length).to.equal(1);
                     expect(projects[0].info.kind).to.equal('SomeOtherKindOfProject');
+                })
+                .nodeify(done);
+        });
+
+        it('transferred project should have same hooks a source', function (done) {
+            var projectName = 'hooksAtTransfer',
+                username = inOrgCanCreateAdmin,
+                data = {
+                    projectName: projectName,
+                    username: username
+                },
+                projectId;
+
+            safeStorage.createProject(data)
+                .then(function (project) {
+                    projectId = project.projectId;
+                    data.projectId = projectId;
+                    data.info = true;
+
+                    return safeStorage.metadataStorage.addProjectHook(projectId, 'transHook',
+                        {
+                            url: 'localhost',
+                            events: 'all'
+                        }
+                    );
+                })
+                .then(function () {
+                    return safeStorage.transferProject({
+                        projectId: projectId,
+                        newOwnerId: 'theOrg',
+                        username: username
+                    });
+                })
+                .then(function (projectId) {
+                    return safeStorage.metadataStorage.getProjectHook(projectId, 'transHook');
+                })
+                .then(function (hook) {
+                    expect(hook.url).to.equal('localhost');
+                    expect(hook.events).to.equal('all');
                 })
                 .nodeify(done);
         });

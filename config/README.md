@@ -261,3 +261,5 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.webhooks.manager = 'memory'`
  - Type of webhook-manager for detecting events, can be `'memory'`, `'redis'`. Memory runs in the server process, whereas redis
  is running in a sub-process. Redis requires the socket.io adapter to be of type redis. (It is also possible to run the redis manager separately from the webgme server.)
+- `config.webhooks.defaults = {}`
+ - Collection of hooks that should be added to every new project. Keys are webhook-ids and values are object with at least `url` and `events` defined, see [wiki](https://github.com/webgme/webgme/wiki/GME-WebHooks) for available fields. 

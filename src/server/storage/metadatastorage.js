@@ -10,7 +10,7 @@ var Q = require('q'),
     CONSTANTS = requireJS('common/Constants'),
     storageUtil = requireJS('common/storage/util');
 
-function MetadataStorage(mainLogger, gmeConfig) {
+function MetadataStorage(mainLogger /*, gmeConfig*/) {
     var self = this,
         logger = mainLogger.fork('MetadataStorage');
 
@@ -75,8 +75,8 @@ function MetadataStorage(mainLogger, gmeConfig) {
      *
      * @param ownerId
      * @param projectName
-     * @param info
-     * @param callback
+     * @param [info]
+     * @param [callback] - if provided no promise will be returned
      * @returns {*}
      */
     function addProject(ownerId, projectName, info, callback) {
@@ -112,21 +112,63 @@ function MetadataStorage(mainLogger, gmeConfig) {
         return self.projectCollection.deleteOne({_id: projectId}).nodeify(callback);
     }
 
-    function transferProject(projectId, newOwnerId, callback) {
+    /**
+     * @param projectId
+     * @param newOwnerId
+     * @param [info] - if not given will use info from old project.
+     * @param callback
+     * @returns {*}
+     */
+    function transferProject(projectId, newOwnerId, info, callback) {
         var projectInfo,
             projectName,
-            newProjectId;
+            newProjectId,
+            hooks;
+
         logger.debug('transferProject: projectId, newOrgOrUserId', projectId, newOwnerId);
 
         return getProject(projectId)
             .then(function (projectData) {
-                projectInfo = projectData.info;
+                projectInfo = info || projectData.info;
                 projectName = projectData.name;
+                hooks = projectData.hooks;
+
                 return addProject(newOwnerId, projectName, projectInfo);
             })
             .then(function (newProjectId_) {
                 newProjectId = newProjectId_;
-                return deleteProject(projectId);
+                return Q.all([
+                    deleteProject(projectId),
+                    self.updateProjectHooks(newProjectId, hooks)
+                ]);
+            })
+            .then(function () {
+                return newProjectId;
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param projectId
+     * @param ownerId
+     * @param projectName
+     * @param [info] - if not given will use info from old project.
+     * @param callback
+     * @returns {*}
+     */
+    function duplicateProject(projectId, ownerId, projectName, info, callback) {
+        var newProjectId,
+            hooks;
+
+        return getProject(projectId)
+            .then(function (oldData) {
+                hooks = oldData.hooks;
+                return addProject(ownerId, projectName, info || oldData.info);
+            })
+            .then(function (id_) {
+                newProjectId = id_;
+                return self.updateProjectHooks(newProjectId, hooks);
             })
             .then(function () {
                 return newProjectId;
@@ -255,7 +297,7 @@ function MetadataStorage(mainLogger, gmeConfig) {
                         active: true,
                         description: 'No description given',
                         events: []
-                };
+                    };
 
                 if (typeof hookId !== 'string' || !hookId) {
                     throw new Error('hookId empty or not a string [' + hookId + ']');
@@ -369,24 +411,23 @@ function MetadataStorage(mainLogger, gmeConfig) {
             .nodeify(callback);
     }
 
-    return {
-        start: start,
-        stop: stop,
+    self.start = start;
+    self.stop = stop;
 
-        getProjects: getProjects,
-        getProject: getProject,
-        addProject: addProject,
-        deleteProject: deleteProject,
-        transferProject: transferProject,
-        updateProjectInfo: updateProjectInfo,
+    self.getProjects = getProjects;
+    self.getProject = getProject;
+    self.addProject = addProject;
+    self.deleteProject = deleteProject;
+    self.transferProject = transferProject;
+    self.duplicateProject = duplicateProject;
+    self.updateProjectInfo = updateProjectInfo;
 
-        getProjectHooks: getProjectHooks,
-        getProjectHook: getProjectHook,
-        addProjectHook: addProjectHook,
-        updateProjectHooks: updateProjectHooks,
-        updateProjectHook: updateProjectHook,
-        removeProjectHook: removeProjectHook
-    };
+    self.getProjectHooks = getProjectHooks;
+    self.getProjectHook = getProjectHook;
+    self.addProjectHook = addProjectHook;
+    self.updateProjectHooks = updateProjectHooks;
+    self.updateProjectHook = updateProjectHook;
+    self.removeProjectHook = removeProjectHook;
 }
 
 module.exports = MetadataStorage;
