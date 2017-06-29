@@ -608,27 +608,9 @@ define(['jquery',
         return result;
     }
 
-    /*
-     *
-     */
     function isValidChildrenTypeInCrossCut(parentId, baseIdList) {
-        //Check if each single baseId is a valid children type of parentId
-        var i,
-            result = true,
-            baseNode,
-            baseId;
-
-        i = baseIdList.length;
-        while (i--) {
-            baseId = baseIdList[i];
-            baseNode = client.getNode(baseId);
-            if (!baseNode || !baseNode.isValidChildOf(parentId)) {
-                result = false;
-                break;
-            }
-        }
-
-        return result;
+        // Only the root node is not allowed in a cross-cut.
+        return baseIdList.indexOf(CONSTANTS.PROJECT_ROOT_ID) === -1;
     }
 
     function getValidPointerTargetTypesFromSource(objID, isSet) {
