@@ -603,7 +603,10 @@ function GMEAuth(session, gmeConfig) {
                     }
                 })
                 .then(function (res) {
-                    self.dispatchEvent(CONSTANTS.USER_CREATED, {userId: userId});
+                    if (!data.disabled) {
+                        self.dispatchEvent(CONSTANTS.USER_CREATED, {userId: userId});
+                    }
+
                     deferred.resolve(res);
                 })
                 .catch(function (err) {

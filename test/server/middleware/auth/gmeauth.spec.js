@@ -3,6 +3,7 @@
 /**
  * @author ksmyth / https://github.com/ksmyth
  * @author lattmann / https://github.com/lattmann
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 var testFixture = require('../../../_globals.js');
@@ -78,6 +79,7 @@ describe('GME authentication', function () {
 
     it('adds user without overwrite should dispatch USER_CREATED', function (done) {
         var cnt = 2;
+
         function callDone() {
             cnt -= 1;
             if (cnt === 0) {
@@ -343,7 +345,7 @@ describe('GME authentication', function () {
                 return Q.allDone([
                     auth.addOrganization(orgId),
                     auth.deleteUser(userId)
-                    ]);
+                ]);
             })
             .then(function () {
                 return Q.allSettled([
@@ -992,23 +994,23 @@ describe('GME authentication', function () {
             .then(function () {
                 return auth.listOrganizations({});
             }).then(function (organizations) {
-                expect(organizations).to.include({
-                        _id: orgName,
-                        info: {},
-                        projects: {},
-                        type: auth.CONSTANTS.ORGANIZATION,
-                        admins: [],
-                        users: ['user']
-                    },
-                    {
-                        _id: otherOrgName,
-                        info: {},
-                        projects: {},
-                        type: auth.CONSTANTS.ORGANIZATION,
-                        admins: [],
-                        users: []
-                    });
-            }).nodeify(done);
+            expect(organizations).to.include({
+                    _id: orgName,
+                    info: {},
+                    projects: {},
+                    type: auth.CONSTANTS.ORGANIZATION,
+                    admins: [],
+                    users: ['user']
+                },
+                {
+                    _id: otherOrgName,
+                    info: {},
+                    projects: {},
+                    type: auth.CONSTANTS.ORGANIZATION,
+                    admins: [],
+                    users: []
+                });
+        }).nodeify(done);
     });
 
     it('should fail to add dup organization', function (done) {
@@ -1322,7 +1324,7 @@ describe('GME authentication', function () {
                 return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
-                expect(admins.indexOf(userId) > - 1).to.equal(true);
+                expect(admins.indexOf(userId) > -1).to.equal(true);
             })
             .nodeify(done);
     });
@@ -1338,7 +1340,7 @@ describe('GME authentication', function () {
                 return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
-                expect(admins.indexOf(userId) > - 1).to.equal(true);
+                expect(admins.indexOf(userId) > -1).to.equal(true);
             })
             .then(function () {
                 return auth.setAdminForUserInOrganization(userId, orgId, false);
@@ -1347,7 +1349,7 @@ describe('GME authentication', function () {
                 return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
-                expect(admins.indexOf(userId) > - 1).to.equal(false);
+                expect(admins.indexOf(userId) > -1).to.equal(false);
             })
             .nodeify(done);
     });
@@ -1363,7 +1365,7 @@ describe('GME authentication', function () {
                 return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
-                expect(admins.indexOf(userId) > - 1).to.equal(true);
+                expect(admins.indexOf(userId) > -1).to.equal(true);
             })
             .then(function () {
                 return auth.setAdminForUserInOrganization(userId, orgId, true);
@@ -1372,7 +1374,7 @@ describe('GME authentication', function () {
                 return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
-                expect(admins.indexOf(userId) > - 1).to.equal(true);
+                expect(admins.indexOf(userId) > -1).to.equal(true);
             })
             .nodeify(done);
     });
@@ -1388,7 +1390,7 @@ describe('GME authentication', function () {
                 return auth.getAdminsInOrganization(orgId);
             })
             .then(function (admins) {
-                expect(admins.indexOf(userId) > - 1).to.equal(false);
+                expect(admins.indexOf(userId) > -1).to.equal(false);
             })
             .nodeify(done);
     });
@@ -1565,8 +1567,8 @@ describe('GME authentication', function () {
     it.skip('getProjectAuthorizationList should fail if user does not exist', function (done) {
         var userId = 'getProjectAuthorizationListDoesNotExist';
 
-        auth.getProjectAuthorizationListByUserId(userId).
-            then(function () {
+        auth.getProjectAuthorizationListByUserId(userId)
+            .then(function () {
                 throw new Error('Should have failed');
             })
             .catch(function (err) {
@@ -1705,5 +1707,314 @@ describe('GME authentication', function () {
                 expect(projectData.info).to.deep.equal({firstOwner: oldOwner});
             })
             .nodeify(done);
+    });
+
+
+    // #1445 introduction of queries and reEnable users/org
+    it('getUser should still accept callback as second argument', function (done) {
+        var userId = 'get_user_callback';
+
+        auth.addUser(userId, '@', 'p', true, {overwrite: true})
+            .then(function () {
+                var deferred = Q.defer();
+
+                auth.getUser(userId, function (err, user) {
+                    if (err) {
+                        deferred.reject(err);
+                    } else if (user._id !== userId) {
+                        deferred.reject(new Error('Could not get user'));
+                    } else {
+                        deferred.resolve();
+                    }
+                });
+
+                return deferred.promise;
+            })
+            .nodeify(done);
+    });
+
+    it('getUser should not return user if email query specified and no match', function (done) {
+        var userId = 'userEmailQuery',
+            email = 'www@www.com',
+            firstPassed = false;
+
+        auth.addUser(userId, email, 'p', true, {overwrite: true})
+            .then(function () {
+                return auth.getUser(userId, {email: email});
+            })
+            .then(function (userData) {
+                expect(userData._id).to.equal(userId);
+                expect(userData.email).to.equal(email);
+                firstPassed = true;
+                return auth.getUser(userId, {email: 'someOtherEmail'});
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                if (firstPassed && err.message.indexOf('no such user') > -1) {
+                    done();
+                } else {
+                    done(err);
+                }
+            });
+    });
+
+    it('getUser should return disabled user if {disabled: undefined}', function (done) {
+        var userId = 'disabledUser';
+
+        auth.addUser(userId, '@', 'p', true, {overwrite: true})
+            .then(function () {
+                return auth.deleteUser(userId);
+            })
+            .then(function () {
+                return auth.getUser(userId, {disabled: undefined});
+            })
+            .then(function (userData) {
+                expect(userData.disabled).to.equal(true);
+            })
+            .nodeify(done);
+    });
+
+    it('reEnableUser should set {disabled: false}', function (done) {
+        var userId = 'reEnabledUser';
+
+        auth.addUser(userId, '@', 'p', true, {overwrite: true})
+            .then(function () {
+                return auth.deleteUser(userId);
+            })
+            .then(function () {
+                return auth.getUser(userId, {disabled: undefined});
+            })
+            .then(function (userData) {
+                expect(userData.disabled).to.equal(true);
+
+                return auth.reEnableUser(userId);
+            })
+            .then(function (userData) {
+                expect(userData.disabled).to.equal(false);
+            })
+            .nodeify(done);
+    });
+
+    it('reEnableUser should throw if user does not exist', function (done) {
+        var userId = 'doesNotExist';
+
+        auth.reEnableUser(userId)
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [') > -1) {
+                    done();
+                } else {
+                    done(err);
+                }
+            });
+    });
+
+    it('should be possible to add disabled user', function (done) {
+        var userId = 'disabledAtCreation';
+
+        auth.addUser(userId, '@', 'p', true, {overwrite: true, disabled: true})
+            .then(function () {
+                return auth.getUser(userId);
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [') > -1) {
+                    done();
+                } else {
+                    done(err);
+                }
+            });
+    });
+
+    it('adding disabled user should NOT dispatch USER_CREATED', function (done) {
+        var userId = 'disabledAddNoEvent',
+            timeOutId,
+            error,
+            cnt = 2;
+
+        function callDone(err) {
+            error = error || err;
+            cnt -= 1;
+            if (cnt === 1) {
+                done(error);
+            }
+        }
+
+        function handler(/*_auth, data*/) {
+            auth.removeEventListener(auth.CONSTANTS.USER_CREATED, handler);
+            clearTimeout(timeOutId);
+            callDone(new Error('Should not have been triggered!'));
+        }
+
+        auth.addEventListener(auth.CONSTANTS.USER_CREATED, handler);
+
+        auth.addUser(userId, '@', 'p', true, {overwrite: false, disabled: true})
+            .then(function () {
+                // The timeout isn't really necessary.. It dispatches immediately.
+                callDone();
+                timeOutId = setTimeout(function () {
+                    auth.removeEventListener(auth.CONSTANTS.USER_CREATED, handler);
+                    callDone();
+                }, 100);
+            })
+            .catch(done);
+    });
+
+    it('listUsers should return disabled users if query {disabled: undefined}', function (done) {
+        var userId = 'listDisabledUser';
+
+        auth.addUser(userId, '@', 'p', true, {overwrite: true, disabled: true})
+            .then(function () {
+                return auth.listUsers({disabled: undefined});
+            })
+            .then(function (users) {
+                var foundDisabled = false;
+
+                users.forEach(function (data) {
+                    if (data._id === userId && data.disabled === true) {
+                        foundDisabled = true;
+                    }
+                });
+
+                expect(foundDisabled).to.equal(true);
+            })
+            .nodeify(done);
+    });
+
+    it('getOrganization should still accept callback as second argument', function (done) {
+        var orgId = 'get_org_callback';
+
+        auth.addOrganization(orgId)
+            .then(function () {
+                var deferred = Q.defer();
+
+                auth.getOrganization(orgId, function (err, org) {
+                    if (err) {
+                        deferred.reject(err);
+                    } else if (org._id !== orgId) {
+                        deferred.reject(new Error('Could not get org'));
+                    } else {
+                        deferred.resolve();
+                    }
+                });
+
+                return deferred.promise;
+            })
+            .nodeify(done);
+    });
+
+    it('reEnableOrganization should set {disabled: false}', function (done) {
+        var orgId = 'reEnabledOrg';
+
+        auth.addOrganization(orgId)
+            .then(function () {
+                return auth.deleteOrganization(orgId);
+            })
+            .then(function () {
+                return auth.getOrganization(orgId, {disabled: undefined});
+            })
+            .then(function (orgData) {
+                expect(orgData.disabled).to.equal(true);
+
+                return auth.reEnableOrganization(orgId);
+            })
+            .then(function (orgData) {
+                expect(orgData.disabled).to.equal(false);
+            })
+            .nodeify(done);
+    });
+
+    it('reEnableOrganization should throw if organization does not exist', function (done) {
+        var orgId = 'doesNotExist';
+
+        auth.reEnableOrganization(orgId)
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such organization') > -1) {
+                    done();
+                } else {
+                    done(err);
+                }
+            });
+    });
+
+    it('listOrganizations should return disabled org if query {disabled: undefined}', function (done) {
+        var orgId = 'listDisabledOrg';
+
+        auth.addOrganization(orgId)
+            .then(function () {
+                return auth.deleteOrganization(orgId);
+            })
+            .then(function () {
+                return auth.listOrganizations({disabled: undefined});
+            })
+            .then(function (orgs) {
+                var foundDisabled = false;
+
+                orgs.forEach(function (data) {
+                    if (data._id === orgId && data.disabled === true) {
+                        foundDisabled = true;
+                    }
+                });
+
+                expect(foundDisabled).to.equal(true);
+            })
+            .nodeify(done);
+    });
+
+    it('updateOrganizationInfo should accept an object', function (done) {
+        var orgId = 'orgWithInfoUpdate';
+
+        auth.addOrganization(orgId, {old: 'info'})
+            .then(function () {
+                return auth.updateOrganizationInfo(orgId, {new: 'info'});
+            })
+            .then(function (org) {
+                expect(org.info).to.deep.equal({new: 'info'});
+            })
+            .nodeify(done);
+    });
+
+    it('updateOrganizationInfo should throw if not an object', function (done) {
+        var orgId = 'orgWithInfoFailUpdate';
+
+        auth.addOrganization(orgId, {old: 'info'})
+            .then(function () {
+                return auth.updateOrganizationInfo(orgId, 'This is a string');
+            })
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('info is not an object') > -1) {
+                    done();
+                } else {
+                    done(err);
+                }
+            });
+    });
+
+    it('updateOrganizationInfo should throw if org does not exist', function (done) {
+        var orgId = 'orgDoesNotExist';
+
+        auth.updateOrganizationInfo(orgId, {a: 'fsdf'})
+            .then(function () {
+                throw new Error('Should have failed!');
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such organization [' + orgId) > -1) {
+                    done();
+                } else {
+                    done(err);
+                }
+            });
     });
 });

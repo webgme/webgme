@@ -70,11 +70,17 @@ describe('ExampleRestRouter', function () {
             server.start(function () {
                 var serverBaseUrl = server.getUrl();
                 agent.get(serverBaseUrl + '/ExampleRestRouter/getExample').end(function (err, res) {
-                    expect(err).equal(null);
-                    expect(res.status).equal(200);
+                    var error;
+                    try {
+                        expect(err).equal(null);
+                        expect(res.status).equal(200);
+                    }catch (e) {
+                        error = e;
+                    }
+
                     server.stop(function (err) {
                         server = null;
-                        done(err);
+                        done(error || err);
                     });
                 });
             });
@@ -89,11 +95,17 @@ describe('ExampleRestRouter', function () {
             server.start(function () {
                 var serverBaseUrl = server.getUrl();
                 agent.patch(serverBaseUrl + '/ExampleRestRouter/patchExample').end(function (err, res) {
-                    expect(err).equal(null);
-                    expect(res.status).equal(200);
+                    var error;
+                    try {
+                        expect(err).equal(null);
+                        expect(res.status).equal(200);
+                    }catch (e) {
+                        error = e;
+                    }
+
                     server.stop(function (err) {
                         server = null;
-                        done(err);
+                        done(error || err);
                     });
                 });
             });
