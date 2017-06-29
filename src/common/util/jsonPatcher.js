@@ -711,7 +711,9 @@ define([
             i, j,
             ownChange = false,
             absGmePath,
-            patchPath;
+            patchPath,
+            subPath,
+            pathPieces;
 
         if (!nodePatches) {
             // E.g. if the node was added the full data is given instead of a patch.
@@ -738,6 +740,18 @@ define([
                 for (j = 0; j < nodePatches[i].updates.length; j += 1) {
                     absGmePath = gmePath + nodePatches[i].updates[j];
                     if (_inLoadOrUnload(res, absGmePath) === false) {
+                        res.update[absGmePath] = true;
+                    }
+                }
+
+                // #1438 This will capture set-owner updates.
+                subPath = _strDecode(patchPath.substring('/ovr/'.length));
+                pathPieces = subPath.split('/');
+                if (pathPieces.length >= 3 && pathPieces[2] === CORE_CONSTANTS.ALL_SETS_PROPERTY) {
+                    // Original path looks something like /ovr/<nodePath>/_sets/...
+                    absGmePath = gmePath + '/' + pathPieces[1];
+
+                    if (_isGmePath(absGmePath) && _inLoadOrUnload(res, absGmePath) === false) {
                         res.update[absGmePath] = true;
                     }
                 }
