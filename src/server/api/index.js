@@ -71,7 +71,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         return deferred.promise.nodeify(callback);
     }
 
-    function exportProject(req, res, next) {
+    function exportProject(req, res) {
         var userId = getUserId(req),
             projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                 req.params.projectName),
@@ -100,7 +100,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     }
 
-    function exportModel(req, res, next) {
+    function exportModel(req, res) {
         var userId = getUserId(req),
             projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(req.params.ownerId,
                 req.params.projectName),
@@ -234,11 +234,11 @@ function createAPI(app, mountPath, middlewareOpts) {
             .then(function (userData) {
                 if (userData.disabled === true) {
                     res.clearCookie(gmeConfig.authentication.jwt.cookieId);
-                    req.status(401);
-                    throw new Error('user has been disabled [' + userId + ']');
+                    res.status(401);
+                    deferred.reject(new Error('user has been disabled [' + userId + ']'));
+                } else {
+                    deferred.resolve(userData);
                 }
-
-                deferred.resolve(userData);
             })
             .catch(function (err) {
                 if (err.message.indexOf('no such user') === 0) {
@@ -258,20 +258,12 @@ function createAPI(app, mountPath, middlewareOpts) {
     }
 
     // AUTHENTICATED
-    router.get('/user', ensureAuthenticated, function (req, res) {
-        getOrAddUser(req, res, function (err, data) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
-
-            res.json(data);
-        });
-
+    router.get('/user', ensureAuthenticated, function (req, res, next) {
+        getOrAddUser(req, res)
+            .then(function (data) {
+                res.json(data);
+            })
+            .catch(next);
     });
 
     // Example: curl -i -H "Content-Type: application/json" -X PATCH
@@ -423,8 +415,8 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.put('/user/settings', function (req, res, next) {
         getOrAddUser(req, res)
-            .then(function (/*userData*/) {
-                return gmeAuth.updateUserSettings(userId, req.body, true);
+            .then(function (userData) {
+                return gmeAuth.updateUserSettings(userData._id, req.body, true);
             })
             .then(function (settings) {
                 res.json(settings);
@@ -434,8 +426,8 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.patch('/user/settings', function (req, res, next) {
         getOrAddUser(req, res)
-            .then(function (/*userData*/) {
-                return gmeAuth.updateUserSettings(userId, req.body);
+            .then(function (userData) {
+                return gmeAuth.updateUserSettings(userData._id, req.body);
             })
             .then(function (settings) {
                 res.json(settings);
@@ -445,8 +437,8 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     router.delete('/user/settings', function (req, res, next) {
         getOrAddUser(req, res)
-            .then(function (/*userData*/) {
-                return gmeAuth.updateUserSettings(userId, {}, true);
+            .then(function (userData) {
+                return gmeAuth.updateUserSettings(userData._id, {}, true);
             })
             .then(function (/*settings*/) {
                 res.sendStatus(204);
@@ -972,7 +964,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                         }
                     });
             } else {
-                return ensureOrgOrSiteAdmin(req)
+                return ensureOrgOrSiteAdmin(req, res)
                     .then(function () {
                         return gmeAuth.removeOrganizationByOrgId(req.params.orgId, req.body.info);
                     });

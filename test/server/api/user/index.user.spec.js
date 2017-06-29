@@ -155,6 +155,9 @@ describe('USER REST API', function () {
                         gmeAuth.addUser('user_not_in_db2', 'e@mail.com', 'plaintext', false, {
                             overwrite: true,
                             settings: {comp1: {a: 1}}
+                        }),
+                        gmeAuth.addUser('user_disabled_but_has_token', 'e@mail.com', 'plaintext', false, {
+                            overwrite: true
                         })
                     ]);
                 })
@@ -610,17 +613,37 @@ describe('USER REST API', function () {
                 });
             });
 
-            it('should get all users /api/v1/users', function (done) {
-                agent.get(server.getUrl() + '/api/v1/users').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    //expect(res.body.length).gt(2);
-                    // TODO: check all users are there
+            it('should 401 all users /api/v1/users', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users')
+                    .end(function (err, res) {
+                    expect(res.status).equal(401, err);
 
                     done();
                 });
             });
 
+            it('should 401 all orgs /api/v1/orgs', function (done) {
+                agent.get(server.getUrl() + '/api/v1/orgs')
+                    .end(function (err, res) {
+                        expect(res.status).equal(401, err);
+
+                        done();
+                    });
+            });
+
             // AUTH METHODS
+            it('should get all users /api/v1/users if authenticated', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        //expect(res.body.length).gt(2);
+                        // TODO: check all users are there
+
+                        done();
+                    });
+            });
+
             it('should return with 401 GET /api/v1/user', function (done) {
                 agent.get(server.getUrl() + '/api/v1/user').end(function (err, res) {
                     expect(res.status).equal(401, err);
@@ -654,7 +677,7 @@ describe('USER REST API', function () {
                     });
             });
 
-            it('should create user when accessed in db and not existing for user and setting calls', function (done) {
+            it('should create user when accessed in db and not existing for user', function (done) {
                 var userId = 'user_not_in_db',
                     token;
 
@@ -709,6 +732,30 @@ describe('USER REST API', function () {
                     .catch(done);
             });
 
+            it('should 401 when user identified via token but user is disabled', function (done) {
+                var userId = 'user_disabled_but_has_token',
+                    token;
+
+                gmeAuth.generateJWTokenForAuthenticatedUser(userId)
+                    .then(function (token_) {
+                        token = token_;
+                        return gmeAuth.deleteUser(userId);
+                    })
+                    .then(function () {
+                        agent.get(server.getUrl() + '/api/v1/user')
+                            .set('Authorization', 'Bearer ' + token)
+                            .end(function (err, res) {
+                                try {
+                                    expect(res.status).to.equal(401);
+                                    done();
+                                } catch (e) {
+                                    done(e);
+                                }
+                            });
+                    })
+                    .catch(done);
+            });
+
             it('should fail with wrong password basic authentication GET /api/v1/user', function (done) {
                 agent.get(server.getUrl() + '/api/v1/user')
                     .set('Authorization', 'Basic ' + new Buffer('guest:wrong_password').toString('base64'))
@@ -735,6 +782,7 @@ describe('USER REST API', function () {
                 };
 
                 agent.get(server.getUrl() + '/api/v1/users/user_to_modify')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body.email).not.equal(updates.email);
@@ -764,6 +812,7 @@ describe('USER REST API', function () {
                     };
 
                     agent.get(server.getUrl() + '/api/v1/users/user_to_modify')
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
                             expect(res.body.siteAdmin).not.equal(updates.siteAdmin);
@@ -831,6 +880,7 @@ describe('USER REST API', function () {
                 };
 
                 agent.get(server.getUrl() + '/api/v1/users/new_user')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(404, err); // user should not exist at this point
 
@@ -858,6 +908,7 @@ describe('USER REST API', function () {
                     userId = 'new_user_param';
 
                 agent.get(server.getUrl() + '/api/v1/users/new_user_param')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(404, err); // user should not exist at this point
 
@@ -885,6 +936,7 @@ describe('USER REST API', function () {
                 };
 
                 agent.get(server.getUrl() + '/api/v1/users/guest')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(200, err); // user should not exist at this point
 
@@ -901,6 +953,7 @@ describe('USER REST API', function () {
 
             it('should delete a specified user as site admin DELETE /api/v1/users/user_to_delete', function (done) {
                 agent.get(server.getUrl() + '/api/v1/users')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         agent.del(server.getUrl() + '/api/v1/users/user_to_delete')
@@ -909,6 +962,7 @@ describe('USER REST API', function () {
                                 expect(res2.status).equal(204, err);
 
                                 agent.get(server.getUrl() + '/api/v1/users')
+                                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                     .end(function (err, res2) {
                                         expect(res2.status).equal(200, err);
                                         expect(res.body.length - 1).equal(res2.body.length);
@@ -921,6 +975,7 @@ describe('USER REST API', function () {
 
             it('should delete a self user DELETE /api/v1/users/self_delete_2', function (done) {
                 agent.get(server.getUrl() + '/api/v1/users')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         agent.del(server.getUrl() + '/api/v1/users/self_delete_2')
@@ -929,6 +984,7 @@ describe('USER REST API', function () {
                                 expect(res2.status).equal(204, err);
 
                                 agent.get(server.getUrl() + '/api/v1/users')
+                                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                     .end(function (err, res2) {
                                         expect(res2.status).equal(200, err);
                                         expect(res.body.length - 1).equal(res2.body.length);
@@ -941,6 +997,7 @@ describe('USER REST API', function () {
 
             it('should delete a self user DELETE /api/v1/user', function (done) {
                 agent.get(server.getUrl() + '/api/v1/users')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         agent.del(server.getUrl() + '/api/v1/user')
@@ -949,6 +1006,7 @@ describe('USER REST API', function () {
                                 expect(res2.status).equal(204, err);
 
                                 agent.get(server.getUrl() + '/api/v1/users')
+                                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                     .end(function (err, res2) {
                                         expect(res2.status).equal(200, err);
                                         expect(res.body.length - 1).equal(res2.body.length);
