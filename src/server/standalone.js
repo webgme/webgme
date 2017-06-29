@@ -473,8 +473,8 @@ function StandAloneServer(gmeConfig) {
                     }
                 })
                 .catch(function (err) {
+                    res.clearCookie(gmeConfig.authentication.jwt.cookieId);
                     if (err.name === 'TokenExpiredError') {
-                        res.clearCookie(gmeConfig.authentication.jwt.cookieId);
                         if (res.getHeader('X-WebGME-Media-Type') || !gmeConfig.authentication.logInUrl) {
                             res.status(401);
                             next(err);

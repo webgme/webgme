@@ -220,14 +220,24 @@ function createAPI(app, mountPath, middlewareOpts) {
     /**
      * Should be called when user is already authenticated but does not exist in the gmeAuth db.
      * Used mainly to store the settings of the user.
-     * @param userId
+     * @param req
+     * @param res
      * @param callback
      * @returns {*}
      */
-    function getOrAddUser(userId, callback) {
-        var deferred = Q.defer();
-        gmeAuth.getUser(userId)
+    function getOrAddUser(req, res, callback) {
+        var deferred = Q.defer(),
+            userId = getUserId(req),
+            query = {disabled: undefined};
+
+        gmeAuth.getUser(userId, query)
             .then(function (userData) {
+                if (userData.disabled === true) {
+                    res.clearCookie(gmeConfig.authentication.jwt.cookieId);
+                    req.status(401);
+                    throw new Error('user has been disabled [' + userId + ']');
+                }
+
                 deferred.resolve(userData);
             })
             .catch(function (err) {
@@ -249,9 +259,7 @@ function createAPI(app, mountPath, middlewareOpts) {
 
     // AUTHENTICATED
     router.get('/user', ensureAuthenticated, function (req, res) {
-        var userId = getUserId(req);
-
-        getOrAddUser(userId, function (err, data) {
+        getOrAddUser(req, res, function (err, data) {
             if (err) {
                 res.status(404);
                 res.json({
@@ -406,9 +414,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.get('/user/settings', ensureAuthenticated, function (req, res, next) {
-        var userId = getUserId(req);
-
-        getOrAddUser(userId)
+        getOrAddUser(req, res)
             .then(function (userData) {
                 res.json(userData.settings || {});
             })
@@ -416,9 +422,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.put('/user/settings', function (req, res, next) {
-        var userId = getUserId(req);
-
-        getOrAddUser(userId)
+        getOrAddUser(req, res)
             .then(function (/*userData*/) {
                 return gmeAuth.updateUserSettings(userId, req.body, true);
             })
@@ -429,9 +433,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.patch('/user/settings', function (req, res, next) {
-        var userId = getUserId(req);
-
-        getOrAddUser(userId)
+        getOrAddUser(req, res)
             .then(function (/*userData*/) {
                 return gmeAuth.updateUserSettings(userId, req.body);
             })
@@ -442,9 +444,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.delete('/user/settings', function (req, res, next) {
-        var userId = getUserId(req);
-
-        getOrAddUser(userId)
+        getOrAddUser(req, res)
             .then(function (/*userData*/) {
                 return gmeAuth.updateUserSettings(userId, {}, true);
             })
@@ -455,9 +455,7 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.get('/user/settings/:componentId', ensureAuthenticated, function (req, res, next) {
-        var userId = getUserId(req);
-
-        getOrAddUser(userId)
+        getOrAddUser(req, res)
             .then(function (userData) {
                 res.json(userData.settings[req.params.componentId] || {});
             })
@@ -465,10 +463,9 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.put('/user/settings/:componentId', function (req, res, next) {
-        var userId = getUserId(req);
-        getOrAddUser(userId)
-            .then(function (/*userData*/) {
-                return gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body, true);
+        getOrAddUser(req, res)
+            .then(function (userData) {
+                return gmeAuth.updateUserComponentSettings(userData._id, req.params.componentId, req.body, true);
             })
             .then(function (settings) {
                 res.json(settings);
@@ -477,10 +474,9 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.patch('/user/settings/:componentId', function (req, res, next) {
-        var userId = getUserId(req);
-        getOrAddUser(userId)
-            .then(function (/*userData*/) {
-                return gmeAuth.updateUserComponentSettings(userId, req.params.componentId, req.body);
+        getOrAddUser(req, res)
+            .then(function (userData) {
+                return gmeAuth.updateUserComponentSettings(userData._id, req.params.componentId, req.body);
             })
             .then(function (settings) {
                 res.json(settings);
@@ -489,10 +485,9 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.delete('/user/settings/:componentId', function (req, res, next) {
-        var userId = getUserId(req);
-        getOrAddUser(userId)
-            .then(function (/*userData*/) {
-                return gmeAuth.updateUserComponentSettings(userId, req.params.componentId, {}, true);
+        getOrAddUser(req, res)
+            .then(function (userData) {
+                return gmeAuth.updateUserComponentSettings(userData._id, req.params.componentId, {}, true);
             })
             .then(function (/*settings*/) {
                 res.sendStatus(204);
@@ -931,7 +926,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             var userId;
             if (req.body.hasOwnProperty('disabled') && req.body.disabled === false) {
                 userId = getUserId(req);
-                gmeAuth.getUser(userId)
+                return gmeAuth.getUser(userId)
                     .then(function (userData) {
                         if (userData.siteAdmin === true) {
                             return gmeAuth.reEnableOrganization(req.params.orgId);
@@ -963,12 +958,28 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.delete('/orgs/:orgId', function (req, res, next) {
-        ensureOrgOrSiteAdmin(req, res)
-            .then(function (userData) {
-                var force = req.query.force && userData.siteAdmin === true;
+        function deleteOrg() {
+            var userId;
+            if (req.query.force) {
+                userId = getUserId(req);
+                return gmeAuth.getUser(userId)
+                    .then(function (userData) {
+                        if (userData.siteAdmin === true) {
+                            return gmeAuth.removeOrganizationByOrgId(req.params.orgId, true);
+                        } else {
+                            res.status(403);
+                            throw new Error('force deletion requires site admin role');
+                        }
+                    });
+            } else {
+                return ensureOrgOrSiteAdmin(req)
+                    .then(function () {
+                        return gmeAuth.removeOrganizationByOrgId(req.params.orgId, req.body.info);
+                    });
+            }
+        }
 
-                return gmeAuth.removeOrganizationByOrgId(req.params.orgId, force);
-            })
+        deleteOrg(req, res)
             .then(function () {
                 res.sendStatus(204);
             })

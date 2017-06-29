@@ -723,7 +723,7 @@ function GMEAuth(session, gmeConfig) {
 
         _resolveQuery(query_, query);
 
-        return collection.findOne()
+        return collection.findOne(query_)
             .then(function (org) {
                 if (!org) {
                     return Q.reject(new Error('no such organization [' + orgId + ']'));
