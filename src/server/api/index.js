@@ -161,46 +161,28 @@ function createAPI(app, mountPath, middlewareOpts) {
     function putUser(receivedData, req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.getUser(userId, function (err, data) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
+        gmeAuth.getUser(userId)
+            .then(function (data) {
 
-            if (!data.siteAdmin) {
-                res.status(403);
-                return next(new Error('site admin role is required for this operation'));
-            }
+                if (!data.siteAdmin) {
+                    res.status(403);
+                    throw new Error('site admin role is required for this operation');
+                }
 
-            gmeAuth.addUser(receivedData.userId,
-                receivedData.email,
-                receivedData.password,
-                receivedData.canCreate === 'true' || receivedData.canCreate === true,
-                {overwrite: receivedData.overwrite},
-                function (err/*, updateData*/) {
-                    if (err) {
+                gmeAuth.addUser(receivedData.userId,
+                    receivedData.email,
+                    receivedData.password,
+                    receivedData.canCreate === 'true' || receivedData.canCreate === true,
+                    {overwrite: receivedData.overwrite})
+                    .then(function (newData) {
+                        res.json(newData);
+                    })
+                    .catch(function (err) {
                         res.status(400);
-                        return next(new Error(err));
-                    }
-
-                    gmeAuth.getUser(receivedData.userId, function (err, data) {
-                        if (err) {
-                            res.status(404);
-                            res.json({
-                                message: 'Requested resource was not found',
-                                error: err
-                            });
-                            return;
-                        }
-
-                        res.json(data);
+                        next(err);
                     });
-                });
-        });
+            })
+            .catch(next);
     }
 
     function ensureSameUserOrSiteAdmin(req, res) {
@@ -271,54 +253,31 @@ function createAPI(app, mountPath, middlewareOpts) {
     router.patch('/user', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.getUser(userId, function (err, data) {
-            var receivedData;
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
+        gmeAuth.getUser(userId)
+            .then(function (data) {
+                var receivedData = req.body;
 
-            receivedData = req.body;
-
-            if (receivedData.hasOwnProperty('siteAdmin') && !data.siteAdmin) {
-                res.status(403);
-                return next(new Error('setting siteAdmin property requires site admin role'));
-            }
-
-            gmeAuth.updateUser(userId, receivedData, function (err, userData) {
-                if (err) {
-                    res.status(404);
-                    res.json({
-                        message: 'Requested resource was not found',
-                        error: err
-                    });
-                    return;
+                if (receivedData.hasOwnProperty('siteAdmin') && !data.siteAdmin) {
+                    res.status(403);
+                    throw new Error('setting siteAdmin property requires site admin role');
                 }
 
-                res.json(userData);
-            });
-        });
+                return gmeAuth.updateUser(userId, receivedData);
+            })
+            .then(function (newData) {
+                res.json(newData);
+            })
+            .catch(next);
     });
 
-    router.delete('/user', function (req, res/*, next*/) {
+    router.delete('/user', function (req, res, next) {
         var userId = getUserId(req);
 
-        gmeAuth.deleteUser(userId, false, function (err) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
-
-            res.sendStatus(204);
-        });
+        gmeAuth.deleteUser(userId, false)
+            .then(function () {
+                res.sendStatus(204);
+            })
+            .catch(next);
     });
 
     router.get('/user/data', ensureAuthenticated, function (req, res, next) {

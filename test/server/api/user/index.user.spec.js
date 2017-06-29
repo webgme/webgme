@@ -158,6 +158,10 @@ describe('USER REST API', function () {
                         }),
                         gmeAuth.addUser('user_disabled_but_has_token', 'e@mail.com', 'plaintext', false, {
                             overwrite: true
+                        }),
+                        gmeAuth.addUser('disabled_user_at_start', 'e@mail.com', 'plaintext', false, {
+                            overwrite: true,
+                            disabled: true
                         })
                     ]);
                 })
@@ -1169,16 +1173,199 @@ describe('USER REST API', function () {
             });
 
             it('should get all users /api/v1/users', function (done) {
-                agent.get(server.getUrl() + '/api/v1/users').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    //expect(res.body.length).equal(8);
-                    // TODO: check all users are there
+                agent.get(server.getUrl() + '/api/v1/users')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        //expect(res.body.length).equal(8);
+                        // TODO: check all users are there
 
-                    done();
-                });
+                        done();
+                    });
             });
 
-            // AUTH METHODS
+            it('should get disabled user too if /api/v1/users?includeDisabled=true for site-admin', function (done) {
+                var dUsers,
+                    users;
+
+                function report(err) {
+                    if (err) {
+                        done(err);
+                    } else if (dUsers && users) {
+                        var hadWhenShouldHave = false,
+                            hadWhenShouldNotHave  = false;
+
+                        try {
+                            expect(dUsers.length > users.length).to.equal(true);
+
+                            dUsers.forEach(function (uData) {
+                                if (uData.disabled) {
+                                    hadWhenShouldHave = true;
+                                }
+                            });
+
+                            users.forEach(function (uData) {
+                                if (uData.disabled) {
+                                    hadWhenShouldNotHave = true;
+                                }
+                            });
+
+                            expect(hadWhenShouldHave).to.equal(true);
+                            expect(hadWhenShouldNotHave).to.equal(false);
+
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }
+                }
+
+                agent.get(server.getUrl() + '/api/v1/users')
+                    .query({includeDisabled: true})
+                    .end(function (err, res) {
+                        users = res.body;
+                        report(err);
+                    });
+
+                agent.get(server.getUrl() + '/api/v1/users')
+                    .query({includeDisabled: true})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        dUsers = res.body;
+                        report(err);
+                    });
+            });
+
+            it('should return with 204 and delete user from db if site-admin DEL /api/v1/users/:userId?force=true',
+                function (done) {
+                    var userId = 'to_be_force_deleted';
+
+                    gmeAuth.addUser(userId, '@', 'p', true, {overwrite: true})
+                        .then(function () {
+                            var deferred = Q.defer();
+                            agent.del(server.getUrl() + '/api/v1/users/' + userId)
+                                .query({force: true})
+                                .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                                .end(function (err, res) {
+                                    try {
+                                        expect(res.status).equal(204, err);
+                                        deferred.resolve();
+                                    } catch (e) {
+                                        deferred.reject(e);
+                                    }
+                                });
+
+                            return deferred.promise;
+                        })
+                        .then(function () {
+                            return gmeAuth.listUsers({disabled: undefined});
+                        })
+                        .then(function (users) {
+                            users.forEach(function (userData) {
+                                if (userData._id === userId) {
+                                    throw new Error('User still exists');
+                                }
+                            });
+                        })
+                        .nodeify(done);
+                }
+            );
+
+            it('should 204 but NOT delete user from db if not site-admin DEL /api/v1/users/:userId?force=true',
+                function (done) {
+                    var userId = 'to_be_attempted_force_deletion';
+
+                    gmeAuth.addUser(userId, '@', 'p', true, {overwrite: true})
+                        .then(function () {
+                            var deferred = Q.defer();
+                            agent.del(server.getUrl() + '/api/v1/users/' + userId)
+                                .query({force: true})
+                                .set('Authorization', 'Basic ' + new Buffer(userId + ':p').toString('base64'))
+                                .end(function (err, res) {
+                                    try {
+                                        expect(res.status).equal(204, err);
+                                        deferred.resolve();
+                                    } catch (e) {
+                                        deferred.reject(e);
+                                    }
+                                });
+
+                            return deferred.promise;
+                        })
+                        .then(function () {
+                            return gmeAuth.listUsers({disabled: undefined});
+                        })
+                        .then(function (users) {
+                            var userExists = false;
+                            users.forEach(function (userData) {
+                                if (userData._id === userId) {
+                                    userExists = true;
+                                    expect(userData.disabled).to.equal(true);
+                                }
+                            });
+
+                            expect(userExists).to.equal(true);
+                        })
+                        .nodeify(done);
+                }
+            );
+
+            it('should re-enable user if site-admin patch /api/v1/users/:userId with body {disabled: true}',
+                function (done) {
+                    var userId = 'to_be_reEnabled_deleted';
+
+                    gmeAuth.addUser(userId, '@', 'p', true, {overwrite: true, disabled: true})
+                        .then(function () {
+                            var deferred = Q.defer();
+                            agent.patch(server.getUrl() + '/api/v1/users/' + userId)
+                                .send({disabled: false})
+                                .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                                .end(function (err, res) {
+                                    try {
+                                        expect(res.status).equal(200, err);
+                                        expect(res.body.disabled).to.equal(false);
+                                        deferred.resolve();
+                                    } catch (e) {
+                                        deferred.reject(e);
+                                    }
+                                });
+
+                            return deferred.promise;
+                        })
+                        .then(function () {
+                            return gmeAuth.getUser(userId);
+                        })
+                        .then(function (user) {
+                            expect(user.disabled).to.equal(false);
+                        })
+                        .nodeify(done);
+                }
+            );
+
+            it('should 403 if not site-admin patch /api/v1/users/:userId with body {disabled: true}',
+                function (done) {
+                    var userId = 'attempt_to_be_reEnabled_deleted';
+
+                    gmeAuth.addUser(userId, '@', 'p', true, {overwrite: true})
+                        .then(function () {
+                            var deferred = Q.defer();
+                            agent.patch(server.getUrl() + '/api/v1/users/' + userId)
+                                .send({disabled: false})
+                                .set('Authorization', 'Basic ' + new Buffer(userId + ':p').toString('base64'))
+                                .end(function (err, res) {
+                                    try {
+                                        expect(res.status).equal(403, err);
+                                        deferred.resolve();
+                                    } catch (e) {
+                                        deferred.reject(e);
+                                    }
+                                });
+
+                            return deferred.promise;
+                        })
+                        .nodeify(done);
+                }
+            );
+
             it('should return with 200 and guest is logged in GET /api/v1/user', function (done) {
                 agent.get(server.getUrl() + '/api/v1/user').end(function (err, res) {
                     expect(res.status).equal(200, err);

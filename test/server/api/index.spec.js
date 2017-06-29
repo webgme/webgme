@@ -85,7 +85,6 @@ describe('ORGANIZATION REST API', function () {
                 agent = superagent.agent();
             });
 
-            // NO AUTH methods
             it('should get all organizations /api/v1/orgs', function (done) {
                 agent.get(server.getUrl() + '/api/v1/orgs').end(function (err, res) {
                     expect(res.status).equal(200, err);
@@ -104,8 +103,6 @@ describe('ORGANIZATION REST API', function () {
                 });
             });
 
-            // AUTH METHODS
-            // create organization
             it('should create a new organization as admin with valid data PUT /api/v1/orgs/newOrg', function (done) {
                 var orgId = 'newOrg',
                     newOrg = {
@@ -580,6 +577,48 @@ describe('ORGANIZATION REST API', function () {
                         });
                 }
             );
+        });
+
+        describe('auth enabled, allowGuests false', function () {
+            var server,
+                agent;
+
+            before(function (done) {
+                var gmeConfig = testFixture.getGmeConfig();
+                gmeConfig.authentication.enable = true;
+                gmeConfig.authentication.allowGuests = false;
+
+                server = WebGME.standaloneServer(gmeConfig);
+                server.start(done);
+            });
+
+            after(function (done) {
+                server.stop(done);
+            });
+
+            beforeEach(function () {
+                agent = superagent.agent();
+            });
+
+            it('should 401 at get organizations /api/v1/orgs', function (done) {
+                agent.get(server.getUrl() + '/api/v1/orgs').end(function (err, res) {
+                    if (res.status === 401) {
+                        done();
+                    } else {
+                        done(new Error('Should have returned 401'));
+                    }
+                });
+            });
+
+            it('should 401 at get specific organization /api/v1/orgs/orgInit', function (done) {
+                agent.get(server.getUrl() + '/api/v1/orgs/orgInit').end(function (err, res) {
+                    if (res.status === 401) {
+                        done();
+                    } else {
+                        done(new Error('Should have returned 401'));
+                    }
+                });
+            });
         });
     });
 });

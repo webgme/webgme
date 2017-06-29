@@ -100,6 +100,29 @@ describe('GME authentication', function () {
             .catch(done);
     });
 
+    it('adds user with overwrite that did not exist should dispatch USER_CREATED', function (done) {
+        var userId = 'userAddedWithOverWriteShouldEvent',
+            cnt = 2;
+
+        function callDone() {
+            cnt -= 1;
+            if (cnt === 0) {
+                done();
+            }
+        }
+
+        function handler() {
+            auth.removeEventListener(auth.CONSTANTS.USER_CREATED, handler);
+            callDone();
+        }
+
+        auth.addEventListener(auth.CONSTANTS.USER_CREATED, handler);
+
+        auth.addUser(userId, '@', 'p', true, {overwrite: true})
+            .then(callDone)
+            .catch(done);
+    });
+
     it('adds a user without email address', function (done) {
         auth.addUser('user_no_email', null, 'plaintext', true, {overwrite: true}, done);
     });
@@ -1855,6 +1878,43 @@ describe('GME authentication', function () {
         auth.addEventListener(auth.CONSTANTS.USER_CREATED, handler);
 
         auth.addUser(userId, '@', 'p', true, {overwrite: false, disabled: true})
+            .then(function () {
+                // The timeout isn't really necessary.. It dispatches immediately.
+                callDone();
+                timeOutId = setTimeout(function () {
+                    auth.removeEventListener(auth.CONSTANTS.USER_CREATED, handler);
+                    callDone();
+                }, 100);
+            })
+            .catch(done);
+    });
+
+    it('overwriting existing user should NOT dispatch USER_CREATED', function (done) {
+        var userId = 'userOverwriteExistingNoEvent',
+            timeOutId,
+            error,
+            cnt = 2;
+
+        function callDone(err) {
+            error = error || err;
+            cnt -= 1;
+            if (cnt === 1) {
+                done(error);
+            }
+        }
+
+        function handler(/*_auth, data*/) {
+            auth.removeEventListener(auth.CONSTANTS.USER_CREATED, handler);
+            clearTimeout(timeOutId);
+            callDone(new Error('Should not have been triggered!'));
+        }
+
+        auth.addUser(userId, '@', 'p', true, {overwrite: false, disabled: true})
+            .then(function () {
+                auth.addEventListener(auth.CONSTANTS.USER_CREATED, handler);
+
+                return auth.addUser(userId, '@', 'p', true, {overwrite: true, disabled: true});
+            })
             .then(function () {
                 // The timeout isn't really necessary.. It dispatches immediately.
                 callDone();

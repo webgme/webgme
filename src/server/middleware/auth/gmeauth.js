@@ -603,11 +603,15 @@ function GMEAuth(session, gmeConfig) {
                     }
                 })
                 .then(function (res) {
-                    if (!data.disabled) {
+                    // Do not dispatch if disabled user or existing user was overwritten.
+                    if (!data.disabled && !(options.overwrite && res.matchedCount !== 0)) {
                         self.dispatchEvent(CONSTANTS.USER_CREATED, {userId: userId});
                     }
 
-                    deferred.resolve(res);
+                    return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}});
+                })
+                .then(function (userData) {
+                    deferred.resolve(userData);
                 })
                 .catch(function (err) {
                     if (err.code === 11000) {
@@ -645,13 +649,12 @@ function GMEAuth(session, gmeConfig) {
      */
     function addOrganization(orgId, info, callback) {
         return collection.insertOne({
-                _id: orgId,
-                projects: {},
-                type: CONSTANTS.ORGANIZATION,
-                admins: [],
-                info: info || {}
-            }
-        )
+            _id: orgId,
+            projects: {},
+            type: CONSTANTS.ORGANIZATION,
+            admins: [],
+            info: info || {}
+        })
             .then(function (res) {
                 self.dispatchEvent(CONSTANTS.ORGANIZATION_CREATED, {orgId: orgId});
                 return res;
