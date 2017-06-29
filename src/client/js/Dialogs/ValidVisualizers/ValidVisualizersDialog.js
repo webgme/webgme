@@ -8,9 +8,10 @@
  */
 
 define([
+    'js/RegistryKeys',
     'text!./templates/ValidVisualizersDialog.html',
     'css!./styles/ValidVisualizersDialog.css'
-], function (dialogTemplate) {
+], function (REGISTRY_KEYS, dialogTemplate) {
     'use strict';
 
     function ValidVisualizersDialog() {
@@ -21,11 +22,29 @@ define([
         this._infoSpan = null;
     }
 
-    ValidVisualizersDialog.prototype.show = function (fnCallback, oldValue) {
+    /**
+     *
+     * @param {object} desc
+     * @param {string} desc.value
+     * @param {object} [desc.client=WebGMEGlobal.Client]
+     * @param {string} [desc.activeObject=WebGMEGlobal.State.getActiveObject()]
+     * @param {string[]} [desc.activeSelection=WebGMEGlobal.State.getActiveSelection()]
+     */
+    ValidVisualizersDialog.prototype.show = function (desc) {
         var self = this,
+            activeObject,
             result;
 
         this._dialog = $(dialogTemplate);
+        this._oldValue = desc.value;
+        this._client = desc.client || WebGMEGlobal.Client;
+
+        activeObject = desc.activeObject || WebGMEGlobal.State.getActiveObject();
+        this._activeSelection = desc.activeSelection || WebGMEGlobal.State.getActiveSelection();
+
+        if (!this._activeSelection || this._activeSelection.length === 0) {
+            this._activeSelection = [activeObject];
+        }
 
         this._infoBtn = this._dialog.find('.toggle-info-btn');
         this._infoSpan = this._dialog.find('.info-message');
@@ -36,7 +55,7 @@ define([
         this._availableViz = this._dialog.find('#available');
         this._chosenViz = this._dialog.find('#chosen');
 
-        this.populateLists(WebGMEGlobal.allVisualizers, oldValue ? oldValue.split(' ') : []);
+        this.populateLists(WebGMEGlobal.allVisualizers, desc.value ? desc.value.split(' ') : []);
 
         // Connect available and selected viz.
         this._dialog.find('#chosen, #available').sortable({
@@ -72,10 +91,12 @@ define([
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
-            if (typeof result === 'string') {
-                fnCallback(result);
-            } else {
-                fnCallback(oldValue);
+            if (typeof result === 'string' && result !== self.oldValue) {
+                self._client.startTransaction();
+                self._activeSelection.forEach(function (id) {
+                    self._client.setRegistry(id, REGISTRY_KEYS.VALID_VISUALIZERS, result);
+                });
+                self._client.completeTransaction();
             }
         });
 

@@ -69,6 +69,9 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         }
     };
 
-    return StringWidget;
+    StringWidget.prototype.focus = function () {
+        this.__input.focus();
+    };
 
+    return StringWidget;
 });

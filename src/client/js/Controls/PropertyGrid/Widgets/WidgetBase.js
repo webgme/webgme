@@ -8,14 +8,14 @@ define(['jquery'], function () {
 
     'use strict';
 
-    var EL_BASE = $('<div/>', {class: 'widget'}),
-        WidgetBase;
+    var EL_BASE = $('<div/>', {class: 'widget'});
 
-    WidgetBase = function (propertyDesc) {
+    function WidgetBase(propertyDesc) {
         this.el = EL_BASE.clone();
 
         this.propertyValue = propertyDesc.value;
-        this.originalValue = propertyDesc.value;
+        this.originalValue = typeof propertyDesc.originalValue === 'undefined' ?
+            propertyDesc.value : propertyDesc.originalValue;
         this.propertyName = propertyDesc.name;
         this.propertyID = propertyDesc.id;
         this.propertyText = propertyDesc.text;
@@ -36,7 +36,7 @@ define(['jquery'], function () {
 
         // The function to be called on finishing change.
         this.__onFinishChange = undefined;
-    };
+    }
 
     WidgetBase.prototype.onChange = function (fnc) {
         this.__onChange = fnc;
@@ -87,6 +87,10 @@ define(['jquery'], function () {
 
     WidgetBase.prototype.updateDisplay = function () {
         return this;
+    };
+
+    WidgetBase.prototype.focus = function () {
+
     };
 
     WidgetBase.prototype.remove = function () {

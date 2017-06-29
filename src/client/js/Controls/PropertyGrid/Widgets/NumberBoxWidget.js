@@ -91,6 +91,10 @@ define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWi
         }
     };
 
+    NumberBoxWidget.prototype.focus = function () {
+        this.__input.focus();
+    };
+
     return NumberBoxWidget;
 });
 

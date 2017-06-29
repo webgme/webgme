@@ -93,7 +93,8 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'setAttribute(' + path + ',' + name + ',' + JSON.stringify(value) + ')');
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'setAttribute(' + path + ',' + name + ',' + JSON.stringify(value) + ')');
             }
         }
 
@@ -108,7 +109,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'delAttribute(' + path + ',' + name + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delAttribute(' + path + ',' + name + ')');
             }
         }
 
@@ -123,7 +124,8 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'setRegistry(' + path + ',' + name + ',' + JSON.stringify(value) + ')');
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'setRegistry(' + path + ',' + name + ',' + JSON.stringify(value) + ')');
             }
         }
 
@@ -138,7 +140,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'delRegistry(' + path + ',' + name + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delRegistry(' + path + ',' + name + ')');
             }
         }
 
@@ -158,7 +160,8 @@ define([], function () {
                 _setAttrAndRegistry(newNode, desc);
                 newPath = storeNode(newNode);
 
-                saveRoot(msg || 'copyNode(' + path + ', ' + parentPath + ', ' + JSON.stringify(desc) + ')');
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'copyNode(' + path + ', ' + parentPath + ', ' + JSON.stringify(desc) + ')');
                 return newPath;
             }
         }
@@ -176,7 +179,8 @@ define([], function () {
                     }
                 }
 
-                msg = msg || 'copyMoreNodes(' + JSON.stringify(pathsToCopy) + ',' + parameters.parentId + ')';
+                msg = typeof msg === 'string' ?
+                    msg : 'copyMoreNodes(' + JSON.stringify(pathsToCopy) + ',' + parameters.parentId + ')';
 
                 if (pathsToCopy.length < 1) {
                     // empty on purpose
@@ -235,7 +239,7 @@ define([], function () {
                 }
             }
 
-            saveRoot(msg || 'moveMoreNodes(' + JSON.stringify(returnParams) + ')');
+            saveRoot(typeof msg === 'string' ? msg : 'moveMoreNodes(' + JSON.stringify(returnParams) + ')');
             return returnParams;
         }
 
@@ -293,7 +297,7 @@ define([], function () {
 
             }
 
-            msg = msg || 'createChildren(' + JSON.stringify(result) + ')';
+            msg = typeof msg === 'string' ? msg : 'createChildren(' + JSON.stringify(result) + ')';
             saveRoot(msg);
             return result;
         }
@@ -303,7 +307,7 @@ define([], function () {
 
             if (node) {
                 state.core.deleteNode(node);
-                saveRoot(msg || 'deleteNode(' + path + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'deleteNode(' + path + ')');
             }
         }
 
@@ -321,7 +325,7 @@ define([], function () {
             }
 
             if (didDelete) {
-                saveRoot(msg || 'deleteNodes(' + paths + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'deleteNodes(' + paths + ')');
             }
         }
 
@@ -355,7 +359,7 @@ define([], function () {
 
                 storeNode(newNode);
                 newID = state.core.getPath(newNode);
-                saveRoot(msg || 'createNode(' + parameters.parentId + ',' + parameters.baseId + ',' + newID + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'createNode(' + parameters.parentId + ',' + parameters.baseId + ',' + newID + ')');
             }
 
             return newID;
@@ -373,7 +377,7 @@ define([], function () {
                     state.core.setPointer(node, name, targetNode);
                 }
 
-                saveRoot(msg || 'setPointer(' + path + ',' + name + ',' + target + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'setPointer(' + path + ',' + name + ',' + target + ')');
             }
         }
 
@@ -382,7 +386,7 @@ define([], function () {
 
             if (node) {
                 state.core.delPointer(node, name);
-                saveRoot(msg || 'delPointer(' + path + ',' + name + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delPointer(' + path + ',' + name + ')');
             }
         }
 
@@ -394,7 +398,7 @@ define([], function () {
 
             if (node && memberNode) {
                 state.core.addMember(node, setId, memberNode);
-                saveRoot(msg || 'addMember(' + path + ',' + memberPath + ',' + setId + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'addMember(' + path + ',' + memberPath + ',' + setId + ')');
             }
         }
 
@@ -404,7 +408,7 @@ define([], function () {
 
             if (node) {
                 state.core.delMember(node, setId, memberPath);
-                saveRoot(msg || 'removeMember(' + path + ',' + memberPath + ',' + setId + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'removeMember(' + path + ',' + memberPath + ',' + setId + ')');
             }
         }
 
@@ -414,8 +418,8 @@ define([], function () {
 
             if (node) {
                 state.core.setMemberAttribute(node, setId, memberPath, name, value);
-                saveRoot(msg || 'setMemberAttribute(' + path + ',' + memberPath + ',' + setId + ',' + name +
-                    ',' + value + ')');
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'setMemberAttribute(' + path + ',' + memberPath + ',' + setId + ',' + name + ',' + value + ')');
             }
         }
 
@@ -425,7 +429,8 @@ define([], function () {
 
             if (node) {
                 state.core.delMemberAttribute(node, setId, memberPath, name);
-                saveRoot(msg || 'delMemberAttribute(' + path + ',' + memberPath + ',' + setId + ',' + name + ')');
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'delMemberAttribute(' + path + ',' + memberPath + ',' + setId + ',' + name + ')');
             }
         }
 
@@ -435,7 +440,8 @@ define([], function () {
 
             if (node) {
                 state.core.setMemberRegistry(node, setId, memberPath, name, value);
-                saveRoot(msg || 'setMemberRegistry(' + path + ',' + memberPath + ',' + setId + ',' + name + ',' +
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'setMemberRegistry(' + path + ',' + memberPath + ',' + setId + ',' + name + ',' +
                     JSON.stringify(value) + ')');
             }
         }
@@ -446,7 +452,8 @@ define([], function () {
 
             if (node) {
                 state.core.delMemberRegistry(node, setId, memberPath, name);
-                saveRoot(msg || 'delMemberRegistry(' + path + ',' + memberPath + ',' + setId + ',' + name + ')');
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'delMemberRegistry(' + path + ',' + memberPath + ',' + setId + ',' + name + ')');
             }
         }
 
@@ -457,7 +464,8 @@ define([], function () {
 
             if (node) {
                 state.core.setSetAttribute(node, setName, attrName, attrValue);
-                saveRoot(msg || 'setSetAttribute(' + path + ',' + setName + ',' + attrName + ',' +
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'setSetAttribute(' + path + ',' + setName + ',' + attrName + ',' +
                     JSON.stringify(attrValue) + ')');
             }
         }
@@ -467,7 +475,8 @@ define([], function () {
 
             if (node) {
                 state.core.delSetAttribute(node, setName, attrName);
-                saveRoot(msg || 'delSetAttribute(' + path + ',' + setName + ',' + attrName + ')');
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'delSetAttribute(' + path + ',' + setName + ',' + attrName + ')');
             }
         }
 
@@ -476,8 +485,8 @@ define([], function () {
 
             if (node) {
                 state.core.setSetRegistry(node, setName, regName, regValue);
-                saveRoot(msg || 'setSetRegistry(' + path + ',' + setName + ',' + regName + ',' +
-                    JSON.stringify(regValue) + ')');
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'setSetRegistry(' + path + ',' + setName + ',' + regName + ',' + JSON.stringify(regValue) + ')');
             }
         }
 
@@ -486,7 +495,8 @@ define([], function () {
 
             if (node) {
                 state.core.delSetRegistry(node, setName, regName);
-                saveRoot(msg || 'delSetRegistry(' + path + ',' + setName + ',' + regName + ')');
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'delSetRegistry(' + path + ',' + setName + ',' + regName + ')');
             }
         }
 
@@ -495,7 +505,7 @@ define([], function () {
 
             if (node) {
                 state.core.createSet(node, setId);
-                saveRoot(msg || 'createSet(' + path + ',' + setId + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'createSet(' + path + ',' + setId + ')');
             }
         }
 
@@ -510,7 +520,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'delSet(' + path + ',' + setId + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delSet(' + path + ',' + setId + ')');
             }
         }
 
@@ -526,7 +536,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'setBase(' + path + ',' + basePath + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'setBase(' + path + ',' + basePath + ')');
             }
         }
 
@@ -537,7 +547,7 @@ define([], function () {
 
             if (node && parentNode) {
                 movedPath = storeNode(state.core.moveNode(node, parentNode));
-                saveRoot(msg || 'moveNode(' + path + ',' + parentPath + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'moveNode(' + path + ',' + parentPath + ')');
             }
 
             return movedPath;
@@ -554,7 +564,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'delBase(' + path + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delBase(' + path + ')');
             }
         }
 
@@ -678,7 +688,7 @@ define([], function () {
                     }
                 }
 
-                saveRoot(msg || 'setMeta(' + path + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'setMeta(' + path + ')');
             }
         }
 
@@ -693,7 +703,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'addMixin(' + path + ',' + mixinPath + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'addMixin(' + path + ',' + mixinPath + ')');
             }
         }
 
@@ -708,7 +718,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg, 'delMixin(' + path + ',' + mixinPath + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delMixin(' + path + ',' + mixinPath + ')');
             }
         }
 
@@ -732,7 +742,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'setChildMeta(' + path + ',' + childPath + ',' +
+                saveRoot(typeof msg === 'string' ? msg : 'setChildMeta(' + path + ',' + childPath + ',' +
                     (min || -1) + ',' + (max || -1) + ')');
             }
         }
@@ -762,7 +772,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'Meta.setChildrenMeta(' + path + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'Meta.setChildrenMeta(' + path + ')');
             }
         }
 
@@ -777,7 +787,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'delChildMeta(' + path + ', ' + typeId + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delChildMeta(' + path + ', ' + typeId + ')');
             }
         }
 
@@ -792,7 +802,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'setAttributeMeta(' + path + ', ' + name + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'setAttributeMeta(' + path + ', ' + name + ')');
             }
         }
 
@@ -807,7 +817,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'delAttributeMeta(' + path + ', ' + name + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delAttributeMeta(' + path + ', ' + name + ')');
             }
         }
 
@@ -823,7 +833,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'setPointerMetaTarget(' + path + ', ' + name + ', ' + targetPath + ',' +
+                saveRoot(typeof msg === 'string' ? msg : 'setPointerMetaTarget(' + path + ', ' + name + ', ' + targetPath + ',' +
                     min || -1 + ',' + max || -1 + ')');
             }
         }
@@ -839,7 +849,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'delPointerMetaTarget(' + path + ', ' + name + ', ' + targetPath + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delPointerMetaTarget(' + path + ', ' + name + ', ' + targetPath + ')');
             }
         }
 
@@ -854,7 +864,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'delPointerMeta(' + path + ', ' + name + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delPointerMeta(' + path + ', ' + name + ')');
             }
         }
 
@@ -888,7 +898,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'setPointerMeta(' + path + ', ' + name + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'setPointerMeta(' + path + ', ' + name + ')');
             }
         }
 
@@ -904,7 +914,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'setAspectMetaTarget(' + path + ', ' + name + ',' + targetPath + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'setAspectMetaTarget(' + path + ', ' + name + ',' + targetPath + ')');
             }
         }
 
@@ -919,7 +929,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'delAspectMeta(' + path + ', ' + name + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delAspectMeta(' + path + ', ' + name + ')');
             }
         }
 
@@ -947,7 +957,8 @@ define([], function () {
                     }
                 }
 
-                saveRoot(msg || 'setAspectMetaTargets(' + path + ', ' + name + ',' + JSON.stringify(targetPaths) + ')');
+                saveRoot(typeof msg === 'string' ?
+                    msg : 'setAspectMetaTargets(' + path + ', ' + name + ',' + JSON.stringify(targetPaths) + ')');
             }
         }
 
@@ -962,7 +973,7 @@ define([], function () {
                     return;
                 }
 
-                saveRoot(msg || 'delAspectMeta(' + path + ', ' + name + ')');
+                saveRoot(typeof msg === 'string' ? msg : 'delAspectMeta(' + path + ', ' + name + ')');
             }
         }
 

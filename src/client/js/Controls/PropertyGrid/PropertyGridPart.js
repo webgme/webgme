@@ -5,10 +5,10 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
-    'js/Constants',
+define([
+    'js/Controls/PropertyGrid/PropertyGridWidgetManager',
     'css!./styles/PropertyGridPart.css'
-], function (PropertyGridWidgetManager, CONSTANTS) {
+], function (PropertyGridWidgetManager) {
 
     'use strict';
 
@@ -148,14 +148,14 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
     };
 
     PropertyGridPart.prototype.add = function (propertyDesc) {
-        var widget,
+        var self = this,
             container = $('<div/>'),
             spnName = $('<span/>', {class: 'property-name'}),
             divAction = $('<div/>', {class: 'p-reset'}),
-            li,
-            self = this,
             extraCss = {},
-            actionBtn;
+            widget,
+            actionBtn,
+            li;
 
         if (this.__widgets[propertyDesc.name] !== undefined) {
             throw new Error('You already have a widget with the name "' + propertyDesc.name + '"');
@@ -230,13 +230,17 @@ define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
 
         container.append(spnName).append(divAction).append(widget.el);
 
-        li = this._addRow(undefined, container, undefined);
+        li = this._addRow(undefined, container);
 
         li.addClass(CLASS_CONTROLLER_ROW);
         if (propertyDesc.valueType) {
             li.addClass(propertyDesc.valueType);
         } else {
             li.addClass(typeof propertyDesc.value);
+        }
+
+        if (propertyDesc.focusWidget) {
+            widget.focus();
         }
 
         return widget;

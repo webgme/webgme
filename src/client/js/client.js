@@ -639,10 +639,13 @@ define([
 
             if (!state.viewer && !state.readOnlyProject && state.nodes[ROOT_PATH]) {
                 if (state.msg) {
-                    state.msg += '\n' + msg;
+                    if (msg) {
+                        state.msg += '\n' + msg;
+                    }
                 } else {
-                    state.msg += msg;
+                    state.msg = msg;
                 }
+
                 if (!state.inTransaction) {
                     ASSERT(state.project && state.core && state.branchName);
 
@@ -1771,7 +1774,7 @@ define([
             }
             if (state.core) {
                 state.inTransaction = true;
-                msg = msg || '[';
+                msg = typeof msg === 'string' ? msg : '[';
                 saveRoot(msg);
             } else {
                 logger.error('Can not start transaction with no core available.');
