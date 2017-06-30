@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, console*/
 /*jshint browser: true*/
 /**
  * @author kecso / https://github.com/kecso
@@ -81,6 +81,8 @@ define(['js/Constants'], function (CONSTANTS) {
 
         function openLibraryOriginInNewWindow(libraryRootId, followBranch) {
             // FIXME: This does not belong here (the client knows nothing about the URL serialization..
+            console.warn('client.openLibraryOriginInNewWindow is deprecated use ' +
+                'src/client/Utils/LibraryManager.js instead.');
             var address,
                 info;
             if (!state.nodes[libraryRootId]) {

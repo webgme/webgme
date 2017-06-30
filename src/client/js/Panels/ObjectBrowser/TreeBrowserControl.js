@@ -457,14 +457,14 @@ define(['js/logger',
                         viewLibrary: {
                             name: 'View commit of library',
                             callback: function (/*key, options*/) {
-                                self._client.openLibraryOriginInNewWindow(nodeId);
+                                self._libraryManager.openLibraryOriginInNewWindow(nodeId);
                             },
                             icon: false
                         },
                         followLibrary: {
                             name: 'View branch of library',
                             callback: function (/*key, options*/) {
-                                self._client.openLibraryOriginInNewWindow(nodeId, true);
+                                self._libraryManager.openLibraryOriginInNewWindow(nodeId, true);
                             },
                             icon: false
                         }

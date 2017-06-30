@@ -66,7 +66,7 @@
 
  var userId = client.addUI(null, eventHandler);
  * @param {object} [ui] - Object with additional methods to be invoked.
- * @param {function} [ui.reLaunch] - Triggered when state
+ * @param {function} [ui.reLaunch] - Triggered when active project/branch is switched.
  * @param {function} eventHandler - Function invoked at changes for, or initial loading of, nodes within the
  * "user's" territory.
  * @param {object[]} eventHandler.events - Array of event data for affected nodes within the territory.
@@ -93,7 +93,7 @@
             children: 1 // '/a/d' and all its children are included
         },
         '/a/e': {
-            children: 3 // We can arbitrarily deep down (note in large models too big territories can be slow!)
+            children: 3 // We can go arbitrarily deep down (note in large models too big territories can be slow!)
         }
     });
  * @param {string} guid - The unique id of the added "user".
@@ -176,6 +176,143 @@
  * @param {function} callback
  */
 
+// Transactions
+/**
+ * @description Starts a transaction where all changes to nodes are bundled into a single commit. All commit-messages
+ * for each change will be joined and separated by '\n'.
+ * @function startTransaction
+ * @memberOf Client
+ * @instance
+ * @example
+ * var nodeId = 'someIdToANodeThatIsLoaded';
+ client.startTransaction('start of commitMessage');
+
+ // While transaction is open nothing will be committed to the server.
+ client.setAttributes(nodeId, 'name', 'newName', 'changes within the transaction');
+
+ client.setRegistry(nodeId, 'position', {x: 100, y:200}, 'some more changes');
+
+ // When we have made all of our changes we make a single commit.
+ client.completeTransaction('end of commitMessage', function (err, result) {
+  // Here we have the option to get notified when the commit has reached the server
+  // and been persisted in the database.
+
+  // The commit hash of the new state of our model.
+  console.log(result.hash);
+
+  // If we are working in a branch - this is the status of our commit.
+  // 'SYNCED', 'FORKED'.
+  console.log(result.status);
+});
+ * @param {string} [msg='['] - Start of commit-message.
+ */
+
+/**
+ * @description Completes any open transaction and persists the changes to server.
+ * @function completeTransaction
+ * @memberOf Client
+ * @instance
+ * @example
+ * var nodeId = 'someIdToANodeThatIsLoaded';
+ client.startTransaction('start of commitMessage');
+
+ // While transaction is open nothing will be committed to the server.
+ client.setAttributes(nodeId, 'name', 'newName', 'changes within the transaction');
+
+ client.setRegistry(nodeId, 'position', {x: 100, y:200}, 'some more changes');
+
+ // When we have made all of our changes we make a single commit.
+ client.completeTransaction('end of commitMessage', function (err, result) {
+  // Here we have the option to get notified when the commit has reached the server
+  // and been persisted in the database.
+
+  // The commit hash of the new state of our model.
+  console.log(result.hash);
+
+  // If we are working in a branch - this is the status of our commit.
+  // 'SYNCED', 'FORKED'.
+  console.log(result.status);
+});
+ * @param {string} [msg=']'] - End of commit-message.
+ * @param {function} [callback] - Optional callback that's invoked when the commit has reached the server.
+ */
+
+/**
+ * @description Trigger the client to dispatch a NOTIFICATION (in the generic UI the notification widget listens to these).
+ * @function notifyUser
+ * @memberOf Client
+ * @instance
+ * @param {object|string} [notification] - Notification to user (if string given will be set at notification.message)
+ * @param {string} notification.message - Message of notification
+ * @param {string} [notification.severity='info'] - Notification severity level ('success', 'info', 'warn', 'error')
+ */
+
+// Libraries
+/**
+ * @description Returns an array of all libraries at the current project and commit/branch.
+ * @function getLibraryNames
+ * @memberOf Client
+ * @instance
+ * @returns {string[]} - Fully qualified names of libraries (including libraries of libraries)
+ */
+
+/**
+ * @description Returns the info associated with the library in the current project and commit/branch.
+ * @function getLibraryInfo
+ * @memberOf Client
+ * @instance
+ * @param {string} libraryName - Name of library.
+ * @returns {object} - Info stored at library.
+ */
+
+
+/**
+ * @description Sends a server request to add specified library to the current project and branch.
+ * @function addLibrary
+ * @memberOf Client
+ * @param {string} name - Name of new library (cannot contain dots or exist already)
+ * @param {string|object} blobHashOrLibraryInfo - If string given will import library from blob otherwise project at info (will also be added to info at library).
+ * @param {string} blobHashOrLibraryInfo.projectId - The projectId of your library.
+ * @param {string} [blobHashOrLibraryInfo.branchName] - The branch that your library follows in the origin project.
+ * @param {string} [blobHashOrLibraryInfo.commitHash] - The commit-hash of your library.
+ * @param {function} callback - Invoked when request completed.
+ * @param {null|Error} callback.err - If request failed.
+ * @param {module:Storage~CommitResult} callback.result - Result from the commit made.
+ * @instance
+ */
+
+/**
+ * @description Sends a server request to update the specified library at the current project and branch.
+ * @function updateLibrary
+ * @memberOf Client
+ * @param {string} name - Name of library to update.
+ * @param {string|object} blobHashOrLibraryInfo - If string given will import library from blob otherwise project at info (will also be added to info at library).
+ * @param {string} blobHashOrLibraryInfo.projectId - The projectId of your library.
+ * @param {string} [blobHashOrLibraryInfo.branchName] - The branch that your library follows in the origin project.
+ * @param {string} [blobHashOrLibraryInfo.commitHash] - The commit-hash of your library.
+ * @param {function} callback - Invoked when request completed.
+ * @param {null|Error} callback.err - If request failed.
+ * @param {module:Storage~CommitResult} callback.result - Result from the commit made.
+ * @instance
+ */
+
+/**
+ * @description Remove the library from the current project and branch.
+ * @function removeLibrary
+ * @memberOf Client
+ * @instance
+ * @param {string} libraryName - Name of library to remove.
+ */
+
+/**
+ * @description Rename the library in the current project and branch.
+ * @function removeLibrary
+ * @memberOf Client
+ * @instance
+ * @param {string} oldName - Name of library to rename.
+ * @param {string} newName - New name of library.
+ */
+
 /**
  [
  __"_eventList",
@@ -204,15 +341,6 @@
  "getValidChildrenItems",
  "getOwnValidChildrenTypes",
  "getAspectTerritoryPattern",
-
- "getLibraryNames",
- "addLibrary",
- "updateLibrary",
- "removeLibrary",
- "renameLibrary",
- "getLibraryInfo",
-
- "openLibraryOriginInNewWindow",
 
  "connectToDatabase",
  "disconnectFromDatabase",
@@ -269,9 +397,7 @@
 
  "getAllMetaNodes",
  "checkMetaConsistency",
- 
- "startTransaction",
- "completeTransaction",
+
  "_removeAllUIs",
 
  "importProjectFromFile",
@@ -292,7 +418,6 @@
  "emitStateNotification",
  "dispatchConnectedUsersChanged",
  "registerUIStateGetter",
- "notifyUser",
  "gmeConfig",
  "getUserId",
  "uiStateGetter",

@@ -6,20 +6,23 @@
  */
 
 define([
+    'js/logger',
     'js/Dialogs/Confirm/ConfirmDialog',
     'js/Dialogs/AddOrUpdateLibrary/AddOrUpdateLibraryDialog',
     'common/regexp',
     'common/storage/constants'
-], function (ConfirmDialog, AddOrUpdateLibraryDialog, REGEXP, CONSTANTS) {
+], function (Logger, ConfirmDialog, AddOrUpdateLibraryDialog, REGEXP, CONSTANTS) {
     'use strict';
 
-    var LibraryManager = function (client) {
+    var LibraryManager = function (client, mainLogger) {
         this._add = new AddOrUpdateLibraryDialog(client, true);
         this._update = new AddOrUpdateLibraryDialog(client);
         this._remove = new ConfirmDialog();
         this._getName = new ConfirmDialog();
         this._doNotAskRemove = false;
         this._client = client;
+        this._logger = mainLogger ? mainLogger.fork('LibraryManager') :
+            Logger.createWithGmeConfig('Utils:LibraryManager', client.gmeConfig);
         this._libraryInfos = {};
         this._followedProjects = {};
         this._currentProjectId = null;
@@ -288,6 +291,41 @@ define([
                 }
             }
         }
+    };
+
+    LibraryManager.prototype.openLibraryOriginInNewWindow = function (libraryRootId, followBranch) {
+        var nodeObj = this._client.getNode(libraryRootId),
+            address,
+            info;
+
+        if (!nodeObj) {
+            this._logger.error('Library node is not loaded and cannot be followed [', libraryRootId, ']');
+            return;
+        }
+
+        info = this._client.getLibraryInfo(nodeObj.getFullyQualifiedName());
+
+        if (!info) {
+            this._logger.error('Library node has no available info and cannot be followed [', libraryRootId, ']');
+            return;
+        }
+
+        if (!info.projectId) {
+            this._logger.error('Library info did not a have projectId in info and cannot be followed [',
+                libraryRootId, ']');
+            return;
+        }
+
+        address = window.location.origin + '/?project=' + encodeURIComponent(info.projectId);
+
+        if (info.branchName && followBranch) {
+            address += '&branch=' + encodeURIComponent(info.branchName);
+        } else if (info.commitHash) {
+            address += '&commit=' + encodeURIComponent(info.commitHash);
+        }
+
+        window.open(address, '_blank');
+        window.focus();
     };
 
     return LibraryManager;
