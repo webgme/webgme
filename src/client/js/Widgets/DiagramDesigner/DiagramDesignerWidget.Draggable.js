@@ -27,7 +27,8 @@ define([
 
 
     DiagramDesignerWidgetDraggable.prototype._makeDraggable = function (item) {
-        var self = this;
+        var self = this,
+            delta = self._zoomRatio * self.gridSize;
 
         dragSource.makeDraggable(item.$el, {
             helper: function (event, dragInfo) {
@@ -62,7 +63,9 @@ define([
                     }
                 }
                 return ret;
-            }
+            },
+            grid: [delta, delta],
+            cursorAt: {top: delta, left: delta}
         });
     };
 
@@ -87,8 +90,8 @@ define([
                 'text-align': 'center',
                 border: '2px dashed #666',
                 'background-color': 'rgba(100, 100, 100, 0.1)',
-                'margin-top': (selectionBBox.y - mousePos.mY + dragSource.DEFAULT_CURSOR_AT.top) * this._zoomRatio,
-                'margin-left': (selectionBBox.x - mousePos.mX + dragSource.DEFAULT_CURSOR_AT.left) * this._zoomRatio
+                'margin-top': (selectionBBox.y - mousePos.mY + this.gridSize) * this._zoomRatio,
+                'margin-left': (selectionBBox.x - mousePos.mX + this.gridSize) * this._zoomRatio
             });
 
             if (dragEffects.length === 1) {

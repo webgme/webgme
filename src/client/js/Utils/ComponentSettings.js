@@ -30,7 +30,7 @@ define(['common/util/util', 'superagent'], function (UTIL, superagent) {
     /**
      * Updates the defaultSettings trying ot extract values from WebGMEGlobal.
      *
-     * @param {object} defaultSettings - hardcoded in the component.
+     * @param {object} defaultSettings - Defined in the component itself.
      * @param {string} componentID - UniqueId for component.
      */
     function resolveWithWebGMEGlobal(defaultSettings, componentId) {
@@ -48,7 +48,14 @@ define(['common/util/util', 'superagent'], function (UTIL, superagent) {
         return resolveSettings(defaultSettings, deploymentSettings, userSettings);
     }
 
-
+    /**
+     * Merges the currently stored settings for the user with the given new ones.
+     *
+     * If WebGMEGlobal is defined it will be updated to fit the new settings stored for the user.
+     *
+     * @param {string} componentID - UniqueId for component.
+     * @param {object} newSettings - Settings that will be merged with the current stored ones.
+     */
     function updateComponentSettings(componentId, newSettings, callback) {
         superagent.patch('api/user/settings/' + componentId)
             .send(newSettings)
@@ -58,10 +65,24 @@ define(['common/util/util', 'superagent'], function (UTIL, superagent) {
                     return;
                 }
 
+                if (typeof WebGMEGlobal !== 'undefined') {
+                    if (WebGMEGlobal.userInfo && WebGMEGlobal.userInfo.settings) {
+                        WebGMEGlobal.userInfo.settings[componentId] = res.body;
+                    }
+                }
+
                 callback(null, res.body);
             });
     }
 
+    /**
+     * Overwrites the currently stored settings for the user with the given new ones.
+     *
+     * If WebGMEGlobal is defined it will be updated to fit the new settings stored for the user.
+     *
+     * @param {string} componentID - UniqueId for component.
+     * @param {object} newSettings - Settings that will be merged with the current stored ones.
+     */
     function overwriteComponentSettings(componentId, newSettings, callback) {
         superagent.put('api/user/settings/' + componentId)
             .send(newSettings)
@@ -69,6 +90,12 @@ define(['common/util/util', 'superagent'], function (UTIL, superagent) {
                 if (err || res.status !== 200) {
                     callback(err || new Error('Did not return status 200: ' + res.status));
                     return;
+                }
+
+                if (typeof WebGMEGlobal !== 'undefined') {
+                    if (WebGMEGlobal.userInfo && WebGMEGlobal.userInfo.settings) {
+                        WebGMEGlobal.userInfo.settings[componentId] = res.body;
+                    }
                 }
 
                 callback(null, res.body);

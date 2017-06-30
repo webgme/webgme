@@ -18,7 +18,7 @@
 
 @import url("print.css");
 @import url("themes/dawn.css");
-@import url("../fonts/font-awesome/css/font-awesome.min.css");
+@import url("../bower_components/font-awesome/css/font-awesome.min.css");
 @import url("../fonts/webgme-icons/style.css");
 @import url("../bower_components/isis-ui-components/dist/isis-ui-components.css");
 

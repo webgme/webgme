@@ -35,6 +35,7 @@
     border-right: 15px solid white;
     color: whitesmoke; }
     .decorator-svg-dialog .svg-editor .svg-display .displayed-svg {
+      background-image: url("../../../../img/transparent.svg");
       margin: auto;
       display: block;
       position: absolute;

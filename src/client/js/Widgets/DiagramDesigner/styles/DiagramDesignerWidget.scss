@@ -42,6 +42,9 @@ $tabs-container-height: 26px;
 
   .items {
     position: absolute;
+    &.display-grid {
+      background-image: url('../../../../img/grid.svg');
+    }
 
     .designer-item,
     .designer-connection {
@@ -89,7 +92,7 @@ $tabs-container-height: 26px;
 
         &.rotate {
           &.bottom {
-            left: 50%;
+            left: calc(50% + 3px);
             margin-left: -13px;
             bottom: -13px;
           }
@@ -107,7 +110,7 @@ $tabs-container-height: 26px;
 
         &.move {
           top: -13px;
-          left: -13px;
+          left: calc(50% + 3px);
           margin-left: -13px;
         }
 
