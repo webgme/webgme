@@ -1,6 +1,3 @@
 {
-  "pluingSettings": {
-    "MyPlugin1": {
-      "save": true
-    }
+  "country": "USA"
 }

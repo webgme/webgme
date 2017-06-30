@@ -473,8 +473,8 @@ function StandAloneServer(gmeConfig) {
                     }
                 })
                 .catch(function (err) {
+                    res.clearCookie(gmeConfig.authentication.jwt.cookieId);
                     if (err.name === 'TokenExpiredError') {
-                        res.clearCookie(gmeConfig.authentication.jwt.cookieId);
                         if (res.getHeader('X-WebGME-Media-Type') || !gmeConfig.authentication.logInUrl) {
                             res.status(401);
                             next(err);
@@ -539,8 +539,9 @@ function StandAloneServer(gmeConfig) {
     }
 
     function mountUserManagementPage() {
-        var userComponent = require('webgme-user-management-page');
+        var userComponent = require(gmeConfig.authentication.userManagementPage);
         userComponent.initialize(middlewareOpts);
+        routeComponents.push(userComponent);
         __app.use('/profile', userComponent.router);
     }
 

@@ -1,9 +1,6 @@
 {
-  "_id": "webgme",
-  "projects": {},
-  "type": "Organization",
-  "admins": [
-    "pelleBlom"
-  ],
-  "info": {}
+  "info": {
+    "description": "My organization",
+    "webpage": "https://org.org"
+  }
 }

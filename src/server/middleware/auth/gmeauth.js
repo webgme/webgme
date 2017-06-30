@@ -43,7 +43,7 @@ function GMEAuth(session, gmeConfig) {
         tokenGenerator = new TokenGenerator(logger, gmeConfig, jwt),
         Authorizer = require(gmeConfig.authentication.authorizer.path),
         authorizer = new Authorizer(logger, gmeConfig),
-        // JWT Keys
+    // JWT Keys
         PUBLIC_KEY;
 
     EventDispatcher.call(this);
@@ -158,7 +158,7 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param callback
+     * @param {function} [callback]
      * @returns {*}
      */
     function connect(callback) {
@@ -207,7 +207,7 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param callback
+     * @param {function} [callback]
      * @returns {*}
      */
     function unload(callback) {
@@ -299,14 +299,34 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    function _resolveQuery(query, extraQuery) {
+        Object.keys(extraQuery || {}).forEach(function (key) {
+            if (typeof extraQuery[key] === 'undefined') {
+                delete query[key];
+            } else {
+                query[key] = extraQuery[key];
+            }
+        });
+    }
+
     /**
      *
-     * @param userId {string}
-     * @param callback
+     * @param {string} userId
+     * @param {object] [query]
+     * @param {function} [callback]
      * @returns {*}
      */
-    function getUser(userId, callback) {
-        return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}})
+    function getUser(userId, query, callback) {
+        var query_ = {_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}};
+
+        if (typeof query === 'function') {
+            callback = query;
+            query = null;
+        }
+
+        _resolveQuery(query_, query);
+
+        return collection.findOne(query_)
             .then(function (userData) {
                 if (!userData) {
                     return Q.reject(new Error('no such user [' + userId + ']'));
@@ -323,9 +343,9 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param userId {string}
-     * @param force {boolean} - removes the user from the db completely
-     * @param callback
+     * @param {string} userId
+     * @param {boolean} force - removes the user from the db completely
+     * @param {function} [callback]
      * @returns {*}
      */
     function deleteUser(userId, force, callback) {
@@ -498,13 +518,16 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param query
-     * @param callback
+     * @param {object} [query]
+     * @param {function} [callback]
      * @returns {*}
      */
     function listUsers(query, callback) {
-        // FIXME: query can paginate, or filter users
-        return collection.find({type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}})
+        var query_ = {type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}};
+
+        _resolveQuery(query_, query);
+
+        return collection.find(query_)
             .then(function (users) {
                 return Q.ninvoke(users, 'toArray');
             })
@@ -522,12 +545,12 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param userId
-     * @param email
-     * @param password
-     * @param canCreate
-     * @param options
-     * @param callback
+     * @param {string} userId
+     * @param {string} email
+     * @param {string} password
+     * @param {boolean} [canCreate=false]
+     * @param {object} options
+     * @param {function} [callback]
      * @returns {*}
      */
     function addUser(userId, email, password, canCreate, options, callback) {
@@ -565,6 +588,10 @@ function GMEAuth(session, gmeConfig) {
             }
         }
 
+        if (typeof options.disabled === 'boolean') {
+            data.disabled = options.disabled;
+        }
+
         if (rejected === false) {
             Q.ninvoke(bcrypt, 'hash', password, gmeConfig.authentication.salts)
                 .then(function (hash) {
@@ -576,8 +603,15 @@ function GMEAuth(session, gmeConfig) {
                     }
                 })
                 .then(function (res) {
-                    self.dispatchEvent(CONSTANTS.USER_CREATED, {userId: userId});
-                    deferred.resolve(res);
+                    // Do not dispatch if disabled user or existing user was overwritten.
+                    if (!data.disabled && !(options.overwrite && res.matchedCount !== 0)) {
+                        self.dispatchEvent(CONSTANTS.USER_CREATED, {userId: userId});
+                    }
+
+                    return collection.findOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}});
+                })
+                .then(function (userData) {
+                    deferred.resolve(userData);
                 })
                 .catch(function (err) {
                     if (err.code === 11000) {
@@ -591,21 +625,36 @@ function GMEAuth(session, gmeConfig) {
         return deferred.promise.nodeify(callback);
     }
 
+    function reEnableUser(userId, callback) {
+        return collection.updateOne({_id: userId, type: {$ne: CONSTANTS.ORGANIZATION}}, {
+            $set: {disabled: false}
+        })
+            .then(function (result) {
+                if (result.modifiedCount === 0) {
+                    return Q.reject(new Error('no such user [' + userId + ']'));
+                }
+
+                self.dispatchEvent(CONSTANTS.USER_ADDED, {userId: userId});
+
+                return getUser(userId);
+            })
+            .nodeify(callback);
+    }
+
     /**
      *
-     * @param orgId
-     * @param callback
+     * @param {string} orgId
+     * @param {function} [callback]
      * @returns {*}
      */
     function addOrganization(orgId, info, callback) {
         return collection.insertOne({
-                _id: orgId,
-                projects: {},
-                type: CONSTANTS.ORGANIZATION,
-                admins: [],
-                info: info || {}
-            }
-        )
+            _id: orgId,
+            projects: {},
+            type: CONSTANTS.ORGANIZATION,
+            admins: [],
+            info: info || {}
+        })
             .then(function (res) {
                 self.dispatchEvent(CONSTANTS.ORGANIZATION_CREATED, {orgId: orgId});
                 return res;
@@ -620,14 +669,67 @@ function GMEAuth(session, gmeConfig) {
             .nodeify(callback);
     }
 
+    function reEnableOrganization(orgId, callback) {
+        return collection.updateOne({_id: orgId, type: CONSTANTS.ORGANIZATION}, {
+            $set: {disabled: false}
+        })
+            .then(function (result) {
+                if (result.modifiedCount === 0) {
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
+                }
+
+                self.dispatchEvent(CONSTANTS.ORGANIZATION_CREATED, {orgId: orgId});
+
+                return getOrganization(orgId);
+            })
+            .nodeify(callback);
+    }
+
     /**
      *
-     * @param orgId
-     * @param callback
+     * @param {string} orgId
+     * @param {object] info
+     * @param {function} [callback]
      * @returns {*}
      */
-    function getOrganization(orgId, callback) {
-        return collection.findOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}})
+    function updateOrganizationInfo(orgId, info, callback) {
+
+        if (!UTIL.isTrueObject(info)) {
+            throw new Error('supplied info is not an object [' + info + ']');
+        }
+
+        return collection.updateOne({_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}},
+            {
+                $set: {info: info}
+            })
+            .then(function (res) {
+                if (res.modifiedCount === 0) {
+                    return Q.reject(new Error('no such organization [' + orgId + ']'));
+                }
+
+                return getOrganization(orgId);
+            })
+            .nodeify(callback);
+    }
+
+    /**
+     *
+     * @param {string} orgId
+     * @param {object] [query]
+     * @param {function} [callback]
+     * @returns {*}
+     */
+    function getOrganization(orgId, query, callback) {
+        var query_ = {_id: orgId, type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}};
+
+        if (typeof query === 'function') {
+            callback = query;
+            query = null;
+        }
+
+        _resolveQuery(query_, query);
+
+        return collection.findOne(query_)
             .then(function (org) {
                 if (!org) {
                     return Q.reject(new Error('no such organization [' + orgId + ']'));
@@ -649,12 +751,16 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param query
-     * @param callback
+     * @param {object} [query]
+     * @param {function} [callback]
      * @returns {*}
      */
     function listOrganizations(query, callback) {
-        return collection.find({type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}})
+        var query_ = {type: CONSTANTS.ORGANIZATION, disabled: {$ne: true}};
+
+        _resolveQuery(query_, query);
+
+        return collection.find(query_)
             .then(function (orgs) {
                 return Q.ninvoke(orgs, 'toArray');
             })
@@ -680,9 +786,9 @@ function GMEAuth(session, gmeConfig) {
 
     /**
      *
-     * @param orgId
-     * @param force - delete organization from db.
-     * @param callback
+     * @param {string} orgId
+     * @param {boolean} [force=false] - delete organization from db.
+     * @param {function} [callback]
      * @returns {*}
      */
     function removeOrganizationByOrgId(orgId, force, callback) {
@@ -717,8 +823,8 @@ function GMEAuth(session, gmeConfig) {
     /**
      *
      * @param userId
-     * @param orgId
-     * @param callback
+     * @param {string} orgId
+     * @param {function} [callback]
      * @returns {*}
      */
     function addUserToOrganization(userId, orgId, callback) {
@@ -744,7 +850,7 @@ function GMEAuth(session, gmeConfig) {
      *
      * @param userId
      * @param orgId
-     * @param callback
+     * @param {function} [callback]
      * @returns {*}
      */
     function removeUserFromOrganization(userId, orgId, callback) {
@@ -766,7 +872,7 @@ function GMEAuth(session, gmeConfig) {
      * @param {string} userId
      * @param {string} orgId
      * @param {boolean} makeAdmin
-     * @param callback
+     * @param {function} [callback]
      * @returns {*}
      */
     function setAdminForUserInOrganization(userId, orgId, makeAdmin, callback) {
@@ -825,11 +931,14 @@ function GMEAuth(session, gmeConfig) {
     this.updateUserSettings = updateUserSettings;
     this.updateUserComponentSettings = updateUserComponentSettings;
     this.deleteUser = deleteUser;
+    this.reEnableUser = reEnableUser;
 
     this.listOrganizations = listOrganizations;
     this.getOrganization = getOrganization;
     this.addOrganization = addOrganization;
+    this.updateOrganizationInfo = updateOrganizationInfo;
     this.deleteOrganization = this.removeOrganizationByOrgId = removeOrganizationByOrgId;
+    this.reEnableOrganization = reEnableOrganization;
 
     this.getAdminsInOrganization = getAdminsInOrganization;
     this.addUserToOrganization = addUserToOrganization;

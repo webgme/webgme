@@ -5,9 +5,11 @@
   "admins": [
     "pelleBlom"
   ],
-  "info": {},
+  "info": {
+    "description": "My organization",
+    "webpage": "https://org.org"
+  },
   "users": [
-    "guest",
     "pelleBlom"
   ]
 }
