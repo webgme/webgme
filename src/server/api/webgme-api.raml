@@ -39,6 +39,7 @@ resourceTypes:
       description: Collection of available <<resourcePathName>> in WebGME.
       get:
         description: Get a list of <<resourcePathName>>. <<desc>>
+        securedBy: [ basic, bearer ]
         responses:
           200:
             body:
@@ -89,12 +90,19 @@ resourceTypes:
             example: |
               <<patchBody>>
         responses:
-            204:
+            200:
             403:
             404:
       delete:
         description: Delete <<resourcePathName|!singularize>> from WebGME. <<deleteDesc>>
         securedBy: [ basic, bearer ]
+        queryParameters:
+          force:
+            displayName: force
+            type: boolean
+            description: If true and <b>user.siteAdmin</b> user will be deleted from database
+            example: true
+            required: false
         responses:
           204:
           403:
@@ -127,6 +135,7 @@ resourceTypes:
               }
 
 /componentSettings:
+  description: End points for default deployment settings.
   get:
     description: Returns all component settings defined for the deployment, see https://github.com/webgme/webgme/wiki/Component-Settings
     securedBy: [ basic, bearer ]
@@ -146,6 +155,7 @@ resourceTypes:
               example: !include webgme-api-user-settings-component-retrieve.json
 
 /user:
+  description: End points for currently connected user.
   get:
     description: Returns with the current user
     securedBy: [ basic, bearer ]
@@ -174,7 +184,7 @@ resourceTypes:
         exampleItem: !include webgme-api-user-data-retrieve.json
         putBody: !include webgme-api-user-data-retrieve.json
         patchBody: !include webgme-api-user-data-patch.json
-        getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. Consider using settings instead, which provides options for server defaults.
+        getDesc: The user data field is an arbitrary object where developers can put custom data associated with a specific user. For preferences consider using settings instead, which provides options for server defaults.
         putDesc: Overwrites the data field.
         patchDesc: Updates/overwrites the user's data with the sent values for matching keys.
         deleteDesc: Clears out the user's data field (sets it to empty dictionary). 
@@ -200,20 +210,70 @@ resourceTypes:
           deleteDesc: Clears out the settings for a specific component.
 
 /users:
-  type:
-    collection:
-      exampleCollection: !include webgme-api-users.json
-      desc: API regarding users
+  description: End points for users on deployment. PUT/PATCH/DELETE requires that authenticated user is siteAdmin.
+  get:
+    description: Collection of available users in WebGME
+    securedBy: [ basic, bearer ]
+    queryParameters:
+     includeDisabled:
+      displayName: includeDisabled
+      type: boolean
+      description: If true and <b>user.siteAdmin</b> disabled users will be included in response.
+      example: true
+      required: false
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include webgme-api-users.json
   /{username}:
-    type:
-      collection-item:
-        exampleItem: !include webgme-api-user-retrieve.json
-        putBody: !include webgme-api-user-new.json
-        patchBody: !include webgme-api-user-patch.json
-        getDesc: Anyone can get this data.
-        putDesc: Requires <b>user.siteAdmin</b>.
-        patchDesc: Requires <b>user.siteAdmin</b> if setting siteAdmin.
-        deleteDesc: Requires is current user or <b>user.siteAdmin</b>.
+    get:
+      description: Retrives the user entry.
+      securedBy: [ basic, bearer ]
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-user-retrieve.json
+        404:
+    put:
+      description: Create a new user. Requires <b>user.siteAdmin</b>.
+      securedBy: [ basic, bearer ]
+      body:
+        application/json:
+          schema: See example
+          example: !include webgme-api-user-new.json
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-user-retrieve.json
+        403:
+        404:
+    patch:
+      description: Updates the user if <b>user.siteAdmin</b> or same user. If {disabled ":" false} given and <b>user.siteAdmin</b> disabled user will be re-enabled.
+      securedBy: [ basic, bearer ]
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-user-patch.json
+        403:
+        404:
+    delete:
+      description: Deletes the user. Requires <b>user.siteAdmin</b> or same user.
+      securedBy: [ basic, bearer ]
+      queryParameters:
+          force:
+            displayName: force
+            type: boolean
+            description: If true and <b>user.siteAdmin</b> user at username will be permanently deleted from database.
+            example: true
+            required: false
+      responses:
+        204:
+        403:
+        404:
     /data:
       type:
         collection-item:
@@ -246,8 +306,17 @@ resourceTypes:
             deleteDesc: Clears out the settings for a specific component.
 
 /orgs:
+  description: End points for organizations on deployment. PUT/PATCH/DELETE requires that authenticated user is siteAdmin or admin in organization.
   get:
     description: Collection of available organizations in WebGME
+    securedBy: [ basic, bearer ]
+    queryParameters:
+     includeDisabled:
+      displayName: includeDisabled
+      type: boolean
+      description: If true and <b>user.siteAdmin</b> disabled organizations will be included in response.
+      example: true
+      required: false
     responses:
       200:
         body:
@@ -266,6 +335,20 @@ resourceTypes:
     put:
       description: Create a new organization. Requires <b>user.canCreate</b> or <b>user.siteAdmin</b>.
       securedBy: [ basic, bearer ]
+      body:
+        application/json:
+          schema: See example
+          example: !include webgme-api-org-new.json
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include webgme-api-org-retrieve.json
+        403:
+        404:
+    patch:
+      description: Updates the organization info if given which requires admin in organization or <b>user.siteAdmin</b>. If {disabled ":" false} given and <b>user.siteAdmin</b> disabled organization will be re-enabled.
+      securedBy: [ basic, bearer ]
       responses:
         200:
           body:
@@ -276,6 +359,13 @@ resourceTypes:
     delete:
       description: Delete an organization. Requires admin in organization or <b>user.siteAdmin</b>.
       securedBy: [ basic, bearer ]
+      queryParameters:
+          force:
+            displayName: force
+            type: boolean
+            description: If true and <b>user.siteAdmin</b> the organization will be permanently deleted from database.
+            example: true
+            required: false
       responses:
         204:
         403:

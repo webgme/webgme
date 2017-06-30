@@ -1,11 +1,5 @@
 {
-  "pluingSettings": {
-    "MyPlugin1": {
-      "enable": true,
-      "save": false
-    },
-    "MyPlugin2": {
-      "outputName": "afile.ext"
-    }
-  }
+  "country": "USA",
+  "organization": "Org",
+  "name": "Joe Smith"
 }
