@@ -44,6 +44,9 @@ describe('ORGANIZATION REST API', function () {
                         gmeAuth.addOrganization('orgToRemoveUser', null),
                         gmeAuth.addOrganization('orgToDelete', null),
                         gmeAuth.addOrganization('orgToDelete2', null),
+                        gmeAuth.addOrganization('orgDisabledAtStart', {some: 'info'}),
+                        gmeAuth.addOrganization('orgDisabledForceDelete'),
+                        gmeAuth.addOrganization('orgPatchInfo', {start: 'info'}),
                     ]);
                 })
                 .then(function () {
@@ -53,7 +56,10 @@ describe('ORGANIZATION REST API', function () {
                         gmeAuth.addUserToOrganization('userAdminOrg2', 'orgToDelete2'),
                         gmeAuth.setAdminForUserInOrganization('userAdminOrg', 'orgInit', true),
                         gmeAuth.setAdminForUserInOrganization('userAdminOrg2', 'orgToDelete2', true),
-                        gmeAuth.setAdminForUserInOrganization('userAdminOrg', 'orgToRemoveAdmin', true)
+                        gmeAuth.setAdminForUserInOrganization('userAdminOrg', 'orgToRemoveAdmin', true),
+                        gmeAuth.deleteOrganization('orgDisabledAtStart'),
+                        gmeAuth.deleteOrganization('orgDisabledForceDelete'),
+                        gmeAuth.setAdminForUserInOrganization('userAdminOrg', 'orgPatchInfo', true)
                     ]);
                 })
                 .nodeify(done);
@@ -92,6 +98,58 @@ describe('ORGANIZATION REST API', function () {
 
                     done();
                 });
+            });
+
+            it('should get disabled orgs too if /api/v1/orgs?includeDisabled=true for site-admin', function (done) {
+                var dOrgs,
+                    orgs;
+
+                function report(err) {
+                    if (err) {
+                        done(err);
+                    } else if (dOrgs && orgs) {
+                        var hadWhenShouldHave = false,
+                            hadWhenShouldNotHave = false;
+
+                        try {
+                            expect(dOrgs.length > orgs.length).to.equal(true);
+
+                            dOrgs.forEach(function (uData) {
+                                if (uData.disabled) {
+                                    hadWhenShouldHave = true;
+                                }
+                            });
+
+                            orgs.forEach(function (uData) {
+                                if (uData.disabled) {
+                                    hadWhenShouldNotHave = true;
+                                }
+                            });
+
+                            expect(hadWhenShouldHave).to.equal(true);
+                            expect(hadWhenShouldNotHave).to.equal(false);
+
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }
+                }
+
+                agent.get(server.getUrl() + '/api/v1/orgs')
+                    .query({includeDisabled: true})
+                    .end(function (err, res) {
+                        orgs = res.body;
+                        report(err);
+                    });
+
+                agent.get(server.getUrl() + '/api/v1/orgs')
+                    .query({includeDisabled: true})
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        dOrgs = res.body;
+                        report(err);
+                    });
             });
 
             it('should get specific organization /api/v1/orgs/orgInit', function (done) {
@@ -146,7 +204,7 @@ describe('ORGANIZATION REST API', function () {
 
                             agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
                                 .set('Authorization', 'Basic ' + new Buffer('userCanCreate:plaintext')
-                                    .toString('base64'))
+                                        .toString('base64'))
                                 .send(newOrg)
                                 .end(function (err, res2) {
                                     expect(res2.status).equal(200, err);
@@ -206,7 +264,7 @@ describe('ORGANIZATION REST API', function () {
 
                             agent.put(server.getUrl() + '/api/v1/orgs/' + orgId)
                                 .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext')
-                                    .toString('base64'))
+                                        .toString('base64'))
                                 .send(newOrg)
                                 .end(function (err, res2) {
                                     expect(res2.status).equal(403, err);
@@ -241,6 +299,158 @@ describe('ORGANIZATION REST API', function () {
                 }
             );
 
+            // patch organization
+            it('should 200 when patching org with info as org-admin PATCH /api/v1/orgs/orgInit', function (done) {
+                var orgId = 'orgPatchInfo',
+                    newInfo = {
+                        info: {
+                            new: 'info'
+                        }
+                    };
+
+                agent.patch(server.getUrl() + '/api/v1/orgs/' + orgId)
+                    .send(newInfo)
+                    .set('Authorization', 'Basic ' + new Buffer('userAdminOrg:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        try {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.info.new).to.deep.equal('info');
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    });
+            });
+
+            it('should 200 when patching org with info as site-admin PATCH /api/v1/orgs/orgInit', function (done) {
+                var orgId = 'orgPatchInfo',
+                    newInfo = {
+                        info: {
+                            new: 'info2'
+                        }
+                    };
+
+                agent.patch(server.getUrl() + '/api/v1/orgs/' + orgId)
+                    .send(newInfo)
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        try {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.info.new).to.deep.equal('info2');
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    });
+            });
+
+            it('should 403 when patching org with info as non-admin PATCH /api/v1/orgs/orgInit', function (done) {
+                var orgId = 'orgPatchInfo',
+                    newInfo = {
+                        info: {
+                            new: 'info3'
+                        }
+                    };
+
+                agent.patch(server.getUrl() + '/api/v1/orgs/' + orgId)
+                    .send(newInfo)
+                    .set('Authorization', 'Basic ' + new Buffer('userCanCreate:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        try {
+                            expect(res.status).equal(403, err);
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    });
+            });
+
+            it('should 403 when patching {disabled: false} org with on-site-admin PATCH /api/v1/orgs/orgInit',
+                function (done) {
+                    var orgId = 'orgPatchInfo',
+                        newData = {
+                            disabled: false
+                        };
+
+                    agent.patch(server.getUrl() + '/api/v1/orgs/' + orgId)
+                        .send(newData)
+                        .set('Authorization', 'Basic ' + new Buffer('userAdminOrg:plaintext').toString('base64'))
+                        .end(function (err, res) {
+                            try {
+                                expect(res.status).equal(403, err);
+                                done();
+                            } catch (e) {
+                                done(e);
+                            }
+                        });
+                }
+            );
+
+            it('should 400 when patching {disabled: false} org as site-admin PATCH /api/v1/orgs/orgInit',
+                function (done) {
+                    var orgId = 'orgDoesNotExist',
+                        newData = {
+                            disabled: false
+                        };
+
+                    agent.patch(server.getUrl() + '/api/v1/orgs/' + orgId)
+                        .send(newData)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res) {
+                            try {
+                                expect(res.status).equal(400, err);
+                                done();
+                            } catch (e) {
+                                done(e);
+                            }
+                        });
+                }
+            );
+
+            it('should 403 when patching {disabled: false} org as non-site-admin PATCH /api/v1/orgs/orgInit',
+                function (done) {
+                    var orgId = 'orgDoesNotExist',
+                        newData = {
+                            disabled: false
+                        };
+
+                    agent.patch(server.getUrl() + '/api/v1/orgs/' + orgId)
+                        .send(newData)
+                        .set('Authorization', 'Basic ' + new Buffer('userAdminOrg:plaintext').toString('base64'))
+                        .end(function (err, res) {
+                            try {
+                                expect(res.status).equal(403, err);
+                                done();
+                            } catch (e) {
+                                done(e);
+                            }
+                        });
+                }
+            );
+
+            it('should reEnable org when patching {disabled: false} org as site-admin PATCH /api/v1/orgs/orgInit',
+                function (done) {
+                    var orgId = 'orgDisabledAtStart',
+                        newData = {
+                            disabled: false
+                        };
+
+                    agent.patch(server.getUrl() + '/api/v1/orgs/' + orgId)
+                        .send(newData)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res) {
+                            try {
+                                expect(res.status).to.equal(200, err);
+                                expect(res.body._id).to.equal(orgId);
+                                expect(res.body.info).to.deep.equal({some: 'info'});
+                                done();
+                            } catch (e) {
+                                done(e);
+                            }
+                        });
+                }
+            );
+
             // delete organization
             it('should delete organization as site admin DELETE /api/v1/orgs/orgToDelete', function (done) {
                 var orgName = 'orgToDelete';
@@ -269,8 +479,7 @@ describe('ORGANIZATION REST API', function () {
                         expect(res.status).equal(200, err); // org should exist at this point
 
                         agent.del(server.getUrl() + '/api/v1/orgs/' + orgName)
-                            .set('Authorization', 'Basic ' + new Buffer('userAdminOrg2:plaintext')
-                                .toString('base64'))
+                            .set('Authorization', 'Basic ' + new Buffer('userAdminOrg2:plaintext').toString('base64'))
                             .end(function (err, res2) {
                                 expect(res2.status).equal(204, err);
 
@@ -283,6 +492,68 @@ describe('ORGANIZATION REST API', function () {
                     });
             });
 
+            it('should force delete org site-admin DELETE /api/v1/orgs/orgToDelete2?force=true', function (done) {
+                var orgName = 'orgDisabledForceDelete';
+
+                    agent.del(server.getUrl() + '/api/v1/orgs/' + orgName)
+                        .query({force: true})
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res2) {
+                            try {
+                                expect(res2.status).equal(204, err);
+                            } catch (e) {
+                                done(e);
+                                return;
+                            }
+                            gmeAuth.getOrganization(orgName, {disabled: undefined})
+                                .then(function() {
+                                    throw new Error('Should have failed!');
+                                })
+                                .catch(function (err) {
+                                    expect(err.message).to.include('no such organization');
+                                })
+                                .nodeify(done);
+                        });
+            });
+
+            it('should 204 force delete non existing org site-admin DELETE /api/v1/orgs/orgToDelete2?force=true',
+                function (done) {
+                    var orgName = 'doesNotExist';
+
+                    agent.del(server.getUrl() + '/api/v1/orgs/' + orgName)
+                        .query({force: true})
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res2) {
+                            try {
+                                expect(res2.status).equal(204, err);
+                                done();
+                            } catch (e) {
+                                done(e);
+                                return;
+                            }
+                        });
+                }
+            );
+
+            it('should 403 force delete org when only org-admin DELETE /api/v1/orgs/orgToDelete2?force=true',
+                function (done) {
+                    var orgName = 'orgInit';
+
+                    agent.del(server.getUrl() + '/api/v1/orgs/' + orgName)
+                        .query({force: true})
+                        .set('Authorization', 'Basic ' + new Buffer('userAdminOrg:plaintext').toString('base64'))
+                        .end(function (err, res2) {
+                            try {
+                                expect(res2.status).equal(403, err);
+                                done();
+                            } catch (e) {
+                                done(e);
+                                return;
+                            }
+                        });
+                }
+            );
+
             it('should 403 when delete organization when not site nor org admin DELETE /api/v1/orgs/orgInit',
                 function (done) {
                     var orgName = 'orgInit';
@@ -292,7 +563,7 @@ describe('ORGANIZATION REST API', function () {
 
                             agent.del(server.getUrl() + '/api/v1/orgs/' + orgName)
                                 .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext')
-                                    .toString('base64'))
+                                        .toString('base64'))
                                 .end(function (err, res2) {
                                     expect(res2.status).equal(403, err);
 
@@ -314,8 +585,7 @@ describe('ORGANIZATION REST API', function () {
                             expect(res.status).equal(404, err); // org should not exist at this point
 
                             agent.del(server.getUrl() + '/api/v1/orgs/' + orgName)
-                                .set('Authorization', 'Basic ' + new Buffer('admin:admin')
-                                    .toString('base64'))
+                                .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                 .end(function (err, res2) {
                                     expect(res2.status).equal(404, err);
                                     done();
@@ -410,7 +680,7 @@ describe('ORGANIZATION REST API', function () {
 
                             agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/users/' + userId)
                                 .set('Authorization', 'Basic ' + new Buffer('userCanNotCreate:plaintext')
-                                    .toString('base64'))
+                                        .toString('base64'))
                                 .end(function (err, res2) {
                                     expect(res2.status).equal(403, err);
 
@@ -432,7 +702,7 @@ describe('ORGANIZATION REST API', function () {
 
                     agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/users/' + userId)
                         .set('Authorization', 'Basic ' + new Buffer('admin:admin')
-                            .toString('base64'))
+                                .toString('base64'))
                         .end(function (err, res2) {
                             expect(res2.status).equal(404, err);
                             done();
@@ -447,7 +717,7 @@ describe('ORGANIZATION REST API', function () {
 
                     agent.del(server.getUrl() + '/api/v1/orgs/' + orgId + '/users/' + userId)
                         .set('Authorization', 'Basic ' + new Buffer('admin:admin')
-                            .toString('base64'))
+                                .toString('base64'))
                         .end(function (err, res2) {
                             expect(res2.status).equal(204, err);
                             done();

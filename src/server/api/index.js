@@ -887,7 +887,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                         }
                     });
             } else {
-                return ensureOrgOrSiteAdmin(req)
+                return ensureOrgOrSiteAdmin(req, res)
                     .then(function () {
                         return gmeAuth.updateOrganizationInfo(req.params.orgId, req.body.info);
                     });
