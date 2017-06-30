@@ -1722,29 +1722,32 @@ define(['js/logger',
                 memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey) || [];
             }
 
-            i = memberListSetsRegistry.length;
-            while (i--) {
-                if (memberListSetsRegistry[i].SetID === setID) {
-                    memberListSetsRegistry.splice(i, 1);
-                    break;
+            if(memberListSetsRegistry !== undefined && memberListSetsRegistryKey !== undefined){
+                i = memberListSetsRegistry.length;
+                while (i--) {
+                    if (memberListSetsRegistry[i].SetID === setID) {
+                        memberListSetsRegistry.splice(i, 1);
+                        break;
+                    }
                 }
+
+                //order remaining and reset order number
+                memberListSetsRegistry.sort(function (a, b) {
+                    if (a.order < b.order) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                });
+
+                i = memberListSetsRegistry.length;
+                while (i--) {
+                    memberListSetsRegistry[i].order = i;
+                }
+
+                this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
             }
 
-            //order remaining and reset order number
-            memberListSetsRegistry.sort(function (a, b) {
-                if (a.order < b.order) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            });
-
-            i = memberListSetsRegistry.length;
-            while (i--) {
-                memberListSetsRegistry[i].order = i;
-            }
-
-            this._client.setRegistry(memberListContainerID, memberListSetsRegistryKey, memberListSetsRegistry);
             //finally delete the sheet's SET
             this._client.deleteSet(memberListContainerID, setID);
 
