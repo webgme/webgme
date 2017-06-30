@@ -86,7 +86,8 @@ var path = require('path'),
                 DSN: '',
                 // see https://docs.sentry.io/clients/javascript/config/
                 ravenOptions: null // defaults to {release: <webgme-version>}
-            }
+            },
+            allowUserDefinedSVG: true
         },
 
         core: {
