@@ -351,11 +351,15 @@ resourceTypes:
     patch:
       description: Updates the organization info if given which requires admin in organization or <b>user.siteAdmin</b>. If {disabled ":" false} given and <b>user.siteAdmin</b> disabled organization will be re-enabled.
       securedBy: [ basic, bearer ]
+      body:
+        application/json:
+          schema: See example
+          example: !include webgme-api-org-new.json
       responses:
         200:
           body:
             application/json:
-              example: !include webgme-api-org-new.json
+              example: !include webgme-api-org-retrieve.json
         403:
         404:
     delete:
