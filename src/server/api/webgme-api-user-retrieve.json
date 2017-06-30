@@ -1,6 +1,6 @@
 {
   "_id":"demo",
-  "email":"demo@mail.com",
+  "email": "a@example.com",
   "canCreate":true,
   "projects":{
     "guest+aaaaaa":{
@@ -17,6 +17,6 @@
   "orgs":[
     "ATeam"
   ],
-  "siteAdmin":false,
+  "siteAdmin":true,
   "data": {}
 }

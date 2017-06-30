@@ -1,5 +1,6 @@
 {
   "password": "demo",
   "email": "a@example.com",
-  "canCreate": true
+  "canCreate": true,
+  "siteAdmin": true
 }

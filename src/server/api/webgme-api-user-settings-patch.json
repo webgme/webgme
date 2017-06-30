@@ -1,6 +1,6 @@
 {
   "Plugin_ConfigurationArtifact__0_1_0": {
-      "carnivore":true
+      "carnivore":false
   },
   "ICorePanel":{
     "consoleWindow":{

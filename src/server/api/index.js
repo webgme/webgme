@@ -1476,8 +1476,8 @@ function createAPI(app, mountPath, middlewareOpts) {
             };
 
         safeStorage.setBranchHash(data)
-            .then(function (res) {
-                res.json(res);
+            .then(function () {
+                res.sendStatus(200);
             })
             .catch(function (err) {
                 next(err);
@@ -1690,7 +1690,7 @@ function createAPI(app, mountPath, middlewareOpts) {
                 return safeStorage.createTag(data);
             })
             .then(function () {
-                res.sendStatus(204);
+                res.sendStatus(200);
             })
             .catch(function (err) {
                 next(err);
