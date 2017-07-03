@@ -587,7 +587,7 @@ define([
         var self = this;
         this._displayGrid = !this._displayGrid;
 
-        this.skinParts.$itemsContainer.toggleClass('display-grid');
+        this.skinParts.$itemsContainer.toggleClass('gme-display-grid');
 
         if (updateSettings) {
             ComponentSettings.updateComponentSettings(DiagramDesignerWidget.getComponentId(), {
