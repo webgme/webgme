@@ -148,6 +148,7 @@ function validateConfig(configOrFileName) {
     assertBoolean('config.client.errorReporting.enable', config.client.errorReporting.enable);
     assertString('config.client.errorReporting.DSN', config.client.errorReporting.DSN);
     assertObject('config.client.errorReporting.ravenOptions', config.client.errorReporting.ravenOptions, true);
+    assertBoolean('config.client.allowUserDefinedSVG', config.client.allowUserDefinedSVG);
 
     // core
     expectedKeys.push('core');

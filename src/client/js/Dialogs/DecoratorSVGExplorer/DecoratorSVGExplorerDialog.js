@@ -125,7 +125,6 @@ define([
                     testResult,
                     svg;
 
-
                 if (svgText.indexOf('<svg') >= 0 && svgText.indexOf('</svg>') > 0) {
                     testResult = WebGMEGlobal.SvgManager.testSvgTemplate(svgText, self._clientNode);
                     try {
@@ -171,7 +170,6 @@ define([
                 }
 
                 var filename = $(event.currentTarget).data('filename');
-
 
                 self._filter('$@$impossible$@$');
                 self._editor.show();
@@ -264,6 +262,10 @@ define([
             btnEdit.data('filename', svgPath);
             btnEdit.on('click', editBtnFn);
 
+            if (WebGMEGlobal.gmeConfig.client.allowUserDefinedSVG !== true) {
+                btnEdit.disable(true);
+            }
+
             btnEdit.addClass('glyphicon-pencil');
             btnEdit.addClass('btn-primary');
 
@@ -287,7 +289,6 @@ define([
                         btnEdit.disable(true);
                     }
                 }
-
 
                 divImg.find('.desc').text('-- CURRENT --');
                 divImg.find('.desc').attr('title', '-- CURRENT --');

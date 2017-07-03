@@ -24,7 +24,7 @@ define([
     function isSvg(text) {
         var result = false;
 
-        if (DecoratorSVGIconList.indexOf(text) > -1) {
+        if (DecoratorSVGIconList.indexOf(text) > -1 || WebGMEGlobal.gmeConfig.client.allowUserDefinedSVG !== true) {
             return false;
         }
 
@@ -203,6 +203,10 @@ define([
      */
     function testSvgTemplate(templateString, clientNodeObj) {
         var svgContent;
+
+        if (WebGMEGlobal.gmeConfig.client.allowUserDefinedSVG !== true) {
+            return new Error('Not allowed to run or test unsafe script templates.');
+        }
 
         try {
             svgContent = ejs.render(templateString, clientNodeObj);
