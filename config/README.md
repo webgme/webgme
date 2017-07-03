@@ -123,7 +123,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Url like endpoint for raven-js e.g. 'https://****@sentry.io/999999'.
 - `config.client.errorReporting.ravenOptions = null`
  - Options passed to the [raven-client](https://docs.sentry.io/clients/javascript/config/), if not specified {release: <webgmeversion>} will be passed.
-- `config.client.allowUserDefinedSVG = true'
+- `config.client.allowUserDefinedSVG = true`
  - Set to false to disabled injection of user-defined svgs into the DOM. 
 
 ##### core
