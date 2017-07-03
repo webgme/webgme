@@ -407,7 +407,7 @@ define([
             var i;
             for (i in state.users) {
                 if (state.users.hasOwnProperty(i)) {
-                    if (state.users[i].UI.reLaunch) {
+                    if (typeof state.users[i].UI.reLaunch === 'function') {
                         state.users[i].UI.reLaunch();
                     }
                 }

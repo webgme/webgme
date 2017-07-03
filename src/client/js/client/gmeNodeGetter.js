@@ -421,8 +421,8 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.core.isMetaNode(this._state.nodes[this._id].node);
     };
 
-    GMENode.prototype.isTypeOf = function (typePath) {
-        var typeNode = _getNode(this._state.nodes, typePath);
+    GMENode.prototype.isTypeOf = function (typeId) {
+        var typeNode = _getNode(this._state.nodes, typeId);
 
         if (typeNode) {
             return this._state.core.isTypeOf(this._state.nodes[this._id].node, typeNode);
@@ -431,8 +431,8 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         }
     };
 
-    GMENode.prototype.isInstanceOf = function (basePath) {
-        var baseNode = _getNode(this._state.nodes, basePath);
+    GMENode.prototype.isInstanceOf = function (baseId) {
+        var baseNode = _getNode(this._state.nodes, baseId);
 
         if (baseNode) {
             return this._state.core.isInstanceOf(this._state.nodes[this._id].node, baseNode);

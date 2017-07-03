@@ -207,24 +207,6 @@
  */
 
 /**
- * @description Returns information about the given pointer of the node.
- * @function getPointer
- * @memberOf GMENode
- * @instance
- *
- * @param {string} name - The name of the pointer.
- *
- * @return {object} Returns a special object with fields 'to' and 'from'. The value of 'to' is a string that
- * is the path of the target node. The 'from' is always an empty array.
- *
- * @example
- * {
- *  to: '/a/3',
- *  from:[]
- * }
- */
-
-/**
  * @description Returns the path of the target node of the given pointer.
  * @function getPointerId
  * @memberOf GMENode
@@ -234,24 +216,6 @@
  *
  * @return {string|null|undefined} The path of the target node. If the response is null, then the pointer
  * is defined but has no target, if undefined, it is not defined.
- */
-
-/**
- * @description Returns information about the pointer specifically set for the node.
- * @function getOwnPointer
- * @memberOf GMENode
- * @instance
- *
- * @param {string} name - The name of the pointer.
- *
- * @return {object} Returns a special object with fields 'to' and 'from'. The value of 'to' is a string that
- * is the path of the target node. The 'from' is always an empty array.
- *
- * @example
- * {
- *  to: '/a/3',
- *  from:[]
- * }
  */
 
 /**
@@ -326,13 +290,61 @@
 /**
  * @description Returns the definition object of an attribute from the META rules of the node.
  * @function getAttributeMeta
- * @memberOf Core
+ * @memberOf GMENode
  * @instance
  *
  * @param {string} name - the name of the attribute.
  *
  * @return {object} The function returns the definition object, where type is always defined. For examples
  * see the similar [Core]{@link Core#getAttributeMeta} definition.
+ */
+
+/**
+ * @description Returns the id of meta-node of the node in question, that is the first base node that is part of the meta.
+ * (Aliased getBaseTypeId).
+ * @function getMetaTypeId
+ * @memberOf GMENode
+ * @instance
+ *
+ * @return {string} Returns the id of the first node (including itself) among the inheritance chain
+ * that is a META node. It returns null if it does not find such node (ideally the only node with this result
+ * is the ROOT).
+ */
+
+/**
+ * @description Returns the id of the meta-node of the node in question, that is the first base node that is part of the meta.
+ * (Aliased getMetaTypeId).
+ * @function getBaseTypeId
+ * @memberOf GMENode
+ * @instance
+ *
+ * @return {string|null} Returns the id of the first node (including itself) among the inheritance chain
+ * that is a META node. It returns null if it does not find such node (ideally the only node with this result
+ * is the ROOT).
+ */
+
+/**
+ * @description Checks if the given node in any way inherits type-node. In addition to checking if the node
+ * "isInstanceOf" of type-node, this methods also takes mixins into account.
+ * @function isTypeOf
+ * @memberOf GMENode
+ * @instance
+ * @param {string} typeId - Id to the type node we want to check.
+ *
+ *
+ * @return {bool} The function returns true if the type-node is a base node, or a mixin of any of the
+ * base nodes, of the node. Every node is considered to be a type of itself.
+ */
+
+/**
+ * @description Checks if the node is an instance of the node at base Id.
+ * @function isInstanceOf
+ * @memberOf GMENode
+ * @instance
+ * @param {string} baseId - Id to the base node we want to check.
+ *
+ * @return {bool} Returns true if the base is on the inheritance chain of node. A node is considered to be an 
+ * instance of itself here.
  */
 // expect(typeof node.getRegistryNames).to.equal('function');
 // expect(typeof node.getOwnRegistryNames).to.equal('function');
@@ -370,9 +382,7 @@
 // expect(typeof node.getCrosscutsInfo).to.equal('function');
 // expect(typeof node.getValidChildrenTypesDetailed).to.equal('function');
 // expect(typeof node.getValidSetMemberTypesDetailed).to.equal('function');
-// expect(typeof node.getMetaTypeId).to.equal('function');
 // expect(typeof node.isMetaNode).to.equal('function');
-// expect(typeof node.isTypeOf).to.equal('function');
 // expect(typeof node.isValidChildOf).to.equal('function');
 // expect(typeof node.getValidChildrenIds).to.equal('function');
 // expect(typeof node.isValidTargetOf).to.equal('function');
