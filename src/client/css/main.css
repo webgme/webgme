@@ -27,6 +27,14 @@
     background-image: url('../img/webgme-icon.png');
 }
 
+.gme-transparent {
+    background-image: url('../img/transparent.svg');
+}
+
+.gme-display-grid {
+    background-image: url('../img/grid.svg');
+}
+
 html,body {
     margin: 0;
     padding: 0;

@@ -130,7 +130,7 @@ define([
                     try {
                         if (testResult === null) {
                             svg = WebGMEGlobal.SvgManager.getRawSvgContent(svgText, self._clientNode, true);
-                            svg.addClass('displayed-svg');
+                            svg.addClass('displayed-svg gme-transparent');
 
                             self._editor.find('.svg-display').empty().append(svg);
                         } else {
