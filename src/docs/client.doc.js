@@ -306,7 +306,7 @@
 
 /**
  * @description Rename the library in the current project and branch.
- * @function removeLibrary
+ * @function renameLibrary
  * @memberOf Client
  * @instance
  * @param {string} oldName - Name of library to rename.
