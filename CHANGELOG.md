@@ -1,5 +1,38 @@
 # Change Log
 
+## [v2.15.0](https://github.com/webgme/webgme/tree/v2.15.0) (2017-07-03)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.14.1...v2.15.0)
+
+**Implemented enhancements:**
+
+- Fix discrepancies in API docs. [\#1447](https://github.com/webgme/webgme/issues/1447)
+- Listing users and organization should require authentication [\#1442](https://github.com/webgme/webgme/issues/1442)
+- Allow site-admins to view and edit disabled users/orgs [\#1441](https://github.com/webgme/webgme/issues/1441)
+- Syncing model overwrites changes that have not been committed [\#1434](https://github.com/webgme/webgme/issues/1434)
+- show/hide grid feature on editor [\#1415](https://github.com/webgme/webgme/issues/1415)
+- Point to ^0.3.0 release of user-management-page [\#1450](https://github.com/webgme/webgme/pull/1450) ([pmeijer](https://github.com/pmeijer))
+- Improved client source documentation [\#1449](https://github.com/webgme/webgme/pull/1449) ([pmeijer](https://github.com/pmeijer))
+- Option to disabled the use of user-defined/dynamic SVGs [\#1448](https://github.com/webgme/webgme/pull/1448) ([kecso](https://github.com/kecso))
+- GME Auth enhancements [\#1445](https://github.com/webgme/webgme/pull/1445) ([pmeijer](https://github.com/pmeijer))
+- Loosen restriction on crosscut members to be valid children. [\#1440](https://github.com/webgme/webgme/pull/1440) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1434 by storing pending change and apply after update. [\#1437](https://github.com/webgme/webgme/pull/1437) ([pmeijer](https://github.com/pmeijer))
+- Enable specification of default webhooks via gmeConfig [\#1436](https://github.com/webgme/webgme/pull/1436) ([pmeijer](https://github.com/pmeijer))
+- Display active node name in bread-crumb rather than the ... [\#1431](https://github.com/webgme/webgme/pull/1431) ([pmeijer](https://github.com/pmeijer))
+- Make sure aliased core methods show up correctly in docs. [\#1429](https://github.com/webgme/webgme/pull/1429) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1415 Add optional grid for diagram designers [\#1428](https://github.com/webgme/webgme/pull/1428) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Deleting invalid set throws exception [\#1443](https://github.com/webgme/webgme/issues/1443)
+- Deleted nodes do not trigger an update event for set owners where they were members [\#1438](https://github.com/webgme/webgme/issues/1438)
+- Fixes \#1443 Deleting invalid set throws exception [\#1446](https://github.com/webgme/webgme/pull/1446) ([kecso](https://github.com/kecso))
+- Closes \#1438 captures the missing update on deletion of set members [\#1439](https://github.com/webgme/webgme/pull/1439) ([pmeijer](https://github.com/pmeijer))
+- Fixes updating of port-svgs in ModelDecorator resolves with wrong uri. [\#1430](https://github.com/webgme/webgme/pull/1430) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Mounted user profile page should be configurable [\#1444](https://github.com/webgme/webgme/issues/1444)
+
 ## [v2.14.1](https://github.com/webgme/webgme/tree/v2.14.1) (2017-06-13)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.14.0...v2.14.1)
 
@@ -63,6 +96,7 @@
 **Implemented enhancements:**
 
 - Crosscut inheritance is not working as it should [\#1266](https://github.com/webgme/webgme/issues/1266)
+- Expose project export on REST API [\#1381](https://github.com/webgme/webgme/issues/1381)
 - Notifications panel doesn't have a maximum width, so it can display outside the bounds of the window and can't be deleted. [\#1375](https://github.com/webgme/webgme/issues/1375)
 - Small feature request: Add un-filled composition arrow head [\#1368](https://github.com/webgme/webgme/issues/1368)
 - core.loadRoot should check the provided hash and returned data object. [\#1306](https://github.com/webgme/webgme/issues/1306)
@@ -90,10 +124,6 @@
 - For basic routing fix bug in connection-point selection and improve selection for loops [\#1394](https://github.com/webgme/webgme/pull/1394) ([pmeijer](https://github.com/pmeijer))
 - Closes \#1379 exception in plugin dialog when saving settings [\#1380](https://github.com/webgme/webgme/pull/1380) ([pmeijer](https://github.com/pmeijer))
 - Crosscut fixes [\#1378](https://github.com/webgme/webgme/pull/1378) ([kecso](https://github.com/kecso))
-
-**Closed issues:**
-
-- Expose project export on REST API [\#1381](https://github.com/webgme/webgme/issues/1381)
 
 **Merged pull requests:**
 
