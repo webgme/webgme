@@ -59,6 +59,10 @@ describe('GME authentication', function () {
             .nodeify(done);
     });
 
+    beforeEach(function () {
+        auth.clearAllEvents();
+    });
+
     after(function (done) {
         auth.unload()
             .nodeify(done);
@@ -1886,6 +1890,31 @@ describe('GME authentication', function () {
                     callDone();
                 }, 100);
             })
+            .catch(done);
+    });
+
+    it('re-enabling disabled user should dispatch USER_CREATED', function (done) {
+        var userId = 'reEnableUserShouldDispatchEvent',
+            cnt = 2;
+
+        function callDone() {
+            cnt -= 1;
+            if (cnt === 0) {
+                done();
+            }
+        }
+
+        function handler() {
+            auth.removeEventListener(auth.CONSTANTS.USER_CREATED, handler);
+            callDone();
+        }
+
+        auth.addUser(userId, '@', 'p', true, {overwrite: true, disabled: true})
+            .then(function () {
+                auth.addEventListener(auth.CONSTANTS.USER_CREATED, handler);
+                return auth.reEnableUser(userId);
+            })
+            .then(callDone)
             .catch(done);
     });
 

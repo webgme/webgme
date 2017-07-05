@@ -634,7 +634,7 @@ function GMEAuth(session, gmeConfig) {
                     return Q.reject(new Error('no such user [' + userId + ']'));
                 }
 
-                self.dispatchEvent(CONSTANTS.USER_ADDED, {userId: userId});
+                self.dispatchEvent(CONSTANTS.USER_CREATED, {userId: userId});
 
                 return getUser(userId);
             })
