@@ -1905,7 +1905,6 @@ describe('GME authentication', function () {
         }
 
         function handler() {
-            console.log('Hello');
             auth.removeEventListener(auth.CONSTANTS.USER_CREATED, handler);
             callDone();
         }
