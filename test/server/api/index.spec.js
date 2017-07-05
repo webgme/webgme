@@ -91,13 +91,15 @@ describe('ORGANIZATION REST API', function () {
                 agent = superagent.agent();
             });
 
-            it('should get all organizations /api/v1/orgs', function (done) {
-                agent.get(server.getUrl() + '/api/v1/orgs').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    expect(res.body.length).to.be.above(3);
+            it('should get all organizations /api/v1/orgs if siteAdmin', function (done) {
+                agent.get(server.getUrl() + '/api/v1/orgs')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body.length).to.be.above(3);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it('should get disabled orgs too if /api/v1/orgs?includeDisabled=true for site-admin', function (done) {
@@ -602,6 +604,7 @@ describe('ORGANIZATION REST API', function () {
                         expect(res2.status).equal(204, err);
 
                         agent.get(server.getUrl() + '/api/v1/users/userAddedToOrg')
+                            .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                             .end(function (err, res) {
                                 expect(res.status).equal(200, err);
                                 expect(res.body.orgs).to.deep.equal(['orgInit']);
@@ -649,6 +652,7 @@ describe('ORGANIZATION REST API', function () {
                     var orgId = 'orgToRemoveUser',
                         userId = 'userRemovedFromOrg';
                     agent.get(server.getUrl() + '/api/v1/users/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
                             expect(res.body.orgs).to.deep.equal([orgId]);
@@ -659,6 +663,7 @@ describe('ORGANIZATION REST API', function () {
                                     expect(res2.status).equal(204, err);
 
                                     agent.get(server.getUrl() + '/api/v1/users/' + userId)
+                                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err);
                                             expect(res.body.orgs).to.deep.equal([]);
@@ -674,6 +679,7 @@ describe('ORGANIZATION REST API', function () {
                     var orgId = 'orgInit',
                         userId = 'userAdminOrg';
                     agent.get(server.getUrl() + '/api/v1/users/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
                             expect(res.body.orgs).to.deep.equal([orgId]);
@@ -685,6 +691,7 @@ describe('ORGANIZATION REST API', function () {
                                     expect(res2.status).equal(403, err);
 
                                     agent.get(server.getUrl() + '/api/v1/users/' + userId)
+                                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err);
                                             expect(res.body.orgs).to.deep.equal([orgId]);

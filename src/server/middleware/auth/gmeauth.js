@@ -519,15 +519,21 @@ function GMEAuth(session, gmeConfig) {
     /**
      *
      * @param {object} [query]
+     * @param {object} [projection]
      * @param {function} [callback]
      * @returns {*}
      */
-    function listUsers(query, callback) {
+    function listUsers(query, projection, callback) {
         var query_ = {type: {$ne: CONSTANTS.ORGANIZATION}, disabled: {$ne: true}};
 
         _resolveQuery(query_, query);
 
-        return collection.find(query_)
+        if (typeof projection === 'function') {
+            callback = projection;
+            projection = undefined;
+        }
+
+        return collection.find(query_, projection)
             .then(function (users) {
                 return Q.ninvoke(users, 'toArray');
             })

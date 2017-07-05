@@ -239,6 +239,63 @@ function createAPI(app, mountPath, middlewareOpts) {
         return deferred.promise.nodeify(callback);
     }
 
+    function filterUsersOrOrgs(userData, projects, usersOrOrgs) {
+        var result = [],
+            readableProjects = {},
+            filteredData,
+            i;
+
+        function getFilteredDatadata(data) {
+            var filteredProjects = {};
+            data = usersOrOrgs[i];
+
+            if (userData._id === data) {
+                return userData;
+            } else if (userData.siteAdmin === true) {
+                return data;
+            } else {
+                if (data.type === 'Organization') {
+                    if (userData._id === gmeConfig.authentication.guestAccount &&
+                        data.users.indexOf(userData._id) === -1) {
+                        // The guest can only view organization where he/she is a member.
+                        return;
+                    }
+                } else {
+                    // Clear out user-data.
+                    data.settings = {};
+                    data.data = {};
+                    data.email = '';
+                    data.siteAdmin = false;
+                    data.canCreate = false;
+                }
+
+                // We only return project info for projects the requesting user has access to.
+                Object.keys(data.projects).forEach(function (projectId) {
+                    if (readableProjects[projectId]) {
+                        filteredProjects[projectId] = data.projects[projectId];
+                    }
+                });
+
+                data.projects = filteredProjects;
+
+                return data;
+            }
+        }
+
+        projects.forEach(function (pData) {
+            readableProjects[pData._id] = true;
+        });
+
+        for (i = 0; i < usersOrOrgs.length; i += 1) {
+            filteredData = getFilteredDatadata(usersOrOrgs[i]);
+            if (filteredData) {
+                result.push(filteredData);
+            }
+        }
+
+        return result;
+    }
+
     // AUTHENTICATED
     router.get('/user', ensureAuthenticated, function (req, res, next) {
         getOrAddUser(req, res)
@@ -447,33 +504,40 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.get('/users', ensureAuthenticated, function (req, res, next) {
-        var deferred = Q.defer(),
-            userId = getUserId(req),
-            query;
+        var userId = getUserId(req),
+            userData,
+            query,
+            projection;
 
-        if (req.query.includeDisabled) {
-            gmeAuth.getUser(userId)
-                .then(function (userData) {
-                    if (userData.siteAdmin) {
-                        query = {disabled: undefined};
-                    }
+        gmeAuth.getUser(userId)
+            .then(function (userData_) {
+                var doGetProjects = userId !== gmeConfig.authentication.guestAccount && !userData_.siteAdmin;
+                userData = userData_;
 
-                    deferred.resolve();
-                })
-                .catch(deferred.reject);
-        } else {
-            deferred.resolve();
-        }
+                if (req.query.includeDisabled && userData.siteAdmin) {
+                    query = {disabled: undefined};
+                }
 
-        deferred.promise
-            .then(function () {
-                return gmeAuth.listUsers(query);
+                if (userId === gmeConfig.authentication.guestAccount) {
+                    query = {_id: userId};
+                } else if (!userData.siteAdmin) {
+                    projection = {
+                        data: 0,
+                        settings: 0,
+                        email: 0,
+                        password: 0
+                    };
+                }
+
+                return Q.all([
+                    doGetProjects ? safeStorage.getProjects({username: userId}) : Q.resolve([]),
+                    gmeAuth.listUsers(query, projection)
+                ]);
             })
-            .then(function (data) {
-                res.json(data);
+            .then(function (results) {
+                res.json(filterUsersOrOrgs(userData, results[0], results[1]));
             })
             .catch(next);
-
     });
 
     router.put('/users', function (req, res, next) {
@@ -486,20 +550,36 @@ function createAPI(app, mountPath, middlewareOpts) {
         putUser(req.body, req, res, next);
     });
 
-    router.get('/users/:username', ensureAuthenticated, function (req, res) {
+    router.get('/users/:username', ensureAuthenticated, function (req, res, next) {
+        var userId = getUserId(req);
 
-        gmeAuth.getUser(req.params.username, function (err, data) {
-            if (err || !data) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
+        gmeAuth.getUser(userId)
+            .then(function (userData) {
+                if (userId === req.params.username) {
+                    return Q.resolve(userData);
+                } else if (userId === gmeConfig.authentication.guestAccount) {
+                    res.status(404);
+                    return Q.reject(new Error('no such user'));
+                } else {
+                    return Q.all([
+                        userData.siteAdmin ? [] : safeStorage.getProjects({username: userId}),
+                        gmeAuth.getUser(req.params.username)
+                    ])
+                        .then(function (results) {
+                            return filterUsersOrOrgs(userData, results[0], [results[1]])[0];
+                        });
+                }
+            })
+            .then(function (data) {
+                res.json(data);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [' + req.params.username) === 0) {
+                    res.status(404);
+                }
 
-            res.json(data);
-        });
+                next(err);
+            });
     });
 
     router.put('/users/:username', function (req, res, next) {
@@ -525,9 +605,10 @@ function createAPI(app, mountPath, middlewareOpts) {
         //"data": {}
         ensureSameUserOrSiteAdmin(req, res)
             .then(function (userData) {
-                if (req.body.hasOwnProperty('siteAdmin') && userData.siteAdmin !== true) {
+                if (userData.siteAdmin !== true &&
+                    (req.body.hasOwnProperty('siteAdmin') && req.body.hasOwnProperty('canCreate'))) {
                     res.status(403);
-                    throw new Error('setting siteAdmin property requires site admin role');
+                    throw new Error('setting siteAdmin and/or canCreate property requires site admin role');
                 }
 
                 if (req.body.hasOwnProperty('disabled') && req.body.disabled === false) {
@@ -572,20 +653,21 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/users/:username/data', ensureAuthenticated, function (req, res) {
-        // TODO: Should data be hidden from other (non-siteAdmin) users?
-        gmeAuth.getUser(req.params.username, function (err, userData) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
+    router.get('/users/:username/data', ensureAuthenticated, function (req, res, next) {
+        ensureSameUserOrSiteAdmin(req, res)
+            .then(function () {
+                return gmeAuth.getUser(req.params.username);
+            })
+            .then(function (userData) {
+                res.json(userData.data);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [' + req.params.username) === 0) {
+                    res.status(404);
+                }
 
-            res.json(userData.data);
-        });
+                next(err);
+            });
     });
 
     router.put('/users/:username/data', function (req, res, next) {
@@ -639,20 +721,21 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/users/:username/settings', ensureAuthenticated, function (req, res) {
-        // TODO: Should settings be hidden from other (non-siteAdmin) users?
-        gmeAuth.getUser(req.params.username, function (err, userData) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
+    router.get('/users/:username/settings', ensureAuthenticated, function (req, res, next) {
+        ensureSameUserOrSiteAdmin(req, res)
+            .then(function () {
+                return gmeAuth.getUser(req.params.username);
+            })
+            .then(function (userData) {
+                res.json(userData.settings);
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [' + req.params.username) === 0) {
+                    res.status(404);
+                }
 
-            res.json(userData.settings || {});
-        });
+                next(err);
+            });
     });
 
     router.put('/users/:username/settings', function (req, res, next) {
@@ -706,20 +789,21 @@ function createAPI(app, mountPath, middlewareOpts) {
             });
     });
 
-    router.get('/users/:username/settings/:componentId', ensureAuthenticated, function (req, res) {
-        // TODO: Should settings be hidden from other (non-siteAdmin) users?
-        gmeAuth.getUser(req.params.username, function (err, userData) {
-            if (err) {
-                res.status(404);
-                res.json({
-                    message: 'Requested resource was not found',
-                    error: err
-                });
-                return;
-            }
+    router.get('/users/:username/settings/:componentId', ensureAuthenticated, function (req, res, next) {
+        ensureSameUserOrSiteAdmin(req, res)
+            .then(function () {
+                return gmeAuth.getUser(req.params.username);
+            })
+            .then(function (userData) {
+                res.json(userData.settings[req.params.componentId] || {});
+            })
+            .catch(function (err) {
+                if (err.message.indexOf('no such user [' + req.params.username) === 0) {
+                    res.status(404);
+                }
 
-            res.json(userData.settings[req.params.componentId] || {});
-        });
+                next(err);
+            });
     });
 
     router.put('/users/:username/settings/:componentId', function (req, res, next) {
@@ -794,30 +878,24 @@ function createAPI(app, mountPath, middlewareOpts) {
     }
 
     router.get('/orgs', ensureAuthenticated, function (req, res, next) {
-        var deferred = Q.defer(),
-            userId = getUserId(req),
+        var userId = getUserId(req),
+            userData,
             query;
 
-        if (req.query.includeDisabled) {
-            gmeAuth.getUser(userId)
-                .then(function (userData) {
-                    if (userData.siteAdmin) {
-                        query = {disabled: undefined};
-                    }
+        gmeAuth.getUser(userId)
+            .then(function (userData_) {
+                userData= userData_;
+                if (req.query.includeDisabled && userData.siteAdmin) {
+                    query = {disabled: undefined};
+                }
 
-                    deferred.resolve();
-                })
-                .catch(deferred.reject);
-        } else {
-            deferred.resolve();
-        }
-
-        deferred.promise
-            .then(function () {
-                return gmeAuth.listOrganizations(query);
+                return Q.all([
+                    safeStorage.getProjects({username: userId}),
+                    gmeAuth.listOrganizations(query)
+                ]);
             })
-            .then(function (data) {
-                res.json(data);
+            .then(function (results) {
+                res.json(filterUsersOrOrgs(userData, results[0], results[1]));
             })
             .catch(next);
     });

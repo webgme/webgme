@@ -636,7 +636,7 @@ describe('USER REST API', function () {
             });
 
             // AUTH METHODS
-            it('should get all users /api/v1/users if authenticated', function (done) {
+            it('should get all users /api/v1/users if authenticated and admin', function (done) {
                 agent.get(server.getUrl() + '/api/v1/users')
                     .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
