@@ -91,13 +91,15 @@ describe('ORGANIZATION REST API', function () {
                 agent = superagent.agent();
             });
 
-            it('should get all organizations /api/v1/orgs', function (done) {
-                agent.get(server.getUrl() + '/api/v1/orgs').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    expect(res.body.length).to.be.above(3);
+            it('should get all organizations /api/v1/orgs if siteAdmin', function (done) {
+                agent.get(server.getUrl() + '/api/v1/orgs')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body.length).to.be.above(3);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it('should get disabled orgs too if /api/v1/orgs?includeDisabled=true for site-admin', function (done) {
@@ -153,12 +155,14 @@ describe('ORGANIZATION REST API', function () {
             });
 
             it('should get specific organization /api/v1/orgs/orgInit', function (done) {
-                agent.get(server.getUrl() + '/api/v1/orgs/orgInit').end(function (err, res) {
-                    expect(res.status).equal(200, err);
-                    expect(res.body.admins).to.deep.equal(['userAdminOrg']);
+                agent.get(server.getUrl() + '/api/v1/orgs/orgInit')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body.admins).to.deep.equal(['userAdminOrg']);
 
-                    done();
-                });
+                        done();
+                    });
             });
 
             it('should create a new organization as admin with valid data PUT /api/v1/orgs/newOrg', function (done) {
@@ -284,6 +288,7 @@ describe('ORGANIZATION REST API', function () {
                         };
 
                     agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
 
@@ -455,6 +460,7 @@ describe('ORGANIZATION REST API', function () {
             it('should delete organization as site admin DELETE /api/v1/orgs/orgToDelete', function (done) {
                 var orgName = 'orgToDelete';
                 agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(200, err); // org should exist at this point
 
@@ -464,6 +470,7 @@ describe('ORGANIZATION REST API', function () {
                                 expect(res2.status).equal(204, err);
 
                                 agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                     .end(function (err, res) {
                                         expect(res.status).equal(404, err); // org should not exist at this point
                                         done();
@@ -475,6 +482,7 @@ describe('ORGANIZATION REST API', function () {
             it('should delete organization as org admin DELETE /api/v1/orgs/orgToDelete2', function (done) {
                 var orgName = 'orgToDelete2';
                 agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
                         expect(res.status).equal(200, err); // org should exist at this point
 
@@ -484,6 +492,7 @@ describe('ORGANIZATION REST API', function () {
                                 expect(res2.status).equal(204, err);
 
                                 agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                     .end(function (err, res) {
                                         expect(res.status).equal(404, err); // org should not exist at this point
                                         done();
@@ -558,6 +567,7 @@ describe('ORGANIZATION REST API', function () {
                 function (done) {
                     var orgName = 'orgInit';
                     agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                         .end(function (err, res) {
                             expect(res.status).equal(200, err); // org should exist at this point
 
@@ -568,6 +578,7 @@ describe('ORGANIZATION REST API', function () {
                                     expect(res2.status).equal(403, err);
 
                                     agent.get(server.getUrl() + '/api/v1/orgs/' + orgName)
+                                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err); // org should still exist at this point
                                             done();
@@ -602,6 +613,7 @@ describe('ORGANIZATION REST API', function () {
                         expect(res2.status).equal(204, err);
 
                         agent.get(server.getUrl() + '/api/v1/users/userAddedToOrg')
+                            .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                             .end(function (err, res) {
                                 expect(res.status).equal(200, err);
                                 expect(res.body.orgs).to.deep.equal(['orgInit']);
@@ -649,6 +661,7 @@ describe('ORGANIZATION REST API', function () {
                     var orgId = 'orgToRemoveUser',
                         userId = 'userRemovedFromOrg';
                     agent.get(server.getUrl() + '/api/v1/users/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
                             expect(res.body.orgs).to.deep.equal([orgId]);
@@ -659,6 +672,7 @@ describe('ORGANIZATION REST API', function () {
                                     expect(res2.status).equal(204, err);
 
                                     agent.get(server.getUrl() + '/api/v1/users/' + userId)
+                                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err);
                                             expect(res.body.orgs).to.deep.equal([]);
@@ -674,6 +688,7 @@ describe('ORGANIZATION REST API', function () {
                     var orgId = 'orgInit',
                         userId = 'userAdminOrg';
                     agent.get(server.getUrl() + '/api/v1/users/' + userId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
                             expect(res.body.orgs).to.deep.equal([orgId]);
@@ -685,6 +700,7 @@ describe('ORGANIZATION REST API', function () {
                                     expect(res2.status).equal(403, err);
 
                                     agent.get(server.getUrl() + '/api/v1/users/' + userId)
+                                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err);
                                             expect(res.body.orgs).to.deep.equal([orgId]);
@@ -736,6 +752,7 @@ describe('ORGANIZATION REST API', function () {
                             expect(res2.status).equal(204, err);
 
                             agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
+                                .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                 .end(function (err, res) {
                                     expect(res.status).equal(200, err);
                                     expect(res.body.admins).to.deep.equal([userId]);
@@ -789,6 +806,7 @@ describe('ORGANIZATION REST API', function () {
                     var orgId = 'orgToRemoveAdmin',
                         userId = 'userAdminOrg';
                     agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
                             expect(res.body.admins).to.deep.equal([userId]);
@@ -799,6 +817,7 @@ describe('ORGANIZATION REST API', function () {
                                     expect(res2.status).equal(204, err);
 
                                     agent.get(server.getUrl() + '/api/v1/orgs/' + orgId)
+                                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                                         .end(function (err, res) {
                                             expect(res.status).equal(200, err);
                                             expect(res.body.admins).to.deep.equal([]);

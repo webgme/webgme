@@ -32,16 +32,18 @@ describe('USER REST API', function () {
                 .then(function (gmeAuth_) {
                     gmeAuth = gmeAuth_;
                     return Q.allDone([
-                        gmeAuth.addUser('guest', 'guest@example.com', 'guest', true, {overwrite: true}),
+                        gmeAuth.addUser('guest', 'guest@example.com', 'guest', true, {overwrite: true, data: {d: 1}}),
                         gmeAuth.addUser('admin', 'admin@example.com', 'admin', true, {
                             overwrite: true,
                             siteAdmin: true
                         }),
                         gmeAuth.addUser('user', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                        gmeAuth.addUser('user2', 'user2@example.com', 'plaintext', true, {overwrite: true, data: {d: 1}}),
                         gmeAuth.addUser('user_to_delete', 'user@example.com', 'plaintext', true, {overwrite: true}),
                         gmeAuth.addUser('self_delete_1', 'user@example.com', 'plaintext', true, {overwrite: true}),
                         gmeAuth.addUser('self_delete_2', 'user@example.com', 'plaintext', true, {overwrite: true}),
-                        gmeAuth.addUser('user_to_modify', 'user@example.com', 'plaintext', true, {overwrite: true}),
+                        gmeAuth.addUser('user_to_modify', 'user@example.com', 'plaintext', true,
+                            {overwrite: true, data: {d: 1}}),
                         gmeAuth.addUser('user_without_create', 'user@example.com', 'plaintext', false, {overwrite: true}),
                         gmeAuth.addUser('user_w_data', 'e@mail.com', 'plaintext', false, {overwrite: true}),
                         gmeAuth.addUser('user_w_data1', 'e@mail.com', 'plaintext', false, {
@@ -328,15 +330,6 @@ describe('USER REST API', function () {
                     });
             });
 
-            it('should GET /api/v1/users/admin', function (done) {
-                agent.get(server.getUrl() + '/api/v1/users/admin')
-                    .end(function (err, res) {
-                        expect(res.status).equal(200, err);
-
-                        done();
-                    });
-            });
-
             it('should return with the same information GET /api/v1/user and /api/v1/users/guest', function (done) {
                 agent.get(server.getUrl() + '/api/v1/user')
                     .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
@@ -394,7 +387,6 @@ describe('USER REST API', function () {
             it('should fail to grant site admin access with no site admin roles PATCH /api/v1/user', function (done) {
                 var updates = {
                     email: 'new_email_address',
-                    canCreate: false,
                     siteAdmin: true
                 };
 
@@ -403,8 +395,31 @@ describe('USER REST API', function () {
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body.email).not.equal(updates.email);
+                        expect(res.body.siteAdmin).not.equal(updates.siteAdmin);
+
+                        agent.patch(server.getUrl() + '/api/v1/user')
+                            .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                            .send(updates)
+                            .end(function (err, res2) {
+                                expect(res2.status).equal(403, err);
+
+                                done();
+                            });
+                    });
+            });
+
+            it('should fail to set canCreate access with no site admin roles PATCH /api/v1/user', function (done) {
+                var updates = {
+                    email: 'new_email_address',
+                    canCreate: false
+                };
+
+                agent.get(server.getUrl() + '/api/v1/user')
+                    .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body.email).not.equal(updates.email);
                         expect(res.body.canCreate).not.equal(updates.canCreate);
-                        expect(res.body.siteAdmin).not.equal(true);
 
                         agent.patch(server.getUrl() + '/api/v1/user')
                             .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
@@ -421,7 +436,6 @@ describe('USER REST API', function () {
                 function (done) {
                     var updates = {
                         email: 'new_email_address',
-                        canCreate: false,
                         siteAdmin: true
                     };
 
@@ -430,8 +444,32 @@ describe('USER REST API', function () {
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
                             expect(res.body.email).not.equal(updates.email);
-                            expect(res.body.canCreate).not.equal(updates.canCreate);
                             expect(res.body.siteAdmin).not.equal(true);
+
+                            agent.patch(server.getUrl() + '/api/v1/users/guest')
+                                .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                                .send(updates)
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(403, err);
+
+                                    done();
+                                });
+                        });
+                });
+
+            it('should fail to set canCreate access acc with no site admin roles PATCH /api/v1/users/guest',
+                function (done) {
+                    var updates = {
+                        email: 'new_email_address',
+                        canCreate: false
+                    };
+
+                    agent.get(server.getUrl() + '/api/v1/user')
+                        .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.email).not.equal(updates.email);
+                            expect(res.body.canCreate).not.equal(updates.canCreate);
 
                             agent.patch(server.getUrl() + '/api/v1/users/guest')
                                 .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
@@ -501,51 +539,6 @@ describe('USER REST API', function () {
                                     expect(res2.status).equal(403, err);
 
                                     done();
-                                });
-                        });
-                });
-
-            it('should fail to delete a specified user if not authenticated DELETE /api/v1/users/admin',
-                function (done) {
-                    agent.get(server.getUrl() + '/api/v1/users/admin')
-                        .end(function (err, res) {
-                            expect(res.status).equal(200, err);
-                            agent.del(server.getUrl() + '/api/v1/users/admin')
-                                .end(function (err, res2) {
-                                    expect(res2.status).equal(403, err);
-
-                                    agent.get(server.getUrl() + '/api/v1/users/admin')
-                                        .end(function (err, res2) {
-                                            expect(res.status).equal(200, err);
-
-                                            // make sure we did not lose any users
-                                            expect(res.body).deep.equal(res2.body);
-
-                                            done();
-                                        });
-                                });
-                        });
-                });
-
-            it('should fail to delete a specified user if acting user is not a site admin DELETE /api/v1/users/guest',
-                function (done) {
-                    agent.get(server.getUrl() + '/api/v1/users/user')
-                        .end(function (err, res) {
-                            expect(res.status).equal(200, err);
-                            agent.del(server.getUrl() + '/api/v1/users/user')
-                                //.set('Authorization', 'Basic ' + new Buffer('user:plaintext').toString('base64'))
-                                .end(function (err, res2) {
-                                    expect(res2.status).equal(403, err);
-
-                                    agent.get(server.getUrl() + '/api/v1/users/user')
-                                        .end(function (err, res2) {
-                                            expect(res.status).equal(200, err);
-
-                                            // make sure we did not lose any users
-                                            expect(res.body).deep.equal(res2.body);
-
-                                            done();
-                                        });
                                 });
                         });
                 });
@@ -636,7 +629,7 @@ describe('USER REST API', function () {
             });
 
             // AUTH METHODS
-            it('should get all users /api/v1/users if authenticated', function (done) {
+            it('should get all users /api/v1/users if authenticated and admin', function (done) {
                 agent.get(server.getUrl() + '/api/v1/users')
                     .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
                     .end(function (err, res) {
@@ -847,8 +840,7 @@ describe('USER REST API', function () {
 
             it('should update self user with valid data PATCH /api/v1/user', function (done) {
                 var updates = {
-                    email: 'new_email_address',
-                    canCreate: false
+                    email: 'new_email_address'
                 };
 
                 agent.get(server.getUrl() + '/api/v1/user')
@@ -856,7 +848,6 @@ describe('USER REST API', function () {
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body.email).not.equal(updates.email);
-                        expect(res.body.canCreate).not.equal(updates.canCreate);
 
                         agent.patch(server.getUrl() + '/api/v1/user')
                             .set('Authorization', 'Basic ' + new Buffer('user:plaintext').toString('base64'))
@@ -869,7 +860,6 @@ describe('USER REST API', function () {
 
                                 // we have changed just these fields
                                 expect(res2.body.email).equal(updates.email);
-                                expect(res2.body.canCreate).equal(updates.canCreate);
                                 done();
                             });
                     });
@@ -1172,6 +1162,110 @@ describe('USER REST API', function () {
                 });
             });
 
+            // AUTH
+            it('should get users and filter depending on user-type /api/v1/users', function (done) {
+                var numberOfUsers;
+
+                agent.get(server.getUrl() + '/api/v1/users').end(function (err, res) {
+                    expect(res.status).equal(200, err);
+                    // Guest can only see him/herself.
+                    try {
+                        expect(res.body.length).to.equal(1);
+                        expect(res.body[0]._id).to.equal('guest');
+                    } catch (e) {
+                        return done(e);
+                    }
+
+                    agent.get(server.getUrl() + '/api/v1/users')
+                        .set('Authorization', 'Basic ' + new Buffer('user2:plaintext').toString('base64'))
+                        .end(function (err, res) {
+                            // Regular user can only see details about him/herself.
+                            try {
+                                numberOfUsers = res.body.length;
+                                expect(numberOfUsers > 1).to.equal(true);
+                                res.body.forEach(function (uData) {
+                                    if (uData._id !== 'user2') {
+                                        expect(uData.email.length).to.equal(0);
+                                        expect(Object.keys(uData.data).length).to.equal(0);
+                                    } else {
+                                        expect(uData.email.length > 1).to.equal(true);
+                                    }
+                                });
+                            } catch (e) {
+                                return done(e);
+                            }
+
+                            agent.get(server.getUrl() + '/api/v1/users')
+                                .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                                .end(function (err, res) {
+                                    // Admin can see all details about everyone.
+                                    var gotData = false;
+                                    try {
+                                        expect(res.body.length).to.equal(numberOfUsers);
+                                        res.body.forEach(function (uData) {
+                                            expect(uData.email.length > 1).to.equal(true);
+                                            if (uData._id !== 'admin' && Object.keys(uData.data).length > 0) {
+                                                gotData = true;
+                                            }
+                                        });
+
+                                        expect(gotData).to.equal(true);
+                                    } catch (e) {
+                                        return done(e);
+                                    }
+
+                                    done();
+                                });
+                    });
+                });
+            });
+
+            it('should 404 GET /api/v1/users/user if guest', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/user')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+
+                        done();
+                    });
+            });
+
+            it('should GET /api/v1/users/user if non guest user but filter out email and projects', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/user')
+                    .set('Authorization', 'Basic ' + new Buffer('user2:plaintext').toString('base64'))
+                    .end(function (err, res) {
+                        try {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.email.length).to.equal(0);
+                            expect(Object.keys(res.body.projects).length).to.equal(0);
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    });
+            });
+
+            it('should GET /api/v1/users/user if admin and contain email', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/user')
+                    .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(Object.keys(res.body.projects).length).to.equal(1);
+                        expect(res.body.email.length > 1).to.equal(true);
+
+                        done();
+                    });
+            });
+
+            it('should GET /api/v1/users/guest if same user', function (done) {
+                agent.get(server.getUrl() + '/api/v1/users/guest')
+                    .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+
+                        done();
+                    });
+            });
+
             it('should get all users /api/v1/users', function (done) {
                 agent.get(server.getUrl() + '/api/v1/users')
                     .end(function (err, res) {
@@ -1182,6 +1276,55 @@ describe('USER REST API', function () {
                         done();
                     });
             });
+
+            it('should fail to delete a specified user if not authenticated DELETE /api/v1/users/admin',
+                function (done) {
+                    agent.get(server.getUrl() + '/api/v1/users/admin')
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            agent.del(server.getUrl() + '/api/v1/users/admin')
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(403, err);
+
+                                    agent.get(server.getUrl() + '/api/v1/users/admin')
+                                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                                        .end(function (err, res2) {
+                                            expect(res.status).equal(200, err);
+
+                                            // make sure we did not lose any users
+                                            expect(res.body).deep.equal(res2.body);
+
+                                            done();
+                                        });
+                                });
+                        });
+                });
+
+            it('should fail to delete a specified user if acting user is not a site admin DELETE /api/v1/users/guest',
+                function (done) {
+                    agent.get(server.getUrl() + '/api/v1/users/user')
+                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            agent.del(server.getUrl() + '/api/v1/users/user')
+                            //.set('Authorization', 'Basic ' + new Buffer('user:plaintext').toString('base64'))
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(403, err);
+
+                                    agent.get(server.getUrl() + '/api/v1/users/user')
+                                        .set('Authorization', 'Basic ' + new Buffer('admin:admin').toString('base64'))
+                                        .end(function (err, res2) {
+                                            expect(res.status).equal(200, err);
+
+                                            // make sure we did not lose any users
+                                            expect(res.body).deep.equal(res2.body);
+
+                                            done();
+                                        });
+                                });
+                        });
+                });
 
             it('should get disabled user too if /api/v1/users?includeDisabled=true for site-admin', function (done) {
                 var dUsers,
@@ -2187,6 +2330,8 @@ describe('USER REST API', function () {
                 });
             });
 
+
+            // AUTH METHODS
             it('should get all users /api/v1/users', function (done) {
                 agent.get(server.getUrl() + '/api/v1/users').end(function (err, res) {
                     expect(res.status).equal(200, err);
@@ -2197,7 +2342,6 @@ describe('USER REST API', function () {
                 });
             });
 
-            // AUTH METHODS
             it('should return with guest user account and 200 GET /api/v1/user', function (done) {
                 agent.get(server.getUrl() + '/api/v1/user').end(function (err, res) {
                     expect(res.status).equal(200, err);

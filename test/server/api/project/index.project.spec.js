@@ -93,16 +93,58 @@ describe('PROJECT REST API', function () {
                                 }
                             ),
                             gmeAuth.addOrganization('org', null),
+                            gmeAuth.addOrganization('orgProjects', null),
                             gmeAuth.addUser('userSiteAdmin', 'user@example.com', 'p', true, {
                                 overwrite: true,
                                 siteAdmin: true
+                            }),
+                            gmeAuth.addUser('user1', 'user@example.com', 'p', true, {
+                                overwrite: true,
+                            }),
+                            gmeAuth.addUser('user2', 'user@example.com', 'p', true, {
+                                overwrite: true,
                             })
                         ]);
                     })
                     .then(function () {
                         return Q.allDone([
                             gmeAuth.addUserToOrganization(guestAccount, 'org'),
-                            gmeAuth.setAdminForUserInOrganization(guestAccount, 'org', true)
+                            gmeAuth.setAdminForUserInOrganization(guestAccount, 'org', true),
+                            gmeAuth.authorizeByUserId('user1', projectName2Id(projectName),
+                                'create', {
+                                    read: true,
+                                    write: false,
+                                    delete: false
+                                }
+                            ),
+                            gmeAuth.authorizeByUserId('user1', projectName2Id(shardedProjectName),
+                                'create', {
+                                    read: true,
+                                    write: false,
+                                    delete: false
+                                }
+                            ),
+                            gmeAuth.authorizeByUserId('user2', projectName2Id(projectName),
+                                'create', {
+                                    read: true,
+                                    write: false,
+                                    delete: false
+                                }
+                            ),
+                            gmeAuth.authorizeByUserOrOrgId('orgProjects', projectName2Id(projectName),
+                                'create', {
+                                    read: true,
+                                    write: false,
+                                    delete: false
+                                }
+                            ),
+                            gmeAuth.authorizeByUserOrOrgId('orgProjects', projectName2Id(shardedProjectName),
+                                'create', {
+                                    read: true,
+                                    write: false,
+                                    delete: false
+                                }
+                            ),
                         ]);
                     })
                     .then(function () {
@@ -131,7 +173,6 @@ describe('PROJECT REST API', function () {
                 agent = superagent.agent();
             });
 
-            // NO AUTH methods
             it('should list projects /projects', function (done) {
                 agent.get(server.getUrl() + '/api/projects').end(function (err, res) {
                     expect(res.status).equal(200, err);
@@ -141,6 +182,143 @@ describe('PROJECT REST API', function () {
                     });
                     done();
                 });
+            });
+
+            it('should only include projects where auth user has access to GET /users', function (done) {
+                agent.get(server.getUrl() + '/api/users')
+                    .set('Authorization', 'Basic ' + new Buffer('user2:p').toString('base64'))
+                    .end(function (err, res) {
+                        var hadUser = false;
+                        expect(res.status).equal(200, err);
+                        res.body.forEach(function (userData) {
+                            if (userData._id === 'user1') {
+                                hadUser = true;
+                                expect(Object.keys(userData.projects)).to.deep.equal([projectName2Id(projectName)]);
+                            }
+                        });
+
+                        expect(hadUser).to.equal(true);
+                        done();
+                    });
+            });
+
+            it('should include all projects if user is siteAdmin GET /users', function (done) {
+                agent.get(server.getUrl() + '/api/users')
+                    .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        var hadUser = false;
+                        expect(res.status).equal(200, err);
+                        res.body.forEach(function (userData) {
+                            if (userData._id === 'user1') {
+                                hadUser = true;
+                                expect(Object.keys(userData.projects).length).to.equal(2);
+                                expect(userData.projects[projectName2Id(projectName)]).to.not.equal(undefined);
+                                expect(userData.projects[projectName2Id(shardedProjectName)]).to.not.equal(undefined);
+                            }
+                        });
+
+                        expect(hadUser).to.equal(true);
+                        done();
+                    });
+            });
+
+            it('should only include projects where auth user has access to GET /orgs', function (done) {
+                agent.get(server.getUrl() + '/api/orgs')
+                    .set('Authorization', 'Basic ' + new Buffer('user2:p').toString('base64'))
+                    .end(function (err, res) {
+                        var hadOrg = false;
+                        expect(res.status).equal(200, err);
+                        res.body.forEach(function (orgData) {
+                            if (orgData._id === 'orgProjects') {
+                                hadOrg = true;
+                                expect(Object.keys(orgData.projects)).to.deep.equal([projectName2Id(projectName)]);
+                            }
+                        });
+
+                        expect(hadOrg).to.equal(true);
+                        done();
+                    });
+            });
+
+            it('should include all projects if user is siteAdmin GET /orgs', function (done) {
+                agent.get(server.getUrl() + '/api/orgs')
+                    .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        var hadOrg = false;
+                        expect(res.status).equal(200, err);
+                        res.body.forEach(function (orgData) {
+                            if (orgData._id === 'orgProjects') {
+                                hadOrg = true;
+                                expect(Object.keys(orgData.projects).length).to.equal(2);
+                                expect(orgData.projects[projectName2Id(projectName)]).to.not.equal(undefined);
+                                expect(orgData.projects[projectName2Id(shardedProjectName)]).to.not.equal(undefined);
+                            }
+                        });
+
+                        expect(hadOrg).to.equal(true);
+                        done();
+                    });
+            });
+
+            it('should only include projects where auth user has access to GET /users/user1', function (done) {
+                agent.get(server.getUrl() + '/api/users/user1')
+                    .set('Authorization', 'Basic ' + new Buffer('user2:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(Object.keys(res.body.projects)).to.deep.equal([projectName2Id(projectName)]);
+                        done();
+                    });
+            });
+
+            it('should include all projects if user is siteAdmin GET /users/user1', function (done) {
+                agent.get(server.getUrl() + '/api/users/user1')
+                    .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(Object.keys(res.body.projects).length).to.equal(2);
+                        expect(res.body.projects[projectName2Id(projectName)]).to.not.equal(undefined);
+                        expect(res.body.projects[projectName2Id(shardedProjectName)]).to.not.equal(undefined);
+                        done();
+                    });
+            });
+
+            it('should only include projects where auth user has access to GET /orgs/orgProjects', function (done) {
+                agent.get(server.getUrl() + '/api/orgs/orgProjects')
+                    .set('Authorization', 'Basic ' + new Buffer('user2:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(Object.keys(res.body.projects)).to.deep.equal([projectName2Id(projectName)]);
+                        done();
+                    });
+            });
+
+            it('should include all projects if user is siteAdmin GET /orgs/orgProjects', function (done) {
+                agent.get(server.getUrl() + '/api/orgs/orgProjects')
+                    .set('Authorization', 'Basic ' + new Buffer('userSiteAdmin:p').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(Object.keys(res.body.projects).length).to.equal(2);
+                        expect(res.body.projects[projectName2Id(projectName)]).to.not.equal(undefined);
+                        expect(res.body.projects[projectName2Id(shardedProjectName)]).to.not.equal(undefined);
+                        done();
+                    });
+            });
+
+            it('should only include orgs where guest is member GET /orgs', function (done) {
+                agent.get(server.getUrl() + '/api/orgs')
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body.length).to.equal(1);
+                        done();
+                    });
+            });
+
+            it('should 404 for org where guest is not member GET /orgs/orgProjects', function (done) {
+                agent.get(server.getUrl() + '/api/orgs/orgProjects')
+                    .end(function (err, res) {
+                        expect(res.status).equal(404, err);
+                        done();
+                    });
             });
 
             it('should create a project from fileSeed /projects/:ownerId/:projectName', function (done) {
@@ -1950,7 +2128,7 @@ describe('PROJECT REST API', function () {
             gmeAuth,
             projectAuthParams,
             pr2Id = testFixture.projectName2Id;
-            //guestAccount = gmeConfig.authentication.guestAccount;
+        //guestAccount = gmeConfig.authentication.guestAccount;
 
         before(function (done) {
             var gmeConfig = testFixture.getGmeConfig();
