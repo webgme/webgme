@@ -34,7 +34,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
             this._input.attr(attr);
         }
 
-        this._input.on('keyup change click', function (/* e */) {
+        this._input.on('change click', function (/* e */) {
             self._onChange();
         });
 

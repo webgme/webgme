@@ -39,7 +39,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
 
         this._input.prop('title', this._helpMessage);
 
-        this._input.on('keyup change', function (/* e */) {
+        this._input.on('change', function (/* e */) {
             self._onChange();
         });
 
