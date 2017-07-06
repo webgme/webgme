@@ -245,7 +245,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             filteredData,
             i;
 
-        function getFilteredDatadata(data) {
+        function getFilteredData(data) {
             var filteredProjects = {};
             data = usersOrOrgs[i];
 
@@ -287,7 +287,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         });
 
         for (i = 0; i < usersOrOrgs.length; i += 1) {
-            filteredData = getFilteredDatadata(usersOrOrgs[i]);
+            filteredData = getFilteredData(usersOrOrgs[i]);
             if (filteredData) {
                 result.push(filteredData);
             }
@@ -936,9 +936,26 @@ function createAPI(app, mountPath, middlewareOpts) {
     });
 
     router.get('/orgs/:orgId', ensureAuthenticated, function (req, res, next) {
-        gmeAuth.getOrganization(req.params.orgId)
-            .then(function (data) {
-                res.json(data);
+        var userId = getUserId(req);
+
+        gmeAuth.getUser(userId)
+            .then(function (userData) {
+
+                return Q.all([
+                    userData.siteAdmin ? [] : safeStorage.getProjects({username: userId}),
+                    gmeAuth.getOrganization(req.params.orgId)
+                ])
+                    .then(function (results) {
+                        return filterUsersOrOrgs(userData, results[0], [results[1]])[0];
+                    });
+            })
+            .then(function (orgData) {
+                if (!orgData) {
+                    // This is the case where the guest is not a member.
+                    throw new Error('no such organization [');
+                }
+
+                res.json(orgData);
             })
             .catch(function (err) {
                 if (err.message.indexOf('no such organization [') > -1) {
