@@ -311,12 +311,13 @@ function createAPI(app, mountPath, middlewareOpts) {
         var userId = getUserId(req);
 
         gmeAuth.getUser(userId)
-            .then(function (data) {
+            .then(function (userData) {
                 var receivedData = req.body;
 
-                if (receivedData.hasOwnProperty('siteAdmin') && !data.siteAdmin) {
+                if (userData.siteAdmin !== true &&
+                    (receivedData.hasOwnProperty('siteAdmin') || receivedData.hasOwnProperty('canCreate'))) {
                     res.status(403);
-                    throw new Error('setting siteAdmin property requires site admin role');
+                    throw new Error('setting siteAdmin and/or canCreate property requires site admin role');
                 }
 
                 return gmeAuth.updateUser(userId, receivedData);
@@ -606,7 +607,7 @@ function createAPI(app, mountPath, middlewareOpts) {
         ensureSameUserOrSiteAdmin(req, res)
             .then(function (userData) {
                 if (userData.siteAdmin !== true &&
-                    (req.body.hasOwnProperty('siteAdmin') && req.body.hasOwnProperty('canCreate'))) {
+                    (req.body.hasOwnProperty('siteAdmin') || req.body.hasOwnProperty('canCreate'))) {
                     res.status(403);
                     throw new Error('setting siteAdmin and/or canCreate property requires site admin role');
                 }

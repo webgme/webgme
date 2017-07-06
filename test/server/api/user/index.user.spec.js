@@ -387,7 +387,6 @@ describe('USER REST API', function () {
             it('should fail to grant site admin access with no site admin roles PATCH /api/v1/user', function (done) {
                 var updates = {
                     email: 'new_email_address',
-                    canCreate: false,
                     siteAdmin: true
                 };
 
@@ -396,8 +395,31 @@ describe('USER REST API', function () {
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body.email).not.equal(updates.email);
+                        expect(res.body.siteAdmin).not.equal(updates.siteAdmin);
+
+                        agent.patch(server.getUrl() + '/api/v1/user')
+                            .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                            .send(updates)
+                            .end(function (err, res2) {
+                                expect(res2.status).equal(403, err);
+
+                                done();
+                            });
+                    });
+            });
+
+            it('should fail to set canCreate access with no site admin roles PATCH /api/v1/user', function (done) {
+                var updates = {
+                    email: 'new_email_address',
+                    canCreate: false
+                };
+
+                agent.get(server.getUrl() + '/api/v1/user')
+                    .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                    .end(function (err, res) {
+                        expect(res.status).equal(200, err);
+                        expect(res.body.email).not.equal(updates.email);
                         expect(res.body.canCreate).not.equal(updates.canCreate);
-                        expect(res.body.siteAdmin).not.equal(true);
 
                         agent.patch(server.getUrl() + '/api/v1/user')
                             .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
@@ -414,7 +436,6 @@ describe('USER REST API', function () {
                 function (done) {
                     var updates = {
                         email: 'new_email_address',
-                        canCreate: false,
                         siteAdmin: true
                     };
 
@@ -423,8 +444,32 @@ describe('USER REST API', function () {
                         .end(function (err, res) {
                             expect(res.status).equal(200, err);
                             expect(res.body.email).not.equal(updates.email);
-                            expect(res.body.canCreate).not.equal(updates.canCreate);
                             expect(res.body.siteAdmin).not.equal(true);
+
+                            agent.patch(server.getUrl() + '/api/v1/users/guest')
+                                .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                                .send(updates)
+                                .end(function (err, res2) {
+                                    expect(res2.status).equal(403, err);
+
+                                    done();
+                                });
+                        });
+                });
+
+            it('should fail to set canCreate access acc with no site admin roles PATCH /api/v1/users/guest',
+                function (done) {
+                    var updates = {
+                        email: 'new_email_address',
+                        canCreate: false
+                    };
+
+                    agent.get(server.getUrl() + '/api/v1/user')
+                        .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
+                        .end(function (err, res) {
+                            expect(res.status).equal(200, err);
+                            expect(res.body.email).not.equal(updates.email);
+                            expect(res.body.canCreate).not.equal(updates.canCreate);
 
                             agent.patch(server.getUrl() + '/api/v1/users/guest')
                                 .set('Authorization', 'Basic ' + new Buffer('guest:guest').toString('base64'))
@@ -795,8 +840,7 @@ describe('USER REST API', function () {
 
             it('should update self user with valid data PATCH /api/v1/user', function (done) {
                 var updates = {
-                    email: 'new_email_address',
-                    canCreate: false
+                    email: 'new_email_address'
                 };
 
                 agent.get(server.getUrl() + '/api/v1/user')
@@ -804,7 +848,6 @@ describe('USER REST API', function () {
                     .end(function (err, res) {
                         expect(res.status).equal(200, err);
                         expect(res.body.email).not.equal(updates.email);
-                        expect(res.body.canCreate).not.equal(updates.canCreate);
 
                         agent.patch(server.getUrl() + '/api/v1/user')
                             .set('Authorization', 'Basic ' + new Buffer('user:plaintext').toString('base64'))
@@ -817,7 +860,6 @@ describe('USER REST API', function () {
 
                                 // we have changed just these fields
                                 expect(res2.body.email).equal(updates.email);
-                                expect(res2.body.canCreate).equal(updates.canCreate);
                                 done();
                             });
                     });
