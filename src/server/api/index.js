@@ -249,7 +249,7 @@ function createAPI(app, mountPath, middlewareOpts) {
             var filteredProjects = {};
             data = usersOrOrgs[i];
 
-            if (userData._id === data) {
+            if (userData._id === data._id) {
                 return userData;
             } else if (userData.siteAdmin === true) {
                 return data;
