@@ -566,7 +566,9 @@ define([
             }
         };
 
-        if (self.config.disableProjectActions === false) {
+        // if (self.config.disableProjectActions === false) {
+        // #1455 Remove delete project item
+        if (false) {
             self.projects[projectId].menu[0].items.unshift({
                 id: 'deleteProject',
                 label: 'Delete project',
