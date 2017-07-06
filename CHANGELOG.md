@@ -1,5 +1,22 @@
 # Change Log
 
+## [v2.15.1](https://github.com/webgme/webgme/tree/v2.15.1) (2017-07-06)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.15.0...v2.15.1)
+
+**Implemented enhancements:**
+
+- Do not show the delete project btn in navigator [\#1455](https://github.com/webgme/webgme/pull/1455) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Float fields in property editor do not behave properly [\#1453](https://github.com/webgme/webgme/issues/1453)
+- Re-enabling user does not dispatch the correct USER\_CREATED event. [\#1452](https://github.com/webgme/webgme/pull/1452) ([pmeijer](https://github.com/pmeijer))
+
+**Merged pull requests:**
+
+- Fixes \#1453 Do not trigger onChange at every keyup [\#1456](https://github.com/webgme/webgme/pull/1456) ([pmeijer](https://github.com/pmeijer))
+- Limit what users and guests can see about other users/orgs [\#1454](https://github.com/webgme/webgme/pull/1454) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.15.0](https://github.com/webgme/webgme/tree/v2.15.0) (2017-07-03)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.14.1...v2.15.0)
 
