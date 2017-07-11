@@ -697,11 +697,15 @@ function StandAloneServer(gmeConfig) {
     logger.debug('creating login routing rules for the static server');
 
     __app.get('/logout', function (req, res) {
+        var redirectUrl;
         if (gmeConfig.authentication.enable === false) {
             res.sendStatus(404);
         } else {
+            if (gmeConfig.authentication.logOutToReferrer) {
+                redirectUrl = req.get('Referrer');
+            }
             res.clearCookie(gmeConfig.authentication.jwt.cookieId);
-            res.redirect(gmeConfig.authentication.logOutUrl || '/');
+            res.redirect(redirectUrl || gmeConfig.authentication.logOutUrl || '/');
         }
     });
 
