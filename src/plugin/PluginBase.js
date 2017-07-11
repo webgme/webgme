@@ -25,7 +25,7 @@ define([
      * @constructor
      * @alias PluginBase
      */
-    var PluginBase = function () {
+    function PluginBase() {
         // set by initialize
 
         /**
@@ -118,8 +118,10 @@ define([
 
         this.isConfigured = false;
 
+        this.callDepth = 0;
+
         this.notificationHandlers = [];
-    };
+    }
 
     //<editor-fold desc="Methods must be overridden by the derived classes">
 
@@ -627,6 +629,63 @@ define([
                 return nodes;
             })
             .nodeify(callback);
+    };
+
+    PluginBase.prototype.invokePlugin = function (pluginId, context, callback) {
+        var self = this,
+            pluginPath = 'plugin/' + pluginId + '/' + pluginId + '/' + pluginId,
+            pluginInstance,
+            pluginConfig,
+            metaName,
+            cfgKey;
+
+        pluginInstance.initialize(this.logger.fork(pluginId), 'TODO: extendedBlobClient', this.gmeConfig);
+
+        pluginInstance.result = 'TODO: extendedResult';
+
+        ['core', 'project', 'branch', 'projectName', 'projectId', 'branchName', 'branchHash', 'commitHash',
+            'currentHash', 'rootNode', 'notificationHandlers']
+            .forEach(function (sameField) {
+                pluginInstance[sameField] = self[sameField];
+            });
+
+        pluginInstance.activeNode = context.activeNode || this.activeNode;
+        pluginInstance.activeSelection = context.activeSelection || this.activeSelection;
+
+        if (context.namespace) {
+            pluginInstance.namespace = this.namespace === '' ? context : this.namespace + '.' + context.namespace;
+            pluginInstance.META = {};
+            for (metaName in this.META) {
+                if (metaName.indexOf('.') > -1) {
+                    this.META[metaName.substring(metaName.indexOf('.') + 1)] = this.META[metaName];
+                }
+            }
+        } else {
+            pluginInstance.namespace = this.namespace;
+            pluginInstance.META = this.META;
+        }
+
+        // TODO: For the config should we pass other dependents as well?
+        pluginConfig = pluginInstance.getDefaultConfig;
+
+        if (typeof this._currentConfig[pluginId] && this._currentConfig[pluginId] !== null) {
+            for (cfgKey in this._currentConfig[pluginId]) {
+                pluginConfig[cfgKey] = this._currentConfig[pluginId][cfgKey];
+            }
+        }
+
+        if (context.pluginConfig) {
+            for (cfgKey in context.pluginConfig[pluginId]) {
+                pluginConfig[cfgKey] = context.pluginConfig[pluginId][cfgKey];
+            }
+        }
+
+        pluginInstance.isConfigured = true;
+        pluginInstance.callDepth = this.callDepth += 1;
+
+        pluginInstance.main(function (err, result) {
+
+        });
     };
     //</editor-fold>
     //<editor-fold desc="Methods that are used by the Plugin Manager. Derived classes should not use these methods">
