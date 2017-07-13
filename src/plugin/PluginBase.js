@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, requirejs*/
 /*jshint browser: true, node:true*/
 
 /**
@@ -10,13 +10,22 @@
  */
 
 define([
+    'q',
     'plugin/PluginConfig',
     'plugin/PluginResult',
+    'plugin/InterPluginResult',
     'plugin/PluginMessage',
     'plugin/PluginNodeDescription',
     'plugin/util',
     'common/storage/constants'
-], function (PluginConfig, PluginResult, PluginMessage, PluginNodeDescription, pluginUtil, STORAGE_CONSTANTS) {
+], function (Q,
+             PluginConfig,
+             PluginResult,
+             InterPluginResult,
+             PluginMessage,
+             PluginNodeDescription,
+             pluginUtil,
+             STORAGE_CONSTANTS) {
     'use strict';
 
     /**
@@ -440,10 +449,20 @@ define([
 
         commitMessage = message ? commitMessage + ' - ' + message : commitMessage;
 
+        if (this.callDepth > 0) {
+            self.logger.info('Call-depth is greater than zero, will not persist "', this.callDepth, '"');
+            // How to handle this neatly..
+            self.addCommitToResult(commitMessage);
+            return Q.resolve({
+                hash: self.currentHash,
+                // TODO: Do we need a status? Which one? SYNCED so it can proceed?
+            }).nodeify(callback);
+        }
+
         self.logger.debug('Saving project');
         persisted = self.core.persist(self.rootNode);
         if (Object.keys(persisted.objects).length === 0) {
-            self.logger.warn('save invoked with no changes, will still proceed');
+            self.logger.debug('save invoked with no changes, will still proceed');
         }
 
         return self.project.makeCommit(self.branchName,
@@ -526,11 +545,17 @@ define([
      * previous commit. Additionally if the namespaces have changed between commits - the this.META might end up
      * being empty.
      *
-     * @param {function(Error, boolean)} callback - Resolved with true if branch had moved forward.
+     * @param {[function(Error, boolean)]} callback - Resolved with true if branch had moved forward.
+     * @returns {Promise}
      */
     PluginBase.prototype.fastForward = function (callback) {
         var self = this,
             options;
+
+        if (this.callDepth > 0) {
+            self.logger.warn('callDepth is greater than zero, will not fast-forward "', this.callDepth, '"');
+            return Q.resolve(false);
+        }
 
         return self.project.getBranchHash(self.branchName)
             .then(function (branchHash) {
@@ -588,8 +613,13 @@ define([
             status: status
         };
 
-        this.result.addCommit(newCommit);
-        this.logger.debug('newCommit added', newCommit);
+        if (this.callDepth > 0) {
+            this.logger.info('callDepth is greater than zero, will append commit-message to result:', status);
+            this.result.addCommit(status);
+        } else {
+            this.result.addCommit(newCommit);
+            this.logger.debug('newCommit added', newCommit);
+        }
     };
 
     /**
@@ -631,61 +661,103 @@ define([
             .nodeify(callback);
     };
 
+    /**
+     *
+     * @param {string} pluginId - Id of plugin that should be invoked
+     * @param {object} [context] -
+     * @param {function} [callback]
+     * @returns {*}
+     */
     PluginBase.prototype.invokePlugin = function (pluginId, context, callback) {
         var self = this,
-            pluginPath = 'plugin/' + pluginId + '/' + pluginId + '/' + pluginId,
-            pluginInstance,
-            pluginConfig,
-            metaName,
-            cfgKey;
+            deferred = Q.defer(),
+            pluginInstance;
 
-        pluginInstance.initialize(this.logger.fork(pluginId), 'TODO: extendedBlobClient', this.gmeConfig);
+        context = context || {};
 
-        pluginInstance.result = 'TODO: extendedResult';
+        function getPluginClass() {
+            var requireDeferred = Q.defer(),
+                pluginPath = 'plugin/' + pluginId + '/' + pluginId + '/' + pluginId;
 
-        ['core', 'project', 'branch', 'projectName', 'projectId', 'branchName', 'branchHash', 'commitHash',
-            'currentHash', 'rootNode', 'notificationHandlers']
-            .forEach(function (sameField) {
-                pluginInstance[sameField] = self[sameField];
+            requirejs([pluginPath],
+                function (PluginClass) {
+                    self.logger.debug('requirejs plugin from path: ' + pluginPath);
+                    requireDeferred.resolve(PluginClass);
+                },
+                function (err) {
+                    requireDeferred.reject(err);
+                }
+            );
+
+            return requireDeferred.promise;
+        }
+
+        getPluginClass()
+            .then(function (PluginClass) {
+                var pluginConfig,
+                    metaName,
+                    cfgKey;
+
+                pluginInstance = new PluginClass();
+
+                pluginInstance.initialize(this.logger.fork(pluginId), this.blobClient, this.gmeConfig);
+                pluginInstance.result = new InterPluginResult(this.result, pluginInstance);
+
+                ['core', 'project', 'branch', 'projectName', 'projectId', 'branchName', 'branchHash', 'commitHash',
+                    'currentHash', 'rootNode', 'notificationHandlers']
+                    .forEach(function (sameField) {
+                        pluginInstance[sameField] = self[sameField];
+                    });
+
+                pluginInstance.activeNode = context.activeNode || this.activeNode;
+                pluginInstance.activeSelection = context.activeSelection || this.activeSelection;
+
+                if (context.namespace) {
+                    pluginInstance.namespace = this.namespace === '' ?
+                        context : this.namespace + '.' + context.namespace;
+
+                    pluginInstance.META = {};
+                    for (metaName in this.META) {
+                        if (metaName.indexOf('.') > -1) {
+                            this.META[metaName.substring(metaName.indexOf('.') + 1)] = this.META[metaName];
+                        }
+                    }
+                } else {
+                    pluginInstance.namespace = this.namespace;
+                    pluginInstance.META = this.META;
+                }
+
+                // TODO: For the config should we pass other dependents as well?
+                // Plugin config
+                // 1. Get the default config for the plugin instance.
+                pluginConfig = pluginInstance.getDefaultConfig();
+
+                // 2. If the current-plugin has a sub-config for this plugin (from the default UI) - add those.
+                if (typeof this._currentConfig[pluginId] && this._currentConfig[pluginId] !== null) {
+                    for (cfgKey in this._currentConfig[pluginId]) {
+                        pluginConfig[cfgKey] = this._currentConfig[pluginId][cfgKey];
+                    }
+                }
+
+                // 3. Finally use the specific config passed here.
+                if (context.pluginConfig) {
+                    for (cfgKey in context.pluginConfig[pluginId]) {
+                        pluginConfig[cfgKey] = context.pluginConfig[pluginId][cfgKey];
+                    }
+                }
+
+                pluginInstance.isConfigured = true;
+                pluginInstance.callDepth = this.callDepth += 1;
+
+                return Q.ninvoke(pluginInstance.main);
+            })
+            .then(deferred.resolve)
+            .catch(function (err) {
+                console.log(err);
+                deferred.reject(err);
             });
 
-        pluginInstance.activeNode = context.activeNode || this.activeNode;
-        pluginInstance.activeSelection = context.activeSelection || this.activeSelection;
-
-        if (context.namespace) {
-            pluginInstance.namespace = this.namespace === '' ? context : this.namespace + '.' + context.namespace;
-            pluginInstance.META = {};
-            for (metaName in this.META) {
-                if (metaName.indexOf('.') > -1) {
-                    this.META[metaName.substring(metaName.indexOf('.') + 1)] = this.META[metaName];
-                }
-            }
-        } else {
-            pluginInstance.namespace = this.namespace;
-            pluginInstance.META = this.META;
-        }
-
-        // TODO: For the config should we pass other dependents as well?
-        pluginConfig = pluginInstance.getDefaultConfig;
-
-        if (typeof this._currentConfig[pluginId] && this._currentConfig[pluginId] !== null) {
-            for (cfgKey in this._currentConfig[pluginId]) {
-                pluginConfig[cfgKey] = this._currentConfig[pluginId][cfgKey];
-            }
-        }
-
-        if (context.pluginConfig) {
-            for (cfgKey in context.pluginConfig[pluginId]) {
-                pluginConfig[cfgKey] = context.pluginConfig[pluginId][cfgKey];
-            }
-        }
-
-        pluginInstance.isConfigured = true;
-        pluginInstance.callDepth = this.callDepth += 1;
-
-        pluginInstance.main(function (err, result) {
-
-        });
+        return deferred.promise.nodeify(callback);
     };
     //</editor-fold>
     //<editor-fold desc="Methods that are used by the Plugin Manager. Derived classes should not use these methods">

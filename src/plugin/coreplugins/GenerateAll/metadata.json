@@ -1,0 +1,22 @@
+{
+  "id": "GenerateAll",
+  "name": "Generate All",
+  "version": "2.16.0",
+  "description": "A plugin that calls all generator plugins and returns their result",
+  "icon": {
+    "src": "",
+    "class": "fa fa-cogs"
+  },
+  "disableServerSideExecution": false,
+  "disableBrowserSideExecution": false,
+  "writeAccessRequired": false,
+  "dependencies": [
+    {
+      "id": "AddOnGenerator"
+    },
+    {
+      "id": "PluginGenerator"
+    }
+  ],
+  "configStructure": []
+}
