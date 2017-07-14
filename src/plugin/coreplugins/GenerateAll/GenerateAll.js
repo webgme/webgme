@@ -31,7 +31,7 @@ define([
     GenerateAll.prototype.main = function (callback) {
         var self = this;
 
-        Q.allSettled([
+        Q.all([
             self.invokePlugin('AddOnGenerator', {}),
             self.invokePlugin('PluginGenerator', {})
         ])
@@ -59,14 +59,15 @@ define([
                     throw new Error('Called plugin failed with error');
                 }
 
-                self.result.setSucces(true);
+                self.result.setSuccess(true);
                 callback(null, self.result);
             })
             .catch(function (err) {
-                self.result.setSucces(false);
-                self.result.error(err.message);
+                self.result.setSuccess(false);
+                self.result.setError(err.message);
                 callback(err, self.result);
-            });
+            })
+            .done();
     };
 
     return GenerateAll;

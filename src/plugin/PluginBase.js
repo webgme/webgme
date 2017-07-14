@@ -700,8 +700,8 @@ define([
 
                 pluginInstance = new PluginClass();
 
-                pluginInstance.initialize(this.logger.fork(pluginId), this.blobClient, this.gmeConfig);
-                pluginInstance.result = new InterPluginResult(this.result, pluginInstance);
+                pluginInstance.initialize(self.logger.fork(pluginId), self.blobClient, self.gmeConfig);
+                pluginInstance.result = new InterPluginResult(self.result, pluginInstance);
 
                 ['core', 'project', 'branch', 'projectName', 'projectId', 'branchName', 'branchHash', 'commitHash',
                     'currentHash', 'rootNode', 'notificationHandlers']
@@ -709,22 +709,22 @@ define([
                         pluginInstance[sameField] = self[sameField];
                     });
 
-                pluginInstance.activeNode = context.activeNode || this.activeNode;
-                pluginInstance.activeSelection = context.activeSelection || this.activeSelection;
+                pluginInstance.activeNode = context.activeNode || self.activeNode;
+                pluginInstance.activeSelection = context.activeSelection || self.activeSelection;
 
                 if (context.namespace) {
-                    pluginInstance.namespace = this.namespace === '' ?
-                        context : this.namespace + '.' + context.namespace;
+                    pluginInstance.namespace = self.namespace === '' ?
+                        context : self.namespace + '.' + context.namespace;
 
                     pluginInstance.META = {};
-                    for (metaName in this.META) {
+                    for (metaName in self.META) {
                         if (metaName.indexOf('.') > -1) {
-                            this.META[metaName.substring(metaName.indexOf('.') + 1)] = this.META[metaName];
+                            self.META[metaName.substring(metaName.indexOf('.') + 1)] = self.META[metaName];
                         }
                     }
                 } else {
-                    pluginInstance.namespace = this.namespace;
-                    pluginInstance.META = this.META;
+                    pluginInstance.namespace = self.namespace;
+                    pluginInstance.META = self.META;
                 }
 
                 // TODO: For the config should we pass other dependents as well?
@@ -733,9 +733,9 @@ define([
                 pluginConfig = pluginInstance.getDefaultConfig();
 
                 // 2. If the current-plugin has a sub-config for this plugin (from the default UI) - add those.
-                if (typeof this._currentConfig[pluginId] && this._currentConfig[pluginId] !== null) {
-                    for (cfgKey in this._currentConfig[pluginId]) {
-                        pluginConfig[cfgKey] = this._currentConfig[pluginId][cfgKey];
+                if (typeof self._currentConfig[pluginId] && self._currentConfig[pluginId] !== null) {
+                    for (cfgKey in self._currentConfig[pluginId]) {
+                        pluginConfig[cfgKey] = self._currentConfig[pluginId][cfgKey];
                     }
                 }
 
@@ -747,13 +747,14 @@ define([
                 }
 
                 pluginInstance.isConfigured = true;
-                pluginInstance.callDepth = this.callDepth += 1;
+                pluginInstance.callDepth = self.callDepth += 1;
 
-                return Q.ninvoke(pluginInstance.main);
+                return Q.ninvoke(pluginInstance, 'main');
             })
-            .then(deferred.resolve)
+            .then(function (res) {
+                deferred.resolve(res);
+            })
             .catch(function (err) {
-                console.log(err);
                 deferred.reject(err);
             });
 
