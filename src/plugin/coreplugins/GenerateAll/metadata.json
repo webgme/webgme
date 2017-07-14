@@ -12,10 +12,14 @@
   "writeAccessRequired": false,
   "dependencies": [
     {
-      "id": "AddOnGenerator"
+      "id": "AddOnGenerator",
+      "propagateConfig": true,
+      "configurableNamespace": false
     },
     {
-      "id": "PluginGenerator"
+      "id": "PluginGenerator",
+      "propagateConfig": true,
+      "configurableNamespace": true
     }
   ],
   "configStructure": []

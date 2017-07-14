@@ -662,10 +662,22 @@ define([
     };
 
     /**
+     * Initializes and invokes the given plugin (at pluginId).
+     * Things to note:
+     *  1. If the invoked plugin calls save - it will not persist nor make a commit. The message will be recorded in
+     *  the InterPluginResult.
+     *  2. Artifacts and files saved will be added to the blob-storage. Invoked plugins can expose the content by adding
+     *  it to itself - the instance will be available in the InterPluginResult.
      *
      * @param {string} pluginId - Id of plugin that should be invoked
-     * @param {object} [context] -
-     * @param {function} [callback]
+     * @param {object} [context] - Optional context for the invoked plugin
+     * @param {object} [context.namespace=this.namespace] - Namespace (relative this.namespace)
+     * @param {module:Core~Node} [context.activeNode=this.activeNode] - Active node of invoked plugin
+     * @param {Array<module:Core~Node>} [context.activeSelection=this.activeSelection] - Active selection of invoked plugin
+     * @param {object} [context.pluginConfig] - Specific configuration parameters that should be used for the invocation.
+     * If not provided will first check if the currentConfig of this plugin contains this plugin as dependency within
+     * the array this._currentConfig._dependencies. Finally it will fall back to the default config of the plugin.
+     * @param {function(Error, InterPluginResult)} [callback]
      * @returns {*}
      */
     PluginBase.prototype.invokePlugin = function (pluginId, context, callback) {
@@ -696,6 +708,8 @@ define([
             .then(function (PluginClass) {
                 var pluginConfig,
                     metaName,
+                    index,
+                    i,
                     cfgKey;
 
                 pluginInstance = new PluginClass();
@@ -727,15 +741,24 @@ define([
                     pluginInstance.META = self.META;
                 }
 
-                // TODO: For the config should we pass other dependents as well?
                 // Plugin config
                 // 1. Get the default config for the plugin instance.
                 pluginConfig = pluginInstance.getDefaultConfig();
 
                 // 2. If the current-plugin has a sub-config for this plugin (from the default UI) - add those.
-                if (typeof self._currentConfig[pluginId] && self._currentConfig[pluginId] !== null) {
-                    for (cfgKey in self._currentConfig[pluginId]) {
-                        pluginConfig[cfgKey] = self._currentConfig[pluginId][cfgKey];
+                index = -1;
+                if (typeof self._currentConfig._dependencies && self._currentConfig._dependencies.length > 0) {
+                    for (i = 0; i < self._currentConfig._dependencies.length; i += 1) {
+                        if (self._currentConfig._dependencies[i].id === pluginId) {
+                            index = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (index > -1) {
+                    for (cfgKey in self._currentConfig._dependencies[index].pluginConfig) {
+                        pluginConfig[cfgKey] = self._currentConfig._dependencies[index].pluginConfig[cfgKey];
                     }
                 }
 

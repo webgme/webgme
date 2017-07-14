@@ -17,8 +17,6 @@ define([], function () {
     var InterPluginResult = function (pluginResult, pluginInstance) {
         this.pluginResult = pluginResult;
         this.success = false;
-        this.error = null;
-
         this.artifacts = [];
         this.commitMessages = [];
 

@@ -64,7 +64,7 @@ define([
             })
             .catch(function (err) {
                 self.result.setSuccess(false);
-                self.result.setError(err.message);
+                self.logger.error(err.stack);
                 callback(err, self.result);
             })
             .done();
