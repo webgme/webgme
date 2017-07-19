@@ -74,6 +74,10 @@
             text-align: left;
             cursor: pointer;
             border-bottom-width: 1px;
+            .btn-info-toggle {
+              color: grey;
+              padding-right: 12px;
+            }
             &.reverse-order {
               i.sorted {
                 &.rev-order {

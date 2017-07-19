@@ -1,7 +1,7 @@
 .projects-dialog .modal-content.in-background {
   opacity: 0; }
   .projects-dialog .modal-content.in-background * {
-    opacity: 0.4; }
+    opacity: 0; }
 .projects-dialog .modal-content .modal-header .header-icon {
   height: 28px;
   width: 28px;
@@ -41,6 +41,9 @@
     text-align: left;
     cursor: pointer;
     border-bottom-width: 1px; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects thead th .btn-info-toggle {
+      color: grey;
+      padding-right: 12px; }
     .projects-dialog .modal-content .modal-body table.table.table-projects thead th.reverse-order i.sorted.rev-order {
       display: inline-block;
       visibility: visible;
