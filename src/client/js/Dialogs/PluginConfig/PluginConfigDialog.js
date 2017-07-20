@@ -122,7 +122,7 @@ define([
         this._modalHeader.prepend(iconEl);
 
         this._title = this._modalHeader.find('.modal-title');
-        this._title.text(this._pluginMetadata.id + ' ' + 'v' + this._pluginMetadata.version);
+        this._title.text(this._pluginMetadata.name + ' ' + 'v' + this._pluginMetadata.version);
 
         // Generate the widget in the body
         this._generateConfigSection(true);

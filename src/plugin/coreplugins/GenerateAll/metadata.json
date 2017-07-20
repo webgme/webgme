@@ -13,13 +13,11 @@
   "dependencies": [
     {
       "id": "AddOnGenerator",
-      "propagateConfig": true,
-      "configurableNamespace": false
+      "propagateConfig": true
     },
     {
       "id": "PluginGenerator",
-      "propagateConfig": true,
-      "configurableNamespace": true
+      "propagateConfig": true
     }
   ],
   "configStructure": []

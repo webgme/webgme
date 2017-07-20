@@ -37,7 +37,8 @@ describe('CorePlugins', function () {
             'FastForward',
             'RestRouterGenerator',
             'CustomPluginConfig',
-            'GuidCollider'
+            'GuidCollider',
+            'GenerateAll'
         ],
 
         pluginsShouldFail = [

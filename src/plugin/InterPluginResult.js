@@ -47,7 +47,7 @@ define([], function () {
      * @param {PluginMessage} pluginMessage
      */
     InterPluginResult.prototype.addMessage = function (pluginMessage) {
-        this.pluginResult.messages.push(pluginMessage);
+        this.pluginResult.addMessage(pluginMessage);
     };
 
     InterPluginResult.prototype.getArtifacts = function () {

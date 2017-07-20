@@ -708,13 +708,11 @@ define([
             .then(function (PluginClass) {
                 var pluginConfig,
                     metaName,
-                    index,
-                    i,
                     cfgKey;
 
                 pluginInstance = new PluginClass();
 
-                pluginInstance.initialize(self.logger.fork(pluginId), self.blobClient, self.gmeConfig);
+                pluginInstance.initialize(self.logger.fork(pluginId), self.blobClient.getNewInstance(), self.gmeConfig);
                 pluginInstance.result = new InterPluginResult(self.result, pluginInstance);
 
                 ['core', 'project', 'branch', 'projectName', 'projectId', 'branchName', 'branchHash', 'commitHash',
@@ -746,19 +744,9 @@ define([
                 pluginConfig = pluginInstance.getDefaultConfig();
 
                 // 2. If the current-plugin has a sub-config for this plugin (from the default UI) - add those.
-                index = -1;
-                if (typeof self._currentConfig._dependencies && self._currentConfig._dependencies.length > 0) {
-                    for (i = 0; i < self._currentConfig._dependencies.length; i += 1) {
-                        if (self._currentConfig._dependencies[i].id === pluginId) {
-                            index = i;
-                            break;
-                        }
-                    }
-                }
-
-                if (index > -1) {
-                    for (cfgKey in self._currentConfig._dependencies[index].pluginConfig) {
-                        pluginConfig[cfgKey] = self._currentConfig._dependencies[index].pluginConfig[cfgKey];
+                if (self._currentConfig._dependencies && self._currentConfig._dependencies.hasOwnProperty(pluginId)) {
+                    for (cfgKey in self._currentConfig._dependencies[pluginId].pluginConfig) {
+                        pluginConfig[cfgKey] = self._currentConfig._dependencies[pluginId].pluginConfig[cfgKey];
                     }
                 }
 
@@ -882,6 +870,22 @@ define([
      */
     PluginBase.prototype.getMetadata = function () {
         return this.pluginMetadata;
+    };
+
+    /**
+     * Gets the ids of the directly defined dependencies of the plugin
+     *
+     * @returns {string[]}
+     */
+    PluginBase.prototype.getPluginDependencies = function () {
+        if (this.pluginMetadata && this.pluginMetadata.dependencies) {
+            return this.pluginMetadata.dependencies
+                .map(function (data) {
+                    return data.id;
+                });
+        } else {
+            return [];
+        }
     };
     //</editor-fold>
 
