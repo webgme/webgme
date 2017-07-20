@@ -260,19 +260,19 @@ define([
             openProject(selectedId);
         });
 
-        this._tableHead.on('click', 'i.btn-info-toggle', function (event) {
-            var elm = $(this),
+        this._tableHead.on('click', 'th.title-icons', function (event) {
+            var elm = $(this).find('.btn-info-toggle'),
                 show = !self._table.hasClass('info-displayed');
             if (show) {
                 self._table.find('.extra-info').removeClass('info-hidden');
                 self._table.addClass('info-displayed');
-                elm.removeClass('glyphicon-plus');
-                elm.addClass('glyphicon-minus');
+                elm.removeClass('fa-chevron-left');
+                elm.addClass('fa-chevron-right');
             } else {
                 self._table.find('.extra-info').addClass('info-hidden');
                 self._table.removeClass('info-displayed');
-                elm.removeClass('glyphicon-minus');
-                elm.addClass('glyphicon-plus');
+                elm.removeClass('fa-chevron-right');
+                elm.addClass('fa-chevron-left');
             }
             event.stopPropagation();
             event.preventDefault();
