@@ -12,6 +12,7 @@
 define([
     'q',
     'plugin/PluginConfig',
+    'plugin/PluginResultBase',
     'plugin/PluginResult',
     'plugin/InterPluginResult',
     'plugin/PluginMessage',
@@ -20,6 +21,7 @@ define([
     'common/storage/constants'
 ], function (Q,
              PluginConfig,
+             PluginResultBase,
              PluginResult,
              InterPluginResult,
              PluginMessage,
@@ -121,7 +123,7 @@ define([
         this.META = null;
 
         /**
-         * @type {PluginResult}
+         * @type {PluginResultBase}
          */
         this.result = null;
 
@@ -499,7 +501,8 @@ define([
                     return commitResult;
                 } else if (!self.branchName) {
                     self.currentHash = commitResult.hash;
-                    self.addCommitToResult(null);
+                    self.addCommitToResult(commitResult.status);
+                    return commitResult;
                 } else {
                     throw new Error('setBranchHash returned unexpected status' + commitResult.status);
                 }
@@ -615,7 +618,7 @@ define([
 
         if (this.callDepth > 0) {
             this.logger.info('callDepth is greater than zero, will append commit-message to result:', status);
-            this.result.addCommit(status);
+            this.result.addCommitMessage(status);
         } else {
             this.result.addCommit(newCommit);
             this.logger.debug('newCommit added', newCommit);
@@ -713,7 +716,7 @@ define([
                 pluginInstance = new PluginClass();
 
                 pluginInstance.initialize(self.logger.fork(pluginId), self.blobClient.getNewInstance(), self.gmeConfig);
-                pluginInstance.result = new InterPluginResult(self.result, pluginInstance);
+                pluginInstance.result = new InterPluginResult(pluginInstance);
 
                 ['core', 'project', 'branch', 'projectName', 'projectId', 'branchName', 'branchHash', 'commitHash',
                     'currentHash', 'rootNode', 'notificationHandlers']
@@ -762,7 +765,7 @@ define([
 
                 pluginInstance.setCurrentConfig(pluginConfig);
                 pluginInstance.isConfigured = true;
-                pluginInstance.callDepth = self.callDepth += 1;
+                pluginInstance.callDepth = self.callDepth + 1;
 
                 return Q.ninvoke(pluginInstance, 'main');
             })

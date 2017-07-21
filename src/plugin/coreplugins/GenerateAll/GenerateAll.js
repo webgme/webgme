@@ -31,32 +31,35 @@ define([
     GenerateAll.prototype.main = function (callback) {
         var self = this;
 
-        Q.all([
-            self.invokePlugin('AddOnGenerator', {}),
-            self.invokePlugin('DecoratorGenerator', {}),
-            self.invokePlugin('LayoutGenerator', {}),
-            self.invokePlugin('PluginGenerator', {}),
-            self.invokePlugin('RestRouterGenerator', {}),
-            self.invokePlugin('VisualizerGenerator', {})
-        ])
+        Q.all(this.getPluginDependencies().map(function (id) {
+            return self.invokePlugin(id);
+        }))
             .then(function (results) {
                 var hasFailures = false;
 
                 results.forEach(function (result) {
-                    // Result is instances of InterPluginResult
+                    // Result is instance of InterPluginResult
                     if (result.getSuccess() === false) {
                         hasFailures = true;
                     } else {
-                        // Messages and notifications from the invoked plugin are already added/emitted.
+                        // Notifications from the invoked plugin are already emitted.
+
                         // Artifacts are stored on the blob - we want them reported in the final result.
                         result.getArtifacts().forEach(function (metadataHash) {
                             self.result.addArtifact(metadataHash);
                         });
 
-                        // Since we're the caller we know that these plugins don't save we do not care about commits.
-                        // But to get the messages of the attempted saves we can use result.getCommitMessages
-                        // and append these to our final save.
+                        // Plugin message are available at getMessages (here we prepend the plugin name)
+                        result.getMessages().forEach(function (message) {
+                            message.message = result.getPluginName() + ':' + message.message;
+                            self.result.addMessage(message);
+                        });
+
+                        // Attempted saves are not persisted and committed. The messages are accessible.
+                        // result.getCommitMessages();
                     }
+
+                    // The instance of the invoked plugin is available at result.pluginInstance
                 });
 
                 if (hasFailures) {

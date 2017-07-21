@@ -7,8 +7,9 @@
  * @author lattmann / https://github.com/lattmann
  */
 
-define(['plugin/PluginMessage'], function (PluginMessage) {
+define(['plugin/PluginMessage', 'plugin/PluginResultBase'], function (PluginMessage, PluginResultBase) {
     'use strict';
+
     /**
      * Initializes a new instance of a plugin result object.
      *
@@ -16,6 +17,7 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      *
      * @param config - deserializes an existing configuration to this object.
      * @constructor
+     * @augments PluginResultBase
      * @alias PluginResult
      */
     var PluginResult = function (config) {
@@ -55,54 +57,9 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
         }
     };
 
-    /**
-     * Gets the success flag of this result object
-     *
-     * @returns {boolean}
-     */
-    PluginResult.prototype.getSuccess = function () {
-        return this.success;
-    };
-
-    /**
-     * Sets the success flag of this result.
-     *
-     * @param {boolean} value
-     */
-    PluginResult.prototype.setSuccess = function (value) {
-        this.success = value;
-    };
-
-    /**
-     * Returns with the plugin messages.
-     *
-     * @returns {PluginMessage[]}
-     */
-    PluginResult.prototype.getMessages = function () {
-        return this.messages;
-    };
-
-    /**
-     * Adds a new plugin message to the messages list.
-     *
-     * @param {PluginMessage} pluginMessage
-     */
-    PluginResult.prototype.addMessage = function (pluginMessage) {
-        this.messages.push(pluginMessage);
-    };
-
-    PluginResult.prototype.getArtifacts = function () {
-        return this.artifacts;
-    };
-
-    /**
-     * Adds a saved artifact to the result - linked via its hash.
-     *
-     * @param {string} hash - Hash of saved artifact.
-     */
-    PluginResult.prototype.addArtifact = function (hash) {
-        this.artifacts.push(hash);
-    };
+    // Prototypical inheritance from PluginResultBase.
+    PluginResult.prototype = Object.create(PluginResultBase.prototype);
+    PluginResult.prototype.constructor = PluginResult;
 
     /**
      *
@@ -113,15 +70,6 @@ define(['plugin/PluginMessage'], function (PluginMessage) {
      */
     PluginResult.prototype.addCommit = function (commitData) {
         this.commits.push(commitData);
-    };
-
-    /**
-     * Gets the name of the plugin to which the result object belongs to.
-     *
-     * @returns {string}
-     */
-    PluginResult.prototype.getPluginName = function () {
-        return this.pluginName;
     };
 
     //------------------------------------------------------------------------------------------------------------------

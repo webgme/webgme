@@ -6,68 +6,34 @@
  * @author pmeijer / https://github.com/meijer
  */
 
-define([], function () {
+define(['plugin/PluginResultBase'], function (PluginResultBase) {
     'use strict';
 
     /**
      * Initializes a new instance of a plugin result object passed from an invoked plugin.
      * @constructor
+     * @augments PluginResultBase
      * @alias InterPluginResult
      */
-    var InterPluginResult = function (pluginResult, pluginInstance) {
-        this.pluginResult = pluginResult;
+    var InterPluginResult = function (pluginInstance) {
         this.success = false;
         this.artifacts = [];
+        this.messages = [];
         this.commitMessages = [];
 
         this.pluginInstance = pluginInstance;
+        this.pluginName = pluginInstance.getName();
     };
+
+    // Prototypical inheritance from PluginResultBase.
+    InterPluginResult.prototype = Object.create(PluginResultBase.prototype);
+    InterPluginResult.prototype.constructor = InterPluginResult;
 
     /**
-     * Gets the success flag of this result object
-     *
-     * @returns {boolean}
-     */
-    InterPluginResult.prototype.getSuccess = function () {
-        return this.success;
-    };
-
-    /**
-     * Sets the success flag of this result.
-     *
-     * @param {boolean} value
-     */
-    InterPluginResult.prototype.setSuccess = function (value) {
-        this.success = value;
-    };
-
-    /**
-     * Adds a new plugin message to the messages list.
-     *
-     * @param {PluginMessage} pluginMessage
-     */
-    InterPluginResult.prototype.addMessage = function (pluginMessage) {
-        this.pluginResult.addMessage(pluginMessage);
-    };
-
-    InterPluginResult.prototype.getArtifacts = function () {
-        return this.artifacts;
-    };
-
-    /**
-     * Adds a saved artifact to the result - linked via its hash.
-     *
-     * @param {string} hash - Hash of saved artifact.
-     */
-    InterPluginResult.prototype.addArtifact = function (hash) {
-        this.artifacts.push(hash);
-    };
-
-    /**
-     *
+     * Adds commit message to result.
      * @param {string} message
      */
-    InterPluginResult.prototype.addCommit = function (message) {
+    InterPluginResult.prototype.addCommitMessage = function (message) {
         if (typeof message === 'string') {
             this.commitMessages.push(message);
         } else {
@@ -77,6 +43,10 @@ define([], function () {
         }
     };
 
+    /**
+     * Gets the added commitMessages.
+     * @param {string[]} messages
+     */
     InterPluginResult.prototype.getCommitMessages = function () {
         return this.commitMessages;
     };
