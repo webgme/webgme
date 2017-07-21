@@ -24,7 +24,7 @@
  * t.connectVertices(3, 4);
  * t.connectVertices(4, 2);
  *
- * t.calculateSCCs();   -> [[1, 2, 3]]
+ * t.calculateSCCs();   -> [[1], [2, 3, 4]]
  * t.hasLoops(); -> true
  *
  *
