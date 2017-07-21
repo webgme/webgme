@@ -744,7 +744,10 @@ define([
                 pluginConfig = pluginInstance.getDefaultConfig();
 
                 // 2. If the current-plugin has a sub-config for this plugin (from the default UI) - add those.
-                if (self._currentConfig._dependencies && self._currentConfig._dependencies.hasOwnProperty(pluginId)) {
+                if (self._currentConfig.hasOwnProperty('_dependencies') &&
+                    self._currentConfig._dependencies.hasOwnProperty(pluginId) &&
+                    self._currentConfig._dependencies[pluginId].hasOwnProperty('pluginConfig')) {
+                    console.log(self._currentConfig._dependencies[pluginId].pluginConfig);
                     for (cfgKey in self._currentConfig._dependencies[pluginId].pluginConfig) {
                         pluginConfig[cfgKey] = self._currentConfig._dependencies[pluginId].pluginConfig[cfgKey];
                     }
@@ -757,6 +760,7 @@ define([
                     }
                 }
 
+                pluginInstance.setCurrentConfig(pluginConfig);
                 pluginInstance.isConfigured = true;
                 pluginInstance.callDepth = self.callDepth += 1;
 

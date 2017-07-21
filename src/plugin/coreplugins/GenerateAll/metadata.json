@@ -18,6 +18,22 @@
     {
       "id": "PluginGenerator",
       "propagateConfig": true
+    },
+    {
+      "id": "LayoutGenerator",
+      "propagateConfig": true
+    },
+    {
+      "id": "DecoratorGenerator",
+      "propagateConfig": true
+    },
+    {
+      "id": "RestRouterGenerator",
+      "propagateConfig": true
+    },
+    {
+      "id": "VisualizerGenerator",
+      "propagateConfig": true
     }
   ],
   "configStructure": []

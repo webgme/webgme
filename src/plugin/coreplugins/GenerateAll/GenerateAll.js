@@ -33,7 +33,11 @@ define([
 
         Q.all([
             self.invokePlugin('AddOnGenerator', {}),
-            self.invokePlugin('PluginGenerator', {})
+            self.invokePlugin('DecoratorGenerator', {}),
+            self.invokePlugin('LayoutGenerator', {}),
+            self.invokePlugin('PluginGenerator', {}),
+            self.invokePlugin('RestRouterGenerator', {}),
+            self.invokePlugin('VisualizerGenerator', {})
         ])
             .then(function (results) {
                 var hasFailures = false;
