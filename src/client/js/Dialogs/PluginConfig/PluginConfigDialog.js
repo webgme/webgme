@@ -1,4 +1,4 @@
-/*globals define, $*/
+/*globals define, $, WebGMEGlobal*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -41,7 +41,10 @@ define([
 
         this._globalOptions = globalOptions;
         this._pluginMetadata = pluginMetadata;
-        this._prevConfg = prevConfig || {};
+        this._prevConfig = prevConfig || {};
+
+        // In case someone was sub-classing ...
+        this._prevConfg = this._prevConfig;
 
         this._initDialog();
 
@@ -124,31 +127,82 @@ define([
     };
 
     PluginConfigDialog.prototype._generateSections = function () {
+        var self = this,
+            tarjan = new Tarjan();
+
         this._generateConfigSection(GLOBAL_OPTS_ID, this._globalOptions);
-        this._divContainer.append($('<hr class="global-and-plugin-divider">'));
-        this._generateConfigSection(this._pluginMetadata.id, this._pluginMetadata.configStructure);
+        this._generateConfigSection(this._pluginMetadata.id, this._pluginMetadata.configStructure, self._prevConfig);
 
-        function addDependencySection() {
+        function traverseDependencies(metadata, joinedId, prevConfig) {
+            (metadata.dependencies || [])
+                .forEach(function (depInfo) {
+                    var depMetadata = WebGMEGlobal.allPluginsMetadata[depInfo.id],
+                        newJoinedId,
+                        subPreConfig;
 
+                    if (!depMetadata) {
+                        throw new Error('Plugin "' + depInfo.id + '" is a dependency but metadata for it not available!');
+                    }
+
+                    if (!joinedId) {
+                        // This is the initial run checking for loops..
+                        if (tarjan.addVertex(depInfo.id) === false) {
+                            // Dependency already added, just account for the connection
+                            tarjan.connectVertices(metadata.id, depInfo.id);
+                        } else {
+                            tarjan.connectVertices(metadata.id, depInfo.id);
+                            traverseDependencies(depMetadata);
+                        }
+                    } else {
+                        newJoinedId = joinedId + '.' + depInfo.id;
+                        if (prevConfig &&
+                            prevConfig.hasOwnProperty('_dependencies') &&
+                            prevConfig._dependencies.hasOwnProperty(depInfo.id)) {
+
+                            subPreConfig = prevConfig._dependencies[depInfo.id].pluginConfig;
+                        }
+                        // Here we know there are no loops so start adding the sections..
+                        self._generateConfigSection(newJoinedId, depMetadata.configStructure, subPreConfig);
+                        traverseDependencies(depMetadata, newJoinedId, subPreConfig);
+                    }
+            });
         }
+
+        tarjan.addVertex(this._pluginMetadata.id);
+        traverseDependencies(this._pluginMetadata);
+
+        if (tarjan.hasLoops()) {
+            throw new Error('The dependencies of ' + this._pluginMetadata.id + ' forms a circular loop..');
+        }
+
+        traverseDependencies(this._pluginMetadata, this._pluginMetadata.id, self._prevConfig);
     };
 
-    PluginConfigDialog.prototype._generateConfigSection = function (id, structure, title) {
+    PluginConfigDialog.prototype._generateConfigSection = function (id, configStructure, prevConfig) {
         var pluginSectionEl = PLUGIN_CONFIG_SECTION_BASE.clone(),
             self = this,
+            callPath = id.split('.'),
             containerEl;
+
+        if (configStructure.length === 0) {
+            return;
+        }
 
         pluginSectionEl.data(PLUGIN_DATA_KEY, id);
 
-        if (title) {
-            pluginSectionEl.find('.dependency-title').text(title);
+        if (callPath.length > 1) {
+            pluginSectionEl.find('.dependency-title').text(callPath.slice(1).join(' > '));
+        }
+
+        if (id !== GLOBAL_OPTS_ID) {
+            this._divContainer.append($('<hr class="global-and-plugin-divider">'));
         }
 
         this._divContainer.append(pluginSectionEl);
 
         containerEl = pluginSectionEl.find('.form-horizontal');
 
-        structure.forEach(function (pluginConfigEntry) {
+        configStructure.forEach(function (pluginConfigEntry) {
             var widget,
                 el,
                 descEl;
@@ -156,10 +210,8 @@ define([
             // Make sure not modify the global metadata.
             pluginConfigEntry = JSON.parse(JSON.stringify(pluginConfigEntry));
 
-            // FIXME: This needs to be recursive
-            if (id !== GLOBAL_OPTS_ID && self._prevConfg.hasOwnProperty(pluginConfigEntry.name)) {
-                // Use stored value if available.
-                pluginConfigEntry.value = self._prevConfg[pluginConfigEntry.name];
+            if (prevConfig && prevConfig.hasOwnProperty(pluginConfigEntry.name)) {
+                pluginConfigEntry.value = prevConfig[pluginConfigEntry.name];
             }
 
             if (self._client.getProjectAccess().write === false && pluginConfigEntry.writeAccessRequired === true) {
@@ -168,11 +220,10 @@ define([
 
             widget = self._propertyGridWidgetManager.getWidgetForProperty(pluginConfigEntry);
 
-            // FIXME: This needs to be recursive
             if (id === GLOBAL_OPTS_ID) {
                 self._globalWidgets[pluginConfigEntry.name] = widget;
             } else {
-                self._pluginWidgets[pluginConfigEntry.name] = widget;
+                self._pluginWidgets[id + '.' + pluginConfigEntry.name] = widget;
             }
 
             el = ENTRY_BASE.clone();
@@ -228,8 +279,21 @@ define([
             self._pluginConfig = {};
             self._globalConfig = {};
 
-            Object.keys(self._pluginWidgets).forEach(function (name) {
-                self._pluginConfig[name] = self._pluginWidgets[name].getValue();
+            Object.keys(self._pluginWidgets).forEach(function (id) {
+                var idPath = id.split('.'),
+                    config = self._pluginConfig,
+                    name = idPath[idPath.length - 1],
+                    i;
+
+                // Start at 1 (we don't need the name of the current plugin)
+                for (i = 1; i < idPath.length - 1; i += 1) {
+                    config._dependencies = config._dependencies || {};
+                    config._dependencies[idPath[i]] = config._dependencies[idPath[i]] || { pluginConfig: {} } ;
+
+                    config = config._dependencies[idPath[i]].pluginConfig;
+                }
+
+                config[name] = self._pluginWidgets[id].getValue();
             });
 
             Object.keys(self._globalWidgets).forEach(function (name) {
