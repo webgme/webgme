@@ -11,6 +11,16 @@
 // Documentation: https://editor.webgme.org/docs/source/index.html
 // https://github.com/webgme/webgme/tree/master/config
 
+declare module "webgme" {
+    export class Standalone {
+        constructor(config: any);
+        start(fn: any): void;
+        stop(): void;
+    }
+    export function addToRequireJsPaths(config: any): void;
+    export function standaloneServer(config: any): void;
+}
+
 declare module "blob/BlobMetadata" {
     export default class BlobMetadata implements Blobs.BlobMetadata {
         constructor();
