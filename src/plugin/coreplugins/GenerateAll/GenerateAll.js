@@ -51,7 +51,7 @@ define([
 
                         // Plugin message are available at getMessages (here we prepend the plugin name)
                         result.getMessages().forEach(function (message) {
-                            message.message = result.getPluginName() + ':' + message.message;
+                            message.message = result.getPluginName() + ' : ' + message.message;
                             self.result.addMessage(message);
                         });
 

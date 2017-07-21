@@ -32,7 +32,11 @@ if (typeof define === 'undefined') {
                 config = self.getCurrentConfig();
 
             Q.all(this.getPluginDependencies().map(function (id) {
-                return self.invokePlugin(id);
+                var cfg = {};
+                if (id === 'MinimalWorkingExample') {
+                    cfg.pluginConfig = {shouldFail: config.minimalShouldFail};
+                }
+                return self.invokePlugin(id, cfg);
             }))
                 .then(function (results) {
                     var hasFailures = false,
@@ -50,9 +54,7 @@ if (typeof define === 'undefined') {
                                 self.result.addArtifact(metadataHash);
                             });
 
-                            // Plugin message are available at getMessages (here we prepend the plugin name)
                             result.getMessages().forEach(function (message) {
-                                message.message = result.getPluginName() + ':' + message.message;
                                 self.result.addMessage(message);
                             });
 

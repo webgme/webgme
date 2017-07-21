@@ -5,7 +5,7 @@
 
 var testFixture = require('../../../_globals');
 
-describe.only('Generate All Plugin', function () {
+describe('Generate All Plugin', function () {
     'use strict';
 
     var pluginName = 'GenerateAll',

@@ -758,8 +758,8 @@ define([
 
                 // 3. Finally use the specific config passed here.
                 if (context.pluginConfig) {
-                    for (cfgKey in context.pluginConfig[pluginId]) {
-                        pluginConfig[cfgKey] = context.pluginConfig[pluginId][cfgKey];
+                    for (cfgKey in context.pluginConfig) {
+                        pluginConfig[cfgKey] = context.pluginConfig[cfgKey];
                     }
                 }
 
