@@ -185,5 +185,9 @@ define(['./ButtonBase',
         }
     };
 
+    ToolbarDropDownButton.prototype.getNumberOfItems = function () {
+        return this._ulMenu.find('> li').length;
+    };
+
     return ToolbarDropDownButton;
 });
