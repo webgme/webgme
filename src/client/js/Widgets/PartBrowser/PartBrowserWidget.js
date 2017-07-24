@@ -396,11 +396,11 @@ define([
     };
 
     PartBrowserWidget.prototype.getCurrentSelectorValue = function () {
-        if (this._selector.el.is(':hidden')) {
-            return '';
+        if (this._selector.getNumberOfItems() === 0) {
+            this._selector.dropDownText(ALL_NSP);
         }
 
-        return this._selector.dropDownText() || '';
+        return  this._selector.dropDownText();
     };
 
     PartBrowserWidget.prototype.updateSelectorInfo = function (valueList) {
