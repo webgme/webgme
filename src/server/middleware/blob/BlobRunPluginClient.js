@@ -28,6 +28,7 @@ var BlobClientClass = requireJS('blob/BlobClient'),
  */
 function BlobRunPluginClient(blobBackend, logger, opts) {
     BlobClientClass.call(this, {logger: logger});
+    this.opts = opts;
     this.blobBackend = blobBackend;
     this.writeBlobFilesDir = opts && opts.writeBlobFilesDir;
     if (this.writeBlobFilesDir) {
@@ -41,6 +42,10 @@ BlobRunPluginClient.prototype = Object.create(BlobClientClass.prototype);
 
 // Override the constructor with this object's constructor
 BlobRunPluginClient.prototype.constructor = BlobRunPluginClient;
+
+BlobRunPluginClient.prototype.getNewInstance = function () {
+    return new BlobRunPluginClient(this.blobBackend, this.logger, this.opts);
+};
 
 BlobRunPluginClient.prototype.getMetadata = function (metadataHash, callback) {
     var self = this,

@@ -27,9 +27,6 @@ define([
         // Call base class' constructor.
         PluginBase.call(this);
         this.pluginMetadata = pluginMetadata;
-
-        // we do not know the meta types, will be populated during run time
-        this.metaTypes = {};
     }
 
     MinimalWorkingExample.metadata = pluginMetadata;
@@ -52,7 +49,6 @@ define([
         // These are all instantiated at this point.
         var self = this,
             currentConfiguration = self.getCurrentConfig();
-        self.updateMETA(self.metaTypes);
         // Using the logger.
         self.logger.debug('This is a debug message.');
         self.logger.info('This is an info message.');
@@ -60,13 +56,9 @@ define([
         self.logger.error('This is an error message.');
 
         // Using the coreAPI to create an object.
-        var newNode = self.core.createNode({parent: self.rootNode, base: self.META.FCO});
+        var newNode = self.core.createNode({parent: self.rootNode, base: self.core.getFCO(self.rootNode)});
         self.core.setAttribute(newNode, 'name', 'My new obj');
         self.core.setRegistry(newNode, 'position', {x: 70, y: 70});
-
-        if (self.isMetaTypeOf(newNode, self.metaTypes.FCO)) {
-            self.logger.info('The new node is an FCO');
-        }
 
         var newNodeMetaType = self.getMetaType(newNode);
         self.logger.info('The new node is a(n) ' + self.core.getAttribute(newNodeMetaType, 'name'));

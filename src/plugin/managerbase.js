@@ -11,6 +11,7 @@ define([
     'plugin/util',
     'common/storage/project/interface',
     'common/storage/util',
+    'common/util/tarjan',
     'q',
 ], function (Core,
              PluginResult,
@@ -18,6 +19,7 @@ define([
              pluginUtil,
              ProjectInterface,
              storageUtil,
+             Tarjan,
              Q) {
 
     'use strict';
@@ -35,6 +37,51 @@ define([
 
         this.logger = mainLogger.fork('PluginManagerBase');
         this.notificationHandlers = [];
+
+        function getPluginInstance(pluginId, callback) {
+            var deferred = Q.defer(),
+                rejected = false,
+                pluginPath = 'plugin/' + pluginId + '/' + pluginId + '/' + pluginId;
+
+            if (rejected === false) {
+                requirejs([pluginPath],
+                    function (PluginClass) {
+                        var plugin = new PluginClass();
+                        self.logger.debug('requirejs plugin from path: ' + pluginPath);
+                        if (self.serverSide && plugin.pluginMetadata.disableServerSideExecution) {
+                            deferred.reject(new Error(pluginId + ' cannot be invoked on server.'));
+                        } else if (self.browserSide && plugin.pluginMetadata.disableBrowserSideExecution) {
+                            deferred.reject(new Error(pluginId + ' cannot be invoked in browser.'));
+                        } else {
+                            deferred.resolve(plugin);
+                        }
+                    },
+                    function (err) {
+                        deferred.reject(err);
+                    }
+                );
+            }
+
+            return deferred.promise.nodeify(callback);
+        }
+
+        function checkDependencies(plugin, tarjan, callback) {
+            return Q.all(plugin.getPluginDependencies()
+                .map(function (pluginId) {
+                    if (tarjan.addVertex(pluginId) === false) {
+                        // Dependency already added, just account for the connection
+                        tarjan.connectVertices(plugin.getId(), pluginId);
+                        return Q.resolve();
+                    } else {
+                        tarjan.connectVertices(plugin.getId(), pluginId);
+                        return getPluginInstance(pluginId)
+                            .then(function (depPluginInstance) {
+                                return checkDependencies(depPluginInstance, tarjan);
+                            });
+                    }
+                }))
+                .nodeify(callback);
+        }
 
         /**
          * These are used to determine if the user is allowed to execute a plugin based on
@@ -93,12 +140,34 @@ define([
          * @returns {promise}
          */
         this.initializePlugin = function (pluginId, callback) {
-            return getPlugin(pluginId)
-                .then(function (PluginClass) {
-                    var pluginLogger = self.logger.fork('plugin:' + pluginId),
-                        plugin;
+            var plugin,
+                tarjan;
 
-                    plugin = new PluginClass();
+            if (!self.serverSide && !self.browserSide) {
+                self.logger.debug('Running as CLI - does not respect gmeConfig.plugin.allowServerExecution..');
+            } else {
+                if (self.serverSide && !gmeConfig.plugin.allowServerExecution) {
+                    throw new Error('Plugin execution on server side is disabled from gmeConfig.');
+                } else if (self.browserSide && !gmeConfig.plugin.allowBrowserExecution) {
+                    throw new Error('Plugin execution on server side is disabled from gmeConfig.');
+                }
+            }
+
+            return getPluginInstance(pluginId)
+                .then(function (plugin_) {
+                    tarjan = new Tarjan();
+                    plugin = plugin_;
+
+                    tarjan.addVertex(pluginId);
+                    return checkDependencies(plugin, tarjan);
+                })
+                .then(function () {
+                    if (tarjan.hasLoops()) {
+                        throw new Error('The dependencies of ' + pluginId + ' forms a circular loop..');
+                    }
+
+                    var pluginLogger = self.logger.fork('plugin:' + pluginId);
+
                     plugin.initialize(pluginLogger, self.blobClient, gmeConfig);
 
                     return plugin;
@@ -234,36 +303,6 @@ define([
                 }
             });
         };
-
-        function getPlugin(pluginId, callback) {
-            var deferred = Q.defer(),
-                rejected = false,
-                pluginPath = 'plugin/' + pluginId + '/' + pluginId + '/' + pluginId;
-
-            if (self.serverSide && !gmeConfig.plugin.allowServerExecution) {
-                deferred.reject(new Error('Plugin execution on server side is disabled from gmeConfig.'));
-                rejected = true;
-            } else if (self.browserSide && !gmeConfig.plugin.allowBrowserExecution) {
-                deferred.reject(new Error('Plugin execution in browser is disabled from gmeConfig.'));
-                rejected = true;
-            } else {
-                self.logger.debug('Running as CLI - does not respect gmeConfig.plugin.allowServerExecution..');
-            }
-
-            if (rejected === false) {
-                requirejs([pluginPath],
-                    function (PluginClass) {
-                        self.logger.debug('requirejs plugin from path: ' + pluginPath);
-                        deferred.resolve(PluginClass);
-                    },
-                    function (err) {
-                        deferred.reject(err);
-                    }
-                );
-            }
-
-            return deferred.promise.nodeify(callback);
-        }
 
         this.getPluginErrorResult = function (pluginId, pluginName, message, projectId) {
             var pluginResult = new PluginResult(),

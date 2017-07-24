@@ -27,6 +27,10 @@ define([
      */
     var BlobClient = function (parameters) {
         var self = this;
+
+        // Store these to be able to create a new instance from an instance.
+        this.parameters = parameters;
+
         this.artifacts = [];
         if (parameters && parameters.logger) {
             this.logger = parameters.logger;
@@ -69,8 +73,6 @@ define([
         }
         this.relativeUrl = '/rest/blob/';
         this.blobUrl = this.origin + this.relativeUrl;
-        // TODO: TOKEN???
-        // TODO: any ways to ask for this or get it from the configuration?
 
         this.isNodeOrNodeWebKit = typeof process !== 'undefined';
         if (this.isNodeOrNodeWebKit) {
@@ -89,6 +91,15 @@ define([
 
         this.logger.debug('origin', this.origin);
         this.logger.debug('blobUrl', this.blobUrl);
+    };
+
+    /**
+     * Creates and returns a new instance of a BlobClient with the same settings as the current one.
+     * This can be used to avoid issues with the artifacts being book-kept at the instance.
+     * @returns {BlobClient} A new instance of a BlobClient
+     */
+    BlobClient.prototype.getNewInstance = function () {
+        return new BlobClient(this.parameters);
     };
 
     BlobClient.prototype.getMetadataURL = function (hash) {

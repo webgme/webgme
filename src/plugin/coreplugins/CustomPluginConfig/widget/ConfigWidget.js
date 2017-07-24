@@ -1,4 +1,4 @@
-/*globals, define, $, WebGMEGlobal*/
+/*globals define, WebGMEGlobal*/
 /**
  * Example of custom plugin configuration. Typically a dialog would show up here.
  * @author pmeijer / https://github.com/pmeijer

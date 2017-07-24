@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, requirejs*/
 /*jshint browser: true, node:true*/
 
 /**
@@ -10,13 +10,24 @@
  */
 
 define([
+    'q',
     'plugin/PluginConfig',
+    'plugin/PluginResultBase',
     'plugin/PluginResult',
+    'plugin/InterPluginResult',
     'plugin/PluginMessage',
     'plugin/PluginNodeDescription',
     'plugin/util',
     'common/storage/constants'
-], function (PluginConfig, PluginResult, PluginMessage, PluginNodeDescription, pluginUtil, STORAGE_CONSTANTS) {
+], function (Q,
+             PluginConfig,
+             PluginResultBase,
+             PluginResult,
+             InterPluginResult,
+             PluginMessage,
+             PluginNodeDescription,
+             pluginUtil,
+             STORAGE_CONSTANTS) {
     'use strict';
 
     /**
@@ -25,7 +36,7 @@ define([
      * @constructor
      * @alias PluginBase
      */
-    var PluginBase = function () {
+    function PluginBase() {
         // set by initialize
 
         /**
@@ -112,14 +123,16 @@ define([
         this.META = null;
 
         /**
-         * @type {PluginResult}
+         * @type {PluginResultBase}
          */
         this.result = null;
 
         this.isConfigured = false;
 
+        this.callDepth = 0;
+
         this.notificationHandlers = [];
-    };
+    }
 
     //<editor-fold desc="Methods must be overridden by the derived classes">
 
@@ -438,10 +451,19 @@ define([
 
         commitMessage = message ? commitMessage + ' - ' + message : commitMessage;
 
+        if (this.callDepth > 0) {
+            self.logger.debug('Call-depth is greater than zero, will not persist "', this.callDepth, '"');
+            self.result.addCommitMessage(commitMessage);
+            return Q.resolve({
+                hash: self.currentHash,
+                // TODO: Do we need a status? Which one? SYNCED so it can proceed?
+            }).nodeify(callback);
+        }
+
         self.logger.debug('Saving project');
         persisted = self.core.persist(self.rootNode);
         if (Object.keys(persisted.objects).length === 0) {
-            self.logger.warn('save invoked with no changes, will still proceed');
+            self.logger.debug('save invoked with no changes, will still proceed');
         }
 
         return self.project.makeCommit(self.branchName,
@@ -452,7 +474,7 @@ define([
             .then(function (commitResult) {
                 if (commitResult.status === STORAGE_CONSTANTS.SYNCED) {
                     self.currentHash = commitResult.hash;
-                    self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                    self.logger.debug('"' + self.branchName + '" was updated to the new commit.');
                     self.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
                     return commitResult;
                 } else if (commitResult.status === STORAGE_CONSTANTS.FORKED) {
@@ -478,7 +500,8 @@ define([
                     return commitResult;
                 } else if (!self.branchName) {
                     self.currentHash = commitResult.hash;
-                    self.addCommitToResult(null);
+                    self.addCommitToResult(commitResult.status);
+                    return commitResult;
                 } else {
                     throw new Error('setBranchHash returned unexpected status' + commitResult.status);
                 }
@@ -498,7 +521,7 @@ define([
             .then(function (forkResult) {
                 if (forkResult.status === STORAGE_CONSTANTS.SYNCED) {
                     self.branchName = forkName;
-                    self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
+                    self.logger.debug('"' + self.branchName + '" was updated to the new commit.' +
                         '(Successive saves will try to save to this new branch.)');
                     self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
 
@@ -524,11 +547,17 @@ define([
      * previous commit. Additionally if the namespaces have changed between commits - the this.META might end up
      * being empty.
      *
-     * @param {function(Error, boolean)} callback - Resolved with true if branch had moved forward.
+     * @param {[function(Error, boolean)]} callback - Resolved with true if branch had moved forward.
+     * @returns {Promise}
      */
     PluginBase.prototype.fastForward = function (callback) {
         var self = this,
             options;
+
+        if (this.callDepth > 0) {
+            self.logger.warn('callDepth is greater than zero, will not fast-forward "', this.callDepth, '"');
+            return Q.resolve(false).nodeify(callback);
+        }
 
         return self.project.getBranchHash(self.branchName)
             .then(function (branchHash) {
@@ -627,6 +656,121 @@ define([
                 return nodes;
             })
             .nodeify(callback);
+    };
+
+    /**
+     * Initializes and invokes the given plugin (at pluginId).
+     * Things to note:
+     *  1. If the invoked plugin calls save - it will not persist nor make a commit. The message will be recorded in
+     *  the InterPluginResult.
+     *  2. Artifacts and files saved will be added to the blob-storage. Invoked plugins can expose the content by adding
+     *  it to itself - the instance will be available in the InterPluginResult.
+     *
+     * @param {string} pluginId - Id of plugin that should be invoked
+     * @param {object} [context] - Optional context for the invoked plugin
+     * @param {object} [context.namespace=this.namespace] - Namespace (relative this.namespace)
+     * @param {module:Core~Node} [context.activeNode=this.activeNode] - Active node of invoked plugin
+     * @param {Array<module:Core~Node>} [context.activeSelection=this.activeSelection] - Active selection of invoked plugin
+     * @param {object} [context.pluginConfig] - Specific configuration parameters that should be used for the invocation.
+     * If not provided will first check if the currentConfig of this plugin contains this plugin as dependency within
+     * the array this._currentConfig._dependencies. Finally it will fall back to the default config of the plugin.
+     * @param {function(Error, InterPluginResult)} [callback]
+     * @returns {*}
+     */
+    PluginBase.prototype.invokePlugin = function (pluginId, context, callback) {
+        var self = this,
+            deferred = Q.defer(),
+            pluginInstance;
+
+        context = context || {};
+
+        function getPluginClass() {
+            var requireDeferred = Q.defer(),
+                pluginPath = 'plugin/' + pluginId + '/' + pluginId + '/' + pluginId;
+
+            requirejs([pluginPath],
+                function (PluginClass) {
+                    self.logger.debug('requirejs plugin from path: ' + pluginPath);
+                    requireDeferred.resolve(PluginClass);
+                },
+                function (err) {
+                    requireDeferred.reject(err);
+                }
+            );
+
+            return requireDeferred.promise;
+        }
+
+        getPluginClass()
+            .then(function (PluginClass) {
+                var pluginConfig,
+                    metaName,
+                    cfgKey;
+
+                pluginInstance = new PluginClass();
+
+                pluginInstance.initialize(self.logger.fork(pluginId), self.blobClient.getNewInstance(), self.gmeConfig);
+                pluginInstance.result = new InterPluginResult(pluginInstance);
+
+                ['core', 'project', 'branch', 'projectName', 'projectId', 'branchName', 'branchHash', 'commitHash',
+                    'currentHash', 'rootNode', 'notificationHandlers']
+                    .forEach(function (sameField) {
+                        pluginInstance[sameField] = self[sameField];
+                    });
+
+                pluginInstance.activeNode = context.activeNode || self.activeNode;
+                pluginInstance.activeSelection = context.activeSelection || self.activeSelection;
+
+                if (context.namespace) {
+                    pluginInstance.namespace = self.namespace === '' ?
+                        context : self.namespace + '.' + context.namespace;
+
+                    pluginInstance.META = {};
+                    for (metaName in self.META) {
+                        if (metaName.indexOf('.') > -1) {
+                            self.META[metaName.substring(metaName.indexOf('.') + 1)] = self.META[metaName];
+                        }
+                    }
+                } else {
+                    pluginInstance.namespace = self.namespace;
+                    pluginInstance.META = self.META;
+                }
+
+                // Plugin config
+                // 1. Get the default config for the plugin instance.
+                pluginConfig = pluginInstance.getDefaultConfig();
+
+                // 2. If the current-plugin has a sub-config for this plugin (from the default UI) - add those.
+                if (self._currentConfig.hasOwnProperty('_dependencies') &&
+                    self._currentConfig._dependencies.hasOwnProperty(pluginId) &&
+                    self._currentConfig._dependencies[pluginId].hasOwnProperty('pluginConfig')) {
+
+                    for (cfgKey in self._currentConfig._dependencies[pluginId].pluginConfig) {
+                        pluginConfig[cfgKey] = self._currentConfig._dependencies[pluginId].pluginConfig[cfgKey];
+                    }
+                }
+
+                // 3. Finally use the specific config passed here.
+                if (context.pluginConfig) {
+                    for (cfgKey in context.pluginConfig) {
+                        pluginConfig[cfgKey] = context.pluginConfig[cfgKey];
+                    }
+                }
+
+                pluginInstance.setCurrentConfig(pluginConfig);
+                pluginInstance.isConfigured = true;
+                pluginInstance.callDepth = self.callDepth + 1;
+
+                return Q.ninvoke(pluginInstance, 'main');
+            })
+            .then(function (res) {
+                deferred.resolve(res);
+            })
+            .catch(function (err) {
+                deferred.reject(err);
+            });
+
+        return deferred.promise.nodeify(callback);
     };
     //</editor-fold>
     //<editor-fold desc="Methods that are used by the Plugin Manager. Derived classes should not use these methods">
@@ -727,6 +871,22 @@ define([
      */
     PluginBase.prototype.getMetadata = function () {
         return this.pluginMetadata;
+    };
+
+    /**
+     * Gets the ids of the directly defined dependencies of the plugin
+     *
+     * @returns {string[]}
+     */
+    PluginBase.prototype.getPluginDependencies = function () {
+        if (this.pluginMetadata && this.pluginMetadata.dependencies) {
+            return this.pluginMetadata.dependencies
+                .map(function (data) {
+                    return data.id;
+                });
+        } else {
+            return [];
+        }
     };
     //</editor-fold>
 
