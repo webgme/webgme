@@ -19,6 +19,7 @@ describe('branch status', function () {
         projectId;
 
     before(function (done) {
+        this.timeout(5000);
         requirejs([
             'js/client',
             'js/logger',
