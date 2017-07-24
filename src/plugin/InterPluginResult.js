@@ -34,13 +34,7 @@ define(['plugin/PluginResultBase'], function (PluginResultBase) {
      * @param {string} message
      */
     InterPluginResult.prototype.addCommitMessage = function (message) {
-        if (typeof message === 'string') {
-            this.commitMessages.push(message);
-        } else {
-            // In order to be called from other plugin via PluginBase.invokePlugin
-            // the plugin must use PluginBase.save instead of persisting/committing on its own.
-            throw new Error('Plugin is being called from other plugin - addCommit takes string.');
-        }
+        this.commitMessages.push(message);
     };
 
     /**

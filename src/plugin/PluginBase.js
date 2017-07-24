@@ -453,8 +453,7 @@ define([
 
         if (this.callDepth > 0) {
             self.logger.debug('Call-depth is greater than zero, will not persist "', this.callDepth, '"');
-            // How to handle this neatly..
-            self.addCommitToResult(commitMessage);
+            self.result.addCommitMessage(commitMessage);
             return Q.resolve({
                 hash: self.currentHash,
                 // TODO: Do we need a status? Which one? SYNCED so it can proceed?
@@ -616,13 +615,8 @@ define([
             status: status
         };
 
-        if (this.callDepth > 0) {
-            this.logger.debug('callDepth is greater than zero, will append commit-message to result:', status);
-            this.result.addCommitMessage(status);
-        } else {
-            this.result.addCommit(newCommit);
-            this.logger.debug('newCommit added', newCommit);
-        }
+        this.result.addCommit(newCommit);
+        this.logger.debug('newCommit added', newCommit);
     };
 
     /**
