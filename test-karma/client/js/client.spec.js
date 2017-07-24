@@ -1316,7 +1316,7 @@ describe('GME client', function () {
                 expect(err).to.equal(null);
                 client.createBranch(projectId, branchName, masterHash, function (err) {
                     expect(err).to.equal(null);
-                    console.error('created branch', projectId, branchName);
+                    //console.error('created branch', projectId, branchName);
                 });
             });
         });
@@ -3435,7 +3435,7 @@ describe('GME client', function () {
                 node,
                 first = true,
                 branchStatusHandler = function (status /*, commitQueue, updateQueue*/) {
-                    console.log(status);
+                    // console.log(status);
                     if (status === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
                         if (first) {
                             first = false;
@@ -3765,7 +3765,7 @@ describe('GME client', function () {
                 testId = 'basicDelMemberAttribute',
                 first = true,
                 branchStatusHandler = function (status /*, commitQueue, updateQueue*/) {
-                    console.log(status);
+                    // console.log(status);
                     if (status === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
                         if (first) {
                             first = false;
@@ -3881,7 +3881,7 @@ describe('GME client', function () {
                 testId = 'basicDelMemberRegistry',
                 first = true,
                 branchStatusHandler = function (status /*, commitQueue, updateQueue*/) {
-                    console.log(status);
+                    // console.log(status);
                     if (status === client.CONSTANTS.BRANCH_STATUS.AHEAD_SYNC) {
                         if (first) {
                             first = false;
@@ -4269,7 +4269,7 @@ describe('GME client', function () {
                 }
 
                 if (testSate === 'undo') {
-                    console.warn('we were here');
+                    //console.warn('we were here');
                     testSate = null;
                     expect(events).to.have.length(2);
                     expect(events[1]).to.deep.equal({eid: '/323573539', etype: 'update'});
@@ -4745,7 +4745,6 @@ describe('GME client', function () {
 
             client.seedProject(seedConfig, function (err) {
                 expect(err).not.to.equal(null);
-                console.error('seedProject', err);
                 expect(err.message).to.contain('Project already exists');
                 //TODO: Check that the project is there.
                 done();

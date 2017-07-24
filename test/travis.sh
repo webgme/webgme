@@ -6,7 +6,7 @@ echo "RECURSIVE = $RECURSIVE"
 
 if [ "$TEST_BROWSER" == "true" ]
 then
-  export COMMAND="node ./node_modules/karma/bin/karma start karma.conf.js --browsers Firefox --single-run"
+  export COMMAND="node ./node_modules/karma/bin/karma start karma.conf.js --browsers Firefox --single-run --timeout 10000"
 else
   export COMMAND="node ./node_modules/mocha/bin/mocha -R dot --timeout 10000"
   if [ "$RECURSIVE" == "true" ]
