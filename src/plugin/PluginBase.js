@@ -452,7 +452,7 @@ define([
         commitMessage = message ? commitMessage + ' - ' + message : commitMessage;
 
         if (this.callDepth > 0) {
-            self.logger.info('Call-depth is greater than zero, will not persist "', this.callDepth, '"');
+            self.logger.debug('Call-depth is greater than zero, will not persist "', this.callDepth, '"');
             // How to handle this neatly..
             self.addCommitToResult(commitMessage);
             return Q.resolve({
@@ -475,7 +475,7 @@ define([
             .then(function (commitResult) {
                 if (commitResult.status === STORAGE_CONSTANTS.SYNCED) {
                     self.currentHash = commitResult.hash;
-                    self.logger.info('"' + self.branchName + '" was updated to the new commit.');
+                    self.logger.debug('"' + self.branchName + '" was updated to the new commit.');
                     self.addCommitToResult(STORAGE_CONSTANTS.SYNCED);
                     return commitResult;
                 } else if (commitResult.status === STORAGE_CONSTANTS.FORKED) {
@@ -522,7 +522,7 @@ define([
             .then(function (forkResult) {
                 if (forkResult.status === STORAGE_CONSTANTS.SYNCED) {
                     self.branchName = forkName;
-                    self.logger.info('"' + self.branchName + '" was updated to the new commit.' +
+                    self.logger.debug('"' + self.branchName + '" was updated to the new commit.' +
                         '(Successive saves will try to save to this new branch.)');
                     self.addCommitToResult(STORAGE_CONSTANTS.FORKED);
 
@@ -557,7 +557,7 @@ define([
 
         if (this.callDepth > 0) {
             self.logger.warn('callDepth is greater than zero, will not fast-forward "', this.callDepth, '"');
-            return Q.resolve(false);
+            return Q.resolve(false).nodeify(callback);
         }
 
         return self.project.getBranchHash(self.branchName)
@@ -617,7 +617,7 @@ define([
         };
 
         if (this.callDepth > 0) {
-            this.logger.info('callDepth is greater than zero, will append commit-message to result:', status);
+            this.logger.debug('callDepth is greater than zero, will append commit-message to result:', status);
             this.result.addCommitMessage(status);
         } else {
             this.result.addCommit(newCommit);
@@ -750,7 +750,7 @@ define([
                 if (self._currentConfig.hasOwnProperty('_dependencies') &&
                     self._currentConfig._dependencies.hasOwnProperty(pluginId) &&
                     self._currentConfig._dependencies[pluginId].hasOwnProperty('pluginConfig')) {
-                    console.log(self._currentConfig._dependencies[pluginId].pluginConfig);
+
                     for (cfgKey in self._currentConfig._dependencies[pluginId].pluginConfig) {
                         pluginConfig[cfgKey] = self._currentConfig._dependencies[pluginId].pluginConfig[cfgKey];
                     }

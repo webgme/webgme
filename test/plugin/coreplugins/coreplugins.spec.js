@@ -38,7 +38,8 @@ describe('CorePlugins', function () {
             'RestRouterGenerator',
             'CustomPluginConfig',
             'GuidCollider',
-            'GenerateAll'
+            'GenerateAll',
+            'SavingDependency'
         ],
 
         pluginsShouldFail = [
