@@ -296,15 +296,23 @@ SafeStorage.prototype.createProject = function (data, callback) {
                     cnt = hookIds.length;
 
                 function addHooks() {
+                    var hookData;
                     if (cnt === 0) {
                         return;
                     } else {
                         cnt -= 1;
-                        return self.metadataStorage.addProjectHook(data.projectId,
-                            hookIds[cnt], self.gmeConfig.webhooks.defaults[hookIds[cnt]])
-                            .then(function () {
-                                return addHooks();
-                            });
+                        hookData = JSON.stringify(self.gmeConfig.webhooks.defaults[hookIds[cnt]]);
+
+                        if (typeof hookData.url === 'string') {
+                            delete hookData.options;
+                            return self.metadataStorage.addProjectHook(data.projectId, hookIds[cnt], hookData)
+                                .then(function () {
+                                    return addHooks();
+                                });
+                        } else {
+                            self.logger.debug('Url not specified in default hook - will not add it to new project.');
+                            return addHooks();
+                        }
                     }
                 }
 

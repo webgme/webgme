@@ -128,6 +128,13 @@ var path = require('path'),
 
         rest: {
             components: {
+                //<id>: {
+                //    mount: 'path/subPath',
+                //    src: './middleware/ExampleRestRouter',
+                //    options: {}
+                // }
+
+                // Old format
                 //'path/subPath': './middleware/ExampleRestRouter'
             }
         },
@@ -242,7 +249,7 @@ var path = require('path'),
             enable: false,
             manager: 'memory', // memory, redis
             defaults: {
-                //myHook: {url: 'http://127.0.0.1:9000/MyWebHook', events: 'all'}
+                //myHook: {url: 'http://127.0.0.1:9000/MyWebHook', events: 'all', options: {}}
             }
         }
     };

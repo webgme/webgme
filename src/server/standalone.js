@@ -511,26 +511,39 @@ function StandAloneServer(gmeConfig) {
     }
 
     function setupExternalRestModules() {
-        var restComponent,
-            keys = Object.keys(gmeConfig.rest.components),
+        var keys = Object.keys(gmeConfig.rest.components),
+            restComponent,
+            mount,
+            src,
             i;
+
         logger.debug('initializing external REST modules');
         for (i = 0; i < keys.length; i++) {
-            restComponent = require(gmeConfig.rest.components[keys[i]]);
+            if (typeof gmeConfig.rest.components[keys[i]] === 'string') {
+                mount = keys[i];
+                src = gmeConfig.rest.components[keys[i]];
+            } else {
+                mount = gmeConfig.rest.components[keys[i]].mount;
+                src = gmeConfig.rest.components[keys[i]].src;
+            }
+
+            restComponent = require(src);
+
             if (restComponent) {
-                logger.debug('adding rest component [' + gmeConfig.rest.components[keys[i]] + '] to' +
-                    ' - /' + keys[i]);
+                logger.debug('Mounting external REST component [' + src + '] at /' + mount);
+
                 if (restComponent.hasOwnProperty('initialize') && restComponent.hasOwnProperty('router')) {
                     restComponent.initialize(middlewareOpts);
-                    __app.use('/' + keys[i], restComponent.router);
+                    __app.use('/' + mount, restComponent.router);
+
                     if (restComponent.hasOwnProperty('start') && restComponent.hasOwnProperty('stop')) {
                         routeComponents.push(restComponent);
                     } else {
-                        logger.warn('Deprecated restRouter, [', keys[i], '] does not have start/stop methods.');
+                        logger.warn('Deprecated restRouter, [' + src + '] does not have start/stop methods.');
                     }
                 } else {
-                    logger.warn('Deprecated restComponent [', keys[i], '], use the RestRouter instead.');
-                    __app.use('/' + keys[i], restComponent(gmeConfig, ensureAuthenticated, logger));
+                    logger.warn('Deprecated restComponent [' + src + '], use the RestRouter instead.');
+                    __app.use('/' + mount, restComponent(gmeConfig, ensureAuthenticated, logger));
                 }
             } else {
                 throw new Error('Loading rest component ' + gmeConfig.rest.components[keys[i]] + ' failed.');

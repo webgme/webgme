@@ -7,10 +7,13 @@
 function getClientConfig(gmeConfig) {
     'use strict';
     var clientConfig = JSON.parse(JSON.stringify(gmeConfig)),
-        serverPort = clientConfig.server.port; // This is only needed for the karma tests.
+        key;
 
     delete clientConfig.server;
-    clientConfig.server = {port: serverPort};
+    clientConfig.server = {port: gmeConfig.server.port}; // This is only needed for the karma tests.
+
+    delete clientConfig.webhooks;
+    clientConfig.webhooks = {enable: gmeConfig.webhooks.enable};
 
     delete clientConfig.authentication.jwt.expiresIn;
     delete clientConfig.authentication.jwt.renewBeforeExpires;
@@ -26,7 +29,20 @@ function getClientConfig(gmeConfig) {
     delete clientConfig.socketIO.serverOptions;
     delete clientConfig.socketIO.adapter;
     delete clientConfig.storage.database;
+
     delete clientConfig.rest;
+
+    for (key in gmeConfig.rest.components) {
+        if (typeof gmeConfig.rest.componets[key] === 'string') {
+            clientConfig.rest.components[key] = {
+                mount: key
+            };
+        } else {
+            clientConfig.rest.components[key] = {
+                mount: clientConfig.rest.components[key].mount
+            };
+        }
+    }
 
     clientConfig.storage.cache = clientConfig.storage.clientCacheSize;
 
