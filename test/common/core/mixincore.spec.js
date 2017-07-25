@@ -10,6 +10,13 @@ var testFixture = require('../../_globals.js');
 describe('mixin core', function () {
     'user strict';
 
+    function definitionInfoToJSON(info) {
+        return {
+            sourcePath: info.sourcePath,
+            targetPath: info.targetPath
+        }
+    }
+
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
         expect = testFixture.expect,
@@ -51,9 +58,9 @@ describe('mixin core', function () {
 
     after(function (done) {
         Q.allDone([
-                storage.closeDatabase(),
-                gmeAuth.unload()
-            ])
+            storage.closeDatabase(),
+            gmeAuth.unload()
+        ])
             .nodeify(done);
     });
 
@@ -645,13 +652,13 @@ describe('mixin core', function () {
 
         it('should containment validity should based on the isTypeOf relation', function () {
             var root = core.createNode(),
-                base = core.createNode({parent:root,relid:'B'}),
-                container = core.createNode({parent:root, base:base, relid:'C'}),
-                element = core.createNode({parent:root, base: base, relid:'E'}),
-                mixin = core.createNode({parent:root, base: base,relid:'M'}),
-                subElement = core.createNode({parent:root, base:element, relid:'S'}),
-                mixed = core.createNode({parent:root,base:base, relid:'m'}),
-                connection = core.createNode({parent:root,base:base,relid:'c'});
+                base = core.createNode({parent: root, relid: 'B'}),
+                container = core.createNode({parent: root, base: base, relid: 'C'}),
+                element = core.createNode({parent: root, base: base, relid: 'E'}),
+                mixin = core.createNode({parent: root, base: base, relid: 'M'}),
+                subElement = core.createNode({parent: root, base: element, relid: 'S'}),
+                mixed = core.createNode({parent: root, base: base, relid: 'm'}),
+                connection = core.createNode({parent: root, base: base, relid: 'c'});
 
             core.addMember(root, 'MetaAspectSet', base);
             core.addMember(root, 'MetaAspectSet', container);
@@ -661,17 +668,17 @@ describe('mixin core', function () {
             core.addMember(root, 'MetaAspectSet', mixed);
             core.addMember(root, 'MetaAspectSet', connection);
 
-            core.setPointerMetaTarget(connection,'ptr',mixin,0,1);
-            core.setChildMeta(container,mixin,0,1);
-            core.setChildMeta(container,element,0,10);
+            core.setPointerMetaTarget(connection, 'ptr', mixin, 0, 1);
+            core.setChildMeta(container, mixin, 0, 1);
+            core.setChildMeta(container, element, 0, 10);
 
-            core.addMixin(mixed,core.getPath(mixin));
+            core.addMixin(mixed, core.getPath(mixin));
 
-            expect(core.isValidChildOf(mixed,container)).to.equal(true);
-            expect(core.isValidChildOf(mixin,container)).to.equal(true);
-            expect(core.isValidChildOf(element,container)).to.equal(true);
-            expect(core.isValidChildOf(subElement,container)).to.equal(true);
-            expect(core.isValidTargetOf(mixed,connection,'ptr')).to.equal(true);
+            expect(core.isValidChildOf(mixed, container)).to.equal(true);
+            expect(core.isValidChildOf(mixin, container)).to.equal(true);
+            expect(core.isValidChildOf(element, container)).to.equal(true);
+            expect(core.isValidChildOf(subElement, container)).to.equal(true);
+            expect(core.isValidTargetOf(mixed, connection, 'ptr')).to.equal(true);
         });
 
         it('should include constraint names from mixins', function () {
@@ -694,6 +701,119 @@ describe('mixin core', function () {
             });
 
             core.delConstraint(M4, 'm4Constraint');
+        });
+
+        it('should return the proper attribute rule owner', function () {
+            expect(core.getAttributeDefinitionOwner(A, 'A')).to.eql(A);
+            expect(core.getAttributeDefinitionOwner(A, 'M1')).to.eql(M1);
+            expect(core.getAttributeDefinitionOwner(A, 'M2')).to.eql(M2);
+            expect(core.getAttributeDefinitionOwner(A, 'M3')).to.eql(M3);
+            expect(core.getAttributeDefinitionOwner(A, 'M4')).to.eql(M4);
+            expect(core.getAttributeDefinitionOwner(A, 'conflicting')).to.eql(M3);
+            expect(core.getAttributeDefinitionOwner(A, 'name')).to.eql(FCO);
+
+        });
+
+        it('should return the proper aspect rule owner', function () {
+            expect(core.getAspectDefinitionOwner(A, 'A')).to.eql(A);
+            expect(core.getAspectDefinitionOwner(A, 'M1')).to.eql(M1);
+            expect(core.getAspectDefinitionOwner(A, 'M2')).to.eql(M2);
+            expect(core.getAspectDefinitionOwner(A, 'M3')).to.eql(M3);
+            expect(core.getAspectDefinitionOwner(A, 'M4')).to.eql(M4);
+            expect(core.getAspectDefinitionOwner(A, 'conflicting')).to.eql(M3);
+        });
+
+        it('should return the proper aspect definition info', function () {
+            expect(definitionInfoToJSON(core.getAspectDefinitionInfo(A, 'A', FCO))).to.eql({
+                sourcePath: '/A',
+                targetPath: '/1'
+            });
+
+            expect(definitionInfoToJSON(core.getAspectDefinitionInfo(A, 'conflicting', FCO))).to.eql({
+                sourcePath: '/M3',
+                targetPath: '/1'
+            });
+
+            expect(definitionInfoToJSON(core.getAspectDefinitionInfo(A, 'conflicting', A))).to.eql({
+                sourcePath: '/M3',
+                targetPath: '/1'
+            });
+
+            expect(definitionInfoToJSON(core.getAspectDefinitionInfo(A, 'M4', M2))).to.eql({
+                sourcePath: '/M4',
+                targetPath: '/1'
+            });
+        });
+
+        it('should return the proper pointer definition info', function () {
+            expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'A', FCO))).to.eql({
+                sourcePath: '/A',
+                targetPath: '/1'
+            });
+
+            expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'Ms', M4))).to.eql({
+                sourcePath: '/M3',
+                targetPath: '/M4'
+            });
+
+            expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'Ms', M3))).to.eql({
+                sourcePath: '/M2',
+                targetPath: '/M3'
+            });
+
+            expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'MEs', M4))).to.eql({
+                sourcePath: '/M2',
+                targetPath: '/M4'
+            });
+
+            expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'MEs', M2))).to.eql({
+                sourcePath: '/M4',
+                targetPath: '/M2'
+            });
+
+            expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'MEs', A))).to.eql({
+                sourcePath: '/M2',
+                targetPath: '/M4'
+            });
+        });
+
+        it('should return the proper set definition info', function () {
+            expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sA', FCO))).to.eql({
+                sourcePath: '/A',
+                targetPath: '/1'
+            });
+
+            expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sA', A))).to.eql({
+                sourcePath: '/A',
+                targetPath: '/1'
+            });
+
+            expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sMs', A))).to.eql({
+                sourcePath: '/M1',
+                targetPath: '/M2'
+            });
+
+            expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sMs', M2))).to.eql({
+                sourcePath: '/M1',
+                targetPath: '/M2'
+            });
+
+            expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sMs', M3))).to.eql({
+                sourcePath: '/M2',
+                targetPath: '/M3'
+            });
+
+            expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sMs', M4))).to.eql({
+                sourcePath: '/M3',
+                targetPath: '/M4'
+            });
+        });
+
+        it('should return the proper containment definition info', function () {
+            expect(definitionInfoToJSON(core.getChildDefinitionInfo(A, A))).to.eql({
+                sourcePath: '/A',
+                targetPath: '/A'
+            });
         });
     });
 });

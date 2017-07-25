@@ -340,4 +340,262 @@ describe('meta core', function () {
             expect(typeof pointerMeta[path].max).to.equal('number');
         }
     });
+
+    it('returns the owner of the attribute definition', function () {
+        var defRoot = core.createNode({}),
+            defFCO = core.createNode({base: null, parent: defRoot, relid: '1'}),
+            defOwner1 = core.createNode({base: defFCO, parent: defRoot, relid: 'O1'}),
+            defOwner2 = core.createNode({base: defOwner1, parent: defRoot, relid: 'O2'}),
+            defInst1 = core.createNode({base: defOwner1, parent: defRoot, relid: 'I1'}),
+            defInst2 = core.createNode({base: defOwner2, parent: defRoot, relid: 'I2'});
+
+        core.setAttributeMeta(defFCO, 'name', {type: 'string'});
+        core.setAttributeMeta(defOwner1, 'attribute', {type: 'string'});
+        core.setAttributeMeta(defOwner1, 'altOne', {type: 'string'});
+        core.setAttributeMeta(defOwner2, 'attribute', {type: 'string'});
+        core.setAttributeMeta(defOwner2, 'altTwo', {type: 'string'});
+
+        expect(core.getAttributeDefinitionOwner(defInst2, 'attribute')).to.equal(defOwner2);
+        expect(core.getAttributeDefinitionOwner(defInst2, 'altOne')).to.equal(defOwner1);
+        expect(core.getAttributeDefinitionOwner(defInst2, 'altTwo')).to.equal(defOwner2);
+        expect(core.getAttributeDefinitionOwner(defInst1, 'attribute')).to.equal(defOwner1);
+        expect(core.getAttributeDefinitionOwner(defOwner2, 'attribute')).to.equal(defOwner2);
+        expect(core.getAttributeDefinitionOwner(defOwner1, 'attribute')).to.equal(defOwner1);
+        expect(core.getAttributeDefinitionOwner(defInst1, 'name')).to.equal(defFCO);
+        expect(core.getAttributeDefinitionOwner(defInst2, 'name')).to.equal(defFCO);
+
+    });
+
+    it('returns the owner of the aspect definition', function () {
+        var defRoot = core.createNode({}),
+            defFCO = core.createNode({base: null, parent: defRoot, relid: '1'}),
+            defOwner1 = core.createNode({base: defFCO, parent: defRoot, relid: 'O1'}),
+            defOwner2 = core.createNode({base: defOwner1, parent: defRoot, relid: 'O2'}),
+            defInst1 = core.createNode({base: defOwner1, parent: defRoot, relid: 'I1'}),
+            defInst2 = core.createNode({base: defOwner2, parent: defRoot, relid: 'I2'});
+
+        core.setAttributeMeta(defFCO, 'name', {type: 'string'});
+        core.setAspectMetaTarget(defOwner1, 'aspect', defFCO);
+        core.setAspectMetaTarget(defOwner1, 'a1', defFCO);
+        core.setAspectMetaTarget(defOwner2, 'aspect', defFCO);
+        core.setAspectMetaTarget(defOwner2, 'a2', defFCO);
+
+        expect(core.getAspectDefinitionOwner(defInst2, 'aspect')).to.equal(defOwner2);
+        expect(core.getAspectDefinitionOwner(defInst2, 'a1')).to.equal(defOwner1);
+        expect(core.getAspectDefinitionOwner(defInst2, 'a2')).to.equal(defOwner2);
+        expect(core.getAspectDefinitionOwner(defInst1, 'aspect')).to.equal(defOwner1);
+        expect(core.getAspectDefinitionOwner(defInst1, 'a1')).to.equal(defOwner1);
+        expect(core.getAspectDefinitionOwner(defOwner2, 'aspect')).to.equal(defOwner2);
+        expect(core.getAspectDefinitionOwner(defOwner1, 'aspect')).to.equal(defOwner1);
+
+    });
+
+    it('returns the info about the pointer definition', function () {
+        var defRoot = core.createNode({}),
+            defFCO = core.createNode({base: null, parent: defRoot, relid: '1'}),
+            defTarget1 = core.createNode({base: defFCO, parent: defRoot, relid: 'T1'}),
+            defTarget2 = core.createNode({base: defFCO, parent: defRoot, relid: 'T2'}),
+            defOwner1 = core.createNode({base: defFCO, parent: defRoot, relid: 'O1'}),
+            defOwner2 = core.createNode({base: defOwner1, parent: defRoot, relid: 'O2'}),
+            defInst1 = core.createNode({base: defOwner1, parent: defRoot, relid: 'I1'}),
+            defInst2 = core.createNode({base: defOwner2, parent: defRoot, relid: 'I2'}),
+            defInstT1 = core.createNode({base: defTarget1, parent: defRoot, relid: 'IT1'}),
+            defInstT2 = core.createNode({base: defTarget2, parent: defRoot, relid: 'IT2'});
+
+        core.setAttributeMeta(defFCO, 'name', {type: 'string'});
+        core.setPointerMetaTarget(defOwner1, 'ptr', defFCO);
+        core.setPointerMetaLimits(defOwner1, 'ptr', 0, 1);
+        core.setPointerMetaTarget(defOwner2, 'ptr', defTarget2);
+        core.setPointerMetaLimits(defOwner2, 'ptr', 0, 1);
+        core.setPointerMetaTarget(defOwner1, 'pA', defTarget1);
+        core.setPointerMetaLimits(defOwner1, 'pA', 0, 1);
+        core.setPointerMetaTarget(defOwner2, 'pA', defTarget2);
+        core.setPointerMetaLimits(defOwner2, 'pA', 0, 1);
+
+        expect(core.getPointerDefinitionInfo(defInst2, 'ptr', defFCO)).to.eql({
+            sourceNode: defOwner1,
+            sourcePath: '/O1',
+            targetNode: defFCO,
+            targetPath: '/1'
+        });
+
+        expect(core.getPointerDefinitionInfo(defInst2, 'ptr', defInstT2)).to.eql({
+            sourceNode: defOwner2,
+            sourcePath: '/O2',
+            targetNode: defTarget2,
+            targetPath: '/T2'
+        });
+
+        expect(core.getPointerDefinitionInfo(defInst2, 'pA', defInstT2)).to.eql({
+            sourceNode: defOwner2,
+            sourcePath: '/O2',
+            targetNode: defTarget2,
+            targetPath: '/T2'
+        });
+
+        expect(core.getPointerDefinitionInfo(defInst2, 'pA', defInstT1)).to.eql({
+            sourceNode: defOwner1,
+            sourcePath: '/O1',
+            targetNode: defTarget1,
+            targetPath: '/T1'
+        });
+    });
+
+    it('returns the info about the set definition', function () {
+        var defRoot = core.createNode({}),
+            defFCO = core.createNode({base: null, parent: defRoot, relid: '1'}),
+            defTarget1 = core.createNode({base: defFCO, parent: defRoot, relid: 'T1'}),
+            defTarget2 = core.createNode({base: defFCO, parent: defRoot, relid: 'T2'}),
+            defOwner1 = core.createNode({base: defFCO, parent: defRoot, relid: 'O1'}),
+            defOwner2 = core.createNode({base: defOwner1, parent: defRoot, relid: 'O2'}),
+            defInst1 = core.createNode({base: defOwner1, parent: defRoot, relid: 'I1'}),
+            defInst2 = core.createNode({base: defOwner2, parent: defRoot, relid: 'I2'}),
+            defInstT1 = core.createNode({base: defTarget1, parent: defRoot, relid: 'IT1'}),
+            defInstT2 = core.createNode({base: defTarget2, parent: defRoot, relid: 'IT2'});
+
+        core.setAttributeMeta(defFCO, 'name', {type: 'string'});
+        core.setPointerMetaTarget(defOwner1, 'ptr', defFCO);
+        core.setPointerMetaTarget(defOwner2, 'ptr', defTarget2);
+        core.setPointerMetaTarget(defOwner1, 'pA', defTarget1);
+        core.setPointerMetaTarget(defOwner2, 'pA', defTarget2);
+
+        expect(core.getSetDefinitionInfo(defInst2, 'ptr', defFCO)).to.eql({
+            sourceNode: defOwner1,
+            sourcePath: '/O1',
+            targetNode: defFCO,
+            targetPath: '/1'
+        });
+
+        expect(core.getSetDefinitionInfo(defInst2, 'ptr', defInstT2)).to.eql({
+            sourceNode: defOwner2,
+            sourcePath: '/O2',
+            targetNode: defTarget2,
+            targetPath: '/T2'
+        });
+
+        expect(core.getSetDefinitionInfo(defInst2, 'pA', defInstT2)).to.eql({
+            sourceNode: defOwner2,
+            sourcePath: '/O2',
+            targetNode: defTarget2,
+            targetPath: '/T2'
+        });
+
+        expect(core.getSetDefinitionInfo(defInst2, 'pA', defInstT1)).to.eql({
+            sourceNode: defOwner1,
+            sourcePath: '/O1',
+            targetNode: defTarget1,
+            targetPath: '/T1'
+        });
+    });
+
+    it('returns the info about containment relationship', function () {
+        var defRoot = core.createNode({}),
+            defFCO = core.createNode({base: null, parent: defRoot, relid: '1'}),
+            defTarget1 = core.createNode({base: defFCO, parent: defRoot, relid: 'T1'}),
+            defTarget2 = core.createNode({base: defFCO, parent: defRoot, relid: 'T2'}),
+            defOwner1 = core.createNode({base: defFCO, parent: defRoot, relid: 'O1'}),
+            defOwner2 = core.createNode({base: defOwner1, parent: defRoot, relid: 'O2'}),
+            defInst1 = core.createNode({base: defOwner1, parent: defRoot, relid: 'I1'}),
+            defInst2 = core.createNode({base: defOwner2, parent: defRoot, relid: 'I2'});
+
+        core.setChildMeta(defOwner1, defTarget1);
+        core.setChildMeta(defOwner2, defTarget2);
+
+        expect(core.getChildDefinitionInfo(defInst2, defTarget2)).to.eql({
+            sourceNode: defOwner2,
+            sourcePath: '/O2',
+            targetNode: defTarget2,
+            targetPath: '/T2'
+        });
+
+        expect(core.getChildDefinitionInfo(defInst2, defTarget1)).to.eql({
+            sourceNode: defOwner1,
+            sourcePath: '/O1',
+            targetNode: defTarget1,
+            targetPath: '/T1'
+        });
+    });
+
+    it('returns the info about the aspect definition', function () {
+        var defRoot = core.createNode({}),
+            defFCO = core.createNode({base: null, parent: defRoot, relid: '1'}),
+            defTarget1 = core.createNode({base: defFCO, parent: defRoot, relid: 'T1'}),
+            defTarget2 = core.createNode({base: defFCO, parent: defRoot, relid: 'T2'}),
+            defOwner1 = core.createNode({base: defFCO, parent: defRoot, relid: 'O1'}),
+            defOwner2 = core.createNode({base: defOwner1, parent: defRoot, relid: 'O2'}),
+            defInst1 = core.createNode({base: defOwner1, parent: defRoot, relid: 'I1'}),
+            defInst2 = core.createNode({base: defOwner2, parent: defRoot, relid: 'I2'}),
+            defInstT1 = core.createNode({base: defTarget1, parent: defRoot, relid: 'IT1'}),
+            defInstT2 = core.createNode({base: defTarget2, parent: defRoot, relid: 'IT2'});
+
+        core.setAttributeMeta(defFCO, 'name', {type: 'string'});
+        core.setAspectMetaTarget(defOwner1, 'ptr', defFCO);
+        core.setAspectMetaTarget(defOwner2, 'ptr', defTarget2);
+        core.setAspectMetaTarget(defOwner1, 'pA', defTarget1);
+        core.setAspectMetaTarget(defOwner2, 'pA', defTarget2);
+
+        expect(core.getAspectDefinitionInfo(defInst2, 'ptr', defFCO)).to.eql({
+            sourceNode: defOwner1,
+            sourcePath: '/O1',
+            targetNode: defFCO,
+            targetPath: '/1'
+        });
+
+        expect(core.getAspectDefinitionInfo(defInst2, 'ptr', defInstT2)).to.eql({
+            sourceNode: defOwner2,
+            sourcePath: '/O2',
+            targetNode: defTarget2,
+            targetPath: '/T2'
+        });
+
+        expect(core.getAspectDefinitionInfo(defInst2, 'pA', defInstT2)).to.eql({
+            sourceNode: defOwner2,
+            sourcePath: '/O2',
+            targetNode: defTarget2,
+            targetPath: '/T2'
+        });
+
+        expect(core.getAspectDefinitionInfo(defInst2, 'pA', defInstT1)).to.eql({
+            sourceNode: defOwner1,
+            sourcePath: '/O1',
+            targetNode: defTarget1,
+            targetPath: '/T1'
+        });
+    });
+
+    it('should move the target of a pointer/set definition', function () {
+        var defRoot = core.createNode({}),
+            defOwner = core.createNode({parent: defRoot, relid: 'O'}),
+            defTarget = core.createNode({parent: defRoot, relid: 'T'});
+
+        core.setPointerMetaTarget(defOwner, 'old', defTarget, 9, 10);
+        core.setPointerMetaLimits(defOwner, 'old', 8, 11);
+        expect(core.getValidPointerNames(defOwner)).to.eql([]);
+        expect(core.getValidSetNames(defOwner)).to.eql(['old']);
+        expect(core.isValidTargetOf(defTarget, defOwner, 'old')).to.eql(true);
+        expect(core.isValidTargetOf(defTarget, defOwner, 'new')).to.eql(false);
+
+        core.movePointerMetaTarget(defOwner, defTarget, 'old', 'new');
+        expect(core.getValidPointerNames(defOwner)).to.eql([]);
+        expect(core.getValidSetNames(defOwner)).to.eql(['new']);
+        expect(core.isValidTargetOf(defTarget, defOwner, 'old')).to.eql(false);
+        expect(core.isValidTargetOf(defTarget, defOwner, 'new')).to.eql(true);
+        expect(core.getPointerMeta(defOwner, 'new')).to.include({min: 8, max: 11});
+    });
+
+    it.only('should move the target of an aspect definition', function () {
+        var defRoot = core.createNode({}),
+            defOwner = core.createNode({parent: defRoot, relid: 'O'}),
+            defTarget = core.createNode({parent: defRoot, relid: 'T'});
+
+        core.setAspectMetaTarget(defOwner, 'old', defTarget);
+        expect(core.getValidAspectNames(defOwner)).to.eql(['old']);
+        expect(core.isValidAspectMemberOf(defTarget, defOwner, 'old')).to.eql(true);
+        expect(core.isValidAspectMemberOf(defTarget, defOwner, 'new')).to.eql(false);
+
+        core.moveAspectMetaTarget(defOwner, defTarget, 'old', 'new');
+        expect(core.getValidAspectNames(defOwner)).to.eql(['new']);
+        expect(core.isValidAspectMemberOf(defTarget, defOwner, 'old')).to.eql(false);
+        expect(core.isValidAspectMemberOf(defTarget, defOwner, 'new')).to.eql(true);
+    });
 });

@@ -118,7 +118,10 @@ describe('core', function () {
                 'removeLibrary', 'getLibraryGuid', 'renameLibrary', 'getLibraryInfo',
                 'getLibraryRoot', 'getLibraryMetaNodes', 'traverse', 'getClosureInformation',
                 'importClosure', 'getInstancePaths', 'loadInstances', 'delPointer', 'delSet',
-                'getMetaType', 'loadMembers', 'loadOwnMembers'
+                'getMetaType', 'loadMembers', 'loadOwnMembers', 'renamePointer', 'renameAttribute',
+                'renameRegistry', 'renameSet', 'getAttributeDefinitionOwner', 'getAspectDefinitionOwner',
+                'getPointerDefinitionInfo', 'getAspectDefinitionInfo', 'getSetDefinitionInfo',
+                'getChildDefinitionInfo'
             ];
 
         expect(functions).to.have.members(Matches);
@@ -4571,5 +4574,245 @@ describe('core', function () {
             expect(err.name).to.eql('CoreIllegalArgumentError');
             done();
         });
+    });
+
+    it('should throw @renamePointer if node is invalid', function () {
+        var myError;
+
+        try {
+            core.renamePointer('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renamePointer if node is invalid', function () {
+        var myError;
+
+        try {
+            core.renamePointer('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renamePointer if oldName is invalid', function () {
+        var myError;
+
+        try {
+            core.renamePointer(rootNode, {'not': 'string'}, 'newName');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renamePointer if newName is invalid', function () {
+        var myError;
+
+        try {
+            core.renamePointer(rootNode, 'OldName', {'not': 'string'});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renameAttribute if node is invalid', function () {
+        var myError;
+
+        try {
+            core.renameAttribute('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renameAttribute if oldName is invalid', function () {
+        var myError;
+
+        try {
+            core.renameAttribute(rootNode, {'not': 'string'}, 'newName');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renameAttribute if newName is invalid', function () {
+        var myError;
+
+        try {
+            core.renameAttribute(rootNode, 'OldName', {'not': 'string'});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renameRegistry if node is invalid', function () {
+        var myError;
+
+        try {
+            core.renameRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renameRegistry if oldName is invalid', function () {
+        var myError;
+
+        try {
+            core.renameRegistry(rootNode, {'not': 'string'}, 'newName');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renameRegistry if newName is invalid', function () {
+        var myError;
+
+        try {
+            core.renameRegistry(rootNode, 'OldName', {'not': 'string'});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renameSet if node is invalid', function () {
+        var myError;
+
+        try {
+            core.renameRegistry('string');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renameSet if oldName is invalid', function () {
+        var myError;
+
+        try {
+            core.renameSet(rootNode, {'not': 'string'}, 'newName');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @renameSet if newName is invalid', function () {
+        var myError;
+
+        try {
+            core.renameSet(rootNode, 'OldName', {'not': 'string'});
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @getAttributeDefinitionOwner if node is invalid', function () {
+        var myError;
+
+        try {
+            core.getAttributeDefinitionOwner('not node');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @getAttributeDefinitionOwner if name is invalid', function () {
+        var myError;
+
+        try {
+            core.getAttributeDefinitionOwner(rootNode, 2);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @getAttributeDefinitionOwner if name is not meta valid', function () {
+        var myError;
+
+        try {
+            core.getAttributeDefinitionOwner(rootNode, 'noGoodAttr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getPointerDefinitionInfo if node is invalid', function () {
+        var myError;
+
+        try {
+            core.getAttributeDefinitionOwner('not node');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @getPointerDefinitionInfo if name is invalid', function () {
+        var myError;
+
+        try {
+            core.getAttributeDefinitionOwner(rootNode, 2);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @getPointerDefinitionInfo if name is not meta valid', function () {
+        var myError;
+
+        try {
+            core.getAttributeDefinitionOwner(rootNode, 'noGoodAttr');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
+    });
+
+    it('should throw @getPointerDefinitionInfo if target is not node', function () {
+        var myError;
+
+        try {
+            core.getAttributeDefinitionOwner(rootNode, '', 'notnode');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalOperationError');
+        }
     });
 });

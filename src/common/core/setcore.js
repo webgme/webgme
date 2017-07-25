@@ -389,6 +389,20 @@ define([
 
             innerCore.deletePointer(setsNode, setName);
             innerCore.deleteNode(setNode, true);
+            setModified(node);
+        };
+
+        this.renameSet = function (node, oldName, newName) {
+            var setsNode = innerCore.getChild(node, CONSTANTS.ALL_SETS_PROPERTY),
+                setNode = innerCore.getChild(setsNode, oldName),
+                ownSetNames = self.getOwnSetNames(node);
+
+            if (ownSetNames.indexOf(newName) !== -1) {
+                self.deleteSet(node, newName);
+            }
+            innerCore.renamePointer(setsNode, oldName, newName);
+            innerCore.moveNode(setNode, setsNode, undefined, newName);
+            setModified(node);
         };
 
         this.isMemberOf = function (node) {
@@ -645,10 +659,31 @@ define([
         this.loadOwnMembers = function (node, setName) {
             return loadNodesOfPaths(self.getRoot(node), self.getOwnMemberPaths(node, setName));
         };
+
+        // it only works for own members
+        // if the target set has the same member, it will be removed first
+        this.moveMember = function (node, memberPath, oldSetName, newSetName) {
+            var oldSetNode = getSetNodeByName(node, oldSetName),
+                oldMemberRelid = getOwnMemberRelId(node, oldSetName, memberPath),
+                oldMemberNode,
+                setNames = self.getSetNames(node),
+                newMemberRelid = getOwnMemberRelId(node, newSetName, memberPath),
+                newSetNode;
+
+            ASSERT(oldMemberRelid !== null, 'Only own member can be moved!');
+            ASSERT(setNames.indexOf(newSetName) !== -1, 'Can only move to existing set');
+
+            oldMemberNode = self.getChild(oldSetNode, oldMemberRelid);
+            newSetNode = getSetNodeByName(node, newSetName);
+
+            if (newMemberRelid !== null) {
+                self.delMember(node, newSetName, memberPath);
+            }
+
+            self.moveNode(oldMemberNode, newSetNode);
+        };
         //</editor-fold>
     }
 
     return SetCore;
 });
-
-

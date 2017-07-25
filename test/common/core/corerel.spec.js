@@ -315,6 +315,83 @@ describe('corerel', function () {
         }, myCore.loadRoot(myCore.getHash(root)));
     });
 
+    it('should rename a pointer', function () {
+        var source = core.createNode({parent: root, relid: 'source'}),
+            destination = core.createNode({parent: root, relid: 'destination'});
+
+        core.setPointer(source, 'ptr', destination);
+        expect(core.getPointerNames(source)).to.eql(['ptr']);
+        expect(core.getPointerPath(source, 'ptr')).to.eql(core.getPath(destination));
+        core.renamePointer(source, 'ptr', 'rtp');
+        expect(core.getPointerNames(source)).to.eql(['rtp']);
+        expect(core.getPointerPath(source, 'rtp')).to.eql(core.getPath(destination));
+        expect(core.getPointerPath(source, 'ptr')).to.eql(undefined);
+    });
+
+    it('should rename a pointer and overide if new name was taken', function () {
+        var source = core.createNode({parent: root, relid: 'source'}),
+            destination = core.createNode({parent: root, relid: 'destination'});
+
+        core.setPointer(source, 'ptr', destination);
+        core.setPointer(source, 'rtp', root);
+        expect(core.getPointerNames(source)).to.eql(['ptr', 'rtp']);
+        expect(core.getPointerPath(source, 'ptr')).to.eql(core.getPath(destination));
+        core.renamePointer(source, 'ptr', 'rtp');
+        expect(core.getPointerNames(source)).to.eql(['rtp']);
+        expect(core.getPointerPath(source, 'rtp')).to.eql(core.getPath(destination));
+        expect(core.getPointerPath(source, 'ptr')).to.eql(undefined);
+    });
+
+    it('should rename an attribute', function () {
+        var mynode = core.createNode({parent: root, relid: 'mine'});
+
+        core.setAttribute(mynode, 'myattr', 1);
+        expect(core.getAttributeNames(mynode)).to.eql(['myattr']);
+        expect(core.getAttribute(mynode, 'myattr')).to.eql(1);
+        core.renameAttribute(mynode, 'myattr', 'newattr');
+        expect(core.getAttributeNames(mynode)).to.eql(['newattr']);
+        expect(core.getAttribute(mynode, 'newattr')).to.eql(1);
+        expect(core.getAttribute(mynode, 'myattr')).to.eql(undefined);
+    });
+
+    it('should rename an attribute and override if new was taken', function () {
+        var mynode = core.createNode({parent: root, relid: 'mine'});
+
+        core.setAttribute(mynode, 'myattr', 1);
+        core.setAttribute(mynode, 'newattr', 2);
+        expect(core.getAttributeNames(mynode)).to.have.members(['myattr', 'newattr']);
+        expect(core.getAttribute(mynode, 'myattr')).to.eql(1);
+        core.renameAttribute(mynode, 'myattr', 'newattr');
+        expect(core.getAttributeNames(mynode)).to.eql(['newattr']);
+        expect(core.getAttribute(mynode, 'newattr')).to.eql(1);
+        expect(core.getAttribute(mynode, 'myattr')).to.eql(undefined);
+    });
+
+    it('should rename a registry', function () {
+        var mynode = core.createNode({parent: root, relid: 'mine'});
+
+        core.setRegistry(mynode, 'myattr', 1);
+        expect(core.getRegistryNames(mynode)).to.eql(['myattr']);
+        expect(core.getRegistry(mynode, 'myattr')).to.eql(1);
+        core.renameRegistry(mynode, 'myattr', 'newattr');
+        expect(core.getRegistryNames(mynode)).to.eql(['newattr']);
+        expect(core.getRegistry(mynode, 'newattr')).to.eql(1);
+        expect(core.getRegistry(mynode, 'myattr')).to.eql(undefined);
+    });
+
+    it('should rename a registry and override if new was taken', function () {
+        var mynode = core.createNode({parent: root, relid: 'mine'});
+
+        core.setRegistry(mynode, 'myattr', 1);
+        core.setRegistry(mynode, 'newattr', 2);
+        expect(core.getRegistryNames(mynode)).to.have.members(['myattr', 'newattr']);
+        expect(core.getRegistry(mynode, 'myattr')).to.eql(1);
+        core.renameRegistry(mynode, 'myattr', 'newattr');
+        expect(core.getRegistryNames(mynode)).to.eql(['newattr']);
+        expect(core.getRegistry(mynode, 'newattr')).to.eql(1);
+        expect(core.getRegistry(mynode, 'myattr')).to.eql(undefined);
+    });
+
     describe('sharded overlay handling', function () {
         var shardedProject,
             shardedProjectName = 'shardingTestProject',

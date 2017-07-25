@@ -232,6 +232,9 @@ define(['js/logger',
             return self._onInconsistencyLinkClicked(gmeId);
         };
 
+        this.diagramDesigner.onSelectionContextMenu = function (selectedIds, mousePos) {
+            self._onSelectionContextMenu(selectedIds, mousePos);
+        };
         this.logger.debug('attachDesignerCanvasEventHandlers finished');
     };
 
@@ -629,7 +632,6 @@ define(['js/logger',
     /************************************************************************/
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /************************************************************************/
-
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragParams = function (selectedElements, event) {
         var oParams = this._oGetDragParams.call(this.diagramDesigner, selectedElements, event),
@@ -1036,6 +1038,33 @@ define(['js/logger',
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onInconsistencyLinkClicked = function (gmeId) {
         WebGMEGlobal.State.registerActiveSelection([gmeId]);
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds,
+                                                                                                      mousePos) {
+        var menuItems = {},
+            MENU_RENAME_CONCEPT = 'conceptRename',
+            node,
+            i,
+            paths,
+            libraryContentSelected = false,
+            self = this;
+
+        if (selectedIds.length === 1) {
+            menuItems[MENU_RENAME_CONCEPT] = {
+                name: 'Rename concept',
+                icon: 'glyphicon glyphicon-ok-sign'
+            };
+
+            this.diagramDesigner.createMenu(menuItems, function (key) {
+                    if (key === MENU_RENAME_CONCEPT) {
+                        console.log('rename concept', selectedIds);
+                    }
+                },
+                this.diagramDesigner.posToPageXY(mousePos.mX,
+                    mousePos.mY));
+        }
+
     };
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;

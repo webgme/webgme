@@ -51,6 +51,17 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
                 return innerCore.loadPointer(node, name);
             }
         };
+
+        this.renamePointer = function (node, oldName, newName) {
+            var oldPath = self.getPointerPath(node, oldName);
+            if (oldPath === null) {
+                self.deletePointer(node, oldName);
+                self.setPointer(node, newName, null);
+            } else {
+                innerCore.renamePointer(node, oldName, newName);
+            }
+        };
+
         //</editor-fold>
 
         return self;
@@ -58,5 +69,3 @@ define(['common/core/CoreAssert', 'common/core/constants'], function (ASSERT, CO
 
     return NullPointerCore;
 });
-
-

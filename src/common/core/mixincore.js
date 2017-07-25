@@ -37,7 +37,7 @@ define([
         }
 
         function getOrderedMixinList(node) {
-            var paths = self.getMixinPaths(node),
+            var paths = innerCore.getOwnMemberPaths(node, CONSTANTS.MIXINS_SET),
                 metaNodes,
                 helper = {},
                 orderedList = [],
@@ -170,6 +170,89 @@ define([
             return null;
         }
 
+        function getOwnRuleInfoTarget(target, validTargetPaths, alreadyVisited) {
+            var orderedMixins = getOrderedMixinList(target),
+                path = self.getPath(target),
+                base = self.getBase(target),
+                result,
+                i;
+            if (alreadyVisited[path]) {
+                return null;
+            }
+
+            alreadyVisited[path] = true;
+
+            if (validTargetPaths.indexOf(path) !== -1) {
+                return target;
+            }
+
+            if (base) {
+                result = getOwnRuleInfoTarget(base, validTargetPaths, alreadyVisited);
+                if (result) {
+                    return result;
+                }
+            }
+
+            for (i = 0; i < orderedMixins.length; i += 1) {
+                result = getOwnRuleInfoTarget(orderedMixins[i], validTargetPaths, alreadyVisited);
+                if (result) {
+                    return result;
+                }
+            }
+
+            return null;
+        }
+
+        function getOwnRuleInfo(node, name, target, getter) {
+            var definedTarget = getOwnRuleInfoTarget(target, getter(node, name), {});
+
+            if (definedTarget) {
+                return {
+                    sourceNode: node,
+                    sourcePath: self.getPath(node),
+                    targetPath: self.getPath(definedTarget),
+                    targetNode: definedTarget
+                };
+            }
+
+            return null;
+        }
+
+        function getFirstMatchingRuleInfo(node, name, target, getter, alreadyVisited) {
+            var base = self.getBase(node),
+                path = self.getPath(node),
+                mixins = getOrderedMixinList(node),
+                info,
+                i;
+
+            if (alreadyVisited[path]) {
+                return null;
+            }
+
+            //when it comes to rule holder, always the given node's own rule-set is the first
+            alreadyVisited[path] = true;
+            info = getOwnRuleInfo(node, name, target, getter);
+            if (info) {
+                return info;
+            }
+
+            if (base) {
+                info = getFirstMatchingRuleInfo(base, name, target, getter, alreadyVisited);
+                if (info) {
+                    return info;
+                }
+            }
+
+            for (i = 0; i < mixins.length; i += 1) {
+                info = getFirstMatchingRuleInfo(mixins[i], name, target, getter, alreadyVisited);
+                if (info) {
+                    return info;
+                }
+            }
+
+            return null;
+        }
+
         function getAllMatchingRuleHolders(node, name, getter, alreadyVisited) {
             var base = self.getBase(node),
                 path = self.getPath(node),
@@ -246,6 +329,35 @@ define([
             return false;
         }
 
+        function isTypeOfPath(node, typePath, alreadyVisited) {
+            var base, mixins, i,
+                path = self.getPath(node);
+
+            if (alreadyVisited[path]) {
+                return false;
+            }
+
+            alreadyVisited[path] = true;
+
+            if (innerCore.isTypeOfPath(node, typePath)) {
+                return true;
+            }
+
+            base = self.getBase(node);
+            if (base && isTypeOfPath(base, typePath, alreadyVisited)) {
+                return true;
+            }
+
+            mixins = getOrderedMixinList(node);
+            for (i = 0; i < mixins.length; i += 1) {
+                if (isTypeOfPath(mixins[i], typePath, alreadyVisited)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         function convertRuleToItemizedArraySet(rule) {
             var items = [],
                 minItems = [],
@@ -271,12 +383,19 @@ define([
         //<editor-fold=Modified Methods>
 
         this.isTypeOf = function (node, typeNode) {
-            //TODO implement
             if (!realNode(node)) {
                 return false;
             }
 
             return isTypeOf(node, typeNode, {});
+        };
+
+        this.isTypeOfPath = function (node, typePath) {
+            if (!realNode(node)) {
+                return false;
+            }
+
+            return isTypeOfPath(node, typePath, {});
         };
 
         this.isValidChildOf = function (node, parentNode) {
@@ -489,6 +608,19 @@ define([
             return getFirstMatchingMeta(node, name, innerCore.getOwnValidAspectNames, innerCore.getAspectMeta);
         };
 
+        this.isValidAspectMemberOf = function (node, parent, name) {
+            var aspectMeta = self.getAspectMeta(parent, name) || [],
+                i;
+
+            for (i = 0; i < aspectMeta.length; i += 1) {
+                if (self.isTypeOfPath(node, aspectMeta[i])) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
         this.getSetNames = function (node) {
             var rawNames = innerCore.getSetNames(node),
                 index = rawNames.indexOf(CONSTANTS.MIXINS_SET);
@@ -500,6 +632,29 @@ define([
             return rawNames;
         };
 
+        this.getAttributeDefinitionOwner = function (node, name) {
+            return getFirstMatchingRuleHolder(node, name, self.getOwnValidAttributeNames, {});
+        };
+
+        this.getAspectDefinitionOwner = function (node, name) {
+            return getFirstMatchingRuleHolder(node, name, self.getOwnValidAspectNames, {});
+        };
+
+        this.getAspectDefinitionInfo = function (node, name, member) {
+            return getFirstMatchingRuleInfo(node, name, member, self.getValidAspectTargetPaths, {});
+        };
+
+        this.getPointerDefinitionInfo = function (node, name, target) {
+            return getFirstMatchingRuleInfo(node, name, target, self.getOwnValidTargetPaths, {});
+        };
+
+        this.getSetDefinitionInfo = function (node, name, target) {
+            return getFirstMatchingRuleInfo(node, name, target, self.getOwnValidTargetPaths, {});
+        };
+
+        this.getChildDefinitionInfo = function (node, child) {
+            return getFirstMatchingRuleInfo(node, undefined, child, self.getValidChildrenPaths, {});
+        };
         //</editor-fold>
 
         //<editor-fold=Added Methods>
@@ -781,7 +936,15 @@ define([
         };
 
         this.getMixinPaths = function (node) {
-            return innerCore.getOwnMemberPaths(node, CONSTANTS.MIXINS_SET);
+            var paths = [],
+                nodes = getOrderedMixinList(node),
+                i;
+
+            for (i = 0; i < nodes.length; i += 1) {
+                paths.push(self.getPaths(nodes[i]));
+            }
+
+            return paths;
         };
 
         this.getMixinNodes = function (node) {

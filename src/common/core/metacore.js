@@ -102,12 +102,50 @@ define([
             }
         }
 
+        function getRelationDefinitionInfo(node, name, target) {
+            var targetPath,
+                result = {},
+                definedTarget,
+                validTargets;
+
+            while (node) {
+                if (self.isValidTargetOf(target, node, name)) {
+                    result.sourceNode = node;
+                    result.sourcePath = self.getPath(node);
+                    validTargets = self.getOwnValidTargetPaths(node, name);
+                    definedTarget = target;
+                    while (definedTarget) {
+                        targetPath = self.getPath(definedTarget);
+                        if (validTargets.indexOf(targetPath) !== -1) {
+                            result.targetPath = targetPath;
+                            result.targetNode = definedTarget;
+                            return result;
+                        }
+                        definedTarget = self.getBase(definedTarget);
+                    }
+                }
+                node = self.getBase(node);
+            }
+
+            return null;
+        }
+
         //</editor-fold>
 
         //<editor-fold=Added Methods>
         this.isTypeOf = function (node, typeNode) {
             while (node) {
                 if (sameNode(node, typeNode)) {
+                    return true;
+                }
+                node = self.getBase(node);
+            }
+            return false;
+        };
+
+        this.isTypeOfPath = function (node, typePath) {
+            while (node) {
+                if (self.getPath(node) === typePath) {
                     return true;
                 }
                 node = self.getBase(node);
@@ -349,9 +387,9 @@ define([
 
                 for (j = 0; j < pointer.items.length; j++) {
                     pointer.minItems.push(self.getMemberAttribute(tempNode, CONSTANTS.SET_ITEMS, pointer.items[j],
-                            CONSTANTS.SET_ITEMS_MIN) || -1);
+                        CONSTANTS.SET_ITEMS_MIN) || -1);
                     pointer.maxItems.push(self.getMemberAttribute(tempNode, CONSTANTS.SET_ITEMS, pointer.items[j],
-                            CONSTANTS.SET_ITEMS_MAX) || -1);
+                        CONSTANTS.SET_ITEMS_MAX) || -1);
 
                 }
 
@@ -435,9 +473,9 @@ define([
 
                     for (j = 0; j < pointer.items.length; j++) {
                         pointer.minItems.push(self.getMemberAttribute(tempNode, CONSTANTS.SET_ITEMS, pointer.items[j],
-                                CONSTANTS.SET_ITEMS_MIN) || -1);
+                            CONSTANTS.SET_ITEMS_MIN) || -1);
                         pointer.maxItems.push(self.getMemberAttribute(tempNode, CONSTANTS.SET_ITEMS, pointer.items[j],
-                                CONSTANTS.SET_ITEMS_MAX) || -1);
+                            CONSTANTS.SET_ITEMS_MAX) || -1);
 
                     }
 
@@ -478,7 +516,6 @@ define([
         };
 
         this.setAttributeMeta = function (node, name, value) {
-            ASSERT(typeof value === 'object' && typeof name === 'string' && name);
             var defaultValue;
 
             if (value.hasOwnProperty('default')) {
@@ -492,6 +529,12 @@ define([
             if (typeof defaultValue !== 'undefined') {
                 self.setAttribute(node, name, defaultValue);
             }
+        };
+
+        this.renameAttributeMeta = function (node, oldName, newName) {
+            self.setAttributeMeta(node, newName, self.getAttributeMeta(node, oldName));
+            self.delAttributeMeta(node, oldName);
+            self.renameAttribute(node, oldName, newName);
         };
 
         this.delAttributeMeta = function (node, name) {
@@ -558,12 +601,36 @@ define([
 
         this.setPointerMetaTarget = function (node, name, target, min, max) {
             self.addMember(metaPointerNode(node, name), CONSTANTS.SET_ITEMS, target);
-            min = min || -1;
+            min = min === 0 ? 0 : min || -1;
             self.setMemberAttribute(metaPointerNode(node, name), CONSTANTS.SET_ITEMS, self.getPath(target),
                 CONSTANTS.SET_ITEMS_MIN, min);
-            max = max || -1;
+            max = max === 0 ? 0 : max || -1;
             self.setMemberAttribute(metaPointerNode(node, name), CONSTANTS.SET_ITEMS, self.getPath(target),
                 CONSTANTS.SET_ITEMS_MAX, max);
+        };
+
+        this.movePointerMetaTarget = function (node, target, oldName, newName) {
+            var targetPath = self.getPath(target),
+                min, max;
+            self.delPointerMetaTarget(node, oldName, targetPath);
+
+            if (self.getValidTargetPaths(node, newName).length === 0) {
+                // The move introduces the newName relation
+                min = self.getAttribute(metaPointerNode(node, oldName), CONSTANTS.SET_ITEMS_MIN);
+                max = self.getAttribute(metaPointerNode(node, oldName), CONSTANTS.SET_ITEMS_MAX);
+                self.setPointerMetaLimits(node, newName, min, max);
+            }
+
+            min = self.getMemberAttribute(metaPointerNode(node, oldName),
+                CONSTANTS.SET_ITEMS, targetPath, CONSTANTS.SET_ITEMS_MIN);
+            max = self.getMemberAttribute(metaPointerNode(node, oldName),
+                CONSTANTS.SET_ITEMS, targetPath, CONSTANTS.SET_ITEMS_MAX);
+            self.setPointerMetaTarget(node, newName, target, min, max);
+
+            // setPointerMetaLimits
+            if (self.getOwnValidTargetPaths(node, oldName).length === 0) {
+                self.delPointerMeta(node, oldName);
+            }
         };
 
         this.delPointerMetaTarget = function (node, name, targetPath) {
@@ -574,10 +641,10 @@ define([
         };
 
         this.setPointerMetaLimits = function (node, name, min, max) {
-            if (min) {
+            if (min || min === 0) {
                 self.setAttribute(metaPointerNode(node, name), CONSTANTS.SET_ITEMS_MIN, min);
             }
-            if (max) {
+            if (max || max === 0) {
                 self.setAttribute(metaPointerNode(node, name), CONSTANTS.SET_ITEMS_MAX, max);
             }
         };
@@ -651,16 +718,57 @@ define([
             self.addMember(metaAspectNode(node, name), CONSTANTS.SET_ITEMS, target);
         };
 
+        this.moveAspectMetaTarget = function (node, target, oldName, newName) {
+            self.delAspectMetaTarget(node, oldName, self.getPath(target));
+            self.setAspectMetaTarget(node, newName, target);
+        };
+
         this.delAspectMetaTarget = function (node, name, targetPath) {
             var metaNode = getMetaAspectNode(node, name);
             if (metaNode) {
                 self.delMember(metaNode, CONSTANTS.SET_ITEMS, targetPath);
+
+                if (self.getOwnMemberPaths(metaNode, CONSTANTS.SET_ITEMS).length === 0) {
+                    self.delAspectMeta(node, name);
+                }
             }
         };
 
         this.delAspectMeta = function (node, name) {
             self.deleteNode(metaAspectNode(node, name), true);
             self.deletePointer(getMetaAspectsNode(node), name);
+        };
+
+        this.getValidAspectTargetPaths = function (node, name) {
+            var aspectNode = getMetaAspectNode(node, name);
+            if (aspectNode === null) {
+                return [];
+            }
+            return self.getMemberPaths(aspectNode, CONSTANTS.SET_ITEMS);
+        };
+
+        this.getOwnValidAspectTargetPaths = function (node, name) {
+            var aspectNode = getMetaAspectNode(node, name);
+            if (aspectNode === null) {
+                return [];
+            }
+            return self.getOwnMemberPaths(aspectNode, CONSTANTS.SET_ITEMS);
+        };
+
+        this.isValidAspectMemberOf = function (node, parent, name) {
+            var validPaths = self.getValidAspectTargetPaths(parent, name);
+
+            if (self.getValidAspectNames(parent).indexOf(name) === -1) {
+                return false;
+            }
+
+            while (node) {
+                if (validPaths.indexOf(self.getPath(node)) !== -1) {
+                    return true;
+                }
+            }
+
+            return false;
         };
 
         this.getBaseType = function (node) {
@@ -685,6 +793,91 @@ define([
             }
 
             return false;
+        };
+
+        this.getAttributeDefinitionOwner = function (node, name) {
+            while (node) {
+                if (self.getOwnValidAttributeNames(node).indexOf(name) !== -1) {
+                    return node;
+                }
+                node = self.getBase(node);
+            }
+
+            return null;
+        };
+
+        this.getPointerDefinitionInfo = function (node, name, target) {
+            return getRelationDefinitionInfo(node, name, target);
+        };
+
+        this.getSetDefinitionInfo = function (node, name, target) {
+            return getRelationDefinitionInfo(node, name, target);
+        };
+
+        this.getAspectDefinitionInfo = function (node, name, target) {
+            var result = {},
+                validTargets,
+                definedTarget,
+                targetPath;
+
+            while (node) {
+                if (self.getOwnValidAspectNames(node).indexOf(name) !== -1) {
+                    result.sourcePath = self.getPath(node);
+                    result.sourceNode = node;
+                    validTargets = self.getOwnValidAspectTargetPaths(node, name);
+                    definedTarget = target;
+                    while (definedTarget) {
+                        targetPath = self.getPath(definedTarget);
+                        if (validTargets.indexOf(targetPath) !== -1) {
+                            result.targetPath = targetPath;
+                            result.targetNode = definedTarget;
+                            return result;
+                        }
+                    }
+                }
+            }
+            return null;
+        };
+
+        this.getAspectDefinitionOwner = function (node, name) {
+
+            while (node) {
+                if (self.getOwnValidAspectNames(node).indexOf(name) !== -1) {
+                    break;
+                }
+
+                node = self.getBase(node);
+            }
+
+            return node;
+        };
+
+        this.getChildDefinitionInfo = function (node, child) {
+            var result = {},
+                validPaths,
+                definedChild,
+                childPath;
+
+            while (node) {
+                if (self.isValidChildOf(child, node)) {
+                    validPaths = self.getOwnValidChildrenPaths(node);
+                    result.souceNode = node;
+                    result.soucePath = self.getPath(node);
+                    definedChild = child;
+                    while (definedChild) {
+                        childPath = self.getPath(definedChild);
+                        if (validPaths.indexOf(childPath) !== -1) {
+                            result.targetPath = childPath;
+                            result.targetNode = definedChild;
+                            return result;
+                        }
+                        definedChild = self.getBase(definedChild);
+                    }
+
+                }
+                node = self.getBase(node);
+            }
+            return null;
         };
         //</editor-fold>
     };
