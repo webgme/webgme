@@ -18,6 +18,7 @@ define([
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter',
     'js/client/libraries',
+    'js/client/rename',
     'blob/BlobClient',
     'js/client/stateloghelpers',
     'js/client/pluginmanager',
@@ -35,6 +36,7 @@ define([
              getNode,
              getNodeSetters,
              getLibraryFunctions,
+             getRenameFunctions,
              BlobClient,
              stateLogHelpers,
              PluginManager,
@@ -91,8 +93,9 @@ define([
             pluginManager,
             nodeSetterFunctions,
             coreLibraryFunctions,
+            metaRenameFunctions,
             ROOT_PATH = '',
-        //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
+            //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled;
 
         blobClient = new BlobClient({logger: logger.fork('BlobClient')});
@@ -738,6 +741,14 @@ define([
         for (monkeyPatchKey in coreLibraryFunctions) {
             if (coreLibraryFunctions.hasOwnProperty(monkeyPatchKey)) {
                 self[monkeyPatchKey] = coreLibraryFunctions[monkeyPatchKey];
+            }
+        }
+
+        metaRenameFunctions = getRenameFunctions(logger, state, storage, saveRoot);
+
+        for (monkeyPatchKey in metaRenameFunctions) {
+            if (metaRenameFunctions.hasOwnProperty(monkeyPatchKey)) {
+                self[monkeyPatchKey] = metaRenameFunctions[monkeyPatchKey];
             }
         }
 
@@ -1679,19 +1690,19 @@ define([
          */
         this.watchDatabase = function (eventHandler, callback) {
             callback = callback || function (err) {
-                    if (err) {
-                        logger.error('Problems watching database room');
-                    }
-                };
+                if (err) {
+                    logger.error('Problems watching database room');
+                }
+            };
             storage.watchDatabase(eventHandler, callback);
         };
 
         this.unwatchDatabase = function (eventHandler, callback) {
             callback = callback || function (err) {
-                    if (err) {
-                        logger.error('Problems unwatching database room');
-                    }
-                };
+                if (err) {
+                    logger.error('Problems unwatching database room');
+                }
+            };
             storage.unwatchDatabase(eventHandler, callback);
         };
 
@@ -1714,19 +1725,19 @@ define([
          */
         this.watchProject = function (projectId, eventHandler, callback) {
             callback = callback || function (err) {
-                    if (err) {
-                        logger.error('Problems watching project room', projectId);
-                    }
-                };
+                if (err) {
+                    logger.error('Problems watching project room', projectId);
+                }
+            };
             storage.watchProject(projectId, eventHandler, callback);
         };
 
         this.unwatchProject = function (projectId, eventHandler, callback) {
             callback = callback || function (err) {
-                    if (err) {
-                        logger.error('Problems unwatching project room', projectId);
-                    }
-                };
+                if (err) {
+                    logger.error('Problems unwatching project room', projectId);
+                }
+            };
             storage.unwatchProject(projectId, eventHandler, callback);
         };
 
