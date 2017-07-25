@@ -19,7 +19,7 @@ describe('branch status', function () {
         projectId;
 
     before(function (done) {
-        this.timeout(5000);
+        this.timeout(15000);
         requirejs([
             'js/client',
             'js/logger',
@@ -185,6 +185,7 @@ describe('branch status', function () {
 
     it('should go from SYNC to PULLING to SYNC when external changes are made.', function (done) {
         var branchName = 'sync_pull_sync',
+            eventHandler,
             prevStatus;
 
         currentBranchName = branchName;
@@ -193,7 +194,7 @@ describe('branch status', function () {
             client.removeEventListener(client.CONSTANTS.BRANCH_STATUS_CHANGED, eventHandler);
         }
 
-        function eventHandler(__client, eventData) {
+        eventHandler = function (__client, eventData) {
             if (prevStatus === client.CONSTANTS.BRANCH_STATUS.SYNC) {
                 expect(eventData.status).to.equal(client.CONSTANTS.BRANCH_STATUS.PULLING);
                 prevStatus = eventData.status;
@@ -206,7 +207,7 @@ describe('branch status', function () {
                 removeHandler();
                 done(new Error('Unexpected BranchStatus' + eventData.status));
             }
-        }
+        };
 
         createSelectBranch(branchName, function (err) {
             expect(err).to.equal(null);
@@ -343,7 +344,7 @@ describe('branch status', function () {
                     removeHandler();
                     done(new Error('Unexpected BranchStatus ' + eventData.status));
                 }
-            }
+            };
 
             createSelectBranch(branchName, function (err) {
                 expect(err).to.equal(null);

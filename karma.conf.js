@@ -44,11 +44,12 @@ var testFixture = require('./test/_globals.js'),
 
 (function initializeServer() {
     'use strict';
+    console.log((new Date()).toISOString(), 'initializeServer started');
     // Add a user to to GMEAuth
     var projectNames = PROJECTS_TO_IMPORT.map(function (projectData) {
         return projectData.name;
     });
-    console.log(projectNames);
+    //console.log(projectNames);
     testFixture.clearDBAndGetGMEAuth(gmeConfig, projectNames)
         .then(function (gmeAuth_) {
             // Open the database storage
@@ -63,7 +64,7 @@ var testFixture = require('./test/_globals.js'),
             function importProject(projectInfo) {
                 var branchName = projectInfo.hasOwnProperty('branches') ?
                     projectInfo.branches[0] : 'master';
-                console.log((new Date()).toISOString(), ' importing ' + projectInfo.name);
+                //console.log((new Date()).toISOString(), ' importing ' + projectInfo.name);
                 return testFixture.importProject(storage, {
                     projectSeed: projectInfo.path,
                     projectName: projectInfo.name,
@@ -105,7 +106,7 @@ var testFixture = require('./test/_globals.js'),
             server = webgme.standaloneServer(gmeConfig);
             //setTimeout(function () {
             server.start(function () {
-                console.log('webgme server started');
+                console.log((new Date()).toISOString(), 'webgme server started');
             });
             //}, 10000); // timeout to emulate long server start up see test-main.js
         })
@@ -123,6 +124,12 @@ module.exports = function (config) {
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
         basePath: '',
+
+        client: {
+            mocha: {
+                timeout: 10000 // Increased from 2000 [ms]
+            }
+        },
 
 
         // frameworks to use
