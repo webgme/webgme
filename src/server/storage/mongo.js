@@ -481,7 +481,10 @@ function Mongo(mainLogger, gmeConfig) {
             Q.ninvoke(self.client, 'collection', projectId)
                 .then(function (result) {
                     collection = result;
-                    return Q.ninvoke(collection, 'insertOne', {_id: CONSTANTS.EMPTY_PROJECT_DATA});
+                    return Q.ninvoke(collection, 'insertMany', [
+                        {_id: CONSTANTS.EMPTY_PROJECT_DATA},
+                        {_id: self.CONSTANTS.TAGS}
+                    ]);
                 })
                 .then(function () {
                     deferred.resolve(new MongoProject(projectId, collection));
