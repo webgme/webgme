@@ -941,7 +941,7 @@ define([
                 i;
 
             for (i = 0; i < nodes.length; i += 1) {
-                paths.push(self.getPaths(nodes[i]));
+                paths.push(self.getPath(nodes[i]));
             }
 
             return paths;

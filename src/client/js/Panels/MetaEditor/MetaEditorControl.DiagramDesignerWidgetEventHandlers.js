@@ -1048,21 +1048,34 @@ define(['js/logger',
             i,
             paths,
             libraryContentSelected = false,
-            self = this;
+            self = this,
+            srcPath,
+            oldName,
+            type;
 
         if (selectedIds.length === 1) {
-            menuItems[MENU_RENAME_CONCEPT] = {
-                name: 'Rename concept',
-                icon: 'glyphicon glyphicon-ok-sign'
-            };
+            if (self._connectionListByID.hasOwnProperty(selectedIds[0]) &&
+                self._connectionListByID[selectedIds[0]].type === 'pointer') {
+                type = 'pointer';
+                srcPath = self._connectionListByID[selectedIds[0]].GMESrcId;
+                oldName = self._connectionListByID[selectedIds[0]].name;
 
-            this.diagramDesigner.createMenu(menuItems, function (key) {
-                    if (key === MENU_RENAME_CONCEPT) {
-                        console.log('rename concept', selectedIds);
-                    }
-                },
-                this.diagramDesigner.posToPageXY(mousePos.mX,
-                    mousePos.mY));
+                menuItems[MENU_RENAME_CONCEPT] = {
+                    name: 'Rename concept',
+                    icon: 'glyphicon glyphicon-ok-sign'
+                };
+
+                this.diagramDesigner.createMenu(menuItems, function (key) {
+                        if (key === MENU_RENAME_CONCEPT) {
+                            console.log('rename concept', selectedIds);
+                            self._client.renameConcept(srcPath, type, oldName, 'new_' + oldName, function (err) {
+                                console.log('finished propagation:', err);
+                            });
+                        }
+                    },
+                    this.diagramDesigner.posToPageXY(mousePos.mX,
+                        mousePos.mY));
+            }
         }
 
     };

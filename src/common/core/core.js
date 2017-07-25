@@ -2357,6 +2357,21 @@ define([
         };
 
         /**
+         * Returns the list of the META defined pointer names of the node introduced by the nide.
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string[]} The function returns all the pointer names that are defined among the META rules of the node.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getOwnValidPointerNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getOwnValidPointerNames(node);
+        };
+
+        /**
          * Returns the list of the META defined set names of the node.
          * @param {module:Core~Node} node - the node in question.
          *
@@ -2406,6 +2421,13 @@ define([
 
             return core.getValidAttributeNames(node);
         };
+
+        this.getOwnValidTargetPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureRelationName(name, 'name');
+
+            return core.getOwnValidTargetPaths(node, name);
+        }
 
         /**
          * Returns the list of the META defined attribute names of the node that were specifically defined for the node.

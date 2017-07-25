@@ -125,34 +125,25 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
 
     function _collectedBasicAffectedTypes(core, node, type, name) {
         var affectedTypes = [],
-            allMetaNodes = core.getAllMetanodes(node),
-            checkedrFunc,
-            attributeCheckerFunc = function (node) {
-                return core.getValidAttributeNames(node).indexOf(oldName) !== -1;
-            },
-            pointerCheckerFunc = function (node) {
-                return core.getValidPointerNames(node).indexOf(oldName) !== -1;
-            },
-            setCheckerFunc = function (node) {
-                return core.getValidSetNames(node).indexOf(oldName) !== -1;
-            },
-            aspectCheckerFunc = function (node) {
-                return core.getValidAspectNames(node).indexOf(oldName) !== -1;
+            allMetaNodes = core.getAllMetaNodes(node),
+            checkerFunc,
+            check = function (node) {
+                return checkerFunc(node).indexOf(oldName) !== -1;
             },
             path;
 
         switch (type) {
             case 'attribute':
-                checkerFunc = attributeCheckerFunc;
+                checkerFunc = core.getValidAttributeNames;
                 break;
             case 'pointer':
-                checkerFunc = pointerCheckerFunc;
+                checkerFunc = core.getValidPointerNames;
                 break;
             case 'set':
-                checkerFunc = setCheckerFunc;
+                checkerFunc = core.getValidSetNames;
                 break;
             case 'aspect':
-                checkerFunc = aspectCheckerFunc;
+                checkerFunc = core.getValidAspectNames;
                 break;
             default:
                 return null;
@@ -190,11 +181,13 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             targets,
             path;
 
+        console.log('renaming: ', type);
         switch (type) {
             case 'attribute':
                 toArrayFunc = core.getOwnValidAttributeNames;
                 break;
             case 'pointer':
+                console.log('we are here:', core.getOwnValidPointerNames(node));
                 toArrayFunc = core.getOwnValidPointerNames;
                 break;
             case 'set':
@@ -289,11 +282,11 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             })
             .catch(deferred.reject);
 
-        return deferred.promise.nodefiy(callback);
+        return deferred.promise.nodeify(callback);
     }
 
     return {
         propagateMetaDefinitionRename: propagateMetaDefinitionRename,
-        propagateMetaConceptRename: metaConceptRename
+        metaConceptRename: metaConceptRename
     };
 });
