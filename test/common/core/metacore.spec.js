@@ -583,7 +583,7 @@ describe('meta core', function () {
         expect(core.getPointerMeta(defOwner, 'new')).to.include({min: 8, max: 11});
     });
 
-    it.only('should move the target of an aspect definition', function () {
+    it('should move the target of an aspect definition', function () {
         var defRoot = core.createNode({}),
             defOwner = core.createNode({parent: defRoot, relid: 'O'}),
             defTarget = core.createNode({parent: defRoot, relid: 'T'});

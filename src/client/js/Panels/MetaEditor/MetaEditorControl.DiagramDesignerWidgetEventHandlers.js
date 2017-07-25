@@ -15,7 +15,7 @@ define(['js/logger',
     './MetaEditorConstants',
     './MetaDocItem',
     'js/DragDrop/DragHelper',
-    'js/Controls/Dialog'
+    'js/Dialogs/Confirm/ConfirmDialog'
 ], function (Logger,
              util,
              generateGuid,
@@ -27,7 +27,7 @@ define(['js/logger',
              MetaEditorConstants,
              MetaDocItem,
              DragHelper,
-             dialog) {
+             ConfirmDialog) {
 
     'use strict';
 
@@ -55,6 +55,7 @@ define(['js/logger',
                 mixinCheckResult,
                 node,
                 baseNode,
+                confirmDialog = new ConfirmDialog(),
                 oldBaseNode;
 
             if (self._connType === MetaRelations.META_RELATIONS.INHERITANCE) {
@@ -62,11 +63,12 @@ define(['js/logger',
                 node = self._client.getNode(sourceId);
                 if (node) {
                     if (sourceId === targetId) {
-                        dialog.alert('Invalid base modification',
-                            'The base of an object cannot be itself!',
-                            function () {
-                            }
-                        );
+                        confirmDialog.show({
+                            title: 'Invalid base modification',
+                            question: 'The base of an object cannot be itself!',
+                            noCancelButton: true
+                        }, function () {
+                        });
                         return;
                     }
 
@@ -79,47 +81,51 @@ define(['js/logger',
 
                         if (baseNode && oldBaseNode) {
                             if (baseNode.getChildrenIds().length > 0 || oldBaseNode.getChildrenIds().length > 0) {
-                                dialog.alert('Invalid base modification',
-                                    'Currently, modification from or to a base which has children is not allowed!',
-                                    function () {
-
-                                    }
-                                );
+                                confirmDialog.show({
+                                    title: 'Invalid base modification',
+                                    question: 'Currently, modification from or to a base ' +
+                                    'which has children is not allowed!',
+                                    noCancelButton: true
+                                }, function () {
+                                });
                                 return;
                             } else {
                                 do {
                                     if (baseNode.getId() === sourceId) {
-                                        dialog.alert('Invalid base modification',
-                                            'Change of base node would create circular inheritance!',
-                                            function () {
-
-                                            }
-                                        );
+                                        confirmDialog.show({
+                                            title: 'Invalid base modification',
+                                            question: 'Change of base node would create circular inheritance!',
+                                            noCancelButton: true
+                                        }, function () {
+                                        });
                                         return;
                                     }
                                     baseNode = self._client.getNode(baseNode.getBaseId());
                                 } while (baseNode);
                             }
 
-                            dialog.confirm('Confirm base change',
-                                'Changing a base can cause invalid data in the target node and its descendants!',
-                                function () {
-                                    self._onCreateNewConnection(params);
-                                }
-                            );
+                            confirmDialog.show({
+                                title: 'Confirm base change',
+                                question: 'Changing a base can cause invalid data ' +
+                                'in the target node and its descendants!'
+                            }, function () {
+                                self._onCreateNewConnection(params);
+                            });
                         } else if (!oldBaseNode) {
-                            dialog.alert('Invalid base modification',
-                                'Cannot change the base of the FCO!',
-                                function () {
-                                }
-                            );
+                            confirmDialog.show({
+                                title: 'Invalid base modification',
+                                question: 'Cannot change the base of the FCO!',
+                                noCancelButton: true
+                            }, function () {
+                            });
                         }
                     } else {
-                        dialog.alert('Invalid base modification',
-                            'Base already set to the new base!',
-                            function () {
-                            }
-                        );
+                        confirmDialog.show({
+                            title: 'Invalid base modification',
+                            question: 'Base already set to the new base!',
+                            noCancelButton: true
+                        }, function () {
+                        });
                     }
                 } else {
                     self.logger.error('cannot edit base of an unknown node [' + sourceId + ']');
@@ -133,11 +139,12 @@ define(['js/logger',
                     if (mixinCheckResult.isOk === false) {
                         self.logger.warn('cannot set [' + targetId + '] as mixin for [' + sourceId + ']',
                             mixinCheckResult);
-                        dialog.alert('Invalid mixin target',
-                            mixinCheckResult.reason,
-                            function () {
-
-                            });
+                        confirmDialog.show({
+                            title: 'Invalid mixin target',
+                            question: mixinCheckResult.reason,
+                            noCancelButton: true
+                        }, function () {
+                        });
                         return;
                     }
                 } else {
@@ -522,7 +529,7 @@ define(['js/logger',
             self = this,
             metaInfoToBeLost = [],
             doDelete,
-
+            confirmDialog,
             confirmMsg,
             itemNames,
             nodeObj;
@@ -621,7 +628,12 @@ define(['js/logger',
                     '</b>  (all associated meta rules will be deleted for this element)<br>';
             }
             confirmMsg += '<br>Are you sure you want to delete?';
-            dialog.confirm('Confirm delete', confirmMsg, function () {
+
+            confirmDialog = new ConfirmDialog();
+            confirmDialog.show({
+                title: 'Confirm delete',
+                htmlQuestion: confirmMsg
+            }, function () {
                 doDelete(idList);
             });
         } else {
@@ -825,7 +837,8 @@ define(['js/logger',
             _client = this._client,
             doDeleteTab,
             i,
-            confirmMsg,
+            confirmDialog,
+            confirmDialogParams = {title: 'Confirm delete'},
             itemNames,
             nodeObj;
 
@@ -895,7 +908,7 @@ define(['js/logger',
 
         if (metaAspectMemberToBeLost.length > 0) {
             //need user confirmation because there is some meta info to be lost
-            confirmMsg = 'You are about to delete a sheet that contains the following items that are not present ' +
+            confirmDialogParams.htmlQuestion = 'You are about to delete a sheet that contains the following items that are not present ' +
                 'on any other sheet and will be permanently removed from the META aspect:<br><br>';
             itemNames = [];
             len = metaAspectMemberToBeLost.length;
@@ -910,20 +923,19 @@ define(['js/logger',
             }
             itemNames.sort();
             for (len = 0; len < itemNames.length; len += 1) {
-                confirmMsg += '- <b>' + itemNames[len] +
+                confirmDialogParams.htmlQuestion += '- <b>' + itemNames[len] +
                     '</b> (all associated meta rules will be deleted for this element)<br>';
             }
-            confirmMsg += '<br>Are you sure you want to delete the sheet anyway?';
-            dialog.confirm('Confirm delete', confirmMsg, function () {
-                doDeleteTab();
-            });
+            confirmDialogParams.htmlQuestion += '<br>Are you sure you want to delete the sheet anyway?';
         } else {
             //no meta member will be lost permanently but make sure that the user really wants to delete the sheet
-            confirmMsg = 'Are you sure you want to delete this sheet?';
-            dialog.confirm('Confirm delete', confirmMsg, function () {
-                doDeleteTab();
-            });
+            confirmDialogParams.question = 'Are you sure you want to delete this sheet?';
         }
+
+        confirmDialog = new ConfirmDialog();
+        confirmDialog.show(confirmDialogParams, function () {
+            doDeleteTab();
+        });
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onTabsSorted = function (newTabIDOrder) {
@@ -1055,8 +1067,9 @@ define(['js/logger',
 
         if (selectedIds.length === 1) {
             if (self._connectionListByID.hasOwnProperty(selectedIds[0]) &&
-                self._connectionListByID[selectedIds[0]].type === 'pointer') {
-                type = 'pointer';
+                (self._connectionListByID[selectedIds[0]].type === 'pointer' ||
+                    self._connectionListByID[selectedIds[0]].type === 'set')) {
+                type = self._connectionListByID[selectedIds[0]].type;
                 srcPath = self._connectionListByID[selectedIds[0]].GMESrcId;
                 oldName = self._connectionListByID[selectedIds[0]].name;
 

@@ -115,10 +115,20 @@ define([
 
         if (params.question) {
             this._contentDiv.find('.question-text').text(params.question);
+        } else if (params.htmlQuestion) {
+            this._contentDiv.find('.question-text').append(params.htmlQuestion);
         }
 
         if (params.deleteItem) {
             this._contentDiv.find('.delete-item').text(params.deleteItem);
+        }
+
+        if (typeof params.okLabel === 'string') {
+            $(this._okBtn).text(params.okLabel);
+        }
+
+        if (typeof params.cancelLabel === 'string') {
+            $(this._cancelBtn).text(params.cancelLabel);
         }
 
         this._okBtn.on('click', function (event) {
@@ -129,11 +139,15 @@ define([
             onOk(self._dontAsk.find('input').is(':checked'), value);
         });
 
-        this._cancelBtn.on('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            self._dialog.modal('hide');
-        });
+        if (params.noCancelButton) {
+            $(this._cancelBtn).hide();
+        } else {
+            this._cancelBtn.on('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                self._dialog.modal('hide');
+            });
+        }
 
         this._dialog.on('hide.bs.modal', function () {
             self._dialog.remove();

@@ -123,34 +123,55 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
         return deferred.promise.nodeify(callback);
     }
 
+    function _areTheTwoConceptsConnected(core, conceptOne, conceptTwo) {
+        var allMetaNodes,
+            path;
+
+        if (core.isTypeOf(conceptOne, conceptTwo)) {
+            return true;
+        }
+
+        if (core.isTypeOf(conceptTwo, conceptOne)) {
+            return true;
+        }
+
+        allMetaNodes = core.getAllMetaNodes(conceptOne);
+        for (path in allMetaNodes) {
+            if (core.isTypeOf(allMetaNodes[path], conceptOne) && core.isTypeOf(allMetaNodes[path], conceptTwo)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function _collectedBasicAffectedTypes(core, node, type, name) {
         var affectedTypes = [],
             allMetaNodes = core.getAllMetaNodes(node),
             checkerFunc,
             check = function (node) {
-                return checkerFunc(node).indexOf(oldName) !== -1;
+                return checkerFunc(node).indexOf(name) !== -1;
             },
             path;
 
         switch (type) {
             case 'attribute':
-                checkerFunc = core.getValidAttributeNames;
+                checkerFunc = core.getOwnValidAttributeNames;
                 break;
             case 'pointer':
-                checkerFunc = core.getValidPointerNames;
+                checkerFunc = core.getOwnValidPointerNames;
                 break;
             case 'set':
-                checkerFunc = core.getValidSetNames;
+                checkerFunc = core.getOwnValidSetNames;
                 break;
             case 'aspect':
-                checkerFunc = core.getValidAspectNames;
+                checkerFunc = core.getOwnValidAspectNames;
                 break;
             default:
                 return null;
         }
 
         for (path in allMetaNodes) {
-            if (core.isTypeOf(node, allMetaNodes[path]) && checkerFunc(allMetaNodes[path])) {
+            if (_areTheTwoConceptsConnected(core, node, allMetaNodes[path]) && check(allMetaNodes[path])) {
                 affectedTypes.push(allMetaNodes[path]);
             }
         }
@@ -181,7 +202,6 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             targets,
             path;
 
-        console.log('renaming: ', type);
         switch (type) {
             case 'attribute':
                 toArrayFunc = core.getOwnValidAttributeNames;
@@ -229,21 +249,20 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
         }
     }
 
-    function metaConceptRename(core, node, type, oldName, newName, callback) {
+    function propagateMetaConceptRename(core, typeNodes, type, oldName, newName, callback) {
         var deferred = Q.defer(),
-            affectedTypes,
-            i,
             hasDataFn,
             hasData = function (node) {
                 return hasDataFn(node).indexOf(oldName) !== -1;
             },
             renameFn,
             visitFn = function (visitedNode, next) {
-                if (_instanceOfAny(core, visitedNode, affectedTypes) && hasData(visitedNode)) {
+                if (_instanceOfAny(core, visitedNode, typeNodes) && hasData(visitedNode)) {
                     renameFn(visitedNode, oldName, newName);
                 }
                 next(null);
-            };
+            },
+            i;
 
         switch (type) {
             case 'attribute':
@@ -266,7 +285,28 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 return Q.reject(new Error('Unkown rule type [' + type + ']')).nodeify(callback);
         }
 
-        affectedTypes = _collectedBasicAffectedTypes(core, node, type, oldName);
+        // check if the affected types are in some library as they cannot be changed...
+        for (i = 0; i < typeNodes.length; i += 1) {
+            if (core.isLibraryElement(typeNodes[i])) {
+                return Q.reject(new Error('Concept originates in some library therefore cannot be renamed!'))
+                    .nodeify(callback);
+            }
+        }
+        core.traverse(core.getRoot(typeNodes[0]), {excludeRoot: true}, visitFn)
+            .then(deferred.resolve)
+            .catch(deferred.reject);
+
+        return deferred.promise.nodeify(callback);
+    }
+
+    function metaConceptRename(core, node, type, oldName, newName, callback) {
+        var deferred = Q.defer(),
+            affectedTypes = _collectedBasicAffectedTypes(core, node, type, oldName),
+            i;
+
+        if (affectedTypes === null) {
+            return Q.reject(new Error('Unkown rule type [' + type + ']')).nodeify(callback);
+        }
 
         // check if the affected types are in some library as they cannot be changed...
         for (i = 0; i < affectedTypes.length; i += 1) {
@@ -275,7 +315,8 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     .nodeify(callback);
             }
         }
-        core.traverse(core.getRoot(node), {excludeRoot: true}, visitFn)
+
+        propagateMetaConceptRename(core, affectedTypes, type, oldName, newName)
             .then(function () {
                 metaConceptRenameInMeta(core, node, type, oldName, newName);
                 return deferred.resolve();
@@ -287,6 +328,8 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
 
     return {
         propagateMetaDefinitionRename: propagateMetaDefinitionRename,
-        metaConceptRename: metaConceptRename
+        metaConceptRename: metaConceptRename,
+        metaConceptRenameInMeta: metaConceptRenameInMeta,
+        propagateMetaConceptRename: propagateMetaConceptRename
     };
 });

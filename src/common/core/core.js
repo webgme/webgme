@@ -2387,6 +2387,21 @@ define([
         };
 
         /**
+         * Returns the list of the META defined set names of the node introduced by its rules.
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string[]} The function returns all the set names that are defined among the META rules of the node.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getOwnValidSetNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getOwnValidSetNames(node);
+        };
+
+        /**
          * Returns the list of the META defined pointers of the node.
          * @param {module:Core~Node} node - the node in question.
          * @param {module:Core~Node} source - the source to test.
@@ -2421,13 +2436,6 @@ define([
 
             return core.getValidAttributeNames(node);
         };
-
-        this.getOwnValidTargetPaths = function (node, name) {
-            ensureNode(node, 'node');
-            ensureRelationName(name, 'name');
-
-            return core.getOwnValidTargetPaths(node, name);
-        }
 
         /**
          * Returns the list of the META defined attribute names of the node that were specifically defined for the node.
@@ -4294,6 +4302,40 @@ define([
             ensureType(name, 'name', 'string');
 
             return core.isValidAspectMemberOf(node, parent, name);
+        };
+
+        /**
+         * Returns the paths of Meta nodes that are possible targets of the given pointer/set introduced by the node.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of pointer/set.
+         *
+         * @return {string[]} The function returns the paths of valid nodes.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getOwnValidTargetPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureRelationName(name, 'name');
+
+            return core.getOwnValidTargetPaths(node, name);
+        };
+
+        /**
+         * Returns the paths of Meta nodes that are possible targets of the given pointer/set.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of pointer/set.
+         *
+         * @return {string[]} The function returns the paths of valid nodes.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getValidTargetPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureRelationName(name, 'name');
+
+            return core.getValidTargetPaths(node, name);
         };
     }
 
