@@ -29,7 +29,14 @@ define(['js/logger',
 
     UserProfileWidget.prototype._initializeUI = function (opts) {
         var widget = $(TEMPLATE),
+            logoutUrl,
             userName = WebGMEGlobal.userInfo._id;
+
+        if (window !== window.top) {
+            logoutUrl = '/logout?redirect=' + window.top.document.referrer;
+        } else {
+            logoutUrl = '/logout';
+        }
 
         if (opts.disableUserProfile) {
             widget.append($('<span class="user-name-field"/>').text(userName));
@@ -38,8 +45,8 @@ define(['js/logger',
                 $('<a href="/profile/" target="_self" class="navbar-link user-name-field" title="View profile"/>')
                     .text(userName)
             );
-            widget.append('<a href="/logout" target="_top" class="navbar-link">' +
-                '<i class="glyphicon glyphicon-eject icon-white" title="Log out"/></a>');
+            widget.append($('<a target="_top" class="navbar-link">' +
+                '<i class="glyphicon glyphicon-eject icon-white" title="Log out"/></a>').attr('href', logoutUrl));
         }
 
         this._el.append(widget);

@@ -28,7 +28,6 @@ var path = require('path'),
             guestAccount: 'guest',
             logOutUrl: '/profile/login',
             logInUrl: '/profile/login',
-            logOutToReferrer: false,
             salts: 10,
             jwt: {
                 expiresIn: 3600 * 24 * 7,

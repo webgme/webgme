@@ -701,9 +701,8 @@ function StandAloneServer(gmeConfig) {
         if (gmeConfig.authentication.enable === false) {
             res.sendStatus(404);
         } else {
-            if (gmeConfig.authentication.logOutToReferrer) {
-                redirectUrl = req.get('Referrer');
-            }
+            redirectUrl = req.query('redirect');
+
             res.clearCookie(gmeConfig.authentication.jwt.cookieId);
             res.redirect(redirectUrl || gmeConfig.authentication.logOutUrl || '/');
         }
