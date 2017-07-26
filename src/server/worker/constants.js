@@ -49,6 +49,7 @@ module.exports = {
         connectedWorkerStatus: 'connectedWorkerStatus',
 
         //Rename
-        renameConcept: 'renameConcept'
+        renameConcept: 'renameConcept',
+        changeAttributeMeta: 'changeAttributeMeta'
     }
 };

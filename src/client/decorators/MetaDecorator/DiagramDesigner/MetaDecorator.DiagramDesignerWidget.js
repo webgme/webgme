@@ -19,6 +19,7 @@ define([
     './MetaDecorator.DiagramDesignerWidget.Aspects',
     './MetaTextEditorDialog',
     'common/regexp',
+    'js/Dialogs/Confirm/ConfirmDialog',
     'css!./styles/MetaDecorator.DiagramDesignerWidget.css'
 ], function (CONSTANTS,
              nodePropertyNames,
@@ -31,7 +32,8 @@ define([
              MetaDecoratorDiagramDesignerWidgetConstraints,
              MetaDecoratorDiagramDesignerWidgetAspects,
              MetaTextEditorDialog,
-             REGEXP) {
+             REGEXP,
+             ConfirmDialog) {
 
     'use strict';
 
@@ -553,28 +555,54 @@ define([
     MetaDecoratorDiagramDesignerWidget.prototype.saveAttributeDescriptor = function (attrName, attrDesc) {
         var client = this._control._client,
             objID = this._metaInfo[CONSTANTS.GME_ID],
-            attrSchema;
-
-        client.startTransaction();
-
-        this.logger.debug('saveAttributeDescriptor: ' + attrName + ', attrDesc: ' + JSON.stringify(attrDesc));
-
-        if (attrName !== attrDesc.name) {
-            //rename an attribute
-            client.delAttributeMeta(objID, attrName);
-            client.delAttribute(objID, attrName);
-
-        }
+            attrSchema,
+            confirmDialog = new ConfirmDialog();
 
         attrSchema = {type: attrDesc.type, min: attrDesc.min, max: attrDesc.max, regexp: attrDesc.regexp};
         if (attrDesc.isEnum) {
             attrSchema.enum = attrDesc.enumValues;
         }
 
-        client.setAttributeMeta(objID, attrDesc.name, attrSchema);
-        client.setAttribute(objID, attrDesc.name, attrDesc.defaultValue);
+        this.logger.debug('saveAttributeDescriptor: ' + attrName + ', attrDesc: ' + JSON.stringify(attrDesc));
+        if (attrName !== attrDesc.name) {
+            confirmDialog.show({
+                title: 'Propagate Meta attribute name change',
+                question: 'Do you wish to propagate the attribute name change throughout the project?',
+                okLabel: 'Propagate',
+                cancelLabel: 'Don\'t propagate',
+                onHideFn: function (oked) {
+                    if (oked) {
+                        client.renameAttributeDefinition(objID, attrSchema, attrName, attrDesc.name, function (err) {
+                            var errorDialog;
 
-        client.completeTransaction();
+                            if (err) {
+                                errorDialog = new ConfirmDialog();
+                                errorDialog.show({
+                                    title: 'Meta attribute change propagation failed',
+                                    question: err,
+                                    noCancelButton: true
+                                }, function () {
+                                });
+                            }
+                        });
+                    } else {
+                        client.startTransaction();
+                        client.delAttributeMeta(objID, attrName);
+                        client.delAttribute(objID, attrName);
+                        client.setAttributeMeta(objID, attrDesc.name, attrSchema);
+                        client.setAttribute(objID, attrDesc.name, attrDesc.defaultValue);
+                        client.completeTransaction();
+                    }
+                }
+            }, function () {
+            });
+            return;
+        } else {
+            client.startTransaction();
+            client.setAttributeMeta(objID, attrDesc.name, attrSchema);
+            client.setAttribute(objID, attrDesc.name, attrDesc.defaultValue);
+            client.completeTransaction();
+        }
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype.deleteAttributeDescriptor = function (attrName) {
@@ -662,7 +690,7 @@ define([
 
             if (connType &&
                 (connType === MetaRelations.META_RELATIONS.INHERITANCE ||
-                connType === MetaRelations.META_RELATIONS.MIXIN)) {
+                    connType === MetaRelations.META_RELATIONS.MIXIN)) {
                 //if the connection is inheritance
                 //it can be NORTH only if source
                 //it can be SOUTH only if destination

@@ -25,8 +25,29 @@ define(['js/Constants'], function (CONSTANTS) {
             });
         }
 
+        function renameAttributeDefinition(nodePath, meta, oldName, newName, callback) {
+            var parameters = {
+                command: 'changeAttributeMeta',
+                projectId: state.project.projectId,
+                nodePath: nodePath,
+                meta: meta,
+                type: 'attribute',
+                oldName: oldName,
+                newName: newName,
+                branchName: state.branchName
+            };
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
+            });
+        }
+
         return {
-            renameConcept: renameConcept
+            renameConcept: renameConcept,
+            renameAttributeDefinition: renameAttributeDefinition
         };
     }
 

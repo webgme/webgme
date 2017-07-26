@@ -24,6 +24,7 @@ define([
     ConfirmDialog.prototype.show = function (params, onOk) {
         var self = this,
             inputChecker,
+            oked = false,
             value;
 
         this._dialog = $(dialogTemplate);
@@ -132,6 +133,7 @@ define([
         }
 
         this._okBtn.on('click', function (event) {
+            oked = true;
             event.preventDefault();
             event.stopPropagation();
             self._dialog.modal('hide');
@@ -154,7 +156,7 @@ define([
             self._dialog.empty();
             self._dialog = undefined;
             if (typeof params.onHideFn === 'function') {
-                params.onHideFn();
+                params.onHideFn(oked);
             }
         });
 

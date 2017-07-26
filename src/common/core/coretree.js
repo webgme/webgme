@@ -780,6 +780,12 @@ define([
             }
         };
 
+        this.renameProperty = function (node, oldName, newName) {
+            console.log(self.getPath(node), oldName, newName);
+            self.setProperty(node, newName, self.getProperty(node, oldName));
+            self.deleteProperty(node, oldName);
+        };
+
         this.getKeys = function (node, predicate) {
             var result;
             node = self.normalize(node);
@@ -788,7 +794,7 @@ define([
                 return null;
             }
 
-            result = this.getRawKeys(node.data, predicate);
+            result = self.getRawKeys(node.data, predicate);
             return result;
         };
 

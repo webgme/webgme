@@ -112,8 +112,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 visitFn = visitForPointer;
                 break;
             default:
-                deferred.reject(new Error('Invalid parameter misses a correct type for renaming.'));
-                return deferred.promise.nodeify(callback);
+                return Q.reject(new Error('Invalid parameter misses a correct type for renaming.')).nodeify(callback);
         }
 
         core.traverse(core.getRoot(node), {excludeRoot: true}, visitFn)

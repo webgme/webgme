@@ -1433,6 +1433,61 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             .nodeify(finish);
     }
 
+    function changeAttributeMeta(webgmeToken, parameters, callback) {
+        var storage,
+            context,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('changeAttributeMeta failed with error', err);
+                } else {
+                    logger.debug('changeAttributeMeta completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash, parameters.branchName, parameters.tagName);
+            })
+            .then(function (context_) {
+                context = context_;
+                return context.core.loadByPath(context.rootNode, parameters.nodePath);
+            })
+            .then(function (node) {
+                context.core.renameAttributeMeta(node, parameters.oldName, parameters.newName);
+                context.core.setAttributeMeta(node, parameters.newName, parameters.meta);
+                parameters.excludeOriginNode = true;
+                return metaRename.propagateMetaDefinitionRename(context.core, node, parameters);
+            })
+            .then(function () {
+                var deferred = Q.defer(),
+                    persisted;
+
+                persisted = context.core.persist(context.rootNode);
+
+                context.project.makeCommit(
+                    parameters.branchName,
+                    [context.commitObject._id],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'rename attribute definition [' + parameters.oldName +
+                    '->' + parameters.newName + '] of [' + parameters.nodePath + ']', function (err, saveResult) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve(saveResult);
+                        }
+                    });
+
+                return deferred.promise;
+            })
+            .nodeify(finish);
+    }
+
     return {
         executePlugin: executePlugin,
         seedProject: seedProject,
@@ -1449,7 +1504,8 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
         addLibrary: addLibrary,
         updateLibrary: updateLibrary,
         updateProjectFromFile: updateProjectFromFile,
-        renameConcept: renameConcept
+        renameConcept: renameConcept,
+        changeAttributeMeta: changeAttributeMeta
     };
 }
 
