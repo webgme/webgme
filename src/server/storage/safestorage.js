@@ -301,7 +301,7 @@ SafeStorage.prototype.createProject = function (data, callback) {
                         return;
                     } else {
                         cnt -= 1;
-                        hookData = JSON.stringify(self.gmeConfig.webhooks.defaults[hookIds[cnt]]);
+                        hookData = JSON.parse(JSON.stringify(self.gmeConfig.webhooks.defaults[hookIds[cnt]]));
 
                         if (typeof hookData.url === 'string') {
                             delete hookData.options;

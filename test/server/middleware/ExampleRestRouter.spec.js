@@ -40,6 +40,34 @@ describe('ExampleRestRouter', function () {
             });
         });
 
+        it('/ExampleRestRouter/getExample should return 200 with new config structure', function (done) {
+            var gmeConfig = testFixture.getGmeConfig();
+            server = null;
+            gmeConfig.rest.components.ExampleRestRouter = {
+                src: './middleware/ExampleRestRouter',
+                mount: 'ExampleRestRouter',
+                options: {
+                    hello: 'there'
+                }
+            };
+            server = webGME.standaloneServer(gmeConfig);
+            server.start(function () {
+                var serverBaseUrl = server.getUrl();
+                agent.get(serverBaseUrl + '/ExampleRestRouter/getExample').end(function (err, res) {
+                    expect(err).equal(null);
+                    expect(res.status).equal(200);
+
+                    // Make sure options are preserved
+                    expect(gmeConfig.rest.components.ExampleRestRouter.options.hello).to.equal('there');
+
+                    server.stop(function (err) {
+                        server = null;
+                        done(err);
+                    });
+                });
+            });
+        });
+
         it.skip('/ExampleRestRouter/getExample should return 302 with auth and no guests', function (done) {
             var gmeConfig = testFixture.getGmeConfig();
             server = null;

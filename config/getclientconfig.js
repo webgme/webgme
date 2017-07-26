@@ -30,16 +30,16 @@ function getClientConfig(gmeConfig) {
     delete clientConfig.socketIO.adapter;
     delete clientConfig.storage.database;
 
-    delete clientConfig.rest;
+    clientConfig.rest = { components: {} };
 
     for (key in gmeConfig.rest.components) {
-        if (typeof gmeConfig.rest.componets[key] === 'string') {
+        if (typeof gmeConfig.rest.components[key] === 'string') {
             clientConfig.rest.components[key] = {
                 mount: key
             };
         } else {
             clientConfig.rest.components[key] = {
-                mount: clientConfig.rest.components[key].mount
+                mount: gmeConfig.rest.components[key].mount
             };
         }
     }
